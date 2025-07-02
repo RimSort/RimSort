@@ -22,28 +22,28 @@
 <context>
     <name>CollectionImport</name>
     <message>
+        <location filename="../app/utils/steam/webapi/wrapper.py" line="59"/>
         <location filename="../app/utils/steam/webapi/wrapper.py" line="60"/>
-        <location filename="../app/utils/steam/webapi/wrapper.py" line="61"/>
         <source>Add Workshop collection link</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/webapi/wrapper.py" line="101"/>
+        <location filename="../app/utils/steam/webapi/wrapper.py" line="100"/>
         <source>Invalid Link</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/webapi/wrapper.py" line="102"/>
+        <location filename="../app/utils/steam/webapi/wrapper.py" line="104"/>
         <source>Invalid Workshop collection link. Please enter a valid Workshop collection link.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/webapi/wrapper.py" line="113"/>
+        <location filename="../app/utils/steam/webapi/wrapper.py" line="115"/>
         <source>Invalid Database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/webapi/wrapper.py" line="114"/>
+        <location filename="../app/utils/steam/webapi/wrapper.py" line="119"/>
         <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -51,33 +51,33 @@
 <context>
     <name>FatalErrorDialog</name>
     <message>
-        <location filename="../app/views/dialogue.py" line="498"/>
-        <location filename="../app/views/dialogue.py" line="552"/>
+        <location filename="../app/views/dialogue.py" line="540"/>
+        <location filename="../app/views/dialogue.py" line="594"/>
         <source>Show Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="499"/>
+        <location filename="../app/views/dialogue.py" line="541"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="500"/>
+        <location filename="../app/views/dialogue.py" line="542"/>
         <source>Open Log Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="501"/>
+        <location filename="../app/views/dialogue.py" line="543"/>
         <source>Upload Log</source>
         <translation type="unfinished">ログをアップロード</translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="502"/>
+        <location filename="../app/views/dialogue.py" line="544"/>
         <source>Upload the log file to 0x0.st</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="554"/>
+        <location filename="../app/views/dialogue.py" line="596"/>
         <source>Hide Details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -85,130 +85,130 @@
 <context>
     <name>FileSearchController</name>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="807"/>
+        <location filename="../app/controllers/file_search_controller.py" line="809"/>
         <source>Preparing search...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="815"/>
+        <location filename="../app/controllers/file_search_controller.py" line="817"/>
         <source>Starting new search...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="884"/>
+        <location filename="../app/controllers/file_search_controller.py" line="886"/>
         <source>Active Mods Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="885"/>
+        <location filename="../app/controllers/file_search_controller.py" line="887"/>
         <source>No active mods found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="896"/>
+        <location filename="../app/controllers/file_search_controller.py" line="898"/>
         <source>Inactive Mods Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="897"/>
+        <location filename="../app/controllers/file_search_controller.py" line="899"/>
         <source>No inactive mods found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1079"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1081"/>
         <source>Stopping search...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1088"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1090"/>
         <source>Search stopped by user</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1122"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1124"/>
         <source>Regular Expression Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1123"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1127"/>
         <source>There was an error with your regular expression pattern.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1124"/>
-        <source>{error_msg}
-
-Try simplifying your pattern or check for syntax errors.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1128"/>
-        <source>File Access Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1129"/>
-        <source>RimSort doesn&apos;t have permission to access some files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1130"/>
         <source>{error_msg}
 
-Try running RimSort with administrator privileges or check folder permissions.</source>
+Try simplifying your pattern or check for syntax errors.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1134"/>
-        <source>Memory Error</source>
+        <source>File Access Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1135"/>
+        <source>RimSort doesn&apos;t have permission to access some files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/file_search_controller.py" line="1138"/>
+        <source>{error_msg}
+
+Try running RimSort with administrator privileges or check folder permissions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/file_search_controller.py" line="1142"/>
+        <source>Memory Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/file_search_controller.py" line="1143"/>
         <source>RimSort ran out of memory while searching.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1136"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1146"/>
         <source>{error_msg}
 
 Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1140"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1150"/>
         <source>Search Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1141"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1151"/>
         <source>An error occurred during the search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1142"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1154"/>
         <source>{error_msg}
 
 Please check your settings and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1146"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1159"/>
         <source>Search failed: {error_msg[:100]}...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1195"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1209"/>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1209"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1225"/>
         <source>Location Not Set</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="1210"/>
+        <location filename="../app/controllers/file_search_controller.py" line="1228"/>
         <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -216,7 +216,7 @@ Please check your settings and try again.</source>
 <context>
     <name>FileSearchDialog</name>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="75"/>
+        <location filename="../app/views/file_search_dialog.py" line="73"/>
         <source>Search for:</source>
         <translation>検索する:</translation>
     </message>
@@ -276,7 +276,7 @@ Please check your settings and try again.</source>
         <translation>正規表現を使用</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="136"/>
+        <location filename="../app/views/file_search_dialog.py" line="138"/>
         <source>Enable to use regular expressions in search
 Examples:
 - &apos;def.*\(&apos; to find function definitions
@@ -288,185 +288,185 @@ Examples:
 - &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="139"/>
+        <location filename="../app/views/file_search_dialog.py" line="141"/>
         <source>XML files only</source>
         <translation>XMLファイルのみ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="143"/>
+        <location filename="../app/views/file_search_dialog.py" line="147"/>
         <source>When checked, search only XML files and use optimized XML search.
 When unchecked, search all file types with standard search.</source>
         <translation>チェックされている場合、XMLファイルのみを検索し、最適化されたXML検索を使用します。
 チェックされていない場合、標準の検索を使用してすべてのファイルタイプを検索します。</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="164"/>
+        <location filename="../app/views/file_search_dialog.py" line="168"/>
         <source>Exclude from Search:</source>
         <translation>検索から除外:</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="168"/>
+        <location filename="../app/views/file_search_dialog.py" line="172"/>
         <source>Skip translations</source>
         <translation>翻訳をスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="172"/>
+        <location filename="../app/views/file_search_dialog.py" line="176"/>
         <source>Skip translation files to improve search speed</source>
         <translation>翻訳ファイルをスキップして検索速度を向上させる</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="174"/>
+        <location filename="../app/views/file_search_dialog.py" line="178"/>
         <source>Skip .git folder</source>
         <translation> .gitフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="176"/>
+        <location filename="../app/views/file_search_dialog.py" line="180"/>
         <source>Skip Git repository folders</source>
         <translation>Gitリポジトリフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="178"/>
+        <location filename="../app/views/file_search_dialog.py" line="182"/>
         <source>Skip Source folder</source>
         <translation>ソースフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="180"/>
+        <location filename="../app/views/file_search_dialog.py" line="184"/>
         <source>Skip Source folders containing C# code</source>
         <translation>C#コードを含むソースフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="182"/>
+        <location filename="../app/views/file_search_dialog.py" line="186"/>
         <source>Skip Textures folder</source>
         <translation>テクスチャフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="184"/>
+        <location filename="../app/views/file_search_dialog.py" line="190"/>
         <source>Skip Textures folders containing images</source>
         <translation>画像を含むテクスチャフォルダをスキップ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="206"/>
+        <location filename="../app/views/file_search_dialog.py" line="212"/>
         <source>Search method is automatically selected based on options</source>
         <translation>オプションに基づいて自動的に検索方法が選択されます</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="212"/>
+        <location filename="../app/views/file_search_dialog.py" line="218"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="217"/>
+        <location filename="../app/views/file_search_dialog.py" line="223"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="253"/>
-        <location filename="../app/views/file_search_dialog.py" line="776"/>
+        <location filename="../app/views/file_search_dialog.py" line="259"/>
+        <location filename="../app/views/file_search_dialog.py" line="797"/>
         <source>Ready to search</source>
         <translation>検索準備完了</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="269"/>
+        <location filename="../app/views/file_search_dialog.py" line="275"/>
         <source>Filter results:</source>
         <translation>結果をフィルタリング:</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="276"/>
+        <location filename="../app/views/file_search_dialog.py" line="282"/>
         <source>Filter results by mod name, file name, or path</source>
         <translation>モッド名、ファイル名、またはパスで結果をフィルタリング</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="288"/>
+        <location filename="../app/views/file_search_dialog.py" line="294"/>
         <source>Search Results:</source>
         <translation>検索結果:</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="293"/>
+        <location filename="../app/views/file_search_dialog.py" line="299"/>
         <source>Double-click a result to open the file</source>
         <translation>結果をダブルクリックしてファイルを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="302"/>
+        <location filename="../app/views/file_search_dialog.py" line="309"/>
         <source>Mod Name</source>
         <translation>モッド名</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="302"/>
+        <location filename="../app/views/file_search_dialog.py" line="310"/>
         <source>File Name</source>
         <translation>ファイル名</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="302"/>
+        <location filename="../app/views/file_search_dialog.py" line="311"/>
         <source>Path</source>
         <translation>パス</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="303"/>
+        <location filename="../app/views/file_search_dialog.py" line="312"/>
         <source>Preview</source>
         <translation>プレビュー</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="391"/>
+        <location filename="../app/views/file_search_dialog.py" line="403"/>
         <source>Found {result_count} results</source>
         <translation>結果を見つけました</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="393"/>
+        <location filename="../app/views/file_search_dialog.py" line="408"/>
         <source>No results found</source>
         <translation>結果が見つかりません</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="433"/>
+        <location filename="../app/views/file_search_dialog.py" line="448"/>
         <source>Open File (Enter)</source>
         <translation>ファイルを開く(Enter)</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="436"/>
+        <location filename="../app/views/file_search_dialog.py" line="451"/>
         <source>Open Containing Folder (Ctrl+O)</source>
         <translation>含むフォルダを開く(Ctrl+O)</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="439"/>
+        <location filename="../app/views/file_search_dialog.py" line="454"/>
         <source>Copy Path (Ctrl+C)</source>
         <translation>パスをコピー(Ctrl+C)</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="446"/>
+        <location filename="../app/views/file_search_dialog.py" line="461"/>
         <source>Open With...</source>
         <translation>開く(Ctrl+O)</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="447"/>
+        <location filename="../app/views/file_search_dialog.py" line="462"/>
         <source>Notepad</source>
         <translation>メモ帳</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="448"/>
+        <location filename="../app/views/file_search_dialog.py" line="463"/>
         <source>VS Code</source>
         <translation>VS Code</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="449"/>
+        <location filename="../app/views/file_search_dialog.py" line="464"/>
         <source>Default Editor</source>
         <translation>デフォルトのエディタ</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="640"/>
+        <location filename="../app/views/file_search_dialog.py" line="655"/>
         <source>Double-click to open file</source>
         <translation>ダブルクリックしてファイルを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="691"/>
+        <location filename="../app/views/file_search_dialog.py" line="706"/>
         <source>Clear Recent Searches</source>
         <translation>最近の検索をクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="772"/>
+        <location filename="../app/views/file_search_dialog.py" line="790"/>
         <source>Filter: {visible_rows} of {total_rows} results visible</source>
         <translation>フィルター: {visible_rows}の{total_rows}の結果が表示されています</translation>
     </message>
     <message>
-        <location filename="../app/views/file_search_dialog.py" line="774"/>
+        <location filename="../app/views/file_search_dialog.py" line="794"/>
         <source>Found {total_rows} results</source>
         <translation>結果を見つけました</translation>
     </message>
@@ -474,12 +474,12 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>InstanceController</name>
     <message>
-        <location filename="../app/controllers/instance_controller.py" line="68"/>
+        <location filename="../app/controllers/instance_controller.py" line="72"/>
         <source>Error restoring instance</source>
         <translation>インスタンスの復元中にエラーが発生しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/instance_controller.py" line="69"/>
+        <location filename="../app/controllers/instance_controller.py" line="75"/>
         <source>An error occurred while reading instance archive: {e}</source>
         <translation>インスタンスアーカイブの読み取り中にエラーが発生しました: {e}</translation>
     </message>
@@ -518,152 +518,162 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <location filename="../app/views/log_reader.py" line="240"/>
-        <location filename="../app/views/log_reader.py" line="332"/>
+        <location filename="../app/views/log_reader.py" line="335"/>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>ロードされた{count}のアイテム | 最終更新: {time}</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="421"/>
-        <location filename="../app/views/log_reader.py" line="491"/>
+        <location filename="../app/views/log_reader.py" line="428"/>
+        <location filename="../app/views/log_reader.py" line="507"/>
         <source>Export canceled by user.</source>
         <translation>ユーザーによってエクスポートがキャンセルされました。</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="431"/>
-        <location filename="../app/views/log_reader.py" line="435"/>
-        <location filename="../app/views/log_reader.py" line="736"/>
+        <location filename="../app/views/log_reader.py" line="440"/>
+        <location filename="../app/views/log_reader.py" line="446"/>
+        <location filename="../app/views/log_reader.py" line="769"/>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>エクスポートに失敗しました: ファイルのパーミッションが拒否されました - ファイルのパーミッションを確認してください</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="434"/>
-        <location filename="../app/views/log_reader.py" line="445"/>
-        <location filename="../app/views/log_reader.py" line="516"/>
-        <location filename="../app/views/log_reader.py" line="699"/>
-        <location filename="../app/views/log_reader.py" line="709"/>
-        <location filename="../app/views/log_reader.py" line="721"/>
-        <location filename="../app/views/log_reader.py" line="737"/>
+        <location filename="../app/views/log_reader.py" line="443"/>
+        <location filename="../app/views/log_reader.py" line="458"/>
+        <location filename="../app/views/log_reader.py" line="532"/>
+        <location filename="../app/views/log_reader.py" line="717"/>
+        <location filename="../app/views/log_reader.py" line="729"/>
+        <location filename="../app/views/log_reader.py" line="744"/>
+        <location filename="../app/views/log_reader.py" line="770"/>
         <source>Export Error</source>
         <translation>エクスポートエラー</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="441"/>
+        <location filename="../app/views/log_reader.py" line="452"/>
         <source>Export failed: File system error - {e}</source>
         <translation>エクスポートに失敗しました: ファイルシステムエラー - {e}</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="446"/>
+        <location filename="../app/views/log_reader.py" line="459"/>
         <source>Export failed: File system error</source>
         <translation>エクスポートに失敗しました: ファイルシステムエラー</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="453"/>
+        <location filename="../app/views/log_reader.py" line="466"/>
         <source>Exporting to CSV...</source>
         <translation>CSVにエクスポート中...</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="456"/>
+        <location filename="../app/views/log_reader.py" line="469"/>
         <source>Exporting rows...</source>
         <translation>行をエクスポート中...</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="456"/>
+        <location filename="../app/views/log_reader.py" line="470"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="517"/>
+        <location filename="../app/views/log_reader.py" line="533"/>
         <source>Export failed due to an unknown error</source>
         <translation>不明なエラーによりエクスポートに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="605"/>
+        <location filename="../app/views/log_reader.py" line="585"/>
+        <source>View in Steam Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/log_reader.py" line="596"/>
+        <source>Open Mod Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/log_reader.py" line="621"/>
         <source>Published File ID</source>
         <translation>公開されたファイルID</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="606"/>
+        <location filename="../app/views/log_reader.py" line="622"/>
         <source>Last Updated</source>
         <translation>最終更新日</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="607"/>
+        <location filename="../app/views/log_reader.py" line="623"/>
         <source>Relative Time</source>
         <translation>相対時間</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="608"/>
+        <location filename="../app/views/log_reader.py" line="624"/>
         <source>Type</source>
         <translation>タイプ</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="609"/>
+        <location filename="../app/views/log_reader.py" line="625"/>
         <source>Mod Name</source>
         <translation>モッド名</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="610"/>
+        <location filename="../app/views/log_reader.py" line="626"/>
         <source>Mod Path</source>
         <translation>モッドパス</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="676"/>
+        <location filename="../app/views/log_reader.py" line="692"/>
         <source>Conform acf import</source>
         <translation>ACFインポートを確認</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="677"/>
+        <location filename="../app/views/log_reader.py" line="693"/>
         <source>This will replace your current steamcmd .acf file</source>
         <translation>これは現在のsteamcmd .acfファイルを置き換えます</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="678"/>
+        <location filename="../app/views/log_reader.py" line="696"/>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="700"/>
+        <location filename="../app/views/log_reader.py" line="718"/>
         <source>SteamCMD interface not properly initialized</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="706"/>
+        <location filename="../app/views/log_reader.py" line="725"/>
         <source>ACF file not found: {acf_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="709"/>
+        <location filename="../app/views/log_reader.py" line="730"/>
         <source>ACF file not found at: {acf_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="722"/>
+        <location filename="../app/views/log_reader.py" line="747"/>
         <source>Invalid file path provided for export: {file_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="728"/>
-        <location filename="../app/views/log_reader.py" line="732"/>
+        <location filename="../app/views/log_reader.py" line="754"/>
+        <location filename="../app/views/log_reader.py" line="761"/>
         <source>Successfully exported ACF to {file_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="731"/>
+        <location filename="../app/views/log_reader.py" line="760"/>
         <source>Export Success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="739"/>
+        <location filename="../app/views/log_reader.py" line="772"/>
         <source>Export failed: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="742"/>
+        <location filename="../app/views/log_reader.py" line="775"/>
         <source>Export failed</source>
         <translation type="unfinished">エクスポートに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/views/log_reader.py" line="743"/>
+        <location filename="../app/views/log_reader.py" line="776"/>
         <source>Exportfailed unknown exception occurred</source>
         <translation type="unfinished"></translation>
     </message>
@@ -671,195 +681,230 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>MainContent</name>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="404"/>
+        <location filename="../app/views/main_content_panel.py" line="367"/>
         <source>Essential path(s)</source>
         <translation>必須のパス</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="405"/>
+        <location filename="../app/views/main_content_panel.py" line="368"/>
         <source>Essential path(s) are invalid or not set!
 </source>
         <translation>必須のパスが無効または設定されていません！</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="411"/>
+        <location filename="../app/views/main_content_panel.py" line="376"/>
         <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
 
 Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="564"/>
+        <location filename="../app/views/main_content_panel.py" line="529"/>
         <source>Duplicate mod(s) found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="565"/>
+        <location filename="../app/views/main_content_panel.py" line="532"/>
         <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="571"/>
+        <location filename="../app/views/main_content_panel.py" line="540"/>
         <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="592"/>
+        <location filename="../app/views/main_content_panel.py" line="561"/>
         <source>Could not find data for some mods!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="597"/>
+        <location filename="../app/views/main_content_panel.py" line="568"/>
         <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
 
 Are your game configuration paths correct?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="809"/>
+        <location filename="../app/views/main_content_panel.py" line="744"/>
         <source>Update skipped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="810"/>
+        <location filename="../app/views/main_content_panel.py" line="745"/>
         <source>You are running from Python interpreter.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="811"/>
+        <location filename="../app/views/main_content_panel.py" line="746"/>
         <source>Skipping update check...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="824"/>
-        <location filename="../app/views/main_content_panel.py" line="1009"/>
+        <location filename="../app/views/main_content_panel.py" line="763"/>
+        <location filename="../app/views/main_content_panel.py" line="960"/>
         <source>Unable to retrieve latest release information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="825"/>
+        <location filename="../app/views/main_content_panel.py" line="766"/>
         <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="857"/>
+        <location filename="../app/views/main_content_panel.py" line="798"/>
         <source>RimSort update found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="858"/>
+        <location filename="../app/views/main_content_panel.py" line="801"/>
         <source>An update to RimSort has been released: {tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="859"/>
+        <location filename="../app/views/main_content_panel.py" line="804"/>
         <source>You are running RimSort {current_version}
 Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="917"/>
+        <location filename="../app/views/main_content_panel.py" line="862"/>
         <source>Unable to complete update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="918"/>
+        <location filename="../app/views/main_content_panel.py" line="865"/>
         <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="936"/>
+        <location filename="../app/views/main_content_panel.py" line="885"/>
         <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="940"/>
+        <location filename="../app/views/main_content_panel.py" line="889"/>
         <source>Update downloaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="941"/>
+        <location filename="../app/views/main_content_panel.py" line="890"/>
         <source>Do you want to proceed with the update?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="949"/>
+        <location filename="../app/views/main_content_panel.py" line="898"/>
         <source>Failed to download update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="950"/>
+        <location filename="../app/views/main_content_panel.py" line="899"/>
         <source>Failed to download latest RimSort release!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1003"/>
+        <location filename="../app/views/main_content_panel.py" line="952"/>
         <source>RimSort is up to date!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1004"/>
+        <location filename="../app/views/main_content_panel.py" line="955"/>
         <source>You are already running the latest release: {tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1010"/>
+        <location filename="../app/views/main_content_panel.py" line="963"/>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1118"/>
+        <location filename="../app/views/main_content_panel.py" line="1071"/>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>モッドソースをスキャンしてメタデータを追加しています...</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1279"/>
+        <location filename="../app/views/main_content_panel.py" line="1233"/>
         <source>Sorting algorithm not implemented</source>
         <translation>ソートアルゴリズムが実装されていません</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1280"/>
+        <location filename="../app/views/main_content_panel.py" line="1234"/>
         <source>The selected sorting algorithm is not implemented</source>
         <translation>選択されたソートアルゴリズムは実装されていません</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1285"/>
+        <location filename="../app/views/main_content_panel.py" line="1241"/>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1422"/>
+        <location filename="../app/views/main_content_panel.py" line="1383"/>
         <source>Failed to export to file</source>
         <translation>ファイルにエクスポートに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1423"/>
+        <location filename="../app/views/main_content_panel.py" line="1384"/>
         <source>Failed to export active mods to file:</source>
         <translation>アクティブなモッドをファイルにエクスポートに失敗しました:</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1584"/>
+        <location filename="../app/views/main_content_panel.py" line="1443"/>
+        <source>Important</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1449"/>
+        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1491"/>
+        <source>Steam client integration not set up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1494"/>
+        <source>Steam client integration is not set up. Please set it up to download mods using Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1503"/>
+        <source>Download Rentry Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1504"/>
+        <source>Please select a download method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1507"/>
+        <source>Select which method you want to use to download missing Rentry mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/main_content_panel.py" line="1665"/>
         <source>Export active mod list</source>
         <translation>アクティブなモッドをファイルにエクスポート</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1585"/>
+        <location filename="../app/views/main_content_panel.py" line="1666"/>
         <source>Copied active mod list report to clipboard...</source>
         <translation>アクティブなモッドをファイルにエクスポートしました</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1586"/>
-        <location filename="../app/views/main_content_panel.py" line="1741"/>
+        <location filename="../app/views/main_content_panel.py" line="1667"/>
+        <location filename="../app/views/main_content_panel.py" line="1824"/>
         <source>Click &quot;Show Details&quot; to see the full report!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1739"/>
+        <location filename="../app/views/main_content_panel.py" line="1820"/>
         <source>Uploaded active mod list</source>
         <translation>アクティブなモッドをRentry.coにアップロード</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1740"/>
+        <location filename="../app/views/main_content_panel.py" line="1823"/>
         <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
 
 {rentry_uploader.url}</source>
@@ -868,546 +913,402 @@ Do you want to update now?</source>
 {rentry_uploader.url}</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1746"/>
+        <location filename="../app/views/main_content_panel.py" line="1829"/>
         <source>Failed to upload</source>
         <translation>アップロードに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1747"/>
+        <location filename="../app/views/main_content_panel.py" line="1830"/>
         <source>Failed to upload exported active mod list to Rentry.co</source>
         <translation>アクティブなモッドをRentry.coにエクスポートしました</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1815"/>
+        <location filename="../app/views/main_content_panel.py" line="1898"/>
         <source>Could not open directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1816"/>
+        <location filename="../app/views/main_content_panel.py" line="1899"/>
         <source>{directory_name} path does not exist or is not set.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1817"/>
+        <location filename="../app/views/main_content_panel.py" line="1902"/>
         <source>Would you like to set the path now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1818"/>
+        <location filename="../app/views/main_content_panel.py" line="1903"/>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1847"/>
+        <location filename="../app/views/main_content_panel.py" line="1932"/>
+        <location filename="../app/views/main_content_panel.py" line="2456"/>
         <source>File not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1848"/>
+        <location filename="../app/views/main_content_panel.py" line="1933"/>
         <source>The file you are trying to upload does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1849"/>
+        <location filename="../app/views/main_content_panel.py" line="1934"/>
         <source>File: {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1856"/>
+        <location filename="../app/views/main_content_panel.py" line="1941"/>
         <source>Uploading {path.name} to 0x0.st...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1862"/>
+        <location filename="../app/views/main_content_panel.py" line="1947"/>
         <source>Uploaded file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1863"/>
+        <location filename="../app/views/main_content_panel.py" line="1948"/>
         <source>Uploaded {path.name} to http://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1864"/>
+        <location filename="../app/views/main_content_panel.py" line="1953"/>
         <source>The URL has been copied to your clipboard:
 
 {ret}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1869"/>
+        <location filename="../app/views/main_content_panel.py" line="1958"/>
         <source>Failed to upload file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1870"/>
+        <location filename="../app/views/main_content_panel.py" line="1959"/>
         <source>Failed to upload the file to 0x0.st</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1924"/>
+        <location filename="../app/views/main_content_panel.py" line="2013"/>
         <source>Could not save active mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="1925"/>
+        <location filename="../app/views/main_content_panel.py" line="2014"/>
         <source>Failed to save active mods to file:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2030"/>
+        <location filename="../app/views/main_content_panel.py" line="2123"/>
         <source>Checking Steam Workshop mods for updates...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2035"/>
+        <location filename="../app/views/main_content_panel.py" line="2128"/>
         <source>Unable to check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2036"/>
+        <location filename="../app/views/main_content_panel.py" line="2131"/>
         <source>RimSort was unable to query Steam WebAPI for update information!
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2037"/>
+        <location filename="../app/views/main_content_panel.py" line="2132"/>
         <source>Are you connected to the Internet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2046"/>
+        <location filename="../app/views/main_content_panel.py" line="2143"/>
         <source>All Workshop mods appear to be up to date!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2055"/>
-        <location filename="../app/views/main_content_panel.py" line="2078"/>
+        <location filename="../app/views/main_content_panel.py" line="2152"/>
+        <location filename="../app/views/main_content_panel.py" line="2175"/>
         <source>RimSort - SteamCMD setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2056"/>
-        <location filename="../app/views/main_content_panel.py" line="2109"/>
+        <location filename="../app/views/main_content_panel.py" line="2153"/>
+        <location filename="../app/views/main_content_panel.py" line="2212"/>
         <source>Unable to create SteamCMD runner!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2057"/>
-        <location filename="../app/views/main_content_panel.py" line="2110"/>
+        <location filename="../app/views/main_content_panel.py" line="2154"/>
+        <location filename="../app/views/main_content_panel.py" line="2213"/>
         <source>There is an active process already running!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2079"/>
+        <location filename="../app/views/main_content_panel.py" line="2178"/>
         <source>Unable to initiate SteamCMD installation. Local mods path not set!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2080"/>
+        <location filename="../app/views/main_content_panel.py" line="2181"/>
         <source>Please configure local mods path in Settings before attempting to install.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2096"/>
-        <location filename="../app/views/main_content_panel.py" line="2108"/>
-        <location filename="../app/views/main_content_panel.py" line="2251"/>
+        <location filename="../app/views/main_content_panel.py" line="2197"/>
+        <location filename="../app/views/main_content_panel.py" line="2211"/>
+        <location filename="../app/views/main_content_panel.py" line="2356"/>
         <source>RimSort</source>
         <translation type="unfinished">RimSort</translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2097"/>
-        <location filename="../app/views/main_content_panel.py" line="2252"/>
+        <location filename="../app/views/main_content_panel.py" line="2198"/>
+        <location filename="../app/views/main_content_panel.py" line="2357"/>
         <source>No PublishedFileIds were supplied in operation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2098"/>
-        <location filename="../app/views/main_content_panel.py" line="2253"/>
+        <location filename="../app/views/main_content_panel.py" line="2201"/>
+        <location filename="../app/views/main_content_panel.py" line="2360"/>
         <source>Please add mods to list before attempting to download.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2146"/>
+        <location filename="../app/views/main_content_panel.py" line="2249"/>
         <source>SteamCMD not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2147"/>
+        <location filename="../app/views/main_content_panel.py" line="2250"/>
         <source>SteamCMD executable was not found.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2148"/>
+        <location filename="../app/views/main_content_panel.py" line="2253"/>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2263"/>
+        <location filename="../app/views/main_content_panel.py" line="2372"/>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2275"/>
-        <source>Enter git repo</source>
+        <location filename="../app/views/main_content_panel.py" line="2388"/>
+        <source>Download or select from local</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2276"/>
-        <source>Enter a git repository url (http/https) to clone to local mods:</source>
+        <location filename="../app/views/main_content_panel.py" line="2391"/>
+        <source>Please select a ZIP file to add to the local mods directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2297"/>
-        <source>Edit username</source>
+        <location filename="../app/views/main_content_panel.py" line="2394"/>
+        <source>You can download a ZIP file from the internet, or select a file from your local machine.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2298"/>
-        <source>Enter your Github username:</source>
+        <location filename="../app/views/main_content_panel.py" line="2403"/>
+        <source>Enter zip file url</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2308"/>
-        <source>Edit token</source>
+        <location filename="../app/views/main_content_panel.py" line="2406"/>
+        <source>Enter a zip file url (http/https) to download to local mods:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2309"/>
-        <source>Enter your Github personal access token here (ghp_*):</source>
+        <location filename="../app/views/main_content_panel.py" line="2431"/>
+        <source>Failed to download zip file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2392"/>
-        <location filename="../app/views/main_content_panel.py" line="2584"/>
-        <location filename="../app/views/main_content_panel.py" line="2763"/>
-        <source>Failed to update repo!</source>
+        <location filename="../app/views/main_content_panel.py" line="2432"/>
+        <source>The zip file could not be downloaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2395"/>
-        <source>The repository supplied at [{repo_path}] failed to update!
-Are you connected to the Internet? Is the repo valid?</source>
+        <location filename="../app/views/main_content_panel.py" line="2433"/>
+        <location filename="../app/views/main_content_panel.py" line="2477"/>
+        <location filename="../app/views/main_content_panel.py" line="2486"/>
+        <source>File: {file_path}
+Error: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2421"/>
-        <source>Git repo(s) updated</source>
+        <location filename="../app/views/main_content_panel.py" line="2457"/>
+        <source>The selected file does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2422"/>
-        <source>The following repo(s) had updates pulled from the remote:</source>
+        <location filename="../app/views/main_content_panel.py" line="2458"/>
+        <source>File: {file_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2428"/>
-        <source>Git repo(s) not updated</source>
+        <location filename="../app/views/main_content_panel.py" line="2473"/>
+        <source>Unsupported Compression Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2429"/>
-        <source>No updates were found.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2453"/>
-        <source>Existing repository found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2454"/>
-        <source>An existing local repo that matches this repository was found:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2460"/>
-        <source>{repo_path}
-
-How would you like to handle? Choose option:
-
-1) Clone new repository (deletes existing and replaces)
-2) Update existing repository (in-place force-update)</source>
+        <location filename="../app/views/main_content_panel.py" line="2476"/>
+        <source>This ZIP file uses a compression method that is not supported by this version.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/views/main_content_panel.py" line="2484"/>
-        <location filename="../app/views/main_content_panel.py" line="2513"/>
-        <source>Repo retrieved</source>
+        <source>Failed to extract zip file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/views/main_content_panel.py" line="2485"/>
-        <source>The configured repository was cloned!</source>
+        <source>The zip file could not be extracted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2514"/>
-        <source>The configured repository was reinitialized with existing files! (likely leftover .dds textures)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2520"/>
-        <source>Failed to clone repo!</source>
+        <location filename="../app/views/main_content_panel.py" line="2519"/>
+        <location filename="../app/views/main_content_panel.py" line="2535"/>
+        <source>Existing files or directories found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/views/main_content_panel.py" line="2522"/>
-        <source>The configured repo failed to clone/initialize! </source>
+        <source>All files in the archive already exist in the target path.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2524"/>
-        <location filename="../app/views/main_content_panel.py" line="2588"/>
-        <location filename="../app/views/main_content_panel.py" line="2724"/>
-        <location filename="../app/views/main_content_panel.py" line="2743"/>
-        <location filename="../app/views/main_content_panel.py" line="2765"/>
-        <source>Configured repository: {repo_url}</source>
+        <location filename="../app/views/main_content_panel.py" line="2527"/>
+        <source>How would you like to proceed?
+
+1) Overwrite All — Replace all existing files and directories.
+2) Cancel — Abort the operation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2530"/>
-        <location filename="../app/views/main_content_panel.py" line="2608"/>
-        <location filename="../app/views/main_content_panel.py" line="2785"/>
-        <source>Invalid repository</source>
+        <location filename="../app/views/main_content_panel.py" line="2538"/>
+        <source>The following files or directories already exist in the target path:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2531"/>
-        <location filename="../app/views/main_content_panel.py" line="2609"/>
-        <location filename="../app/views/main_content_panel.py" line="2786"/>
-        <source>An invalid repository was detected!</source>
+        <location filename="../app/views/main_content_panel.py" line="2545"/>
+        <source>{conflicts_list}
+
+How would you like to proceed?
+
+1) Overwrite All — Replace all existing files and directories.
+2) Skip Existing — Extract only new files and leave existing ones untouched.
+3) Cancel — Abort the extraction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2534"/>
-        <source>Please check your repository URL!
-A valid repository is a repository URL which is not
-empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2535"/>
-        <source>Invalid repository: {repo_url}</source>
+        <location filename="../app/views/main_content_panel.py" line="2573"/>
+        <source>Extraction completed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/views/main_content_panel.py" line="2574"/>
-        <source>Repo force updated</source>
+        <source>The ZIP file was successfully extracted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2575"/>
-        <source>The configured repository was updated!</source>
+        <location filename="../app/views/main_content_panel.py" line="2579"/>
+        <source>Extraction failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2577"/>
-        <source>{repo_path} -&gt;
- Latest Commit: {commit}</source>
+        <location filename="../app/views/main_content_panel.py" line="2580"/>
+        <source>An error occurred during extraction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/views/main_content_panel.py" line="2587"/>
-        <source>The configured repo failed to update! Are you connected to the Internet? Is your configured repo valid?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2593"/>
-        <location filename="../app/views/main_content_panel.py" line="2770"/>
-        <source>Repository does not exist</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2594"/>
-        <location filename="../app/views/main_content_panel.py" line="2771"/>
-        <source>Tried to update a git repository that does not exist!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2595"/>
-        <location filename="../app/views/main_content_panel.py" line="2772"/>
-        <source>Would you like to clone a new copy of this repository?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2612"/>
-        <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not
-empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2657"/>
-        <source>Failed to upload database!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2658"/>
-        <source>The database file does not contain a version or timestamp!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2659"/>
-        <source>File: {file_full_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2676"/>
-        <source>File does not exist</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2677"/>
-        <source>Please ensure the file exists and then try to upload again!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2678"/>
-        <source>File not found:
-{file_full_path}
-Repository:
-{repo_url}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2721"/>
-        <source>Failed to push new branch to repo!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2723"/>
-        <source>Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see if you can manually push + Pull Request. Otherwise, checkout main and try again!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2739"/>
-        <source>Failed to create pull request!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2742"/>
-        <source>Failed to create a pull request for branch {base_branch} &lt;- {new_branch_name}!
-The branch should be pushed. Check on Github to see if you can manually make a Pull Request there! Otherwise, checkout main and try again!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2752"/>
-        <source>Pull request created</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2753"/>
-        <source>Successfully created pull request!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2755"/>
-        <source>Do you want to try to open it in your web browser?
-
-URL: {pull_request_url}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2764"/>
-        <source>The configured repo failed to update!
-File name: {file_name}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2788"/>
-        <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/main_content_panel.py" line="2793"/>
         <source>git not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2794"/>
+        <location filename="../app/views/main_content_panel.py" line="2588"/>
         <source>git executable was not found in $PATH!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2798"/>
+        <location filename="../app/views/main_content_panel.py" line="2594"/>
         <source>Git integration will not work without Git installed! Do you want to open download page for Git?
 
 If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2861"/>
+        <location filename="../app/views/main_content_panel.py" line="2657"/>
         <source>Edit Steam DB repo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2862"/>
-        <location filename="../app/views/main_content_panel.py" line="2876"/>
+        <location filename="../app/views/main_content_panel.py" line="2658"/>
+        <location filename="../app/views/main_content_panel.py" line="2672"/>
         <source>Enter URL (https://github.com/AccountName/RepositoryName):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="2875"/>
+        <location filename="../app/views/main_content_panel.py" line="2671"/>
         <source>Edit Community Rules DB repo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3018"/>
+        <location filename="../app/views/main_content_panel.py" line="2814"/>
         <source>No PublishedFileIDs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3019"/>
+        <location filename="../app/views/main_content_panel.py" line="2815"/>
         <source>DB Builder query did not return any PublishedFileIDs!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3021"/>
+        <location filename="../app/views/main_content_panel.py" line="2819"/>
         <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
 PublishedFileIDs are needed to retrieve mods from Steam!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3042"/>
+        <location filename="../app/views/main_content_panel.py" line="2840"/>
         <source>Are you sure?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3043"/>
+        <location filename="../app/views/main_content_panel.py" line="2841"/>
         <source>Here be dragons.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3048"/>
+        <location filename="../app/views/main_content_panel.py" line="2848"/>
         <source>WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. This can take longer due to rate limits, but you can also re-use the script generated by RimSort with a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3081"/>
+        <location filename="../app/views/main_content_panel.py" line="2881"/>
         <source>Edit Steam WebAPI key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3082"/>
+        <location filename="../app/views/main_content_panel.py" line="2882"/>
         <source>Enter your personal 32 character Steam WebAPI key here:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3100"/>
-        <location filename="../app/views/main_content_panel.py" line="3200"/>
-        <location filename="../app/views/main_content_panel.py" line="3209"/>
+        <location filename="../app/views/main_content_panel.py" line="2900"/>
+        <location filename="../app/views/main_content_panel.py" line="3004"/>
+        <location filename="../app/views/main_content_panel.py" line="3015"/>
         <source>Steam DB Builder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3101"/>
+        <location filename="../app/views/main_content_panel.py" line="2903"/>
         <source>This operation will compare 2 databases, A &amp; B, by checking dependencies from A with dependencies from B.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3106"/>
+        <location filename="../app/views/main_content_panel.py" line="2909"/>
         <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
 A report of discrepancies is generated. You will be prompted for these paths in order:
 
@@ -1416,22 +1317,22 @@ A report of discrepancies is generated. You will be prompted for these paths in 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3201"/>
+        <location filename="../app/views/main_content_panel.py" line="3005"/>
         <source>Steam DB comparison report: {len} found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3202"/>
+        <location filename="../app/views/main_content_panel.py" line="3008"/>
         <source>Click &apos;Show Details&apos; to see the full report!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3210"/>
+        <location filename="../app/views/main_content_panel.py" line="3018"/>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3218"/>
+        <location filename="../app/views/main_content_panel.py" line="3028"/>
         <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
 - Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.
 - The following exceptions will be made:
@@ -1446,132 +1347,834 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3313"/>
+        <location filename="../app/views/main_content_panel.py" line="3125"/>
         <source>Failed to read existing database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3314"/>
+        <location filename="../app/views/main_content_panel.py" line="3126"/>
         <source>Failed to read the existing database!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3315"/>
+        <location filename="../app/views/main_content_panel.py" line="3127"/>
         <source>Path: {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3329"/>
+        <location filename="../app/views/main_content_panel.py" line="3141"/>
         <source>RimSort - DB Builder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3330"/>
+        <location filename="../app/views/main_content_panel.py" line="3142"/>
         <source>Do you want to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3331"/>
+        <location filename="../app/views/main_content_panel.py" line="3145"/>
         <source>This operation will overwrite the {rules_source} database located at the following path:
 
 {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3346"/>
+        <location filename="../app/views/main_content_panel.py" line="3160"/>
         <source>Edit SteamDB expiry:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3347"/>
+        <location filename="../app/views/main_content_panel.py" line="3163"/>
         <source>Enter your preferred expiry duration in seconds (default 1 week/604800 sec):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3356"/>
+        <location filename="../app/views/main_content_panel.py" line="3174"/>
         <source>Tried configuring Dynamic Query with a value that is not an integer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3357"/>
+        <location filename="../app/views/main_content_panel.py" line="3177"/>
         <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3511"/>
+        <location filename="../app/views/main_content_panel.py" line="3267"/>
         <source>Use This Instead</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_content_panel.py" line="3512"/>
+        <location filename="../app/views/main_content_panel.py" line="3270"/>
         <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MainContentController</name>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="116"/>
+        <location filename="../app/controllers/main_content_controller.py" line="247"/>
+        <source>No Repositories</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="117"/>
+        <source>No repositories provided for update check.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="118"/>
+        <source>Please select at least one repository to check.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="135"/>
+        <source>Invalid git repository</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="136"/>
+        <source>Could not find a valid git repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="146"/>
+        <source>Errors during update check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="147"/>
+        <source>Some repositories encountered errors.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="150"/>
+        <source>Errors occurred while checking for updates:
+{errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="156"/>
+        <source>No updates found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="157"/>
+        <source>All repositories are up to date.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="158"/>
+        <source>No new commits were found on remote branches.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="170"/>
+        <source>Git Updates Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="171"/>
+        <source>{len} repositories have updates available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="174"/>
+        <source>Would you like to update them now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="176"/>
+        <source>Update All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="177"/>
+        <location filename="../app/controllers/main_content_controller.py" line="263"/>
+        <location filename="../app/controllers/main_content_controller.py" line="369"/>
+        <location filename="../app/controllers/main_content_controller.py" line="1270"/>
+        <location filename="../app/controllers/main_content_controller.py" line="1293"/>
+        <source>Cancel</source>
+        <translation type="unfinished">キャンセル</translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="203"/>
+        <source>Updates Completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="204"/>
+        <source>All repositories updated successfully!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="207"/>
+        <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="218"/>
+        <source>Failed to update repo!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="219"/>
+        <source>All pull operations failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="222"/>
+        <source>{count} repositories could not be updated.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="227"/>
+        <source>Successful updates:
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="234"/>
+        <source>Partial Updates Completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="235"/>
+        <source>Some repositories updated successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="238"/>
+        <location filename="../app/controllers/main_content_controller.py" line="347"/>
+        <source>{success} succeeded, {failed} failed out of {total}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="248"/>
+        <source>No repositories provided for push operation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="249"/>
+        <source>Please select at least one repository to push.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="256"/>
+        <source>Push Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="257"/>
+        <source>Push changes to remote repositories?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="260"/>
+        <source>This will push local commits to the remote repositories.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="262"/>
+        <source>Push</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="272"/>
+        <location filename="../app/controllers/main_content_controller.py" line="277"/>
+        <source>Force Push</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="273"/>
+        <source>Use force push?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="276"/>
+        <source>Force push will overwrite remote history. Use with caution!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="278"/>
+        <source>Normal Push</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="314"/>
+        <source>Push Completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="315"/>
+        <source>All repositories pushed successfully!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="316"/>
+        <source>{count} repositories were pushed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="327"/>
+        <source>Push Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="328"/>
+        <source>All push operations failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="329"/>
+        <source>{count} repositories could not be pushed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="336"/>
+        <source>Successful pushes:
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="343"/>
+        <source>Partial Push Completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="344"/>
+        <source>Some repositories pushed successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="363"/>
+        <source>Clone Repository</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="364"/>
+        <source>Do you want to clone this repository?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="365"/>
+        <source>Repository: {repo_url}
+Destination: {dest}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="368"/>
+        <source>Clone</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="377"/>
+        <source>Existing repository found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="380"/>
+        <source>An existing local repo that matches this repository was found:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="386"/>
+        <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="387"/>
+        <location filename="../app/controllers/main_content_controller.py" line="390"/>
+        <source>Clone new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="387"/>
+        <location filename="../app/controllers/main_content_controller.py" line="392"/>
+        <source>Update existing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="524"/>
+        <source>Repo retrieved</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="525"/>
+        <source>The configured repository was cloned!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="526"/>
+        <source>Cloned to: {path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="541"/>
+        <source>Failed to clone repo!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="546"/>
+        <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="555"/>
+        <source>Enter git repo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="556"/>
+        <source>Enter a git repository url (http/https) to clone to local mods:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="587"/>
+        <location filename="../app/controllers/main_content_controller.py" line="597"/>
+        <source>Invalid repository</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="588"/>
+        <source>Repository URL is empty or invalid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="591"/>
+        <source>Please configure a valid repository URL in settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="598"/>
+        <source>An invalid repository was detected!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="602"/>
+        <source>Please reconfigure a repository in settings!
+A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="613"/>
+        <source>Invalid repository URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="614"/>
+        <source>Failed to parse repository information from URL.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="615"/>
+        <source>URL: {repo_url}
+Error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="627"/>
+        <source>GitHub credentials missing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="630"/>
+        <source>GitHub username and token are required for database upload.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="633"/>
+        <source>Please configure your GitHub credentials in settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="643"/>
+        <source>Repository not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="644"/>
+        <source>Local repository does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="645"/>
+        <source>Would you like to clone the repository first?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="658"/>
+        <source>File does not exist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="661"/>
+        <source>Please ensure the file exists and then try to upload again!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="664"/>
+        <source>File not found:
+{file_full_path}
+Repository:
+{repo_url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="682"/>
+        <source>Invalid database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="685"/>
+        <source>Database file does not contain version or timestamp.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="686"/>
+        <source>File: {file_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="694"/>
+        <source>Database parse error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="695"/>
+        <source>Failed to read or parse database file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="715"/>
+        <source>GitHub API error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="716"/>
+        <source>Failed to connect to GitHub API.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="735"/>
+        <source>Fork created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="736"/>
+        <source>Created fork of repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="739"/>
+        <source>Fork: {fork_name}
+Please wait a moment for GitHub to set up the fork.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="744"/>
+        <source>Fork creation failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="745"/>
+        <source>Failed to create fork of repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="752"/>
+        <source>Fork error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="753"/>
+        <source>Could not access or create fork repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="806"/>
+        <source>Git repository error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="807"/>
+        <source>Invalid git repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="851"/>
+        <source>Stash failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="854"/>
+        <source>Failed to stash uncommitted changes before pull.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="874"/>
+        <source>Pull conflict</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="877"/>
+        <source>Merge conflicts encountered during pull operation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="880"/>
+        <source>Please manually resolve conflicts and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="886"/>
+        <source>Pull failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="887"/>
+        <source>Failed to pull latest changes from remote.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="946"/>
+        <source>Conflicts Auto-Resolved</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="949"/>
+        <source>Merge conflicts were detected and automatically resolved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="954"/>
+        <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="966"/>
+        <source>Stash restore warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="969"/>
+        <source>Failed to restore stashed changes, but no conflicts detected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="972"/>
+        <source>Continuing with current state. Your database changes should still be present.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1002"/>
+        <source>Branch creation failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1003"/>
+        <source>Failed to create new branch for upload.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1125"/>
+        <source>Force push failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1128"/>
+        <source>Failed to force push changes to fork.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1135"/>
+        <source>Force push error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1138"/>
+        <source>Error occurred while force pushing to remote.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1143"/>
+        <source>Push failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1144"/>
+        <source>Failed to push changes to fork.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1150"/>
+        <source>No changes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1151"/>
+        <source>No changes detected in database file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1154"/>
+        <source>The database appears to be up to date with the remote repository.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1160"/>
+        <source>Commit failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1161"/>
+        <source>Failed to stage and commit changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1168"/>
+        <source>Git operation error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1169"/>
+        <source>Failed to perform git operations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1231"/>
+        <source>Pull request created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1232"/>
+        <source>Successfully created pull request!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1235"/>
+        <source>Pull request created successfully.
+Do you want to open it in your web browser?
+
+URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1250"/>
+        <source>Pull request failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1251"/>
+        <source>Failed to create pull request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1255"/>
+        <source>The changes were pushed to your fork successfully, but the pull request creation failed.
+
+You can manually create a pull request on GitHub.
+
+Error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1262"/>
+        <source>Upload Steam Workshop Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1265"/>
+        <source>Are you sure you want to upload the Steam Workshop database to GitHub?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1268"/>
+        <location filename="../app/controllers/main_content_controller.py" line="1291"/>
+        <source>This will create a pull request with your local database changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1269"/>
+        <location filename="../app/controllers/main_content_controller.py" line="1292"/>
+        <source>Upload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1285"/>
+        <source>Upload Community Rules Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/controllers/main_content_controller.py" line="1288"/>
+        <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../app/views/main_window.py" line="121"/>
+        <location filename="../app/views/main_window.py" line="124"/>
         <source>Refresh</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="122"/>
+        <location filename="../app/views/main_window.py" line="125"/>
         <source>Clear</source>
         <translation>クリア</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="123"/>
+        <location filename="../app/views/main_window.py" line="126"/>
         <source>Restore</source>
         <translation>復元</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="124"/>
+        <location filename="../app/views/main_window.py" line="127"/>
         <source>Sort</source>
         <translation>ソート</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="125"/>
+        <location filename="../app/views/main_window.py" line="128"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="126"/>
+        <location filename="../app/views/main_window.py" line="129"/>
         <source>Run</source>
         <translation>実行</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="141"/>
+        <location filename="../app/views/main_window.py" line="144"/>
         <source>Main Content</source>
         <translation>メインコンテンツ</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="152"/>
+        <location filename="../app/views/main_window.py" line="155"/>
         <source>Log Reader</source>
         <translation>ログリーダー</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="168"/>
+        <location filename="../app/views/main_window.py" line="171"/>
         <source>File Search</source>
         <translation>ファイル検索</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="182"/>
+        <location filename="../app/views/main_window.py" line="185"/>
         <source>Troubleshooting</source>
         <translation>トラブルシューティング</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="276"/>
+        <location filename="../app/views/main_window.py" line="289"/>
         <source>Steam Client Integration</source>
         <translation>Steamクライアント統合</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="277"/>
+        <location filename="../app/views/main_window.py" line="292"/>
         <source>&lt;h3&gt;Would you like to enable Steam Client Integration for this instance?&lt;/h3&gt;</source>
         <translation>このインスタンスにSteamクライアント統合を有効にしますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="280"/>
+        <location filename="../app/views/main_window.py" line="295"/>
         <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
                 &lt;br&gt;&lt;br&gt;
                 You can change this in the settings under the Advanced tab.</source>
@@ -1580,37 +2183,37 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
                 これは、設定の高度なタブの下で変更できます。</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="291"/>
+        <location filename="../app/views/main_window.py" line="306"/>
         <source>Create new instance</source>
         <translation>新しいインスタンスを作成</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="292"/>
+        <location filename="../app/views/main_window.py" line="309"/>
         <source>Input a unique name of new instance that is not already used:</source>
         <translation>使用されていない一意の名前を入力してください:</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="299"/>
+        <location filename="../app/views/main_window.py" line="316"/>
         <source>Provide instance name</source>
         <translation>インスタンス名を提供</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="300"/>
+        <location filename="../app/views/main_window.py" line="319"/>
         <source>Input a unique name for the backed up instance that is not &quot;Default&quot;</source>
         <translation>バックアップされたインスタンスの一意の名前を入力してください。これは &quot;Default&quot; ではありません:</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="311"/>
+        <location filename="../app/views/main_window.py" line="330"/>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>インスタンスを複製 [{existing_instance_name}]</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="314"/>
+        <location filename="../app/views/main_window.py" line="337"/>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>設定されたワークショップモッドフォルダをどうしますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="320"/>
+        <location filename="../app/views/main_window.py" line="345"/>
         <source>Workshop folder: {existing_instance_workshop_folder}
 
 RimSort can copy all of your Workshop mods to the new instance&apos;s local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
@@ -1621,194 +2224,194 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="365"/>
+        <location filename="../app/views/main_window.py" line="394"/>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="369"/>
+        <location filename="../app/views/main_window.py" line="398"/>
         <source>Error compressing instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="370"/>
+        <location filename="../app/views/main_window.py" line="401"/>
         <source>An error occurred while compressing instance folder: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="371"/>
+        <location filename="../app/views/main_window.py" line="402"/>
         <source>Please check the logs for more information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="395"/>
-        <location filename="../app/views/main_window.py" line="409"/>
-        <location filename="../app/views/main_window.py" line="488"/>
+        <location filename="../app/views/main_window.py" line="426"/>
+        <location filename="../app/views/main_window.py" line="442"/>
+        <location filename="../app/views/main_window.py" line="533"/>
         <source>Error restoring instance</source>
         <translation type="unfinished">インスタンスの復元中にエラーが発生しました</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="396"/>
+        <location filename="../app/views/main_window.py" line="427"/>
         <source>Archive not found at path: {input_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="410"/>
+        <location filename="../app/views/main_window.py" line="443"/>
         <source>An error occurred while reading instance archive: {e}</source>
         <translation type="unfinished">インスタンスアーカイブの読み取り中にエラーが発生しました: {e}</translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="417"/>
+        <location filename="../app/views/main_window.py" line="450"/>
         <source>Instance folder exists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="418"/>
+        <location filename="../app/views/main_window.py" line="453"/>
         <source>Instance folder already exists: {instance_folder_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="419"/>
+        <location filename="../app/views/main_window.py" line="456"/>
         <source>Do you want to continue and replace the existing instance folder?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="421"/>
-        <location filename="../app/views/main_window.py" line="426"/>
+        <location filename="../app/views/main_window.py" line="458"/>
+        <location filename="../app/views/main_window.py" line="463"/>
         <source>Replace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="435"/>
+        <location filename="../app/views/main_window.py" line="472"/>
         <source>Restoring instance [{name}] from archive...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="446"/>
-        <location filename="../app/views/main_window.py" line="447"/>
+        <location filename="../app/views/main_window.py" line="485"/>
+        <location filename="../app/views/main_window.py" line="486"/>
         <source>Invalid instance folder paths</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="448"/>
+        <location filename="../app/views/main_window.py" line="489"/>
         <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="449"/>
+        <location filename="../app/views/main_window.py" line="490"/>
         <source>Invalid paths: {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="476"/>
-        <location filename="../app/views/main_window.py" line="477"/>
+        <location filename="../app/views/main_window.py" line="519"/>
+        <location filename="../app/views/main_window.py" line="520"/>
         <source>Couldn&apos;t restore steamcmd symlink/junction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="478"/>
+        <location filename="../app/views/main_window.py" line="523"/>
         <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="489"/>
+        <location filename="../app/views/main_window.py" line="536"/>
         <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="490"/>
+        <location filename="../app/views/main_window.py" line="539"/>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="739"/>
+        <location filename="../app/views/main_window.py" line="788"/>
         <source>Workshop mods not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="740"/>
+        <location filename="../app/views/main_window.py" line="791"/>
         <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="834"/>
+        <location filename="../app/views/main_window.py" line="887"/>
         <source>Error cloning instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="835"/>
+        <location filename="../app/views/main_window.py" line="888"/>
         <source>Unable to clone instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="836"/>
-        <location filename="../app/views/main_window.py" line="906"/>
+        <location filename="../app/views/main_window.py" line="891"/>
+        <location filename="../app/views/main_window.py" line="967"/>
         <source>Please enter a valid, unique instance name. It cannot be &apos;Default&apos; or empty.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="871"/>
+        <location filename="../app/views/main_window.py" line="926"/>
         <source>Create new instance [{instance_name}]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="872"/>
+        <location filename="../app/views/main_window.py" line="929"/>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="873"/>
+        <location filename="../app/views/main_window.py" line="932"/>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="904"/>
+        <location filename="../app/views/main_window.py" line="963"/>
         <source>Error creating instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="905"/>
+        <location filename="../app/views/main_window.py" line="964"/>
         <source>Unable to create new instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="912"/>
+        <location filename="../app/views/main_window.py" line="973"/>
         <source>Problem deleting instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="913"/>
-        <location filename="../app/views/main_window.py" line="922"/>
+        <location filename="../app/views/main_window.py" line="974"/>
+        <location filename="../app/views/main_window.py" line="985"/>
         <source>Unable to delete instance {current_instance}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="914"/>
+        <location filename="../app/views/main_window.py" line="977"/>
         <source>The default instance cannot be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="921"/>
+        <location filename="../app/views/main_window.py" line="984"/>
         <source>Error deleting instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="923"/>
+        <location filename="../app/views/main_window.py" line="988"/>
         <source>The selected instance does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="928"/>
+        <location filename="../app/views/main_window.py" line="993"/>
         <source>Delete instance {current_instance}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="929"/>
+        <location filename="../app/views/main_window.py" line="998"/>
         <source>Are you sure you want to delete the selected instance and all of its data?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/main_window.py" line="930"/>
+        <location filename="../app/views/main_window.py" line="999"/>
         <source>This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1816,230 +2419,235 @@ How would you like to proceed?</source>
 <context>
     <name>MenuBar</name>
     <message>
-        <location filename="../app/views/menu_bar.py" line="105"/>
+        <location filename="../app/views/menu_bar.py" line="106"/>
         <source>File</source>
         <translation>ファイル</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="107"/>
+        <location filename="../app/views/menu_bar.py" line="108"/>
         <source>Open Mod List…</source>
         <translation>モッドリストを開く…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="111"/>
+        <location filename="../app/views/menu_bar.py" line="112"/>
         <source>Save Mod List As…</source>
         <translation>モッドリストを保存…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="114"/>
+        <location filename="../app/views/menu_bar.py" line="115"/>
         <source>Import</source>
         <translation>インポート</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="118"/>
+        <location filename="../app/views/menu_bar.py" line="119"/>
         <source>From Rentry.co</source>
         <translation>Rentry.coから</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="121"/>
+        <location filename="../app/views/menu_bar.py" line="122"/>
         <source>From Workshop collection</source>
         <translation>クリエイティブワークショップコレクションから</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="122"/>
+        <location filename="../app/views/menu_bar.py" line="123"/>
         <source>Export</source>
         <translation>エクスポート</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="126"/>
+        <location filename="../app/views/menu_bar.py" line="127"/>
         <source>To Clipboard…</source>
         <translation>クリップボードにコピー…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="129"/>
+        <location filename="../app/views/menu_bar.py" line="130"/>
         <source>To Rentry.co…</source>
         <translation>Rentry.coにエクスポート…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="131"/>
+        <location filename="../app/views/menu_bar.py" line="132"/>
         <source>Upload Log</source>
         <translation>ログをアップロード</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="143"/>
+        <location filename="../app/views/menu_bar.py" line="144"/>
         <source>Open...</source>
         <translation>開く…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="146"/>
+        <location filename="../app/views/menu_bar.py" line="147"/>
         <source>RimSort</source>
         <translation>RimSort</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="148"/>
+        <location filename="../app/views/menu_bar.py" line="149"/>
         <source>RimWorld</source>
         <translation>RimWorld</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="153"/>
-        <location filename="../app/views/menu_bar.py" line="163"/>
+        <location filename="../app/views/menu_bar.py" line="154"/>
+        <location filename="../app/views/menu_bar.py" line="164"/>
         <source>Root Directory</source>
         <translation>ルートディレクトリ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="156"/>
-        <location filename="../app/views/menu_bar.py" line="166"/>
+        <location filename="../app/views/menu_bar.py" line="157"/>
+        <location filename="../app/views/menu_bar.py" line="167"/>
         <source>Config Directory</source>
         <translation>設定ディレクトリ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="159"/>
-        <location filename="../app/views/menu_bar.py" line="169"/>
+        <location filename="../app/views/menu_bar.py" line="160"/>
+        <location filename="../app/views/menu_bar.py" line="170"/>
         <source>Logs Directory</source>
         <translation>ログディレクトリ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="172"/>
+        <location filename="../app/views/menu_bar.py" line="173"/>
         <source>Local Mods Directory</source>
         <translation>ローカルモッドディレクトリ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="175"/>
+        <location filename="../app/views/menu_bar.py" line="176"/>
         <source>Steam Mods Directory</source>
         <translation>Steamモッドディレクトリ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="179"/>
+        <location filename="../app/views/menu_bar.py" line="181"/>
         <source>Settings…</source>
         <translation>設定…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="181"/>
+        <location filename="../app/views/menu_bar.py" line="184"/>
         <source>Exit</source>
         <translation>終了</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="191"/>
+        <location filename="../app/views/menu_bar.py" line="194"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="192"/>
+        <location filename="../app/views/menu_bar.py" line="195"/>
         <source>Cut</source>
         <translation>切り取り</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="193"/>
+        <location filename="../app/views/menu_bar.py" line="196"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="194"/>
+        <location filename="../app/views/menu_bar.py" line="197"/>
         <source>Paste</source>
         <translation>貼り付け</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="196"/>
+        <location filename="../app/views/menu_bar.py" line="199"/>
         <source>Rule Editor…</source>
         <translation>ルールエディタ…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="199"/>
+        <location filename="../app/views/menu_bar.py" line="202"/>
         <source>Reset Warning Toggles</source>
         <translation>警告トグルをリセット</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="209"/>
+        <location filename="../app/views/menu_bar.py" line="212"/>
         <source>Download</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="210"/>
+        <location filename="../app/views/menu_bar.py" line="215"/>
         <source>Add Git Mod</source>
         <translation>Gitモッドを追加</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="212"/>
+        <location filename="../app/views/menu_bar.py" line="218"/>
+        <source>Add Zip Mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/menu_bar.py" line="222"/>
         <source>Browse Workshop</source>
         <translation>クリエイティブワークショップを閲覧</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="215"/>
+        <location filename="../app/views/menu_bar.py" line="225"/>
         <source>Update Workshop Mods</source>
         <translation>クリエイティブワークショップを更新</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="225"/>
+        <location filename="../app/views/menu_bar.py" line="235"/>
         <source>Instances</source>
         <translation>インスタンス</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="226"/>
+        <location filename="../app/views/menu_bar.py" line="236"/>
         <source>Current: &quot;Default&quot;</source>
         <translation>現在: &quot;Default&quot;</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="231"/>
+        <location filename="../app/views/menu_bar.py" line="241"/>
         <source>Backup Instance…</source>
         <translation>インスタンスをバックアップ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="234"/>
+        <location filename="../app/views/menu_bar.py" line="244"/>
         <source>Restore Instance…</source>
         <translation>インスタンスを復元</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="236"/>
+        <location filename="../app/views/menu_bar.py" line="248"/>
         <source>Clone Instance…</source>
         <translation>インスタンスをクローン</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="239"/>
+        <location filename="../app/views/menu_bar.py" line="251"/>
         <source>Create Instance…</source>
         <translation>インスタンスを作成</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="242"/>
+        <location filename="../app/views/menu_bar.py" line="254"/>
         <source>Delete Instance…</source>
         <translation>インスタンスを削除</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="252"/>
+        <location filename="../app/views/menu_bar.py" line="264"/>
         <source>Textures</source>
         <translation>テクスチャ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="255"/>
+        <location filename="../app/views/menu_bar.py" line="267"/>
         <source>Optimize Textures</source>
         <translation>テクスチャを最適化</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="259"/>
+        <location filename="../app/views/menu_bar.py" line="271"/>
         <source>Delete .dds Textures</source>
         <translation>DDSテクスチャを削除</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="263"/>
+        <location filename="../app/views/menu_bar.py" line="275"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="266"/>
+        <location filename="../app/views/menu_bar.py" line="278"/>
         <source>Check for Updates…</source>
         <translation>更新を確認…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="268"/>
+        <location filename="../app/views/menu_bar.py" line="280"/>
         <source>Check for Updates on Startup</source>
         <translation>起動時に更新を確認</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="280"/>
+        <location filename="../app/views/menu_bar.py" line="292"/>
         <source>Help</source>
         <translation>ヘルプ</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="281"/>
+        <location filename="../app/views/menu_bar.py" line="293"/>
         <source>RimSort Wiki…</source>
         <translation>RimSort Wiki…</translation>
     </message>
@@ -2047,7 +2655,7 @@ How would you like to proceed?</source>
 <context>
     <name>MenuBarController</name>
     <message>
-        <location filename="../app/controllers/menu_bar_controller.py" line="181"/>
+        <location filename="../app/controllers/menu_bar_controller.py" line="185"/>
         <source>Current: {current_instance}</source>
         <translation>現在: {current_instance}</translation>
     </message>
@@ -2056,7 +2664,7 @@ How would you like to proceed?</source>
     <name>MetadataManager</name>
     <message>
         <location filename="../app/utils/metadata.py" line="130"/>
-        <location filename="../app/utils/metadata.py" line="140"/>
+        <location filename="../app/utils/metadata.py" line="144"/>
         <source>{db_type} DB is missing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2066,48 +2674,48 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="133"/>
-        <location filename="../app/utils/metadata.py" line="143"/>
+        <location filename="../app/utils/metadata.py" line="137"/>
+        <location filename="../app/utils/metadata.py" line="155"/>
         <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
 
 Please make sure your Database location settings are correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="141"/>
+        <location filename="../app/utils/metadata.py" line="147"/>
         <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="186"/>
+        <location filename="../app/utils/metadata.py" line="198"/>
         <source>Steam DB metadata expired</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="187"/>
+        <location filename="../app/utils/metadata.py" line="199"/>
         <source>Steam DB is expired! Consider updating!
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="189"/>
+        <location filename="../app/utils/metadata.py" line="203"/>
         <source>Steam DB last updated: {last_updated}
 
 Falling back to cached, but EXPIRED Steam Database...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="472"/>
+        <location filename="../app/utils/metadata.py" line="491"/>
         <source>Missing Version.txt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="473"/>
+        <location filename="../app/utils/metadata.py" line="494"/>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/metadata.py" line="474"/>
+        <location filename="../app/utils/metadata.py" line="497"/>
         <source>
 Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
         <translation type="unfinished"></translation>
@@ -2116,43 +2724,43 @@ Is your game path {folder} set correctly? There should be a Version.txt file in 
 <context>
     <name>MissingDependenciesDialog</name>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="45"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="50"/>
         <source>Some mods in your active list require other mods to work properly.
 Select which missing dependencies to add to your active mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="59"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="63"/>
         <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="65"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="69"/>
         <source>Add Selected &amp;&amp; Sort</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="71"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="75"/>
         <source>Sort Without Adding</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="111"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="115"/>
         <source>Local mods (available but not active):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="121"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="125"/>
         <source>Mods that need to be downloaded:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="185"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="190"/>
         <source>Package ID: {dep_id}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_dependencies_dialog.py" line="192"/>
+        <location filename="../app/windows/missing_dependencies_dialog.py" line="198"/>
         <source>Required by:
   • </source>
         <translation type="unfinished"></translation>
@@ -2171,7 +2779,7 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="32"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="34"/>
         <source>
 User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
 
@@ -2181,37 +2789,37 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="34"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="36"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="35"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="37"/>
         <source>PackageId</source>
         <translation>パッケージID</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="36"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="38"/>
         <source>Game Versions</source>
         <translation>ゲームバージョン</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="37"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="39"/>
         <source># Variants</source>
         <translation># バリアント</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="38"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="40"/>
         <source>PublishedFileID</source>
         <translation>PublishedFileID</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="47"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="51"/>
         <source>Download with SteamCMD</source>
         <translation>SteamCMDでダウンロード</translation>
     </message>
     <message>
-        <location filename="../app/windows/missing_mods_panel.py" line="57"/>
+        <location filename="../app/windows/missing_mods_panel.py" line="61"/>
         <source>Download with Steam client</source>
         <translation>Steamクライアントでダウンロード</translation>
     </message>
@@ -2219,93 +2827,212 @@ Please select your preferred mod variant in the table below. You can also open e
 <context>
     <name>ModDeletionMenu</name>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="33"/>
         <source>Deletion options</source>
-        <translation>削除オプション</translation>
+        <translation type="vanished">削除オプション</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="39"/>
         <source>Delete mod</source>
-        <translation>モッドを削除</translation>
+        <translation type="vanished">モッドを削除</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="43"/>
         <source>Delete mod (keep .dds)</source>
-        <translation>モッドを削除（.ddsを保持）</translation>
+        <translation type="vanished">モッドを削除（.ddsを保持）</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="48"/>
+        <location filename="../app/views/deletion_menu.py" line="90"/>
+        <source>Delete mod completely</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="96"/>
+        <source>Delete mod (keep .dds textures)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="104"/>
         <source>Delete optimized textures (.dds files only)</source>
         <translation>最適化されたテクスチャ（.ddsファイルのみ）を削除</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="93"/>
+        <location filename="../app/views/deletion_menu.py" line="112"/>
+        <source>Delete mod and unsubscribe from Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="121"/>
+        <source>Delete mod and resubscribe using Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="160"/>
         <source>RimSort</source>
         <translation>RimSort</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="93"/>
-        <source>Successfully deleted {count} seleted mods.</source>
-        <translation>成功して{count}の選択されたモッドを削除しました。</translation>
+        <location filename="../app/views/deletion_menu.py" line="161"/>
+        <source>Successfully deleted {count} selected mods.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="117"/>
+        <location filename="../app/views/deletion_menu.py" line="263"/>
+        <source>An OS error occurred while deleting the mod.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="270"/>
+        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="284"/>
+        <location filename="../app/views/deletion_menu.py" line="311"/>
+        <location filename="../app/views/deletion_menu.py" line="348"/>
+        <location filename="../app/views/deletion_menu.py" line="474"/>
+        <source>No mods selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="285"/>
+        <source>Please select at least one mod to delete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="290"/>
+        <source>Confirm Complete Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="293"/>
+        <source>You have selected {count} mod(s) for complete deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="297"/>
+        <source>
+This operation will permanently delete the selected mod directories from the filesystem.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="312"/>
+        <location filename="../app/views/deletion_menu.py" line="349"/>
+        <source>Please select at least one mod to process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="317"/>
+        <source>Confirm DDS Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="320"/>
+        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="324"/>
+        <source>
+This operation will only delete optimized textures (.dds files) from the selected mods.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="354"/>
+        <source>Confirm Selective Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="357"/>
+        <source>You have selected {count} mod(s) for selective deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="361"/>
+        <source>
+This operation will delete all mod files except for .dds texture files.
+The .dds files will be preserved.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="433"/>
+        <source>Steam {action.capitalize()}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="437"/>
+        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="447"/>
+        <source>{action.capitalize()} Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="450"/>
+        <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="475"/>
+        <source>Please select at least one mod to delete and {action}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="488"/>
+        <source>Confirm Deletion and {action.capitalize()}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="492"/>
+        <source>You have selected {len(selected_mods)} mod(s) for deletion.
+{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="498"/>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action.capitalize()} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted {count} seleted mods.</source>
+        <translation type="vanished">成功して{count}の選択されたモッドを削除しました。</translation>
+    </message>
+    <message>
+        <location filename="../app/views/deletion_menu.py" line="260"/>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
         <translation>モッドディレクトリが空ではありません。ファイルやサブフォルダにアクセスしているすべてのプログラムを閉じて（ファイルマネージャーを含む）、再試行してください。</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="120"/>
         <source>An OSError occurred while deleting mod.</source>
-        <translation>モッドを削除しているときにOSErrorが発生しました。</translation>
+        <translation type="vanished">モッドを削除しているときにOSErrorが発生しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="124"/>
+        <location filename="../app/views/deletion_menu.py" line="266"/>
         <source>Unable to delete mod</source>
         <translation>モッドを削除できません</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="126"/>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation>{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
+        <translation type="vanished">{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="132"/>
-        <location filename="../app/views/deletion_menu.py" line="143"/>
-        <location filename="../app/views/deletion_menu.py" line="162"/>
         <source>Are you sure?</source>
-        <translation>本当に削除しますか？</translation>
+        <translation type="vanished">本当に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/deletion_menu.py" line="133"/>
-        <location filename="../app/views/deletion_menu.py" line="163"/>
         <source>You have selected {len} mods for deletion.</source>
-        <translation>削除するモッドを{len}個選択しました。</translation>
-    </message>
-    <message>
-        <location filename="../app/views/deletion_menu.py" line="135"/>
-        <source>
-This operation delete a mod&apos;s directory from the filesystem.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/deletion_menu.py" line="144"/>
-        <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/deletion_menu.py" line="146"/>
-        <source>
-This operation will only delete optimized textures (.dds files only) from mod files.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/views/deletion_menu.py" line="165"/>
-        <source>
-This operation will recursively delete all mod files, except for .dds textures found.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation type="vanished">削除するモッドを{len}個選択しました。</translation>
     </message>
 </context>
 <context>
@@ -2359,32 +3086,32 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="208"/>
+        <location filename="../app/views/mods_panel.py" line="210"/>
         <source>Contains custom content (textures / XML)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="220"/>
+        <location filename="../app/views/mods_panel.py" line="224"/>
         <source>Local mod that contains a git repository</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="231"/>
+        <location filename="../app/views/mods_panel.py" line="237"/>
         <source>Local mod that can be used with SteamCMD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="271"/>
+        <location filename="../app/views/mods_panel.py" line="277"/>
         <source>Official RimWorld content by Ludeon Studios</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="283"/>
+        <location filename="../app/views/mods_panel.py" line="289"/>
         <source>Installed locally</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="286"/>
+        <location filename="../app/views/mods_panel.py" line="292"/>
         <source>Subscribed via Steam</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2392,238 +3119,238 @@ Do you want to proceed?</source>
 <context>
     <name>ModListWidget</name>
     <message>
-        <location filename="../app/views/mods_panel.py" line="800"/>
+        <location filename="../app/views/mods_panel.py" line="806"/>
         <source>Open folder</source>
         <translation>フォルダを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="804"/>
+        <location filename="../app/views/mods_panel.py" line="810"/>
         <source>Open URL in browser</source>
         <translation>ブラウザでURLを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="806"/>
+        <location filename="../app/views/mods_panel.py" line="814"/>
         <source>Copy URL to clipboard</source>
         <translation>URLをクリップボードにコピー</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="815"/>
+        <location filename="../app/views/mods_panel.py" line="823"/>
         <source>Open mod in Steam</source>
         <translation>Steamでモッドを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="841"/>
+        <location filename="../app/views/mods_panel.py" line="849"/>
         <source>Convert local mod to SteamCMD</source>
         <translation>ローカルモッドをSteamCMDに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="849"/>
+        <location filename="../app/views/mods_panel.py" line="857"/>
         <source>Convert SteamCMD mod to local</source>
         <translation>SteamCMDモッドをローカルに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="852"/>
+        <location filename="../app/views/mods_panel.py" line="862"/>
         <source>Re-download mod with SteamCMD</source>
         <translation>SteamCMDでモッドを再ダウンロード</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="859"/>
+        <location filename="../app/views/mods_panel.py" line="869"/>
         <source>Update mod with git</source>
         <translation>Gitでモッドを更新</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="873"/>
+        <location filename="../app/views/mods_panel.py" line="883"/>
         <source>Convert Steam mod to local</source>
         <translation>Steamモッドをローカルに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="880"/>
+        <location filename="../app/views/mods_panel.py" line="892"/>
         <source>Re-subscribe mod with Steam</source>
         <translation>Steamでモッドを再購読</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="885"/>
+        <location filename="../app/views/mods_panel.py" line="897"/>
         <source>Unsubscribe mod with Steam</source>
         <translation>Steamでモッドを購読解除</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="899"/>
+        <location filename="../app/views/mods_panel.py" line="911"/>
         <source>Remove mod from SteamDB blacklist</source>
         <translation>SteamDBブラックリストからモッドを削除</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="905"/>
+        <location filename="../app/views/mods_panel.py" line="917"/>
         <source>Add mod to SteamDB blacklist</source>
         <translation>SteamDBブラックリストにモッドを追加</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="910"/>
+        <location filename="../app/views/mods_panel.py" line="922"/>
         <source>Copy packageId to clipboard</source>
         <translation>packageIdをクリップボードにコピー</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="913"/>
+        <location filename="../app/views/mods_panel.py" line="925"/>
         <source>Edit mod with Rule Editor</source>
         <translation>ルールエディタでモッドを編集</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="916"/>
+        <location filename="../app/views/mods_panel.py" line="928"/>
         <source>Toggle warning</source>
         <translation>警告を切り替え</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="930"/>
+        <location filename="../app/views/mods_panel.py" line="942"/>
         <source>Open folder(s)</source>
         <translation>フォルダを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="934"/>
+        <location filename="../app/views/mods_panel.py" line="948"/>
         <source>Open URL(s) in browser</source>
         <translation>ブラウザでURLを開く</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="955"/>
+        <location filename="../app/views/mods_panel.py" line="969"/>
         <source>Convert local mod(s) to SteamCMD</source>
         <translation>ローカルモッドをSteamCMDに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="966"/>
+        <location filename="../app/views/mods_panel.py" line="980"/>
         <source>Convert SteamCMD mod(s) to local</source>
         <translation>SteamCMDモッドをローカルに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="972"/>
+        <location filename="../app/views/mods_panel.py" line="986"/>
         <source>Re-download mod(s) with SteamCMD</source>
         <translation>SteamCMDでモッドを再ダウンロード</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="980"/>
+        <location filename="../app/views/mods_panel.py" line="996"/>
         <source>Update mod(s) with git</source>
         <translation>Gitでモッドを更新</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="985"/>
+        <location filename="../app/views/mods_panel.py" line="1001"/>
         <source>Toggle warning(s)</source>
         <translation>警告を切り替え</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1000"/>
+        <location filename="../app/views/mods_panel.py" line="1016"/>
         <source>Convert Steam mod(s) to local</source>
         <translation>Steamモッドをローカルに変換</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1010"/>
+        <location filename="../app/views/mods_panel.py" line="1026"/>
         <source>Re-subscribe mod(s) with Steam</source>
         <translation>Steamでモッドを再購読</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1016"/>
+        <location filename="../app/views/mods_panel.py" line="1032"/>
         <source>Unsubscribe mod(s) with Steam</source>
         <translation>Steamでモッドを購読解除</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1036"/>
+        <location filename="../app/views/mods_panel.py" line="1052"/>
         <source>Miscellaneous options</source>
         <translation>その他のオプション</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1038"/>
+        <location filename="../app/views/mods_panel.py" line="1054"/>
         <source>Clipboard options</source>
         <translation>クリップボードのオプション</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1061"/>
+        <location filename="../app/views/mods_panel.py" line="1077"/>
         <source>Workshop mods options</source>
         <translation>Workshopモッドのオプション</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1094"/>
-        <location filename="../app/views/mods_panel.py" line="1186"/>
-        <location filename="../app/views/mods_panel.py" line="1278"/>
-        <location filename="../app/views/mods_panel.py" line="1304"/>
-        <location filename="../app/views/mods_panel.py" line="1371"/>
+        <location filename="../app/views/mods_panel.py" line="1110"/>
+        <location filename="../app/views/mods_panel.py" line="1204"/>
+        <location filename="../app/views/mods_panel.py" line="1300"/>
+        <location filename="../app/views/mods_panel.py" line="1330"/>
+        <location filename="../app/views/mods_panel.py" line="1403"/>
         <source>Are you sure?</source>
         <translation>本当によろしいですか？</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1095"/>
+        <location filename="../app/views/mods_panel.py" line="1113"/>
         <source>You have selected {len} git mods to be updated.</source>
         <translation>更新するgitモッドを{len}個選択しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1096"/>
+        <location filename="../app/views/mods_panel.py" line="1114"/>
         <source>Do you want to proceed?</source>
         <translation>続行しますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1187"/>
+        <location filename="../app/views/mods_panel.py" line="1207"/>
         <source>You have selected {len} mods for deletion + re-download.</source>
         <translation>削除して再ダウンロードするモッドを{len}個選択しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1189"/>
+        <location filename="../app/views/mods_panel.py" line="1211"/>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
         <translation>
 この操作は再帰的にモッドファイルを削除し、.ddsテクスチャを除くすべてのモッドファイルを削除し、SteamCMDを使用してモッドを再ダウンロードしようとします。続行しますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1279"/>
+        <location filename="../app/views/mods_panel.py" line="1303"/>
         <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
         <translation>購読解除して再購読するモッドを{len}個選択しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1305"/>
+        <location filename="../app/views/mods_panel.py" line="1333"/>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>購読解除するモッドを{len}個選択しました。</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1280"/>
+        <location filename="../app/views/mods_panel.py" line="1306"/>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 この操作は潜在的に.ddsテクスチャを削除します。Steamはこれに不安定です。続行しますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1306"/>
+        <location filename="../app/views/mods_panel.py" line="1334"/>
         <source>
 Do you want to proceed?</source>
         <translation>
 続行しますか？</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1338"/>
+        <location filename="../app/views/mods_panel.py" line="1366"/>
         <source>Add comment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1340"/>
+        <location filename="../app/views/mods_panel.py" line="1370"/>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1348"/>
+        <location filename="../app/views/mods_panel.py" line="1378"/>
         <source>Unable to add to blacklist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1349"/>
+        <location filename="../app/views/mods_panel.py" line="1381"/>
         <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1373"/>
+        <location filename="../app/views/mods_panel.py" line="1405"/>
         <source>This will remove the selected mod, </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1864"/>
+        <location filename="../app/views/mods_panel.py" line="1896"/>
         <source>
 Missing Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="1865"/>
+        <location filename="../app/views/mods_panel.py" line="1897"/>
         <source>
 Incompatibilities:</source>
         <translation type="unfinished"></translation>
@@ -2645,168 +3372,237 @@ Incompatibilities:</source>
 <context>
     <name>ModsPanel</name>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2136"/>
+        <location filename="../app/views/mods_panel.py" line="2140"/>
+        <source>Showing All Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2141"/>
+        <source>Showing Core and DLC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2142"/>
+        <source>Showing Local Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2143"/>
+        <source>Showing Git Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2144"/>
+        <source>Showing SteamCMD Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2145"/>
+        <source>Showing Steam Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2153"/>
+        <source>Showing All Mod Types</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2154"/>
+        <source>Showing C# Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2155"/>
+        <source>Showing XML Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2162"/>
+        <source>Hide Filter Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2168"/>
         <source>Active [0]</source>
         <translation>アクティブ[0]</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2156"/>
+        <location filename="../app/views/mods_panel.py" line="2168"/>
+        <source>Hide Filter Enabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2188"/>
         <source>Inactive [0]</source>
         <translation>非アクティブ[0]</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2223"/>
-        <location filename="../app/views/mods_panel.py" line="2356"/>
+        <location filename="../app/views/mods_panel.py" line="2255"/>
+        <location filename="../app/views/mods_panel.py" line="2399"/>
         <source>Search by...</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2237"/>
-        <location filename="../app/views/mods_panel.py" line="2370"/>
-        <location filename="../app/views/mods_panel.py" line="2650"/>
+        <location filename="../app/views/mods_panel.py" line="2271"/>
+        <location filename="../app/views/mods_panel.py" line="2415"/>
+        <location filename="../app/views/mods_panel.py" line="2706"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2237"/>
-        <location filename="../app/views/mods_panel.py" line="2370"/>
-        <location filename="../app/views/mods_panel.py" line="2652"/>
+        <location filename="../app/views/mods_panel.py" line="2272"/>
+        <location filename="../app/views/mods_panel.py" line="2416"/>
+        <location filename="../app/views/mods_panel.py" line="2708"/>
         <source>PackageId</source>
         <translation>パッケージID</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2237"/>
-        <location filename="../app/views/mods_panel.py" line="2370"/>
-        <location filename="../app/views/mods_panel.py" line="2654"/>
+        <location filename="../app/views/mods_panel.py" line="2273"/>
+        <location filename="../app/views/mods_panel.py" line="2417"/>
+        <location filename="../app/views/mods_panel.py" line="2710"/>
         <source>Author(s)</source>
         <translation>作者</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2238"/>
-        <location filename="../app/views/mods_panel.py" line="2371"/>
-        <location filename="../app/views/mods_panel.py" line="2656"/>
+        <location filename="../app/views/mods_panel.py" line="2274"/>
+        <location filename="../app/views/mods_panel.py" line="2418"/>
+        <location filename="../app/views/mods_panel.py" line="2712"/>
         <source>PublishedFileId</source>
         <translation>公開ファイルID</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2265"/>
-        <location filename="../app/views/mods_panel.py" line="2572"/>
+        <location filename="../app/views/mods_panel.py" line="2275"/>
+        <location filename="../app/views/mods_panel.py" line="2419"/>
+        <location filename="../app/views/mods_panel.py" line="2714"/>
+        <source>Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/mods_panel.py" line="2304"/>
+        <location filename="../app/views/mods_panel.py" line="2628"/>
         <source>0 warnings</source>
         <translation>警告0</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2267"/>
+        <location filename="../app/views/mods_panel.py" line="2306"/>
         <source>Click to only show mods with warnings</source>
         <translation>警告を表示するモッドのみを表示</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2272"/>
+        <location filename="../app/views/mods_panel.py" line="2311"/>
         <source>Click to only show mods with errors</source>
         <translation>エラーを表示するモッドのみを表示</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2286"/>
+        <location filename="../app/views/mods_panel.py" line="2327"/>
         <source>Check &quot;Use This Instead&quot; Database</source>
         <translation>このデータベースを使用</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2294"/>
+        <location filename="../app/views/mods_panel.py" line="2337"/>
         <source>Check Dependencies</source>
         <translation>依存関係を確認</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2561"/>
+        <location filename="../app/views/mods_panel.py" line="2611"/>
         <source>{padding}{num_warnings} warning(s)</source>
         <translation>{padding}{num_warnings}警告</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2563"/>
+        <location filename="../app/views/mods_panel.py" line="2616"/>
         <source>{padding}{num_errors} error(s)</source>
         <translation>{padding}{num_errors}エラー</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2573"/>
+        <location filename="../app/views/mods_panel.py" line="2629"/>
         <source>0 errors</source>
         <translation>0エラー</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2818"/>
+        <location filename="../app/views/mods_panel.py" line="2885"/>
         <source>Active</source>
         <translation>アクティブ</translation>
     </message>
     <message>
-        <location filename="../app/views/mods_panel.py" line="2819"/>
+        <location filename="../app/views/mods_panel.py" line="2886"/>
         <source>Inactive</source>
         <translation>非アクティブ</translation>
     </message>
 </context>
 <context>
+    <name>Rentry Auth Code Not Found </name>
+    <message>
+        <location filename="../app/utils/rentry/wrapper.py" line="386"/>
+        <source>RimSort can work without rentry auth code. But To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RentryError</name>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="300"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="346"/>
         <source>Failed to fetch Rentry Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="301"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="347"/>
         <source>Rentry returned status code: {code}</source>
         <translation>Rentryがステータスコード{code}を返しました。</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="302"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="353"/>
         <source>RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.</source>
         <translation>RimSortが提供されたRentryリンクからコンテンツを取得できませんでした。これは無効なリンク、インターネット接続の問題、またはRentry.coのダウン、またはCAPTCHAの結果である可能性があります。後で再試行してください。</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="316"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="367"/>
         <source>Network Error</source>
         <translation>ネットワークエラー</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="317"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="371"/>
         <source>Network error occurred while processing Rentry, Please check your internet connection.</source>
         <translation>Rentryの処理中にネットワークエラーが発生しました。インターネット接続を確認してください。</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="326"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="380"/>
         <source>Rentry Auth Code Not Found</source>
         <translation>Rentry Authコードが見つかりません</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="327"/>
         <source>You need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
-        <translation>support@rentry.coにメールを送信してauthコードを要求してください。その後、Settings -&gt; Advanced -&gt; Rentry Authに貼り付けてください。</translation>
+        <translation type="vanished">support@rentry.coにメールを送信してauthコードを要求してください。その後、Settings -&gt; Advanced -&gt; Rentry Authに貼り付けてください。</translation>
     </message>
 </context>
 <context>
     <name>RentryImport</name>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="178"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="192"/>
         <source>Enter Rentry.co link</source>
         <translation>Rentry.coリンクを入力</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="179"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="193"/>
         <source>Enter the Rentry.co link:</source>
         <translation>Rentry.coリンクを入力:</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="209"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="223"/>
         <source>Invalid Rentry Link</source>
         <translation>無効なRentryリンク</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="210"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="227"/>
         <source>Invalid Rentry link, Please enter a valid Rentry link.</source>
         <translation>無効なRentryリンク、有効なRentryリンクを入力してください。</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="253"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="297"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../app/utils/rentry/wrapper.py" line="254"/>
+        <location filename="../app/utils/rentry/wrapper.py" line="298"/>
         <source>An error occurred: {e}</source>
         <translation>エラーが発生しました: {e}</translation>
     </message>
@@ -2827,189 +3623,224 @@ Incompatibilities:</source>
 <context>
     <name>RuleEditor</name>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="160"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="165"/>
         <source>No mod currently being edited</source>
         <translation>編集中のモッドはありません</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="182"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="187"/>
         <source>About.xml (loadAfter)</source>
         <translation>About.xml (loadAfter)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="183"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="188"/>
         <source>About.xml (loadBefore)</source>
         <translation>About.xml (loadBefore)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="186"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="191"/>
         <source>About.xml (incompatibilities)</source>
         <translation>About.xml (incompatibilities)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="194"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="199"/>
         <source>Community Rules (loadAfter)</source>
         <translation>コミュニティルール (loadAfter)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="197"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="202"/>
         <source>Community Rules (loadBefore)</source>
         <translation>コミュニティルール (loadBefore)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="234"/>
-        <location filename="../app/windows/rule_editor_panel.py" line="275"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="239"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="284"/>
         <source>Force load at bottom of list</source>
         <translation>リストの下部に強制的に読み込む</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="237"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="244"/>
         <source>User Rules (loadAfter)</source>
         <translation>ユーザールール (loadAfter)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="238"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="247"/>
         <source>User Rules (loadBefore)</source>
         <translation>ユーザールール (loadBefore)</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="281"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="291"/>
         <source>Name</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="281"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="292"/>
         <source>PackageId</source>
         <translation>パッケージID</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="281"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="293"/>
         <source>Rule source</source>
         <translation>ルールソース</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="281"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="294"/>
         <source>Rule type</source>
         <translation>ルールタイプ</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="282"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="295"/>
         <source>Comment</source>
         <translation>コメント</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="326"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="341"/>
         <source>Save rules to communityRules.json</source>
         <translation>コミュニティルールを保存</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="338"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="355"/>
         <source>Save rules to userRules.json</source>
         <translation>ユーザールールを保存</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="556"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="365"/>
+        <source>Search mods by name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/rule_editor_panel.py" line="574"/>
         <source>Duplicate rule</source>
         <translation>重複するルール</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="557"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="575"/>
         <source>Tried to add duplicate rule.</source>
         <translation>重複するルールを追加しようとしました。</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="558"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="576"/>
         <source>Skipping creation of duplicate rule!</source>
         <translation>重複するルールの作成をスキップします！</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="567"/>
-        <location filename="../app/windows/rule_editor_panel.py" line="1024"/>
-        <location filename="../app/windows/rule_editor_panel.py" line="1087"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="585"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1048"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1113"/>
         <source>Enter comment</source>
         <translation>コメントを入力</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="569"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="587"/>
         <source>Enter a comment to annotate why this rule exists.
                       This is useful for your own records, as well as others.</source>
         <translation>これは自分の記録に有用であり、他の人にも有用です。</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="733"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="656"/>
+        <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/rule_editor_panel.py" line="662"/>
+        <source>Rules can be Modified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/rule_editor_panel.py" line="754"/>
         <source>Editing rules for: {name}</source>
         <translation>ルールを編集: {name}</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="964"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="988"/>
         <source>Show About.xml rules</source>
         <translation>About.xmlのルールを表示</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="970"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="994"/>
         <source>Edit Community Rules</source>
         <translation>コミュニティルールを編集</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="976"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1000"/>
         <source>Edit User Rules</source>
         <translation>ユーザールールを編集</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="983"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1007"/>
         <source>Hide About.xml rules</source>
         <translation>About.xmlのルールを非表示</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="989"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1013"/>
         <source>Lock Community Rules</source>
         <translation>コミュニティルールをロック</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="995"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1019"/>
         <source>Lock User Rules</source>
         <translation>ユーザールールをロック</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="1026"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1052"/>
         <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
         <translation>これは自分の記録に有用であり、他の人にも有用です。</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="1089"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1117"/>
         <source>Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.</source>
         <translation>これは自分の記録に有用であり、他の人にも有用です。</translation>
     </message>
     <message>
-        <location filename="../app/windows/rule_editor_panel.py" line="1101"/>
+        <location filename="../app/windows/rule_editor_panel.py" line="1129"/>
         <source>Open this mod in the editor</source>
         <translation>このモッドをエディタで開く</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/rule_editor_panel.py" line="1140"/>
+        <source>Remove this rule</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>RunnerPanel</name>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="92"/>
+        <location filename="../app/windows/runner_panel.py" line="114"/>
         <source>Clear the text currently displayed by the runner</source>
         <translation>実行者が表示しているテキストをクリア</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="102"/>
+        <location filename="../app/windows/runner_panel.py" line="125"/>
         <source>Re-run the process last used by the runner</source>
         <translation>実行者が最後に使用したプロセスを再実行</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="113"/>
+        <location filename="../app/windows/runner_panel.py" line="137"/>
         <source>Kill a process currently being executed by the runner</source>
         <translation>実行者が現在実行中のプロセスを強制終了</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="392"/>
+        <location filename="../app/windows/runner_panel.py" line="149"/>
+        <source>Save the current output to a file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/runner_panel.py" line="260"/>
+        <source>Save Runner Output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/runner_panel.py" line="262"/>
+        <source>Text files (*.txt)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/runner_panel.py" line="527"/>
         <source>SteamCMD downloader</source>
         <translation>SteamCMDダウンローダー</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="393"/>
+        <location filename="../app/windows/runner_panel.py" line="531"/>
         <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
 
 Click &apos;Show Details&apos; to see a list of mods that failed.</source>
@@ -3018,25 +3849,35 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
 &apos;Show Details&apos;をクリックして、失敗したモッドのリストを確認してください。</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="416"/>
+        <location filename="../app/windows/runner_panel.py" line="585"/>
         <source>Process Complete</source>
         <translation>プロセスが完了しました</translation>
     </message>
     <message>
-        <location filename="../app/windows/runner_panel.py" line="417"/>
+        <location filename="../app/windows/runner_panel.py" line="586"/>
         <source>Process complete, you can close the window.</source>
         <translation>プロセスが完了しました、ウィンドウを閉じることができます。</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/runner_panel.py" line="587"/>
+        <source>Close Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/runner_panel.py" line="588"/>
+        <source>Ok</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SearchWorker</name>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="655"/>
+        <location filename="../app/controllers/file_search_controller.py" line="656"/>
         <source>Searching in: {root_path}</source>
         <translation>検索中: {root_path}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/file_search_controller.py" line="662"/>
+        <location filename="../app/controllers/file_search_controller.py" line="664"/>
         <source>Search complete</source>
         <translation>検索が完了しました</translation>
     </message>
@@ -3044,37 +3885,37 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
 <context>
     <name>SettingsController</name>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="918"/>
+        <location filename="../app/controllers/settings_controller.py" line="948"/>
         <source>Reset to defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="919"/>
+        <location filename="../app/controllers/settings_controller.py" line="951"/>
         <source>Are you sure you want to reset all settings to their default values?</source>
         <translation>すべての設定をデフォルト値に戻しますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="1094"/>
+        <location filename="../app/controllers/settings_controller.py" line="1127"/>
         <source>Clear all locations</source>
         <translation>すべての場所をクリア</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="1095"/>
+        <location filename="../app/controllers/settings_controller.py" line="1128"/>
         <source>Are you sure you want to clear all locations?</source>
         <translation>すべての場所をクリアしますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="1643"/>
+        <location filename="../app/controllers/settings_controller.py" line="1676"/>
         <source>Confirm Build Database</source>
         <translation>Steam Workshopデータベースをビルドしますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="1644"/>
+        <location filename="../app/controllers/settings_controller.py" line="1677"/>
         <source>Are you sure you want to build the Steam Workshop database?</source>
         <translation>Steam Workshopデータベースをビルドしますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/settings_controller.py" line="1649"/>
+        <location filename="../app/controllers/settings_controller.py" line="1684"/>
         <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
         <translation>ほとんどのユーザーはGitHub SteamDBで十分です。データベースのビルドには時間がかかる場合があります。設定によっては、WebAPIを介してSteam Workshopの全体をクロールすることもあります。これは大量のデータを生成し、時間がかかる場合があります。続行しますか？</translation>
     </message>
@@ -3082,366 +3923,384 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="36"/>
+        <location filename="../app/views/settings_dialog.py" line="40"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="63"/>
+        <location filename="../app/views/settings_dialog.py" line="59"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトに戻す</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="69"/>
+        <location filename="../app/views/settings_dialog.py" line="66"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="73"/>
+        <location filename="../app/views/settings_dialog.py" line="70"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="79"/>
+        <location filename="../app/views/settings_dialog.py" line="89"/>
         <source>Locations</source>
         <translation>場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="108"/>
+        <location filename="../app/views/settings_dialog.py" line="118"/>
         <source>Clear All Locations</source>
         <translation>すべての場所をクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="112"/>
+        <location filename="../app/views/settings_dialog.py" line="122"/>
         <source>Autodetect</source>
         <translation>自動検出</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="126"/>
+        <location filename="../app/views/settings_dialog.py" line="134"/>
         <source>Game location</source>
         <translation>ゲームの場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="131"/>
-        <location filename="../app/views/settings_dialog.py" line="162"/>
-        <location filename="../app/views/settings_dialog.py" line="195"/>
-        <location filename="../app/views/settings_dialog.py" line="228"/>
+        <location filename="../app/views/settings_dialog.py" line="139"/>
+        <location filename="../app/views/settings_dialog.py" line="169"/>
+        <location filename="../app/views/settings_dialog.py" line="201"/>
+        <location filename="../app/views/settings_dialog.py" line="233"/>
         <source>Open…</source>
         <translation>開く</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="135"/>
-        <location filename="../app/views/settings_dialog.py" line="166"/>
-        <location filename="../app/views/settings_dialog.py" line="199"/>
-        <location filename="../app/views/settings_dialog.py" line="343"/>
-        <location filename="../app/views/settings_dialog.py" line="657"/>
+        <location filename="../app/views/settings_dialog.py" line="143"/>
+        <location filename="../app/views/settings_dialog.py" line="173"/>
+        <location filename="../app/views/settings_dialog.py" line="205"/>
+        <location filename="../app/views/settings_dialog.py" line="357"/>
+        <location filename="../app/views/settings_dialog.py" line="691"/>
         <source>Choose…</source>
         <translation>選択…</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="139"/>
-        <location filename="../app/views/settings_dialog.py" line="170"/>
-        <location filename="../app/views/settings_dialog.py" line="203"/>
+        <location filename="../app/views/settings_dialog.py" line="147"/>
+        <location filename="../app/views/settings_dialog.py" line="177"/>
+        <location filename="../app/views/settings_dialog.py" line="209"/>
         <source>Clear…</source>
         <translation>クリア…</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="157"/>
+        <location filename="../app/views/settings_dialog.py" line="164"/>
         <source>Config location</source>
         <translation>設定の場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="190"/>
+        <location filename="../app/views/settings_dialog.py" line="196"/>
         <source>Steam mods location</source>
         <translation>Steamモッドの場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="223"/>
+        <location filename="../app/views/settings_dialog.py" line="228"/>
         <source>Local mods location</source>
         <translation>ローカルモッドの場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="238"/>
+        <location filename="../app/views/settings_dialog.py" line="243"/>
         <source>Game location sets local mods location.</source>
         <translation>ゲームの場所はローカルモッドの場所を設定します。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="244"/>
+        <location filename="../app/views/settings_dialog.py" line="248"/>
         <source>Databases</source>
         <translation>データベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="286"/>
+        <location filename="../app/views/settings_dialog.py" line="258"/>
+        <source>Additional Databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="300"/>
         <source>None</source>
         <translation>なし</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="291"/>
+        <location filename="../app/views/settings_dialog.py" line="305"/>
         <source>No {none_lbl} will be used.</source>
         <translation>なしの{none_lbl}が使用されます。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="300"/>
+        <location filename="../app/views/settings_dialog.py" line="314"/>
         <source>GitHub</source>
         <translation>GitHub</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="316"/>
+        <location filename="../app/views/settings_dialog.py" line="330"/>
         <source>Upload…</source>
         <translation>アップロード…</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="321"/>
+        <location filename="../app/views/settings_dialog.py" line="335"/>
         <source>Download…</source>
         <translation>ダウンロード…</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="327"/>
+        <location filename="../app/views/settings_dialog.py" line="341"/>
         <source>Local File</source>
         <translation>ローカルファイル</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="373"/>
+        <location filename="../app/views/settings_dialog.py" line="387"/>
         <source>Community Rules database</source>
         <translation>コミュニティルールデータベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="375"/>
+        <location filename="../app/views/settings_dialog.py" line="389"/>
         <source>community rules database</source>
         <translation>コミュニティルールデータベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="389"/>
-        <location filename="../app/views/settings_dialog.py" line="391"/>
+        <location filename="../app/views/settings_dialog.py" line="403"/>
+        <location filename="../app/views/settings_dialog.py" line="405"/>
         <source>Steam Workshop database</source>
         <translation>Steamワークショップデータベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="404"/>
         <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
-        <translation>Steamワークショップデータベースの有効期限（0を使用して通知を無効にします。デフォルトは7日）</translation>
+        <translation type="vanished">Steamワークショップデータベースの有効期限（0を使用して通知を無効にします。デフォルトは7日）</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="414"/>
         <source>Cross Version Databases</source>
-        <translation>クロスバージョンデータベース</translation>
+        <translation type="vanished">クロスバージョンデータベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="424"/>
-        <location filename="../app/views/settings_dialog.py" line="425"/>
+        <location filename="../app/views/settings_dialog.py" line="431"/>
+        <location filename="../app/views/settings_dialog.py" line="432"/>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation>&quot;バージョン警告なし&quot;データベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="439"/>
-        <location filename="../app/views/settings_dialog.py" line="440"/>
+        <location filename="../app/views/settings_dialog.py" line="446"/>
+        <location filename="../app/views/settings_dialog.py" line="447"/>
         <source>&quot;Use This Instead&quot; Database</source>
         <translation>&quot;これを使用してください&quot;データベース</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="454"/>
+        <location filename="../app/views/settings_dialog.py" line="461"/>
         <source>Sorting</source>
         <translation>ソート</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="466"/>
+        <location filename="../app/views/settings_dialog.py" line="473"/>
         <source>Sort mods</source>
         <translation>モッドをソート</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="470"/>
+        <location filename="../app/views/settings_dialog.py" line="477"/>
         <source>Alphabetically</source>
         <translation>アルファベット順</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="473"/>
+        <location filename="../app/views/settings_dialog.py" line="480"/>
         <source>Topologically</source>
         <translation>トポロジカル</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="477"/>
+        <location filename="../app/views/settings_dialog.py" line="486"/>
+        <source>Use dependency rules for sorting.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="491"/>
+        <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="501"/>
         <source>Sort Dependencies</source>
         <translation>依存関係をソート</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="485"/>
+        <location filename="../app/views/settings_dialog.py" line="507"/>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>ソート時に依存関係をダウンロードするかどうかをユーザーに確認する</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="497"/>
+        <location filename="../app/views/settings_dialog.py" line="519"/>
         <source>DB Builder</source>
         <translation>データベースビルダー</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="509"/>
+        <location filename="../app/views/settings_dialog.py" line="531"/>
         <source>When building the database:</source>
         <translation>データベースをビルドするとき:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="515"/>
+        <location filename="../app/views/settings_dialog.py" line="537"/>
         <source>Get PublishedFileIDs from locally installed mods.</source>
         <translation>ローカルにインストールされたモッドからPublishedFileIDsを取得します。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="521"/>
+        <location filename="../app/views/settings_dialog.py" line="545"/>
         <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
         <translation>更新したいモッドはインストールされている必要があります。初期データベースはモッドのAbout.xmlファイルのデータを含めてビルドされます。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="526"/>
+        <location filename="../app/views/settings_dialog.py" line="550"/>
         <source>Get PublishedFileIDs from the Steam Workshop.</source>
         <translation>SteamワークショップからPublishedFileIDsを取得します。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="532"/>
+        <location filename="../app/views/settings_dialog.py" line="558"/>
         <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation>更新したいモッドはインストールされている必要がありません。初期データベースはSteamワークショップをスクレイピングしてビルドされます。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="544"/>
+        <location filename="../app/views/settings_dialog.py" line="570"/>
         <source>Query DLC dependency data with Steamworks API</source>
         <translation>Steamworks APIを使用してDLC依存関係データをクエリ</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="549"/>
+        <location filename="../app/views/settings_dialog.py" line="575"/>
         <source>Update database instead of overwriting</source>
         <translation>データベースを上書きする代わりに更新</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="559"/>
+        <location filename="../app/views/settings_dialog.py" line="585"/>
         <source>Steam API key:</source>
         <translation>Steam APIキー:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="581"/>
+        <location filename="../app/views/settings_dialog.py" line="607"/>
         <source>Download all published Workshop mods via:</source>
         <translation>Steamワークショップからすべての公開モッドをダウンロードする:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="584"/>
-        <location filename="../app/views/settings_dialog.py" line="616"/>
+        <location filename="../app/views/settings_dialog.py" line="612"/>
+        <location filename="../app/views/settings_dialog.py" line="648"/>
         <source>SteamCMD</source>
         <translation>SteamCMD</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="587"/>
+        <location filename="../app/views/settings_dialog.py" line="617"/>
         <source>Steam</source>
         <translation>Steam</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="599"/>
+        <location filename="../app/views/settings_dialog.py" line="631"/>
         <source>Compare Databases</source>
         <translation>データベースを比較</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="602"/>
+        <location filename="../app/views/settings_dialog.py" line="634"/>
         <source>Merge Databases</source>
         <translation>データベースをマージ</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="608"/>
+        <location filename="../app/views/settings_dialog.py" line="640"/>
         <source>Build Database</source>
         <translation>データベースをビルド</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="629"/>
+        <location filename="../app/views/settings_dialog.py" line="661"/>
         <source>Validate downloaded mods</source>
         <translation>ダウンロードされたモッドを検証</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="634"/>
+        <location filename="../app/views/settings_dialog.py" line="666"/>
         <source>Automatically clear depot cache</source>
         <translation>自動的にデポットキャッシュをクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="639"/>
+        <location filename="../app/views/settings_dialog.py" line="673"/>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>これは、ダウンロードの失敗や削除されたモッドの再出現などのダウンロードモッドの問題を防ぐ可能性があります。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="652"/>
+        <location filename="../app/views/settings_dialog.py" line="686"/>
         <source>SteamCMD installation location</source>
         <translation>SteamCMDのインストール場所</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="674"/>
+        <location filename="../app/views/settings_dialog.py" line="710"/>
         <source>Clear depot cache</source>
         <translation>デポットキャッシュをクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="677"/>
+        <location filename="../app/views/settings_dialog.py" line="715"/>
         <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
         <translation>手動でデポットキャッシュをクリアします。SteamCMDを使用してモッドをダウンロードする際に問題が発生した場合に便利です。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="680"/>
+        <location filename="../app/views/settings_dialog.py" line="718"/>
         <source>Import .acf</source>
         <translation>Import .acf</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="683"/>
+        <location filename="../app/views/settings_dialog.py" line="721"/>
         <source>Delete .acf</source>
         <translation>Delete .acf</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="686"/>
+        <location filename="../app/views/settings_dialog.py" line="724"/>
         <source>Install SteamCMD</source>
         <translation>SteamCMDをインストール</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="691"/>
+        <location filename="../app/views/settings_dialog.py" line="729"/>
         <source>todds</source>
         <translation>todds</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="702"/>
+        <location filename="../app/views/settings_dialog.py" line="740"/>
         <source>Quality preset</source>
         <translation>品質プリセット</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="710"/>
+        <location filename="../app/views/settings_dialog.py" line="750"/>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>最適化 - RimWorldに推奨</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="719"/>
+        <location filename="../app/views/settings_dialog.py" line="759"/>
         <source>When optimizing textures</source>
         <translation>テクスチャを最適化するとき</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="723"/>
+        <location filename="../app/views/settings_dialog.py" line="765"/>
         <source>Optimize active mods only</source>
         <translation>アクティブなモッドのみを最適化</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="726"/>
+        <location filename="../app/views/settings_dialog.py" line="768"/>
         <source>Optimize all mods</source>
         <translation>すべてのモッドを最適化</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="735"/>
+        <location filename="../app/views/settings_dialog.py" line="777"/>
         <source>Enable dry-run mode</source>
         <translation>乾燥実行モードを有効にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="740"/>
+        <location filename="../app/views/settings_dialog.py" line="782"/>
         <source>Overwrite existing optimized textures</source>
         <translation>既存の最適化されたテクスチャを上書き</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="745"/>
+        <location filename="../app/views/settings_dialog.py" line="787"/>
         <source>Theme</source>
         <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="759"/>
+        <location filename="../app/views/settings_dialog.py" line="793"/>
+        <source>Theme Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="805"/>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>システムのテーマの代わりにテーマ/スタイルシートを使用する</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="771"/>
+        <location filename="../app/views/settings_dialog.py" line="817"/>
         <source>To add your own theme / stylesheet 
 
 1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
@@ -3456,122 +4315,157 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="781"/>
+        <location filename="../app/views/settings_dialog.py" line="827"/>
         <source>Open Theme Location</source>
         <translation>テーマの場所を開く</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="784"/>
+        <location filename="../app/views/settings_dialog.py" line="831"/>
         <source>Font Settings</source>
         <translation>フォント設定</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="793"/>
+        <location filename="../app/views/settings_dialog.py" line="843"/>
         <source>Font Family</source>
         <translation>フォントファミリー</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="805"/>
+        <location filename="../app/views/settings_dialog.py" line="855"/>
         <source>Font Size</source>
         <translation>フォントサイズ</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="816"/>
+        <location filename="../app/views/settings_dialog.py" line="866"/>
         <source>Reset</source>
         <translation>リセット</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="835"/>
+        <location filename="../app/views/settings_dialog.py" line="885"/>
         <source>Language Setting</source>
         <translation>言語設定</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="842"/>
+        <location filename="../app/views/settings_dialog.py" line="897"/>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>言語を選択します（変更を適用するには再起動が必要です）</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="878"/>
+        <location filename="../app/views/settings_dialog.py" line="919"/>
+        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="984"/>
+        <source>Reset Window Size based on Screen Dimensions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1047"/>
+        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1072"/>
+        <source>Authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1133"/>
         <source>Advanced</source>
         <translation>高度な</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="889"/>
+        <location filename="../app/views/settings_dialog.py" line="1144"/>
         <source>RimSort restart required for some settings</source>
         <translation>RimSortの設定を変更すると再起動が必要です</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="894"/>
+        <location filename="../app/views/settings_dialog.py" line="1149"/>
         <source>Enable debug logging</source>
         <translation>デバッグログを有効にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="897"/>
+        <location filename="../app/views/settings_dialog.py" line="1154"/>
         <source>Enable watchdog file monitor daemon</source>
         <translation>監視ファイル監視デーモンを有効にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="900"/>
+        <location filename="../app/views/settings_dialog.py" line="1157"/>
         <source>Enable mod type filter</source>
         <translation>モッドタイプフィルターを有効にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="905"/>
+        <location filename="../app/views/settings_dialog.py" line="1162"/>
         <source>Hide invalid mods when filtering</source>
         <translation>フィルタリング時に無効なモッドを非表示にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="910"/>
+        <location filename="../app/views/settings_dialog.py" line="1167"/>
         <source>Show duplicate mods warning</source>
         <translation>重複モッド警告を表示</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="913"/>
+        <location filename="../app/views/settings_dialog.py" line="1172"/>
         <source>Check for mod updates on refresh</source>
         <translation>更新時にモッドの更新を確認</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="918"/>
+        <location filename="../app/views/settings_dialog.py" line="1177"/>
         <source>Enable Steam client integration</source>
         <translation>Steamクライアント統合を有効にする</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="923"/>
+        <location filename="../app/views/settings_dialog.py" line="1182"/>
         <source>Download missing mods automatically</source>
         <translation>不足しているモッドを自動的にダウンロード</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="928"/>
+        <location filename="../app/views/settings_dialog.py" line="1187"/>
         <source>Render Unity Rich Text in mod descriptions</source>
         <translation>モッドの説明でUnityのリッチテキストをレンダリング</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="931"/>
+        <location filename="../app/views/settings_dialog.py" line="1192"/>
         <source>Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.</source>
         <translation>このオプションを有効にすると、モッドの説明でUnityのリッチテキストをレンダリングします。画像は表示されません。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="940"/>
+        <location filename="../app/views/settings_dialog.py" line="1083"/>
         <source>Rentry Auth:</source>
         <translation>Rentry Auth:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="950"/>
+        <location filename="../app/views/settings_dialog.py" line="420"/>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1093"/>
         <source>Obtain rentry auth code by emailing: support@rentry.co</source>
         <translation>support@rentry.coにメールを送信してrentry authコードを取得します。</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="960"/>
+        <location filename="../app/views/settings_dialog.py" line="1103"/>
         <source>GitHub username:</source>
         <translation>GitHubユーザー名:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="970"/>
+        <location filename="../app/views/settings_dialog.py" line="1113"/>
         <source>GitHub personal access token:</source>
         <translation>GitHub個人アクセストークン:</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="1004"/>
+        <location filename="../app/views/settings_dialog.py" line="1197"/>
+        <source>Update databases on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1203"/>
+        <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1220"/>
         <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
 
  Examples : 
@@ -3581,7 +4475,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="1011"/>
+        <location filename="../app/views/settings_dialog.py" line="1227"/>
         <source>Edit Game Run Arguments:</source>
         <translation>ゲーム実行引数を編集:</translation>
     </message>
@@ -3589,28 +4483,28 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 <context>
     <name>SettingsFailureDialog</name>
     <message>
-        <location filename="../app/views/dialogue.py" line="690"/>
+        <location filename="../app/views/dialogue.py" line="738"/>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="690"/>
+        <location filename="../app/views/dialogue.py" line="738"/>
         <source>Open Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="691"/>
+        <location filename="../app/views/dialogue.py" line="739"/>
         <source>Open Settings Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="692"/>
+        <location filename="../app/views/dialogue.py" line="740"/>
         <source>Reset Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="693"/>
+        <location filename="../app/views/dialogue.py" line="741"/>
         <source>Exit RimSort</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3618,96 +4512,96 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="83"/>
+        <location filename="../app/utils/steam/browser.py" line="84"/>
         <source>Mod Downloader</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="94"/>
+        <location filename="../app/utils/steam/browser.py" line="95"/>
         <source>Clear List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="97"/>
+        <location filename="../app/utils/steam/browser.py" line="100"/>
         <source>Download mod(s) (SteamCMD)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="103"/>
+        <location filename="../app/utils/steam/browser.py" line="108"/>
         <source>Download mod(s) (Steam app)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="139"/>
+        <location filename="../app/utils/steam/browser.py" line="144"/>
         <source>Add to list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="196"/>
+        <location filename="../app/utils/steam/browser.py" line="203"/>
         <source>No publishedfileid found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="197"/>
+        <location filename="../app/utils/steam/browser.py" line="206"/>
         <source>Unable to parse publishedfileid from url, Please check if url is in the correct format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="217"/>
+        <location filename="../app/utils/steam/browser.py" line="231"/>
         <source>Add Collection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="218"/>
+        <location filename="../app/utils/steam/browser.py" line="232"/>
         <source>How would you like to add the collection?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="219"/>
+        <location filename="../app/utils/steam/browser.py" line="235"/>
         <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="220"/>
-        <location filename="../app/utils/steam/browser.py" line="225"/>
+        <location filename="../app/utils/steam/browser.py" line="237"/>
+        <location filename="../app/utils/steam/browser.py" line="244"/>
         <source>Add All Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="220"/>
-        <location filename="../app/utils/steam/browser.py" line="229"/>
+        <location filename="../app/utils/steam/browser.py" line="238"/>
+        <location filename="../app/utils/steam/browser.py" line="248"/>
         <source>Add Missing Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="237"/>
-        <location filename="../app/utils/steam/browser.py" line="248"/>
+        <location filename="../app/utils/steam/browser.py" line="256"/>
+        <location filename="../app/utils/steam/browser.py" line="271"/>
         <source>SteamCMD downloader</source>
         <translation type="unfinished">SteamCMDダウンローダー</translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="238"/>
+        <location filename="../app/utils/steam/browser.py" line="259"/>
         <source>Empty list of mods returned, unable to add collection to list!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="239"/>
+        <location filename="../app/utils/steam/browser.py" line="262"/>
         <source>Please reach out to us on Github Issues page or
 #rimsort-testing on the Rocketman/CAI discord</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="249"/>
+        <location filename="../app/utils/steam/browser.py" line="272"/>
         <source>You already have these mods in your download list!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="250"/>
+        <location filename="../app/utils/steam/browser.py" line="275"/>
         <source>Skipping the following mods which are already present in your download list!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/browser.py" line="337"/>
+        <location filename="../app/utils/steam/browser.py" line="385"/>
         <source>Remove mod from list</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3720,52 +4614,52 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="357"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="360"/>
         <source>RimSort was unable to find SteamCMD installed in the configured prefix:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="359"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="362"/>
         <source>Do you want to setup SteamCMD?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="405"/>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="416"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="408"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="421"/>
         <source>Depot Cache Cleared</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="406"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="411"/>
         <source>SteamCMD depot cache was already cleared.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="417"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="424"/>
         <source>SteamCMD depot cache has been cleared.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="504"/>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="524"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="511"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="544"/>
         <source>Re-create Symlink?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="506"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="516"/>
         <source>An existing symlink already exists. Would you like to delete and re-create the symlink?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="508"/>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="528"/>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="542"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="521"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="554"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="580"/>
         <source>The symlink makes SteamCMD download mods to the local mods folder and is required for SteamCMD mod downloads to work correctly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="511"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="527"/>
         <source>Existing symlink: {symlink_destination_path}
 
 New symlink:
@@ -3773,12 +4667,12 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="526"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="549"/>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="531"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="560"/>
         <source>Existing destination: {symlink_destination_path}
 
 New symlink:
@@ -3786,17 +4680,17 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="539"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="572"/>
         <source>Create Symlink?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="540"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="575"/>
         <source>Do you want to create a symlink?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="544"/>
+        <location filename="../app/utils/steam/steamcmd/wrapper.py" line="583"/>
         <source>New symlink:
 [{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
@@ -3805,22 +4699,22 @@ New symlink:
 <context>
     <name>ThemeController</name>
     <message>
-        <location filename="../app/controllers/theme_controller.py" line="134"/>
+        <location filename="../app/controllers/theme_controller.py" line="133"/>
         <source>Theme path Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/theme_controller.py" line="135"/>
+        <location filename="../app/controllers/theme_controller.py" line="137"/>
         <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/theme_controller.py" line="163"/>
+        <location filename="../app/controllers/theme_controller.py" line="168"/>
         <source>Theme Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/theme_controller.py" line="165"/>
+        <location filename="../app/controllers/theme_controller.py" line="173"/>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3829,45 +4723,45 @@ New symlink:
     <name>TroubleshootingController</name>
     <message>
         <location filename="../app/controllers/troubleshooting_controller.py" line="136"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="172"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="225"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="231"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="257"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="346"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="180"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="241"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="250"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="281"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="383"/>
         <source>Process complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="137"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="140"/>
         <source>Process complete, wait for steam to complete further process.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="142"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="147"/>
         <source>Steam Launch Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="143"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="151"/>
         <source>Could not automatically start game installation through Steam.
 
 Please manually verify/install the game through Steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="173"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="184"/>
         <source>Deleted all files in the Steam mods directory.
 
  Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="192"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="205"/>
         <source>Steam Workshop Redownload</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="193"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="209"/>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
 
 If mods don&apos;t download automatically, try:
@@ -3877,42 +4771,42 @@ If mods don&apos;t download automatically, try:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="226"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="245"/>
         <source>Deleted all files in the {config_dir} successfully.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="232"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="254"/>
         <source>No files found in {config_dir} for deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="258"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="284"/>
         <source>Deleted {item} successfully.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="267"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="293"/>
         <source>Confirm Changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="268"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="297"/>
         <source>Are you sure you want to apply these changes? This cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="269"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="301"/>
         <source>This will delete the selected files. Make sure you have backups if needed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="303"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="335"/>
         <source>Confirm Clear</source>
         <translation>すべてのモッドを削除しますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="304"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="339"/>
         <source>Are you sure you want to delete all mods?
 
 WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
@@ -3921,134 +4815,134 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
 警告: これにより、Modsフォルダ内のすべてのモッドが完全に削除され、バニラの状態にリセットされます。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="347"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="387"/>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
         <translation>すべてのモッドを削除しました。ModsConfig.xmlをバニラの状態にリセットしました。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="352"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="453"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="526"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="392"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="502"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="583"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="353"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="395"/>
         <source>Failed to reset ModsConfig.xml.</source>
         <translation>ModsConfig.xmlをリセットできませんでした。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="375"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="417"/>
         <source>Export failed</source>
         <translation>エクスポートに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="376"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="421"/>
         <source>{mods_config} does not exist, skipping mod export.</source>
         <translation>{mods_config}が存在しません。モッドのエクスポートをスキップします。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="382"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="427"/>
         <source>Export Mod List</source>
         <translation>モッドのエクスポート</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="391"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="679"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="436"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="773"/>
         <source>Location Error</source>
         <translation>場所エラー</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="392"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="439"/>
         <source>Failed to get Location: {save_path}.</source>
         <translation>場所を取得できませんでした: {save_path}.</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="402"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="449"/>
         <source>Confirm Export</source>
         <translation>エクスポートを確認</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="403"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="452"/>
         <source>Export current mod list to file?</source>
         <translation>現在のモッドリストをファイルにエクスポートしますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="454"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="505"/>
         <source>Failed to export mod list.</source>
         <translation>モッドリストのエクスポートに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="470"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="521"/>
         <source>Import failed</source>
         <translation>モッドリストのインポートに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="471"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="525"/>
         <source>{mods_config} does not exist, skipping mod import.</source>
         <translation>{mods_config}が存在しません。モッドのインポートをスキップします。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="477"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="531"/>
         <source>Import Mod List</source>
         <translation>モッドリストのインポート</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="486"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="540"/>
         <source>Confirm Import</source>
         <translation>モッドリストのインポートを確認</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="487"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="541"/>
         <source>Import mod list from file?</source>
         <translation>モッドリストをファイルからインポートしますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="488"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="545"/>
         <source>This will overwrite your current mod list.</source>
         <translation>これにより、現在のモッドリストが上書きされます。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="527"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="586"/>
         <source>Failed to import mod list</source>
         <translation>モッドリストのインポートに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="528"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="590"/>
         <source>The selected file is not a valid mod list file.
 Details: {e}</source>
         <translation>選択されたファイルは有効なモッドリストファイルではありません。
 詳細: {e}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="589"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="651"/>
         <source>Cache Cleared</source>
         <translation>キャッシュがクリアされました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="590"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="655"/>
         <source>Successfully deleted Steam&apos;s downloading folder.
 Restart Steam for the changes to take effect.</source>
         <translation>Steamのダウンロードフォルダが正常に削除されました。
 変更を有効にするにはSteamを再起動してください。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="595"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="660"/>
         <source>Cache Clear</source>
         <translation>キャッシュをクリア</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="596"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="664"/>
         <source>Steam&apos;s downloading folder is already empty.</source>
         <translation>Steamのダウンロードフォルダはすでに空です。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="604"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="672"/>
         <source>Cache Clear Failed</source>
         <translation>キャッシュのクリアに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="605"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="676"/>
         <source>Could not delete Steam&apos;s downloading folder.
 Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
@@ -4057,13 +4951,13 @@ Details: {e}</source>
 詳細: {e}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="619"/>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="672"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="692"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="763"/>
         <source>Steam Action Failed</source>
         <translation>Steamのアクションに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="620"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="696"/>
         <source>Could not open Steam to verify game files.
 Please verify game files manually through Steam&apos;s game properties.
 Details: {e}</source>
@@ -4072,43 +4966,43 @@ Details: {e}</source>
 詳細: {e}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="643"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="719"/>
         <source>No Games Found</source>
         <translation>ゲームが見つかりません</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="644"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="723"/>
         <source>No installed games found in this Steam library folder.
 You may have games installed in a different Steam library folder or drive.</source>
         <translation>このSteamライブラリフォルダにインストールされたゲームが見つかりません。
 異なるSteamライブラリフォルダまたはドライブにゲームがインストールされている可能性があります。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="652"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="733"/>
         <source>Confirm Library Repair</source>
         <translation>ライブラリの修復を確認</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="653"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="737"/>
         <source>This will verify all {len} games in your Steam library.
 This may take a while. Continue?</source>
         <translation>これにより、Steamライブラリ内のすべての{len}ゲームが確認されます。
 これには時間がかかる場合があります。続けますか？</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="664"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="750"/>
         <source>Library Repair Started</source>
         <translation>ライブラリの修復が開始されました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="665"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="754"/>
         <source>Steam will now verify {len} games.
 You can monitor progress in the Steam client.</source>
         <translation>Steamは現在{len}ゲームを確認しています。
 Steamクライアントで進捗を監視できます。</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="673"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="767"/>
         <source>Could not repair Steam library.
 Please verify your games manually through Steam.
 Details: {e}</source>
@@ -4117,33 +5011,33 @@ Details: {e}</source>
 詳細: {e}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="680"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="777"/>
         <source>Path not set, Please check your settings and Try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="685"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="782"/>
         <source>Process failed</source>
         <translation>プロセスに失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="686"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="785"/>
         <source>Could not process: {item}</source>
         <translation>処理できませんでした: {item}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="687"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="789"/>
         <source>Failed to process item: {item} due to the following error: {e}</source>
         <translation>項目の処理に失敗しました: {item}
 次のエラーが発生しました: {e}</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="692"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="796"/>
         <source>Steam user Check failed</source>
         <translation>Steamユーザーの確認に失敗しました</translation>
     </message>
     <message>
-        <location filename="../app/controllers/troubleshooting_controller.py" line="693"/>
+        <location filename="../app/controllers/troubleshooting_controller.py" line="800"/>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
         <translation>Steamユーザーではありません。パスが設定されていないか、設定を確認して再試行してください。</translation>
     </message>
@@ -4156,167 +5050,167 @@ Details: {e}</source>
         <translation>ゲームファイルの復元</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="89"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="91"/>
         <source>⚠️ Warning: These operations will delete selected files permanently!</source>
         <translation>⚠️ 警告: これらの操作は選択されたファイルを完全に削除します！</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="100"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="104"/>
         <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
         <translation>ゲームの問題が発生している場合、次の復元オプションを試してください。Steamは次回起動時に削除されたファイルを自動的に再ダウンロードします。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="108"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="114"/>
         <source>Reset game files (Preserves local mods, deletes and redownloads game files)</source>
         <translation>ゲームファイルをリセット（ローカルモッドを保持し、ゲームファイルを削除して再ダウンロード）</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="112"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="120"/>
         <source>Deletes and redownloads game files but keeps your local mods intact.</source>
         <translation>ゲームファイルを削除して再ダウンロードしますが、ローカルモッドは保持します。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="117"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="127"/>
         <source>Reset Steam Workshop mods (Deletes and redownloads all Steam mods)</source>
         <translation>Steam Workshopモッドをリセット（すべてのSteamモッドを削除して再ダウンロード）</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="121"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="131"/>
         <source>Deletes all Steam Workshop mods and triggers redownload.</source>
         <translation>すべてのSteam Workshopモッドを削除して再ダウンロードします。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="126"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="136"/>
         <source>Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)</source>
         <translation>モッドの設定をリセット（ModsConfig.xmlとPrefs.xmlを保持）</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="130"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="142"/>
         <source>Deletes mod configuration files except ModsConfig.xml and Prefs.xml.</source>
         <translation>ModsConfig.xmlとPrefs.xmlを除くモッドの設定ファイルを削除します。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="135"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="149"/>
         <source>Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*</source>
         <translation>ゲームの設定をリセット（ModsConfig.xml, Prefs.xml, KeyPrefs.xmlを保持）</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="139"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="155"/>
         <source>Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml.</source>
         <translation>ModsConfig.xml, Prefs.xml, KeyPrefs.xmlを含むゲームの設定ファイルを削除します。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="143"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="163"/>
         <source>After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort.</source>
         <translation>ゲームの設定をリセットした後、Steamを直接起動してModsConfig.xmlを再生成し、RimSortを再起動します。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="153"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="173"/>
         <source>Apply Recovery</source>
         <translation>復元を適用</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="156"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="178"/>
         <source>Apply the selected recovery options</source>
         <translation>選択された復元オプションを適用</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="159"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="181"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="162"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="184"/>
         <source>Cancel and clear selections</source>
         <translation>キャンセルして選択をクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="170"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="192"/>
         <source>Mod Configuration Options</source>
         <translation>モッドの設定オプション</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="178"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="204"/>
         <source>Manage your mod configurations and load order. These options help you organize and share your mod setup.</source>
         <translation>モッドの設定とロード順序を管理します。これらのオプションは、モッドのセットアップを整理して共有するのに役立ちます。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="192"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="222"/>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>現在のモッドリストを.xmlファイルに保存して他の人と共有します。</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="197"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="229"/>
         <source>Export Mod List</source>
         <translation>モッドリストをエクスポート</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="199"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="233"/>
         <source>Export your current mod list to a file</source>
         <translation>現在のモッドリストをファイルにエクスポート</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="208"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="242"/>
         <source>Import a mod list in .xml format from another player</source>
         <translation>他のプレイヤーから.xml形式のモッドリストをインポート</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="216"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="250"/>
         <source>Import Mod List</source>
         <translation>モッドリストをインポート</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="218"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="252"/>
         <source>Import a mod list from a file</source>
         <translation>ファイルからモッドリストをインポート</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="228"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="264"/>
         <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
         <translation>⚠️ WARNING: この操作はModsフォルダ内のすべてのモッドを削除し、バニラの状態にリセットします</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="235"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="271"/>
         <source>Clear Mods</source>
         <translation>モッドをクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="238"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="276"/>
         <source>Delete all mods and reset to vanilla state</source>
         <translation>すべてのモッドを削除してバニラの状態にリセット</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="244"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="282"/>
         <source>Steam Utilities</source>
         <translation>Steamのユーティリティ</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="253"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="291"/>
         <source>🔄 Clear Download Cache</source>
         <translation>🔄 ダウンロードキャッシュをクリア</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="254"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="292"/>
         <source>✓ Verify Game Files</source>
         <translation>✓ ゲームファイルを検証</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="255"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="295"/>
         <source>🔧 Repair Steam library</source>
         <translation>🔧 Steamライブラリを修復</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="260"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="301"/>
         <source>Delete Steam&apos;s downloading folder to fix download issues</source>
         <translation>ダウンロードの問題を修正するためにSteamのダウンロードフォルダを削除</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="263"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="305"/>
         <source>Check and repair RimWorld game files</source>
         <translation>RimWorldゲームファイルをチェックして修復</translation>
     </message>
     <message>
-        <location filename="../app/views/troubleshooting_dialog.py" line="266"/>
+        <location filename="../app/views/troubleshooting_dialog.py" line="309"/>
         <source>Verify integrity of all installed Steam games</source>
         <translation>すべてのインストールされたSteamゲームの整合性を確認</translation>
     </message>
@@ -4324,85 +5218,129 @@ Details: {e}</source>
 <context>
     <name>UseThisInsteadPanel</name>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="31"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="34"/>
         <source>RimSort - Replacements found for Workshop mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="32"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="35"/>
         <source>There are replacements available for Workshop mods!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="33"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="38"/>
         <source>
 The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="35"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="40"/>
         <source>Original Mod Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="36"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="41"/>
         <source>Original Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="37"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="42"/>
         <source>Original Workshop Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="38"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="43"/>
         <source>Replacement Mod Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="39"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="44"/>
         <source>Replacement Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="40"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="45"/>
         <source>Replacement Workshop Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="47"/>
-        <location filename="../app/windows/use_this_instead_panel.py" line="73"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="63"/>
+        <source>Download with SteamCMD</source>
+        <translation type="unfinished">SteamCMDでダウンロード</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="71"/>
+        <source>Subscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="104"/>
+        <source>Unsubscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="107"/>
+        <source>Unsubscribe outdated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="118"/>
+        <source>Unsubscribe all outdated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="138"/>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="141"/>
+        <source>Refresh Mod List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="144"/>
+        <source>Refresh Table</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="157"/>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="161"/>
+        <source>Delete Selected Original Mods...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="174"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="183"/>
         <source>Use This Instead</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="48"/>
-        <source>Succesfully subscribed to replacement mods</source>
+        <location filename="../app/windows/use_this_instead_panel.py" line="175"/>
+        <source>Successfully subscribed to replacement mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="51"/>
-        <source>Subscribe replacements</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="55"/>
-        <source>Subscribe all replacements</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="61"/>
-        <source>More Options</source>
+        <location filename="../app/windows/use_this_instead_panel.py" line="184"/>
+        <source>Successfully unsubscribed to original mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/windows/use_this_instead_panel.py" line="74"/>
-        <source>Succesfully unsubscribed to original mods</source>
+        <source>Subscribe replacements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/windows/use_this_instead_panel.py" line="137"/>
-        <location filename="../app/windows/use_this_instead_panel.py" line="148"/>
+        <location filename="../app/windows/use_this_instead_panel.py" line="84"/>
+        <source>Subscribe all replacements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/windows/use_this_instead_panel.py" line="258"/>
         <source>Open Workshop Page</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4410,32 +5348,32 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>_UploadLogDialog</name>
     <message>
-        <location filename="../app/views/dialogue.py" line="580"/>
+        <location filename="../app/views/dialogue.py" line="622"/>
         <source>Uploading Log...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="597"/>
+        <location filename="../app/views/dialogue.py" line="639"/>
         <source>Log Upload Successful</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="598"/>
+        <location filename="../app/views/dialogue.py" line="642"/>
         <source>Log file uploaded successfully! Copied URL to clipboard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="604"/>
+        <location filename="../app/views/dialogue.py" line="648"/>
         <source>Log Upload Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="605"/>
+        <location filename="../app/views/dialogue.py" line="649"/>
         <source>Log file upload failed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/views/dialogue.py" line="606"/>
+        <location filename="../app/views/dialogue.py" line="652"/>
         <source>Please check your internet connection and try again.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4448,12 +5386,12 @@ The following table displays Workshop mods with suggested replacements according
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/instance_controller.py" line="47"/>
+        <location filename="../app/controllers/instance_controller.py" line="49"/>
         <source>The provided archive path is invalid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/controllers/instance_controller.py" line="48"/>
+        <location filename="../app/controllers/instance_controller.py" line="52"/>
         <source>Please provide a valid archive path.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4461,26 +5399,26 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>copy_to_clipboard_safely</name>
     <message>
-        <location filename="../app/utils/generic.py" line="48"/>
+        <location filename="../app/utils/generic.py" line="49"/>
         <source>Failed to copy to clipboard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="49"/>
+        <location filename="../app/utils/generic.py" line="53"/>
         <source>RimSort failed to copy the text to your clipboard. Please copy it manually.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
-    <name>do_topo_sort</name>
+    <name>find_circular_dependencies</name>
     <message>
-        <location filename="../app/sort/topo_sort.py" line="66"/>
-        <location filename="../app/sort/topo_sort.py" line="67"/>
+        <location filename="../app/sort/topo_sort.py" line="68"/>
+        <location filename="../app/sort/topo_sort.py" line="69"/>
         <source>Unable to Sort</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/sort/topo_sort.py" line="68"/>
+        <location filename="../app/sort/topo_sort.py" line="73"/>
         <source>RimSort found circular dependencies in your mods list. Please see the details for dependency loops.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4488,32 +5426,32 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <location filename="../app/utils/generic.py" line="261"/>
+        <location filename="../app/utils/generic.py" line="289"/>
         <source>File not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="262"/>
+        <location filename="../app/utils/generic.py" line="290"/>
         <source>Unable to launch game process</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="267"/>
+        <location filename="../app/utils/generic.py" line="298"/>
         <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="273"/>
+        <location filename="../app/utils/generic.py" line="304"/>
         <source>Game launch failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="274"/>
+        <location filename="../app/utils/generic.py" line="305"/>
         <source>Unable to launch RimWorld</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="277"/>
+        <location filename="../app/utils/generic.py" line="311"/>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4521,63 +5459,87 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>rmtree</name>
     <message>
-        <location filename="../app/utils/generic.py" line="70"/>
-        <location filename="../app/utils/generic.py" line="79"/>
-        <location filename="../app/utils/generic.py" line="94"/>
+        <location filename="../app/utils/generic.py" line="74"/>
+        <location filename="../app/utils/generic.py" line="87"/>
+        <location filename="../app/utils/generic.py" line="106"/>
         <source>Failed to remove directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="71"/>
+        <location filename="../app/utils/generic.py" line="77"/>
         <source>RimSort tried to remove a directory that does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="72"/>
+        <location filename="../app/utils/generic.py" line="78"/>
         <source>Directory does not exist: {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="80"/>
+        <location filename="../app/utils/generic.py" line="90"/>
         <source>RimSort tried to remove a directory that is not a directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="81"/>
+        <location filename="../app/utils/generic.py" line="91"/>
         <source>Path is not a directory: {path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="95"/>
+        <location filename="../app/utils/generic.py" line="109"/>
         <source>An OSError occurred while trying to remove a directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/generic.py" line="96"/>
+        <location filename="../app/utils/generic.py" line="113"/>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation type="unfinished">{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
     </message>
 </context>
 <context>
+    <name>show_dialogue_conditional</name>
+    <message>
+        <location filename="../app/views/dialogue.py" line="71"/>
+        <source>Cancel</source>
+        <translation type="unfinished">キャンセル</translation>
+    </message>
+</context>
+<context>
+    <name>show_dialogue_information</name>
+    <message>
+        <location filename="../app/views/dialogue.py" line="166"/>
+        <source>OK</source>
+        <translation type="unfinished">OK</translation>
+    </message>
+</context>
+<context>
+    <name>show_warning</name>
+    <message>
+        <location filename="../app/views/dialogue.py" line="223"/>
+        <source>OK</source>
+        <translation type="unfinished">OK</translation>
+    </message>
+</context>
+<context>
     <name>validate_rimworld_mods_list</name>
     <message>
-        <location filename="../app/utils/schema.py" line="78"/>
-        <location filename="../app/utils/schema.py" line="87"/>
+        <location filename="../app/utils/schema.py" line="79"/>
+        <location filename="../app/utils/schema.py" line="94"/>
         <source>Unable to read data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/schema.py" line="79"/>
+        <location filename="../app/utils/schema.py" line="83"/>
         <source>RimSort was unable to read the supplied mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/schema.py" line="81"/>
+        <location filename="../app/utils/schema.py" line="88"/>
         <source>The supplied mods list may be missing or invalid. If you just (re)installed RimWorld, you may need to run it once to generate the mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utils/schema.py" line="90"/>
+        <location filename="../app/utils/schema.py" line="100"/>
         <source>RimSort was unable to read the supplied mods list because it may be invalid or missing.</source>
         <translation type="unfinished"></translation>
     </message>
