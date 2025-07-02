@@ -37,8 +37,8 @@ class MissingDependenciesDialog(QDialog):
         Set up the UI components of the dialog.
         """
         self.setWindowTitle("Dependency Manager")
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
+        # Use GUIInfo to set size from settings
+        self.resize(GUIInfo().get_panel_size())
 
         main_layout = QVBoxLayout(self)
 
