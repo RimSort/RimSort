@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 
 from app.utils.app_info import AppInfo
 from app.utils.generic import platform_specific_open
-from app.utils.gui_info import GUIInfo
 
 
 class FileSearchDialog(QDialog):
@@ -39,9 +38,6 @@ class FileSearchDialog(QDialog):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("File Search")
-        self.setWindowFlags(Qt.WindowType.Window)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
         self._search_paths: list[str] = []
         self._recent_searches: list[str] = []
         self._max_recent_searches = 10

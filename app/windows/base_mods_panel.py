@@ -149,8 +149,9 @@ class BaseModsPanel(QWidget):
         # Put it all together
         self.setWindowTitle(window_title)
         self.setLayout(layout)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
+
+        # Use GUIInfo to set size from settings
+        self.resize(GUIInfo().get_panel_size())
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:

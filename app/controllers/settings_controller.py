@@ -682,6 +682,8 @@ class SettingsController(QObject):
         self.settings_dialog.window_y_spinbox.setValue(self.settings.window_y)
         self.settings_dialog.window_width_spinbox.setValue(self.settings.window_width)
         self.settings_dialog.window_height_spinbox.setValue(self.settings.window_height)
+        self.settings_dialog.panel_width_spinbox.setValue(self.settings.panel_width)
+        self.settings_dialog.panel_height_spinbox.setValue(self.settings.panel_height)
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -893,6 +895,8 @@ class SettingsController(QObject):
         self.settings.window_y = self.settings_dialog.window_y_spinbox.value()
         self.settings.window_width = self.settings_dialog.window_width_spinbox.value()
         self.settings.window_height = self.settings_dialog.window_height_spinbox.value()
+        self.settings.panel_width = self.settings_dialog.panel_width_spinbox.value()
+        self.settings.panel_height = self.settings_dialog.panel_height_spinbox.value()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
