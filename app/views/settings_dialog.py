@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.settings import Settings
 from app.utils.gui_info import GUIInfo
 
 
@@ -38,6 +39,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
+
         # Use GUIInfo to set the window size and position from settings
         self.setGeometry(*GUIInfo().get_window_geometry())
 
@@ -944,9 +946,22 @@ class SettingsDialog(QDialog):
         self.window_height_spinbox.setRange(540, max_height)
         window_size_layout.addWidget(self.window_height_spinbox, 3, 1)
 
+        # Panel size labels and spinboxes
+        panel_width_label = QLabel(self.tr("Panel Width (px):"))
+        window_size_layout.addWidget(panel_width_label, 4, 0)
+        self.panel_width_spinbox = QSpinBox()
+        self.panel_width_spinbox.setRange(600, max_width)
+        window_size_layout.addWidget(self.panel_width_spinbox, 4, 1)
+
+        panel_height_label = QLabel(self.tr("Panel Height (px):"))
+        window_size_layout.addWidget(panel_height_label, 5, 0)
+        self.panel_height_spinbox = QSpinBox()
+        self.panel_height_spinbox.setRange(400, max_height)
+        window_size_layout.addWidget(self.panel_height_spinbox, 5, 1)
+
         # Reset to Default button
         self.window_size_reset_button = QPushButton(self.tr("Reset to Default"))
-        window_size_layout.addWidget(self.window_size_reset_button, 4, 0, 1, 2)
+        window_size_layout.addWidget(self.window_size_reset_button, 6, 0, 1, 2)
         self.window_size_reset_button.clicked.connect(
             self._reset_window_size_to_default
         )
@@ -954,17 +969,18 @@ class SettingsDialog(QDialog):
         # Warning label for out-of-bounds
         self.window_size_warning_label = QLabel()
         self.window_size_warning_label.setStyleSheet("color: orange;")
-        window_size_layout.addWidget(self.window_size_warning_label, 5, 0, 1, 2)
+        window_size_layout.addWidget(self.window_size_warning_label, 7, 0, 1, 2)
 
         # Connect value changes to validation
         self.window_x_spinbox.valueChanged.connect(self._validate_window_size)
         self.window_y_spinbox.valueChanged.connect(self._validate_window_size)
         self.window_width_spinbox.valueChanged.connect(self._validate_window_size)
         self.window_height_spinbox.valueChanged.connect(self._validate_window_size)
+        self.panel_width_spinbox.valueChanged.connect(self._validate_window_size)
+        self.panel_height_spinbox.valueChanged.connect(self._validate_window_size)
 
     def _reset_window_size_to_default(self) -> None:
-        from app.models.settings import Settings
-
+        """Reset the window size to its default values."""
         geom = GUIInfo().set_window_size(Settings())
         self.window_x_spinbox.setValue(geom[0])
         self.window_y_spinbox.setValue(geom[1])

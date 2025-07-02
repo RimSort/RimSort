@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QMargins
+from PySide6.QtCore import QMargins, QSize
 from PySide6.QtGui import QCursor, QFont, QFontMetrics, QGuiApplication, QPixmap
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
@@ -163,6 +163,17 @@ class GUIInfo:
             return x, y, width, height
         else:
             return self.set_window_size(settings)
+
+    def get_panel_size(self) -> QSize:
+        """Adjust the size hint when resizing."""
+        settings = Settings()
+        # Load Settings
+        settings.load()
+        # Get settings values
+        width = getattr(settings, "panel_width")
+        height = getattr(settings, "panel_height")
+        # Return adjusted size
+        return QSize(width, height)
 
     @property
     def default_font(self) -> QFont:

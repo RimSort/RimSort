@@ -104,6 +104,10 @@ class Settings(QObject):
         self.window_width: int = 0
         self.window_height: int = 0
 
+        # Runner panel size configuration
+        self.panel_width: int = 600
+        self.panel_height: int = 400
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
