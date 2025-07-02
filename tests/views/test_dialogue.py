@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
-from pytestqt.qtbot import QtBot  # type: ignore #pytestqt is untyped and has no stubs
+from pytestqt.qtbot import QtBot
 
 from app.views.dialogue import BinaryChoiceDialog
 
@@ -182,14 +182,14 @@ class TestBinaryChoiceDialog:
     def test_click(self, qtbot: QtBot) -> None:
         dialog1 = BinaryChoiceDialog()
         qtbot.addWidget(dialog1)
-        qtbot.mouseClick(
+        qtbot.mouseClick(  # type: ignore
             dialog1.button(dialog1.positive_btn), Qt.MouseButton.LeftButton
         )
         assert dialog1.result() == dialog1.positive_btn
 
         dialog2 = BinaryChoiceDialog()
         qtbot.addWidget(dialog2)
-        qtbot.mouseClick(
+        qtbot.mouseClick(  # type: ignore
             dialog2.button(dialog2.negative_btn), Qt.MouseButton.LeftButton
         )
         assert dialog2.result() == dialog2.negative_btn
