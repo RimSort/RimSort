@@ -178,8 +178,8 @@ class RunnerPanel(QWidget):
         # Set the main layout
         self.setLayout(self.main_layout)
 
-        # Set window geometry from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
+        # Use GUIInfo to set size from settings
+        self.resize(GUIInfo().get_panel_size())
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()
