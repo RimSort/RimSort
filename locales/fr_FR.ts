@@ -2240,14 +2240,6 @@ Please select your preferred mod variant in the table below. You can also open e
 <context>
     <name>ModDeletionMenu</name>
     <message>
-        <source>Delete mod</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete mod (keep .dds)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Delete optimized textures (.dds files only)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2256,37 +2248,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished">RimSort</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} seleted mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation delete a mod&apos;s directory from the filesystem.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will only delete optimized textures (.dds files only) from mod files.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will recursively delete all mod files, except for .dds textures found.
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An OSError occurred while deleting mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Deletion options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2294,19 +2256,132 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
+        <source>Delete mod completely</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Are you sure?</source>
+        <source>Delete mod (keep .dds textures)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len} mods for deletion.</source>
+        <source>Delete mod and unsubscribe from Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
+        <source>Delete mod and resubscribe using Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted {count} selected mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An OS error occurred while deleting the mod.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No mods selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Complete Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for complete deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will permanently delete the selected mod directories from the filesystem.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm DDS Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will only delete optimized textures (.dds files) from the selected mods.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Selective Deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for selective deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will delete all mod files except for .dds texture files.
+The .dds files will be preserved.
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam {action.capitalize()}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{action.capitalize()} Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete and {action}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action.capitalize()}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {len(selected_mods)} mod(s) for deletion.
+{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action.capitalize()} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deletion options</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2561,6 +2636,16 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded After:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded Before:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3108,10 +3193,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3348,26 +3429,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Size Configuration</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Window X Position:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Window Y Position:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Window Width:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Window Height:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Advanced</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3437,6 +3498,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset Window Size based on Screen Dimensions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authentication</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

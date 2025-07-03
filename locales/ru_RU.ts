@@ -2329,18 +2329,6 @@ Please select your preferred mod variant in the table below. You can also open e
 <context>
     <name>ModDeletionMenu</name>
     <message>
-        <source>Deletion options</source>
-        <translation>Опции удаления</translation>
-    </message>
-    <message>
-        <source>Delete mod</source>
-        <translation>Удалить мод</translation>
-    </message>
-    <message>
-        <source>Delete mod (keep .dds)</source>
-        <translation>Удалить мод (сохранить .dds)</translation>
-    </message>
-    <message>
         <source>Delete optimized textures (.dds files only)</source>
         <translation>Удалить оптимизированные текстуры (.dds файлы только)</translation>
     </message>
@@ -2349,57 +2337,158 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>RimSort</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} seleted mods.</source>
-        <translation>Успешно удалено {count} выбранных модов.</translation>
-    </message>
-    <message>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
         <translation>Каталог мода не был пустым. Пожалуйста, закройте все программы, которые получают доступ к файлам или подпапкам в каталоге (включая ваш файловый менеджер), и попробуйте снова.</translation>
-    </message>
-    <message>
-        <source>An OSError occurred while deleting mod.</source>
-        <translation>Произошла ошибка OSError при удалении мода.</translation>
     </message>
     <message>
         <source>Unable to delete mod</source>
         <translation>Не удалось удалить мод</translation>
     </message>
     <message>
-        <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
+        <source>Delete mod completely</source>
+        <translation>Удалить мод полностью</translation>
     </message>
     <message>
-        <source>Are you sure?</source>
-        <translation>Вы уверены?</translation>
+        <source>Delete mod (keep .dds textures)</source>
+        <translation>Удалить мод (сохранить .dds текстуры)</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for deletion.</source>
-        <translation>Вы выбрали {len} модов для удаления.</translation>
+        <source>Delete mod and unsubscribe from Steam</source>
+        <translation>Удалить мод и отписаться от Steam</translation>
+    </message>
+    <message>
+        <source>Delete mod and resubscribe using Steam</source>
+        <translation>Удалить мод и повторно подписаться через Steam</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {count} selected mods.</source>
+        <translation>Успешно удалено {count} выбранных модов.</translation>
+    </message>
+    <message>
+        <source>An OS error occurred while deleting the mod.</source>
+        <translation>Произошла ошибка ОС при удалении мода.</translation>
+    </message>
+    <message>
+        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
+        <translation>{error_msg} произошла в {filename} с кодом ошибки {error_code}.</translation>
+    </message>
+    <message>
+        <source>No mods selected</source>
+        <translation>Не выбрано ни одного мода</translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete.</source>
+        <translation>Пожалуйста, выберите хотя бы один мод для удаления.</translation>
+    </message>
+    <message>
+        <source>Confirm Complete Deletion</source>
+        <translation>Подтвердите полное удаление</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for complete deletion.</source>
+        <translation>Вы выбрали {count} мод(ов) для полного удаления.</translation>
     </message>
     <message>
         <source>
-This operation delete a mod&apos;s directory from the filesystem.
+This operation will permanently delete the selected mod directories from the filesystem.
+
 Do you want to proceed?</source>
-        <translation>Эта операция удаляет каталог мода из файловой системы.
-Вы хотите продолжить?</translation>
+        <translation>
+Эта операция навсегда удалит выбранные каталоги модов из файловой системы.
+
+Do you want to proceed?</translation>
     </message>
     <message>
-        <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
-        <translation>Вы выбрали {len} модов для удаления оптимизированных текстур (.dds файлы только)</translation>
+        <source>Please select at least one mod to process.</source>
+        <translation>Пожалуйста, выберите хотя бы один мод для обработки.</translation>
+    </message>
+    <message>
+        <source>Confirm DDS Deletion</source>
+        <translation>Подтвердите удаление DDS</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
+        <translation>Вы выбрали {count} мод(ов) для удаления текстур DDS.</translation>
     </message>
     <message>
         <source>
-This operation will only delete optimized textures (.dds files only) from mod files.
+This operation will only delete optimized textures (.dds files) from the selected mods.
+
 Do you want to proceed?</source>
-        <translation>Эта операция удалит только оптимизированные текстуры (.dds файлы только) из файлов мода.
-Вы хотите продолжить?</translation>
+        <translation>
+Эта операция удалит только оптимизированные текстуры (.dds файлы) из выбранных модов.
+
+Do you want to proceed?</translation>
+    </message>
+    <message>
+        <source>Confirm Selective Deletion</source>
+        <translation>Подтвердите выборочное удаление</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for selective deletion.</source>
+        <translation>Вы выбрали {count} мод(ов) для выборочного удаления.</translation>
     </message>
     <message>
         <source>
-This operation will recursively delete all mod files, except for .dds textures found.
+This operation will delete all mod files except for .dds texture files.
+The .dds files will be preserved.
+
 Do you want to proceed?</source>
-        <translation>Эта операция рекурсивно удалит все файлы мода, за исключением найденных текстур .dds.
+        <translation>
+Эта операция удалит все файлы мода, кроме файлов текстур .dds.
+Файлы .dds будут сохранены.
+
+Вы уверены, что хотите продолжить?</translation>
+    </message>
+    <message>
+        <source>Steam {action.capitalize()}</source>
+        <translation>Steam {action.capitalize()}</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation>Успешно инициировано {action} из {len(publishedfileids)} модов Steam Workshop.
+Процесс может занять несколько минут.</translation>
+    </message>
+    <message>
+        <source>{action.capitalize()} Error</source>
+        <translation>{action.capitalize()} Ошибка</translation>
+    </message>
+    <message>
+        <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
+        <translation>Произошла ошибка при попытке {action} из модов Steam Workshop.</translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete and {action}.</source>
+        <translation>Пожалуйста, выберите хотя бы один мод для удаления и {action}.</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action.capitalize()}</source>
+        <translation>Подтвердите удаление и {action.capitalize()}</translation>
+    </message>
+    <message>
+        <source>You have selected {len(selected_mods)} mod(s) for deletion.
+{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
+        <translation>Вы выбрали {len(selected_mods)} мод(ов) для удаления.
+{len(steam_mods)} из них являются модами Steam Workshop, которые также будут {action}d.</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action.capitalize()} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>
+Эта операция:
+• Удалит выбранные каталоги модов из вашей файловой системы
+• {action.capitalize()} моды Steam Workshop из вашей учетной записи Steam
+
 Вы хотите продолжить?</translation>
+    </message>
+    <message>
+        <source>Deletion options</source>
+        <translation>Опции удаления</translation>
     </message>
 </context>
 <context>
@@ -2658,6 +2747,18 @@ Missing Dependencies:</source>
 Incompatibilities:</source>
         <translation>
 Несовместимости:</translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded After:</source>
+        <translation>
+Должен загружаться после:</translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded Before:</source>
+        <translation>
+Должен загружаться перед:</translation>
     </message>
 </context>
 <context>
@@ -3207,10 +3308,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>База данных Steam Workshop</translation>
     </message>
     <message>
-        <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
-        <translation>Срок действия базы данных Steam Workshop в эпохе времени (используйте 0, чтобы отключить уведомление. По умолчанию 7 дней)</translation>
-    </message>
-    <message>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation>База данных &quot;Нет предупреждения о версии&quot;</translation>
     </message>
@@ -3445,26 +3542,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Выберите язык (требуется перезапуск для применения изменений)</translation>
     </message>
     <message>
-        <source>Window Size Configuration</source>
-        <translation>Конфигурация размера окна</translation>
-    </message>
-    <message>
-        <source>Window X Position:</source>
-        <translation>Позиция окна по оси X:</translation>
-    </message>
-    <message>
-        <source>Window Y Position:</source>
-        <translation>Позиция окна по оси Y:</translation>
-    </message>
-    <message>
-        <source>Window Width:</source>
-        <translation>Ширина окна:</translation>
-    </message>
-    <message>
-        <source>Window Height:</source>
-        <translation>Высота окна:</translation>
-    </message>
-    <message>
         <source>Advanced</source>
         <translation>Расширенные</translation>
     </message>
@@ -3553,6 +3630,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Edit Game Run Arguments:</source>
         <translation>Редактировать аргументы запуска игры:</translation>
+    </message>
+    <message>
+        <source>Additional Databases</source>
+        <translation>Дополнительные базы данных</translation>
+    </message>
+    <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>Срок действия базы данных в секундах, например, 604800 для 7 дней и 0 для отсутствия срока действия.</translation>
+    </message>
+    <message>
+        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
+        <translation>Конфигурация размера окна обнаружила размер отображения окна: {max_width} x {max_height} пикселей</translation>
+    </message>
+    <message>
+        <source>Reset Window Size based on Screen Dimensions</source>
+        <translation>Сбросить размер окна на основе размеров экрана</translation>
+    </message>
+    <message>
+        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
+        <translation>Предупреждение: Окно может не поместиться на текущем экране! Пожалуйста, отрегулируйте значения.</translation>
+    </message>
+    <message>
+        <source>Authentication</source>
+        <translation>Аутентификация</translation>
     </message>
 </context>
 <context>

@@ -2329,18 +2329,6 @@ Please select your preferred mod variant in the table below. You can also open e
 <context>
     <name>ModDeletionMenu</name>
     <message>
-        <source>Deletion options</source>
-        <translation>削除オプション</translation>
-    </message>
-    <message>
-        <source>Delete mod</source>
-        <translation>モッドを削除</translation>
-    </message>
-    <message>
-        <source>Delete mod (keep .dds)</source>
-        <translation>モッドを削除（.ddsを保持）</translation>
-    </message>
-    <message>
         <source>Delete optimized textures (.dds files only)</source>
         <translation>最適化されたテクスチャ（.ddsファイルのみ）を削除</translation>
     </message>
@@ -2349,60 +2337,158 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>RimSort</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} seleted mods.</source>
-        <translation>成功して{count}の選択されたモッドを削除しました。</translation>
-    </message>
-    <message>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
         <translation>モッドディレクトリが空ではありません。ファイルやサブフォルダにアクセスしているすべてのプログラムを閉じて（ファイルマネージャーを含む）、再試行してください。</translation>
-    </message>
-    <message>
-        <source>An OSError occurred while deleting mod.</source>
-        <translation>モッドを削除しているときにOSErrorが発生しました。</translation>
     </message>
     <message>
         <source>Unable to delete mod</source>
         <translation>モッドを削除できません</translation>
     </message>
     <message>
-        <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation>{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
+        <source>Delete mod completely</source>
+        <translation>MODを完全に削除</translation>
     </message>
     <message>
-        <source>Are you sure?</source>
-        <translation>本当に削除しますか？</translation>
+        <source>Delete mod (keep .dds textures)</source>
+        <translation>MODを削除（.ddsテクスチャを保持）</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for deletion.</source>
-        <translation>削除するモッドを{len}個選択しました。</translation>
+        <source>Delete mod and unsubscribe from Steam</source>
+        <translation>MODを削除し、Steamから解除します</translation>
+    </message>
+    <message>
+        <source>Delete mod and resubscribe using Steam</source>
+        <translation>MODを削除し、Steamを使用して再購読します</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {count} selected mods.</source>
+        <translation>選択した{count}のMODを正常に削除しました。</translation>
+    </message>
+    <message>
+        <source>An OS error occurred while deleting the mod.</source>
+        <translation>MODを削除中にOSエラーが発生しました。</translation>
+    </message>
+    <message>
+        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
+        <translation>{error_msg}が{filename}でエラーコード{error_code}で発生しました。</translation>
+    </message>
+    <message>
+        <source>No mods selected</source>
+        <translation>MODが選択されていません</translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete.</source>
+        <translation>削除するMODを少なくとも1つ選択してください。</translation>
+    </message>
+    <message>
+        <source>Confirm Complete Deletion</source>
+        <translation>完全削除の確認</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for complete deletion.</source>
+        <translation>完全削除のために{count}のMODが選択されました。</translation>
     </message>
     <message>
         <source>
-This operation delete a mod&apos;s directory from the filesystem.
+This operation will permanently delete the selected mod directories from the filesystem.
+
 Do you want to proceed?</source>
         <translation>
-この操作は、ファイルシステムからモッドのディレクトリを削除します。
+この操作は、選択したMODディレクトリをファイルシステムから永久に削除します。
+
 続行しますか？</translation>
     </message>
     <message>
-        <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
-        <translation>最適化されたテクスチャ（.ddsファイルのみ）を削除するために{len}のモッドを選択しました。</translation>
+        <source>Please select at least one mod to process.</source>
+        <translation>処理するMODを少なくとも1つ選択してください。</translation>
+    </message>
+    <message>
+        <source>Confirm DDS Deletion</source>
+        <translation>DDS削除の確認</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
+        <translation>選択した{count}のMODのDDSテクスチャ削除が選択されました。</translation>
     </message>
     <message>
         <source>
-This operation will only delete optimized textures (.dds files only) from mod files.
+This operation will only delete optimized textures (.dds files) from the selected mods.
+
 Do you want to proceed?</source>
         <translation>
-この操作は、モッドファイルから最適化されたテクスチャ（.ddsファイルのみ）を削除します。
+この操作は、選択したMODから最適化されたテクスチャ（.ddsファイル）のみを削除します。
+
 続行しますか？</translation>
     </message>
     <message>
+        <source>Confirm Selective Deletion</source>
+        <translation>選択的削除の確認</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for selective deletion.</source>
+        <translation>選択した{count}のMODの選択的削除が選択されました。</translation>
+    </message>
+    <message>
         <source>
-This operation will recursively delete all mod files, except for .dds textures found.
+This operation will delete all mod files except for .dds texture files.
+The .dds files will be preserved.
+
 Do you want to proceed?</source>
         <translation>
-この操作は、見つかった.ddsテクスチャを除いて、すべてのモッドファイルを再帰的に削除します。
+この操作は、.ddsテクスチャファイルを除くすべてのMODファイルを削除します。
+.ddsファイルは保持されます。
+
 続行しますか？</translation>
+    </message>
+    <message>
+        <source>Steam {action.capitalize()}</source>
+        <translation>Steam {action.capitalize()}</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation>SteamワークショップMODからの{action}を正常に開始しました。
+プロセスが完了するまでに数分かかる場合があります。</translation>
+    </message>
+    <message>
+        <source>{action.capitalize()} Error</source>
+        <translation>{action.capitalize()}エラー</translation>
+    </message>
+    <message>
+        <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
+        <translation>SteamワークショップMODからの{action}中にエラーが発生しました。</translation>
+    </message>
+    <message>
+        <source>Please select at least one mod to delete and {action}.</source>
+        <translation>削除して{action}するMODを少なくとも1つ選択してください。</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action.capitalize()}</source>
+        <translation>削除と{action.capitalize()}の確認</translation>
+    </message>
+    <message>
+        <source>You have selected {len(selected_mods)} mod(s) for deletion.
+{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
+        <translation>削除のために{len(selected_mods)}のMODが選択されました。
+このうち{len(steam_mods)}はSteamワークショップMODであり、{action}されます。</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action.capitalize()} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>
+この操作は以下を行います:
+• 選択したMODディレクトリをファイルシステムから削除
+• SteamワークショップMODをあなたのSteamアカウントから{action.capitalize()}
+
+続行しますか？</translation>
+    </message>
+    <message>
+        <source>Deletion options</source>
+        <translation>削除オプション</translation>
     </message>
 </context>
 <context>
@@ -2662,6 +2748,18 @@ Missing Dependencies:</source>
 Incompatibilities:</source>
         <translation>
 非互換性:</translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded After:</source>
+        <translation>
+後に読み込む必要があります:</translation>
+    </message>
+    <message>
+        <source>
+Should be Loaded Before:</source>
+        <translation>
+前に読み込む必要があります:</translation>
     </message>
 </context>
 <context>
@@ -3210,10 +3308,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>Steamワークショップデータベース</translation>
     </message>
     <message>
-        <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
-        <translation>Steamワークショップデータベースの有効期限（0を使用して通知を無効にします。デフォルトは7日）</translation>
-    </message>
-    <message>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation>&quot;バージョン警告なし&quot;データベース</translation>
     </message>
@@ -3437,26 +3531,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>言語を選択します（変更を適用するには再起動が必要です）</translation>
     </message>
     <message>
-        <source>Window Size Configuration</source>
-        <translation>ウィンドウサイズ設定</translation>
-    </message>
-    <message>
-        <source>Window X Position:</source>
-        <translation>ウィンドウX位置:</translation>
-    </message>
-    <message>
-        <source>Window Y Position:</source>
-        <translation>ウィンドウY位置:</translation>
-    </message>
-    <message>
-        <source>Window Width:</source>
-        <translation>ウィンドウ幅:</translation>
-    </message>
-    <message>
-        <source>Window Height:</source>
-        <translation>ウィンドウ高さ:</translation>
-    </message>
-    <message>
         <source>Advanced</source>
         <translation>高度な</translation>
     </message>
@@ -3545,6 +3619,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Edit Game Run Arguments:</source>
         <translation>ゲーム実行引数を編集:</translation>
+    </message>
+    <message>
+        <source>Additional Databases</source>
+        <translation>追加データベース</translation>
+    </message>
+    <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>データベースの有効期限（秒単位）を指定します。たとえば、604800は7日間、0は無期限を意味します。</translation>
+    </message>
+    <message>
+        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
+        <translation>ウィンドウサイズの設定がウィンドウの表示サイズを検出しました: {max_width} x {max_height} ピクセル</translation>
+    </message>
+    <message>
+        <source>Reset Window Size based on Screen Dimensions</source>
+        <translation>画面のサイズに基づいてウィンドウサイズをリセット</translation>
+    </message>
+    <message>
+        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
+        <translation>警告: ウィンドウが現在の画面に収まらない可能性があります! 値を調整してください。</translation>
+    </message>
+    <message>
+        <source>Authentication</source>
+        <translation>認証</translation>
     </message>
 </context>
 <context>
