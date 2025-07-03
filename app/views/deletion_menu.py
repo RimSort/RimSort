@@ -57,7 +57,7 @@ class ModDeletionMenu(QMenu):
         enable_delete_and_unsubscribe: bool = True,
         enable_delete_and_resubscribe: bool = True,
     ) -> None:
-        super().__init__(title=self.tr(menu_title))
+        super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
