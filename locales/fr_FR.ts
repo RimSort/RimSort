@@ -2188,6 +2188,10 @@ Select which missing dependencies to add to your active mods list.</source>
   • </source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Dependency Manager</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MissingModsPrompt</name>
@@ -3522,6 +3526,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Window X Position (px): minimum: 100, maximum: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Window Width (px): minimum: 600, maximum: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Window Height (px): minimum: 400, maximum: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Panel Width (px): minimum: 600, maximum: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Panel Height (px): minimum: 400, maximum: {}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

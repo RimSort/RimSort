@@ -2273,6 +2273,10 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation>Требуется для:
   • </translation>
     </message>
+    <message>
+        <source>Dependency Manager</source>
+        <translation>Менеджер зависимостей</translation>
+    </message>
 </context>
 <context>
     <name>MissingModsPrompt</name>
@@ -3654,6 +3658,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Authentication</source>
         <translation>Аутентификация</translation>
+    </message>
+    <message>
+        <source>Window X Position (px): minimum: 100, maximum: {}</source>
+        <translation>Позиция окна X (пиксели): минимум: 100, максимум: {}</translation>
+    </message>
+    <message>
+        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
+        <translation>Позиция окна Y (пиксели): минимум: 100, максимум: {}</translation>
+    </message>
+    <message>
+        <source>Window Width (px): minimum: 600, maximum: {}</source>
+        <translation>Ширина окна (пиксели): минимум: 600, максимум: {}</translation>
+    </message>
+    <message>
+        <source>Window Height (px): minimum: 400, maximum: {}</source>
+        <translation>Высота окна (пиксели): минимум: 400, максимум: {}</translation>
+    </message>
+    <message>
+        <source>Panel Width (px): minimum: 600, maximum: {}</source>
+        <translation>Ширина панели (пиксели): минимум: 600, максимум: {}</translation>
+    </message>
+    <message>
+        <source>Panel Height (px): minimum: 400, maximum: {}</source>
+        <translation>Высота панели (пиксели): минимум: 400, максимум: {}</translation>
     </message>
 </context>
 <context>

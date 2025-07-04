@@ -914,8 +914,8 @@ class SettingsDialog(QDialog):
 
         windows_size_group_label = QLabel(
             self.tr(
-                f"Window Size Configuration detected window display size: {max_width} x {max_height} pixels"
-            )
+                "Window Size Configuration detected window display size: {max_width} x {max_height} pixels"
+            ).format(max_width=max_width, max_height=max_height)
         )
         windows_size_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(windows_size_group_label)
@@ -929,32 +929,44 @@ class SettingsDialog(QDialog):
         # Create a dictionary for spinboxes and their labels and ranges
         spinbox_config = {
             "window_x_spinbox": (
-                "Window X Position (px): minimum: 100, maximum: {}",
+                self.tr("Window X Position (px): minimum: 100, maximum: {}").format(
+                    max_width
+                ),
                 100,
                 max_width,
             ),
             "window_y_spinbox": (
-                "Window Y Position (px): minimum: 100, maximum: {}",
+                self.tr("Window Y Position (px): minimum: 100, maximum: {}").format(
+                    max_height
+                ),
                 100,
                 max_height,
             ),
             "window_width_spinbox": (
-                "Window Width (px): minimum: 600, maximum: {}",
+                self.tr("Window Width (px): minimum: 600, maximum: {}").format(
+                    max_width
+                ),
                 600,
                 max_width,
             ),
             "window_height_spinbox": (
-                "Window Height (px): minimum: 400, maximum: {}",
+                self.tr("Window Height (px): minimum: 400, maximum: {}").format(
+                    max_height
+                ),
                 400,
                 max_height,
             ),
             "panel_width_spinbox": (
-                "Panel Width (px): minimum: 600, maximum: {}",
+                self.tr("Panel Width (px): minimum: 600, maximum: {}").format(
+                    max_width
+                ),
                 600,
                 max_width,
             ),
             "panel_height_spinbox": (
-                "Panel Height (px): minimum: 400, maximum: {}",
+                self.tr("Panel Height (px): minimum: 400, maximum: {}").format(
+                    max_height
+                ),
                 400,
                 max_height,
             ),

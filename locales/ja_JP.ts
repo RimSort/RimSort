@@ -2272,6 +2272,10 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation>必要なもの:
   • </translation>
     </message>
+    <message>
+        <source>Dependency Manager</source>
+        <translation>依存関係マネージャー</translation>
+    </message>
 </context>
 <context>
     <name>MissingModsPrompt</name>
@@ -3643,6 +3647,30 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Authentication</source>
         <translation>認証</translation>
+    </message>
+    <message>
+        <source>Window X Position (px): minimum: 100, maximum: {}</source>
+        <translation>ウィンドウ X 位置 (px): 最小: 100, 最大: {}</translation>
+    </message>
+    <message>
+        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
+        <translation>ウィンドウ Y 位置 (px): 最小: 100, 最大: {}</translation>
+    </message>
+    <message>
+        <source>Window Width (px): minimum: 600, maximum: {}</source>
+        <translation>ウィンドウ幅 (px): 最小: 600, 最大: {}</translation>
+    </message>
+    <message>
+        <source>Window Height (px): minimum: 400, maximum: {}</source>
+        <translation>ウィンドウ高さ (px): 最小: 400, 最大: {}</translation>
+    </message>
+    <message>
+        <source>Panel Width (px): minimum: 600, maximum: {}</source>
+        <translation>パネル幅 (px): 最小: 600, 最大: {}</translation>
+    </message>
+    <message>
+        <source>Panel Height (px): minimum: 400, maximum: {}</source>
+        <translation>パネル高さ (px): 最小: 400, 最大: {}</translation>
     </message>
 </context>
 <context>
