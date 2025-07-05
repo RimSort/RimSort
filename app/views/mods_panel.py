@@ -1914,8 +1914,8 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = tool_tip_text
             # Calculate any needed string for warnings
             for error_type, tooltip_header in [
-                ("load_before_violations", "\nShould be Loaded After:"),
-                ("load_after_violations", "\nShould be Loaded Before:"),
+                ("load_before_violations", self.tr("\nShould be Loaded After:")),
+                ("load_after_violations", self.tr("\nShould be Loaded Before:")),
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header

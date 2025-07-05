@@ -139,13 +139,13 @@ def run_lupdate(language: Optional[str] = None) -> bool:
         # If a specific language is provided, update that .ts file
         if language:
             print(f"🔄 Updating translation file for {language}...")
-            cmd.extend(["-ts", f"locales/{language}.ts", "-no-obsolete"])
+            cmd.extend(["-ts", f"locales/{language}.ts", "-no-obsolete", "-locations", "none"])
         else:
             print("🔄 Updating all translation files...")
             locales_dir = Path("locales")
             ts_files = list(locales_dir.glob("*.ts"))
             if ts_files:
-                cmd.extend(["-ts"] + [str(f) for f in ts_files])
+                cmd.extend(["-ts"] + [str(f) for f in ts_files] + ["-no-obsolete", "-locations", "none"])
             else:
                 print("⚠️ No .ts files found in locales/")
                 return False

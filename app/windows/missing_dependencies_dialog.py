@@ -36,7 +36,7 @@ class MissingDependenciesDialog(QDialog):
         """
         Set up the UI components of the dialog.
         """
-        self.setWindowTitle("Dependency Manager")
+        self.setWindowTitle(self.tr("Dependency Manager"))
         # Use GUIInfo to set size from settings
         self.resize(GUIInfo().get_panel_size())
 
