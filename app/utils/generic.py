@@ -457,6 +457,7 @@ def check_internet_connection(
     primary_host: str = "8.8.8.8",
     fallback_host: str = "1.1.1.1",
     port: int = 53,
+    fallback_port: int = 443,
     timeout: float = 10,
 ) -> bool:
     """
@@ -465,21 +466,25 @@ def check_internet_connection(
     """
     socket.setdefaulttimeout(timeout)
 
-    def try_connect(host: str) -> bool:
+    def try_connect(host: str, port_to_try: int) -> bool:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((host, port))
+                sock.connect((host, port_to_try))
             return True
         except OSError as e:
-            logger.warning(f"Socket connection to {host}:{port} failed: {e}")
+            logger.warning(f"Socket connection to {host}:{port_to_try} failed: {e}")
             return False
 
-    # Try connecting to the primary host first, then fallback if necessary
-    if try_connect(primary_host) or try_connect(fallback_host):
+    # Try connecting to the primary host on both ports
+    if try_connect(primary_host, port) or try_connect(primary_host, fallback_port):
+        return True
+
+    # Try connecting to the fallback host on both ports
+    if try_connect(fallback_host, port) or try_connect(fallback_host, fallback_port):
         return True
 
     # Fallback: try HTTP request to a well-known site
-    try:
+    try:  # Try google.com first
         conn = http.client.HTTPSConnection("www.google.com", timeout=timeout)
         conn.request("HEAD", "/")
         response = conn.getresponse()
@@ -488,5 +493,60 @@ def check_internet_connection(
     except Exception as e:
         logger.warning(f"HTTP connection to www.google.com failed: {e}")
 
+    try:  # Try cloudflare fallback site
+        conn = http.client.HTTPSConnection("www.cloudflare.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.cloudflare.com failed: {e}")
+
+    try:  # Try microsoft.com as another fallback site
+        conn = http.client.HTTPSConnection("www.microsoft.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.microsoft.com failed: {e}")
+
     logger.error("No internet connection detected.")
+
+    try:  # Try additional fallback: try curl command to google.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.google.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.google.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to cloudflare.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.cloudflare.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.cloudflare.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to microsoft.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.microsoft.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.microsoft.com failed: {e}")
+
     return False
