@@ -179,11 +179,148 @@ jobs:
           echo "Executable found at $executable"
         shell: bash
 
+      - name: Create MSI Package
+        if: matrix.platform == 'Windows'
+        run: |
+          choco install wixtoolset -y
+          
+          $env:PATH += ";C:\Program Files (x86)\WiX Toolset v3.11\bin"
+
+          heat.exe dir "build\\__main__.dist" -cg MainDist -dr INSTALLFOLDER -gg -sfrag -sreg -srd -var var.DistDir -out maindist.wxs
+
+          $wixContent = @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+            <Product Id="*" 
+                     Name="RimSort" 
+                     Language="1033" 
+                     Version="${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}.${{ steps.sem_version.outputs.increment }}" 
+                     Manufacturer="RimSort Team" 
+                     UpgradeCode="d4f7c3b9-8a5e-4e52-bb9f-3c2d1f7a9e24">
+              <Package InstallerVersion="400" Compressed="yes" InstallScope="perMachine" />
+              <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+              <MediaTemplate EmbedCab="yes" />
+
+              <Property Id="DistDir" Value="build\\__main__.dist" />
+
+              <Property Id="INSTALLFOLDER">
+                <RegistrySearch Id="PreviousInstallDirSearch" Root="HKCU" Key="Software\RimSort" Name="InstallDir" Type="raw" />
+              </Property>
+
+              <CustomAction Id="SetDefaultInstallDir" Script="vbscript" Execute="immediate">
+                <![CDATA[
+                  Dim fso, installDir
+                  Set fso = CreateObject("Scripting.FileSystemObject")
+                  
+                  installDir = Session.Property("INSTALLFOLDER")
+                  
+                  If installDir = "" Then
+                    If fso.DriveExists("D:\") Then
+                      installDir = "D:\Program Files\RimSort"
+                    Else
+                      installDir = "C:\Program Files\RimSort"
+                    End If
+                    Session.Property("INSTALLFOLDER") = installDir
+                  End If
+                ]]>
+              </CustomAction>
+
+              <Icon Id="RimSortIcon" SourceFile="themes\\default-icons\\AppIcon.ico" />
+
+              <Directory Id="TARGETDIR" Name="SourceDir">
+                <Directory Id="ProgramFilesFolder">
+                  <Directory Id="INSTALLFOLDER" Name="RimSort" />
+                </Directory>
+                <Directory Id="ProgramMenuFolder">
+                  <Directory Id="ApplicationProgramsFolder" Name="RimSort"/>
+                </Directory>
+              </Directory>
+
+              <Feature Id="ProductFeature" Title="RimSort" Level="1">
+                <ComponentGroupRef Id="MainDist" />
+                <ComponentGroupRef Id="ShortcutComponents" />
+                <ComponentGroupRef Id="RegistryComponents" />
+              </Feature>
+
+              <UIRef Id="WixUI_InstallDir" />
+
+              <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+              <InstallExecuteSequence>
+                <Custom Action="SetDefaultInstallDir" After="ValidateProductID">NOT Installed</Custom>
+              </InstallExecuteSequence>
+
+              <InstallUISequence>
+                <Custom Action="SetDefaultInstallDir" After="ValidateProductID">NOT Installed</Custom>
+              </InstallUISequence>
+
+              <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
+                <Component Id="StartMenuShortcut" Guid="3C5F5459-99AE-5A3E-0422-E64DA66B4443">
+                  <RegistryValue Root="HKCU"
+                                Key="Software\RimSort"
+                                Name="StartMenuShortcutInstalled"
+                                Type="integer"
+                                Value="1"
+                                KeyPath="yes" />
+                  <Shortcut Id="ApplicationStartMenuShortcut"
+                            Directory="ApplicationProgramsFolder"
+                            Name="RimSort"
+                            Target="[INSTALLFOLDER]RimSort.exe"
+                            WorkingDirectory="INSTALLFOLDER"
+                            Icon="RimSortIcon"
+                            IconIndex="0"
+                            Advertise="no" />
+                  <RemoveFolder Id="RemoveApplicationProgramsFolder"
+                                Directory="ApplicationProgramsFolder"
+                                On="uninstall" />
+                </Component>
+              </ComponentGroup>
+
+              <ComponentGroup Id="RegistryComponents" Directory="INSTALLFOLDER">
+                <Component Id="InstallFlagRegistry" Guid="92D579F1-DC10-4E2F-87F5-25B36476C271">
+                  <RegistryValue Root="HKCU"
+                                Key="Software\RimSort\StartMenu"
+                                Name="installed"
+                                Type="integer"
+                                Value="1"
+                                KeyPath="yes" />
+                </Component>
+                <Component Id="InstallPathRegistry" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+                  <RegistryValue Root="HKCU"
+                                Key="Software\RimSort"
+                                Name="InstallDir"
+                                Type="string"
+                                Value="[INSTALLFOLDER]"
+                                KeyPath="yes" />
+                </Component>
+              </ComponentGroup>
+            </Product>
+          </Wix>
+          "@
+          $wixContent | Out-File -FilePath "RimSort.wxs" -Encoding UTF8
+
+          candle.exe `
+            -dDistDir="build\\__main__.dist" `
+            maindist.wxs RimSort.wxs
+
+          light.exe `
+            -ext WixUIExtension `
+            -cultures:en-us `
+            maindist.wixobj RimSort.wixobj `
+            -o "RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi"
+        shell: powershell
+
       - name: Generate executable attestations
         uses: actions/attest-build-provenance@v2.4.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
+
+      - name: Generate MSI attestation
+        uses: actions/attest-build-provenance@v2.4.0
+        if: ${{ inputs.attest && matrix.platform == 'Windows' }}
+        with:
+          subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
 
       - name: Rename new build
         run: |
@@ -206,6 +343,16 @@ jobs:
           name: ${{ steps.filename.outputs.FILENAME }}
           path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
           if-no-files-found: error
+
+      # Upload the built executable
+      - name: Upload MSI Package
+        if: matrix.platform == 'Windows'
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.platform }}_${{ matrix.arch }}_msi
+          path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
+          if-no-files-found: error
+
     outputs:
       filename: ${{ steps.filename.outputs.FILENAME }}
 
