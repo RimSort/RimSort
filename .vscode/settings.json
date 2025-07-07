@@ -100,5 +100,8 @@
   "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "editor.defaultFormatter": "charliermarsh.ruff"
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }
