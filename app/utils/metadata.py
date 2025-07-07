@@ -1073,6 +1073,20 @@ class MetadataManager(QObject):
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
+                    incompatibilities = self.external_community_rules[package_id].get(
+                        "incompatibleWith"
+                    )
+                    if incompatibilities:
+                        logger.debug(
+                            f"Current mod is incompatible with these mods: {incompatibilities}"
+                        )
+                        for incompatibilities in incompatibilities:
+                            for uuid in potential_uuids:
+                                add_incompatibility_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    incompatibilities,
+                                    self.internal_local_metadata,
+                                )
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1141,6 +1155,20 @@ class MetadataManager(QObject):
                                     "loadTheseAfter",
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
+                                )
+                    incompatibilities = self.external_user_rules[package_id].get(
+                        "incompatibleWith"
+                    )
+                    if incompatibilities:
+                        logger.debug(
+                            f"Current mod is incompatible with these mods: {incompatibilities}"
+                        )
+                        for incompatibilities in incompatibilities:
+                            for uuid in potential_uuids:
+                                add_incompatibility_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    incompatibilities,
+                                    self.internal_local_metadata,
                                 )
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
