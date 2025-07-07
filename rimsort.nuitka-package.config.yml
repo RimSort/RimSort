@@ -5,7 +5,7 @@
 ---
 - module-name: "app"
   data-files:
-    dirs:
+    - dirs:
       - "../themes"
       - "../locales"
 
