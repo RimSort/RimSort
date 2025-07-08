@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -15,12 +16,13 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self
+from typing import Any, Callable, Self, cast
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
 import requests
 from loguru import logger
+from packaging import version
 from PySide6.QtCore import (
     QEventLoop,
     QObject,
@@ -734,7 +736,18 @@ class MainContent(QObject):
     # GAME CONFIGURATION PANEL
 
     def _do_check_for_update(self) -> None:
+        """
+        Check for RimSort updates and handle the update process.
+
+        This method:
+        1. Validates prerequisites (compiled binary, internet connection)
+        2. Fetches latest release information from GitHub
+        3. Compares versions and prompts user if update is available
+        4. Downloads and extracts the update if user confirms
+        5. Launches the appropriate update script for the platform
+        """
         logger.debug("Checking for RimSort update...")
+
         # NOT NUITKA
         if "__compiled__" not in globals():
             logger.debug(
@@ -746,213 +759,340 @@ class MainContent(QObject):
                 information=self.tr("Skipping update check..."),
             )
             return
+
         # Check internet connection before attempting task
         if not check_internet_connection():
             dialogue.show_internet_connection_error()
             return
-        # NUITKA
-        logger.debug("Checking for RimSort update...")
+
         current_version = AppInfo().app_version
+        logger.debug(f"Current RimSort version: {current_version}")
+
+        # Get the latest release info and download URL
+        latest_release_info = self._get_latest_release_info()
+        if not latest_release_info:
+            return
+
+        latest_version = latest_release_info["version"]
+        latest_tag_name = latest_release_info["tag_name"]
+        download_url = latest_release_info["download_url"]
+
+        logger.debug(f"Latest RimSort version: {latest_version}")
+
+        # Compare versions
         try:
-            json_response = self.__do_get_github_release_info()
-        except Exception as e:
-            logger.warning(
-                f"Unable to retrieve latest release information due to exception: {e.__class__}"
-            )
-            dialogue.show_warning(
-                title=self.tr("Unable to retrieve latest release information"),
-                text=self.tr(
-                    "Unable to retrieve latest release information due to exception: {e.__class__}"
-                ).format(e=e),
-            )
-            return
+            current_version_parsed = version.parse(current_version)
+        except Exception:
+            logger.warning(f"Failed to parse current version: {current_version}")
+            current_version_parsed = version.parse("0.0.0")
 
-        # Check if response is a dictionary and if 'tag_name' exists in the response
-        if not isinstance(json_response, dict):
-            logger.warning(
-                f"Unexpected response type from GitHub API: {type(json_response)}"
-            )
-            logger.debug(f"Response received: {json_response}")
-            self.show_update_error()
-            return
-
-        if "tag_name" not in json_response:
-            logger.warning(
-                "Unable to retrieve latest release information: 'tag_name' not found in response"
-            )
-            logger.debug(f"Response received: {json_response}")
-            self.show_update_error()
-            return
-
-        tag_name = json_response["tag_name"]
-        if tag_name is None:
-            logger.warning("Unable to retrieve latest release information")
-            self.show_update_error()
-            return
-        tag_name_updated = tag_name.replace("alpha", "Alpha")
-        install_path = os.getcwd()
-        logger.debug(f"Current RimSort github release found: {tag_name}")
-        logger.debug(f"Current RimSort installed version found: {current_version}")
-        if current_version != tag_name:
-            answer = dialogue.show_dialogue_conditional(
-                title=self.tr("RimSort update found"),
-                text=self.tr(
-                    "An update to RimSort has been released: {tag_name}"
-                ).format(tag_name=tag_name),
-                information=self.tr(
-                    "You are running RimSort {current_version}\nDo you want to update now?"
-                ).format(current_version=current_version),
-            )
-            if answer == "&Yes":
-                logger.debug("User selected to update RimSort")
-                open_url_browser("https://github.com/RimSort/RimSort/releases")
-                return  # Remove this and above line to enable auto-update
-                # TODO : Implement auto-update currenty disabled since it has issues on linux
-                # Setup environment
-                ARCH = platform.architecture()[0]
-                CWD = os.getcwd()
-                PROCESSOR = platform.processor()
-                if PROCESSOR == "":
-                    PROCESSOR = platform.machine()
-                SYSTEM = platform.system()
-
-                current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-                if SYSTEM == "Darwin":
-                    current_dir = os.path.split(
-                        os.path.split(os.path.dirname(os.path.abspath(sys.argv[0])))[0]
-                    )[0]
-                    executable_name = "RimSort.app"
-                    if PROCESSOR == "i386" or PROCESSOR == "arm":
-                        logger.warning(
-                            f"Darwin/MacOS system detected with a {ARCH} {PROCESSOR} CPU..."
-                        )
-                        target_archive = (
-                            f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
-                        )
-                    else:
-                        logger.warning(
-                            f"Unsupported processor {SYSTEM} {ARCH} {PROCESSOR}"
-                        )
-                        return
-                elif SYSTEM == "Linux":
-                    executable_name = "RimSort.bin"
-                    logger.warning(
-                        f"Linux system detected with a {ARCH} {PROCESSOR} CPU..."
-                    )
-                    target_archive = (
-                        f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
-                    )
-                elif SYSTEM == "Windows":
-                    executable_name = "RimSort.exe"
-                    logger.warning(
-                        f"Windows system detected with a {ARCH} {PROCESSOR} CPU..."
-                    )
-                    target_archive = f"RimSort-{tag_name_updated}_{SYSTEM}.zip"
-                else:
-                    logger.warning(f"Unsupported system {SYSTEM} {ARCH} {PROCESSOR}")
-                    return
-                # Try to find a valid release from our generated archive name
-                for asset in json_response["assets"]:
-                    if asset["name"] == target_archive:
-                        browser_download_url = asset["browser_download_url"]
-                # If we don't have it from our query...
-                if "browser_download_url" not in locals():
-                    dialogue.show_warning(
-                        title=self.tr("Unable to complete update"),
-                        text=self.tr(
-                            "Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}"
-                        ).format(SYSTEM=SYSTEM, ARCH=ARCH, PROCESSOR=PROCESSOR),
-                    )
-                    return
-                target_archive_extracted = target_archive.replace(".zip", "")
-                try:
-                    logger.debug(
-                        f"Downloading & extracting RimSort release from: {browser_download_url}"
-                    )
-                    self.do_threaded_loading_animation(
-                        gif_path=str(
-                            AppInfo().theme_data_folder
-                            / "default-icons"
-                            / "refresh.gif"
-                        ),
-                        target=partial(
-                            self.__do_download_extract_release_to_tempdir,
-                            url=browser_download_url,
-                        ),
-                        text=self.tr(
-                            "RimSort update found. Downloading RimSort {tag_name_updated} release..."
-                        ).format(tag_name_updated=tag_name_updated),
-                    )
-                    temp_dir = "RimSort" if SYSTEM != "Darwin" else "RimSort.app"
-                    answer = dialogue.show_dialogue_conditional(
-                        title=self.tr("Update downloaded"),
-                        text=self.tr("Do you want to proceed with the update?"),
-                        information=f"\nSuccessfully retrieved latest release. The update will be installed from: {os.path.join(gettempdir(), temp_dir)}",
-                    )
-                    if answer != "&Yes":
-                        return
-                except Exception:
-                    stacktrace = traceback.format_exc()
-                    dialogue.show_warning(
-                        title=self.tr("Failed to download update"),
-                        text=self.tr("Failed to download latest RimSort release!"),
-                        information="Did the file/url change? "
-                        + "Does your environment have access to the Internet?\n"
-                        + f"URL: {browser_download_url}",
-                        details=stacktrace,
-                    )
-                    return
-                # Stop watchdog
-                logger.info("Stopping watchdog Observer thread before update...")
-                self.stop_watchdog_signal.emit()
-                # https://stackoverflow.com/a/21805723
-                if SYSTEM == "Darwin":  # MacOS
-                    popen_args = [
-                        "/bin/bash",
-                        str((Path(current_dir) / "Contents" / "MacOS" / "update.sh")),
-                    ]
-                    p = subprocess.Popen(popen_args)
-                else:
-                    try:
-                        subprocess.CREATE_NEW_PROCESS_GROUP
-                    except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
-                        popen_args = [
-                            "/bin/bash",
-                            str((AppInfo().application_folder / "update.sh")),
-                        ]
-                        p = subprocess.Popen(
-                            popen_args,
-                            start_new_session=True,
-                        )
-                    else:  # Windows
-                        popen_args = [
-                            "start",
-                            "/wait",
-                            "cmd",
-                            "/c",
-                            str(
-                                (
-                                    AppInfo.application_folder,
-                                    "update.bat",
-                                )
-                            ),
-                        ]
-                        p = subprocess.Popen(
-                            popen_args,
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                            shell=True,
-                        )
-                logger.debug(f"External updater script launched with PID: {p.pid}")
-                logger.debug(f"Arguments used: {popen_args}")
-                sys.exit()
-        else:
+        if current_version_parsed >= latest_version:
             logger.debug("Up to date!")
             dialogue.show_information(
                 title=self.tr("RimSort is up to date!"),
                 text=self.tr(
-                    "You are already running the latest release: {tag_name}"
-                ).format(tag_name=tag_name),
+                    "You are already running the latest release: {latest_tag_name}"
+                ).format(latest_tag_name=latest_tag_name),
+            )
+            return
+
+        # Show update prompt
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("RimSort update found"),
+            text=self.tr(
+                "An update to RimSort has been released: {latest_tag_name}"
+            ).format(latest_tag_name=latest_tag_name),
+            information=self.tr(
+                "You are running RimSort {current_version}\nDo you want to update now?"
+            ).format(current_version=current_version),
+        )
+
+        if answer != "&Yes":
+            return
+
+        # Perform update
+        self._perform_update(download_url, latest_tag_name)
+
+    def _get_latest_release_info(self) -> dict[str, Any] | None:
+        """
+        Get the latest release information from GitHub API.
+
+        Returns:
+            Dictionary containing version, tag_name, and download_url, or None if failed
+        """
+        try:
+            # Use releases API for better asset information
+            releases_url = (
+                "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+            )
+            response = requests.get(releases_url, timeout=15)
+            response.raise_for_status()
+            release_data = response.json()
+
+            tag_name = release_data.get("tag_name", "")
+            # Normalize tag name by removing prefix 'v' if present
+            normalized_tag = re.sub(r"^v", "", tag_name, flags=re.IGNORECASE)
+
+            # Parse version
+            try:
+                latest_version = version.parse(normalized_tag)
+            except Exception as e:
+                logger.warning(f"Failed to parse version from tag {tag_name}: {e}")
+                self.show_update_error()
+                return None
+
+            # Get platform-specific download URL
+            download_url = self._get_platform_download_url(
+                release_data.get("assets", [])
+            )
+            if not download_url:
+                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.processor()}"
+                dialogue.show_warning(
+                    title=self.tr("Unable to complete update"),
+                    text=self.tr(
+                        "Failed to find valid RimSort release for {system_info}"
+                    ).format(system_info=system_info),
+                )
+                return None
+
+            return {
+                "version": latest_version,
+                "tag_name": tag_name,
+                "download_url": download_url,
+            }
+
+        except requests.RequestException as e:
+            logger.warning(f"Failed to fetch release information: {e}")
+            dialogue.show_warning(
+                title=self.tr("Unable to retrieve release information"),
+                text=self.tr("Failed to connect to GitHub API: {error}").format(
+                    error=str(e)
+                ),
+            )
+            return None
+        except Exception as e:
+            logger.warning(f"Unexpected error fetching release info: {e}")
+            self.show_update_error()
+            return None
+
+    def _get_platform_download_url(self, assets: list[dict[str, Any]]) -> str | None:
+        """
+        Get the appropriate download URL for the current platform.
+
+        Args:
+            assets: List of asset dictionaries from GitHub API
+
+        Returns:
+            Download URL string or None if not found
+        """
+        system = platform.system()
+        arch = platform.architecture()[0]
+        # The variable 'processor' is assigned but never used, so we remove it
+        # processor = platform.processor() or platform.machine()
+
+        # Platform-specific asset name patterns
+        platform_patterns = {
+            "Darwin": {
+                "patterns": ["Darwin", "macOS", "Mac"],
+                "arch_patterns": {
+                    "64bit": ["x86_64", "intel"],
+                    "ARM64": ["arm64", "apple"],
+                },
+            },
+            "Linux": {
+                "patterns": ["Linux", "Ubuntu"],
+                "arch_patterns": {
+                    "64bit": ["x86_64", "amd64"],
+                    "32bit": ["i386", "x86"],
+                },
+            },
+            "Windows": {
+                "patterns": ["Windows", "Win"],
+                "arch_patterns": {
+                    "64bit": ["x86_64", "x64", "amd64"],
+                    "32bit": ["x86", "i386"],
+                },
+            },
+        }
+
+        if system not in platform_patterns:
+            logger.warning(f"Unsupported system: {system}")
+            return None
+
+        platform_info = platform_patterns[system]
+        system_patterns = cast(list[str], platform_info["patterns"])
+        arch_patterns_dict = cast(dict[str, list[str]], platform_info["arch_patterns"])
+        arch_patterns = arch_patterns_dict.get(arch, [])
+
+        logger.debug(
+            f"Looking for asset matching system={system}, arch={arch}, patterns={system_patterns + arch_patterns}"
+        )
+
+        # Search for matching asset
+        for asset in assets:
+            asset_name = asset.get("name", "").lower()
+
+            # Check if asset matches platform and architecture
+            system_match = any(
+                pattern.lower() in asset_name for pattern in system_patterns
+            )
+            arch_match = (
+                any(pattern.lower() in asset_name for pattern in arch_patterns)
+                if arch_patterns
+                else True
+            )
+
+            if system_match and arch_match:
+                download_url = asset.get("browser_download_url")
+                logger.debug(
+                    f"Found matching asset: {asset.get('name')} -> {download_url}"
+                )
+                return download_url
+
+        # Fallback: try to find any asset that contains the system name
+        for asset in assets:
+            asset_name = asset.get("name", "").lower()
+            if any(pattern.lower() in asset_name for pattern in system_patterns):
+                download_url = asset.get("browser_download_url")
+                logger.debug(
+                    f"Found fallback asset: {asset.get('name')} -> {download_url}"
+                )
+                return download_url
+
+        logger.warning(f"No matching asset found for {system} {arch}")
+        return None
+
+    def _perform_update(self, download_url: str, tag_name: str) -> None:
+        """
+        Download and extract the update, then launch the update script.
+
+        Args:
+            download_url: URL to download the update from
+            tag_name: Tag name of the release
+        """
+        try:
+            logger.debug(
+                f"Downloading & extracting RimSort release from: {download_url}"
+            )
+
+            # Download with progress animation
+            self.do_threaded_loading_animation(
+                gif_path=str(
+                    AppInfo().theme_data_folder / "default-icons" / "refresh.gif"
+                ),
+                target=partial(
+                    self._download_and_extract_update,
+                    url=download_url,
+                ),
+                text=self.tr("Downloading RimSort {tag_name} release...").format(
+                    tag_name=tag_name
+                ),
+            )
+
+            # Get temp directory path
+            system = platform.system()
+            temp_dir = "RimSort.app" if system == "Darwin" else "RimSort"
+            temp_path = os.path.join(gettempdir(), temp_dir)
+
+            # Confirm installation
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Update downloaded"),
+                text=self.tr("Do you want to proceed with the update?"),
+                information=f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {temp_path}",
+            )
+
+            if answer != "&Yes":
+                return
+
+            # Launch update script
+            self._launch_update_script()
+
+        except Exception as e:
+            logger.error(f"Update process failed: {e}")
+            dialogue.show_warning(
+                title=self.tr("Failed to download update"),
+                text=self.tr("Failed to download latest RimSort release!"),
+                information=f"Error: {str(e)}\nURL: {download_url}",
+                details=traceback.format_exc(),
+            )
+
+    def _download_and_extract_update(self, url: str) -> None:
+        """
+        Download and extract the update to temporary directory.
+
+        Args:
+            url: URL to download from
+        """
+        try:
+            # Download with better error handling and progress
+            response = requests.get(url, timeout=30, stream=True)
+            response.raise_for_status()
+
+            # Extract to temp directory
+            with ZipFile(BytesIO(response.content)) as zipobj:
+                zipobj.extractall(gettempdir())
+
+        except requests.RequestException as e:
+            raise Exception(f"Failed to download update: {e}")
+        except zipfile.BadZipFile as e:
+            raise Exception(f"Downloaded file is not a valid ZIP archive: {e}")
+        except Exception as e:
+            raise Exception(f"Failed to extract update: {e}")
+
+    def _launch_update_script(self) -> None:
+        """
+        Launch the appropriate update script for the current platform.
+        """
+        system = platform.system()
+
+        # Stop watchdog before update
+        logger.info("Stopping watchdog Observer thread before update...")
+        self.stop_watchdog_signal.emit()
+
+        try:
+            if system == "Darwin":  # MacOS
+                current_dir = os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
+                )
+                script_path = Path(current_dir) / "Contents" / "MacOS" / "update.sh"
+                popen_args = ["/bin/bash", str(script_path)]
+                p = subprocess.Popen(popen_args)
+
+            elif system == "Windows":
+                script_path = AppInfo().application_folder / "update.bat"
+                popen_args = ["start", "/wait", "cmd", "/c", str(script_path)]
+                creationflags_value = (
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
+                    else 0
+                )
+                p = subprocess.Popen(
+                    popen_args,
+                    creationflags=creationflags_value,
+                    shell=True,
+                    cwd=str(AppInfo().application_folder),
+                )
+
+            else:  # Linux and other POSIX systems
+                script_path = AppInfo().application_folder / "update.sh"
+                popen_args = ["/bin/bash", str(script_path)]
+                p = subprocess.Popen(
+                    popen_args,
+                    start_new_session=True,
+                )
+
+            logger.debug(f"External updater script launched with PID: {p.pid}")
+            logger.debug(f"Arguments used: {popen_args}")
+
+            # Exit the application to allow update
+            sys.exit(0)
+
+        except Exception as e:
+            logger.error(f"Failed to launch update script: {e}")
+            dialogue.show_warning(
+                title=self.tr("Failed to launch update"),
+                text=self.tr("Could not start the update process."),
+                information=f"Error: {str(e)}",
             )
 
     def show_update_error(self) -> None:
@@ -962,10 +1102,6 @@ class MainContent(QObject):
                 "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
             ),
         )
-
-    def __do_download_extract_release_to_tempdir(self, url: str) -> None:
-        with ZipFile(BytesIO(requests.get(url).content)) as zipobj:
-            zipobj.extractall(gettempdir())
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
         # Parse latest release
@@ -2373,7 +2509,7 @@ class MainContent(QObject):
         )
         # self._do_refresh()
 
-    # GIT MOD ACTIONS
+        # GIT MOD ACTIONS
 
     def _do_add_zip_mod(self) -> None:
         """
