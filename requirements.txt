@@ -1,6 +1,6 @@
 git+https://github.com/RimSort/steamfiles
 beautifulsoup4==4.13.4
-certifi==2025.6.15
+certifi==2025.7.9
 chardet==5.2.0
 imageio==2.37.0
 loguru==0.7.3
