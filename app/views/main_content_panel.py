@@ -746,6 +746,10 @@ class MainContent(QObject):
         4. Downloads and extracts the update if user confirms
         5. Launches the appropriate update script for the platform
         """
+        if os.getenv("RIMSORT_DISABLE_UPDATER"):
+            logger.debug("RIMSORT_DISABLE_UPDATER is set, skipping update check silently.")
+            return
+        
         logger.debug("Checking for RimSort update...")
 
         # NOT NUITKA
