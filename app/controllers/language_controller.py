@@ -48,10 +48,8 @@ class LanguageController:
             for file in folder.glob("*.qm"):
                 if file.is_file():
                     language_name = file.stem
-                    # Skip qtbase files
-                    if not language_name.startswith("qtbase_"):
-                        supported_languages.add(language_name)
-                        logger.info(f"Found language: {language_name} in {folder}")
+                    supported_languages.add(language_name)
+                    logger.info(f"Found language: {language_name} in {folder}")
         return supported_languages
 
     def populate_languages_combobox(self, combox: QComboBox) -> None:
