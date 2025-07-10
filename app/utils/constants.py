@@ -57,6 +57,12 @@ RIMWORLD_DLC_METADATA = {
         "steam_url": "https://store.steampowered.com/app/2380740/RimWorld__Anomaly/",
         "description": "DLC #4",
     },
+    "3022790": {
+        "packageid": "ludeon.rimworld.odyssey",
+        "name": "RimWorld - Odyssey",
+        "steam_url": "https://store.steampowered.com/app/3022790/RimWorld__Odyssey/",
+        "description": "DLC #5",
+    },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
 SEARCH_DATA_SOURCE_FILTER_INDEXES = [

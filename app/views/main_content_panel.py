@@ -1277,6 +1277,7 @@ class MainContent(QObject):
             app_constants.RIMWORLD_DLC_METADATA["1392840"]["packageid"],
             app_constants.RIMWORLD_DLC_METADATA["1826140"]["packageid"],
             app_constants.RIMWORLD_DLC_METADATA["2380740"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["3022790"]["packageid"],
         ]
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
