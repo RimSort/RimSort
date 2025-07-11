@@ -89,6 +89,7 @@ def gen_tier_one_deps_graph(
         "ludeon.rimworld.ideology",
         "ludeon.rimworld.biotech",
         "ludeon.rimworld.anomaly",
+        "ludeon.rimworld.odyssey",
         "unlimitedhugs.hugslib",
     }
     # Bug fix: if there are circular dependencies in tier one mods
