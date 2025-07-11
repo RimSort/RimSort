@@ -1,5 +1,6 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import os
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -8,14 +9,30 @@ from pathlib import Path
 from typing import Any, Generator, List, Optional, Protocol, cast
 from urllib.parse import urlparse
 
-import pygit2
 from loguru import logger
-from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
-from pygit2.repository import Repository
 from PySide6.QtWidgets import QMessageBox
 
 from app.utils.generic import check_internet_connection, delete_files_with_condition
 from app.views.dialogue import InformationBox
+
+try:
+    import pygit2
+    from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
+    from pygit2.repository import Repository
+except Exception:
+    import certifi
+
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
+    logger.warning("Set SSL certificates using certifi")
+
+    try:
+        import pygit2
+        from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
+        from pygit2.repository import Repository
+    except Exception as e:
+        logger.error("Failed to import pygit2 after setting SSL certificates. ")
+        raise ImportError("Failed to import pygit2. ") from e
 
 
 class GitError(Exception):

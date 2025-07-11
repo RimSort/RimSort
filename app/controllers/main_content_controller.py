@@ -1,10 +1,10 @@
 import datetime
 import json
+import os
 import time
 from pathlib import Path
 from typing import List, Optional, cast
 
-import pygit2
 from github import Github, Repository
 from loguru import logger
 from PySide6.QtCore import QObject, QThreadPool, Slot
@@ -39,6 +39,21 @@ from app.views.dialogue import (
     show_internet_connection_error,
 )
 from app.views.main_content_panel import MainContent
+
+try:
+    import pygit2
+except Exception:
+    import certifi
+
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
+    logger.warning("Set SSL certificates using certifi")
+
+    try:
+        import pygit2
+    except Exception as e:
+        logger.error("Failed to import pygit2 after setting SSL certificates. ")
+        raise ImportError("Failed to import pygit2. ") from e
 
 
 class MainContentController(QObject):
