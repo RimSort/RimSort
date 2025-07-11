@@ -747,9 +747,11 @@ class MainContent(QObject):
         5. Launches the appropriate update script for the platform
         """
         if os.getenv("RIMSORT_DISABLE_UPDATER"):
-            logger.debug("RIMSORT_DISABLE_UPDATER is set, skipping update check silently.")
+            logger.debug(
+                "RIMSORT_DISABLE_UPDATER is set, skipping update check silently."
+            )
             return
-        
+
         logger.debug("Checking for RimSort update...")
 
         # NOT NUITKA
