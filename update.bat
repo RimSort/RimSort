@@ -72,7 +72,7 @@ if exist "%executable_path%" (
 REM Perform the update with robust error handling
 echo.
 echo Updating RimSort files...
-robocopy "%update_source_folder%" %current_dir_no_slash% /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
+robocopy "%update_source_folder%" "%current_dir_no_slash%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
 
 REM Check if robocopy was successful
 if errorlevel 8 (
