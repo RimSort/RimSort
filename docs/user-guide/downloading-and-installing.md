@@ -1,8 +1,8 @@
 ---
-title: Downloading and Installing
+title: Set Up
 parent: User Guide
 nav_order: 1
-permalink: user-guide/downloading-and-installing
+permalink: user-guide/set-up
 ---
 
 # Downloading and Installing
@@ -97,6 +97,18 @@ Linux
 - Run the executable: `./RimSort`
 
 <img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
+
+## Upgrading
+
+The upgrade process is the same for all operating systems.
+
+It is the same as installing, except you need first to remove or rename the directory of the current installation.
+
+1. Remove the old version or rename the directory so you have a backup.
+2. Follow the installation instruction for your operating systems.
+
+Data and configuration are stored in different locations, depending on the operating systems.
+
 
 [Releases]: https://github.com/oceancabbage/RimSort/releases
 [Stable Release]: https://github.com/oceancabbage/RimSort/releases/latest
