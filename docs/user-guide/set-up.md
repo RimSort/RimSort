@@ -98,16 +98,33 @@ Linux
 
 <img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
 
-## Upgrading
-
+# Upgrading
 The upgrade process is the same for all operating systems.
 
-It is the same as installing, except you need first to remove or rename the directory of the current installation.
+Since version `1.0.23`, there are 2 methods to upgrade RimSort:
+1. A manual upgrade
+2. An automatic upgrade.
+
+The procedures described, below, are the same for all operating systems.
+
+Data and configuration are stored in different locations, depending on the operating systems, so you will not loose your modlist, instances and configuration during the process.
+
+## Manual upgrade
+The procedure is the same as installing, except you need first to remove or rename the directory of the current installation.
 
 1. Remove the old version or rename the directory so you have a backup.
 2. Follow the installation instruction for your operating systems.
 
-Data and configuration are stored in different locations, depending on the operating systems.
+## Automatic upgrade
+In the menu bar click the 'Update' menu.
+
+There are, currently, 2 menu items:
+- 'Check for updates...', check if a new version is available and install it.
+- 'Check for updates on startup', a check box. If enabled, tells the tool to check for updates every time Rimsort is started. 
+
+The Update menu:
+
+<img width="855" height="210" alt="image" src="https://github.com/user-attachments/assets/eaca8d03-aa2e-4bb3-8b9e-2116202f9b26" />
 
 
 [Releases]: https://github.com/oceancabbage/RimSort/releases
