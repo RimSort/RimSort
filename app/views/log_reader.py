@@ -695,11 +695,13 @@ class LogReader(QDialog):
                 "Are you sure you want to import .acf? THis only works for steamcmd"
             ),
             button_text_override=[
-                "Import .acf",
+                self.tr("Import .acf"),
             ],
         )
         # Import .acf if user wants to import
-        if "Import" in answer:
+        answer_str = str(answer)
+        download_text = self.tr("Import .acf")
+        if download_text in answer_str:
             EventBus().do_import_acf.emit()
             self.load_acf_data()
 

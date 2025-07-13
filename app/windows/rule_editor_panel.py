@@ -37,7 +37,7 @@ from app.views.dialogue import show_dialogue_input, show_warning
 class EditableDelegate(QItemDelegate):
     comment_edited_signal = Signal(
         list
-    )  # signal connects to _comment_edited slot in main_content_panel.py
+    )  # signal connects to _do_update_rules_database in main_content_panel.py
 
     def createEditor(
         self,

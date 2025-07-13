@@ -547,6 +547,10 @@ When unchecked, search all file types with standard search.</source>
         <source>Exportfailed unknown exception occurred</source>
         <translation>Экспорт не удался: произошла неизвестная ошибка</translation>
     </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished">Импортировать .acf</translation>
+    </message>
 </context>
 <context>
     <name>MainContent</name>
@@ -609,16 +613,8 @@ Are your game configuration paths correct?</source>
         <translation>Не удалось получить информацию о последнем релизе</translation>
     </message>
     <message>
-        <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
-        <translation>Не удалось получить информацию о последнем релизе из-за исключения: {e.__class__}</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Обнаружено обновление RimSort</translation>
-    </message>
-    <message>
-        <source>An update to RimSort has been released: {tag_name}</source>
-        <translation>Выпущено обновление для RimSort: {tag_name}</translation>
     </message>
     <message>
         <source>You are running RimSort {current_version}
@@ -629,14 +625,6 @@ Do you want to update now?</source>
     <message>
         <source>Unable to complete update</source>
         <translation>Не удалось завершить обновление</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
-        <translation>Не удалось найти действительный релиз RimSort для {SYSTEM} {ARCH} {PROCESSOR}</translation>
-    </message>
-    <message>
-        <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
-        <translation>Обнаружено обновление RimSort. Загружается релиз RimSort {tag_name_updated}...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -657,10 +645,6 @@ Do you want to update now?</source>
     <message>
         <source>RimSort is up to date!</source>
         <translation>RimSort обновлен до последней версии!</translation>
-    </message>
-    <message>
-        <source>You are already running the latest release: {tag_name}</source>
-        <translation>Вы уже используете последнюю версию: {tag_name}</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -1166,6 +1150,38 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Failed to read the existing database!</source>
         <translation>Не удалось прочитать существующую базу данных!</translation>
     </message>
+    <message>
+        <source>You are already running the latest release: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to launch update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not start the update process.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -1242,10 +1258,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>All repositories updated successfully!</source>
         <translation>Все репозитории успешно обновлены!</translation>
-    </message>
-    <message>
-        <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
-        <translation>{count} репозиториев были обновлены:&lt;br/&gt;{repos}</translation>
     </message>
     <message>
         <source>Failed to update repo!</source>
@@ -1739,6 +1751,10 @@ Error: {error}</source>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
         <translation>Вы уверены, что хотите загрузить базу данных правил сообщества на GitHub?</translation>
     </message>
+    <message>
+        <source>{count} repositories were updated with their latest commits:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -1985,6 +2001,18 @@ RimSort может скопировать все ваши моды Workshop в �
     <message>
         <source>This action cannot be undone.</source>
         <translation>Это действие нельзя отменить.</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2982,10 +3010,6 @@ Should be Loaded Before:</source>
         <translation>About.xml (loadBefore)</translation>
     </message>
     <message>
-        <source>About.xml (incompatibilities)</source>
-        <translation>About.xml (incompatibilities)</translation>
-    </message>
-    <message>
         <source>Community Rules (loadAfter)</source>
         <translation>Community Rules (loadAfter)</translation>
     </message>
@@ -3110,6 +3134,18 @@ Should be Loaded Before:</source>
     <message>
         <source>Remove this rule</source>
         <translation>Удалить это правило</translation>
+    </message>
+    <message>
+        <source>About.xml (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4435,6 +4471,17 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>Please provide a valid archive path.</source>
         <translation>Пожалуйста, предоставьте действительный путь к архиву.</translation>
+    </message>
+</context>
+<context>
+    <name>check_if_pfids_blacklisted</name>
+    <message>
+        <source>Download blacklisted mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip blacklisted mods</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

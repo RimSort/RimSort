@@ -10,7 +10,14 @@ from uuid import uuid4
 
 from loguru import logger
 from natsort import natsorted
-from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
+from PySide6.QtCore import (
+    QCoreApplication,
+    QObject,
+    QRunnable,
+    QThread,
+    QThreadPool,
+    Signal,
+)
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
@@ -2673,12 +2680,20 @@ def check_if_pfids_blacklisted(
             information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
             details=blacklisted_mods_report,
             button_text_override=[
-                "Download blacklisted mods",
-                "Skip blacklisted mods",
+                QCoreApplication.translate(
+                    "check_if_pfids_blacklisted", "Download blacklisted mods"
+                ),
+                QCoreApplication.translate(
+                    "check_if_pfids_blacklisted", "Skip blacklisted mods"
+                ),
             ],
         )
         # Remove blacklisted mods from list if user wants to download them still
-        if "Download" in answer:
+        answer_str = str(answer)
+        download_text = QCoreApplication.translate(
+            "check_if_pfids_blacklisted", "Download blacklisted mods"
+        )
+        if download_text in answer_str:
             publishedfileids.remove(publishedfileid)
             logger.debug(
                 f"Skipping download of blacklisted Workshop mod: {publishedfileid}"

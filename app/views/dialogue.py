@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -45,7 +45,7 @@ def show_dialogue_conditional(
     information: str | None = None,
     details: str | None = None,
     button_text_override: list[str] | None = None,
-) -> str:
+) -> Union[str, QMessageBox.StandardButton]:
     """
     Displays a dialogue, prompting the user for input
 
@@ -73,7 +73,10 @@ def show_dialogue_conditional(
         # Add custom buttons
         custom_btns = []
         for btn_text in button_text_override:
-            custom_btn = QPushButton(btn_text)
+            custom_btn_text = QCoreApplication.translate(
+                "show_dialogue_conditional", btn_text
+            )
+            custom_btn = QPushButton(custom_btn_text)
             custom_btn.setFixedWidth(custom_btn.sizeHint().width())
             custom_btns.append(custom_btn)
             dialogue.addButton(custom_btn, QMessageBox.ButtonRole.ActionRole)
@@ -95,6 +98,16 @@ def show_dialogue_conditional(
     # Show the message box & return response
     dialogue.exec_()
     response = dialogue.clickedButton()
+    # Map the clicked button to standard button enum if possible
+    for std_button in [
+        QMessageBox.StandardButton.Yes,
+        QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.Cancel,
+        QMessageBox.StandardButton.Ok,
+    ]:
+        if dialogue.button(std_button) == response:
+            return std_button
+    # Fallback to return button text if no match found
     return response.text()
 
 
