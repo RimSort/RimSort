@@ -347,11 +347,13 @@ class MainWindow(QMainWindow):
                 )
             ),
             button_text_override=[
-                "Convert to SteamCMD",
-                "Keep Workshop Folder",
+                self.tr("Convert to SteamCMD"),
+                self.tr("Keep Workshop Folder"),
             ],
         )
-        return answer or "Cancelled"
+        answer_str = str(answer)
+        cancelled_str = self.tr("Cancelled")
+        return answer_str or cancelled_str
 
     def __backup_existing_instance(self, instance_name: str) -> None:
         # Get instance data from Settings
