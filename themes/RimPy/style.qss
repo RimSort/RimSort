@@ -690,3 +690,196 @@ QWidget#dependencyGroupWidget {
     margin-bottom: 6px;
     padding: 6px;
 }
+
+/* TroubleshootingDialog styling */
+QDialog#TroubleshootingDialog {
+    background-color: #19232d; /* Primary Background */
+    color: #e6edf3; /* White */
+}
+
+QFrame#section {
+    background-color: #1B2838; /* Secondary Background */
+    border: 1px solid #455364; /* Primary Text (used for borders) */
+    border-radius: 8px;
+    margin: 0px;
+}
+
+QLabel#sectionHeader {
+    background-color: #22303d; /* Tertiary Background */
+    color: #e6edf3; /* White */
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px 8px 0px 0px;
+    border-bottom: 1px solid #455364; /* Primary Text (used for borders) */
+    qproperty-alignment: AlignCenter;
+}
+
+QLabel#description {
+    color: #cfcfcf; /* Subtext */
+    font-size: 12px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    line-height: 1.3;
+}
+
+QCheckBox#styledCheckbox {
+    color: #e6edf3; /* White */
+    font-size: 13px;
+    padding: 4px 14px;
+    background: transparent;
+    border: none;
+    spacing: 8px;
+    min-height: 22px;
+}
+
+QCheckBox#styledCheckbox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #455364; /* Primary Text (used for borders) */
+    border-radius: 3px;
+    background-color: #1B2838; /* Secondary Background */
+}
+
+QCheckBox#styledCheckbox::indicator:hover {
+    border-color: #3688c3; /* Secondary Accent */
+}
+
+QCheckBox#styledCheckbox::indicator:checked {
+    background-color: #3688c3; /* Secondary Accent */
+    border-color: #3688c3; /* Secondary Accent */
+}
+
+QPushButton#primaryButton {
+    background-color: #346792; /* Primary Accent */
+    color: #e6edf3; /* White */
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #3688c3; /* Secondary Accent */
+}
+
+QPushButton#primaryButton:pressed {
+    background-color: #3e4a52; /* Quaternary Accent */
+}
+
+QPushButton#secondaryButton {
+    background-color: #455364; /* Primary Text */
+    color: #e6edf3; /* White */
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+QPushButton#secondaryButton:hover {
+    background-color: #54687a; /* Secondary Text */
+}
+
+QPushButton#secondaryButton:pressed {
+    background-color: #60798b; /* Tertiary Text */
+}
+
+QPushButton#dangerButton {
+    background-color: #c4334d; /* Retained original for danger, as no direct theme equivalent for red */
+    color: #e6edf3; /* White */
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+QPushButton#dangerButton:hover {
+    background-color: #a02d42; /* Darkened original for danger hover */
+}
+
+QPushButton#dangerButton:pressed {
+    background-color: #822536; /* Further darkened original for danger pressed */
+}
+
+QPushButton#actionButton {
+    background-color: #2e8b57; /* Retained original for action, as no direct theme equivalent for green */
+    color: #e6edf3; /* White */
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 100px;
+}
+
+QPushButton#actionButton:hover {
+    background-color: #247846; /* Darkened original for action hover */
+}
+
+QPushButton#actionButton:pressed {
+    background-color: #1e6238; /* Further darkened original for action pressed */
+}
+
+QLabel#warningLabel {
+    color: red; /* Retained original for warning, as red is used elsewhere in the theme for invalid states */
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    margin: 0px 14px 6px 14px;
+    min-height: 16px;
+}
+
+QLabel#noteLabel {
+    color: #d4b106; /* Retained original for note, as no direct theme equivalent for yellow */
+    font-size: 11px;
+    padding: 6px 14px;
+    margin: 4px 14px 6px 14px;
+    min-height: 16px;
+}
+
+QWidget#contentWidget {
+    background-color: #1B2838; /* Secondary Background */
+    border: none;
+}
+
+QFrame#separator {
+    background-color: #455364; /* Primary Text (used for separators) */
+    border: none;
+    height: 1px;
+    margin: 4px 14px;
+}
+
+QLabel#utilityTitle {
+    font-weight: 600;
+    font-size: 12px;
+    color: #e6edf3; /* White */
+}
+
+QLabel#utilityDescription {
+    font-size: 10px;
+    color: #cfcfcf; /* Subtext */
+}
+
+QLabel#sectionTitle {
+    font-weight: 600;
+    font-size: 13px;
+    color: #e6edf3; /* White */
+}
+
+QLabel#sectionDescription {
+    font-size: 11px;
+    color: #cfcfcf; /* Subtext */
+}
+
+QLabel#clearWarning {
+    font-size: 11px;
+    color: red; /* Retained original for warning */
+}
