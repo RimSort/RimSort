@@ -546,6 +546,10 @@ When unchecked, search all file types with standard search.</source>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
         <translation>本当に.acfをインポートしますか？これはsteamcmd専用です</translation>
     </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished">Import .acf</translation>
+    </message>
 </context>
 <context>
     <name>MainContent</name>
@@ -607,16 +611,8 @@ Are your game configuration paths correct?</source>
         <translation>最新のリリース情報を取得できませんでした</translation>
     </message>
     <message>
-        <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
-        <translation>最新のリリース情報を取得できませんでした: {e.__class__}</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>RimSortのアップデートが見つかりました</translation>
-    </message>
-    <message>
-        <source>An update to RimSort has been released: {tag_name}</source>
-        <translation>RimSortのアップデートがリリースされました: {tag_name}</translation>
     </message>
     <message>
         <source>You are running RimSort {current_version}
@@ -627,14 +623,6 @@ Do you want to update now?</source>
     <message>
         <source>Unable to complete update</source>
         <translation>アップデートを完了できませんでした</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
-        <translation>無効なRimSortリリースが見つかりませんでした: {SYSTEM} {ARCH} {PROCESSOR}</translation>
-    </message>
-    <message>
-        <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
-        <translation>RimSortのアップデートが見つかりました。RimSort {tag_name_updated}リリースをダウンロードしています...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -655,10 +643,6 @@ Do you want to update now?</source>
     <message>
         <source>RimSort is up to date!</source>
         <translation>RimSortは最新の状態です！</translation>
-    </message>
-    <message>
-        <source>You are already running the latest release: {tag_name}</source>
-        <translation>現在の最新リリースは: {tag_name}です</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -1166,6 +1150,38 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Failed to read the existing database!</source>
         <translation>既存のデータベースの読み込みに失敗しました！</translation>
     </message>
+    <message>
+        <source>You are already running the latest release: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to launch update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not start the update process.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -1242,10 +1258,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>All repositories updated successfully!</source>
         <translation>すべてのリポジトリが正常に更新されました！</translation>
-    </message>
-    <message>
-        <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
-        <translation>{count} のリポジトリが更新されました:&lt;br/&gt;{repos}</translation>
     </message>
     <message>
         <source>Failed to update repo!</source>
@@ -1739,6 +1751,10 @@ GitHubで手動でプルリクエストを作成できます。
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
         <translation>コミュニティルールデータベースをGitHubにアップロードしてもよろしいですか？</translation>
     </message>
+    <message>
+        <source>{count} repositories were updated with their latest commits:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -1985,6 +2001,18 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     <message>
         <source>This action cannot be undone.</source>
         <translation>この操作は元に戻せません。</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2983,10 +3011,6 @@ Should be Loaded Before:</source>
         <translation>About.xml (loadBefore)</translation>
     </message>
     <message>
-        <source>About.xml (incompatibilities)</source>
-        <translation>About.xml (incompatibilities)</translation>
-    </message>
-    <message>
         <source>Community Rules (loadAfter)</source>
         <translation>コミュニティルール (loadAfter)</translation>
     </message>
@@ -3110,6 +3134,18 @@ Should be Loaded Before:</source>
     <message>
         <source>Remove this rule</source>
         <translation>このルールを削除</translation>
+    </message>
+    <message>
+        <source>About.xml (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4425,6 +4461,17 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>Please provide a valid archive path.</source>
         <translation>有効なアーカイブパスを指定してください。</translation>
+    </message>
+</context>
+<context>
+    <name>check_if_pfids_blacklisted</name>
+    <message>
+        <source>Download blacklisted mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip blacklisted mods</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

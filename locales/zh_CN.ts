@@ -547,6 +547,10 @@ When unchecked, search all file types with standard search.</source>
         <source>Exportfailed unknown exception occurred</source>
         <translation>导出失败，发生未知异常</translation>
     </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished">导入 .acf</translation>
+    </message>
 </context>
 <context>
     <name>MainContent</name>
@@ -609,16 +613,8 @@ Are your game configuration paths correct?</source>
         <translation>无法获取最新的版本信息</translation>
     </message>
     <message>
-        <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
-        <translation>由于异常无法获取最新的版本信息：{e.__class__}</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>RimSort 有可用更新</translation>
-    </message>
-    <message>
-        <source>An update to RimSort has been released: {tag_name}</source>
-        <translation>RimSort 已发布更新：{tag_name}</translation>
     </message>
     <message>
         <source>You are running RimSort {current_version}
@@ -629,14 +625,6 @@ Do you want to update now?</source>
     <message>
         <source>Unable to complete update</source>
         <translation>无法完成更新</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
-        <translation>无法找到适用于 {SYSTEM} {ARCH} {PROCESSOR} 的有效 RimSort 版本</translation>
-    </message>
-    <message>
-        <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
-        <translation>发现 RimSort 更新。正在下载 RimSort {tag_name_updated} 版本...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -657,10 +645,6 @@ Do you want to update now?</source>
     <message>
         <source>RimSort is up to date!</source>
         <translation>RimSort 已是最新版本！</translation>
-    </message>
-    <message>
-        <source>You are already running the latest release: {tag_name}</source>
-        <translation>你正在运行最新版本：{tag_name}</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -1166,6 +1150,38 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Use This Instead</source>
         <translation>替代为此</translation>
     </message>
+    <message>
+        <source>You are already running the latest release: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to launch update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not start the update process.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -1242,10 +1258,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>All repositories updated successfully!</source>
         <translation>所有仓库更新成功！</translation>
-    </message>
-    <message>
-        <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
-        <translation>{count} 个仓库已更新：&lt;br/&gt;{repos}</translation>
     </message>
     <message>
         <source>Failed to update repo!</source>
@@ -1739,6 +1751,10 @@ Error: {error}</source>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
         <translation>您确定要将社区规则数据库上传到 GitHub 吗？</translation>
     </message>
+    <message>
+        <source>{count} repositories were updated with their latest commits:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -1985,6 +2001,18 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
     <message>
         <source>This action cannot be undone.</source>
         <translation>此操作无法撤消。</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2986,10 +3014,6 @@ Should be Loaded Before:</source>
         <translation>About.xml (loadBefore)</translation>
     </message>
     <message>
-        <source>About.xml (incompatibilities)</source>
-        <translation>About.xml (incompatibilities)</translation>
-    </message>
-    <message>
         <source>Community Rules (loadAfter)</source>
         <translation>社区规则 (loadAfter)</translation>
     </message>
@@ -3114,6 +3138,18 @@ Should be Loaded Before:</source>
     <message>
         <source>Remove this rule</source>
         <translation>删除此规则</translation>
+    </message>
+    <message>
+        <source>About.xml (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4437,6 +4473,17 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>Please provide a valid archive path.</source>
         <translation>请提供一个有效的存档路径。</translation>
+    </message>
+</context>
+<context>
+    <name>check_if_pfids_blacklisted</name>
+    <message>
+        <source>Download blacklisted mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip blacklisted mods</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -534,6 +534,10 @@ When unchecked, search all file types with standard search.</source>
         <source>Exportfailed unknown exception occurred</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContent</name>
@@ -591,15 +595,7 @@ Are your game configuration paths correct?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An update to RimSort has been released: {tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -609,14 +605,6 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Unable to complete update</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -637,10 +625,6 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>RimSort is up to date!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are already running the latest release: {tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1113,6 +1097,38 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>You are already running the latest release: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to launch update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not start the update process.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -1187,10 +1203,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>All repositories updated successfully!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1669,6 +1681,10 @@ Error: {error}</source>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>{count} repositories were updated with their latest commits:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -1906,6 +1922,18 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2870,10 +2898,6 @@ Should be Loaded Before:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>About.xml (incompatibilities)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Community Rules (loadAfter)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2996,6 +3020,18 @@ Should be Loaded Before:</source>
     </message>
     <message>
         <source>Remove this rule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About.xml (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community Rules (incompatibilitiesWith)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Rules (incompatibilitiesWith)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4270,6 +4306,17 @@ The following table displays Workshop mods with suggested replacements according
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>check_if_pfids_blacklisted</name>
+    <message>
+        <source>Download blacklisted mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip blacklisted mods</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
