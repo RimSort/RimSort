@@ -214,15 +214,21 @@ class MainContentController(QObject):
         total = len(successful) + len(failed)
 
         if not failed:
+            details_msg = ""
+            for repo_path in successful:
+                repo_name = Path(repo_path).name
+                commit_info = getattr(results, "commit_info", {}).get(
+                    str(repo_path), "No commit info"
+                )
+                details_msg += f"✓ {repo_name}\n  └─ {commit_info}\n\n"
+
             InformationBox(
                 title=self.tr("Updates Completed"),
                 text=self.tr("All repositories updated successfully!"),
                 information=self.tr(
-                    "{count} repositories were updated:<br/>{repos}"
-                ).format(
-                    count=len(successful),
-                    repos="<br/>".join([Path(p).name for p in successful]),
-                ),
+                    "{count} repositories were updated with their latest commits:"
+                ).format(count=len(successful)),
+                details=details_msg.strip(),
             ).exec()
         elif not successful:
             details_msg = ""
@@ -239,8 +245,13 @@ class MainContentController(QObject):
             ).exec()
         else:
             details_msg = self.tr("Successful updates:\n")
-            for p in successful:
-                details_msg += f"  ✓ {Path(p).name}\n"
+            for repo_path in successful:
+                repo_name = Path(repo_path).name
+                commit_info = getattr(results, "commit_info", {}).get(
+                    str(repo_path), "No commit info"
+                )
+                details_msg += f"  ✓ {repo_name}\n    └─ {commit_info}\n"
+
             details_msg += f"\n{self.tr('Failed updates:')}\n"
             for repo_path, err in failed:
                 details_msg += f"  ✗ {Path(repo_path).name}: {err}\n"
