@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QVBoxLayout,
@@ -377,7 +378,7 @@ class MainContent(QObject):
                     )
                 ),
             )
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 self.settings_controller.show_settings_dialog("Locations")
             return False
 
@@ -2045,7 +2046,9 @@ class MainContent(QObject):
             information=self.tr("Would you like to set the path now?"),
             button_text_override=[self.tr("Open settings")],
         )
-        if "settings" in answer:
+        answer_str = str(answer)
+        download_text = self.tr("Open settings")
+        if download_text in answer_str:
             self.settings_controller.show_settings_dialog()
 
     @Slot()
@@ -3287,7 +3290,7 @@ class MainContent(QObject):
                 "This operation will overwrite the {rules_source} database located at the following path:\n\n{path}"
             ).format(rules_source=rules_source, path=path),
         )
-        if answer == "&Yes":
+        if answer == QMessageBox.StandardButton.Yes:
             with open(path, "w", encoding="utf-8") as output:
                 json.dump(db_output_c, output, indent=4)
             self._do_refresh()
