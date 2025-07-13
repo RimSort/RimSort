@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Generator, List, Optional, Protocol, cast
+from typing import Any, Generator, List, Optional, Protocol, Tuple, cast
 from urllib.parse import urlparse
 
 from loguru import logger
@@ -686,6 +686,11 @@ def git_pull(
         merge_result, _ = repo.merge_analysis(remote_master_id)
 
         if merge_result & pygit2.enums.MergeAnalysis.UP_TO_DATE:
+            if reset_working_tree:
+                logger.debug(
+                    "Working tree is up to date, but reset requested — performing hard reset"
+                )
+                repo.reset(repo.head.target, ResetMode.HARD)
             logger.info("Repository is already up to date.")
             return GitPullResult.UP_TO_DATE
 
@@ -731,16 +736,12 @@ def git_pull(
                         logger.warning("Conflict found in unknown file")
 
                 if config.notify_errors:
-                    conflict_details = (
-                        f"Conflicts in files: {', '.join(conflict_files)}"
-                        if conflict_files
-                        else "Multiple conflicts detected"
-                    )
-                    config.get_handler().show_error(
-                        title="Git Merge Conflict",
-                        message="Conflicts encountered during merge.",
-                        details=conflict_details,
-                    )
+                    if conflict_files:
+                        logger.error(
+                            f"Git merge conflicts in files: {', '.join(conflict_files)}"
+                        )
+                    else:
+                        logger.error("Multiple git merge conflicts detected")
 
                 return GitPullResult.CONFLICT
             else:
@@ -1427,3 +1428,59 @@ def git_is_clean(repo: Repository, config: Optional[GitOperationConfig] = None) 
         True if the working directory is clean, False otherwise.
     """
     return not git_has_uncommitted_changes(repo, config)
+
+
+def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
+    """
+    Get the latest commit information from a git repository.
+    Args:
+        repo: pygit2.Repository Object
+        short_format: Whether to use short format (only show hash and message)
+
+    Returns:
+        str: Formatted commit information
+    """
+    try:
+        # Get the HEAD commit
+        head = repo.head
+        commit = repo[head.target]
+
+        # Check if the returned object is a Commit type
+        if isinstance(commit, pygit2.Commit):
+            if short_format:
+                short_hash = str(commit.id)[:7]
+                message = commit.message.split("\n")[
+                    0
+                ]  # Only the first line of the message
+                return f"{short_hash} {message}"
+            else:
+                short_hash = str(commit.id)[:7]
+                message = commit.message.split("\n")[0]
+                author = commit.author.name
+                import datetime
+
+                commit_time = datetime.datetime.fromtimestamp(commit.commit_time)
+                time_str = commit_time.strftime("%Y-%m-%d %H:%M")
+                return f"{short_hash} - {message} ({author}, {time_str})"
+        else:
+            return "The HEAD is not a commit."
+
+    except Exception as e:
+        return f"Latest commit info unavailable: {str(e)}"
+
+
+def get_repository_latest_commit(
+    repo_path: Path, config: GitOperationConfig
+) -> Tuple[bool, Optional[str], Optional[str]]:
+    try:
+        with git_repository(repo_path, config) as repo:
+            if repo is None:
+                return False, None, "Invalid git repository"
+
+            commit_info = get_latest_commit_info(repo, short_format=True)
+            return True, commit_info, None
+
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Error getting latest commit for {repo_path}: {error_msg}")
+        return False, None, error_msg

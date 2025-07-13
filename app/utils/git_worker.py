@@ -453,6 +453,15 @@ class GitCheckUpdatesWorker(BaseBatchWorker):
 class GitBatchUpdateResults(BatchOperationResult):
     """Data structure to hold batch update (pull) results."""
 
+    def __init__(
+        self,
+        successful: List[Path],
+        failed: List[Tuple[Path, str]],
+        commit_info: Dict[str, str],
+    ):
+        super().__init__(successful, failed)
+        self.commit_info = commit_info
+
     pass
 
 
@@ -462,7 +471,31 @@ class GitBatchUpdateWorker(BaseBatchWorker):
     @Slot()
     def run(self) -> None:
         """Pull updates for each repository, collect successes and failures."""
-        self.execute_batch_operation(git_utils.git_pull, "pull", GitBatchUpdateResults)
+        successful: List[Path] = []
+        failed: List[Tuple[Path, str]] = []
+        commit_info: Dict[str, str] = {}
+
+        for repo_path in self.repos_paths:
+            success, error_msg = process_batch_repository(
+                repo_path, self.config, git_utils.git_pull, "pull"
+            )
+
+            if success:
+                successful.append(repo_path)
+                commit_success, latest_commit, commit_error = (
+                    git_utils.get_repository_latest_commit(repo_path, self.config)
+                )
+                if commit_success and latest_commit:
+                    commit_info[str(repo_path)] = latest_commit
+                else:
+                    commit_info[str(repo_path)] = "Latest commit info unavailable"
+            else:
+                failed.append((repo_path, error_msg or "Unknown error"))
+
+        results = GitBatchUpdateResults(
+            successful=successful, failed=failed, commit_info=commit_info
+        )
+        self.signals.finished.emit(results)
 
 
 class GitBatchPushResults(BatchOperationResult):
