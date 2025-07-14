@@ -666,16 +666,21 @@ class SteamBrowser(QWidget):
                             if (!tile.querySelector('.rimsort-installed-badge')) {
                                 var installedBadge = document.createElement('div');
                                 installedBadge.className = 'rimsort-installed-badge';
-                                installedBadge.innerHTML = '✓ Installed';
+                                installedBadge.innerHTML = '✓';
                                 installedBadge.style.position = 'absolute';
                                 installedBadge.style.top = '5px';
                                 installedBadge.style.right = '5px';
                                 installedBadge.style.backgroundColor = '#4CAF50';
                                 installedBadge.style.color = 'white';
-                                installedBadge.style.padding = '2px 6px';
-                                installedBadge.style.borderRadius = '4px';
-                                installedBadge.style.fontSize = '12px';
+                                installedBadge.style.width = '32px';
+                                installedBadge.style.height = '32px';
+                                installedBadge.style.borderRadius = '6px';
+                                installedBadge.style.display = 'flex';
+                                installedBadge.style.alignItems = 'center';
+                                installedBadge.style.justifyContent = 'center';
                                 installedBadge.style.fontWeight = 'bold';
+                                installedBadge.style.fontSize = '18px';
+                                installedBadge.style.boxShadow = '0 0 4px black';
                                 tile.style.position = 'relative';
                                 tile.appendChild(installedBadge);
                             }
