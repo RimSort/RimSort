@@ -5,7 +5,7 @@ from typing import Callable
 
 from loguru import logger
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu
+from PySide6.QtWidgets import QMenu, QMessageBox
 
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
@@ -24,8 +24,8 @@ from app.views.dialogue import (
 class DialogueResponse(Enum):
     """Enumeration for dialogue response constants."""
 
-    YES = "&Yes"
-    NO = "&No"
+    YES = QMessageBox.StandardButton.Yes
+    NO = QMessageBox.StandardButton.No
 
 
 class DeletionResult:

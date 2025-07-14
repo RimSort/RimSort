@@ -8,7 +8,7 @@ from typing import List, Optional, cast
 from github import Github, Repository
 from loguru import logger
 from PySide6.QtCore import QObject, QThreadPool, Slot
-from PySide6.QtWidgets import QInputDialog
+from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from app.controllers.settings_controller import SettingsController
 from app.utils import git_utils
@@ -670,7 +670,7 @@ class MainContentController(QObject):
                 text=self.tr("Local repository does not exist."),
                 information=self.tr("Would you like to clone the repository first?"),
             )
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 self._do_git_clone(
                     base_path=str(AppInfo().databases_folder),
                     repo_url=repo_url,
@@ -1261,7 +1261,7 @@ class MainContentController(QObject):
                 ).format(url=pull_request.html_url),
             )
 
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 # Open URL in browser
                 try:
                     import webbrowser

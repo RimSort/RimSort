@@ -12,6 +12,7 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QMessageBox
 
 import app.utils.symlink as symlink
 from app.controllers.settings_controller import SettingsController
@@ -352,6 +353,10 @@ class SteamcmdInterface:
         else:
             btn_text = ["&Yes", "&No"]
 
+        # Translate button texts explicitly before passing to show_dialogue_conditional
+        translated_btn_text = [
+            self.translate("SteamcmdInterface", btn) for btn in btn_text
+        ]
         answer = show_dialogue_conditional(
             title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
             text=self.translate(
@@ -360,14 +365,17 @@ class SteamcmdInterface:
             ),
             information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
             + self.translate("SteamcmdInterface", "Do you want to setup SteamCMD?"),
-            button_text_override=btn_text,
+            button_text_override=translated_btn_text,
         )
-        if answer == "&Yes":
+        yes_text = self.translate("SteamcmdInterface", "&Yes")
+        dont_ask_text = self.translate("SteamcmdInterface", "&Don't Ask Again")
+
+        if answer == yes_text:
             EventBus().do_install_steamcmd.emit()
         if runner:
             runner.close()
 
-        if ask_ignore and answer == "&Don't Ask Again":
+        if ask_ignore and answer == dont_ask_text:
             if settings_controller is not None:
                 settings_controller.active_instance.steamcmd_ignore = True
                 settings_controller.settings.save()
@@ -487,7 +495,7 @@ class SteamcmdInterface:
                 "Would you like to reinstall SteamCMD?",
                 f"Existing install: {self.steamcmd_install_path}",
             )
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 runner.message(f"Reinstalling SteamCMD: {self.steamcmd_install_path}")
                 self.setup_steamcmd(symlink_source_path, True, runner)
         if installed:
@@ -530,7 +538,7 @@ class SteamcmdInterface:
                     )
                     + symlink_destination_path,
                 )
-                if answer == "&Yes":  # Re-create symlink
+                if answer == QMessageBox.StandardButton.Yes:  # Re-create symlink
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )
@@ -563,7 +571,9 @@ class SteamcmdInterface:
                     )
                     + symlink_destination_path,
                 )
-                if answer == "&Yes":  # Re-create symlink/junction
+                if (
+                    answer == QMessageBox.StandardButton.Yes
+                ):  # Re-create symlink/junction
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )
@@ -585,7 +595,7 @@ class SteamcmdInterface:
                     )
                     + symlink_destination_path,
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )

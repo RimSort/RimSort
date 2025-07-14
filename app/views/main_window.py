@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -933,7 +934,7 @@ class MainWindow(QMainWindow):
                         "This will try to generate run args for the new instance based on the configured Game/Config folders."
                     ),
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     # Append new run args to the existing run args
                     generated_instance_run_args = [
                         "-logfile",
