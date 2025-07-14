@@ -430,10 +430,15 @@ class ModDeletionMenu(QMenu):
 
             # Show success message
             show_information(
-                title=self.tr(f"Steam {action.capitalize()}"),
+                title=self.tr("Steam {action}").format(
+                    action=self.tr(action).capitalize()
+                ),
                 text=self.tr(
-                    f"Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).\n"
+                    "Successfully initiated {action} from {len} Steam Workshop mod(s).\n"
                     "The process may take a few moments to complete."
+                ).format(
+                    action=self.tr(action).capitalize(),
+                    len=len(publishedfileids),
                 ),
             )
 
@@ -444,10 +449,12 @@ class ModDeletionMenu(QMenu):
         except Exception as e:
             logger.error(f"Failed to initiate Steam {action}: {e}")
             show_warning(
-                title=self.tr(f"{action.capitalize()} Error"),
-                text=self.tr(
-                    f"An error occurred while trying to {action} from Steam Workshop mods."
+                title=self.tr("{action} Error").format(
+                    action=self.tr(action).capitalize()
                 ),
+                text=self.tr(
+                    "An error occurred while trying to {action} from Steam Workshop mods."
+                ).format(action=self.tr(action)),
                 information=str(e),
             )
 
@@ -472,7 +479,9 @@ class ModDeletionMenu(QMenu):
         if not selected_mods:
             show_information(
                 title=self.tr("No mods selected"),
-                text=self.tr(f"Please select at least one mod to delete and {action}."),
+                text=self.tr(
+                    "Please select at least one mod to delete and {action}."
+                ).format(action=self.tr(action)),
             )
             return
 
@@ -485,17 +494,23 @@ class ModDeletionMenu(QMenu):
         ]
 
         answer = show_dialogue_conditional(
-            title=self.tr(f"Confirm Deletion and {action.capitalize()}"),
+            title=self.tr("Confirm Deletion and {action}").format(
+                action=self.tr(action).capitalize()
+            ),
             text=self.tr(
-                f"You have selected {len(selected_mods)} mod(s) for deletion.\n"
-                f"{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d."
+                "You have selected {count} mod(s) for deletion.\n"
+                "{steam_count} of these are Steam Workshop mods that will also be {action}."
+            ).format(
+                count=len(selected_mods),
+                steam_count=len(steam_mods),
+                action=self.tr(action + "d"),
             ),
             information=self.tr(
-                f"\nThis operation will:\n"
-                f"• Delete the selected mod directories from your filesystem\n"
-                f"• {action.capitalize()} Steam Workshop mods from your Steam account\n\n"
+                "\nThis operation will:\n"
+                "• Delete the selected mod directories from your filesystem\n"
+                "• {action} Steam Workshop mods from your Steam account\n\n"
                 "Do you want to proceed?"
-            ),
+            ).format(action=self.tr(action).capitalize()),
         )
 
         if answer == DialogueResponse.YES.value:
@@ -518,3 +533,9 @@ class ModDeletionMenu(QMenu):
     def delete_dds(self) -> None:
         """Alias for delete_dds_files_only for backward compatibility."""
         self.delete_dds_files_only()
+
+    def _dummy_translations(self) -> None:
+        self.tr("unsubscribe")
+        self.tr("resubscribe")
+        self.tr("unsubscribed")
+        self.tr("resubscribed")
