@@ -679,8 +679,9 @@ class SteamBrowser(QWidget):
                                 installedBadge.style.alignItems = 'center';
                                 installedBadge.style.justifyContent = 'center';
                                 installedBadge.style.fontWeight = 'bold';
-                                installedBadge.style.fontSize = '18px';
+                                installedBadge.style.fontSize = '20px';
                                 installedBadge.style.boxShadow = '0 0 4px black';
+                                installedBadge.style.cursor = 'default';
                                 tile.style.position = 'relative';
                                 tile.appendChild(installedBadge);
                             }
