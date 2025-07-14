@@ -9,6 +9,7 @@ from PySide6.QtCore import QProcess, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QIcon, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QMessageBox,
     QPlainTextEdit,
     QProgressBar,
     QToolButton,
@@ -531,7 +532,7 @@ class RunnerPanel(QWidget):
                 ),
                 details=details,
             )
-            == "&Yes"
+            == QMessageBox.StandardButton.Yes
         ):
             self.steamcmd_downloader_signal.emit(self.steamcmd_download_tracking)
         else:
