@@ -814,7 +814,7 @@ class MainContent(QObject):
             ).format(current_version=current_version),
         )
 
-        if answer != "&Yes":
+        if answer != QMessageBox.StandardButton.Yes:
             return
 
         # Perform update
@@ -1008,7 +1008,7 @@ class MainContent(QObject):
                 information=f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {temp_path}",
             )
 
-            if answer != "&Yes":
+            if answer != QMessageBox.StandardButton.Yes:
                 return
 
             # Launch update script
@@ -2739,7 +2739,7 @@ class MainContent(QObject):
                 )
             ),
         )
-        if answer == "&Yes":
+        if answer == QMessageBox.StandardButton.Yes:
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
@@ -2993,7 +2993,7 @@ class MainContent(QObject):
                         + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort."
                     ),
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     for (
                         metadata_values
                     ) in self.metadata_manager.internal_local_metadata.values():
