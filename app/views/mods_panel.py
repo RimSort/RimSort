@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMenu,
+    QMessageBox,
     QPushButton,
     QToolButton,
     QVBoxLayout,
@@ -1113,7 +1114,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(git_paths)),
                         information=self.tr("Do you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(f"Updating {len(git_paths)} git mod(s)")
                         self.update_git_mods_signal.emit(git_paths)
                     return True
@@ -1210,7 +1211,7 @@ class ModListWidget(QListWidget):
                             + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Deleting + redownloading {len(steamcmd_publishedfileid_to_redownload)} SteamCMD mod(s)"
                         )
@@ -1305,7 +1306,7 @@ class ModListWidget(QListWidget):
                             "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
                         )
@@ -1333,7 +1334,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(publishedfileids)),
                         information=self.tr("\nDo you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing from {len(publishedfileids)} mod(s)"
                         )
@@ -1406,7 +1407,7 @@ class ModListWidget(QListWidget):
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         self.steamdb_blacklist_signal.emit(
                             [steamdb_remove_blacklist, False]
                         )
