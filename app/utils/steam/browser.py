@@ -158,17 +158,11 @@ class SteamBrowser(QWidget):
         )
         # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
-        self.progress_bar.setObjectName("default")
+        self.progress_bar.setObjectName("browser")
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setFixedHeight(8)
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setVisible(True)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                font-size: 10px;
-                border: 0px;
-            }
-        """)
 
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
