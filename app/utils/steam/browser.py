@@ -419,6 +419,7 @@ class SteamBrowser(QWidget):
         # self.web_view.hide()
         # self.web_view_loading_placeholder.show()
         self.progress_bar.setTextVisible(True)
+        self.nav_bar.removeAction(self.add_to_list_button)
 
     def _web_view_load_progress(self, progress: int) -> None:
         # Progress bar progress
@@ -694,8 +695,6 @@ class SteamBrowser(QWidget):
                     self.web_view.page().runJavaScript(
                         add_item_markers_script, 0, lambda result: None
                     )
-            else:
-                self.nav_bar.removeAction(self.add_to_list_button)
 
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page
