@@ -794,13 +794,8 @@ class MainContent(QObject):
             current_version_parsed = version.parse("0.0.0")
 
         if current_version_parsed >= latest_version:
-            logger.debug("Up to date!")
-            dialogue.show_information(
-                title=self.tr("RimSort is up to date!"),
-                text=self.tr(
-                    "You are already running the latest release: {latest_tag_name}"
-                ).format(latest_tag_name=latest_tag_name),
-            )
+            # No update needed then return and log the check no need to notify user
+            logger.info("Up to date!")
             return
 
         # Show update prompt
