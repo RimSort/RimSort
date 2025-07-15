@@ -126,6 +126,7 @@ class SteamBrowser(QWidget):
         )
         # WebEngineView
         self.web_view = QWebEngineView()
+        self.web_view.hide()
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
         self.web_view.loadFinished.connect(self._web_view_load_finished)
@@ -157,8 +158,11 @@ class SteamBrowser(QWidget):
         )
         # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(100)
+        self.progress_bar.setObjectName("browser")
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setFixedHeight(8)
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setVisible(True)
 
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
@@ -411,9 +415,10 @@ class SteamBrowser(QWidget):
 
     def _web_view_load_started(self) -> None:
         # Progress bar start, placeholder start
-        self.progress_bar.show()
-        self.web_view.hide()
-        self.web_view_loading_placeholder.show()
+        # Commented out to stop flashing on every page load
+        # self.web_view.hide()
+        # self.web_view_loading_placeholder.show()
+        self.progress_bar.setTextVisible(True)
 
     def _web_view_load_progress(self, progress: int) -> None:
         # Progress bar progress
@@ -425,8 +430,8 @@ class SteamBrowser(QWidget):
 
     def _web_view_load_finished(self) -> None:
         # Progress bar done
-        self.progress_bar.hide()
         self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(False)
 
         # Cache information from page
         self.current_title = self.web_view.title()

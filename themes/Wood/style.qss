@@ -222,8 +222,15 @@ QProgressBar {
     color: #ffffff;
     text-align: center;
 }
-QProgressBar::chunk#default {
+QProgressBar#browser {
+    border: 0px;
+    border-radius: 0px;
+    font-size: 10px;
+}
+QProgressBar::chunk {
     background-color: #a0522d;
+}
+QProgressBar::chunk#runner {
     width: 10px;
 }
 QProgressBar::chunk#warn {

@@ -154,7 +154,7 @@ class RunnerPanel(QWidget):
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         self.progress_bar.hide()
-        self.progress_bar.setObjectName("default")
+        self.progress_bar.setObjectName("runner")
 
     def _setup_layouts(self) -> None:
         """Set up the widget layouts."""
