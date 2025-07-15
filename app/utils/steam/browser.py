@@ -684,6 +684,11 @@ class SteamBrowser(QWidget):
                                 installedBadge.style.cursor = 'default';
                                 tile.style.position = 'relative';
                                 tile.appendChild(installedBadge);
+
+                                var modTitle = tile.querySelector('.workshopItemTitle');
+                                if (modTitle) {
+                                    modTitle.style.color = '#4CAF50';
+                                }
                             }
                         }
                     });
