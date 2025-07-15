@@ -386,7 +386,8 @@ class SearchWorker(QThread):
             header += f"Path: {os.path.dirname(file_path)}\n"
             header += f"Match at line {match_line_index + 1}:\n"
 
-            return f"{header}\n{prefix}{'\n'.join(preview_lines)}{suffix}"
+            joined_preview = "\n".join(preview_lines)
+            return f"{header}\n{prefix}{joined_preview}{suffix}"
         except Exception as e:
             logger.warning(f"Failed to get preview for {file_path}: {e}")
             return f"Error generating preview: {e}"

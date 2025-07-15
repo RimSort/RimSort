@@ -74,12 +74,8 @@ class SteamBrowser(QWidget):
         self.url_prefix_workshop = (
             "https://steamcommunity.com/workshop/filedetails/?id="
         )
-        self.section_readytouseitems = (
-            "section=readytouseitems"
-        )
-        self.section_collections = (
-            "section=collections"
-        )
+        self.section_readytouseitems = "section=readytouseitems"
+        self.section_collections = "section=collections"
 
         # LAYOUTS
         self.window_layout = QHBoxLayout()
@@ -488,18 +484,13 @@ class SteamBrowser(QWidget):
             # }
             # """
 
-            is_item_page = (
-                self.url_prefix_sharedfiles in self.current_url
-            )
-            is_collection_page = (
-                self.url_prefix_workshop in self.current_url
-            )
-            is_collections_page = (
-                self.section_collections in self.current_url
-            )
+            is_item_page = self.url_prefix_sharedfiles in self.current_url
+            is_collection_page = self.url_prefix_workshop in self.current_url
+            is_collections_page = self.section_collections in self.current_url
             is_items_page = (
                 self.section_readytouseitems in self.current_url
-                or not is_collections_page and "section=" in self.current_url
+                or not is_collections_page
+                and "section=" in self.current_url
             )
 
             if is_item_page or is_collection_page or is_items_page:
@@ -526,7 +517,9 @@ class SteamBrowser(QWidget):
                             self.url_prefix_workshop, 1
                         )[1]
                     if self.searchtext_string in publishedfileid:
-                        publishedfileid = publishedfileid.split(self.searchtext_string)[0]
+                        publishedfileid = publishedfileid.split(self.searchtext_string)[
+                            0
+                        ]
                     # check if mod is installed
                     is_installed = self._is_mod_installed(publishedfileid)
                     # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
