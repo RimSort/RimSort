@@ -114,15 +114,10 @@ class SteamBrowser(QWidget):
 
         # BROWSER WIDGETS
         # "Loading..." placeholder
-        self.web_view_loading_placeholder = ImageLabel()
+        self.web_view_loading_placeholder = QLabel()
         self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.web_view_loading_placeholder.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.web_view_loading_placeholder.setPixmap(
-            QPixmap(
-                str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")
-            )
         )
         # WebEngineView
         self.web_view = QWebEngineView()
