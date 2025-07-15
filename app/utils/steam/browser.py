@@ -6,7 +6,7 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.image_label import ImageLabel
+from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
@@ -112,13 +114,19 @@ class SteamBrowser(QWidget):
 
         # BROWSER WIDGETS
         # "Loading..." placeholder
-        self.web_view_loading_placeholder = QLabel()
+        self.web_view_loading_placeholder = ImageLabel()
         self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.web_view_loading_placeholder.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
+        self.web_view_loading_placeholder.setPixmap(
+            QPixmap(
+                str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")
+            )
+        )
         # WebEngineView
         self.web_view = QWebEngineView()
+        self.web_view.hide()
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
         self.web_view.loadFinished.connect(self._web_view_load_finished)
@@ -413,8 +421,9 @@ class SteamBrowser(QWidget):
 
     def _web_view_load_started(self) -> None:
         # Progress bar start, placeholder start
-        self.web_view.hide()
-        self.web_view_loading_placeholder.show()
+        # Commented out to stop flashing on every page load
+        # self.web_view.hide()
+        # self.web_view_loading_placeholder.show()
         self.progress_bar.setTextVisible(True)
 
     def _web_view_load_progress(self, progress: int) -> None:
