@@ -5,8 +5,12 @@
 ---
 - module-name: "app"
   data-files:
-    dirs:
-      - "../themes"
+    - dirs:
+        - "../themes"
+        - "../locales"
+    - patterns:
+        - "../update.sh"
+        - "../update.bat"
 
   dlls:
     - from_filenames:

@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Callable, Self, TypeVar
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.event_bus import EventBus
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 
 # By default, we assume Stretch for all columns.
@@ -46,7 +47,6 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: list[HeaderColumn],
-        minimum_size: QSize = QSize(800, 600),
     ):
         super().__init__()
         # Utility and Setup
@@ -114,19 +114,19 @@ class BaseModsPanel(QWidget):
                 else QHeaderView.ResizeMode.Stretch,
             )
 
-        self.editor_deselect_all_button = QPushButton("Deselect all")
+        self.editor_deselect_all_button = QPushButton(self.tr("Deselect all"))
         self.editor_deselect_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, False)
         )
         self.editor_checkbox_actions_layout.addWidget(self.editor_deselect_all_button)
 
-        self.editor_select_all_button = QPushButton("Select all")
+        self.editor_select_all_button = QPushButton(self.tr("Select all"))
         self.editor_select_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, True)
         )
         self.editor_checkbox_actions_layout.addWidget(self.editor_select_all_button)
 
-        self.editor_cancel_button = QPushButton("Do nothing and exit")
+        self.editor_cancel_button = QPushButton(self.tr("Do nothing and exit"))
         self.editor_cancel_button.clicked.connect(self.close)
         self.editor_exit_actions_layout.addWidget(self.editor_cancel_button)
 
@@ -149,7 +149,9 @@ class BaseModsPanel(QWidget):
         # Put it all together
         self.setWindowTitle(window_title)
         self.setLayout(layout)
-        self.setMinimumSize(minimum_size)
+
+        # Use GUIInfo to set size from settings
+        self.resize(GUIInfo().get_panel_size())
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:

@@ -13,7 +13,7 @@ warn_unused_ignores = true
 exclude = ['venv', '.venv', 'submodules']
 
 [[tool.mypy.overrides]]
-module = ['steam.*', 'steamfiles.*']
+module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot']
 ignore_missing_imports = true
 
 [tool.ruff]

@@ -6,10 +6,9 @@ from multiprocessing import Pool, cpu_count
 from time import time
 from typing import TYPE_CHECKING, Any, Dict
 
+import requests
 from loguru import logger
-from PySide6.QtCore import QObject, Signal
-from requests import post as requests_post
-from requests.exceptions import JSONDecodeError
+from PySide6.QtCore import QCoreApplication, QObject, Signal
 from steam.webapi import WebAPI
 
 from app.utils.app_info import AppInfo
@@ -47,6 +46,7 @@ class CollectionImport:
             metadata_manager: The metadata manager instance.
         """
         self.metadata_manager = metadata_manager
+        self.translate = QCoreApplication.translate
         self.package_ids: list[
             str
         ] = []  # Initialize an empty list to store package IDs
@@ -56,8 +56,8 @@ class CollectionImport:
     def input_dialog(self) -> None:
         # Initialize the UI for entering collection links
         self.link_input = show_dialogue_input(
-            title="Add Workshop collection link",
-            label="Add Workshop collection link",
+            title=self.translate("CollectionImport", "Add Workshop collection link"),
+            label=self.translate("CollectionImport", "Add Workshop collection link"),
         )
         logger.info("Workshop collection link Input UI initialized successfully!")
         if self.link_input[1]:
@@ -97,8 +97,11 @@ class CollectionImport:
             )
             # Show warning message box
             show_warning(
-                title="Invalid Link",
-                text="Invalid Workshop collection link. Please enter a valid Workshop collection link.",
+                title=self.translate("CollectionImport", "Invalid Link"),
+                text=self.translate(
+                    "CollectionImport",
+                    "Invalid Workshop collection link. Please enter a valid Workshop collection link.",
+                ),
             )
             return
 
@@ -109,8 +112,11 @@ class CollectionImport:
             )
             # Show warning message box
             show_warning(
-                title="Invalid Database",
-                text="Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
+                title=self.translate("CollectionImport", "Invalid Database"),
+                text=self.translate(
+                    "CollectionImport",
+                    "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
+                ),
             )
             return
 
@@ -676,7 +682,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests_post(url, data=data)
+            request = requests.post(url, data=data)
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -688,7 +694,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["collectiondetails"]:
                     metadata.append(mod_metadata)
-        except JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")
@@ -720,7 +726,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests_post(url, data=data)
+            request = requests.post(url, data=data)
         except Exception as e:
             logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -731,7 +737,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["publishedfiledetails"]:
                     metadata.append(mod_metadata)
-        except JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")

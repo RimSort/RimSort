@@ -222,8 +222,15 @@ QProgressBar {
     color: #ffffff;
     text-align: center;
 }
-QProgressBar::chunk#default {
+QProgressBar#browser {
+    border: 0px;
+    border-radius: 0px;
+    font-size: 10px;
+}
+QProgressBar::chunk {
     background-color: #ff6347;
+}
+QProgressBar::chunk#runner {
     width: 10px;
 }
 QProgressBar::chunk#warn {
@@ -609,4 +616,75 @@ QWidget#StatusPanel {
 QLabel#StatusLabel {
     color: #ffffff;
     background-color: #4a3a3a;
+}
+
+/* UseThisInsteadPanel styling */
+QWidget#useThisInsteadModsPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* ModUpdaterPrompt styling */
+QWidget#updateModsPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* BaseModsPanel styling */
+QWidget#baseModsPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* MissingDependenciesDialog styling */
+QDialog#missingDependenciesDialog {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* Local dependencies label */
+QLabel#localDepsLabel {
+    background-color: #2e1a1a;
+    font-weight: bold;
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+/* Download dependencies label */
+QLabel#downloadDepsLabel {
+    background-color: #2e1a1a;
+    font-weight: bold;
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+/* Dependency group widget background */
+QWidget#dependencyGroupWidget {
+    background-color: #2e1a1a;
+    border: 1px solid #4a3a3a;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    padding: 6px;
 }
