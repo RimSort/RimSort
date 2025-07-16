@@ -16,7 +16,7 @@ permalink: user-guide/basic-usage
 
 ## Initial Setup
 
-RimSort by default will prompt you to configure game configuration paths and install SteamCMD. It may also ask your preference for more critical settings such as whenever or not to enable Steam Integration. Outside of that, the default settings are applied, and you are free to configure as you like from the [Settings Panel](/user-guide/basic-usage/#settings-panel).
+RimSort by default will prompt you to configure game configuration paths and install SteamCMD. It may also ask your preference for more critical settings such as whenever or not to enable Steam Integration. Outside of that, the default settings are applied, and you are free to configure as you like from the [Settings Panel](#settings-panel).
 
 ## Main Menu Bar
 
@@ -41,7 +41,7 @@ Certain errors/warnings are produced based on dependency presence, incompatibili
 ## External Metadata
 
 {: .note}
-> RimSort releases do not come with this additional external metadata. For information on the optional but highly recommended databases that provide the additional external metadata and how to get them, see the [Databases page](/user-guide/databases).
+> RimSort releases do not come with this additional external metadata. For information on the optional but highly recommended databases that provide the additional external metadata and how to get them, see the [Databases page](../user-guide/databases).
 
 RimSort uses external metadata in order to enhance its functionality. The metadata provides it with additional information beyond the information present in a downloaded mod's `About.xml` file. External Metadata in RimSort is designed to be highly user extendable and sharable.
 
@@ -53,7 +53,7 @@ Steam Workshop Metadata
 
   Contains metadata queried from Steam WebAPI + Steamworks API, utilizing the schema defined by Paladin's RimPy Mod Manager Database db.json
 
-  To build the Steam Workshop Database yourself, use the [SteamDB Builder](/user-guide/db-builder).
+  To build the Steam Workshop Database yourself, use the [SteamDB Builder](../user-guide/db-builder).
   > Why is this necessary?
   
   - Dependency metadata that is available on Steam - mod developers list DLC dependencies as well as additional mod dependencies on Steam.
@@ -73,7 +73,7 @@ Rules Metadata
   Both of these databases uses a schema compatible with Paladin's RimPy Mod Manager Database communityRules.json.
 
   {: .note}
-  > While you can modify the databases directly as they are plain text files, it is recommended to use RimSort's built in [Rule Editor](/user-guide/rule-editor) utility to edit the rules defined in these databases.
+  > While you can modify the databases directly as they are plain text files, it is recommended to use RimSort's built in [Rule Editor](../user-guide/rule-editor) utility to edit the rules defined in these databases.
 
   > Why is this necessary?
   

@@ -223,8 +223,16 @@ QProgressBar {
     color: #e6edf3;
     text-align: center;
 }
-QProgressBar::chunk#default {
+QProgressBar#browser {
+    border: 0px;
+    border-radius: 0px;
+    font-size: 10px;
+}
+QProgressBar::chunk {
     background-color: #60798b;
+    width: 10px;
+}
+QProgressBar::chunk#runner {
     width: 10px;
 }
 QProgressBar::chunk#warn {
@@ -610,4 +618,75 @@ QWidget#StatusPanel {
 QLabel#StatusLabel {
     color: #e6edf3;
     background-color: #455364;
+}
+
+/* UseThisInsteadPanel styling */
+QWidget#useThisInsteadModsPanel {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #e6edf3;
+}
+
+/* ModUpdaterPrompt styling */
+QWidget#updateModsPanel {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #e6edf3;
+}
+
+/* BaseModsPanel styling */
+QWidget#baseModsPanel {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #e6edf3;
+}
+
+/* MissingDependenciesDialog styling */
+QDialog#missingDependenciesDialog {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #e6edf3;
+}
+
+/* Local dependencies label */
+QLabel#localDepsLabel {
+    background-color: #19232d;
+    font-weight: bold;
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+/* Download dependencies label */
+QLabel#downloadDepsLabel {
+    background-color: #19232d;
+    font-weight: bold;
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+/* Dependency group widget background */
+QWidget#dependencyGroupWidget {
+    background-color: #19232d;
+    border: 1px solid #455364;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    padding: 6px;
 }

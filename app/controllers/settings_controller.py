@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
+from app.controllers.language_controller import LanguageController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -58,6 +59,8 @@ class SettingsController(QObject):
         self._last_file_dialog_path = str(Path.home())
 
         self.theme_controller = ThemeController()
+
+        self.language_controller = LanguageController()
 
         self.app_instance = QApplication.instance()
 
@@ -585,7 +588,7 @@ class SettingsController(QObject):
                 True
             )
         self.settings_dialog.use_this_instead_db_local_file.setText(
-            self.settings.external_use_this_instead_file_path
+            self.settings.external_use_this_instead_folder_path
         )
         self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
         self.settings_dialog.use_this_instead_db_github_url.setText(
@@ -598,6 +601,14 @@ class SettingsController(QObject):
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
+
+        # Use dependencies for sorting checkbox
+        if self.settings.use_moddependencies_as_loadTheseBefore:
+            (
+                self.settings_dialog.use_moddependencies_as_loadTheseBefore.setChecked(
+                    True
+                )
+            )
 
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(
@@ -661,6 +672,19 @@ class SettingsController(QObject):
         )
         self.theme_controller.setup_theme_dialog(self.settings_dialog, self.settings)
 
+        self.language_controller.populate_languages_combobox(
+            self.settings_dialog.language_combobox
+        )
+        self.language_controller.setup_language_dialog(
+            self.settings_dialog, self.settings
+        )
+        self.settings_dialog.window_x_spinbox.setValue(self.settings.window_x)
+        self.settings_dialog.window_y_spinbox.setValue(self.settings.window_y)
+        self.settings_dialog.window_width_spinbox.setValue(self.settings.window_width)
+        self.settings_dialog.window_height_spinbox.setValue(self.settings.window_height)
+        self.settings_dialog.panel_width_spinbox.setValue(self.settings.panel_width)
+        self.settings_dialog.panel_height_spinbox.setValue(self.settings.panel_height)
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -690,6 +714,9 @@ class SettingsController(QObject):
         )
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
+        )
+        self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
+            self.settings.update_databases_on_startup
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -788,7 +815,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source = (
                 "Configured git repository"
             )
-        self.settings.external_use_this_instead_file_path = (
+        self.settings.external_use_this_instead_folder_path = (
             self.settings_dialog.use_this_instead_db_local_file.text()
         )
         self.settings.external_use_this_instead_repo_path = (
@@ -800,6 +827,11 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
+
+        # Use moddependencies as loadTheseBefore
+        self.settings.use_moddependencies_as_loadTheseBefore = (
+            self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
+        )
 
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
@@ -854,6 +886,18 @@ class SettingsController(QObject):
         )
         self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
 
+        self.settings.font_family = (
+            self.settings_dialog.font_family_combobox.currentText()
+        )
+        self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
+        self.settings.language = self.settings_dialog.language_combobox.currentData()
+        self.settings.window_x = self.settings_dialog.window_x_spinbox.value()
+        self.settings.window_y = self.settings_dialog.window_y_spinbox.value()
+        self.settings.window_width = self.settings_dialog.window_width_spinbox.value()
+        self.settings.window_height = self.settings_dialog.window_height_spinbox.value()
+        self.settings.panel_width = self.settings_dialog.panel_width_spinbox.value()
+        self.settings.panel_height = self.settings_dialog.panel_height_spinbox.value()
+
         # Advanced tab
         self.settings.debug_logging_enabled = (
             self.settings_dialog.debug_logging_checkbox.isChecked()
@@ -884,6 +928,9 @@ class SettingsController(QObject):
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
         )
+        self.settings.update_databases_on_startup = (
+            self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
@@ -898,8 +945,10 @@ class SettingsController(QObject):
         Reset the settings to their default values.
         """
         answer = BinaryChoiceDialog(
-            title="Reset to defaults",
-            text="Are you sure you want to reset all settings to their default values?",
+            title=self.tr("Reset to defaults"),
+            text=self.tr(
+                "Are you sure you want to reset all settings to their default values?"
+            ),
         )
         if not answer.exec_is_positive():
             return
@@ -923,6 +972,11 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+        self.settings_dialog.apply_window_geometry_from_spinboxes()
+        self.theme_controller.set_font(
+            self.settings.font_family,
+            self.settings.font_size,
+        )
         self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,
@@ -1070,8 +1124,8 @@ class SettingsController(QObject):
         """
         if not skip_confirmation:
             answer = BinaryChoiceDialog(
-                title="Clear all locations",
-                text="Are you sure you want to clear all locations?",
+                title=self.tr("Clear all locations"),
+                text=self.tr("Are you sure you want to clear all locations?"),
             )
             if not answer.exec_is_positive():
                 return
@@ -1494,7 +1548,7 @@ class SettingsController(QObject):
         Open a file dialog to select the "Use This Instead" folder and handle the result.
         """
         use_this_instead_db_location = show_dialogue_file(
-            mode="open",
+            mode="open_dir",
             caption='Select "Use This Instead" Folder',
             _dir=str(self._last_file_dialog_path),
         )
@@ -1619,12 +1673,14 @@ class SettingsController(QObject):
         Build the Steam Workshop database.
         """
         confirm_diag = BinaryChoiceDialog(
-            title="Confirm Build Database",
-            text="Are you sure you want to build the Steam Workshop database?",
+            title=self.tr("Confirm Build Database"),
+            text=self.tr("Are you sure you want to build the Steam Workshop database?"),
             information=(
-                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
-                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                self.tr(
+                    "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                    "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
+                    "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                )
             ),
             icon=QMessageBox.Icon.Warning,
         )

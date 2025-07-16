@@ -1,5 +1,6 @@
 import networkx as nx
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from toposort import CircularDependencyError, toposort
 
 from app.utils.metadata import MetadataManager
@@ -48,8 +49,8 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    graph = nx.DiGraph(dependency_graph)  # type: ignore # Stubs seem to be broken for args
-    cycles = list(nx.simple_cycles(graph))
+    graph = nx.DiGraph(dependency_graph)  # use the networkx library
+    cycles = list(nx.simple_cycles(graph))  # find all cycles in the graph
 
     cycle_strings = []
     if cycles:
@@ -62,8 +63,13 @@ def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
         logger.info("No circular dependencies found.")
 
     show_warning(
-        title="Unable to Sort",
-        text="Unable to Sort",
-        information="RimSort found circular dependencies in your mods list. Please see the details for dependency loops.",
+        title=QCoreApplication.translate(
+            "find_circular_dependencies", "Unable to Sort"
+        ),
+        text=QCoreApplication.translate("find_circular_dependencies", "Unable to Sort"),
+        information=QCoreApplication.translate(
+            "find_circular_dependencies",
+            "RimSort found circular dependencies in your mods list. Please see the details for dependency loops.",
+        ),
         details="\n\n".join(cycle_strings),
     )

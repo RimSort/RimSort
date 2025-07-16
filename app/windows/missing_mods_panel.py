@@ -27,17 +27,19 @@ class MissingModsPrompt(BaseModsPanel):
 
         super().__init__(
             object_name="missingModsPanel",
-            window_title="RimSort - Missing mods found",
-            title_text="There are mods missing from the active mods list!",
-            details_text="\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
-            + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.",
+            window_title=self.tr("RimSort - Missing mods found"),
+            title_text=self.tr("There are mods missing from the active mods list!"),
+            details_text=self.tr(
+                "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
+                + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
+                + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
+            ),
             additional_columns=[
-                "Name",
-                "PackageId",
-                "Game Versions",
-                "# Variants",
-                "PublishedFileID",
+                self.tr("Name"),
+                self.tr("PackageId"),
+                self.tr("Game Versions"),
+                self.tr("# Variants"),
+                self.tr("PublishedFileID"),
                 # "Open page",
             ],
         )
@@ -46,7 +48,9 @@ class MissingModsPrompt(BaseModsPanel):
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
 
-        self.editor_download_steamcmd_button = QPushButton("Download with SteamCMD")
+        self.editor_download_steamcmd_button = QPushButton(
+            self.tr("Download with SteamCMD")
+        )
         self.editor_download_steamcmd_button.clicked.connect(
             partial(
                 self._update_mods_from_table,
@@ -55,7 +59,7 @@ class MissingModsPrompt(BaseModsPanel):
             )
         )
         self.editor_download_steamworks_button = QPushButton(
-            "Download with Steam client"
+            self.tr("Download with Steam client")
         )
         self.editor_download_steamworks_button.clicked.connect(
             partial(

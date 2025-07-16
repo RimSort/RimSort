@@ -2,7 +2,7 @@ from functools import partial
 from typing import Any, Dict
 
 from loguru import logger
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QStandardItem
 from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
 
@@ -22,98 +22,171 @@ class UseThisInsteadPanel(BaseModsPanel):
     def __init__(
         self,
         mod_metadata: Dict[str, Any],
-    ):
+    ) -> None:
+        """
+        Initialize the UseThisInsteadPanel with mod metadata.
+        """
         logger.debug("Initializing UseThisInsteadPanel")
         self.mod_metadata = mod_metadata
 
         super().__init__(
             object_name="useThisInsteadModsPanel",
-            window_title="RimSort - Replacements found for Workshop mods",
-            title_text="There are replacements available for Workshop mods!",
-            details_text='\nThe following table displays Workshop mods with suggested replacements according to the "Use This Instead" database',
+            window_title=self.tr("RimSort - Replacements found for Workshop mods"),
+            title_text=self.tr("There are replacements available for Workshop mods!"),
+            details_text=self.tr(
+                '\nThe following table displays Workshop mods with suggested replacements according to the "Use This Instead" database'
+            ),
             additional_columns=[
-                "Original Mod Name",
-                "Original Author",
-                "Original Workshop Page",
-                "Replacement Mod Name",
-                "Replacement Author",
-                "Replacement Workshop Page",
+                self.tr("Original Mod Name"),
+                self.tr("Original Author"),
+                self.tr("Original Workshop Page"),
+                self.tr("Replacement Mod Name"),
+                self.tr("Replacement Author"),
+                self.tr("Replacement Workshop Page"),
             ],
-            minimum_size=QSize(1100, 600),
         )
 
-        def __subscribe_cb(_: UseThisInsteadPanel) -> None:
-            dialogue.show_information(
-                "Use This Instead",
-                "Succesfully subscribed to replacement mods",
+        self._setup_buttons()
+
+    def _setup_buttons(self) -> None:
+        """
+        Setup buttons for the panel including download, subscribe, unsubscribe, refresh, and delete.
+        """
+        self._setup_steamcmd_download_button()
+        self._setup_subscribe_button()
+        self._setup_unsubscribe_button()
+        self._setup_refresh_button()
+        self._setup_deletion_button()
+
+    def _setup_steamcmd_download_button(self) -> None:
+        self.steamcmd_download_button = QPushButton()
+        self.steamcmd_download_button.setText(self.tr("Download with SteamCMD"))
+        self.steamcmd_download_button.clicked.connect(
+            partial(self._update_mods_from_table, 6, "SteamCMD")
+        )
+        self.editor_main_actions_layout.addWidget(self.steamcmd_download_button)
+
+    def _setup_subscribe_button(self) -> None:
+        self.subscribe_tool_button = QToolButton()
+        self.subscribe_tool_button.setText(self.tr("Subscribe"))
+        subscribe_menu = QMenu(self.subscribe_tool_button)
+
+        subscribe_replacements_action = QAction(self.tr("Subscribe replacements"), self)
+        subscribe_replacements_action.triggered.connect(
+            partial(
+                self._update_mods_from_table,
+                6,
+                "Steam",
+                completed=lambda _: self.subscribe_completed(),
             )
-
-        self.editor_update_mods_button = QPushButton("Subscribe replacements")
-        self.editor_update_mods_button.clicked.connect(
-            partial(self._update_mods_from_table, 6, "Steam", completed=__subscribe_cb)
         )
-        self.editor_update_all_button = QPushButton("Subscribe all replacements")
-        self.editor_update_all_button.clicked.connect(
-            partial(self._steamworks_cmd_for_all, 6, completed=__subscribe_cb)
+        subscribe_all_replacements_action = QAction(
+            self.tr("Subscribe all replacements"), self
         )
-
-        self.editor_tool_button = QToolButton()
-        self.editor_tool_button.setText("More Options")
-
-        self.editor_tool_menu = QMenu(self.editor_tool_button)
-
-        refresh_mods_action = QAction("Refresh Mod List", self)
-        refresh_mods_action.triggered.connect(EventBus().do_refresh_mods_lists.emit)
-
-        refresh_table_action = QAction("Refresh Table", self)
-        refresh_table_action.triggered.connect(self._populate_from_metadata)
-
-        def __unsubscribe_cb(_: UseThisInsteadPanel) -> None:
-            dialogue.show_information(
-                "Use This Instead",
-                "Succesfully unsubscribed to original mods",
+        subscribe_all_replacements_action.triggered.connect(
+            partial(
+                self._steamworks_cmd_for_all,
+                6,
+                "subscribe",
+                completed=lambda _: self.subscribe_completed(),
             )
+        )
+        subscribe_menu.addAction(subscribe_replacements_action)
+        subscribe_menu.addAction(subscribe_all_replacements_action)
+        self.subscribe_tool_button.setMenu(subscribe_menu)
+        self.subscribe_tool_button.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
+        self.editor_main_actions_layout.addWidget(self.subscribe_tool_button)
 
-        unsub_action = QAction("Unsubscribe outdated", self)
-        unsub_action.triggered.connect(
+    def _setup_unsubscribe_button(self) -> None:
+        self.unsubscribe_tool_button = QToolButton()
+        self.unsubscribe_tool_button.setText(self.tr("Unsubscribe"))
+        unsubscribe_menu = QMenu(self.unsubscribe_tool_button)
+
+        unsubscribe_outdated_action = QAction(self.tr("Unsubscribe outdated"), self)
+        unsubscribe_outdated_action.triggered.connect(
             partial(
                 self._update_mods_from_table,
                 3,
                 "Steam",
                 "unsubscribe",
-                __unsubscribe_cb,
+                completed=lambda _: self.unsubscribe_completed(),
             )
         )
-        unsub_all_action = QAction("Unsubscribe all outdated", self)
-        unsub_all_action.triggered.connect(
-            partial(self._steamworks_cmd_for_all, 3, "unsubscribe", __unsubscribe_cb)
+        unsubscribe_all_outdated_action = QAction(
+            self.tr("Unsubscribe all outdated"), self
         )
-
-        deletion_menu = ModDeletionMenu(
-            lambda: self._run_for_selected_rows(self._retrieve_metadata_from_row),
-            None,
-            "Delete Selected Original Mods...",
+        unsubscribe_all_outdated_action.triggered.connect(
+            partial(
+                self._steamworks_cmd_for_all,
+                3,
+                "unsubscribe",
+                completed=lambda _: self.unsubscribe_completed(),
+            )
         )
-
-        self.editor_tool_menu.addAction(refresh_mods_action)
-        self.editor_tool_menu.addAction(refresh_table_action)
-        self.editor_tool_menu.addAction(unsub_action)
-        self.editor_tool_menu.addAction(unsub_all_action)
-        self.editor_tool_menu.addMenu(deletion_menu)
-
-        self.editor_tool_button.setMenu(self.editor_tool_menu)
-        # When clicked, show menu immediately
-        self.editor_tool_button.setPopupMode(
+        unsubscribe_menu.addAction(unsubscribe_outdated_action)
+        unsubscribe_menu.addAction(unsubscribe_all_outdated_action)
+        self.unsubscribe_tool_button.setMenu(unsubscribe_menu)
+        self.unsubscribe_tool_button.setPopupMode(
             QToolButton.ToolButtonPopupMode.InstantPopup
         )
+        self.editor_main_actions_layout.addWidget(self.unsubscribe_tool_button)
 
-        self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
-        self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
-        self.editor_main_actions_layout.addWidget(self.editor_tool_button)
+    def _setup_refresh_button(self) -> None:
+        self.refresh_tool_button = QToolButton()
+        self.refresh_tool_button.setText(self.tr("Refresh"))
+        refresh_menu = QMenu(self.refresh_tool_button)
+
+        refresh_mods_action = QAction(self.tr("Refresh Mod List"), self)
+        refresh_mods_action.triggered.connect(EventBus().do_refresh_mods_lists.emit)
+
+        refresh_table_action = QAction(self.tr("Refresh Table"), self)
+        refresh_table_action.triggered.connect(self._populate_from_metadata)
+
+        refresh_menu.addAction(refresh_mods_action)
+        refresh_menu.addAction(refresh_table_action)
+        self.refresh_tool_button.setMenu(refresh_menu)
+        self.refresh_tool_button.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
+        self.editor_main_actions_layout.addWidget(self.refresh_tool_button)
+
+    def _setup_deletion_button(self) -> None:
+        self.deletion_tool_button = QToolButton()
+        self.deletion_tool_button.setText(self.tr("Delete"))
+        self.deletion_menu = ModDeletionMenu(
+            lambda: self._run_for_selected_rows(self._retrieve_metadata_from_row),
+            None,
+            self.tr("Delete Selected Original Mods..."),
+        )
+        self.deletion_tool_button.setMenu(self.deletion_menu)
+        self.deletion_tool_button.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
+        self.editor_main_actions_layout.addWidget(self.deletion_tool_button)
+
+    def subscribe_completed(self) -> None:
+        """
+        Show information dialog when subscription to replacement mods is successful.
+        """
+        dialogue.show_information(
+            self.tr("Use This Instead"),
+            self.tr("Successfully subscribed to replacement mods"),
+        )
+
+    def unsubscribe_completed(self) -> None:
+        """
+        Show information dialog when unsubscription from original mods is successful.
+        """
+        dialogue.show_information(
+            self.tr("Use This Instead"),
+            self.tr("Successfully unsubscribed to original mods"),
+        )
 
     def _populate_from_metadata(self) -> None:
         """
-        Populates the table with data from the mod metadata
+        Populates the table with data from the mod metadata.
         """
         self.editor_model.removeRows(0, self.editor_model.rowCount())
         mm = MetadataManager.instance()
@@ -128,37 +201,27 @@ class UseThisInsteadPanel(BaseModsPanel):
                 )
                 continue
 
-            original_pfid_btn: QPushButton | None = None
-
-            if "publishedfileid" in mv and "steam_uri" in mv:
-                original_pfid_btn_item = QStandardItem(mv["publishedfileid"])
-                original_pfid_btn = QPushButton()
-                original_pfid_btn.setObjectName("originalPFIDButton")
-                original_pfid_btn.setText("Open Workshop Page")
-                original_pfid_btn.clicked.connect(
-                    partial(platform_specific_open, mv["steam_uri"])
-                )
-            else:
-                original_pfid_btn_item = QStandardItem("Not Found")
+            original_pfid_btn_item = QStandardItem(mv["publishedfileid"])
+            original_pfid_btn = self._create_workshop_button(
+                f"https://steamcommunity.com/sharedfiles/filedetails/?id={mv['publishedfileid']}",
+                "originalPFIDButton",
+            )
 
             replacement_pfid_btn_item = QStandardItem(mr.pfid)
 
-            replacement_pfid_btn = QPushButton()
-            replacement_pfid_btn.setObjectName("replacementPFIDButton")
-            replacement_pfid_btn.setText("Open Workshop Page")
-            replacement_pfid_btn.clicked.connect(
-                partial(
-                    platform_specific_open,
-                    f"https://steamcommunity.com/sharedfiles/filedetails/?id={mr.pfid}",
-                )
+            replacement_pfid_btn = self._create_workshop_button(
+                f"https://steamcommunity.com/sharedfiles/filedetails/?id={mr.pfid}",
+                "replacementPFIDButton",
             )
 
-            original_name_item = QStandardItem(mv["name"])
+            name = self._get_string_from_metadata(mv, "name", mod)
+            original_name_item = QStandardItem(name)
             original_name_item.setData(mv, Qt.ItemDataRole.UserRole)
-            original_name_item.setToolTip(mv["name"])
+            original_name_item.setToolTip(name)
 
-            original_authors_item = QStandardItem(mv["authors"])
-            original_authors_item.setToolTip(mv["authors"])
+            authors = self._get_string_from_metadata(mv, "authors", mod)
+            original_authors_item = QStandardItem(authors)
+            original_authors_item.setToolTip(authors)
 
             replacement_name_item = QStandardItem(mr.name)
             replacement_name_item.setToolTip(mr.name)
@@ -185,6 +248,32 @@ class UseThisInsteadPanel(BaseModsPanel):
                 self.editor_table_view.setIndexWidget(
                     original_pfid_btn_item.index(), original_pfid_btn
                 )
+
+    def _create_workshop_button(self, url: str, object_name: str) -> QPushButton:
+        """
+        Create a QPushButton that opens a Steam Workshop page.
+        """
+        btn = QPushButton()
+        btn.setObjectName(object_name)
+        btn.setText(self.tr("Open Workshop Page"))
+        btn.clicked.connect(partial(platform_specific_open, url))
+        return btn
+
+    def _get_string_from_metadata(
+        self, metadata: dict[str, object], key: str, mod: str
+    ) -> str:
+        """
+        Extract a string value from metadata, handling missing keys and different types.
+        """
+        value = metadata.get(key)
+        if value is None:
+            logger.error(f"Missing '{key}' key in metadata for mod: {mod}")
+            return f"Unknown {key.capitalize()}"
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            return ", ".join(str(v) for v in value)
+        return str(value)
 
     def _retrieve_metadata_from_row(self, row: int) -> ModMetadata:
         """
