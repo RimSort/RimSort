@@ -1,159 +1,77 @@
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
-from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QComboBox,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
     QPushButton,
-    QTableView,
-    QVBoxLayout,
-    QWidget,
 )
 
 from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.windows.base_mods_panel import BaseModsPanel
 
 
-class MissingModsPrompt(QWidget):
+class MissingModsPrompt(BaseModsPanel):
     """
     A generic panel used to prompt a user to download missing mods
     """
 
-    steamcmd_downloader_signal = Signal(list)
-    steamworks_subscription_signal = Signal(list)
-
     def __init__(
         self,
         packageids: list[str],
-        steam_workshop_metadata: Dict[str, Any],
     ):
-        super().__init__()
         logger.debug("Initializing MissingModsPrompt")
 
-        self.installEventFilter(self)
+        super().__init__(
+            object_name="missingModsPanel",
+            window_title=self.tr("RimSort - Missing mods found"),
+            title_text=self.tr("There are mods missing from the active mods list!"),
+            details_text=self.tr(
+                "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
+                + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
+                + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
+            ),
+            additional_columns=[
+                self.tr("Name"),
+                self.tr("PackageId"),
+                self.tr("Game Versions"),
+                self.tr("# Variants"),
+                self.tr("PublishedFileID"),
+                # "Open page",
+            ],
+        )
 
         self.data_by_variants: dict[str, Any] = {}
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
-        self.steam_workshop_metadata = steam_workshop_metadata
-        self.setObjectName("missingModsPanel")
-        # MOD LABEL
-        self.missing_mods_label = QLabel(
-            "There are mods missing from the active mods list!"
-        )
-        self.missing_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # TODO: Make base object shared between this and workshop_mod_updater_panel to avoid duplication
-        # jscpd:ignore-start
-        # CONTAINER LAYOUTS
-        self.upper_layout = QVBoxLayout()
-        self.lower_layout = QVBoxLayout()
-        layout = QVBoxLayout()
-
-        # SUB LAYOUTS
-        self.details_layout = QVBoxLayout()
-        self.editor_layout = QVBoxLayout()
-        self.editor_actions_layout = QHBoxLayout()
-
-        # DETAILS WIDGETS
-        self.details_label = QLabel(
-            "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
-            + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
+        self.editor_download_steamcmd_button = QPushButton(
+            self.tr("Download with SteamCMD")
         )
-        self.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # EDITOR WIDGETS
-        # Create the model and set column headers
-        self.editor_model = QStandardItemModel(0, 5)
-        self.editor_model.setHorizontalHeaderLabels(
-            [
-                "Name",
-                "PackageId",
-                "Game Versions",
-                "# Variants",
-                "PublishedFileID",
-                # "Open page",
-            ]
-        )
-        # Create the table view and set the model
-        self.editor_table_view = QTableView()
-        self.editor_table_view.setModel(self.editor_model)
-        self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
-        self.editor_table_view.setSelectionMode(
-            QAbstractItemView.SelectionMode.NoSelection
-        )
-        # Set default stretch for each column
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_cancel_button = QPushButton("Do nothing and exit")
-        self.editor_cancel_button.clicked.connect(self.close)
-        self.editor_download_steamcmd_button = QPushButton("Download with SteamCMD")
         self.editor_download_steamcmd_button.clicked.connect(
-            partial(self._download_list_from_table, mode="steamcmd")
+            partial(
+                self._update_mods_from_table,
+                pfid_column=5,
+                mode="SteamCMD",
+            )
         )
         self.editor_download_steamworks_button = QPushButton(
-            "Download with Steam client"
+            self.tr("Download with Steam client")
         )
         self.editor_download_steamworks_button.clicked.connect(
-            partial(self._download_list_from_table, mode="steamworks")
+            partial(
+                self._update_mods_from_table,
+                pfid_column=5,
+                mode="Steam",
+            )
         )
-        self.editor_actions_layout.addWidget(self.editor_cancel_button)
-        self.editor_actions_layout.addWidget(self.editor_download_steamcmd_button)
-        self.editor_actions_layout.addWidget(self.editor_download_steamworks_button)
+        self.editor_main_actions_layout.addWidget(self.editor_download_steamcmd_button)
+        self.editor_main_actions_layout.addWidget(
+            self.editor_download_steamworks_button
+        )
 
-        # Build the details layout
-        self.details_layout.addWidget(self.details_label)
-
-        # Build the editor layouts
-        self.editor_layout.addWidget(self.editor_table_view)
-        self.editor_layout.addLayout(self.editor_actions_layout)
-
-        # Add our widget layouts to the containers
-        self.upper_layout.addLayout(self.details_layout)
-        self.lower_layout.addLayout(self.editor_layout)
-
-        # Add our layouts to the main layout
-        layout.addWidget(self.missing_mods_label)
-        layout.addLayout(self.upper_layout)
-        layout.addLayout(self.lower_layout)
-
-        # Put it all together
-        self.setWindowTitle("RimSort - Missing mods found")
-        self.setLayout(layout)
-        self.setMinimumSize(QSize(900, 600))
-
-    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
-            self.close()
-            return True
-
-        return super().eventFilter(obj, event)
-
-    # jscpd:ignore-end
-
-    def _add_row(
+    def _mm_add_row(
         self,
         name: str,
         packageid: str,
@@ -163,9 +81,9 @@ class MissingModsPrompt(QWidget):
     ) -> None:
         # Check if a row with the given packageid already exists
         for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row, 1).text() == packageid:
+            if self.editor_model.item(row, 2).text() == packageid:
                 # If an existing row is found, add the new publishedfileid
-                existing_item = self.editor_model.item(row, 4)
+                existing_item = self.editor_model.item(row, 5)
                 combo_box = self.editor_table_view.indexWidget(existing_item.index())
                 if not isinstance(combo_box, QComboBox):
                     raise Exception(f"Combo box is not a QComboBox!: {combo_box}")
@@ -173,15 +91,16 @@ class MissingModsPrompt(QWidget):
                 combo_box.addItem(publishedfileid)
                 return  # Return here to exit function
         # If we're still here, we need to actually create a new row
+        name_item = QStandardItem(name)
+        name_item.setToolTip(name)
         items = [
-            QStandardItem(name),
+            name_item,
             QStandardItem(packageid),
             QStandardItem(str(game_versions)),
             QStandardItem(mod_variants if publishedfileid != "" else "0"),
             QStandardItem(),
         ]
-        self.editor_model.appendRow(items)
-        # Add our combo box to the row's column 5 and connect to update signal
+        self._add_row(items)
         combo_box_index = items[4].index()
         combo_box = QComboBox()
         combo_box.setEditable(True)
@@ -192,43 +111,13 @@ class MissingModsPrompt(QWidget):
         # Set the combo_box as the index widget
         self.editor_table_view.setIndexWidget(combo_box_index, combo_box)
 
-    def _download_list_from_table(self, mode: str) -> None:
-        publishedfileids = []
-        # Iterate through the editor's rows
-        for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row):  # If there is a row at current index
-                # If an existing row is found, get the combo box
-                combo_box = self.editor_table_view.indexWidget(
-                    self.editor_model.item(row, 4).index()
-                )
-                if not isinstance(combo_box, QComboBox):
-                    logger.critical("Combo box is not a QComboBox! assuming empty text")
-                    publishedfileid = ""
-                else:
-                    publishedfileid = combo_box.currentText()
-
-                if publishedfileid != "":
-                    publishedfileids.append(publishedfileid)
-        self.close()
-        if mode == "steamcmd":
-            self.steamcmd_downloader_signal.emit(publishedfileids)
-        elif mode == "steamworks":
-            self.steamworks_subscription_signal.emit(
-                [
-                    "subscribe",
-                    [eval(str_pfid) for str_pfid in publishedfileids],
-                ]
-            )
-
     def _populate_from_metadata(self) -> None:
         # Build a dict of missing mod variant(s)
-        if (
-            self.steam_workshop_metadata
-            and len(self.steam_workshop_metadata.keys()) > 0
-        ):
+        steam_metadata = self.metadata_manager.external_steam_metadata
+        if steam_metadata and len(steam_metadata.keys()) > 0:
             # Generate a list of all missing mods + any missing mod dependencies listed
             # in the user-configured Steam metadata.
-            for publishedfileid, metadata in self.steam_workshop_metadata.items():
+            for publishedfileid, metadata in steam_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
                 packageid = metadata.get("packageId", "None").lower()
                 game_versions = metadata.get("gameVersions", ["None listed"])
@@ -262,7 +151,7 @@ class MissingModsPrompt(QWidget):
             # Add a row for each mod variant
             for packageid, variants in self.data_by_variants.items():
                 for publishedfileid, variant_data in variants.items():
-                    self._add_row(
+                    self._mm_add_row(
                         name=variant_data["name"],
                         packageid=packageid,
                         game_versions=variant_data["gameVersions"],

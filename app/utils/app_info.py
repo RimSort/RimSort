@@ -80,10 +80,13 @@ class AppInfo:
         # Derive some secondary directory paths
 
         self._databases_folder: Path = self._app_storage_folder / "dbs"
+        self._aux_metadata_db: Path = self._databases_folder / "aux_metadata.db"
         self._saved_modlists_folder: Path = self._app_storage_folder / "modlists"
         self._theme_storage_folder: Path = self._app_storage_folder / "themes"
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
+        self._user_rules_file = self.databases_folder / "userRules.json"
+        self._language_data_folder: Path = self._application_folder / "locales"
 
         # Make sure important directories exist
 
@@ -173,6 +176,15 @@ class AppInfo:
         return self._settings_file
 
     @property
+    def user_rules_file(self) -> Path:
+        """
+        Get the path to the user-specific rules file.
+
+        May or may not exist.
+        """
+        return self._user_rules_file
+
+    @property
     def user_log_folder(self) -> Path:
         """
         Get the path to the folder where application logs are stored for the user.
@@ -204,3 +216,10 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
+
+    @property
+    def aux_metadata_db(self) -> Path:
+        """
+        Get the path to the auxiliary metadata database.
+        """
+        return self._aux_metadata_db

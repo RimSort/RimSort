@@ -1,232 +1,57 @@
 from functools import partial
 from time import localtime, strftime
-from typing import Any, Dict
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
-from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QCheckBox,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
     QPushButton,
-    QTableView,
-    QVBoxLayout,
-    QWidget,
 )
 
+from app.windows.base_mods_panel import BaseModsPanel
 
-class ModUpdaterPrompt(QWidget):
+
+class ModUpdaterPrompt(BaseModsPanel):
     """
     A generic panel used to prompt a user to update eligible Workshop mods
     """
 
-    steamcmd_downloader_signal = Signal(list)
-    steamworks_subscription_signal = Signal(list)
-
-    def __init__(self, internal_mod_metadata: Dict[str, Any]):
-        super().__init__()
+    def __init__(self) -> None:
         logger.debug("Initializing ModUpdaterPrompt")
-        self.updates_found = False
 
-        self.installEventFilter(self)
-
-        self.internal_mod_metadata = internal_mod_metadata
-        self.setObjectName("missingModsPanel")
-        # MOD LABEL
-        self.updates_available_label = QLabel(
-            "There updates available for Workshop mods!"
-        )
-        self.updates_available_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # CONTAINER LAYOUTS
-        self.upper_layout = QVBoxLayout()
-        self.lower_layout = QVBoxLayout()
-        layout = QVBoxLayout()
-
-        # SUB LAYOUTS
-        self.details_layout = QVBoxLayout()
-        self.editor_layout = QVBoxLayout()
-        self.editor_actions_layout = QHBoxLayout()
-
-        # DETAILS WIDGETS
-        self.details_label = QLabel(
-            "\nThe following table displays Workshop mods available for update from Steam."
-        )
-        self.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # EDITOR WIDGETS
-        # Create the model and set column headers
-        self.editor_model = QStandardItemModel(0, 5)
-        self.editor_model.setHorizontalHeaderLabels(
-            [
-                "✔",
+        super().__init__(
+            object_name="updateModsPanel",
+            window_title="RimSort - Updates found for Workshop mods",
+            title_text="There updates available for Workshop mods!",
+            details_text="\nThe following table displays Workshop mods available for update from Steam.",
+            additional_columns=[
                 "Name",
                 "PublishedFileID",
                 "Mod source",
                 "Mod last touched",
                 "Mod last updated",
                 # "Open page",
-            ]
+            ],
         )
-        # Create the table view and set the model
-        self.editor_table_view = QTableView()
-        self.editor_table_view.setModel(self.editor_model)
-        self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
-        self.editor_table_view.setSelectionMode(
-            QAbstractItemView.SelectionMode.NoSelection
-        )
-        # Set default stretch for each column
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            5, QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.editor_deselect_all_button = QPushButton("Deselect all")
-        self.editor_deselect_all_button.clicked.connect(
-            partial(self._deselect_select_all_rows, False)
-        )
-        self.editor_select_all_button = QPushButton("Select all")
-        self.editor_select_all_button.clicked.connect(
-            partial(self._deselect_select_all_rows, True)
-        )
-        self.editor_cancel_button = QPushButton("Do nothing and exit")
-        self.editor_cancel_button.clicked.connect(self.close)
-        self.editor_update_mods_button = QPushButton("Update mods")
+
+        # EDITOR WIDGETS
+
+        self.editor_update_mods_button = QPushButton(self.tr("Update mods"))
         self.editor_update_mods_button.clicked.connect(
-            partial(
-                self._update_mods_from_table,
-            )
+            partial(self._update_mods_from_table, 2, 3)
         )
-        self.editor_update_all_button = QPushButton("Update all")
-        self.editor_update_all_button.clicked.connect(partial(self._update_all))
-        self.editor_actions_layout.addWidget(self.editor_deselect_all_button)
-        self.editor_actions_layout.addWidget(self.editor_select_all_button)
-        self.editor_actions_layout.addStretch(100)
-        self.editor_actions_layout.addWidget(self.editor_cancel_button)
-        self.editor_actions_layout.addWidget(self.editor_update_mods_button)
-        self.editor_actions_layout.addWidget(self.editor_update_all_button)
+        self.editor_update_all_button = QPushButton(self.tr("Update all"))
+        self.editor_update_all_button.clicked.connect(partial(self._update_all_mods))
 
-        # Build the details layout
-        self.details_layout.addWidget(self.details_label)
+        self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
+        self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
 
-        # Build the editor layouts
-        self.editor_layout.addWidget(self.editor_table_view)
-        self.editor_layout.addLayout(self.editor_actions_layout)
-
-        # Add our widget layouts to the containers
-        self.upper_layout.addLayout(self.details_layout)
-        self.lower_layout.addLayout(self.editor_layout)
-
-        # Add our layouts to the main layout
-        layout.addWidget(self.updates_available_label)
-        layout.addLayout(self.upper_layout)
-        layout.addLayout(self.lower_layout)
-
-        # Put it all together
-        self.setWindowTitle("RimSort - Updates found for Workshop mods")
-        self.setLayout(layout)
-        self.setMinimumSize(QSize(900, 600))
-
-    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
-            self.close()
-            return True
-
-        return super().eventFilter(obj, event)
-
-    def _add_row(
-        self,
-        name: str,
-        publishedfileid: str,
-        mod_source: str,
-        internal_time_touched: str,
-        external_time_updated: str,
-    ) -> None:
-        # Create a new row
-        items = [
-            QStandardItem(),
-            QStandardItem(name),
-            QStandardItem(publishedfileid),
-            QStandardItem(mod_source),
-            QStandardItem(internal_time_touched),
-            QStandardItem(external_time_updated),
-        ]
-        self.editor_model.appendRow(items)
-        # Add our combo box to the row's column 5 and connect to update signal
-        checkbox_index = items[0].index()
-        checkbox = QCheckBox()
-        checkbox.setObjectName("summaryValue")
-        checkbox.setChecked(False)
-        # Set the checkbox as the index widget
-        self.editor_table_view.setIndexWidget(checkbox_index, checkbox)
-
-    def _deselect_select_all_rows(self, value: bool) -> None:
-        # Iterate through the editor's rows
-        for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row):  # If there is a row at current index
-                # If an existing row is found, setChecked the value
-                checkbox = self.editor_table_view.indexWidget(
-                    self.editor_model.item(row, 0).index()
-                )
-                assert isinstance(checkbox, QCheckBox)
-                checkbox.setChecked(value)
-
-    def _update_mods_from_table(self) -> None:
-        steamcmd_publishedfileids = []
-        steam_publishedfileids = []
-        # Iterate through the editor's rows
-        for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row):  # If there is a row at current index
-                # If an existing row is found, is it selected?
-                checkbox = self.editor_table_view.indexWidget(
-                    self.editor_model.item(row, 0).index()
-                )
-                assert isinstance(checkbox, QCheckBox)
-                if checkbox.isChecked():
-                    publishedfileid = self.editor_model.item(row, 2).text()
-                    if self.editor_model.item(row, 3).text() == "SteamCMD":
-                        steamcmd_publishedfileids.append(publishedfileid)
-                    elif self.editor_model.item(row, 3).text() == "Steam":
-                        steam_publishedfileids.append(publishedfileid)
-        # If we have any SteamCMD mods designated to be updated
-        if len(steamcmd_publishedfileids) > 0:
-            self.steamcmd_downloader_signal.emit(steamcmd_publishedfileids)
-        # If we have any Steam mods designated to be updated
-        if len(steam_publishedfileids) > 0:
-            self.steamworks_subscription_signal.emit(
-                [
-                    "resubscribe",
-                    [eval(str_pfid) for str_pfid in steam_publishedfileids],
-                ]
-            )
-        self.close()
-
-    def _update_all(self) -> None:
-        self._deselect_select_all_rows(True)
-        self._update_mods_from_table()
+    def _update_all_mods(self) -> None:
+        self._set_all_checkbox_rows(True)
+        self._update_mods_from_table(2, 3)
 
     def _populate_from_metadata(self) -> None:
         # Check our metadata for available updates, append row if found by data source
-        for metadata in self.internal_mod_metadata.values():
+        for metadata in self.metadata_manager.internal_local_metadata.values():
             if (
                 (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
                 and metadata.get("internal_time_touched")
@@ -234,8 +59,6 @@ class ModUpdaterPrompt(QWidget):
                 and metadata["external_time_updated"]
                 > metadata["internal_time_touched"]
             ):
-                if not self.updates_found:
-                    self.updates_found = True
                 # Retrieve values from metadata
                 name = metadata.get("name")
                 publishedfileid = metadata.get("publishedfileid")
@@ -248,11 +71,14 @@ class ModUpdaterPrompt(QWidget):
                     "%Y-%m-%d %H:%M:%S",
                     localtime(metadata["external_time_updated"]),
                 )
+                name_item = QStandardItem(name)
+                name_item.setToolTip(name)
+                items = [
+                    name_item,
+                    QStandardItem(publishedfileid),
+                    QStandardItem(mod_source),
+                    QStandardItem(internal_time_touched),
+                    QStandardItem(external_time_updated),
+                ]
                 # Add row to table
-                self._add_row(
-                    name=name,
-                    publishedfileid=publishedfileid,
-                    mod_source=mod_source,
-                    internal_time_touched=internal_time_touched,
-                    external_time_updated=external_time_updated,
-                )
+                self._add_row(items)

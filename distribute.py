@@ -81,10 +81,6 @@ def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
 
-    print("pip install steamfiles from submodule")
-    path = os.path.join(_CWD, "submodules", "steamfiles")
-    _execute([PY_CMD, "-m", "pip", "install", "-e", path])
-
 
 def build_steamworkspy() -> None:
     # Setup environment
@@ -328,6 +324,8 @@ def build_steamworkspy() -> None:
 
 
 def copy_swp_libs() -> None:
+    STEAMWORKSPY_BUILT_LIB = ""
+    STEAMWORKSPY_LIB_FIN = ""
     # Copy libs
     if _SYSTEM != "Windows":
         if _SYSTEM == "Darwin":
@@ -347,6 +345,8 @@ def copy_swp_libs() -> None:
 def get_latest_todds_release() -> None:
     # Parse latest release
     headers = None
+    browser_download_url = ""
+    # If GITHUB_TOKEN is set, use it to authenticate the request
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
     raw = handle_request(
@@ -429,7 +429,7 @@ def handle_request(
     raw = requests.get(url, headers=headers)
     if raw.status_code != 200:
         raise Exception(
-            f"Failed to get latest release: {raw.status_code}" f"\nResponse: {raw.text}"
+            f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}"
         )
     return raw
 
