@@ -9,6 +9,8 @@ from uuid import uuid4
 
 import msgspec
 
+from app.utils.files import subfolder_contains_candidate_path
+
 
 class ModType(Enum):
     LOCAL = "Local"
@@ -338,28 +340,12 @@ class ListedMod(BaseMod):
     @functools.cached_property
     def c_sharp_mod(self) -> bool:
         """Return whether the mod is a C# mod based on the contents of the mod path. Looks for binaries in the Assemblies folder."""
-        if self.mod_path is None:
-            return False
+        return subfolder_contains_candidate_path(self.mod_path, "Assemblies", "*.dll")
 
-        subfolder_paths = [self.mod_path]
-        subfolder_paths.extend(
-            [
-                self.mod_path / folder
-                for folder in os.listdir(self.mod_path)
-                if os.path.isdir(str(self.mod_path / folder))
-            ]
-        )
-
-        for subfolder_path in subfolder_paths:
-            candidate_path = subfolder_path / "Assemblies"
-            if candidate_path.exists():
-                # Check for .dll or .DLL files in the Assemblies folder using glob
-                if any(candidate_path.glob("*.dll")) or any(
-                    candidate_path.glob("*.DLL")
-                ):
-                    return True
-
-        return False
+    @functools.cached_property
+    def xml_patch_mod(self) -> bool:
+        """Return whether the mod is a C# mod based on the contents of the mod path. Looks for binaries in the Assemblies folder."""
+        return subfolder_contains_candidate_path(self.mod_path, "Patches", "*.xml")
 
     @property
     def preview_img_path(self) -> Path | None:

@@ -11,7 +11,7 @@ lang: zh-cn
 
 Steam 数据库构建器是一个用于创建和更新 Steam 创意工坊元数据库本地副本的专用工具。
 
-![数据库构建器的设置预览](/assets/images/previews/settings/db_builder.png)
+![数据库构建器的设置预览](../assets/images/previews/settings/db_builder.png)
 
 ## 目录
 {: .no_toc .text-delta }

@@ -10,7 +10,14 @@ from uuid import uuid4
 
 from loguru import logger
 from natsort import natsorted
-from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
+from PySide6.QtCore import (
+    QCoreApplication,
+    QObject,
+    QRunnable,
+    QThread,
+    QThreadPool,
+    Signal,
+)
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
@@ -127,20 +134,32 @@ class MetadataManager(QObject):
         ) -> bool:
             if not os.path.exists(path):
                 self.show_warning_signal.emit(
-                    f"{db_type} DB is missing",
-                    f"Configured {db_type} DB not found!",
-                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
-                    + "\nPlease make sure your Database location settings are correct.",
+                    self.tr("{db_type} DB is missing").format(db_type=db_type),
+                    self.tr("Configured {db_type} DB not found!").format(
+                        db_type=db_type
+                    ),
+                    self.tr(
+                        "Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                        + "\nPlease make sure your Database location settings are correct."
+                    ).format(db_type=db_type),
                     f"{path}",
                 )
                 return False
 
             if os.path.isdir(path) == (not expect_directory):
                 self.show_warning_signal.emit(
-                    f"{db_type} DB is missing",
-                    f"Configured {db_type} DB path is {'not' if expect_directory else ''} a directory! Expected a {'directory' if expect_directory else 'file'} path.",
-                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
-                    + "\nPlease make sure your Database location settings are correct.",
+                    self.tr("{db_type} DB is missing").format(db_type=db_type),
+                    self.tr(
+                        "Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path."
+                    ).format(
+                        db_type=db_type,
+                        not_dir="not" if expect_directory else "",
+                        file_dir="directory" if expect_directory else "file",
+                    ),
+                    self.tr(
+                        "Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                        + "\nPlease make sure your Database location settings are correct."
+                    ).format(db_type=db_type),
                     f"{path}",
                 )
                 return False
@@ -183,10 +202,17 @@ class MetadataManager(QObject):
                     # Fallback to the expired metadata
                     if life != 0:  # Disable Notification if value is 0
                         self.show_warning_signal.emit(
-                            "Steam DB metadata expired",
-                            "Steam DB is expired! Consider updating!\n",
-                            f"Steam DB last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(db_data['version'] - life))}\n\n"
-                            + "Falling back to cached, but EXPIRED Steam Database...",
+                            self.tr("Steam DB metadata expired"),
+                            self.tr("Steam DB is expired! Consider updating!\n"),
+                            self.tr(
+                                "Steam DB last updated: {last_updated}\n\n"
+                                + "Falling back to cached, but EXPIRED Steam Database..."
+                            ).format(
+                                last_updated=strftime(
+                                    "%Y-%m-%d %H:%M:%S",
+                                    localtime(db_data["version"] - life),
+                                )
+                            ),
                             "",
                         )
                     db_json_data = db_data[
@@ -469,9 +495,17 @@ class MetadataManager(QObject):
                 f"The provided Version.txt path does not exist: {version_file_path}"
             )
             self.show_warning_signal.emit(
-                "Missing Version.txt",
-                f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
-                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance].game_folder}] set correctly? There should be a Version.txt file in the game install directory.",
+                self.tr("Missing Version.txt"),
+                self.tr(
+                    "RimSort is unable to get the game version at the expected path: [{version_file_path}]."
+                ).format(version_file_path=version_file_path),
+                self.tr(
+                    "\nIs your game path {folder} set correctly? There should be a Version.txt file in the game install directory."
+                ).format(
+                    folder=self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ].game_folder
+                ),
                 "",
             )
         # Get and cache installed base game / DLC data
@@ -634,6 +668,8 @@ class MetadataManager(QObject):
 
         # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
         logger.info("Started compiling metadata from About.xml")
+        # Go through each mod and add dependencies
+        dependencies = None
         for uuid in uuids:
             logger.debug(
                 f"UUID: {uuid} packageid: "
@@ -1044,6 +1080,20 @@ class MetadataManager(QObject):
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
+                    incompatibilities = self.external_community_rules[package_id].get(
+                        "incompatibleWith"
+                    )
+                    if incompatibilities:
+                        logger.debug(
+                            f"Current mod is incompatible with these mods: {incompatibilities}"
+                        )
+                        for incompatibilities in incompatibilities:
+                            for uuid in potential_uuids:
+                                add_incompatibility_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    incompatibilities,
+                                    self.internal_local_metadata,
+                                )
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1112,6 +1162,20 @@ class MetadataManager(QObject):
                                     "loadTheseAfter",
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
+                                )
+                    incompatibilities = self.external_user_rules[package_id].get(
+                        "incompatibleWith"
+                    )
+                    if incompatibilities:
+                        logger.debug(
+                            f"Current mod is incompatible with these mods: {incompatibilities}"
+                        )
+                        for incompatibilities in incompatibilities:
+                            for uuid in potential_uuids:
+                                add_incompatibility_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    incompatibilities,
+                                    self.internal_local_metadata,
                                 )
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
@@ -1213,7 +1277,7 @@ class MetadataManager(QObject):
             == "Configured file path"
         ):
             path = Path(
-                self.settings_controller.settings.external_use_this_instead_file_path
+                self.settings_controller.settings.external_use_this_instead_folder_path
             )
         elif (
             self.settings_controller.settings.external_use_this_instead_metadata_source
@@ -1379,7 +1443,18 @@ class MetadataManager(QObject):
         """
         # Parse the SteamCMD workshop .acf metadata file
         acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        acf_metadata = acf_to_dict(path=acf_path)
+        if not os.path.exists(acf_path):
+            logger.warning(
+                f"SteamCMD ACF file not found at: {acf_path}, Skipping removing mods from ACF."
+            )
+            return
+
+        try:
+            acf_metadata = acf_to_dict(path=acf_path)
+        except Exception as e:
+            logger.error(f"Failed to parse SteamCMD ACF file: {e}")
+            return
+
         depotcache_path = self.steamcmd_wrapper.steamcmd_depotcache_path
         # WorkshopItemsInstalled
         workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
@@ -1500,9 +1575,17 @@ class ModParser(QRunnable):
         data_malformed = None
         # Any pfid parsed will be stored here locally
         pfid = None
-        # Look for a case-insensitive "About" folder
+        # Define defaults for scenario
+        scenario_rsc_found = False
+        scenario_rsc_file = ""
+        scenario_data = {}
+        scenario_metadata = {}
+        # Define defaults for "About" folder and "About.xml" file
         invalid_about_folder_path_found = True
+        invalid_about_file_path_found = True
         about_folder_name = "About"
+        about_file_name = "About.xml"
+        # Look for a case-insensitive "About" folder
         for temp_file in os.scandir(mod_directory):
             if (
                 temp_file.name.lower() == about_folder_name.lower()
@@ -1511,10 +1594,8 @@ class ModParser(QRunnable):
                 about_folder_name = temp_file.name
                 invalid_about_folder_path_found = False
                 break
-        # Look for a case-insensitive "About.xml" file
-        invalid_about_file_path_found = True
+            # Look for a case-insensitive "About.xml" file
         if not invalid_about_folder_path_found:
-            about_file_name = "About.xml"
             for temp_file in os.scandir(str((directory_path / about_folder_name))):
                 if (
                     temp_file.name.lower() == about_file_name.lower()
@@ -1525,7 +1606,6 @@ class ModParser(QRunnable):
                     break
         # Look for .rsc scenario files to load metadata from if we didn't find About.xml
         if invalid_about_file_path_found:
-            scenario_rsc_found = None
             for temp_file in os.scandir(mod_directory):
                 if temp_file.name.lower().endswith(".rsc") and not temp_file.is_dir():
                     scenario_rsc_file = temp_file.name
@@ -1795,7 +1875,6 @@ class ModParser(QRunnable):
         elif invalid_about_file_path_found and scenario_rsc_found:
             scenario_data_path = str((directory_path / scenario_rsc_file))
             logger.debug(f"Found scenario metadata at: {scenario_data_path}")
-            scenario_data = {}
             try:
                 # Try to parse .rsc
                 scenario_data = xml_path_to_json(scenario_data_path)
@@ -2570,8 +2649,10 @@ def check_if_pfids_blacklisted(
             text="Unable to check for blacklisted mods. Please configure a SteamDB for RimSort to use in Settings.",
         )
         return publishedfileids
-    # Warn attempt of blacklisted mods
+    # Define defaults for blacklisted mods
     blacklisted_mods = {}
+    publishedfileid = ""
+    # Check if any of the mods are blacklisted
     for publishedfileid in publishedfileids:
         if steamdb.get(publishedfileid, {}).get("blacklist"):
             blacklisted_mods[publishedfileid] = {
@@ -2599,12 +2680,20 @@ def check_if_pfids_blacklisted(
             information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
             details=blacklisted_mods_report,
             button_text_override=[
-                "Download blacklisted mods",
-                "Skip blacklisted mods",
+                QCoreApplication.translate(
+                    "check_if_pfids_blacklisted", "Download blacklisted mods"
+                ),
+                QCoreApplication.translate(
+                    "check_if_pfids_blacklisted", "Skip blacklisted mods"
+                ),
             ],
         )
         # Remove blacklisted mods from list if user wants to download them still
-        if "Download" in answer:
+        answer_str = str(answer)
+        download_text = QCoreApplication.translate(
+            "check_if_pfids_blacklisted", "Download blacklisted mods"
+        )
+        if download_text in answer_str:
             publishedfileids.remove(publishedfileid)
             logger.debug(
                 f"Skipping download of blacklisted Workshop mod: {publishedfileid}"

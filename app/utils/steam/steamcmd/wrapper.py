@@ -11,6 +11,8 @@ from zipfile import ZipFile
 
 import requests
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QMessageBox
 
 import app.utils.symlink as symlink
 from app.controllers.settings_controller import SettingsController
@@ -51,6 +53,7 @@ class SteamcmdInterface:
             EventBus().do_clear_steamcmd_depot_cache.connect(
                 lambda: self.clear_depot_cache()
             )
+            self.translate = QCoreApplication.translate
             logger.debug("Finished SteamcmdInterface initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
@@ -350,19 +353,29 @@ class SteamcmdInterface:
         else:
             btn_text = ["&Yes", "&No"]
 
+        # Translate button texts explicitly before passing to show_dialogue_conditional
+        translated_btn_text = [
+            self.translate("SteamcmdInterface", btn) for btn in btn_text
+        ]
         answer = show_dialogue_conditional(
-            title="RimSort - SteamCMD setup",
-            text="RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+            title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
+            text=self.translate(
+                "SteamcmdInterface",
+                "RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+            ),
             information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
-            + "Do you want to setup SteamCMD?",
-            button_text_override=btn_text,
+            + self.translate("SteamcmdInterface", "Do you want to setup SteamCMD?"),
+            button_text_override=translated_btn_text,
         )
-        if answer == "&Yes":
+        yes_text = self.translate("SteamcmdInterface", "&Yes")
+        dont_ask_text = self.translate("SteamcmdInterface", "&Don't Ask Again")
+
+        if answer == yes_text:
             EventBus().do_install_steamcmd.emit()
         if runner:
             runner.close()
 
-        if ask_ignore and answer == "&Don't Ask Again":
+        if ask_ignore and answer == dont_ask_text:
             if settings_controller is not None:
                 settings_controller.active_instance.steamcmd_ignore = True
                 settings_controller.settings.save()
@@ -400,8 +413,10 @@ class SteamcmdInterface:
                 )
             else:
                 InformationBox(
-                    title="Depot Cache Cleared",
-                    text="SteamCMD depot cache was already cleared.",
+                    title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache was already cleared."
+                    ),
                 ).exec()
             return False
 
@@ -411,8 +426,10 @@ class SteamcmdInterface:
                 runner.message("Depot cache cleared")
             else:
                 InformationBox(
-                    title="Depot Cache Cleared",
-                    text="SteamCMD depot cache has been cleared.",
+                    title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache has been cleared."
+                    ),
                 ).exec()
             return True
 
@@ -478,7 +495,7 @@ class SteamcmdInterface:
                 "Would you like to reinstall SteamCMD?",
                 f"Existing install: {self.steamcmd_install_path}",
             )
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 runner.message(f"Reinstalling SteamCMD: {self.steamcmd_install_path}")
                 self.setup_steamcmd(symlink_source_path, True, runner)
         if installed:
@@ -499,16 +516,29 @@ class SteamcmdInterface:
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
                 answer = show_dialogue_conditional(
-                    "Re-create Symlink?",
-                    "An existing symlink already exists."
-                    " Would you like to delete and re-create the symlink?",
-                    "The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly.",
-                    f"Existing symlink: {symlink_destination_path}"
-                    "\n\nNew symlink:"
-                    f"\n[{symlink_source_path}] -> " + symlink_destination_path,
+                    self.translate("SteamcmdInterface", "Re-create Symlink?"),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "An existing symlink already exists."
+                        " Would you like to delete and re-create the symlink?",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "Existing symlink: {symlink_destination_path}"
+                        "\n\nNew symlink:"
+                        "\n[{symlink_source_path}] -> ",
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                        symlink_destination_path=symlink_destination_path,
+                    )
+                    + symlink_destination_path,
                 )
-                if answer == "&Yes":  # Re-create symlink
+                if answer == QMessageBox.StandardButton.Yes:  # Re-create symlink
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )
@@ -519,29 +549,53 @@ class SteamcmdInterface:
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
                 answer = show_dialogue_conditional(
-                    "Create Symlink?",
-                    "The symlink destination path already exists."
-                    " Would you like to remove the existing destination and create a new symlink in it's place?",
-                    "The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly.",
-                    f"Existing destination: {symlink_destination_path}"
-                    "\n\nNew symlink:"
-                    f"\n[{symlink_source_path}] -> " + symlink_destination_path,
+                    self.translate("SteamcmdInterface", "Re-create Symlink?"),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink destination path already exists."
+                        " Would you like to remove the existing destination and create a new symlink in it's place?",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "Existing destination: {symlink_destination_path}"
+                        "\n\nNew symlink:"
+                        "\n[{symlink_source_path}] -> ",
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                        symlink_destination_path=symlink_destination_path,
+                    )
+                    + symlink_destination_path,
                 )
-                if answer == "&Yes":  # Re-create symlink/junction
+                if (
+                    answer == QMessageBox.StandardButton.Yes
+                ):  # Re-create symlink/junction
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )
             else:  # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
-                    "Create Symlink?",
-                    "Do you want to create a symlink?",
-                    "The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly.",
-                    "New symlink:"
-                    f"\n[{symlink_source_path}] -> " + symlink_destination_path,
+                    self.translate("SteamcmdInterface", "Create Symlink?"),
+                    self.translate(
+                        "SteamcmdInterface", "Do you want to create a symlink?"
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> "
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                    )
+                    + symlink_destination_path,
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     self.setup = self.create_symlink(
                         symlink_source_path, symlink_destination_path, runner=runner
                     )

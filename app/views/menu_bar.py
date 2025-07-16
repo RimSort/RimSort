@@ -44,6 +44,7 @@ class MenuBar(QObject):
         self.rule_editor_action: QAction
         self.reset_all_warnings_action: QAction
         self.add_git_mod_action: QAction
+        self.add_zip_mod_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
         self.backup_instance_action: QAction
@@ -56,7 +57,6 @@ class MenuBar(QObject):
         self.wiki_action: QAction
         self.check_for_updates_action: QAction
         self.check_for_updates_on_startup_action: QAction
-        self.validate_steam_client_action: QAction
 
         self.import_submenu: QMenu
         self.export_submenu: QMenu
@@ -103,33 +103,33 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "File" menu.
         """
-        file_menu = self.menu_bar.addMenu("File")
+        file_menu = self.menu_bar.addMenu(self.tr("File"))
         self.open_mod_list_action = self._add_action(
-            file_menu, "Open Mod List…", "Ctrl+O"
+            file_menu, self.tr("Open Mod List…"), "Ctrl+O"
         )
         file_menu.addSeparator()
         self.save_mod_list_action = self._add_action(
-            file_menu, "Save Mod List As…", "Ctrl+Shift+S"
+            file_menu, self.tr("Save Mod List As…"), "Ctrl+Shift+S"
         )
         file_menu.addSeparator()
-        self.import_submenu = QMenu("Import")
+        self.import_submenu = QMenu(self.tr("Import"))
         file_menu.addMenu(self.import_submenu)
         self.import_from_rentry_action = self._add_action(
-            self.import_submenu, "From Rentry.co"
+            self.import_submenu, self.tr("From Rentry.co")
         )
         self.import_from_workshop_collection_action = self._add_action(
-            self.import_submenu, "From Workshop collection"
+            self.import_submenu, self.tr("From Workshop collection")
         )
-        self.export_submenu = QMenu("Export")
+        self.export_submenu = QMenu(self.tr("Export"))
         file_menu.addMenu(self.export_submenu)
         self.export_to_clipboard_action = self._add_action(
-            self.export_submenu, "To Clipboard…"
+            self.export_submenu, self.tr("To Clipboard…")
         )
         self.export_to_rentry_action = self._add_action(
-            self.export_submenu, "To Rentry.co…"
+            self.export_submenu, self.tr("To Rentry.co…")
         )
         file_menu.addSeparator()
-        self.upload_submenu = QMenu("Upload Log")
+        self.upload_submenu = QMenu(self.tr("Upload Log"))
         file_menu.addMenu(self.upload_submenu)
         self.upload_rimsort_log_action = self._add_action(
             self.upload_submenu, "RimSort.log"
@@ -141,45 +141,47 @@ class MenuBar(QObject):
             self.upload_submenu, "RimWorld Player.log"
         )
         file_menu.addSeparator()
-        self.shortcuts_submenu = QMenu("Open...")
+        self.shortcuts_submenu = QMenu(self.tr("Open..."))
         file_menu.addMenu(self.shortcuts_submenu)
         # Add submenu under Shortcuts
-        self.rimsort_shortcuts_submenu = QMenu("RimSort")
+        self.rimsort_shortcuts_submenu = QMenu(self.tr("RimSort"))
         self.shortcuts_submenu.addMenu(self.rimsort_shortcuts_submenu)
-        self.rimworld_shortcuts_submenu = QMenu("RimWorld")
+        self.rimworld_shortcuts_submenu = QMenu(self.tr("RimWorld"))
         self.shortcuts_submenu.addMenu(self.rimworld_shortcuts_submenu)
         # Add actions to RimSort submenu
         self.open_app_directory_action = self._add_action(
-            self.rimsort_shortcuts_submenu, "Root Directory"
+            self.rimsort_shortcuts_submenu, self.tr("Root Directory")
         )
         self.open_settings_directory_action = self._add_action(
-            self.rimsort_shortcuts_submenu, "Config Directory"
+            self.rimsort_shortcuts_submenu, self.tr("Config Directory")
         )
         self.open_rimsort_logs_directory_action = self._add_action(
-            self.rimsort_shortcuts_submenu, "Logs Directory"
+            self.rimsort_shortcuts_submenu, self.tr("Logs Directory")
         )
         # Add action to RimWorld submenu
         self.open_rimworld_directory_action = self._add_action(
-            self.rimworld_shortcuts_submenu, "Root Directory"
+            self.rimworld_shortcuts_submenu, self.tr("Root Directory")
         )
         self.open_rimworld_config_directory_action = self._add_action(
-            self.rimworld_shortcuts_submenu, "Config Directory"
+            self.rimworld_shortcuts_submenu, self.tr("Config Directory")
         )
         self.open_rimworld_logs_directory_action = self._add_action(
-            self.rimworld_shortcuts_submenu, "Logs Directory"
+            self.rimworld_shortcuts_submenu, self.tr("Logs Directory")
         )
         self.open_local_mods_directory_action = self._add_action(
-            self.rimworld_shortcuts_submenu, "Local Mods Directory"
+            self.rimworld_shortcuts_submenu, self.tr("Local Mods Directory")
         )
         self.open_steam_mods_directory_action = self._add_action(
-            self.rimworld_shortcuts_submenu, "Steam Mods Directory"
+            self.rimworld_shortcuts_submenu, self.tr("Steam Mods Directory")
         )
 
         if SystemInfo().operating_system != SystemInfo.OperatingSystem.MACOS:
             file_menu.addSeparator()
-            self.settings_action = self._add_action(file_menu, "Settings…", "Ctrl+,")
+            self.settings_action = self._add_action(
+                file_menu, self.tr("Settings…"), "Ctrl+,"
+            )
             file_menu.addSeparator()
-            self.quit_action = self._add_action(file_menu, "Exit", "Ctrl+Q")
+            self.quit_action = self._add_action(file_menu, self.tr("Exit"), "Ctrl+Q")
         return file_menu
 
     def _create_edit_menu(self) -> QMenu:
@@ -189,14 +191,14 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "Edit" menu.
         """
-        edit_menu = self.menu_bar.addMenu("Edit")
-        self.cut_action = self._add_action(edit_menu, "Cut", "Ctrl+X")
-        self.copy_action = self._add_action(edit_menu, "Copy", "Ctrl+C")
-        self.paste_action = self._add_action(edit_menu, "Paste", "Ctrl+V")
+        edit_menu = self.menu_bar.addMenu(self.tr("Edit"))
+        self.cut_action = self._add_action(edit_menu, self.tr("Cut"), "Ctrl+X")
+        self.copy_action = self._add_action(edit_menu, self.tr("Copy"), "Ctrl+C")
+        self.paste_action = self._add_action(edit_menu, self.tr("Paste"), "Ctrl+V")
         edit_menu.addSeparator()
-        self.rule_editor_action = self._add_action(edit_menu, "Rule Editor…")
+        self.rule_editor_action = self._add_action(edit_menu, self.tr("Rule Editor…"))
         self.reset_all_warnings_action = self._add_action(
-            edit_menu, "Reset Warning Toggles"
+            edit_menu, self.tr("Reset Warning Toggles")
         )
         return edit_menu
 
@@ -207,12 +209,19 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "Download" menu.
         """
-        download_menu = self.menu_bar.addMenu("Download")
-        self.add_git_mod_action = self._add_action(download_menu, "Add Git Mod")
+        download_menu = self.menu_bar.addMenu(self.tr("Download"))
+        self.add_git_mod_action = self._add_action(
+            download_menu, self.tr("Add Git Mod")
+        )
+        self.add_zip_mod_action = self._add_action(
+            download_menu, self.tr("Add Zip Mod")
+        )
         download_menu.addSeparator()
-        self.browse_workshop_action = self._add_action(download_menu, "Browse Workshop")
+        self.browse_workshop_action = self._add_action(
+            download_menu, self.tr("Browse Workshop")
+        )
         self.update_workshop_mods_action = self._add_action(
-            download_menu, "Update Workshop Mods"
+            download_menu, self.tr("Update Workshop Mods")
         )
         return download_menu
 
@@ -223,23 +232,25 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "Instances" menu.
         """
-        instances_menu = self.menu_bar.addMenu("Instances")
-        self.instances_submenu = QMenu('Current: "Default"')
+        instances_menu = self.menu_bar.addMenu(self.tr("Instances"))
+        self.instances_submenu = QMenu(self.tr('Current: "Default"'))
         instances_menu.addMenu(self.instances_submenu)
         instances_menu.addSeparator()
         self.backup_instance_action = self._add_action(
-            instances_menu, "Backup Instance…"
+            instances_menu, self.tr("Backup Instance…")
         )
         self.restore_instance_action = self._add_action(
-            instances_menu, "Restore Instance…"
+            instances_menu, self.tr("Restore Instance…")
         )
         instances_menu.addSeparator()
-        self.clone_instance_action = self._add_action(instances_menu, "Clone Instance…")
+        self.clone_instance_action = self._add_action(
+            instances_menu, self.tr("Clone Instance…")
+        )
         self.create_instance_action = self._add_action(
-            instances_menu, "Create Instance…"
+            instances_menu, self.tr("Create Instance…")
         )
         self.delete_instance_action = self._add_action(
-            instances_menu, "Delete Instance…"
+            instances_menu, self.tr("Delete Instance…")
         )
         return instances_menu
 
@@ -250,15 +261,26 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "Textures" menu.
         """
-        texture_menu = self.menu_bar.addMenu("Textures")
+        texture_menu = self.menu_bar.addMenu(self.tr("Textures"))
         self.optimize_textures_action = self._add_action(
-            texture_menu, "Optimize Textures"
+            texture_menu, self.tr("Optimize Textures")
         )
         texture_menu.addSeparator()
         self.delete_dds_textures_action = self._add_action(
-            texture_menu, "Delete .dds Textures"
+            texture_menu, self.tr("Delete .dds Textures")
         )
         return texture_menu
+
+    def _create_update_menu(self) -> QMenu:
+        update_menu = self.menu_bar.addMenu(self.tr("Update"))
+        self.check_for_updates_action = self._add_action(
+            update_menu, self.tr("Check for Updates…")
+        )
+        self.check_for_updates_on_startup_action = self._add_action(
+            update_menu, self.tr("Check for Updates on Startup"), checkable=True
+        )
+        update_menu.addSeparator()
+        return update_menu
 
     def _create_help_menu(self) -> QMenu:
         """
@@ -267,20 +289,9 @@ class MenuBar(QObject):
         Returns:
             QMenu: The created "Help" menu.
         """
-        help_menu = self.menu_bar.addMenu("Help")
-        self.wiki_action = self._add_action(help_menu, "RimSort Wiki…")
+        help_menu = self.menu_bar.addMenu(self.tr("Help"))
+        self.wiki_action = self._add_action(help_menu, self.tr("RimSort Wiki…"))
         help_menu.addSeparator()
-        # TODO: updates not implemented yet
-        # self.check_for_updates_action = self._add_action(
-        #     help_menu, "Check for Updates…"
-        # )
-        # self.check_for_updates_on_startup_action = self._add_action(
-        #     help_menu, "Check for Updates on Startup", checkable=True
-        # )
-        # help_menu.addSeparator()
-        self.validate_steam_client_action = self._add_action(
-            help_menu, "Validate Steam Client mods"
-        )
         return help_menu
 
     def _create_menu_bar(self) -> None:
@@ -303,4 +314,5 @@ class MenuBar(QObject):
         self._create_download_menu()
         self._create_instances_menu()
         self._create_texture_menu()
+        self._create_update_menu()
         self._create_help_menu()

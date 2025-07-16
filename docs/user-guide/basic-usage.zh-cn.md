@@ -17,7 +17,7 @@ lang: zh-cn
 
 ## 初始设置
 
-RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问你对某些关键设置的偏好，例如是否启用 Steam 集成。除此之外的将使用默认设置，你可以通过 [设置](/user-guide/basic-usage/#设置) 自由调整配置。
+RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问你对某些关键设置的偏好，例如是否启用 Steam 集成。除此之外的将使用默认设置，你可以通过 [设置](#设置) 自由调整配置。
 
 ## 菜单栏
 
@@ -51,7 +51,7 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 ## 外部元数据
 
 {: .note}
-> RimSort 发布版本不包含这些额外的外部元数据。有关可选（但强烈推荐）外部元数据库的信息，及其获取方式，请参阅 [数据库](/user-guide/databases)。
+> RimSort 发布版本不包含这些额外的外部元数据。有关可选（但强烈推荐）外部元数据库的信息，及其获取方式，请参阅 [数据库](../user-guide/databases.zh-cn)。
 
 RimSort 利用外部元数据来增强其功能，它们提供了已下载 Mod 的 `About.xml` 文件所含信息之外的附加数据。RimSort 中的外部元数据是用户可扩展的，可共享的。
 
@@ -63,7 +63,7 @@ Steam 创意工坊元数据
 
   包含从 Steam WebAPI 和 Steamworks API 获取的元数据，使用 Paladin RimPy Mod 管理器的数据库 db.json 定义的结构
 
-  要自行构建 Steam 创意工坊数据库，请使用 [Steam 数据库构建器](/user-guide/db-builder).
+  要自行构建 Steam 创意工坊数据库，请使用 [Steam 数据库构建器](../user-guide/db-builder.zh-cn).
   > 为什么需要这个？
   
   - 获取 Steam 上可用的依赖元数据 - Mod 开发者会在 Steam 上列出依赖的 DLC 和其他依赖 Mod
@@ -83,7 +83,7 @@ Steam 创意工坊元数据
   这两个数据库都采用与 Paladin RimPy Mod 管理器的社区规则数据库（communityRules.json）兼容的格式。
 
   {: .note}
-  > 虽然你可以直接修改这些纯文本格式的数据库，但建议使用 RimSort 内置的 [规则编辑器](/user-guide/rule-editor) 来编辑其中定义的规则。
+  > 虽然你可以直接修改这些纯文本格式的数据库，但建议使用 RimSort 内置的 [规则编辑器](../user-guide/rule-editor.zh-cn) 来编辑其中定义的规则。
 
   > 为什么需要这个？
 

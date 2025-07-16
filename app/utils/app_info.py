@@ -86,6 +86,7 @@ class AppInfo:
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
         self._user_rules_file = self.databases_folder / "userRules.json"
+        self._language_data_folder: Path = self._application_folder / "locales"
 
         # Make sure important directories exist
 
@@ -173,7 +174,7 @@ class AppInfo:
             Path: The path to the user-specific data file.
         """
         return self._settings_file
-    
+
     @property
     def user_rules_file(self) -> Path:
         """
@@ -215,7 +216,7 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
-    
+
     @property
     def aux_metadata_db(self) -> Path:
         """

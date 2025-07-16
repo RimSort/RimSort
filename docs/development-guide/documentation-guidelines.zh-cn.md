@@ -12,7 +12,7 @@ lang: zh-cn
 
 用户文档托管在 [GitHub Pages](https://pages.github.com/)，使用 [Jekyll][Jekyll] 的 [Just the Docs](https://github.com/just-the-docs/just-the-docs) 主题构建。当 `docs` 文件夹中的文档变更被合并到主分支时，系统会通过 GitHub Action 自动完成部署。
 
-贡献者请遵循 [贡献指南](/development-guide/contributor-guidelines)，通过 pull request 提交改动。
+贡献者请遵循 [贡献指南](../development-guide/contributor-guidelines.zh-cn)，通过 pull request 提交改动。
 
 ## 目录
 {: .no_toc .text-delta }

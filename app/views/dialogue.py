@@ -1,10 +1,18 @@
 import os
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import (
+    QCoreApplication,
+    QEvent,
+    QRunnable,
+    Qt,
+    QThreadPool,
+    Signal,
+    Slot,
+)
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -37,7 +45,7 @@ def show_dialogue_conditional(
     information: str | None = None,
     details: str | None = None,
     button_text_override: list[str] | None = None,
-) -> str:
+) -> Union[str, QMessageBox.StandardButton]:
     """
     Displays a dialogue, prompting the user for input
 
@@ -58,11 +66,17 @@ def show_dialogue_conditional(
     if button_text_override:
         # Remove standard buttons
         dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
+        dialogue.button(QMessageBox.StandardButton.Cancel).setText(
+            QCoreApplication.translate("show_dialogue_conditional", "Cancel")
+        )
 
         # Add custom buttons
         custom_btns = []
         for btn_text in button_text_override:
-            custom_btn = QPushButton(btn_text)
+            custom_btn_text = QCoreApplication.translate(
+                "show_dialogue_conditional", btn_text
+            )
+            custom_btn = QPushButton(custom_btn_text)
             custom_btn.setFixedWidth(custom_btn.sizeHint().width())
             custom_btns.append(custom_btn)
             dialogue.addButton(custom_btn, QMessageBox.ButtonRole.ActionRole)
@@ -84,6 +98,16 @@ def show_dialogue_conditional(
     # Show the message box & return response
     dialogue.exec_()
     response = dialogue.clickedButton()
+    # Map the clicked button to standard button enum if possible
+    for std_button in [
+        QMessageBox.StandardButton.Yes,
+        QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.Cancel,
+        QMessageBox.StandardButton.Ok,
+    ]:
+        if dialogue.button(std_button) == response:
+            return std_button
+    # Fallback to return button text if no match found
     return response.text()
 
 
@@ -94,7 +118,8 @@ def show_dialogue_input(
     text: str = "",
     parent: QWidget | None = None,
 ) -> Tuple[str, bool]:
-    return QInputDialog().getText(parent, title, label, text=text)  # type: ignore # Is okay to set parent to None
+    actual_parent = parent if parent is not None else QWidget()
+    return QInputDialog().getText(actual_parent, title, label, text=text)
 
 
 def show_dialogue_file(
@@ -148,6 +173,10 @@ def show_information(
     info_message_box.setTextFormat(Qt.TextFormat.RichText)
     info_message_box.setIcon(QMessageBox.Icon.Information)
     info_message_box.setObjectName("dialogue")
+    info_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    info_message_box.button(QMessageBox.StandardButton.Ok).setText(
+        QCoreApplication.translate("show_dialogue_information", "OK")
+    )
     if title:
         info_message_box.setWindowTitle(title)
     else:
@@ -201,6 +230,11 @@ def show_warning(
     else:
         warning_message_box.setWindowTitle(DEFAULT_TITLE)
 
+    warning_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    warning_message_box.button(QMessageBox.StandardButton.Ok).setText(
+        QCoreApplication.translate("show_warning", "OK")
+    )
+
     # Add data
     if text:
         warning_message_box.setText(text)
@@ -236,6 +270,27 @@ def show_fatal_error(
     )
     diag = FatalErrorDialog(title, text, information, details)
     diag.exec_()
+
+
+def show_internet_connection_error() -> None:
+    """Show a warning dialog for no internet connection, with firewall info and user information for help."""
+    logger.info("Showing no internet connection error dialog")
+    show_information(
+        title="No Internet Connection",
+        text="RimSort requires an active internet connection to perform this operation.",
+        information=(
+            "If you are connected but still see this message, your firewall or security software may be blocking RimSort. \n"
+            "To resolve this issue: \n\n"
+            "Add RimSort to your firewall's allowed applications. \n"
+            "You may need to add RimSort to your firewall's allowed list."
+        ),
+        details=(
+            "On Windows: Open Windows Security > Firewall & network protection > Allow an app through firewall. \n"
+            "Find RimSort or add it manually if needed. \n"
+            "On other systems, check your firewall or security software settings. \n"
+            "If you need more help, Please reach out to us on Github Issues page or Discord server."
+        ),
+    )
 
 
 class _BaseDialogue(QDialog):
@@ -495,11 +550,11 @@ class FatalErrorDialog(_BaseDialogue):
         self.details = details
 
         # Buttons
-        self.details_btn = QPushButton("Show Details")
-        self.close_btn = QPushButton("Close")
-        self.open_log_btn = QPushButton("Open Log Directory")
-        self.upload_log_btn = QPushButton("Upload Log")
-        self.upload_log_btn.setToolTip("Upload the log file to 0x0.st")
+        self.details_btn = QPushButton(self.tr("Show Details"))
+        self.close_btn = QPushButton(self.tr("Close"))
+        self.open_log_btn = QPushButton(self.tr("Open Log Directory"))
+        self.upload_log_btn = QPushButton(self.tr("Upload Log"))
+        self.upload_log_btn.setToolTip(self.tr("Upload the log file to 0x0.st"))
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.open_log_btn)
@@ -549,9 +604,9 @@ class FatalErrorDialog(_BaseDialogue):
         def _toggle_details() -> None:
             self.details_edit.setHidden(not self.details_edit.isHidden())
             if self.details_edit.isHidden():
-                self.details_btn.setText("Show Details")
+                self.details_btn.setText(self.tr("Show Details"))
             else:
-                self.details_btn.setText("Hide Details")
+                self.details_btn.setText(self.tr("Hide Details"))
             self.adjustSize()
 
         self.close_btn.clicked.connect(self.close)
@@ -577,7 +632,7 @@ class _UploadLogDialog(QDialog):
     def __init__(self, parent: QWidget):
         super().__init__(parent=parent)
 
-        self.setWindowTitle("Uploading Log...")
+        self.setWindowTitle(self.tr("Uploading Log..."))
         self.setObjectName("dialogue")
 
         self.progress = QProgressBar()
@@ -594,16 +649,20 @@ class _UploadLogDialog(QDialog):
                 # Show the URL
                 generic.copy_to_clipboard_safely(url)
                 show_information(
-                    title="Log Upload Successful",
-                    text="Log file uploaded successfully! Copied URL to clipboard.",
+                    title=self.tr("Log Upload Successful"),
+                    text=self.tr(
+                        "Log file uploaded successfully! Copied URL to clipboard."
+                    ),
                     information=f"URL: <a href='{url}'>{url}</a>",
                     parent=parent,
                 )
             else:
                 show_warning(
-                    title="Log Upload Failed",
-                    text="Log file upload failed!",
-                    information="Please check your internet connection and try again.",
+                    title=self.tr("Log Upload Failed"),
+                    text=self.tr("Log file upload failed!"),
+                    information=self.tr(
+                        "Please check your internet connection and try again."
+                    ),
                     parent=parent,
                 )
 
@@ -684,13 +743,15 @@ class SettingsFailureDialog(QDialog):
         )
 
         # Add data
-        self.text = "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+        self.text = self.tr(
+            "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+        )
 
         # Buttons
-        self.open_settings_file_btn = QPushButton("Open Settings")
-        self.open_settings_folder_btn = QPushButton("Open Settings Folder")
-        self.reset_settings_btn = QPushButton("Reset Settings")
-        self.close_application_btn = QPushButton("Exit RimSort")
+        self.open_settings_file_btn = QPushButton(self.tr("Open Settings"))
+        self.open_settings_folder_btn = QPushButton(self.tr("Open Settings Folder"))
+        self.reset_settings_btn = QPushButton(self.tr("Reset Settings"))
+        self.close_application_btn = QPushButton(self.tr("Exit RimSort"))
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.open_settings_file_btn)

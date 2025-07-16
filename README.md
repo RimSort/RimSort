@@ -15,7 +15,7 @@ To install RimSort, visit the [Releases][Releases] page and download the latest 
 
 For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder.
 
-For macOS, make sure you grab the appropriate release per your CPU (i386 is for an Intel CPU Mac, ARM is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing/#macos) to get around Gatekeeper errors.
+For macOS, make sure you grab the appropriate release per your CPU (i386 is for an Intel CPU Mac, ARM is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing#macos) to get around Gatekeeper errors.
 
 Check the [wiki][Wiki] for more detailed instructions.
 
@@ -24,6 +24,9 @@ Check the [wiki][Wiki] for more detailed instructions.
 Bugs and feature requests are tracked in the [Issues][Issues] section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!
 
 See the [wiki][Wiki] for detailed instructions on building RimSort yourself as well as guidelines for making pull requests.
+
+Interested in helping translate RimSort to your language? Check out our [Translation Guidelines](https://rimsort.github.io/RimSort/development-guide/translation-guidelines) for detailed instructions on how to contribute translations.
+
 ## FAQ and Issues
 
 If you have an issue, make sure you **checked the [wiki][Wiki]** for a solution.
