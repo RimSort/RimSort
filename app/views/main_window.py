@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -24,6 +25,7 @@ from app.controllers.instance_controller import (
     InstanceController,
     InvalidArchivePathError,
 )
+from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
@@ -207,6 +209,12 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
             mods_panel_controller=self.mods_panel_controller,
         )
+
+        self.main_content_controller = MainContentController(
+            view=self.main_content_panel,
+            settings_controller=self.settings_controller,
+        )
+
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
         EventBus().do_backup_existing_instance.connect(self.__backup_existing_instance)
@@ -252,6 +260,12 @@ class MainWindow(QMainWindow):
                 )
         else:
             self.steamcmd_wrapper.setup = True
+
+        # UPDATE DATABASES ON STARTUP IF ENABLED
+        # This is called here after all controllers are initialized and signals are connected
+        if is_initial:
+            self.main_content_controller._update_databases_on_startup_if_enabled_silent()
+
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
@@ -334,11 +348,13 @@ class MainWindow(QMainWindow):
                 )
             ),
             button_text_override=[
-                "Convert to SteamCMD",
-                "Keep Workshop Folder",
+                self.tr("Convert to SteamCMD"),
+                self.tr("Keep Workshop Folder"),
             ],
         )
-        return answer or "Cancelled"
+        answer_str = str(answer)
+        cancelled_str = self.tr("Cancelled")
+        return answer_str or cancelled_str
 
     def __backup_existing_instance(self, instance_name: str) -> None:
         # Get instance data from Settings
@@ -918,7 +934,7 @@ class MainWindow(QMainWindow):
                         "This will try to generate run args for the new instance based on the configured Game/Config folders."
                     ),
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     # Append new run args to the existing run args
                     generated_instance_run_args = [
                         "-logfile",

@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
-from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -75,6 +74,8 @@ class SteamBrowser(QWidget):
         self.url_prefix_workshop = (
             "https://steamcommunity.com/workshop/filedetails/?id="
         )
+        self.section_readytouseitems = "section=readytouseitems"
+        self.section_collections = "section=collections"
 
         # LAYOUTS
         self.window_layout = QHBoxLayout()
@@ -125,6 +126,7 @@ class SteamBrowser(QWidget):
         )
         # WebEngineView
         self.web_view = QWebEngineView()
+        self.web_view.hide()
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
         self.web_view.loadFinished.connect(self._web_view_load_finished)
@@ -156,8 +158,11 @@ class SteamBrowser(QWidget):
         )
         # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(100)
+        self.progress_bar.setObjectName("browser")
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setFixedHeight(8)
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setVisible(True)
 
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
@@ -181,8 +186,9 @@ class SteamBrowser(QWidget):
         # Put it all together
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
+
+        # Set the window to maximized state
+        self.showMaximized()
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
@@ -409,9 +415,11 @@ class SteamBrowser(QWidget):
 
     def _web_view_load_started(self) -> None:
         # Progress bar start, placeholder start
-        self.progress_bar.show()
-        self.web_view.hide()
-        self.web_view_loading_placeholder.show()
+        # Commented out to stop flashing on every page load
+        # self.web_view.hide()
+        # self.web_view_loading_placeholder.show()
+        self.progress_bar.setTextVisible(True)
+        self.nav_bar.removeAction(self.add_to_list_button)
 
     def _web_view_load_progress(self, progress: int) -> None:
         # Progress bar progress
@@ -423,8 +431,8 @@ class SteamBrowser(QWidget):
 
     def _web_view_load_finished(self) -> None:
         # Progress bar done
-        self.progress_bar.hide()
         self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(False)
 
         # Cache information from page
         self.current_title = self.web_view.title()
@@ -482,115 +490,16 @@ class SteamBrowser(QWidget):
             # }
             # """
 
-            if (
-                self.url_prefix_sharedfiles in self.current_url
-                or self.url_prefix_workshop in self.current_url
-            ):
-                # get mod id from steam workshop url
-                if self.url_prefix_sharedfiles in self.current_url:
-                    publishedfileid = self.current_url.split(
-                        self.url_prefix_sharedfiles, 1
-                    )[1]
-                else:
-                    publishedfileid = self.current_url.split(
-                        self.url_prefix_workshop, 1
-                    )[1]
-                if self.searchtext_string in publishedfileid:
-                    publishedfileid = publishedfileid.split(self.searchtext_string)[0]
-                # check if mod is installed
-                is_installed = self._is_mod_installed(publishedfileid)
-                # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
-                mod_subscribe_area_removal_script = """
-                var elements = document.getElementsByClassName("game_area_purchase_game");
-                while (elements.length > 0) {
-                    elements[0].parentNode.removeChild(elements[0]);
-                }
-                """
-                self.web_view.page().runJavaScript(
-                    mod_subscribe_area_removal_script, 0, lambda result: None
-                )
-                # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons for collections
-                mod_unsubscribe_button_removal_script = """
-                var elements = document.getElementsByClassName("subscribeCollection");
-                while (elements.length > 0) {
-                    elements[0].parentNode.removeChild(elements[0]);
-                }
-                """
-                self.web_view.page().runJavaScript(
-                    mod_unsubscribe_button_removal_script, 0, lambda result: None
-                )
-                # Remove "Subscribe" buttons from any mods shown in a collection
-                subscribe_buttons_removal_script = """
-                var elements = document.getElementsByClassName("general_btn subscribe");
-                while (elements.length > 0) {
-                    elements[0].parentNode.removeChild(elements[0]);
-                }
-                """
-                self.web_view.page().runJavaScript(
-                    subscribe_buttons_removal_script, 0, lambda result: None
-                )
-                # add buttons for collection items
-                add_collection_buttons_script = """
-                // find all collection items
-                var collectionItems = document.getElementsByClassName('collectionItem');
-                
-                for (var i = 0; i < collectionItems.length; i++) {
-                    var item = collectionItems[i];
-                    
-                    // get the mod id from the item
-                    var modId = item.id.replace('sharedfile_', '');
-                    
-                    // find the subscription controls div
-                    var subscriptionControls = item.querySelector('.subscriptionControls');
-                    if (!subscriptionControls) {
-                        continue;
-                    }
-                    
-                    // check if mod is installed
-                    var isInstalled = window.installedMods && window.installedMods.includes(modId);
-                    
-                    if (isInstalled) {
-                        // create installed indicator
-                        var installedIndicator = document.createElement('div');
-                        installedIndicator.innerHTML = '✓';
-                        installedIndicator.style.backgroundColor = '#4CAF50';
-                        installedIndicator.style.color = 'white';
-                        installedIndicator.style.width = '24px';
-                        installedIndicator.style.height = '24px';
-                        installedIndicator.style.borderRadius = '4px';
-                        installedIndicator.style.display = 'flex';
-                        installedIndicator.style.alignItems = 'center';
-                        installedIndicator.style.justifyContent = 'center';
-                        installedIndicator.style.fontWeight = 'bold';
-                        installedIndicator.style.fontSize = '16px';
-                        
-                        // Replace subscription controls with our indicator
-                        subscriptionControls.innerHTML = '';
-                        subscriptionControls.appendChild(installedIndicator);
-                    } else {
-                        // create link button
-                        var linkButton = document.createElement('a');
-                        linkButton.innerHTML = '→';
-                        linkButton.href = 'https://steamcommunity.com/sharedfiles/filedetails/?id=' + modId;
-                        linkButton.style.backgroundColor = '#2196F3';
-                        linkButton.style.color = 'white';
-                        linkButton.style.width = '24px';
-                        linkButton.style.height = '24px';
-                        linkButton.style.borderRadius = '4px';
-                        linkButton.style.display = 'flex';
-                        linkButton.style.alignItems = 'center';
-                        linkButton.style.justifyContent = 'center';
-                        linkButton.style.cursor = 'pointer';
-                        linkButton.style.fontWeight = 'bold';
-                        linkButton.style.fontSize = '20px';
-                        linkButton.style.textDecoration = 'none';
-                        
-                        // Replace subscription controls with our button
-                        subscriptionControls.innerHTML = '';
-                        subscriptionControls.appendChild(linkButton);
-                    }
-                }
-                """
+            is_item_page = self.url_prefix_sharedfiles in self.current_url
+            is_collection_page = self.url_prefix_workshop in self.current_url
+            is_collections_page = self.section_collections in self.current_url
+            is_items_page = (
+                self.section_readytouseitems in self.current_url
+                or not is_collections_page
+                and "section=" in self.current_url
+            )
+
+            if is_item_page or is_collection_page or is_items_page:
                 # Get list of installed mod IDs and inject into page
                 installed_mods = []
                 for metadata in self.metadata_manager.internal_local_metadata.values():
@@ -602,35 +511,190 @@ class SteamBrowser(QWidget):
                 self.web_view.page().runJavaScript(
                     inject_installed_mods_script, 0, lambda result: None
                 )
-                self.web_view.page().runJavaScript(
-                    add_collection_buttons_script, 0, lambda result: None
-                )
-                # add installed indicator if mod is installed
-                if is_installed:
-                    add_installed_indicator_script = """
-                    // Create a new div for the installed indicator
-                    var installedDiv = document.createElement('div');
-                    installedDiv.style.backgroundColor = '#4CAF50';  // Green background
-                    installedDiv.style.color = 'white';
-                    installedDiv.style.padding = '10px';
-                    installedDiv.style.borderRadius = '5px';
-                    installedDiv.style.marginBottom = '10px';
-                    installedDiv.style.textAlign = 'center';
-                    installedDiv.style.fontWeight = 'bold';
-                    installedDiv.innerHTML = '✓ Already Installed';
-                    // Insert it at the top of the page content
-                    var contentDiv = document.querySelector('.workshopItemDetailsHeader');
-                    if (contentDiv) {
-                        contentDiv.parentNode.insertBefore(installedDiv, contentDiv);
+
+                if is_item_page or is_collection_page:
+                    # get mod id from steam workshop url
+                    if self.url_prefix_sharedfiles in self.current_url:
+                        publishedfileid = self.current_url.split(
+                            self.url_prefix_sharedfiles, 1
+                        )[1]
+                    else:
+                        publishedfileid = self.current_url.split(
+                            self.url_prefix_workshop, 1
+                        )[1]
+                    if self.searchtext_string in publishedfileid:
+                        publishedfileid = publishedfileid.split(self.searchtext_string)[
+                            0
+                        ]
+                    # check if mod is installed
+                    is_installed = self._is_mod_installed(publishedfileid)
+                    # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
+                    mod_subscribe_area_removal_script = """
+                    var elements = document.getElementsByClassName("game_area_purchase_game");
+                    while (elements.length > 0) {
+                        elements[0].parentNode.removeChild(elements[0]);
                     }
                     """
                     self.web_view.page().runJavaScript(
-                        add_installed_indicator_script, 0, lambda result: None
+                        mod_subscribe_area_removal_script, 0, lambda result: None
                     )
-                # Show the add_to_list_button
-                self.nav_bar.addAction(self.add_to_list_button)
-            else:
-                self.nav_bar.removeAction(self.add_to_list_button)
+                    # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons for collections
+                    mod_unsubscribe_button_removal_script = """
+                    var elements = document.getElementsByClassName("subscribeCollection");
+                    while (elements.length > 0) {
+                        elements[0].parentNode.removeChild(elements[0]);
+                    }
+                    """
+                    self.web_view.page().runJavaScript(
+                        mod_unsubscribe_button_removal_script, 0, lambda result: None
+                    )
+                    # Remove "Subscribe" buttons from any mods shown in a collection
+                    subscribe_buttons_removal_script = """
+                    var elements = document.getElementsByClassName("general_btn subscribe");
+                    while (elements.length > 0) {
+                        elements[0].parentNode.removeChild(elements[0]);
+                    }
+                    """
+                    self.web_view.page().runJavaScript(
+                        subscribe_buttons_removal_script, 0, lambda result: None
+                    )
+                    # add buttons for collection items
+                    add_collection_buttons_script = """
+                    // find all collection items
+                    var collectionItems = document.getElementsByClassName('collectionItem');
+                    
+                    for (var i = 0; i < collectionItems.length; i++) {
+                        var item = collectionItems[i];
+                        
+                        // get the mod id from the item
+                        var modId = item.id.replace('sharedfile_', '');
+                        
+                        // find the subscription controls div
+                        var subscriptionControls = item.querySelector('.subscriptionControls');
+                        if (!subscriptionControls) {
+                            continue;
+                        }
+                        
+                        // check if mod is installed
+                        var isInstalled = window.installedMods && window.installedMods.includes(modId);
+                        
+                        if (isInstalled) {
+                            // create installed indicator
+                            var installedIndicator = document.createElement('div');
+                            installedIndicator.innerHTML = '✓';
+                            installedIndicator.style.backgroundColor = '#4CAF50';
+                            installedIndicator.style.color = 'white';
+                            installedIndicator.style.width = '24px';
+                            installedIndicator.style.height = '24px';
+                            installedIndicator.style.borderRadius = '4px';
+                            installedIndicator.style.display = 'flex';
+                            installedIndicator.style.alignItems = 'center';
+                            installedIndicator.style.justifyContent = 'center';
+                            installedIndicator.style.fontWeight = 'bold';
+                            installedIndicator.style.fontSize = '16px';
+                            
+                            // Replace subscription controls with our indicator
+                            subscriptionControls.innerHTML = '';
+                            subscriptionControls.appendChild(installedIndicator);
+                        } else {
+                            // create link button
+                            var linkButton = document.createElement('a');
+                            linkButton.innerHTML = '→';
+                            linkButton.href = 'https://steamcommunity.com/sharedfiles/filedetails/?id=' + modId;
+                            linkButton.style.backgroundColor = '#2196F3';
+                            linkButton.style.color = 'white';
+                            linkButton.style.width = '24px';
+                            linkButton.style.height = '24px';
+                            linkButton.style.borderRadius = '4px';
+                            linkButton.style.display = 'flex';
+                            linkButton.style.alignItems = 'center';
+                            linkButton.style.justifyContent = 'center';
+                            linkButton.style.cursor = 'pointer';
+                            linkButton.style.fontWeight = 'bold';
+                            linkButton.style.fontSize = '20px';
+                            linkButton.style.textDecoration = 'none';
+                            
+                            // Replace subscription controls with our button
+                            subscriptionControls.innerHTML = '';
+                            subscriptionControls.appendChild(linkButton);
+                        }
+                    }
+                    """
+                    self.web_view.page().runJavaScript(
+                        add_collection_buttons_script, 0, lambda result: None
+                    )
+                    # add installed indicator if mod is installed
+                    if is_installed:
+                        add_installed_indicator_script = """
+                        // Create a new div for the installed indicator
+                        var installedDiv = document.createElement('div');
+                        installedDiv.style.backgroundColor = '#4CAF50';  // Green background
+                        installedDiv.style.color = 'white';
+                        installedDiv.style.padding = '10px';
+                        installedDiv.style.borderRadius = '5px';
+                        installedDiv.style.marginBottom = '10px';
+                        installedDiv.style.textAlign = 'center';
+                        installedDiv.style.fontWeight = 'bold';
+                        installedDiv.innerHTML = '✓ Already Installed';
+                        // Insert it at the top of the page content
+                        var contentDiv = document.querySelector('.workshopItemDetailsHeader');
+                        if (contentDiv) {
+                            contentDiv.parentNode.insertBefore(installedDiv, contentDiv);
+                        }
+                        """
+                        self.web_view.page().runJavaScript(
+                            add_installed_indicator_script, 0, lambda result: None
+                        )
+                    # Show the add_to_list_button
+                    self.nav_bar.addAction(self.add_to_list_button)
+
+                if is_items_page:
+                    add_item_markers_script = """
+                    var modTiles = document.querySelectorAll('.workshopItem');
+                    modTiles.forEach(function(tile) {
+                        var link = tile.querySelector('a[href*="id="]');
+                        if (!link) return;
+
+                        var match = link.href.match(/id=(\\d+)/);
+                        if (!match) return;
+
+                        var modId = match[1];
+
+                        if (window.installedMods && window.installedMods.includes(modId)) {
+                            // Only add if not already present
+                            if (!tile.querySelector('.rimsort-installed-badge')) {
+                                var installedBadge = document.createElement('div');
+                                installedBadge.className = 'rimsort-installed-badge';
+                                installedBadge.innerHTML = '✓';
+                                installedBadge.style.position = 'absolute';
+                                installedBadge.style.top = '5px';
+                                installedBadge.style.right = '5px';
+                                installedBadge.style.backgroundColor = '#4CAF50';
+                                installedBadge.style.color = 'white';
+                                installedBadge.style.width = '32px';
+                                installedBadge.style.height = '32px';
+                                installedBadge.style.borderRadius = '6px';
+                                installedBadge.style.display = 'flex';
+                                installedBadge.style.alignItems = 'center';
+                                installedBadge.style.justifyContent = 'center';
+                                installedBadge.style.fontWeight = 'bold';
+                                installedBadge.style.fontSize = '20px';
+                                installedBadge.style.boxShadow = '0 0 4px black';
+                                installedBadge.style.cursor = 'default';
+                                tile.style.position = 'relative';
+                                tile.appendChild(installedBadge);
+
+                                var modTitle = tile.querySelector('.workshopItemTitle');
+                                if (modTitle) {
+                                    modTitle.style.color = '#4CAF50';
+                                }
+                            }
+                        }
+                    });
+                    """
+                    self.web_view.page().runJavaScript(
+                        add_item_markers_script, 0, lambda result: None
+                    )
 
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page

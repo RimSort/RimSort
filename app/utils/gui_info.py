@@ -1,8 +1,16 @@
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QMargins
-from PySide6.QtGui import QFont, QFontMetrics, QPixmap
+from loguru import logger
+from PySide6.QtCore import QMargins, QSize
+from PySide6.QtGui import (
+    QCursor,
+    QFont,
+    QFontMetrics,
+    QGuiApplication,
+    QPixmap,
+    QScreen,
+)
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from app.models.settings import Settings
@@ -58,65 +66,133 @@ class GUIInfo:
 
         self._text_field_margins: QMargins = QMargins(4, 4, 4, 4)
 
-        self._is_initialized: bool = True
-
         icon_path = "themes/default-icons/AppIcon_alt.ico"
         if Path(icon_path).exists():
             self._app_icon = QPixmap(icon_path)
         else:
             self._app_icon = QPixmap()
 
-    def set_window_size(self, settings: Settings) -> tuple[int, int, int, int]:
+        self._is_initialized: bool = True
+
+    def _get_screen_and_dpr(self) -> tuple[Optional[QScreen], float]:
         """
-        Calculate the recommended window size and position.
+        Helper method to get the current screen under the cursor and its device pixel ratio.
+
+        Returns:
+            tuple[Optional[QScreen], float]: The screen object and its device pixel ratio.
+        """
+        screen = (
+            QGuiApplication.screenAt(QCursor.pos()) or QGuiApplication.primaryScreen()
+        )
+        device_pixel_ratio = (
+            screen.devicePixelRatio()
+            if screen and hasattr(screen, "devicePixelRatio")
+            else 1.0
+        )
+        return screen, device_pixel_ratio
+
+    def set_window_size(self) -> tuple[int, int, int, int]:
+        """
+        Calculate the recommended window size and position, DPI-aware and clamped to the correct screen.
+        This method is robust for high-DPI and multi-monitor setups.
 
         Returns:
             tuple[int, int, int, int]: The x position, y position, width, and height for the window.
         """
-        # Get the screen size and calculate window dimensions based on it
-        screen = QApplication.primaryScreen()
-        screen_geometry = screen.geometry()
-        window_width = int(screen_geometry.width() * 0.5)
-        window_height = int(screen_geometry.height() * 0.5)
-
-        # Calculate position to center the window on screen
-        x_position = int((screen_geometry.width() - window_width) / 2.5)
-        y_position = int((screen_geometry.height() - window_height) / 5)
-
-        # Update settings with calculated values
-        settings.window_x = x_position
-        settings.window_y = y_position
-        settings.window_width = window_width
-        settings.window_height = window_height
-
-        # Save the settings to disk
-        settings.save()
-
-        # Return values for setGeometry (x, y, width, height)
+        screen, device_pixel_ratio = self._get_screen_and_dpr()
+        if not screen:
+            # Fallback to safe defaults
+            window_width, window_height = 800, 600
+            x_position, y_position = 100, 100
+        else:
+            screen_geometry = screen.availableGeometry()
+            # Calculate size before DPI scaling
+            raw_width = int(screen_geometry.width() * 0.6)
+            raw_height = int(screen_geometry.height() * 0.6)
+            # Apply DPI scaling before clamping
+            scaled_width = int(raw_width / device_pixel_ratio)
+            scaled_height = int(raw_height / device_pixel_ratio)
+            # Clamp to min/max reasonable values
+            min_width, min_height = 800, 600
+            max_width, max_height = screen_geometry.width(), screen_geometry.height()
+            window_width = min(max(scaled_width, min_width), max_width)
+            window_height = min(max(scaled_height, min_height), max_height)
+            # Center the window on the screen
+            x_position = int(
+                screen_geometry.x() + (screen_geometry.width() - window_width) / 2
+            )
+            y_position = int(
+                screen_geometry.y() + (screen_geometry.height() - window_height) / 2
+            )
         return x_position, y_position, window_width, window_height
 
     def get_window_geometry(self) -> tuple[int, int, int, int]:
         """
-        Get window geometry (x, y, width, height) using saved settings if valid,
-        else fallback to default window size.
-        Always reloads settings from disk to ensure up-to-date values.
+        Get window geometry (x, y, width, height) using saved settings if valid and visible,
+        else fallback to default window size. Always reloads settings from disk.
+        Handles high-DPI and multi-monitor setups robustly.
+
+        Returns:
+            tuple[int, int, int, int]: The x position, y position, width, and height for the window.
         """
         settings = Settings()
-        settings.load()  # Ensure settings are reloaded from disk
-        if (
-            settings.window_width > 900
-            or settings.window_height > 600
-            or settings.window_x > 0
-            or settings.window_y > 30
-        ):
-            return (
-                settings.window_x,
-                settings.window_y,
-                settings.window_width,
-                settings.window_height,
+        settings.load()
+        screen, device_pixel_ratio = self._get_screen_and_dpr()
+        if not screen:
+            return self.set_window_size()
+        screen_geometry = screen.availableGeometry()
+        # Validate settings with fallback defaults
+        min_width, min_height = 800, 600
+        valid = (
+            settings.window_width >= min_width
+            and settings.window_height >= min_height
+            and settings.window_width <= screen_geometry.width()
+            and settings.window_height <= screen_geometry.height()
+            and screen_geometry.contains(settings.window_x, settings.window_y)
+        )
+        if not valid:
+            logger.warning(
+                f"Window geometry invalid or out of bounds: x={settings.window_x}, y={settings.window_y}, width={settings.window_width}, height={settings.window_height}. Falling back to default size."
             )
+        if valid:
+            # Clamp width/height to available screen
+            width = min(settings.window_width, screen_geometry.width())
+            height = min(settings.window_height, screen_geometry.height())
+            # Clamp position to visible area
+            x = max(
+                screen_geometry.x(),
+                min(settings.window_x, screen_geometry.right() - width),
+            )
+            y = max(
+                screen_geometry.y(),
+                min(settings.window_y, screen_geometry.bottom() - height),
+            )
+            # Adjust for DPI scaling if needed
+            width = int(width / device_pixel_ratio)
+            height = int(height / device_pixel_ratio)
+            return x, y, width, height
         else:
-            return self.set_window_size(settings)
+            return self.set_window_size()
+
+    def get_panel_size(self) -> QSize:
+        """
+        Adjust the size hint when resizing.
+
+        Returns:
+            QSize: The size of the panel.
+        """
+        settings = Settings()
+        # Load Settings
+        settings.load()
+        # Get settings values with fallback defaults
+        width = getattr(settings, "panel_width", 800)
+        height = getattr(settings, "panel_height", 600)
+        if not isinstance(width, int) or width <= 0:
+            width = 800
+        if not isinstance(height, int) or height <= 0:
+            height = 600
+        # Return adjusted size
+        return QSize(width, height)
 
     @property
     def default_font(self) -> QFont:

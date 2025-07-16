@@ -1,7 +1,8 @@
 import json
+import os
 import sys
 
-from PySide6.QtCore import QCoreApplication, QObject, QTranslator
+from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
@@ -16,7 +17,8 @@ from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
 
-translator = QTranslator()
+app_translator = QTranslator()
+qt_translator = QTranslator()
 
 
 class AppController(QObject):
@@ -68,10 +70,20 @@ class AppController(QObject):
     def initialize_translator(self, language: str) -> None:
         """Initializes the translator with the specified language."""
         path = AppInfo()._language_data_folder / f"{language}.qm"
-        if translator.load(str(path)):
-            QCoreApplication.installTranslator(translator)
+        if app_translator.load(str(path)):
+            QCoreApplication.installTranslator(app_translator)
         else:
             print(f"Translation file {path} not found.")
+
+        qt_translations_path = QLibraryInfo.path(
+            QLibraryInfo.LibraryPath.TranslationsPath
+        )
+
+        qt_file_path = os.path.join(qt_translations_path, f"qtbase_{language}.qm")
+        if qt_translator.load(qt_file_path):
+            QCoreApplication.installTranslator(qt_translator)
+        else:
+            print(f"Qt translation file {qt_file_path} not found.")
 
     def initialize_steamcmd_interface(self) -> None:
         """Initializes the SteamcmdInterface."""

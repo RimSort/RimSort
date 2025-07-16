@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QGuiApplication, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -22,39 +22,33 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.settings import Settings
 from app.utils.gui_info import GUIInfo
 
 
 class SettingsDialog(QDialog):
-    def __init__(
-        self,
-    ) -> None:
+    """
+    Dialog for application settings, organized into tabs.
+    Provides UI elements for all settings categories.
+    """
+
+    def __init__(self) -> None:
         super().__init__()
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
 
-        main_layout = QVBoxLayout()
-        self.setLayout(main_layout)
+        # Use GUIInfo to set size from settings
+        self.resize(GUIInfo().get_panel_size())
 
-        # Initialize the QTabWidget
+        main_layout = QVBoxLayout(self)
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget)
 
         # Initialize the tabs
-        self._do_locations_tab()
-        self._do_databases_tab()
-        self._do_cross_version_databases_tab()
-        self._do_sorting_tab()
-        self._do_db_builder_tab()
-        self._do_steamcmd_tab()
-        self._do_todds_tab()
-        self._do_themes_tab()
-        self._do_advanced_tab()
+        self._init_tabs()
 
         # Bottom buttons layout
         button_layout = QHBoxLayout()
@@ -76,6 +70,19 @@ class SettingsDialog(QDialog):
         self.global_ok_button = QPushButton(self.tr("OK"), self)
         self.global_ok_button.setDefault(True)
         button_layout.addWidget(self.global_ok_button)
+
+    def _init_tabs(self) -> None:
+        """Initialize all tabs in the settings dialog."""
+        self._do_locations_tab()
+        self._do_databases_tab()
+        self._do_cross_version_databases_tab()
+        self._do_sorting_tab()
+        self._do_db_builder_tab()
+        self._do_steamcmd_tab()
+        self._do_todds_tab()
+        self._do_themes_tab()
+        self._do_authentication_tab()
+        self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
@@ -115,13 +122,11 @@ class SettingsDialog(QDialog):
         self.locations_autodetect_button = QPushButton(self.tr("Autodetect"), tab)
         buttons_layout.addWidget(self.locations_autodetect_button)
 
-    # jscpd:ignore-start
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -151,8 +156,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -184,8 +188,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -217,8 +220,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -241,8 +243,6 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
-    # jscpd:ignore-end
-
     def _do_databases_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, self.tr("Databases"))
@@ -252,6 +252,16 @@ class SettingsDialog(QDialog):
 
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
+
+    def _do_cross_version_databases_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Additional Databases"))
+
+        tab_layout = QVBoxLayout()
+        tab.setLayout(tab_layout)
+
+        self._do_no_version_warning_db_group(tab_layout)
+        self._do_use_this_instead_db_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -405,7 +415,7 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
         database_expiry_label = QLabel(
             self.tr(
-                "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
+                "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
             )
         )
         database_expiry_label.setFont(GUIInfo().emphasis_font)
@@ -415,16 +425,6 @@ class SettingsDialog(QDialog):
         self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
-
-    def _do_cross_version_databases_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Cross Version Databases"))
-
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
-
-        self._do_no_version_warning_db_group(tab_layout)
-        self._do_use_this_instead_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = self.tr('"No Version Warning" Database')
@@ -907,7 +907,16 @@ class SettingsDialog(QDialog):
         self.connect_populate_languages_combobox()
 
         # Window size configuration group
-        windows_size_group_label = QLabel(self.tr("Window Size Configuration"))
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry() if screen else None
+        max_width = screen_geometry.width() if screen_geometry else 1024
+        max_height = screen_geometry.height() if screen_geometry else 768
+
+        windows_size_group_label = QLabel(
+            self.tr(
+                "Window Size Configuration detected window display size: {max_width} x {max_height} pixels"
+            ).format(max_width=max_width, max_height=max_height)
+        )
         windows_size_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(windows_size_group_label)
 
@@ -917,29 +926,137 @@ class SettingsDialog(QDialog):
         window_size_layout = QGridLayout()
         window_size_group.setLayout(window_size_layout)
 
-        window_x_label = QLabel(self.tr("Window X Position:"))
-        window_size_layout.addWidget(window_x_label, 0, 0)
-        self.window_x_spinbox = QSpinBox()
-        self.window_x_spinbox.setRange(0, 900)
-        window_size_layout.addWidget(self.window_x_spinbox, 0, 1)
+        # Create a dictionary for spinboxes and their labels and ranges
+        spinbox_config = {
+            "window_x_spinbox": (
+                self.tr("Window X Position (px): minimum: 100, maximum: {}").format(
+                    max_width
+                ),
+                100,
+                max_width,
+            ),
+            "window_y_spinbox": (
+                self.tr("Window Y Position (px): minimum: 100, maximum: {}").format(
+                    max_height
+                ),
+                100,
+                max_height,
+            ),
+            "window_width_spinbox": (
+                self.tr("Window Width (px): minimum: 600, maximum: {}").format(
+                    max_width
+                ),
+                600,
+                max_width,
+            ),
+            "window_height_spinbox": (
+                self.tr("Window Height (px): minimum: 400, maximum: {}").format(
+                    max_height
+                ),
+                400,
+                max_height,
+            ),
+            "panel_width_spinbox": (
+                self.tr("Panel Width (px): minimum: 600, maximum: {}").format(
+                    max_width
+                ),
+                600,
+                max_width,
+            ),
+            "panel_height_spinbox": (
+                self.tr("Panel Height (px): minimum: 400, maximum: {}").format(
+                    max_height
+                ),
+                400,
+                max_height,
+            ),
+        }
 
-        window_y_label = QLabel(self.tr("Window Y Position:"))
-        window_size_layout.addWidget(window_y_label, 1, 0)
-        self.window_y_spinbox = QSpinBox()
-        self.window_y_spinbox.setRange(30, 250)
-        window_size_layout.addWidget(self.window_y_spinbox, 1, 1)
+        self.spinboxes = {}
 
-        window_width_label = QLabel(self.tr("Window Width:"))
-        window_size_layout.addWidget(window_width_label, 2, 0)
-        self.window_width_spinbox = QSpinBox()
-        self.window_width_spinbox.setRange(900, 1200)
-        window_size_layout.addWidget(self.window_width_spinbox, 2, 1)
+        for i, (name, (label_text, min_val, max_val)) in enumerate(
+            spinbox_config.items()
+        ):
+            label = QLabel(self.tr(label_text.format(max_val)))
+            window_size_layout.addWidget(label, i, 0)
+            spinbox = QSpinBox()
+            spinbox.setRange(min_val, max_val)
+            window_size_layout.addWidget(spinbox, i, 1)
+            self.spinboxes[name] = spinbox
 
-        window_height_label = QLabel(self.tr("Window Height:"))
-        window_size_layout.addWidget(window_height_label, 3, 0)
-        self.window_height_spinbox = QSpinBox()
-        self.window_height_spinbox.setRange(600, 900)
-        window_size_layout.addWidget(self.window_height_spinbox, 3, 1)
+        self.window_x_spinbox = self.spinboxes["window_x_spinbox"]
+        self.window_y_spinbox = self.spinboxes["window_y_spinbox"]
+        self.window_width_spinbox = self.spinboxes["window_width_spinbox"]
+        self.window_height_spinbox = self.spinboxes["window_height_spinbox"]
+        self.panel_width_spinbox = self.spinboxes["panel_width_spinbox"]
+        self.panel_height_spinbox = self.spinboxes["panel_height_spinbox"]
+
+        self.window_size_reset_button = QPushButton(
+            self.tr("Reset Window Size based on Screen Dimensions")
+        )
+        window_size_layout.addWidget(
+            self.window_size_reset_button, len(spinbox_config), 0, 1, 2
+        )
+        self.window_size_reset_button.clicked.connect(
+            self._reset_window_size_to_default
+        )
+
+        self.window_size_warning_label = QLabel()
+        self.window_size_warning_label.setStyleSheet("color: orange;")
+        window_size_layout.addWidget(
+            self.window_size_warning_label, len(spinbox_config) + 1, 0, 1, 2
+        )
+
+        # Connect value changes to validation
+        for spinbox in self.spinboxes.values():
+            spinbox.valueChanged.connect(self._validate_window_size)
+
+    def _reset_window_size_to_default(self) -> None:
+        """
+        Reset the window and panel size spinboxes to default values based on current screen geometry.
+        Uses GUIInfo.get_window_geometry() for DPI-aware and multi-monitor support.
+        Validates and clamps values to ensure the window fits on the screen.
+        """
+        x, y, width, height = GUIInfo().get_window_geometry()
+
+        self.window_x_spinbox.setValue(x)
+        self.window_y_spinbox.setValue(y)
+        self.window_width_spinbox.setValue(width)
+        self.window_height_spinbox.setValue(height)
+
+        default_panel_width = 800
+        default_panel_height = 600
+        try:
+            settings = Settings()
+            settings.load()
+            default_panel_width = settings.panel_width
+            default_panel_height = settings.panel_height
+        except Exception:
+            pass
+
+        self.panel_width_spinbox.setValue(default_panel_width)
+        self.panel_height_spinbox.setValue(default_panel_height)
+
+        self._validate_window_size()
+        self.apply_window_geometry_from_spinboxes()
+
+    def _validate_window_size(self) -> None:
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry() if screen else None
+        max_width = screen_geometry.width() if screen_geometry else 1024
+        max_height = screen_geometry.height() if screen_geometry else 768
+
+        x = self.window_x_spinbox.value()
+        y = self.window_y_spinbox.value()
+        w = self.window_width_spinbox.value()
+        h = self.window_height_spinbox.value()
+
+        warning = ""
+        if x + w > max_width or y + h > max_height:
+            warning = self.tr(
+                "Warning: Window may not fit on the current screen! Please adjust the values."
+            )
+        self.window_size_warning_label.setText(warning)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
@@ -961,6 +1078,67 @@ class SettingsDialog(QDialog):
 
         language_controller = LanguageController()
         language_controller.populate_languages_combobox
+
+    def _do_authentication_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Authentication"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        auth_group = QGroupBox()
+        tab_layout.addWidget(auth_group)
+
+        auth_group_layout = QGridLayout()
+        auth_group.setLayout(auth_group_layout)
+
+        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
+        auth_group_layout.addWidget(
+            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.rentry_auth_code = QLineEdit()
+        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
+        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.rentry_auth_code.setPlaceholderText(
+            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
+        )
+        # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
+        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
+
+        github_identity_group = QGroupBox()
+        tab_layout.addWidget(github_identity_group)
+
+        github_identity_layout = QGridLayout()
+        github_identity_group.setLayout(github_identity_layout)
+
+        github_username_label = QLabel(self.tr("GitHub username:"))
+        github_identity_layout.addWidget(
+            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_username = QLineEdit()
+        self.github_username.setTextMargins(GUIInfo().text_field_margins)
+        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_username, 0, 1)
+
+        github_token_label = QLabel(self.tr("GitHub personal access token:"))
+        github_identity_layout.addWidget(
+            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_token = QLineEdit()
+        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
+        self.github_token.setTextMargins(GUIInfo().text_field_margins)
+        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_token, 1, 1)
+
+        self.setTabOrder(self.github_username, self.github_token)
+
+        buttons_layout = QHBoxLayout()
+        tab_layout.addLayout(buttons_layout)
+
+        buttons_layout.addStretch()
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
@@ -1026,61 +1204,16 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
-        auth_group = QGroupBox()
-        tab_layout.addWidget(auth_group)
-
-        auth_group_layout = QGridLayout()
-        auth_group.setLayout(auth_group_layout)
-
-        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
-        auth_group_layout.addWidget(
-            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        self.update_databases_on_startup_checkbox = QCheckBox(
+            self.tr("Update databases on startup")
         )
-
-        self.rentry_auth_code = QLineEdit()
-        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
-        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.rentry_auth_code.setPlaceholderText(
-            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
+        self.update_databases_on_startup_checkbox.setToolTip(
+            self.tr(
+                "Enable this option to automatically update enabled databases when RimSort starts. "
+                "This will check for updates and download them if available."
+            )
         )
-        # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
-        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
-
-        github_identity_group = QGroupBox()
-        tab_layout.addWidget(github_identity_group)
-
-        github_identity_layout = QGridLayout()
-        github_identity_group.setLayout(github_identity_layout)
-
-        github_username_label = QLabel(self.tr("GitHub username:"))
-        github_identity_layout.addWidget(
-            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_username = QLineEdit()
-        self.github_username.setTextMargins(GUIInfo().text_field_margins)
-        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_username, 0, 1)
-
-        github_token_label = QLabel(self.tr("GitHub personal access token:"))
-        github_identity_layout.addWidget(
-            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_token = QLineEdit()
-        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
-        self.github_token.setTextMargins(GUIInfo().text_field_margins)
-        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_token, 1, 1)
-
-        self.setTabOrder(self.github_username, self.github_token)
-
-        tab_layout.addStretch(1)
-
-        buttons_layout = QHBoxLayout()
-        tab_layout.addLayout(buttons_layout)
-
-        buttons_layout.addStretch()
+        group_layout.addWidget(self.update_databases_on_startup_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

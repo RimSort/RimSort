@@ -6,10 +6,9 @@ from multiprocessing import Pool, cpu_count
 from time import time
 from typing import TYPE_CHECKING, Any, Dict
 
+import requests
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, QObject, Signal
-from requests import post as requests_post
-from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI
 
 from app.utils.app_info import AppInfo
@@ -683,7 +682,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests_post(url, data=data)
+            request = requests.post(url, data=data)
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -695,7 +694,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["collectiondetails"]:
                     metadata.append(mod_metadata)
-        except JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")
@@ -727,7 +726,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests_post(url, data=data)
+            request = requests.post(url, data=data)
         except Exception as e:
             logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -738,7 +737,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["publishedfiledetails"]:
                     metadata.append(mod_metadata)
-        except JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")

@@ -14,6 +14,7 @@ DB_BUILDER_PRUNE_EXCEPTIONS = [
 DB_BUILDER_PURGE_KEYS = ["external_time_created", "external_time_updated"]
 DB_BUILDER_RECURSE_EXCEPTIONS = [
     "dependencies",
+    "incompatibleWith",
     "loadBefore",
     "loadAfter",
     "loadBottom",
@@ -55,6 +56,12 @@ RIMWORLD_DLC_METADATA = {
         "name": "RimWorld - Anomaly",
         "steam_url": "https://store.steampowered.com/app/2380740/RimWorld__Anomaly/",
         "description": "DLC #4",
+    },
+    "3022790": {
+        "packageid": "ludeon.rimworld.odyssey",
+        "name": "RimWorld - Odyssey",
+        "steam_url": "https://store.steampowered.com/app/3022790/RimWorld__Odyssey/",
+        "description": "DLC #5",
     },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]

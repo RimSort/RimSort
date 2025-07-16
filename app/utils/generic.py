@@ -1,6 +1,8 @@
+import http.client
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import sys
 import webbrowser
@@ -18,7 +20,6 @@ from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
     copy as copy_to_clipboard,
 )
 from PySide6.QtCore import QCoreApplication
-from requests import post as requests_post
 
 import app.views.dialogue as dialogue
 
@@ -237,7 +238,15 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             executable_path = str((game_install_path / "RimWorldLinux"))
         elif system_name == "Windows":
             # Windows
-            executable_path = str((game_install_path / "RimWorldWin64.exe"))
+            path64 = game_install_path / "RimWorldWin64.exe"
+            path32 = game_install_path / "RimWorldWin.exe"
+
+            executable_path = str(path64)  # default to 64-bit executable
+            if (
+                not path64.exists() and path32.exists()
+            ):  # look for and set path to 86x executable only if default doesn't exist
+                executable_path = str(path32)
+
         else:
             logger.error("Unable to launch the game on an unknown system")
             return
@@ -385,7 +394,7 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
     logger.info(f"Uploading data to http://0x0.st/: {path}")
     try:
-        request = requests_post(
+        request = requests.post(
             url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
         )
     except requests.exceptions.ConnectionError as e:
@@ -513,3 +522,101 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     full_rimworld_path = Path(rimworld_path) / "steamapps/common/RimWorld"
 
     return str(full_rimworld_path) if rimworld_path else rimworld_path
+
+def check_internet_connection(
+    primary_host: str = "8.8.8.8",
+    fallback_host: str = "1.1.1.1",
+    port: int = 53,
+    fallback_port: int = 443,
+    timeout: float = 10,
+) -> bool:
+    """
+    Check if there is an active internet connection by attempting to connect to a known host (DNS),
+    As a fallback, try an HTTP request to a well-known google website.
+    """
+    socket.setdefaulttimeout(timeout)
+
+    def try_connect(host: str, port_to_try: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((host, port_to_try))
+            return True
+        except OSError as e:
+            logger.warning(f"Socket connection to {host}:{port_to_try} failed: {e}")
+            return False
+
+    # Try connecting to the primary host on both ports
+    if try_connect(primary_host, port) or try_connect(primary_host, fallback_port):
+        return True
+
+    # Try connecting to the fallback host on both ports
+    if try_connect(fallback_host, port) or try_connect(fallback_host, fallback_port):
+        return True
+
+    # Fallback: try HTTP request to a well-known site
+    try:  # Try google.com first
+        conn = http.client.HTTPSConnection("www.google.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.google.com failed: {e}")
+
+    try:  # Try cloudflare fallback site
+        conn = http.client.HTTPSConnection("www.cloudflare.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.cloudflare.com failed: {e}")
+
+    try:  # Try microsoft.com as another fallback site
+        conn = http.client.HTTPSConnection("www.microsoft.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.microsoft.com failed: {e}")
+
+    logger.error("No internet connection detected.")
+
+    try:  # Try additional fallback: try curl command to google.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.google.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.google.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to cloudflare.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.cloudflare.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.cloudflare.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to microsoft.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.microsoft.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.microsoft.com failed: {e}")
+
+    return False

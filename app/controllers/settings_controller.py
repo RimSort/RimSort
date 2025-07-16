@@ -592,7 +592,7 @@ class SettingsController(QObject):
                 True
             )
         self.settings_dialog.use_this_instead_db_local_file.setText(
-            self.settings.external_use_this_instead_file_path
+            self.settings.external_use_this_instead_folder_path
         )
         self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
         self.settings_dialog.use_this_instead_db_github_url.setText(
@@ -686,6 +686,8 @@ class SettingsController(QObject):
         self.settings_dialog.window_y_spinbox.setValue(self.settings.window_y)
         self.settings_dialog.window_width_spinbox.setValue(self.settings.window_width)
         self.settings_dialog.window_height_spinbox.setValue(self.settings.window_height)
+        self.settings_dialog.panel_width_spinbox.setValue(self.settings.panel_width)
+        self.settings_dialog.panel_height_spinbox.setValue(self.settings.panel_height)
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -716,6 +718,9 @@ class SettingsController(QObject):
         )
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
+        )
+        self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
+            self.settings.update_databases_on_startup
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -814,7 +819,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source = (
                 "Configured git repository"
             )
-        self.settings.external_use_this_instead_file_path = (
+        self.settings.external_use_this_instead_folder_path = (
             self.settings_dialog.use_this_instead_db_local_file.text()
         )
         self.settings.external_use_this_instead_repo_path = (
@@ -894,6 +899,8 @@ class SettingsController(QObject):
         self.settings.window_y = self.settings_dialog.window_y_spinbox.value()
         self.settings.window_width = self.settings_dialog.window_width_spinbox.value()
         self.settings.window_height = self.settings_dialog.window_height_spinbox.value()
+        self.settings.panel_width = self.settings_dialog.panel_width_spinbox.value()
+        self.settings.panel_height = self.settings_dialog.panel_height_spinbox.value()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
@@ -924,6 +931,9 @@ class SettingsController(QObject):
         )
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
+        )
+        self.settings.update_databases_on_startup = (
+            self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
@@ -1553,7 +1563,7 @@ class SettingsController(QObject):
         Open a file dialog to select the "Use This Instead" folder and handle the result.
         """
         use_this_instead_db_location = show_dialogue_file(
-            mode="open",
+            mode="open_dir",
             caption='Select "Use This Instead" Folder',
             _dir=str(self._last_file_dialog_path),
         )

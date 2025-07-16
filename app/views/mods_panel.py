@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMenu,
+    QMessageBox,
     QPushButton,
     QToolButton,
     QVBoxLayout,
@@ -1113,7 +1114,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(git_paths)),
                         information=self.tr("Do you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(f"Updating {len(git_paths)} git mod(s)")
                         self.update_git_mods_signal.emit(git_paths)
                     return True
@@ -1210,7 +1211,7 @@ class ModListWidget(QListWidget):
                             + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Deleting + redownloading {len(steamcmd_publishedfileid_to_redownload)} SteamCMD mod(s)"
                         )
@@ -1305,7 +1306,7 @@ class ModListWidget(QListWidget):
                             "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
                         )
@@ -1333,7 +1334,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(publishedfileids)),
                         information=self.tr("\nDo you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing from {len(publishedfileids)} mod(s)"
                         )
@@ -1406,7 +1407,7 @@ class ModListWidget(QListWidget):
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         self.steamdb_blacklist_signal.emit(
                             [steamdb_remove_blacklist, False]
                         )
@@ -1914,8 +1915,8 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = tool_tip_text
             # Calculate any needed string for warnings
             for error_type, tooltip_header in [
-                ("load_before_violations", "\nShould be Loaded After:"),
-                ("load_after_violations", "\nShould be Loaded Before:"),
+                ("load_before_violations", self.tr("\nShould be Loaded After:")),
+                ("load_after_violations", self.tr("\nShould be Loaded Before:")),
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
@@ -2272,6 +2273,7 @@ class ModsPanel(QWidget):
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
+                self.tr("Version"),
             ]
         )
         # Active mods search layouts
@@ -2415,6 +2417,7 @@ class ModsPanel(QWidget):
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
+                self.tr("Version"),
             ]
         )
         self.inactive_mods_search_layout.addWidget(
@@ -2708,6 +2711,8 @@ class ModsPanel(QWidget):
             search_filter = "authors"
         elif _filter.currentText() == self.tr("PublishedFileId"):
             search_filter = "publishedfileid"
+        elif _filter.currentText() == self.tr("Version"):
+            search_filter = "version"
         # Filter the list using any search and filter state
         for uuid in uuids:
             item = (
@@ -2735,7 +2740,15 @@ class ModsPanel(QWidget):
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
-            if (
+            if search_filter == "version" and pattern:
+                versions = metadata.get("supportedversions", {}).get("li", [])
+                if isinstance(versions, str):
+                    versions = [versions]
+                if not versions or not any(
+                    pattern.lower() in v.lower() for v in versions
+                ):
+                    item_filtered = True
+            elif (
                 pattern
                 and metadata.get(search_filter)
                 and pattern.lower() not in str(metadata.get(search_filter)).lower()

@@ -45,7 +45,8 @@ class Settings(QObject):
             "https://github.com/RimSort/Community-Rules-Database"
         )
 
-        self.database_expiry: int = 604800  # 7 days
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
@@ -56,8 +57,8 @@ class Settings(QObject):
         )
 
         self.external_use_this_instead_metadata_source: str = "None"
-        self.external_use_this_instead_file_path: str = str(
-            AppInfo().app_storage_folder / "UseThisInstead"
+        self.external_use_this_instead_folder_path: str = str(
+            AppInfo().app_storage_folder / "UseThisInstead" / "Replacements"
         )
         self.external_use_this_instead_repo_path: str = (
             "https://github.com/emipa606/UseThisInstead"
@@ -98,20 +99,25 @@ class Settings(QObject):
         self.language = "en_US"
 
         # Window size configuration
-        self.window_x: int = 0
-        self.window_y: int = 0
-        self.window_width: int = 0
-        self.window_height: int = 0
+        self.window_x: int = 100
+        self.window_y: int = 100
+        self.window_width: int = 800
+        self.window_height: int = 600
+
+        # Runner panel size configuration
+        self.panel_width: int = 800
+        self.panel_height: int = 600
 
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
-        self.duplicate_mods_warning: bool = False
+        self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
-        self.try_download_missing_mods: bool = False
+        self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
+        self.update_databases_on_startup: bool = True
 
         self.rentry_auth_code: str = ""
 
