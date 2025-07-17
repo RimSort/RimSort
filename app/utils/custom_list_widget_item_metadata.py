@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from loguru import logger
 from PySide6.QtGui import QColor

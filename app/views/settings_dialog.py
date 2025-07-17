@@ -1000,14 +1000,8 @@ class SettingsDialog(QDialog):
         self.window_size_reset_button.clicked.connect(
             self._reset_window_size_to_default
         )
-
-        self.color_background_instead_of_text_checkbox = QCheckBox(
-            "Apply mod coloring to background instead of text"
-        )
-        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
-
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
-            "Show duplicate mods warning"
+            "Show duplicate mods warning")
         self.window_size_warning_label = QLabel()
         self.window_size_warning_label.setStyleSheet("color: orange;")
         window_size_layout.addWidget(
@@ -1204,6 +1198,10 @@ class SettingsDialog(QDialog):
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
             self.tr(
                 "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."

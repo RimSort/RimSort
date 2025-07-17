@@ -303,8 +303,10 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName("ListItemLabelCustomColor")
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
+            self.handle_mod_color_reset()
         elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
+            self.handle_mod_color_reset()
         else:
             self.main_label.setObjectName("ListItemLabel")
             self.handle_mod_color_reset()
@@ -484,8 +486,10 @@ class ModListItemInner(QWidget):
             new_widget_object_name = "ListItemLabelCustomColor"
         elif item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
+            self.handle_mod_color_reset()
         elif error_tooltip or warning_tooltip:
             new_widget_object_name = "ListItemLabelInvalid"
+            self.handle_mod_color_reset()
         else:
             new_widget_object_name = "ListItemLabel"
             self.handle_mod_color_reset()
