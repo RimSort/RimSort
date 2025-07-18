@@ -1,125 +1,155 @@
 const BadgeState = $badge_state_js;
 
 if (typeof QWebChannel !== 'undefined') {
-    new QWebChannel(qt.webChannelTransport, function(channel) {
-        window.browserBridge = channel.objects.browserBridge;
-        console.log("QWebChannel bridge to Python ready!");
+	new QWebChannel(qt.webChannelTransport, function(channel) {
+		window.browserBridge = channel.objects.browserBridge;
+		console.log("QWebChannel bridge to Python ready!");
 
-        window.updateModBadge = function(modId, status) {
-            const tile = document.querySelector(`.workshopItem a[href*="id=$${modId}"]`)?.closest('.workshopItem');
-            if (!tile) {
-                console.log(`Mod tile for $${modId} not found.`);
-                return;
-            }
+		window.updateModBadge = function(modId, status) {
+			const tile = document.querySelector(`.workshopItem a[href*="id=$${modId}"]`)?.closest('.workshopItem');
+			if (!tile) {
+				console.log(`Mod tile for $${modId} not found.`);
+				return;
+			}
 
-            let modStatusBadge = tile.querySelector('.rimsort-modstatus-badge');
+			let modStatusBadge = tile.querySelector('.rimsort-modstatus-badge');
 
-            if (!modStatusBadge) {
-                modStatusBadge = document.createElement('div');
-                modStatusBadge.className = 'rimsort-modstatus-badge';
+			if (!modStatusBadge) {
+				modStatusBadge = document.createElement('div');
+				modStatusBadge.className = 'rimsort-modstatus-badge';
 
-                const modTitleElement = tile.querySelector('.workshopItemTitle');
-                const modTitleText = modTitleElement ? modTitleElement.textContent.trim() : modId;
+				let modTitleContainer = null;
+				const collectionItemParent = tile.parentElement;
+				if (collectionItemParent && collectionItemParent.classList.contains('collectionItem')) {
+					modTitleContainer = collectionItemParent.querySelector('.collectionItemDetails');
+				} else {
+					modTitleContainer = tile;
+				}
 
-                const mouseoverHandler = function() {
-                    if (modStatusBadge.classList.contains('rimsort-mod-default')) {
-                        modStatusBadge.classList.add('hovered');
-                    }
-                };
-                const mouseoutHandler = function() {
-                    if (modStatusBadge.classList.contains('rimsort-mod-default')) {
-                        modStatusBadge.classList.remove('hovered');
-                    }
-                };
+				const modTitleElement = modTitleContainer.querySelector('.workshopItemTitle');
+				const modTitleText = modTitleElement ? modTitleElement.textContent.trim() : modId;
 
-                tile.addEventListener('mouseover', mouseoverHandler);
-                tile.addEventListener('mouseout', mouseoutHandler);
+				const tileMouseoverHandler = function() {
+					tile.classList.add('rimsort-tile-hovered');
+					if (modStatusBadge.classList.contains('rimsort-mod-default')) {
+						modStatusBadge.style.opacity = '1';
+						modStatusBadge.style.visibility = 'visible';
+					}
+				};
+				const tileMouseoutHandler = function() {
+					tile.classList.remove('rimsort-tile-hovered');
+					if (modStatusBadge.classList.contains('rimsort-mod-default')) {
+						modStatusBadge.style.opacity = '0';
+						modStatusBadge.style.visibility = 'hidden';
+					}
+				};
+				tile.addEventListener('mouseover', tileMouseoverHandler);
+				tile.addEventListener('mouseout', tileMouseoutHandler);
+
+				const badgeMouseoverHandler = function() {
+					modStatusBadge.classList.add('rimsort-badge-hovered');
+				};
+				const badgeMouseoutHandler = function() {
+					modStatusBadge.classList.remove('rimsort-badge-hovered');
+				};
+				modStatusBadge.addEventListener('mouseover', badgeMouseoverHandler);
+				modStatusBadge.addEventListener('mouseout', badgeMouseoutHandler);
 
 
-                modStatusBadge.addEventListener('click', function() {
-                    if (!window.browserBridge) return;
+				const badgeClickHandler = function() {
+					if (!window.browserBridge) return;
 
-                    modStatusBadge.classList.add('pressed');
-                    setTimeout(() => {
-                        modStatusBadge.classList.remove('pressed');
-                    }, 150);
+					modStatusBadge.classList.add('pressed');
+					setTimeout(() => {
+						modStatusBadge.classList.remove('pressed');
+					}, 150);
 
-                    if (modStatusBadge.classList.contains('rimsort-mod-default')) {
-                        window.browserBridge.add_mod_from_js(modId, modTitleText);
-                    } else if (modStatusBadge.classList.contains('rimsort-mod-added')) {
-                        window.browserBridge.remove_mod_from_js(modId);
-                    }
-                });
+					if (modStatusBadge.classList.contains('rimsort-mod-default')) {
+						window.browserBridge.add_mod_from_js(modId, modTitleText);
+					} else if (modStatusBadge.classList.contains('rimsort-mod-added')) {
+						window.browserBridge.remove_mod_from_js(modId);
+					}
+				};
 
-                tile.style.position = 'relative';
-                tile.appendChild(modStatusBadge);
-            }
+				modStatusBadge.addEventListener('click', badgeClickHandler);
 
-            // Update badge based on status
-            if (status === BadgeState.INSTALLED) {
-                modStatusBadge.title = 'Already installed';
-                modStatusBadge.innerHTML = '✓';
-                modStatusBadge.classList.remove('rimsort-mod-added');
-                modStatusBadge.classList.remove('rimsort-mod-default');
-                modStatusBadge.classList.add('rimsort-mod-installed');
-                const modTitleElement = tile.querySelector('.workshopItemTitle');
-                if (modTitleElement) {
-                    modTitleElement.style.color = '#4CAF50';
-                }
-            } else if (status === BadgeState.ADDED) {
-                modStatusBadge.title = 'Preparing to download';
-                modStatusBadge.innerHTML = '-';
-                modStatusBadge.classList.remove('rimsort-mod-installed');
-                modStatusBadge.classList.remove('rimsort-mod-default');
-                modStatusBadge.classList.add('rimsort-mod-added');
-                const modTitleElement = tile.querySelector('.workshopItemTitle');
-                if (modTitleElement) {
-                    modTitleElement.style.color = '';
-                }
-            } else {
-                modStatusBadge.title = 'Add to list';
-                modStatusBadge.innerHTML = '+';
-                modStatusBadge.classList.remove('rimsort-mod-installed');
-                modStatusBadge.classList.remove('rimsort-mod-added');
-                modStatusBadge.classList.add('rimsort-mod-default');
-                if (tile.matches(':hover')) {
-                    modStatusBadge.classList.add('hovered');
-                } else {
-                    modStatusBadge.classList.remove('hovered');
-                }
-                const modTitleElement = tile.querySelector('.workshopItemTitle');
-                if (modTitleElement) {
-                    modTitleElement.style.color = '';
-                }
-            }
-        };
+				tile.style.position = 'relative';
+				tile.appendChild(modStatusBadge);
+			}
 
-        window.updateAllModBadges = function() {
-            const modTiles = document.querySelectorAll('.workshopItem');
-            const installedMods = $installed_mods || [];
-            const addedMods = $added_mods || [];
+			if (status === BadgeState.INSTALLED) {
+				modStatusBadge.title = 'Already installed';
+				modStatusBadge.innerHTML = '✓';
+				modStatusBadge.classList.remove('rimsort-mod-added', 'rimsort-mod-default');
+				modStatusBadge.classList.add('rimsort-mod-installed');
+				const modTitleElement = tile.querySelector('.workshopItemTitle');
+				if (modTitleElement) {
+					modTitleElement.style.color = '#4CAF50';
+				}
+				modStatusBadge.style.opacity = '1';
+				modStatusBadge.style.visibility = 'visible';
+			} else if (status === BadgeState.ADDED) {
+				modStatusBadge.title = 'Preparing to download';
+				modStatusBadge.innerHTML = '-';
+				modStatusBadge.classList.remove('rimsort-mod-installed', 'rimsort-mod-default');
+				modStatusBadge.classList.add('rimsort-mod-added');
+				const modTitleElement = tile.querySelector('.workshopItemTitle');
+				if (modTitleElement) {
+					modTitleElement.style.color = '';
+				}
+				modStatusBadge.style.opacity = '1';
+				modStatusBadge.style.visibility = 'visible';
+			} else {
+				modStatusBadge.title = 'Add to list';
+				modStatusBadge.innerHTML = '+';
+				modStatusBadge.classList.remove('rimsort-mod-installed', 'rimsort-mod-added');
+				modStatusBadge.classList.add('rimsort-mod-default');
+				const modTitleElement = tile.querySelector('.workshopItemTitle');
+				if (modTitleElement) {
+					modTitleElement.style.color = '';
+				}
+				if (tile.classList.contains('rimsort-tile-hovered')) {
+					modStatusBadge.style.opacity = '1';
+					modStatusBadge.style.visibility = 'visible';
+				} else {
+					modStatusBadge.style.opacity = '0';
+					modStatusBadge.style.visibility = 'hidden';
+				}
+			}
 
-            modTiles.forEach(function(tile) {
-                const link = tile.querySelector('a[href*="id="]');
-                if (!link) return;
-                const match = link.href.match(/id=(\d+)/);
-                if (!match) return;
-                const modId = match[1];
+			if (modStatusBadge.matches(':hover')) {
+				modStatusBadge.classList.add('rimsort-badge-hovered');
+			} else {
+				modStatusBadge.classList.remove('rimsort-badge-hovered');
+			}
+		};
 
-                if (installedMods.includes(modId)) {
-                    window.updateModBadge(modId, BadgeState.INSTALLED);
-                } else if (addedMods.includes(modId)) {
-                    window.updateModBadge(modId, BadgeState.ADDED);
-                } else {
-                    window.updateModBadge(modId, BadgeState.DEFAULT);
-                }
-            });
-        };
+		window.updateAllModBadges = function() {
+			const modTiles = document.querySelectorAll('.workshopItem');
+			const installedMods = $installed_mods || [];
+			const addedMods = $added_mods || [];
 
-        window.updateAllModBadges();
-    });
+			modTiles.forEach(function(tile) {
+				const link = tile.querySelector('a[href*="id="]');
+				if (!link) return;
+				const match = link.href.match(/id=(\d+)/);
+				if (!match) return;
+				const modId = match[1];
+
+				if (installedMods.includes(modId)) {
+					window.updateModBadge(modId, BadgeState.INSTALLED);
+				} else if (addedMods.includes(modId)) {
+					window.updateModBadge(modId, BadgeState.ADDED);
+				} else {
+					window.updateModBadge(modId, BadgeState.DEFAULT);
+				}
+			});
+		};
+
+		window.updateAllModBadges();
+	});
 } else {
-    console.error("QWebChannel is not defined. Cannot setup bridge.");
+	console.error("QWebChannel is not defined. Cannot setup bridge.");
 }
 
 const style = document.createElement('style');
@@ -143,33 +173,29 @@ style.textContent = `
         transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease, visibility 0.2s ease;
     }
 
+    .rimsort-modstatus-badge.rimsort-badge-hovered {
+        transform: scale(1.05);
+        box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    }
+
+    .rimsort-modstatus-badge.pressed {
+        transform: scale(0.9);
+    }
+
     .rimsort-mod-installed {
         background-color: #4CAF50;
-        opacity: 1;
-        visibility: visible;
     }
 
     .rimsort-mod-added {
         background-color: #FFA500;
-        opacity: 1;
-        visibility: visible;
         cursor: pointer;
     }
 
     .rimsort-mod-default {
         background-color: #2196F3;
+        cursor: pointer;
         opacity: 0;
         visibility: hidden;
-    }
-
-    .rimsort-mod-default.hovered {
-        opacity: 1;
-        visibility: visible;
-        cursor: pointer;
-    }
-
-    .rimsort-modstatus-badge.pressed {
-        transform: scale(0.9);
     }
 `;
 document.head.appendChild(style);
