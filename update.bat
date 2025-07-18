@@ -42,7 +42,7 @@ echo Target: %current_dir%
 echo.
 echo The update will start in 5 seconds. Press any key to cancel.
 echo ========================================================================
-choice /t 5 /d y /n >nul
+choice /c YN /d Y /t 5 /n >nul
 if errorlevel 2 (
     echo Update cancelled by user.
     pause
@@ -82,12 +82,11 @@ echo Updating RimSort files...
 robocopy "%update_source_folder%" "%current_dir_no_slash%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
 set "robocopy_exit=!errorlevel!"
 
-REM Check if robocopy had serious issues
-if %robocopy_exit% GEQ 8 (
+if !robocopy_exit! GEQ 8 (
     echo ERROR: Update failed with critical errors.
     pause
     exit /b 1
-) else if %robocopy_exit% GEQ 4 (
+) else if !robocopy_exit! GEQ 4 (
     echo WARNING: Some files may not have copied properly.
 ) else (
     echo Update completed successfully.
