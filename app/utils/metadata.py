@@ -1305,6 +1305,12 @@ class MetadataManager(QObject):
             return None
         replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
 
+        # check if replacement supports  the game version
+        major, minor = self.game_version.split(".")[:2]
+        version_regex = rf"{major}.{minor}"
+        if version_regex not in replacement_data["ReplacementVersions"]:
+            return None
+
         return ModReplacement(
             name=replacement_data["ReplacementName"],
             author=replacement_data["ReplacementAuthor"],
