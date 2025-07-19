@@ -62,7 +62,7 @@ from app.utils.generic import (
 from app.utils.metadata import MetadataManager, SettingsController
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
-from app.utils.steam.browser import SteamBrowser
+from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import QObject, Slot
 
 if TYPE_CHECKING:
-    from app.utils.steam.browser import SteamBrowser
+    from app.utils.steam.steambrowser.browser import SteamBrowser
 
 
 class JavaScriptBridge(QObject):
