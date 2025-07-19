@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
-from app.utils.generic import open_url_browser
 from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import (
     get_mod_name_from_pfid,
@@ -612,6 +611,7 @@ class LogReader(QDialog):
                     )
                 )
 
+                """ Disabled for now will remove it if  no fyture use case
                 # Add open URL in browser action
                 def open_mod_url() -> None:
                     metadata_manager = MetadataManager.instance()
@@ -636,6 +636,7 @@ class LogReader(QDialog):
 
                 open_url_action = menu.addAction(self.tr("Open URL in browser"))
                 open_url_action.triggered.connect(open_mod_url)
+                """
 
                 # Add open folder action
                 path_item = self.table_widget.item(selected_row, 4)
