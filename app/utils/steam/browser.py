@@ -1,13 +1,18 @@
+import json
 import os
 import platform
 import re
+from enum import Enum
 from functools import partial
+from pathlib import Path
+from string import Template
 from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
-from PySide6.QtWebEngineCore import QWebEnginePage
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineScript
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -33,6 +38,14 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from app.views.dialogue import show_warning
+
+from .js_bridge import JavaScriptBridge
+
+
+class BadgeState(str, Enum):
+    INSTALLED = "installed"
+    ADDED = "added"
+    DEFAULT = "default"
 
 
 class SteamBrowser(QWidget):
@@ -61,7 +74,6 @@ class SteamBrowser(QWidget):
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
 
-        # TODO: Are these actually ever assigned?
         self.downloader_list_mods_tracking: list[str] = []
         self.downloader_list_dupe_tracking: dict[str, Any] = {}
         self.startpage = QUrl(startpage)
@@ -132,6 +144,20 @@ class SteamBrowser(QWidget):
         self.web_view.loadFinished.connect(self._web_view_load_finished)
         self.web_view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.web_view.load(self.startpage)
+
+        # QWebChannel setup
+        self.channel = QWebChannel(self)
+        self.js_bridge = JavaScriptBridge(self)
+        self.channel.registerObject("browserBridge", self.js_bridge)
+        self.web_view.page().setWebChannel(self.channel)
+
+        # qwebchannel.js injection
+        script = QWebEngineScript()
+        script.setSourceUrl(QUrl("qrc:///qtwebchannel/qwebchannel.js"))
+        script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation)
+        script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld)
+        script.setRunsOnSubFrames(True)
+        self.web_view.page().profile().scripts().insert(script)
 
         #  QWebEngineProfile.defaultProfile().setHttpAcceptLanguages
 
@@ -368,6 +394,7 @@ class SteamBrowser(QWidget):
             item.setSizeHint(label.sizeHint())
             self.downloader_list.addItem(item)
             self.downloader_list.setItemWidget(item, label)
+            self._update_badge_js(publishedfileid, BadgeState.ADDED)
         else:
             logger.debug(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
@@ -379,28 +406,54 @@ class SteamBrowser(QWidget):
                     self.downloader_list_dupe_tracking[publishedfileid] = title
 
     def _clear_downloader_list(self) -> None:
+        mods_to_clear_badges_for = list(self.downloader_list_mods_tracking)
+
         self.downloader_list.clear()
         self.downloader_list_mods_tracking.clear()
         self.downloader_list_dupe_tracking.clear()
+        for mod_id in mods_to_clear_badges_for:
+            self._update_badge_js(mod_id, BadgeState.DEFAULT)
 
     def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
         context_item = self.downloader_list.itemAt(point)
 
         if context_item:  # Check if the right-clicked point corresponds to an item
+            publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
+
             context_menu = QMenu(self)  # Downloader item context menu event
             remove_item = context_menu.addAction(self.tr("Remove mod from list"))
             remove_item.triggered.connect(
-                partial(self._remove_mod_from_list, context_item)
+                partial(self._remove_mod_from_list, publishedfileid)
             )
             context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
-    def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
-        publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
+    def _remove_mod_from_list(self, publishedfileid: str) -> None:
+        """
+        Removes a mod from the downloader list (both internal tracking and UI)
+        and updates its badge status to DEFAULT.
+        This method is called both from the UI context menu and from the JS bridge.
+        """
         if publishedfileid in self.downloader_list_mods_tracking:
-            self.downloader_list.takeItem(self.downloader_list.row(context_item))
             self.downloader_list_mods_tracking.remove(publishedfileid)
+
+            item_found_in_ui = False
+            for i in range(self.downloader_list.count()):
+                item = self.downloader_list.item(i)
+                if item.data(Qt.ItemDataRole.UserRole) == publishedfileid:
+                    self.downloader_list.takeItem(i)
+                    item_found_in_ui = True
+                    break
+
+            if not item_found_in_ui:
+                logger.warning(
+                    f"Mod {publishedfileid} removed from tracking, but corresponding UI item was not found."
+                )
+
+            self._update_badge_js(publishedfileid, BadgeState.DEFAULT)
         else:
-            logger.error("Steam Browser Error: Item not found in tracking list.")
+            logger.warning(
+                f"Mod {publishedfileid} not found in download tracking list, cannot remove."
+            )
 
     def _subscribe_to_mods_from_list(self) -> None:
         logger.debug(
@@ -429,6 +482,7 @@ class SteamBrowser(QWidget):
             self.web_view_loading_placeholder.hide()
             self.web_view.show()
 
+    # TODO: Probably a good idea to break this huge function down into a bunch of smaller helpers
     def _web_view_load_finished(self) -> None:
         # Progress bar done
         self.progress_bar.setValue(0)
@@ -490,28 +544,30 @@ class SteamBrowser(QWidget):
             # }
             # """
 
+            installed_mods_list = self._get_installed_mods_list()
+            added_mods_list = self._get_added_mods_list()
+
+            # Setup QWebChannel bridge
+            template_path = Path(__file__).parent / "setup_web_channel_script.js"
+            raw_script = Template(template_path.read_text(encoding="utf-8"))
+            js_badge_state = {member.name: member.value for member in BadgeState}
+            setup_web_channel_script = raw_script.substitute(
+                installed_mods=json.dumps(installed_mods_list),
+                added_mods=json.dumps(added_mods_list),
+                badge_state_js=json.dumps(js_badge_state),
+            )
+            self.web_view.page().runJavaScript(
+                setup_web_channel_script, 0, lambda result: None
+            )
+
             is_item_page = self.url_prefix_sharedfiles in self.current_url
             is_collection_page = self.url_prefix_workshop in self.current_url
             is_collections_page = self.section_collections in self.current_url
-            is_items_page = (
-                self.section_readytouseitems in self.current_url
-                or not is_collections_page
-                and "section=" in self.current_url
+            is_items_page = self.section_readytouseitems in self.current_url or (
+                not is_collections_page and "section=" in self.current_url
             )
 
             if is_item_page or is_collection_page or is_items_page:
-                # Get list of installed mod IDs and inject into page
-                installed_mods = []
-                for metadata in self.metadata_manager.internal_local_metadata.values():
-                    if metadata.get("publishedfileid"):
-                        installed_mods.append(metadata["publishedfileid"])
-                inject_installed_mods_script = f"""
-                window.installedMods = {installed_mods};
-                """
-                self.web_view.page().runJavaScript(
-                    inject_installed_mods_script, 0, lambda result: None
-                )
-
                 if is_item_page or is_collection_page:
                     # get mod id from steam workshop url
                     if self.url_prefix_sharedfiles in self.current_url:
@@ -648,54 +704,6 @@ class SteamBrowser(QWidget):
                     # Show the add_to_list_button
                     self.nav_bar.addAction(self.add_to_list_button)
 
-                if is_items_page:
-                    add_item_markers_script = """
-                    var modTiles = document.querySelectorAll('.workshopItem');
-                    modTiles.forEach(function(tile) {
-                        var link = tile.querySelector('a[href*="id="]');
-                        if (!link) return;
-
-                        var match = link.href.match(/id=(\\d+)/);
-                        if (!match) return;
-
-                        var modId = match[1];
-
-                        if (window.installedMods && window.installedMods.includes(modId)) {
-                            // Only add if not already present
-                            if (!tile.querySelector('.rimsort-installed-badge')) {
-                                var installedBadge = document.createElement('div');
-                                installedBadge.className = 'rimsort-installed-badge';
-                                installedBadge.innerHTML = '✓';
-                                installedBadge.style.position = 'absolute';
-                                installedBadge.style.top = '5px';
-                                installedBadge.style.right = '5px';
-                                installedBadge.style.backgroundColor = '#4CAF50';
-                                installedBadge.style.color = 'white';
-                                installedBadge.style.width = '32px';
-                                installedBadge.style.height = '32px';
-                                installedBadge.style.borderRadius = '6px';
-                                installedBadge.style.display = 'flex';
-                                installedBadge.style.alignItems = 'center';
-                                installedBadge.style.justifyContent = 'center';
-                                installedBadge.style.fontWeight = 'bold';
-                                installedBadge.style.fontSize = '20px';
-                                installedBadge.style.boxShadow = '0 0 4px black';
-                                installedBadge.style.cursor = 'default';
-                                tile.style.position = 'relative';
-                                tile.appendChild(installedBadge);
-
-                                var modTitle = tile.querySelector('.workshopItemTitle');
-                                if (modTitle) {
-                                    modTitle.style.color = '#4CAF50';
-                                }
-                            }
-                        }
-                    });
-                    """
-                    self.web_view.page().runJavaScript(
-                        add_item_markers_script, 0, lambda result: None
-                    )
-
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page
         self.current_html = html
@@ -707,3 +715,31 @@ class SteamBrowser(QWidget):
             if metadata.get("publishedfileid") == publishedfileid:
                 return True
         return False
+
+    def _get_installed_mods_list(self) -> list[str]:
+        """Get list of installed mod IDs"""
+        installed_mods = []
+        for metadata in self.metadata_manager.internal_local_metadata.values():
+            if metadata.get("publishedfileid"):
+                installed_mods.append(metadata["publishedfileid"])
+
+        return installed_mods
+
+    def _get_added_mods_list(self) -> list[str]:
+        """Get list of mod IDs added to the download list"""
+        added_mods = []
+        for modId in self.downloader_list_mods_tracking:
+            added_mods.append(modId)
+
+        return added_mods
+
+    def _update_badge_js(self, mod_id: str, status: BadgeState) -> None:
+        """Calls a JavaScript function in the web view to update a specific mod's badge"""
+        script = f"""
+        if (typeof window.updateModBadge === 'function') {{
+            window.updateModBadge('{mod_id}', '{status.value}');
+        }} else {{
+            console.warn('window.updateModBadge is not defined yet.');
+        }}
+        """
+        self.web_view.page().runJavaScript(script, 0, lambda result: None)
