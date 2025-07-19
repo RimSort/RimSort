@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
+from app.utils.generic import open_url_browser
 from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import (
     get_mod_name_from_pfid,
@@ -143,6 +144,10 @@ class LogReader(QDialog):
 
         main_layout.addWidget(self.status_bar)
         self.setLayout(main_layout)
+
+        # Set up custom context menu for table widget
+        self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_widget.customContextMenuRequested.connect(self.show_context_menu)
 
         # Remove immediate load; rely on timer to trigger after 15 seconds
         # Initialize last modification times for ACF files
@@ -606,6 +611,31 @@ class LogReader(QDialog):
                         f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                     )
                 )
+
+                # Add open URL in browser action
+                def open_mod_url() -> None:
+                    metadata_manager = MetadataManager.instance()
+                    mod_metadata = None
+                    # Find mod metadata by matching publishedfileid
+                    for (
+                        uuid,
+                        metadata,
+                    ) in metadata_manager.internal_local_metadata.items():
+                        if metadata.get("publishedfileid") == pfid:
+                            mod_metadata = metadata
+                            break
+                    if mod_metadata:
+                        url = mod_metadata.get("url") or mod_metadata.get("steam_url")
+                        if url:
+                            logger.info(f"Opening mod URL in browser: {url}")
+                            open_url_browser(url)
+                        else:
+                            logger.warning(f"No URL found for mod with PFID {pfid}")
+                    else:
+                        logger.warning(f"No metadata found for mod with PFID {pfid}")
+
+                open_url_action = menu.addAction(self.tr("Open URL in browser"))
+                open_url_action.triggered.connect(open_mod_url)
 
                 # Add open folder action
                 path_item = self.table_widget.item(selected_row, 4)
