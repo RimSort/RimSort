@@ -5,10 +5,11 @@ import shutil
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union, cast
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QPoint, Qt, QTimer
+from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -18,13 +19,17 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QPushButton,
     QStatusBar,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
+from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import (
     get_mod_name_from_pfid,
     get_mod_path_from_pfid,
@@ -69,10 +74,15 @@ class LogReader(QDialog):
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self,
+        settings_controller: SettingsController,
+        active_mods_list: Optional[object] = None,
+    ) -> None:
         super().__init__()
         self.setWindowTitle("Log Reader")
         self.settings_controller = settings_controller
+        self.active_mods_list = active_mods_list
         self._metadata_cache: dict[str, dict[str, Any]] = {}
 
         self.entries: list[dict[str, Union[str, int, None]]] = []
@@ -136,8 +146,8 @@ class LogReader(QDialog):
 
         # Remove immediate load; rely on timer to trigger after 15 seconds
         # Initialize last modification times for ACF files
-        self._last_steamcmd_acf_mtime: float | None = None
-        self._last_steam_acf_mtime: float | None = None
+        self._last_steamcmd_acf_mtime: Optional[float] = None
+        self._last_steam_acf_mtime: Optional[float] = None
 
         # Set the check for initial application load.
         self.is_initial_load = True
@@ -637,6 +647,18 @@ class LogReader(QDialog):
             self.table_widget.setSortingEnabled(False)
             self._metadata_cache.clear()
 
+            # Build set of active PFIDs if active_mods_list is provided
+            self.active_pfids = set()
+            if self.active_mods_list is not None:
+                metadata_manager = MetadataManager.instance()
+                uuids = getattr(self.active_mods_list, "uuids", None)
+                if uuids is not None:
+                    for uuid in uuids:
+                        mod_data = metadata_manager.internal_local_metadata.get(uuid)
+                        if mod_data and "publishedfileid" in mod_data:
+                            self.active_pfids.add(mod_data["publishedfileid"])
+            logger.debug(f"Active PFIDs: {self.active_pfids}")
+
             for row_index, entry in enumerate(entries):
                 # Ensure pfid is a valid string before passing to get_mod_name_from_pfid
                 pfid = str(entry.get("published_file_id", "")).strip()
@@ -683,6 +705,9 @@ class LogReader(QDialog):
                 for col, item in enumerate(items):
                     if item is not None:
                         self.table_widget.setItem(row_index, col, item)
+
+            # Set custom delegate for row coloring
+            self.table_widget.setItemDelegate(ActiveModDelegate(self))
 
             self.table_widget.setSortingEnabled(True)
             self.table_widget.resizeColumnsToContents()
@@ -784,3 +809,43 @@ class LogReader(QDialog):
                 text=self.tr("Exportfailed unknown exception occurred"),
                 details=error_msg,
             )
+
+
+class ActiveModDelegate(QStyledItemDelegate):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.log_reader: Optional["LogReader"] = cast("LogReader", parent)
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        log_reader = self.log_reader
+        if log_reader is None:
+            super().paint(painter, option, index)
+            return
+
+        pfid_index: QModelIndex = index.sibling(index.row(), log_reader.COL_PFID)
+        pfid_item = log_reader.table_widget.item(pfid_index.row(), pfid_index.column())
+        pfid: Optional[str] = pfid_item.text() if pfid_item else None
+
+        if pfid and pfid in getattr(log_reader, "active_pfids", set()):
+            painter.save()
+
+            rect = option.rect  # type: ignore[attr-defined]
+            font: QFont = option.font  # type: ignore[attr-defined]
+
+            painter.fillRect(rect, QColor(0, 100, 0))  # Dark green background
+            font.setBold(True)
+            painter.setFont(font)
+            painter.setPen(QColor(255, 255, 255))  # White text
+            painter.drawText(
+                rect.adjusted(5, 0, 0, 0),
+                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                index.data(),
+            )
+            painter.restore()
+        else:
+            super().paint(painter, option, index)
