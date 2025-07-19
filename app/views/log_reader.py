@@ -139,6 +139,9 @@ class LogReader(QDialog):
         self._last_steamcmd_acf_mtime: float | None = None
         self._last_steam_acf_mtime: float | None = None
 
+        # Set the check for initial application load.
+        self.is_initial_load = True
+
         # Start the refresh timer to trigger load_acf_data after 15 seconds
         self.refresh_timer.start()
 
@@ -264,9 +267,10 @@ class LogReader(QDialog):
                     "SteamCMD", steamcmd_acf_path, steamcmd_acf_data
                 )
             else:
-                logger.warning(
-                    "SteamCMD ACF path is None, skipping log_acf_load_result call"
-                )
+                if self.is_initial_load:
+                    logger.warning(
+                        "SteamCMD ACF path is None, skipping log_acf_load_result call"
+                    )
 
             # Load Steam ACF data
             steam_acf_data = {}
@@ -280,9 +284,13 @@ class LogReader(QDialog):
             if workshop_acf_path is not None:
                 self._log_acf_load_result("Steam", workshop_acf_path, steam_acf_data)
             else:
-                logger.warning(
-                    "Steam ACF path is None, skipping log_acf_load_result call"
-                )
+                if self.is_initial_load:
+                    logger.warning(
+                        "Steam ACF path is None, skipping log_acf_load_result call"
+                    )
+
+            # set the inital load flag to False
+            self.is_initial_load = False
 
             # Merge AppWorkshop data carefully to avoid overwriting
             combined_acf_data = {}
