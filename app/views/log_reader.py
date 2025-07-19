@@ -52,7 +52,7 @@ class LogReader(QDialog):
 
         PFID = 0
         MOD_DOWNLOADED = 1
-        LAST_UPDATED = 2
+        UPDATED_ON_WORKSHOP = 2
         TYPE = 3
         MOD_NAME = 4
         MOD_PATH = 5
@@ -63,7 +63,7 @@ class LogReader(QDialog):
             return {
                 self.PFID: "Steam Workshop Published File ID",
                 self.MOD_DOWNLOADED: "Mod downloaded",
-                self.LAST_UPDATED: "Last update timestamp (UTC) / Relative Time",
+                self.UPDATED_ON_WORKSHOP: "Last update timestamp (UTC) / Relative Time",
                 self.TYPE: "Item type (workshop/local)",
                 self.MOD_NAME: "Mod name from Steam metadata",
                 self.MOD_PATH: "Filesystem path to mod",
@@ -72,7 +72,7 @@ class LogReader(QDialog):
     # Maintain backward compatibility with old constant names
     COL_PFID = TableColumn.PFID
     COL_MOD_DOWNLOADED = TableColumn.MOD_DOWNLOADED
-    COL_LAST_UPDATED = TableColumn.LAST_UPDATED
+    COL_UPDATED_ON_WORKSHOP = TableColumn.UPDATED_ON_WORKSHOP
     COL_TYPE = TableColumn.TYPE
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
@@ -672,7 +672,7 @@ class LogReader(QDialog):
                 [
                     self.tr("Published File ID"),
                     self.tr("Mod downloaded"),
-                    self.tr("Last Updated / Relative Time"),
+                    self.tr("Updated on Workshop"),
                     self.tr("Type"),
                     self.tr("Mod Name"),
                     self.tr("Mod Path"),
@@ -755,13 +755,13 @@ class LogReader(QDialog):
                         combined_text = f"{abs_time} | {rel_time}"
                         time_item = QTableWidgetItem(combined_text)
                         time_item.setData(Qt.ItemDataRole.UserRole, int(timeupdated))
-                        items[self.COL_LAST_UPDATED] = time_item
+                        items[self.COL_UPDATED_ON_WORKSHOP] = time_item
                     except (ValueError, TypeError):
-                        items[self.COL_LAST_UPDATED] = QTableWidgetItem(
+                        items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem(
                             "Invalid timestamp"
                         )
                 else:
-                    items[self.COL_LAST_UPDATED] = QTableWidgetItem("Unknown")
+                    items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem("Unknown")
 
                 # Set all items at once
                 for col, item in enumerate(items):
