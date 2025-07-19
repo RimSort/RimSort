@@ -47,18 +47,16 @@ class LogReader(QDialog):
 
         PFID = 0
         LAST_UPDATED = 1
-        RELATIVE_TIME = 2
-        TYPE = 3
-        MOD_NAME = 4
-        MOD_PATH = 5
+        TYPE = 2
+        MOD_NAME = 3
+        MOD_PATH = 4
 
         @property
         def description(self) -> str:
             """Get human-readable description of the column."""
             return {
                 self.PFID: "Steam Workshop Published File ID",
-                self.LAST_UPDATED: "Last update timestamp (UTC)",
-                self.RELATIVE_TIME: "Time since last update",
+                self.LAST_UPDATED: "Last update timestamp (UTC) / Relative Time",
                 self.TYPE: "Item type (workshop/local)",
                 self.MOD_NAME: "Mod name from Steam metadata",
                 self.MOD_PATH: "Filesystem path to mod",
@@ -67,7 +65,6 @@ class LogReader(QDialog):
     # Maintain backward compatibility with old constant names
     COL_PFID = TableColumn.PFID
     COL_LAST_UPDATED = TableColumn.LAST_UPDATED
-    COL_RELATIVE_TIME = TableColumn.RELATIVE_TIME
     COL_TYPE = TableColumn.TYPE
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
@@ -87,6 +84,9 @@ class LogReader(QDialog):
         self.refresh_timer = QTimer()
         self.refresh_timer.setInterval(15000)  # 15 seconds
         self.refresh_timer.timeout.connect(self.load_acf_data)
+
+        # Add attribute to track time display mode: True for absolute, False for relative
+        self.show_absolute_time = True
 
         # Main layout
         main_layout = QVBoxLayout()
@@ -598,7 +598,7 @@ class LogReader(QDialog):
                 )
 
                 # Add open folder action
-                path_item = self.table_widget.item(selected_row, 5)
+                path_item = self.table_widget.item(selected_row, 4)
                 mod_path = path_item.text() if path_item else None
                 if mod_path and Path(mod_path).exists():
                     open_folder = menu.addAction(self.tr("Open Mod Folder"))
@@ -623,12 +623,11 @@ class LogReader(QDialog):
         try:
             self.table_widget.clear()
             self.table_widget.setRowCount(len(entries))
-            self.table_widget.setColumnCount(6)
+            self.table_widget.setColumnCount(5)
             self.table_widget.setHorizontalHeaderLabels(
                 [
                     self.tr("Published File ID"),
-                    self.tr("Last Updated"),
-                    self.tr("Relative Time"),
+                    self.tr("Last Updated / Relative Time"),
                     self.tr("Type"),
                     self.tr("Mod Name"),
                     self.tr("Mod Path"),
@@ -657,33 +656,28 @@ class LogReader(QDialog):
                 items = [
                     QTableWidgetItem(pfid),  # COL_PFID
                     None,  # COL_LAST_UPDATED placeholder
-                    None,  # COL_RELATIVE_TIME placeholder
                     QTableWidgetItem(str(entry.get("type", "unknown"))),  # COL_TYPE
                     QTableWidgetItem(mod_name),  # COL_MOD_NAME
                     QTableWidgetItem(mod_path),  # COL_MOD_PATH
                 ]
 
-                # Handle timestamp columns
+                # Handle timestamp column with toggle display
                 timeupdated = self.timeupdated_data.get(pfid)
                 if timeupdated:
                     try:
                         dt = datetime.fromtimestamp(int(timeupdated))
-                        time_item = QTableWidgetItem(dt.strftime("%Y-%m-%d %H:%M:%S"))
+                        abs_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        rel_time = self.get_relative_time(timeupdated)
+                        combined_text = f"{abs_time} | {rel_time}"
+                        time_item = QTableWidgetItem(combined_text)
                         time_item.setData(Qt.ItemDataRole.UserRole, int(timeupdated))
                         items[self.COL_LAST_UPDATED] = time_item
-                        items[self.COL_RELATIVE_TIME] = QTableWidgetItem(
-                            self.get_relative_time(timeupdated)
-                        )
                     except (ValueError, TypeError):
                         items[self.COL_LAST_UPDATED] = QTableWidgetItem(
                             "Invalid timestamp"
                         )
-                        items[self.COL_RELATIVE_TIME] = QTableWidgetItem(
-                            "Invalid timestamp"
-                        )
                 else:
                     items[self.COL_LAST_UPDATED] = QTableWidgetItem("Unknown")
-                    items[self.COL_RELATIVE_TIME] = QTableWidgetItem("Unknown")
 
                 # Set all items at once
                 for col, item in enumerate(items):
@@ -692,6 +686,10 @@ class LogReader(QDialog):
 
             self.table_widget.setSortingEnabled(True)
             self.table_widget.resizeColumnsToContents()
+            # Auto sort by Last Updated column descending on load
+            self.table_widget.sortItems(
+                self.COL_LAST_UPDATED, order=Qt.SortOrder.DescendingOrder
+            )
         finally:
             self.table_widget.setUpdatesEnabled(True)
 
