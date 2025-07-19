@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from loguru import logger
+from PySide6.QtGui import QColor
 
 from app.utils.metadata import MetadataManager
 
@@ -9,15 +10,6 @@ class CustomListWidgetItemMetadata:
     """
     A class to store metadata for CustomListWidgetItem.
 
-    Attributes:
-        uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        errors_warnings: str, a string of errors and warnings
-        errors: str, a string of errors for the notification tooltip
-        warnings: str, a string of warnings for the notification tooltip
-        warning_toggled: bool, representing if the warning/error icons are toggled off
-        filtered: bool, representing whether the widget's item is filtered
-        invalid: bool, representing whether the widget's item is an invalid mod
-        mismatch: bool, representing whether the widget's item has a version mismatch
     """
 
     def __init__(
@@ -29,9 +21,11 @@ class CustomListWidgetItemMetadata:
         warning_toggled: bool = False,
         filtered: bool = False,
         hidden_by_filter: bool = False,
-        invalid: Optional[bool] = None,
-        mismatch: Optional[bool] = None,
+        invalid: bool | None = None,
+        mismatch: bool | None = None,
+        mod_color: QColor | None = None,
         alternative: Optional[str] = None,
+
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -47,6 +41,7 @@ class CustomListWidgetItemMetadata:
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param mod_color: QColor, the color of the mod's text/background in the modlist
         :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
@@ -66,11 +61,13 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
+        self.mod_color = mod_color
         self.alternative = (
             alternative
             if alternative is not None
             else self.get_alternative_by_uuid(uuid)
         )
+
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
