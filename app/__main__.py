@@ -32,6 +32,7 @@ from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
 from typing import Type
 
+import cpuinfo
 import loguru
 from loguru import logger
 
@@ -209,6 +210,19 @@ if __name__ == "__main__":
             set_start_method("spawn")
 
         logger.debug("Running using Nuitka bundle")
+
+    # === AMD CPU DETECTION AND SAFE MODE ENFORCEMENT ===
+    try:
+        cpu = cpuinfo.get_cpu_info()
+        cpu_brand = cpu.get("brand_raw", "")
+        if "AMD" in cpu_brand:
+            logger.warning("AMD CPU detected — applying safe mode settings.")
+            os.environ["DOTNET_EnableHWIntrinsic"] = "0"
+            os.environ["DOTNET_GCHeapHardLimit"] = "0x20000000"
+            if "--disable-gpu" not in sys.argv:
+                sys.argv += ["--disable-gpu", "--verbose"]
+    except Exception as e:
+        logger.warning(f"Failed to detect CPU info: {e}")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
     main_thread()
