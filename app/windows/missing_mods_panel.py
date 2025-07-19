@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.generic import check_if_steam_running
+from app.views.dialogue import show_warning
 from app.windows.base_mods_panel import BaseModsPanel
 
 
@@ -110,6 +112,43 @@ class MissingModsPrompt(BaseModsPanel):
         combo_box.currentTextChanged.connect(self._update_mod_info)
         # Set the combo_box as the index widget
         self.editor_table_view.setIndexWidget(combo_box_index, combo_box)
+
+
+    def _download_list_from_table(self, mode: str) -> None:
+        publishedfileids = []
+        # Iterate through the editor's rows
+        for row in range(self.editor_model.rowCount()):
+            if self.editor_model.item(row):  # If there is a row at current index
+                # If an existing row is found, get the combo box
+                combo_box = self.editor_table_view.indexWidget(
+                    self.editor_model.item(row, 4).index()
+                )
+                if not isinstance(combo_box, QComboBox):
+                    logger.critical("Combo box is not a QComboBox! assuming empty text")
+                    publishedfileid = ""
+                else:
+                    publishedfileid = combo_box.currentText()
+
+                if publishedfileid != "":
+                    publishedfileids.append(publishedfileid)
+        self.close()
+        if mode == "steamcmd":
+            self.steamcmd_downloader_signal.emit(publishedfileids)
+        elif mode == "steamworks":
+            # Check if steam is running
+            if not check_if_steam_running():
+                logger.warning("Steam is not running. Cannot subscribe to mods using Steam.")
+                show_warning(
+                    title="Steam not running",
+                    text="Unable to subscribe to Steam mods. Ensure Steam is running and try again.",
+                )
+                return
+            self.steamworks_subscription_signal.emit(
+                [
+                    "subscribe",
+                    [eval(str_pfid) for str_pfid in publishedfileids],
+                ]
+            )
 
     def _populate_from_metadata(self) -> None:
         # Build a dict of missing mod variant(s)

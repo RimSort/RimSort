@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
-from app.utils.generic import extract_page_title_steam_browser
+from app.utils.generic import check_if_steam_running, extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -456,6 +456,14 @@ class SteamBrowser(QWidget):
             )
 
     def _subscribe_to_mods_from_list(self) -> None:
+        # Check if steam is running
+        if not check_if_steam_running():
+            logger.warning("Steam is not running. Cannot subscribe to mods using Steam.")
+            show_warning(
+                title="Steam not running",
+                text="Unable to subscribe to Steam mods. Ensure Steam is running and try again.",
+            )
+            return
         logger.debug(
             f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
         )

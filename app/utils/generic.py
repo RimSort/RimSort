@@ -12,6 +12,7 @@ from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from typing import Any, Callable, Generator
 
+import psutil
 import requests
 from loguru import logger
 from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
@@ -452,6 +453,32 @@ def check_valid_http_git_url(url: str) -> bool:
     """
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
 
+
+def check_if_steam_running() -> bool:
+    """
+    Check if Steam is running
+
+    Returns:
+        bool: True if Steam is running, False otherwise
+    """
+    steam_process_name = {
+        "Windows": "steam.exe",
+        "Darwin": "steam",
+        "Linux": "steam",
+    }
+
+    system = platform.system()
+    process_name = steam_process_name.get(system, None)
+
+    if process_name is None:
+        logger.error(f"Unknown system: {system}, when checking if Steam is running")
+        return False
+
+    for process in psutil.process_iter():
+        if process.name() == process_name:
+            return True
+
+    return False
 
 def check_internet_connection(
     primary_host: str = "8.8.8.8",
