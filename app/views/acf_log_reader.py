@@ -44,24 +44,26 @@ from app.views.dialogue import (
 )
 
 
-class LogReader(QDialog):
+class AcfLogReader(QDialog):
     from enum import IntEnum
 
     class TableColumn(IntEnum):
         """Enumeration of table columns with descriptions."""
 
         PFID = 0
-        LAST_UPDATED = 1
-        TYPE = 2
-        MOD_NAME = 3
-        MOD_PATH = 4
+        MOD_DOWNLOADED = 1
+        UPDATED_ON_WORKSHOP = 2
+        TYPE = 3
+        MOD_NAME = 4
+        MOD_PATH = 5
 
         @property
         def description(self) -> str:
             """Get human-readable description of the column."""
             return {
                 self.PFID: "Steam Workshop Published File ID",
-                self.LAST_UPDATED: "Last update timestamp (UTC) / Relative Time",
+                self.MOD_DOWNLOADED: "Mod downloaded",
+                self.UPDATED_ON_WORKSHOP: "Last update timestamp (UTC) / Relative Time",
                 self.TYPE: "Item type (workshop/local)",
                 self.MOD_NAME: "Mod name from Steam metadata",
                 self.MOD_PATH: "Filesystem path to mod",
@@ -69,7 +71,8 @@ class LogReader(QDialog):
 
     # Maintain backward compatibility with old constant names
     COL_PFID = TableColumn.PFID
-    COL_LAST_UPDATED = TableColumn.LAST_UPDATED
+    COL_MOD_DOWNLOADED = TableColumn.MOD_DOWNLOADED
+    COL_UPDATED_ON_WORKSHOP = TableColumn.UPDATED_ON_WORKSHOP
     COL_TYPE = TableColumn.TYPE
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
@@ -664,11 +667,12 @@ class LogReader(QDialog):
         try:
             self.table_widget.clear()
             self.table_widget.setRowCount(len(entries))
-            self.table_widget.setColumnCount(5)
+            self.table_widget.setColumnCount(6)
             self.table_widget.setHorizontalHeaderLabels(
                 [
                     self.tr("Published File ID"),
-                    self.tr("Last Updated / Relative Time"),
+                    self.tr("Mod downloaded"),
+                    self.tr("Updated on Workshop"),
                     self.tr("Type"),
                     self.tr("Mod Name"),
                     self.tr("Mod Path"),
@@ -706,8 +710,35 @@ class LogReader(QDialog):
                     mod_name = f"Error retrieving name: {pfid}"
                     mod_path = f"Error retrieving path: {pfid}"
 
+                # Get internal_time_touched from MetadataManager by matching pfid
+                internal_time_touched_str = "Unknown"
+                try:
+                    metadata_manager = MetadataManager.instance()
+                    for metadata in metadata_manager.internal_local_metadata.values():
+                        if metadata.get("publishedfileid") == pfid:
+                            internal_time_touched = metadata.get(
+                                "internal_time_touched"
+                            )
+                            if internal_time_touched:
+                                dt_touched = datetime.fromtimestamp(
+                                    int(internal_time_touched)
+                                )
+                                internal_time_touched_str = dt_touched.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
+                                rel_time = self.get_relative_time(internal_time_touched)
+                                internal_time_touched_str = (
+                                    f"{internal_time_touched_str} | {rel_time}"
+                                )
+                            break
+                except Exception as e:
+                    logger.error(
+                        f"Error getting internal_time_touched for PFID {pfid}: {str(e)}"
+                    )
+
                 items = [
                     QTableWidgetItem(pfid),  # COL_PFID
+                    QTableWidgetItem(internal_time_touched_str),  # COL_MOD_DOWNLOADED
                     None,  # COL_LAST_UPDATED placeholder
                     QTableWidgetItem(str(entry.get("type", "unknown"))),  # COL_TYPE
                     QTableWidgetItem(mod_name),  # COL_MOD_NAME
@@ -724,13 +755,13 @@ class LogReader(QDialog):
                         combined_text = f"{abs_time} | {rel_time}"
                         time_item = QTableWidgetItem(combined_text)
                         time_item.setData(Qt.ItemDataRole.UserRole, int(timeupdated))
-                        items[self.COL_LAST_UPDATED] = time_item
+                        items[self.COL_UPDATED_ON_WORKSHOP] = time_item
                     except (ValueError, TypeError):
-                        items[self.COL_LAST_UPDATED] = QTableWidgetItem(
+                        items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem(
                             "Invalid timestamp"
                         )
                 else:
-                    items[self.COL_LAST_UPDATED] = QTableWidgetItem("Unknown")
+                    items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem("Unknown")
 
                 # Set all items at once
                 for col, item in enumerate(items):
@@ -744,7 +775,7 @@ class LogReader(QDialog):
             self.table_widget.resizeColumnsToContents()
             # Auto sort by Last Updated column descending on load
             self.table_widget.sortItems(
-                self.COL_LAST_UPDATED, order=Qt.SortOrder.DescendingOrder
+                self.COL_MOD_DOWNLOADED, order=Qt.SortOrder.DescendingOrder
             )
         finally:
             self.table_widget.setUpdatesEnabled(True)
@@ -845,7 +876,7 @@ class LogReader(QDialog):
 class ActiveModDelegate(QStyledItemDelegate):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.log_reader: Optional["LogReader"] = cast("LogReader", parent)
+        self.acf_log_reader: Optional["AcfLogReader"] = cast("AcfLogReader", parent)
 
     def paint(
         self,
@@ -853,16 +884,18 @@ class ActiveModDelegate(QStyledItemDelegate):
         option: QStyleOptionViewItem,
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
-        log_reader = self.log_reader
-        if log_reader is None:
+        acf_log_reader = self.acf_log_reader
+        if acf_log_reader is None:
             super().paint(painter, option, index)
             return
 
-        pfid_index: QModelIndex = index.sibling(index.row(), log_reader.COL_PFID)
-        pfid_item = log_reader.table_widget.item(pfid_index.row(), pfid_index.column())
+        pfid_index: QModelIndex = index.sibling(index.row(), acf_log_reader.COL_PFID)
+        pfid_item = acf_log_reader.table_widget.item(
+            pfid_index.row(), pfid_index.column()
+        )
         pfid: Optional[str] = pfid_item.text() if pfid_item else None
 
-        if pfid and pfid in getattr(log_reader, "active_pfids", set()):
+        if pfid and pfid in getattr(acf_log_reader, "active_pfids", set()):
             painter.save()
 
             rect = option.rect  # type: ignore[attr-defined]
