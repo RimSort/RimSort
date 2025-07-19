@@ -22,3 +22,4 @@ toposort==1.10
 watchdog==6.0.0
 xmltodict==0.14.2
 packaging==25.0
+py-cpuinfo==9.0.0
