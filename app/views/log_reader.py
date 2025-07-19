@@ -51,16 +51,18 @@ class LogReader(QDialog):
         """Enumeration of table columns with descriptions."""
 
         PFID = 0
-        LAST_UPDATED = 1
-        TYPE = 2
-        MOD_NAME = 3
-        MOD_PATH = 4
+        MOD_DOWNLOADED = 1
+        LAST_UPDATED = 2
+        TYPE = 3
+        MOD_NAME = 4
+        MOD_PATH = 5
 
         @property
         def description(self) -> str:
             """Get human-readable description of the column."""
             return {
                 self.PFID: "Steam Workshop Published File ID",
+                self.MOD_DOWNLOADED: "Mod downloaded",
                 self.LAST_UPDATED: "Last update timestamp (UTC) / Relative Time",
                 self.TYPE: "Item type (workshop/local)",
                 self.MOD_NAME: "Mod name from Steam metadata",
@@ -69,6 +71,7 @@ class LogReader(QDialog):
 
     # Maintain backward compatibility with old constant names
     COL_PFID = TableColumn.PFID
+    COL_MOD_DOWNLOADED = TableColumn.MOD_DOWNLOADED
     COL_LAST_UPDATED = TableColumn.LAST_UPDATED
     COL_TYPE = TableColumn.TYPE
     COL_MOD_NAME = TableColumn.MOD_NAME
@@ -664,10 +667,11 @@ class LogReader(QDialog):
         try:
             self.table_widget.clear()
             self.table_widget.setRowCount(len(entries))
-            self.table_widget.setColumnCount(5)
+            self.table_widget.setColumnCount(6)
             self.table_widget.setHorizontalHeaderLabels(
                 [
                     self.tr("Published File ID"),
+                    self.tr("Mod downloaded"),
                     self.tr("Last Updated / Relative Time"),
                     self.tr("Type"),
                     self.tr("Mod Name"),
@@ -706,8 +710,35 @@ class LogReader(QDialog):
                     mod_name = f"Error retrieving name: {pfid}"
                     mod_path = f"Error retrieving path: {pfid}"
 
+                # Get internal_time_touched from MetadataManager by matching pfid
+                internal_time_touched_str = "Unknown"
+                try:
+                    metadata_manager = MetadataManager.instance()
+                    for metadata in metadata_manager.internal_local_metadata.values():
+                        if metadata.get("publishedfileid") == pfid:
+                            internal_time_touched = metadata.get(
+                                "internal_time_touched"
+                            )
+                            if internal_time_touched:
+                                dt_touched = datetime.fromtimestamp(
+                                    int(internal_time_touched)
+                                )
+                                internal_time_touched_str = dt_touched.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
+                                rel_time = self.get_relative_time(internal_time_touched)
+                                internal_time_touched_str = (
+                                    f"{internal_time_touched_str} | {rel_time}"
+                                )
+                            break
+                except Exception as e:
+                    logger.error(
+                        f"Error getting internal_time_touched for PFID {pfid}: {str(e)}"
+                    )
+
                 items = [
                     QTableWidgetItem(pfid),  # COL_PFID
+                    QTableWidgetItem(internal_time_touched_str),  # COL_MOD_DOWNLOADED
                     None,  # COL_LAST_UPDATED placeholder
                     QTableWidgetItem(str(entry.get("type", "unknown"))),  # COL_TYPE
                     QTableWidgetItem(mod_name),  # COL_MOD_NAME
@@ -744,7 +775,7 @@ class LogReader(QDialog):
             self.table_widget.resizeColumnsToContents()
             # Auto sort by Last Updated column descending on load
             self.table_widget.sortItems(
-                self.COL_LAST_UPDATED, order=Qt.SortOrder.DescendingOrder
+                self.COL_MOD_DOWNLOADED, order=Qt.SortOrder.DescendingOrder
             )
         finally:
             self.table_widget.setUpdatesEnabled(True)
