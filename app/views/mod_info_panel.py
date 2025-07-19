@@ -236,7 +236,11 @@ class ModInfo:
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
         # Set name value
-        self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
+        name_value = mod_info.get("name", "Not specified")
+        if isinstance(name_value, dict):
+            # Convert dict to string representation or fallback
+            name_value = str(name_value)
+        self.mod_info_name_value.setText(name_value)
         # Show essential info widgets
         for widget in self.essential_info_widgets:
             if not widget.isVisible():
