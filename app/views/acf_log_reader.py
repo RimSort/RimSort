@@ -44,7 +44,7 @@ from app.views.dialogue import (
 )
 
 
-class LogReader(QDialog):
+class AcfLogReader(QDialog):
     from enum import IntEnum
 
     class TableColumn(IntEnum):
@@ -876,7 +876,7 @@ class LogReader(QDialog):
 class ActiveModDelegate(QStyledItemDelegate):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.log_reader: Optional["LogReader"] = cast("LogReader", parent)
+        self.acf_log_reader: Optional["AcfLogReader"] = cast("AcfLogReader", parent)
 
     def paint(
         self,
@@ -884,16 +884,18 @@ class ActiveModDelegate(QStyledItemDelegate):
         option: QStyleOptionViewItem,
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
-        log_reader = self.log_reader
-        if log_reader is None:
+        acf_log_reader = self.acf_log_reader
+        if acf_log_reader is None:
             super().paint(painter, option, index)
             return
 
-        pfid_index: QModelIndex = index.sibling(index.row(), log_reader.COL_PFID)
-        pfid_item = log_reader.table_widget.item(pfid_index.row(), pfid_index.column())
+        pfid_index: QModelIndex = index.sibling(index.row(), acf_log_reader.COL_PFID)
+        pfid_item = acf_log_reader.table_widget.item(
+            pfid_index.row(), pfid_index.column()
+        )
         pfid: Optional[str] = pfid_item.text() if pfid_item else None
 
-        if pfid and pfid in getattr(log_reader, "active_pfids", set()):
+        if pfid and pfid in getattr(acf_log_reader, "active_pfids", set()):
             painter.save()
 
             rect = option.rect  # type: ignore[attr-defined]

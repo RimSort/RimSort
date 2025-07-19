@@ -36,6 +36,7 @@ from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
+from app.views.acf_log_reader import AcfLogReader
 from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
@@ -45,7 +46,6 @@ from app.views.dialogue import (
     show_warning,
 )
 from app.views.file_search_dialog import FileSearchDialog
-from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
@@ -145,18 +145,18 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.main_content_tab, self.tr("Main Content"))
 
         # Create and add the ACF Data tab
-        self.log_reader_tab = QWidget()
-        self.log_reader_layout = QVBoxLayout()
-        self.log_reader_tab.setLayout(self.log_reader_layout)
+        self.acf_log_reader_tab = QWidget()
+        self.acf_log_reader_layout = QVBoxLayout()
+        self.acf_log_reader_tab.setLayout(self.acf_log_reader_layout)
 
         # Instantiate the AcfDataWindow and add it to the tab
-        self.log_reader = LogReader(
+        self.acf_log_reader = AcfLogReader(
             settings_controller,
             active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
         )
-        self.log_reader_layout.addWidget(self.log_reader)
+        self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
-        self.tab_widget.addTab(self.log_reader_tab, self.tr("Log Reader"))
+        self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
 
         # Create and add the Search tab
         self.file_search_tab = QWidget()
