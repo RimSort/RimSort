@@ -678,12 +678,6 @@ class SettingsController(QObject):
         self.language_controller.setup_language_dialog(
             self.settings_dialog, self.settings
         )
-        self.settings_dialog.window_x_spinbox.setValue(self.settings.window_x)
-        self.settings_dialog.window_y_spinbox.setValue(self.settings.window_y)
-        self.settings_dialog.window_width_spinbox.setValue(self.settings.window_width)
-        self.settings_dialog.window_height_spinbox.setValue(self.settings.window_height)
-        self.settings_dialog.panel_width_spinbox.setValue(self.settings.panel_width)
-        self.settings_dialog.panel_height_spinbox.setValue(self.settings.panel_height)
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -891,12 +885,6 @@ class SettingsController(QObject):
         )
         self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
         self.settings.language = self.settings_dialog.language_combobox.currentData()
-        self.settings.window_x = self.settings_dialog.window_x_spinbox.value()
-        self.settings.window_y = self.settings_dialog.window_y_spinbox.value()
-        self.settings.window_width = self.settings_dialog.window_width_spinbox.value()
-        self.settings.window_height = self.settings_dialog.window_height_spinbox.value()
-        self.settings.panel_width = self.settings_dialog.panel_width_spinbox.value()
-        self.settings.panel_height = self.settings_dialog.panel_height_spinbox.value()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
@@ -972,7 +960,6 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
-        self.settings_dialog.apply_window_geometry_from_spinboxes()
         self.theme_controller.set_font(
             self.settings.font_family,
             self.settings.font_size,

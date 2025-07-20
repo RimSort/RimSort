@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.app_info import AppInfo
-from app.utils.gui_info import GUIInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -178,9 +177,6 @@ class RunnerPanel(QWidget):
 
         # Set the main layout
         self.setLayout(self.main_layout)
-
-        # Use GUIInfo to set size from settings
-        self.resize(GUIInfo().get_panel_size())
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()

@@ -80,9 +80,6 @@ class MainWindow(QMainWindow):
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
         self.__set_window_title(current_instance)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
-        print(f"Window geometry: {self.geometry()}")
 
         # Create the window layout
         app_layout = QVBoxLayout()
