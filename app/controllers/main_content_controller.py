@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 import time
 from pathlib import Path
 from typing import List, Optional, cast
@@ -19,7 +18,7 @@ from app.utils.generic import (
     extract_git_dir_name,
     extract_git_user_or_org,
 )
-from app.utils.git_utils import GitOperationConfig
+from app.utils.git_utils import GitOperationConfig, pygit2
 from app.utils.git_worker import (
     GitBatchPushResults,
     GitBatchPushWorker,
@@ -39,21 +38,6 @@ from app.views.dialogue import (
     show_internet_connection_error,
 )
 from app.views.main_content_panel import MainContent
-
-try:
-    import pygit2
-except Exception:
-    import certifi
-
-    os.environ["SSL_CERT_FILE"] = certifi.where()
-    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
-    logger.warning("Set SSL certificates using certifi")
-
-    try:
-        import pygit2
-    except Exception as e:
-        logger.error("Failed to import pygit2 after setting SSL certificates. ")
-        raise ImportError("Failed to import pygit2. ") from e
 
 
 class MainContentController(QObject):

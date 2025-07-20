@@ -1484,3 +1484,25 @@ def get_repository_latest_commit(
         error_msg = str(e)
         logger.error(f"Error getting latest commit for {repo_path}: {error_msg}")
         return False, None, error_msg
+
+
+__all__ = [
+    "git_check_updates",
+    "git_pull",
+    "git_push",
+    "git_stage_commit",
+    "git_get_status",
+    "git_get_commit_info",
+    "git_cleanup",
+    "git_stash",
+    "git_stash_list",
+    "git_stash_drop",
+    "git_has_uncommitted_changes",
+    "git_is_repository",
+    "git_get_current_branch",
+    "git_get_remote_url",
+    "git_is_clean",
+    "get_latest_commit_info",
+    "get_repository_latest_commit",
+    "pygit2",
+]
