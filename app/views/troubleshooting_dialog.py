@@ -196,7 +196,7 @@ class TroubleshootingDialog(QDialog):
 
         self.integrity_delete_mod_configs = QCheckBox(
             self.tr(
-                "Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*"
+                "Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)"
             )
         )
         self.integrity_delete_mod_configs.setObjectName("styledCheckbox")
