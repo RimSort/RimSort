@@ -276,6 +276,7 @@ def show_dialogue_conditional(
     msg_box = QMessageBox()
     msg_box.setWindowTitle(title)
     msg_box.setText(text)
+    msg_box.setObjectName("dialogue")
 
     # Set icon
     if icon == "warning":
