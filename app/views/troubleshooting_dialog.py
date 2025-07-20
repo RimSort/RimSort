@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -29,11 +30,23 @@ class TroubleshootingDialog(QDialog):
         self.setLayout(main_layout)
         self.setObjectName("TroubleshootingDialog")
 
-        self._create_game_recovery_section(main_layout)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
-        self._create_mod_configuration_section(main_layout)
+        content_widget = QWidget()
+        content_layout = QVBoxLayout()
+        content_widget.setLayout(content_layout)
+        content_widget.setObjectName("contentWidget")
 
-        self._create_steam_utilities_section(main_layout)
+        self._create_game_recovery_section(content_layout)
+        self._create_mod_configuration_section(content_layout)
+        self._create_steam_utilities_section(content_layout)
+
+        scroll_area.setWidget(content_widget)
+        main_layout.addWidget(scroll_area)
 
     def _create_section_frame(self) -> QFrame:
         """Create a styled section frame"""
@@ -83,7 +96,9 @@ class TroubleshootingDialog(QDialog):
 
         return button, layout
 
-    def _setup_section_base(self, parent_layout: QVBoxLayout, title: str) -> tuple[QFrame, QVBoxLayout, QWidget, QVBoxLayout]:
+    def _setup_section_base(
+        self, parent_layout: QVBoxLayout, title: str
+    ) -> tuple[QFrame, QVBoxLayout, QWidget, QVBoxLayout]:
         """Set up the common base structure for all sections to eliminate duplication"""
         section_frame = self._create_section_frame()
         parent_layout.addWidget(section_frame)
@@ -111,8 +126,8 @@ class TroubleshootingDialog(QDialog):
 
     def _create_game_recovery_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the game files recovery section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Game Files Recovery")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(parent_layout, self.tr("Game Files Recovery"))
         )
 
         # Description
@@ -239,8 +254,10 @@ class TroubleshootingDialog(QDialog):
 
     def _create_mod_configuration_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the mod configuration section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Mod Configuration Options")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(
+                parent_layout, self.tr("Mod Configuration Options")
+            )
         )
 
         # Set specific spacing for this section
@@ -353,8 +370,8 @@ class TroubleshootingDialog(QDialog):
 
     def _create_steam_utilities_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the Steam utilities section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Steam Utilities")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(parent_layout, self.tr("Steam Utilities"))
         )
 
         # Description
@@ -390,10 +407,12 @@ class TroubleshootingDialog(QDialog):
         utilities_layout.addLayout(verify_layout)
         utilities_layout.addStretch()
 
-        self.steam_repair_library_button, repair_layout = self._create_button_with_layout(
-            self.tr("Repair Steam Library"),
-            self.tr("Verify integrity of all installed Steam games"),
-            "primaryButton",
+        self.steam_repair_library_button, repair_layout = (
+            self._create_button_with_layout(
+                self.tr("Repair Steam Library"),
+                self.tr("Verify integrity of all installed Steam games"),
+                "primaryButton",
+            )
         )
         utilities_layout.addLayout(repair_layout)
         utilities_layout.addStretch()
