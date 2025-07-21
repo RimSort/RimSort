@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.settings import Settings
 from app.utils.gui_info import GUIInfo
 
 
@@ -77,6 +78,7 @@ class SettingsDialog(QDialog):
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_themes_tab()
+        self._do_launch_state_tab()
         self._do_authentication_tab()
         self._do_advanced_tab()
 
@@ -901,6 +903,94 @@ class SettingsDialog(QDialog):
         language_group_layout.addWidget(self.language_combobox)
 
         self.connect_populate_languages_combobox()
+
+    def _do_launch_state_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Launch State"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        # Windows launch state group
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        user_note = QLabel(self.tr("RimSort restart required for some settings"))
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
+        size_note = QLabel(
+            self.tr(
+                f"Min is {Settings.MIN_SIZE} and Max is {Settings.MAX_SIZE}. Values outside this range will be reset to defaults."
+            )
+        )
+        size_note.setFont(GUIInfo().emphasis_font)
+        size_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(size_note)
+
+        # Main Window
+        main_window_group = QGroupBox()
+        group_layout.addWidget(main_window_group)
+
+        main_window_group_layout = QVBoxLayout()
+        main_window_group.setLayout(main_window_group_layout)
+
+        main_launch_state_group = QGroupBox(self.tr("Main Window Launch State"))
+        main_launch_state_layout = QVBoxLayout()
+        main_launch_state_group.setLayout(main_launch_state_layout)
+
+        main_window_group_layout.addWidget(main_launch_state_group)
+
+        self.main_launch_maximized_radio = QRadioButton(self.tr("Maximized"))
+        main_launch_state_layout.addWidget(self.main_launch_maximized_radio)
+
+        self.main_launch_normal_radio = QRadioButton(self.tr("Normal"))
+        main_launch_state_layout.addWidget(self.main_launch_normal_radio)
+
+        main_custom_layout = QHBoxLayout()
+        self.main_launch_custom_radio = QRadioButton(self.tr("Custom size"))
+        main_custom_layout.addWidget(self.main_launch_custom_radio)
+
+        self.main_custom_width_spinbox = QSpinBox()
+        self.main_custom_width_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
+        self.main_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
+        self.main_custom_width_spinbox.setSuffix(" px")
+        self.main_custom_width_spinbox.setFixedWidth(100)
+        main_custom_layout.addWidget(self.main_custom_width_spinbox)
+
+        self.main_custom_height_spinbox = QSpinBox()
+        self.main_custom_height_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
+        self.main_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
+        self.main_custom_height_spinbox.setSuffix(" px")
+        self.main_custom_height_spinbox.setFixedWidth(100)
+        main_custom_layout.addWidget(self.main_custom_height_spinbox)
+
+        main_launch_state_layout.addLayout(main_custom_layout)
+
+        # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
+        self.main_launch_maximized_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_normal_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_custom_radio.toggled.connect(
+            self.enable_main_custom_size_spinboxes
+        )
+
+    def disable_main_custom_size_spinboxes(self) -> None:
+        """Disable main window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
+        self.main_custom_width_spinbox.setEnabled(False)
+        self.main_custom_height_spinbox.setEnabled(False)
+
+    def enable_main_custom_size_spinboxes(self) -> None:
+        """Enable main window custom size spinboxes when 'Custom size' radio button is checked"""
+        self.main_custom_width_spinbox.setEnabled(True)
+        self.main_custom_height_spinbox.setEnabled(True)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()

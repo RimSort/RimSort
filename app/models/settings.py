@@ -19,6 +19,20 @@ from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
+    MIN_SIZE = 400
+    MAX_SIZE = 1600
+    DEFAULT_WIDTH = 800
+    DEFAULT_HEIGHT = 600
+
+    @staticmethod
+    def validate_window_custom_size(width: int, height: int) -> tuple[int, int]:
+        """Validate custom width and height, resetting to defaults if out of range."""
+        if not (Settings.MIN_SIZE <= width <= Settings.MAX_SIZE):
+            width = Settings.DEFAULT_WIDTH
+        if not (Settings.MIN_SIZE <= height <= Settings.MAX_SIZE):
+            height = Settings.DEFAULT_HEIGHT
+        return width, height
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -97,6 +111,12 @@ class Settings(QObject):
 
         # Language
         self.language = "en_US"
+
+        # Launch state setting: "maximized", "normal", or "custom"
+        # Main Window
+        self.main_window_launch_state: str = "maximized"
+        self.main_window_custom_width: int = 800
+        self.main_window_custom_height: int = 600
 
         # Advanced
         self.debug_logging_enabled: bool = False
