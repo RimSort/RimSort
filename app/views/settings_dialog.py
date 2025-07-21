@@ -982,6 +982,58 @@ class SettingsDialog(QDialog):
             self.enable_main_custom_size_spinboxes
         )
 
+        # Browser Window
+        browser_window_group = QGroupBox()
+        group_layout.addWidget(browser_window_group)
+
+        browser_window_group_layout = QVBoxLayout()
+        browser_window_group.setLayout(browser_window_group_layout)
+
+        browser_launch_state_group = QGroupBox(self.tr("Browser Window Launch State"))
+        browser_launch_state_layout = QVBoxLayout()
+        browser_launch_state_group.setLayout(browser_launch_state_layout)
+
+        browser_window_group_layout.addWidget(browser_launch_state_group)
+
+        self.browser_launch_maximized_radio = QRadioButton(self.tr("Maximized"))
+        browser_launch_state_layout.addWidget(self.browser_launch_maximized_radio)
+
+        self.browser_launch_normal_radio = QRadioButton(self.tr("Normal"))
+        browser_launch_state_layout.addWidget(self.browser_launch_normal_radio)
+
+        browser_custom_layout = QHBoxLayout()
+        self.browser_launch_custom_radio = QRadioButton(self.tr("Custom size"))
+        browser_custom_layout.addWidget(self.browser_launch_custom_radio)
+
+        self.browser_custom_width_spinbox = QSpinBox()
+        self.browser_custom_width_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
+        self.browser_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
+        self.browser_custom_width_spinbox.setSuffix(" px")
+        self.browser_custom_width_spinbox.setFixedWidth(100)
+        browser_custom_layout.addWidget(self.browser_custom_width_spinbox)
+
+        self.browser_custom_height_spinbox = QSpinBox()
+        self.browser_custom_height_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
+        self.browser_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
+        self.browser_custom_height_spinbox.setSuffix(" px")
+        self.browser_custom_height_spinbox.setFixedWidth(100)
+        browser_custom_layout.addWidget(self.browser_custom_height_spinbox)
+
+        browser_launch_state_layout.addLayout(browser_custom_layout)
+
+        # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
+        self.browser_launch_maximized_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_normal_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_custom_radio.toggled.connect(
+            self.enable_browser_custom_size_spinboxes
+        )
+
     def disable_main_custom_size_spinboxes(self) -> None:
         """Disable main window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
         self.main_custom_width_spinbox.setEnabled(False)
@@ -991,6 +1043,16 @@ class SettingsDialog(QDialog):
         """Enable main window custom size spinboxes when 'Custom size' radio button is checked"""
         self.main_custom_width_spinbox.setEnabled(True)
         self.main_custom_height_spinbox.setEnabled(True)
+
+    def disable_browser_custom_size_spinboxes(self) -> None:
+        """Disable browser window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
+        self.browser_custom_width_spinbox.setEnabled(False)
+        self.browser_custom_height_spinbox.setEnabled(False)
+
+    def enable_browser_custom_size_spinboxes(self) -> None:
+        """Enable browser window custom size spinboxes when 'Custom size' radio button is checked"""
+        self.browser_custom_width_spinbox.setEnabled(True)
+        self.browser_custom_height_spinbox.setEnabled(True)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()

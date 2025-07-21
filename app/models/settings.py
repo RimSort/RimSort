@@ -118,6 +118,11 @@ class Settings(QObject):
         self.main_window_custom_width: int = 800
         self.main_window_custom_height: int = 600
 
+        # Browser Window
+        self.browser_window_launch_state: str = "maximized"
+        self.browser_window_custom_width: int = 800
+        self.browser_window_custom_height: int = 600
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True

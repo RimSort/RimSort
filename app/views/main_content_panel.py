@@ -2237,7 +2237,9 @@ class MainContent(QObject):
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/", self.metadata_manager
+            "https://steamcommunity.com/app/294100/workshop/",
+            self.metadata_manager,
+            self.settings_controller,
         )
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd

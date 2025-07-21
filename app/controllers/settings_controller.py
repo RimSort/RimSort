@@ -93,6 +93,16 @@ class SettingsController(QObject):
         self.settings_dialog.main_launch_custom_radio.toggled.connect(
             self.settings_dialog.enable_main_custom_size_spinboxes
         )
+        # Browser Window
+        self.settings_dialog.browser_launch_maximized_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_normal_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_custom_radio.toggled.connect(
+            self.settings_dialog.enable_browser_custom_size_spinboxes
+        )
 
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
@@ -715,6 +725,29 @@ class SettingsController(QObject):
             self.settings_dialog.main_custom_height_spinbox.setValue(height)
         else:
             self.settings_dialog.main_launch_maximized_radio.setChecked(True)
+        # Browser Window
+        browser_window_launch_state = self.settings.browser_window_launch_state
+        if browser_window_launch_state == "maximized":
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        if browser_window_launch_state == "normal":
+            self.settings_dialog.browser_launch_normal_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        elif browser_window_launch_state == "custom":
+            self.settings_dialog.browser_launch_custom_radio.setChecked(True)
+            self.settings_dialog.enable_browser_custom_size_spinboxes()
+            # Validate custom width and height before setting
+            min_size, max_size = 400, 1600
+            width = self.settings.browser_window_custom_width
+            height = self.settings.browser_window_custom_height
+            if not (min_size <= width <= max_size):
+                width = 800
+            if not (min_size <= height <= max_size):
+                height = 600
+            self.settings_dialog.browser_custom_width_spinbox.setValue(width)
+            self.settings_dialog.browser_custom_height_spinbox.setValue(height)
+        else:
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -939,6 +972,21 @@ class SettingsController(QObject):
             )
         else:
             self.settings.main_window_launch_state = "maximized"
+        # Browser Window
+        if self.settings_dialog.browser_launch_maximized_radio.isChecked():
+            self.settings.browser_window_launch_state = "maximized"
+        elif self.settings_dialog.browser_launch_normal_radio.isChecked():
+            self.settings.browser_window_launch_state = "normal"
+        elif self.settings_dialog.browser_launch_custom_radio.isChecked():
+            self.settings.browser_window_launch_state = "custom"
+            self.settings.browser_window_custom_width = (
+                self.settings_dialog.browser_custom_width_spinbox.value()
+            )
+            self.settings.browser_window_custom_height = (
+                self.settings_dialog.browser_custom_height_spinbox.value()
+            )
+        else:
+            self.settings.browser_window_launch_state = "maximized"
 
         # Advanced tab
         self.settings.debug_logging_enabled = (

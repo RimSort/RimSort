@@ -29,7 +29,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
@@ -56,12 +58,18 @@ class SteamBrowser(QWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, startpage: str, metadata_manager: MetadataManager):
+    def __init__(
+        self,
+        startpage: str,
+        metadata_manager: MetadataManager,
+        settongs_controller: SettingsController,
+    ):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
 
         # store metadata manager reference so we can use it to check if mods are installed
         self.metadata_manager = metadata_manager
+        self.settings_controller = settongs_controller
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -213,8 +221,39 @@ class SteamBrowser(QWidget):
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
 
-        # Set the window to maximized state
-        self.showMaximized()
+        # launch the browser window
+        self._launch_browser_window()
+        logger.debug("Finished Browser Window initialization")
+
+    def _launch_browser_window(self) -> None:
+        """Apply browser window launch state from settings"""
+        browser_window_launch_state = (
+            self.settings_controller.settings.browser_window_launch_state
+        )
+        if browser_window_launch_state == "maximized":
+            self.showMaximized()
+        elif browser_window_launch_state == "normal":
+            self.showNormal()
+        elif browser_window_launch_state == "custom":
+            custom_width = self.settings_controller.settings.browser_window_custom_width
+            custom_height = (
+                self.settings_controller.settings.browser_window_custom_height
+            )
+
+            # Validate custom size values
+            custom_width, custom_height = Settings.validate_window_custom_size(
+                custom_width, custom_height
+            )
+            self.resize(custom_width, custom_height)
+            self.show()
+        else:
+            logger.warning(
+                f"Unknown browser window launch state: {browser_window_launch_state}"
+            )
+            pass
+        logger.info(
+            f"Browser window started with launch state: {browser_window_launch_state}"
+        )
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
