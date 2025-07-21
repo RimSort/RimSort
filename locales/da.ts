@@ -287,130 +287,138 @@
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="810"/>
         <source>Preparing search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Forbereder søgning...</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="818"/>
         <source>Starting new search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Påbegynder ny søgning...</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="887"/>
         <source>Active Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl i de aktive mods</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="888"/>
         <source>No active mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Fandt ingen aktive mods</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="899"/>
         <source>Inactive Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl i de inaktive mods</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="900"/>
         <source>No inactive mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Fandt ingen inaktive mods</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1082"/>
         <source>Stopping search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Stopper søgning...</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1091"/>
         <source>Search stopped by user</source>
-        <translation type="unfinished"></translation>
+        <translation>Søgningen blev stoppet af brugeren</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1125"/>
         <source>Regular Expression Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl i regulærudtrykket</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1128"/>
         <source>There was an error with your regular expression pattern.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der var en fejl i det regulære udtryk.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1131"/>
         <source>{error_msg}
 
 Try simplifying your pattern or check for syntax errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Prøv at forenkle søgemønsteret, eller tjek for syntaksfejl.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1135"/>
         <source>File Access Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl ved filadgang</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1136"/>
         <source>RimSort doesn&apos;t have permission to access some files.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort har ikke tilladelse til at tilgå visse filer.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1139"/>
         <source>{error_msg}
 
 Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Tjek mappetilladelser, eller prøv at starte RimSort med administratortilladelse.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1143"/>
         <source>Memory Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl ved hukommelse</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1144"/>
         <source>RimSort ran out of memory while searching.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort løb tør for arbejdshukommelse under søgningen.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1147"/>
         <source>{error_msg}
 
 Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Prøv at søge i mindre grupper, en af gangen, eller benyt &quot;streamsøgningsmetoden&quot; til meget store filer.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1151"/>
         <source>Search Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl ved søgning</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1152"/>
         <source>An error occurred during the search.</source>
-        <translation type="unfinished"></translation>
+        <translation>En fejl opstod under søgningen.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1155"/>
         <source>{error_msg}
 
 Please check your settings and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Tjek venligst dine indstillinger, og prøv igen.</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1160"/>
         <source>Search failed: {error_msg[:100]}...</source>
-        <translation type="unfinished"></translation>
+        <translation>Søgningen misykkedes {error_msg[:100]}...</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1210"/>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
-        <translation type="unfinished"></translation>
+        <translation>Filter: {visible_rows} af {rowCount} resultater er synlige</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1226"/>
         <source>Location Not Set</source>
-        <translation type="unfinished"></translation>
+        <translation>Placering ikke indstillet</translation>
     </message>
     <message>
         <location filename="../app/controllers/file_search_controller.py" line="1229"/>
         <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ingen gyldig søgelokation er mulig inden for virkefeltet. Indstil venligst dine spilmapper i indstillingerne.</translation>
     </message>
 </context>
 <context>
