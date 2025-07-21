@@ -56,7 +56,7 @@ set "current_folder_name=%current_folder_name: =0%"
 set "backup_folder_name=%current_folder_name%_Backup"
 
 REM Use WMIC to get system-local datetime in a consistent format
-for /f %%a in ('wmic os get localdatetime ^| find "."') do set dt=%%a
+for /f %%a in ('PowerShell.exe -Version 5.1 -NoProfile -ExecutionPolicy Bypass -Command  "Write-Output 'LocalDateTime'; (Get-WmiObject Win32_OperatingSystem).LocalDateTime; Write-Output ''" ^| find "."') do set dt=%%a
 set "year=%dt:~0,4%"
 set "month=%dt:~4,2%"
 set "day=%dt:~6,2%"
