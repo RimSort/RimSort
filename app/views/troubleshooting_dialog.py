@@ -195,9 +195,7 @@ class TroubleshootingDialog(QDialog):
         checkbox_items_layout.addWidget(self.integrity_delete_steam_mods)
 
         self.integrity_delete_mod_configs = QCheckBox(
-            self.tr(
-                "Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)"
-            )
+            self.tr("Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)")
         )
         self.integrity_delete_mod_configs.setObjectName("styledCheckbox")
         self.integrity_delete_mod_configs.setToolTip(
