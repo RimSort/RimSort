@@ -30,7 +30,6 @@ from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
-from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -232,28 +231,17 @@ class MainWindow(QMainWindow):
 
     def _launch_main_window(self) -> None:
         """Apply main window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
         main_window_launch_state = (
             self.settings_controller.settings.main_window_launch_state
         )
-        if main_window_launch_state == "maximized":
-            self.showMaximized()
-        elif main_window_launch_state == "normal":
-            self.showNormal()
-        elif main_window_launch_state == "custom":
-            custom_width = self.settings_controller.settings.main_window_custom_width
-            custom_height = self.settings_controller.settings.main_window_custom_height
+        custom_width = self.settings_controller.settings.main_window_custom_width
+        custom_height = self.settings_controller.settings.main_window_custom_height
 
-            # Validate custom size values
-            custom_width, custom_height = Settings.validate_window_custom_size(
-                custom_width, custom_height
-            )
-            self.resize(custom_width, custom_height)
-            self.show()
-        else:
-            logger.warning(
-                f"Unknown main window launch state: {main_window_launch_state}"
-            )
-            pass
+        apply_window_launch_state(
+            self, main_window_launch_state, custom_width, custom_height
+        )
         logger.info(
             f"Main window started with launch state: {main_window_launch_state}"
         )

@@ -933,43 +933,24 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(size_note)
 
         # Main Window
-        main_window_group = QGroupBox()
+        (
+            main_window_group,
+            self.main_launch_maximized_radio,
+            self.main_launch_normal_radio,
+            self.main_launch_custom_radio,
+            self.main_custom_width_spinbox,
+            self.main_custom_height_spinbox,
+        ) = create_launch_state_group(
+            self.tr("Main Window Launch State"),
+            self.tr("Maximized"),
+            self.tr("Normal"),
+            self.tr("Custom size"),
+            Settings.MIN_SIZE,
+            Settings.MAX_SIZE,
+            Settings.DEFAULT_WIDTH,
+            Settings.DEFAULT_HEIGHT,
+        )
         group_layout.addWidget(main_window_group)
-
-        main_window_group_layout = QVBoxLayout()
-        main_window_group.setLayout(main_window_group_layout)
-
-        main_launch_state_group = QGroupBox(self.tr("Main Window Launch State"))
-        main_launch_state_layout = QVBoxLayout()
-        main_launch_state_group.setLayout(main_launch_state_layout)
-
-        main_window_group_layout.addWidget(main_launch_state_group)
-
-        self.main_launch_maximized_radio = QRadioButton(self.tr("Maximized"))
-        main_launch_state_layout.addWidget(self.main_launch_maximized_radio)
-
-        self.main_launch_normal_radio = QRadioButton(self.tr("Normal"))
-        main_launch_state_layout.addWidget(self.main_launch_normal_radio)
-
-        main_custom_layout = QHBoxLayout()
-        self.main_launch_custom_radio = QRadioButton(self.tr("Custom size"))
-        main_custom_layout.addWidget(self.main_launch_custom_radio)
-
-        self.main_custom_width_spinbox = QSpinBox()
-        self.main_custom_width_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
-        self.main_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
-        self.main_custom_width_spinbox.setSuffix(" px")
-        self.main_custom_width_spinbox.setFixedWidth(100)
-        main_custom_layout.addWidget(self.main_custom_width_spinbox)
-
-        self.main_custom_height_spinbox = QSpinBox()
-        self.main_custom_height_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
-        self.main_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
-        self.main_custom_height_spinbox.setSuffix(" px")
-        self.main_custom_height_spinbox.setFixedWidth(100)
-        main_custom_layout.addWidget(self.main_custom_height_spinbox)
-
-        main_launch_state_layout.addLayout(main_custom_layout)
 
         # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
         self.main_launch_maximized_radio.toggled.connect(
@@ -983,45 +964,24 @@ class SettingsDialog(QDialog):
         )
 
         # Browser Window
-        browser_window_group = QGroupBox()
-        group_layout.addWidget(browser_window_group)
-
-        browser_window_group_layout = QVBoxLayout()
-        browser_window_group.setLayout(browser_window_group_layout)
-
-        browser_launch_state_group = QGroupBox(self.tr("Browser Window Launch State"))
-        browser_launch_state_layout = QVBoxLayout()
-        browser_launch_state_group.setLayout(browser_launch_state_layout)
-
-        browser_window_group_layout.addWidget(browser_launch_state_group)
-
-        self.browser_launch_maximized_radio = QRadioButton(self.tr("Maximized"))
-        browser_launch_state_layout.addWidget(self.browser_launch_maximized_radio)
-
-        self.browser_launch_normal_radio = QRadioButton(self.tr("Normal"))
-        browser_launch_state_layout.addWidget(self.browser_launch_normal_radio)
-
-        browser_custom_layout = QHBoxLayout()
-        self.browser_launch_custom_radio = QRadioButton(self.tr("Custom size"))
-        browser_custom_layout.addWidget(self.browser_launch_custom_radio)
-
-        self.browser_custom_width_spinbox = QSpinBox()
-        self.browser_custom_width_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
-        self.browser_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
-        self.browser_custom_width_spinbox.setSuffix(" px")
-        self.browser_custom_width_spinbox.setFixedWidth(100)
-        browser_custom_layout.addWidget(self.browser_custom_width_spinbox)
-
-        self.browser_custom_height_spinbox = QSpinBox()
-        self.browser_custom_height_spinbox.setRange(
-            Settings.MIN_SIZE, Settings.MAX_SIZE
+        (
+            browser_window_group,
+            self.browser_launch_maximized_radio,
+            self.browser_launch_normal_radio,
+            self.browser_launch_custom_radio,
+            self.browser_custom_width_spinbox,
+            self.browser_custom_height_spinbox,
+        ) = create_launch_state_group(
+            self.tr("Browser Window Launch State"),
+            self.tr("Maximized"),
+            self.tr("Normal"),
+            self.tr("Custom size"),
+            Settings.MIN_SIZE,
+            Settings.MAX_SIZE,
+            Settings.DEFAULT_WIDTH,
+            Settings.DEFAULT_HEIGHT,
         )
-        self.browser_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
-        self.browser_custom_height_spinbox.setSuffix(" px")
-        self.browser_custom_height_spinbox.setFixedWidth(100)
-        browser_custom_layout.addWidget(self.browser_custom_height_spinbox)
-
-        browser_launch_state_layout.addLayout(browser_custom_layout)
+        group_layout.addWidget(browser_window_group)
 
         # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
         self.browser_launch_maximized_radio.toggled.connect(
@@ -1262,3 +1222,60 @@ class SettingsDialog(QDialog):
         """Using arg__1 instead of event to avoid name conflict"""
         super().showEvent(arg__1)
         self.global_ok_button.setFocus()
+
+
+def create_launch_state_group(
+    title: str,
+    minimized_text: str,
+    normal_text: str,
+    custom_text: str,
+    min_size: int,
+    max_size: int,
+    default_width: int,
+    default_height: int,
+) -> tuple[
+    QGroupBox,
+    QRadioButton,
+    QRadioButton,
+    QRadioButton,
+    QSpinBox,
+    QSpinBox,
+]:
+    group_box = QGroupBox(title)
+    layout = QVBoxLayout()
+    group_box.setLayout(layout)
+
+    maximized_radio = QRadioButton(minimized_text)
+    layout.addWidget(maximized_radio)
+
+    normal_radio = QRadioButton(normal_text)
+    layout.addWidget(normal_radio)
+
+    custom_layout = QHBoxLayout()
+    custom_radio = QRadioButton(custom_text)
+    custom_layout.addWidget(custom_radio)
+
+    custom_width_spinbox = QSpinBox()
+    custom_width_spinbox.setRange(min_size, max_size)
+    custom_width_spinbox.setValue(default_width)
+    custom_width_spinbox.setSuffix(" px")
+    custom_width_spinbox.setFixedWidth(100)
+    custom_layout.addWidget(custom_width_spinbox)
+
+    custom_height_spinbox = QSpinBox()
+    custom_height_spinbox.setRange(min_size, max_size)
+    custom_height_spinbox.setValue(default_height)
+    custom_height_spinbox.setSuffix(" px")
+    custom_height_spinbox.setFixedWidth(100)
+    custom_layout.addWidget(custom_height_spinbox)
+
+    layout.addLayout(custom_layout)
+
+    return (
+        group_box,
+        maximized_radio,
+        normal_radio,
+        custom_radio,
+        custom_width_spinbox,
+        custom_height_spinbox,
+    )

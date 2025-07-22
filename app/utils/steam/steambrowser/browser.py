@@ -31,7 +31,6 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
-from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
@@ -227,30 +226,17 @@ class SteamBrowser(QWidget):
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
         browser_window_launch_state = (
             self.settings_controller.settings.browser_window_launch_state
         )
-        if browser_window_launch_state == "maximized":
-            self.showMaximized()
-        elif browser_window_launch_state == "normal":
-            self.showNormal()
-        elif browser_window_launch_state == "custom":
-            custom_width = self.settings_controller.settings.browser_window_custom_width
-            custom_height = (
-                self.settings_controller.settings.browser_window_custom_height
-            )
+        custom_width = self.settings_controller.settings.browser_window_custom_width
+        custom_height = self.settings_controller.settings.browser_window_custom_height
 
-            # Validate custom size values
-            custom_width, custom_height = Settings.validate_window_custom_size(
-                custom_width, custom_height
-            )
-            self.resize(custom_width, custom_height)
-            self.show()
-        else:
-            logger.warning(
-                f"Unknown browser window launch state: {browser_window_launch_state}"
-            )
-            pass
+        apply_window_launch_state(
+            self, browser_window_launch_state, custom_width, custom_height
+        )
         logger.info(
             f"Browser window started with launch state: {browser_window_launch_state}"
         )
