@@ -104,6 +104,10 @@ class SettingsController(QObject):
             self.settings_dialog.enable_browser_custom_size_spinboxes
         )
 
+        # Settings Window (only custom option, spinboxes always enabled)
+        self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
+        self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
+
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
             self._on_game_location_text_changed
@@ -348,6 +352,10 @@ class SettingsController(QObject):
         Update the view from the model and show the settings dialog.
         """
         self._update_view_from_model()
+        # Apply custom size for settings window
+        custom_width = self.settings.settings_window_custom_width
+        custom_height = self.settings.settings_window_custom_height
+        self.settings_dialog.resize(custom_width, custom_height)
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
@@ -749,6 +757,14 @@ class SettingsController(QObject):
         else:
             self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
 
+        # Settings Window (only custom option)
+        self.settings_dialog.settings_custom_width_spinbox.setValue(
+            self.settings.settings_window_custom_width
+        )
+        self.settings_dialog.settings_custom_height_spinbox.setValue(
+            self.settings.settings_window_custom_height
+        )
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -987,6 +1003,14 @@ class SettingsController(QObject):
             )
         else:
             self.settings.browser_window_launch_state = "maximized"
+
+        # Settings Window (only custom option)
+        self.settings.settings_window_custom_width = (
+            self.settings_dialog.settings_custom_width_spinbox.value()
+        )
+        self.settings.settings_window_custom_height = (
+            self.settings_dialog.settings_custom_height_spinbox.value()
+        )
 
         # Advanced tab
         self.settings.debug_logging_enabled = (

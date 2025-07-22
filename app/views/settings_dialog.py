@@ -994,6 +994,33 @@ class SettingsDialog(QDialog):
             self.enable_browser_custom_size_spinboxes
         )
 
+        # Settings Window (only custom option)
+        settings_window_group = QGroupBox(self.tr("Settings Window Launch State"))
+        settings_window_layout = QHBoxLayout()
+        settings_window_group.setLayout(settings_window_layout)
+
+        self.settings_custom_width_spinbox = QSpinBox()
+        self.settings_custom_width_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
+        self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
+        self.settings_custom_width_spinbox.setSuffix(" px")
+        self.settings_custom_width_spinbox.setFixedWidth(100)
+        settings_window_layout.addWidget(QLabel(self.tr("Custom Width:")))
+        settings_window_layout.addWidget(self.settings_custom_width_spinbox)
+
+        self.settings_custom_height_spinbox = QSpinBox()
+        self.settings_custom_height_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
+        self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
+        self.settings_custom_height_spinbox.setSuffix(" px")
+        self.settings_custom_height_spinbox.setFixedWidth(100)
+        settings_window_layout.addWidget(QLabel(self.tr("Custom Height:")))
+        settings_window_layout.addWidget(self.settings_custom_height_spinbox)
+
+        group_layout.addWidget(settings_window_group)
+
     def disable_main_custom_size_spinboxes(self) -> None:
         """Disable main window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
         self.main_custom_width_spinbox.setEnabled(False)
