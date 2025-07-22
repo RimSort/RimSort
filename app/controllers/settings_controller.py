@@ -726,7 +726,7 @@ class SettingsController(QObject):
             width = self.settings.main_window_custom_width
             height = self.settings.main_window_custom_height
             if not (min_size <= width <= max_size):
-                width = 800
+                width = 900
             if not (min_size <= height <= max_size):
                 height = 600
             self.settings_dialog.main_custom_width_spinbox.setValue(width)
@@ -749,7 +749,7 @@ class SettingsController(QObject):
             width = self.settings.browser_window_custom_width
             height = self.settings.browser_window_custom_height
             if not (min_size <= width <= max_size):
-                width = 800
+                width = 900
             if not (min_size <= height <= max_size):
                 height = 600
             self.settings_dialog.browser_custom_width_spinbox.setValue(width)

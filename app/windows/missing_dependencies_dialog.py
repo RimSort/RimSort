@@ -76,6 +76,9 @@ class MissingDependenciesDialog(QDialog):
 
         main_layout.addLayout(button_layout)
 
+        # Set the window size
+        self.resize(900, 600)
+
     def show_dialog(self, missing_deps: dict[str, set[str]]) -> set[str]:
         """
         Show the dialog with missing dependencies and return selected mods.

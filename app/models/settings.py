@@ -21,7 +21,7 @@ from app.utils.generic import handle_remove_read_only
 class Settings(QObject):
     MIN_SIZE = 400
     MAX_SIZE = 1600
-    DEFAULT_WIDTH = 800
+    DEFAULT_WIDTH = 900
     DEFAULT_HEIGHT = 600
 
     @staticmethod
@@ -115,17 +115,17 @@ class Settings(QObject):
         # Launch state setting: "maximized", "normal", or "custom"
         # Main Window
         self.main_window_launch_state: str = "maximized"
-        self.main_window_custom_width: int = 800
+        self.main_window_custom_width: int = 900
         self.main_window_custom_height: int = 600
 
         # Browser Window
         self.browser_window_launch_state: str = "maximized"
-        self.browser_window_custom_width: int = 800
+        self.browser_window_custom_width: int = 900
         self.browser_window_custom_height: int = 600
 
         # Settings Window
         self.settings_window_launch_state: str = "custom"
-        self.settings_window_custom_width: int = 800
+        self.settings_window_custom_width: int = 900
         self.settings_window_custom_height: int = 600
 
         # Advanced

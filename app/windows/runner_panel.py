@@ -80,6 +80,9 @@ class RunnerPanel(QWidget):
         # Clear the display
         self._do_clear_runner()
 
+        # Set the window size
+        self.resize(900, 600)
+
     def _setup_text_display(self) -> None:
         """Set up the text display area."""
         self.text = QPlainTextEdit()

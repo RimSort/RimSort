@@ -149,6 +149,9 @@ class BaseModsPanel(QWidget):
         self.setWindowTitle(window_title)
         self.setLayout(layout)
 
+        # Set the window size
+        self.resize(900, 600)
+        
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
             self.close()
