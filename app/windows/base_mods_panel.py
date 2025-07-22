@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.event_bus import EventBus
-from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 
 # By default, we assume Stretch for all columns.
@@ -150,9 +149,9 @@ class BaseModsPanel(QWidget):
         self.setWindowTitle(window_title)
         self.setLayout(layout)
 
-        # Use GUIInfo to set size from settings
-        self.resize(GUIInfo().get_panel_size())
-
+        # Set the window size
+        self.resize(900, 600)
+        
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
             self.close()

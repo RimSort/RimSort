@@ -80,9 +80,6 @@ class MainWindow(QMainWindow):
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
         self.__set_window_title(current_instance)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
-        print(f"Window geometry: {self.geometry()}")
 
         # Create the window layout
         app_layout = QVBoxLayout()
@@ -227,7 +224,27 @@ class MainWindow(QMainWindow):
         EventBus().do_restore_instance_from_archive.connect(
             self.__restore_instance_from_archive
         )
+
+        # launch the main window
+        self._launch_main_window()
         logger.debug("Finished MainWindow initialization")
+
+    def _launch_main_window(self) -> None:
+        """Apply main window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
+        main_window_launch_state = (
+            self.settings_controller.settings.main_window_launch_state
+        )
+        custom_width = self.settings_controller.settings.main_window_custom_width
+        custom_height = self.settings_controller.settings.main_window_custom_height
+
+        apply_window_launch_state(
+            self, main_window_launch_state, custom_width, custom_height
+        )
+        logger.info(
+            f"Main window started with launch state: {main_window_launch_state}"
+        )
 
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
