@@ -37,7 +37,7 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from app.views.dialogue import show_warning
+from app.views.dialogue import show_dialogue_conditional, show_warning
 
 from .js_bridge import JavaScriptBridge
 
@@ -257,8 +257,6 @@ class SteamBrowser(QWidget):
                 )
             if len(collection_mods_pfid_to_title) > 0:
                 # ask user whether to add all mods or only missing ones
-                from app.views.dialogue import show_dialogue_conditional
-
                 answer = show_dialogue_conditional(
                     title=self.tr("Add Collection"),
                     text=self.tr("How would you like to add the collection?"),

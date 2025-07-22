@@ -3,7 +3,7 @@ from pathlib import Path
 from re import match
 
 from loguru import logger
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
@@ -199,8 +199,6 @@ class ModInfo:
 
     @staticmethod
     def tr(text: str) -> str:
-        from PySide6.QtCore import QCoreApplication
-
         return QCoreApplication.translate("ModInfo", text)
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
