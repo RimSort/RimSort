@@ -22,6 +22,7 @@ Usage:
 import argparse
 import importlib
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -397,8 +398,6 @@ def auto_translate_file(
 
     # Create a backup copy
     backup_file = ts_file.with_suffix(".ts.backup")
-    import shutil
-
     shutil.copy2(ts_file, backup_file)
     print(f"📁 Backup created: {backup_file}")
 

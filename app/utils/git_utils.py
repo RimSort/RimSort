@@ -1,5 +1,6 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import datetime
 import os
 import threading
 from contextlib import contextmanager
@@ -1457,8 +1458,6 @@ def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
                 short_hash = str(commit.id)[:7]
                 message = commit.message.split("\n")[0]
                 author = commit.author.name
-                import datetime
-
                 commit_time = datetime.datetime.fromtimestamp(commit.commit_time)
                 time_str = commit_time.strftime("%Y-%m-%d %H:%M")
                 return f"{short_hash} - {message} ({author}, {time_str})"
