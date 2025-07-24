@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, Self, TypeVar
+from typing import Callable, Self, TypeVar, Union
 
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
@@ -192,7 +192,7 @@ class BaseModsPanel(QWidget):
     def _update_mods_from_table(
         self,
         pfid_column: int,
-        mode: str | int,
+        mode: Union[str, int],
         steamworks_cmd: str = "resubscribe",
         completed: Callable[[Self], None] = lambda self: (self.close(), None)[1],
     ) -> None:
