@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -237,6 +238,9 @@ class MainContent(QObject):
             )  # Space between widgets and Frame border
             self.main_layout.setSpacing(5)  # Space between mod lists and action buttons
 
+            self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+            self.main_splitter.setChildrenCollapsible(False)
+
             # FRAME REQUIRED - to allow for styling
             self.main_layout_frame = QFrame()
             self.main_layout_frame.setObjectName("MainPanel")
@@ -248,9 +252,20 @@ class MainContent(QObject):
                 settings_controller=self.settings_controller,
             )
 
+            self.mod_info_container = QWidget()
+            self.mod_info_container.setLayout(self.mod_info_panel.panel)
+
+            self.mods_panel_container = QWidget()
+            self.mods_panel_container.setLayout(self.mods_panel.panel)
+
+            self.main_splitter.addWidget(self.mod_info_container)
+            self.main_splitter.addWidget(self.mods_panel_container)
+
+            self.main_splitter.setHandleWidth(1)
+
+            self.mod_info_container.setMinimumWidth(280)
             # WIDGETS INTO BASE LAYOUT
-            self.main_layout.addLayout(self.mod_info_panel.panel, 50)
-            self.main_layout.addLayout(self.mods_panel.panel, 50)
+            self.main_layout.addWidget(self.main_splitter)
 
             # SIGNALS AND SLOTS
             self.metadata_manager.mod_created_signal.connect(
@@ -2237,7 +2252,9 @@ class MainContent(QObject):
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/", self.metadata_manager
+            "https://steamcommunity.com/app/294100/workshop/",
+            self.metadata_manager,
+            self.settings_controller,
         )
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd

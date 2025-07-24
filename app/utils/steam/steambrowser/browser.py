@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
@@ -37,7 +38,7 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from app.views.dialogue import show_warning
+from app.views.dialogue import show_dialogue_conditional, show_warning
 
 from .js_bridge import JavaScriptBridge
 
@@ -56,12 +57,18 @@ class SteamBrowser(QWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, startpage: str, metadata_manager: MetadataManager):
+    def __init__(
+        self,
+        startpage: str,
+        metadata_manager: MetadataManager,
+        settongs_controller: SettingsController,
+    ):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
 
         # store metadata manager reference so we can use it to check if mods are installed
         self.metadata_manager = metadata_manager
+        self.settings_controller = settongs_controller
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -213,8 +220,26 @@ class SteamBrowser(QWidget):
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
 
-        # Set the window to maximized state
-        self.showMaximized()
+        # launch the browser window
+        self._launch_browser_window()
+        logger.debug("Finished Browser Window initialization")
+
+    def _launch_browser_window(self) -> None:
+        """Apply browser window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
+        browser_window_launch_state = (
+            self.settings_controller.settings.browser_window_launch_state
+        )
+        custom_width = self.settings_controller.settings.browser_window_custom_width
+        custom_height = self.settings_controller.settings.browser_window_custom_height
+
+        apply_window_launch_state(
+            self, browser_window_launch_state, custom_width, custom_height
+        )
+        logger.info(
+            f"Browser window started with launch state: {browser_window_launch_state}"
+        )
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
@@ -257,8 +282,6 @@ class SteamBrowser(QWidget):
                 )
             if len(collection_mods_pfid_to_title) > 0:
                 # ask user whether to add all mods or only missing ones
-                from app.views.dialogue import show_dialogue_conditional
-
                 answer = show_dialogue_conditional(
                     title=self.tr("Add Collection"),
                     text=self.tr("How would you like to add the collection?"),
