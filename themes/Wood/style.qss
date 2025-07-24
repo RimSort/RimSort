@@ -875,3 +875,7 @@ QLabel#clearWarning {
     font-size: 11px;
     color: red; /* Kept red for warnings */
 }
+
+QSplitter::handle {
+    background-color: #5A4A4A;
+}

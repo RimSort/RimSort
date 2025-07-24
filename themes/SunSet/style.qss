@@ -881,3 +881,7 @@ QLabel#clearWarning {
     font-size: 11px;
     color: #ff4500; /* Primary Accent (using a strong theme color for warnings) */
 }
+
+QSplitter::handle {
+    background-color: #4A3A3A;
+}
