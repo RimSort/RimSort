@@ -568,7 +568,7 @@ class RuleEditor(QWidget):
         # Setup the window
         self.setWindowTitle("RimSort - Rule Editor")
         self.setLayout(layout)
-         # Set the window size
+        # Set the window size
         self.resize(900, 600)
 
     def createDropEvent(

@@ -672,6 +672,14 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
 
+        self.steamcmd_delete_before_update_checkbox = QCheckBox(
+            self.tr("Delete before update")
+        )
+        self.steamcmd_delete_before_update_checkbox.setToolTip(
+            self.tr("This is useful if you want to ensure clean mod updates.")
+        )
+        group_layout.addWidget(self.steamcmd_delete_before_update_checkbox)
+
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 

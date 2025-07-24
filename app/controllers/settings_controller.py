@@ -669,6 +669,9 @@ class SettingsController(QObject):
                 self.settings.current_instance
             ].steamcmd_auto_clear_depot_cache
         )
+        self.settings_dialog.steamcmd_delete_before_update_checkbox.setChecked(
+            self.settings.steamcmd_delete_before_update
+        )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
                 self.settings.instances[
@@ -934,6 +937,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_delete_before_update = (
+            self.settings_dialog.steamcmd_delete_before_update_checkbox.isChecked()
         )
         self.settings.instances[
             self.settings.current_instance
