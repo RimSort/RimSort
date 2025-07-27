@@ -360,7 +360,8 @@ class ModListItemInner(QWidget):
         self._hovered = True
         if self._selected:
             return
-        self.setStyleSheet("")
+        if self.settings_controller.settings.color_background_instead_of_text_toggle:
+            self.setStyleSheet("")
         super().enterEvent(event)
 
     def leaveEvent(self, event: QEvent) -> None:
@@ -370,7 +371,8 @@ class ModListItemInner(QWidget):
         if self.mod_color is None:
             self.setStyleSheet("")
         else:
-            self.setStyleSheet(f"background: {self.mod_color.name()};")
+            if self.settings_controller.settings.color_background_instead_of_text_toggle:
+                self.handle_mod_color_change(init=True)
         super().leaveEvent(event)
 
     def set_selected(self, selected: bool) -> None:
@@ -379,10 +381,12 @@ class ModListItemInner(QWidget):
 
     def handle_selected(self) -> None:
         if self._selected:
-            self.setStyleSheet("")
+            if self.settings_controller.settings.color_background_instead_of_text_toggle:
+                self.setStyleSheet("")
         elif not self._selected:
             if self.mod_color:
-                self.setStyleSheet(f"background: {self.mod_color.name()}")
+                if self.settings_controller.settings.color_background_instead_of_text_toggle:
+                    self.handle_mod_color_change(init=True)
             else:
                 self.setStyleSheet("")
 
@@ -563,7 +567,7 @@ class ModListItemInner(QWidget):
             if init:  # Running in ModListItemInner __init__ method
                 new_mod_color_name = self.mod_color.name()
                 # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
-                # self.setStyleSheet(f"color: {new_mod_color_name};")
+                self.setStyleSheet(f"color: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
