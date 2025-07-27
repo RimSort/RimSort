@@ -27,8 +27,8 @@ class CustomListWidgetItemMetadata:
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
         alternative: Optional[str] = None,
-        aux_metadata_controller: Optional[AuxMetadataController] = None,
-        aux_metadata_session: Optional[Any] = None,
+        aux_metadata_controller: AuxMetadataController | None = None,
+        aux_metadata_session: Session | None = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -79,7 +79,7 @@ class CustomListWidgetItemMetadata:
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
 
-    def get_mod_color(self, uuid: str, controller: AuxMetadataController, session: Session) -> QColor | None:
+    def get_mod_color(self, uuid: str, controller: AuxMetadataController | None, session: Session | None) -> QColor | None:
         """
         Get the mod color from DB.
 
@@ -88,7 +88,7 @@ class CustomListWidgetItemMetadata:
         """
         metadata_manager = MetadataManager.instance()
         local_controller = controller or AuxMetadataController()
-        local_session = session or controller.Session()
+        local_session = session or local_controller.Session()
         entry = local_controller.get(
             local_session,
             metadata_manager.internal_local_metadata[uuid]["path"],

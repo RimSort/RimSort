@@ -8,12 +8,13 @@ from traceback import format_exc
 from typing import cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QItemSelection, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QColor,
     QCursor,
     QDropEvent,
+    QEnterEvent,
     QFocusEvent,
     QFontMetrics,
     QIcon,
@@ -161,7 +162,7 @@ class ModListItemInner(QWidget):
         super(ModListItemInner, self).__init__()
 
         # Used to handle hover, select etc. behvaior for this custom widget
-        self.setAttribute(Qt.WA_Hover)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self._selected = False
         self._hovered = False
 
@@ -355,14 +356,14 @@ class ModListItemInner(QWidget):
             self.error_icon_label.setToolTip(self.errors)
             self.error_icon_label.setHidden(False)
 
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEnterEvent) -> None:
         self._hovered = True
         if self._selected:
             return
         self.setStyleSheet("")
         super().enterEvent(event)
 
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: QEvent) -> None:
         self._hovered = False
         if self._selected:
             return
@@ -372,11 +373,11 @@ class ModListItemInner(QWidget):
             self.setStyleSheet(f"background: {self.mod_color.name()};")
         super().leaveEvent(event)
 
-    def set_selected(self, selected: bool):
+    def set_selected(self, selected: bool) -> None:
         self._selected = selected
         self.handle_selected()
 
-    def handle_selected(self):
+    def handle_selected(self) -> None:
         if self._selected:
             self.setStyleSheet("")
         elif not self._selected:
@@ -769,7 +770,7 @@ class ModListWidget(QListWidget):
         )  # TDOD: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
 
-    def on_selection_changed(self, selected, deselected):
+    def on_selection_changed(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         """
         Used to indicate when the custom widget is selected/not selected.
         """
@@ -777,13 +778,13 @@ class ModListWidget(QListWidget):
             item = self.item(index.row())
             widget = self.itemWidget(item)
             if widget:
-                widget.set_selected(True)
+                widget.set_selected(True)  # type: ignore
 
         for index in deselected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
             if widget:
-                widget.set_selected(False)
+                widget.set_selected(False)  # type: ignore
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
