@@ -8,7 +8,16 @@ from traceback import format_exc
 from typing import cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QItemSelection, QModelIndex, QObject, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QItemSelection,
+    QModelIndex,
+    QObject,
+    QRectF,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -590,7 +599,11 @@ class ModListItemInner(QWidget):
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
         # self.main_label.setStyleSheet("")
+        # TODO: This method gets called too often, and without need sometimes... eg. after reset toggle warning
+        # Look into optimizing it? Especially while it instantiates aux metadata controller each time...
         self.setStyleSheet("")
+        # Update ModListItemInner color
+        self.mod_color = None
         # Update DB
         # TODO: Get cached AuxMetadataController()
         aux_metadata_controller = AuxMetadataController()
