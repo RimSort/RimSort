@@ -160,7 +160,10 @@ class ModListItemInner(QWidget):
 
         super(ModListItemInner, self).__init__()
 
+        # Used to handle hover, select etc. behvaior for this custom widget
         self.setAttribute(Qt.WA_Hover)
+        self._selected = False
+        self._hovered = False
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
@@ -353,15 +356,34 @@ class ModListItemInner(QWidget):
             self.error_icon_label.setHidden(False)
 
     def enterEvent(self, event):
+        self._hovered = True
+        if self._selected:
+            return
         self.setStyleSheet("")
         super().enterEvent(event)
 
     def leaveEvent(self, event):
+        self._hovered = False
+        if self._selected:
+            return
         if self.mod_color is None:
             self.setStyleSheet("")
         else:
             self.setStyleSheet(f"background: {self.mod_color.name()};")
         super().leaveEvent(event)
+
+    def set_selected(self, selected: bool):
+        self._selected = selected
+        self.handle_selected()
+
+    def handle_selected(self):
+        if self._selected:
+            self.setStyleSheet("")
+        elif not self._selected:
+            if self.mod_color:
+                self.setStyleSheet(f"background: {self.mod_color.name()}")
+            else:
+                self.setStyleSheet("")
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -693,6 +715,9 @@ class ModListWidget(QListWidget):
 
         super(ModListWidget, self).__init__()
 
+        # Track when a custom widget (ModListItemInner) is selected/not selected
+        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
+
         # Allow for dragging and dropping between lists
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
@@ -743,6 +768,22 @@ class ModListWidget(QListWidget):
             self.uuids,
         )  # TDOD: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
+
+    def on_selection_changed(self, selected, deselected):
+        """
+        Used to indicate when the custom widget is selected/not selected.
+        """
+        for index in selected.indexes():
+            item = self.item(index.row())
+            widget = self.itemWidget(item)
+            if widget:
+                widget.set_selected(True)
+
+        for index in deselected.indexes():
+            item = self.item(index.row())
+            widget = self.itemWidget(item)
+            if widget:
+                widget.set_selected(False)
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
