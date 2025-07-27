@@ -840,12 +840,6 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
-            # Delete mod
-            delete_mod_action = None
-            # Delete mod (keep .dds)
-            delete_mod_keep_dds_action = None
-            # Delete optimized textures (.dds files only)
-            delete_mod_dds_only_action = None
             # Change mod color
             change_mod_color_action = None
             # Reset mod color

@@ -28,7 +28,12 @@ class ModsPanelController(QObject):
         )
         self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
 
-        EventBus().reset_mod_colors_signal.connect(self._on_menu_bar_reset_mod_colors_triggered)
+        EventBus().reset_mod_colors_signal.connect(
+            self._on_menu_bar_reset_mod_colors_triggered
+        )
+        EventBus().do_change_mod_coloring_mode.connect(
+            self._on_change_mod_coloring_mode
+        )
         EventBus().filters_changed_in_active_modlist.connect(
             self._on_filters_changed_in_active_modlist
         )
@@ -102,6 +107,24 @@ class ModsPanelController(QObject):
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             uuid = mod_data["uuid"]
             self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
+
+    def _on_change_mod_coloring_mode(self) -> None:
+        # TODO: Is calling change_mod_color() the most efficient way?
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.active_mods_list.change_mod_color(uuid, mod_color)
+
+        for mod in inactive_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)
 
     @Slot()
     def _change_visibility_of_mods_with_warnings(self) -> None:

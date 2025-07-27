@@ -64,6 +64,8 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
+        self.change_mod_coloring_mode = False
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -281,6 +283,13 @@ class SettingsController(QObject):
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
         )
+
+        # Advanced tab
+        self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
+            self._on_use_background_coloring_checkbox_changed
+        )
+
+        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
 
         # Connect signals from dialogs
         EventBus().reset_settings_file.connect(self._do_reset_settings_file)
@@ -1845,3 +1854,19 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
+
+    @Slot()
+    def _on_use_background_coloring_checkbox_changed(self) -> None:
+        self.change_mod_coloring_mode = not self.change_mod_coloring_mode
+
+    @Slot()
+    def _handle_mod_coloring_mode_changed(self) -> None:
+        """
+        If user changes coloring from text to background or vice versa,
+        update all mod items to use that coloring mode.
+        """
+        if self.change_mod_coloring_mode:
+            self.change_mod_coloring_mode = False
+            EventBus().do_change_mod_coloring_mode.emit()
+
+
