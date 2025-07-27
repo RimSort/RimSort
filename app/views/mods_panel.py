@@ -82,10 +82,13 @@ def uuid_to_mod_name(uuid: str) -> str:
     Args:
         uuid (str): The UUID of the mod.
     Returns:
-        str: If mod name not None, returns mod name in lowercase. Otherwise, returns "# unnamed mod".
+        str: If mod name not None and is a string, returns mod name in lowercase. Otherwise, returns "name error in mod about.xml".
     """
     name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
-    return name.lower() if name is not None else "# unnamed mod"
+    if isinstance(name, str):
+        return name.lower()
+    else:
+        return "name error in mod about.xml"
 
 
 class ModsPanelSortKey(Enum):
@@ -180,10 +183,12 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.uuid = uuid
-        self.list_item_name = (
-            self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get("name")
-            or "METADATA ERROR"
-        )
+        name_value = self.metadata_manager.internal_local_metadata.get(
+            self.uuid, {}
+        ).get("name")
+        if not isinstance(name_value, str):
+            name_value = "name error in mod about.xml"
+        self.list_item_name = name_value
         self.main_label = QLabel()
 
         # Visuals

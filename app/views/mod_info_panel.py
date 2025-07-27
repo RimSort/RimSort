@@ -3,7 +3,7 @@ from pathlib import Path
 from re import match
 
 from loguru import logger
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
@@ -199,8 +199,6 @@ class ModInfo:
 
     @staticmethod
     def tr(text: str) -> str:
-        from PySide6.QtCore import QCoreApplication
-
         return QCoreApplication.translate("ModInfo", text)
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
@@ -236,7 +234,11 @@ class ModInfo:
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
         # Set name value
-        self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
+        name_value = mod_info.get("name", "Not specified")
+        if isinstance(name_value, dict):
+            # Convert dict to string representation or fallback
+            name_value = str(name_value)
+        self.mod_info_name_value.setText(name_value)
         # Show essential info widgets
         for widget in self.essential_info_widgets:
             if not widget.isVisible():

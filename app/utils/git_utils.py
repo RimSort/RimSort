@@ -1,5 +1,6 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import datetime
 import os
 import threading
 from contextlib import contextmanager
@@ -1457,8 +1458,6 @@ def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
                 short_hash = str(commit.id)[:7]
                 message = commit.message.split("\n")[0]
                 author = commit.author.name
-                import datetime
-
                 commit_time = datetime.datetime.fromtimestamp(commit.commit_time)
                 time_str = commit_time.strftime("%Y-%m-%d %H:%M")
                 return f"{short_hash} - {message} ({author}, {time_str})"
@@ -1484,3 +1483,25 @@ def get_repository_latest_commit(
         error_msg = str(e)
         logger.error(f"Error getting latest commit for {repo_path}: {error_msg}")
         return False, None, error_msg
+
+
+__all__ = [
+    "git_check_updates",
+    "git_pull",
+    "git_push",
+    "git_stage_commit",
+    "git_get_status",
+    "git_get_commit_info",
+    "git_cleanup",
+    "git_stash",
+    "git_stash_list",
+    "git_stash_drop",
+    "git_has_uncommitted_changes",
+    "git_is_repository",
+    "git_get_current_branch",
+    "git_get_remote_url",
+    "git_is_clean",
+    "get_latest_commit_info",
+    "get_repository_latest_commit",
+    "pygit2",
+]

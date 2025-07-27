@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication, QComboBox
 
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.views import dialogue
+from app.views.dialogue import show_warning
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -129,7 +129,7 @@ class ThemeController:
                 )
                 return potential_path
         logger.error(f"Stylesheet path does not exist for theme '{theme_name}'")
-        dialogue.show_warning(
+        show_warning(
             title=QCoreApplication.translate("ThemeController", "Theme path Error"),
             text=QCoreApplication.translate(
                 "ThemeController",
@@ -164,7 +164,7 @@ class ThemeController:
                     f"Failed to apply theme: {selected_theme_name},"
                     f"Resetting to default theme: {self.default_theme}"
                 )
-                dialogue.show_warning(
+                show_warning(
                     title=QCoreApplication.translate("ThemeController", "Theme Error"),
                     text=QCoreApplication.translate(
                         "ThemeController",

@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QGuiApplication, QShowEvent
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -40,9 +40,6 @@ class SettingsDialog(QDialog):
         self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
 
-        # Use GUIInfo to set size from settings
-        self.resize(GUIInfo().get_panel_size())
-
         main_layout = QVBoxLayout(self)
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget)
@@ -81,6 +78,7 @@ class SettingsDialog(QDialog):
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_themes_tab()
+        self._do_launch_state_tab()
         self._do_authentication_tab()
         self._do_advanced_tab()
 
@@ -674,6 +672,14 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
 
+        self.steamcmd_delete_before_update_checkbox = QCheckBox(
+            self.tr("Delete before update")
+        )
+        self.steamcmd_delete_before_update_checkbox.setToolTip(
+            self.tr("This is useful if you want to ensure clean mod updates.")
+        )
+        group_layout.addWidget(self.steamcmd_delete_before_update_checkbox)
+
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -906,158 +912,142 @@ class SettingsDialog(QDialog):
 
         self.connect_populate_languages_combobox()
 
-        # Window size configuration group
-        screen = QGuiApplication.primaryScreen()
-        screen_geometry = screen.availableGeometry() if screen else None
-        max_width = screen_geometry.width() if screen_geometry else 1024
-        max_height = screen_geometry.height() if screen_geometry else 768
+    def _do_launch_state_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Launch State"))
 
-        windows_size_group_label = QLabel(
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        # Windows launch state group
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        user_note = QLabel(self.tr("RimSort restart required for some settings"))
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
+        size_note = QLabel(
             self.tr(
-                "Window Size Configuration detected window display size: {max_width} x {max_height} pixels"
-            ).format(max_width=max_width, max_height=max_height)
-        )
-        windows_size_group_label.setFont(GUIInfo().emphasis_font)
-        tab_layout.addWidget(windows_size_group_label)
-
-        window_size_group = QGroupBox()
-        tab_layout.addWidget(window_size_group)
-
-        window_size_layout = QGridLayout()
-        window_size_group.setLayout(window_size_layout)
-
-        # Create a dictionary for spinboxes and their labels and ranges
-        spinbox_config = {
-            "window_x_spinbox": (
-                self.tr("Window X Position (px): minimum: 100, maximum: {}").format(
-                    max_width
-                ),
-                100,
-                max_width,
-            ),
-            "window_y_spinbox": (
-                self.tr("Window Y Position (px): minimum: 100, maximum: {}").format(
-                    max_height
-                ),
-                100,
-                max_height,
-            ),
-            "window_width_spinbox": (
-                self.tr("Window Width (px): minimum: 600, maximum: {}").format(
-                    max_width
-                ),
-                600,
-                max_width,
-            ),
-            "window_height_spinbox": (
-                self.tr("Window Height (px): minimum: 400, maximum: {}").format(
-                    max_height
-                ),
-                400,
-                max_height,
-            ),
-            "panel_width_spinbox": (
-                self.tr("Panel Width (px): minimum: 600, maximum: {}").format(
-                    max_width
-                ),
-                600,
-                max_width,
-            ),
-            "panel_height_spinbox": (
-                self.tr("Panel Height (px): minimum: 400, maximum: {}").format(
-                    max_height
-                ),
-                400,
-                max_height,
-            ),
-        }
-
-        self.spinboxes = {}
-
-        for i, (name, (label_text, min_val, max_val)) in enumerate(
-            spinbox_config.items()
-        ):
-            label = QLabel(self.tr(label_text.format(max_val)))
-            window_size_layout.addWidget(label, i, 0)
-            spinbox = QSpinBox()
-            spinbox.setRange(min_val, max_val)
-            window_size_layout.addWidget(spinbox, i, 1)
-            self.spinboxes[name] = spinbox
-
-        self.window_x_spinbox = self.spinboxes["window_x_spinbox"]
-        self.window_y_spinbox = self.spinboxes["window_y_spinbox"]
-        self.window_width_spinbox = self.spinboxes["window_width_spinbox"]
-        self.window_height_spinbox = self.spinboxes["window_height_spinbox"]
-        self.panel_width_spinbox = self.spinboxes["panel_width_spinbox"]
-        self.panel_height_spinbox = self.spinboxes["panel_height_spinbox"]
-
-        self.window_size_reset_button = QPushButton(
-            self.tr("Reset Window Size based on Screen Dimensions")
-        )
-        window_size_layout.addWidget(
-            self.window_size_reset_button, len(spinbox_config), 0, 1, 2
-        )
-        self.window_size_reset_button.clicked.connect(
-            self._reset_window_size_to_default
-        )
-        self.show_duplicate_mods_warning_checkbox = QCheckBox(
-            "Show duplicate mods warning")
-        self.window_size_warning_label = QLabel()
-        self.window_size_warning_label.setStyleSheet("color: orange;")
-        window_size_layout.addWidget(
-            self.window_size_warning_label, len(spinbox_config) + 1, 0, 1, 2
-        )
-
-        # Connect value changes to validation
-        for spinbox in self.spinboxes.values():
-            spinbox.valueChanged.connect(self._validate_window_size)
-
-    def _reset_window_size_to_default(self) -> None:
-        """
-        Reset the window and panel size spinboxes to default values based on current screen geometry.
-        Uses GUIInfo.get_window_geometry() for DPI-aware and multi-monitor support.
-        Validates and clamps values to ensure the window fits on the screen.
-        """
-        x, y, width, height = GUIInfo().get_window_geometry()
-
-        self.window_x_spinbox.setValue(x)
-        self.window_y_spinbox.setValue(y)
-        self.window_width_spinbox.setValue(width)
-        self.window_height_spinbox.setValue(height)
-
-        default_panel_width = 800
-        default_panel_height = 600
-        try:
-            settings = Settings()
-            settings.load()
-            default_panel_width = settings.panel_width
-            default_panel_height = settings.panel_height
-        except Exception:
-            pass
-
-        self.panel_width_spinbox.setValue(default_panel_width)
-        self.panel_height_spinbox.setValue(default_panel_height)
-
-        self._validate_window_size()
-        self.apply_window_geometry_from_spinboxes()
-
-    def _validate_window_size(self) -> None:
-        screen = QGuiApplication.primaryScreen()
-        screen_geometry = screen.availableGeometry() if screen else None
-        max_width = screen_geometry.width() if screen_geometry else 1024
-        max_height = screen_geometry.height() if screen_geometry else 768
-
-        x = self.window_x_spinbox.value()
-        y = self.window_y_spinbox.value()
-        w = self.window_width_spinbox.value()
-        h = self.window_height_spinbox.value()
-
-        warning = ""
-        if x + w > max_width or y + h > max_height:
-            warning = self.tr(
-                "Warning: Window may not fit on the current screen! Please adjust the values."
+                f"Min is {Settings.MIN_SIZE} and Max is {Settings.MAX_SIZE}. Values outside this range will be reset to defaults."
             )
-        self.window_size_warning_label.setText(warning)
+        )
+        size_note.setFont(GUIInfo().emphasis_font)
+        size_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(size_note)
+
+        # Main Window
+        (
+            main_window_group,
+            self.main_launch_maximized_radio,
+            self.main_launch_normal_radio,
+            self.main_launch_custom_radio,
+            self.main_custom_width_spinbox,
+            self.main_custom_height_spinbox,
+        ) = create_launch_state_group(
+            self.tr("Main Window Launch State"),
+            self.tr("Maximized"),
+            self.tr("Normal"),
+            self.tr("Custom size"),
+            Settings.MIN_SIZE,
+            Settings.MAX_SIZE,
+            Settings.DEFAULT_WIDTH,
+            Settings.DEFAULT_HEIGHT,
+        )
+        group_layout.addWidget(main_window_group)
+
+        # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
+        self.main_launch_maximized_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_normal_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_custom_radio.toggled.connect(
+            self.enable_main_custom_size_spinboxes
+        )
+
+        # Browser Window
+        (
+            browser_window_group,
+            self.browser_launch_maximized_radio,
+            self.browser_launch_normal_radio,
+            self.browser_launch_custom_radio,
+            self.browser_custom_width_spinbox,
+            self.browser_custom_height_spinbox,
+        ) = create_launch_state_group(
+            self.tr("Browser Window Launch State"),
+            self.tr("Maximized"),
+            self.tr("Normal"),
+            self.tr("Custom size"),
+            Settings.MIN_SIZE,
+            Settings.MAX_SIZE,
+            Settings.DEFAULT_WIDTH,
+            Settings.DEFAULT_HEIGHT,
+        )
+        group_layout.addWidget(browser_window_group)
+
+        # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
+        self.browser_launch_maximized_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_normal_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_custom_radio.toggled.connect(
+            self.enable_browser_custom_size_spinboxes
+        )
+
+        # Settings Window (only custom option)
+        settings_window_group = QGroupBox(self.tr("Settings Window Launch State"))
+        settings_window_layout = QHBoxLayout()
+        settings_window_group.setLayout(settings_window_layout)
+
+        self.settings_custom_width_spinbox = QSpinBox()
+        self.settings_custom_width_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
+        self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
+        self.settings_custom_width_spinbox.setSuffix(" px")
+        self.settings_custom_width_spinbox.setFixedWidth(100)
+        settings_window_layout.addWidget(QLabel(self.tr("Custom Width:")))
+        settings_window_layout.addWidget(self.settings_custom_width_spinbox)
+
+        self.settings_custom_height_spinbox = QSpinBox()
+        self.settings_custom_height_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
+        self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
+        self.settings_custom_height_spinbox.setSuffix(" px")
+        self.settings_custom_height_spinbox.setFixedWidth(100)
+        settings_window_layout.addWidget(QLabel(self.tr("Custom Height:")))
+        settings_window_layout.addWidget(self.settings_custom_height_spinbox)
+
+        group_layout.addWidget(settings_window_group)
+
+    def disable_main_custom_size_spinboxes(self) -> None:
+        """Disable main window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
+        self.main_custom_width_spinbox.setEnabled(False)
+        self.main_custom_height_spinbox.setEnabled(False)
+
+    def enable_main_custom_size_spinboxes(self) -> None:
+        """Enable main window custom size spinboxes when 'Custom size' radio button is checked"""
+        self.main_custom_width_spinbox.setEnabled(True)
+        self.main_custom_height_spinbox.setEnabled(True)
+
+    def disable_browser_custom_size_spinboxes(self) -> None:
+        """Disable browser window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
+        self.browser_custom_width_spinbox.setEnabled(False)
+        self.browser_custom_height_spinbox.setEnabled(False)
+
+    def enable_browser_custom_size_spinboxes(self) -> None:
+        """Enable browser window custom size spinboxes when 'Custom size' radio button is checked"""
+        self.browser_custom_width_spinbox.setEnabled(True)
+        self.browser_custom_height_spinbox.setEnabled(True)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
@@ -1272,10 +1262,59 @@ class SettingsDialog(QDialog):
         super().showEvent(arg__1)
         self.global_ok_button.setFocus()
 
-    def apply_window_geometry_from_spinboxes(self) -> None:
-        """Set the dialog geometry to match the values in the window size spinboxes."""
-        x = self.window_x_spinbox.value()
-        y = self.window_y_spinbox.value()
-        w = self.window_width_spinbox.value()
-        h = self.window_height_spinbox.value()
-        self.setGeometry(x, y, w, h)
+
+def create_launch_state_group(
+    title: str,
+    minimized_text: str,
+    normal_text: str,
+    custom_text: str,
+    min_size: int,
+    max_size: int,
+    default_width: int,
+    default_height: int,
+) -> tuple[
+    QGroupBox,
+    QRadioButton,
+    QRadioButton,
+    QRadioButton,
+    QSpinBox,
+    QSpinBox,
+]:
+    group_box = QGroupBox(title)
+    layout = QVBoxLayout()
+    group_box.setLayout(layout)
+
+    maximized_radio = QRadioButton(minimized_text)
+    layout.addWidget(maximized_radio)
+
+    normal_radio = QRadioButton(normal_text)
+    layout.addWidget(normal_radio)
+
+    custom_layout = QHBoxLayout()
+    custom_radio = QRadioButton(custom_text)
+    custom_layout.addWidget(custom_radio)
+
+    custom_width_spinbox = QSpinBox()
+    custom_width_spinbox.setRange(min_size, max_size)
+    custom_width_spinbox.setValue(default_width)
+    custom_width_spinbox.setSuffix(" px")
+    custom_width_spinbox.setFixedWidth(100)
+    custom_layout.addWidget(custom_width_spinbox)
+
+    custom_height_spinbox = QSpinBox()
+    custom_height_spinbox.setRange(min_size, max_size)
+    custom_height_spinbox.setValue(default_height)
+    custom_height_spinbox.setSuffix(" px")
+    custom_height_spinbox.setFixedWidth(100)
+    custom_layout.addWidget(custom_height_spinbox)
+
+    layout.addLayout(custom_layout)
+
+    return (
+        group_box,
+        maximized_radio,
+        normal_radio,
+        custom_radio,
+        custom_width_spinbox,
+        custom_height_spinbox,
+    )
