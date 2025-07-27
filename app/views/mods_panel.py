@@ -532,6 +532,7 @@ class ModListItemInner(QWidget):
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
+                self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
                 # self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
                 self.setStyleSheet(f"background: {new_mod_color_name};")
         else:
@@ -543,6 +544,7 @@ class ModListItemInner(QWidget):
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
+                self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
                 # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
