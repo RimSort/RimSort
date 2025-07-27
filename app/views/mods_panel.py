@@ -1483,7 +1483,10 @@ class ModListWidget(QListWidget):
                     return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
                 if action == change_mod_color_action:
-                    new_color = QColorDialog().getColor()
+                    invalid_color = False
+                    new_color = QColorDialog().getColor(title="Select new mod color")
+                    if not new_color.isValid():
+                        invalid_color = True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is CustomListWidgetItem:
@@ -1498,7 +1501,7 @@ class ModListWidget(QListWidget):
                         # Toggle warning action
                         if action == toggle_warning_action:
                             self.toggle_warning(mod_metadata["packageid"], uuid)
-                        elif action == change_mod_color_action:
+                        elif action == change_mod_color_action and not invalid_color:
                             self.change_mod_color(uuid, new_color)
                         elif action == reset_mod_color_action:
                             self.reset_mod_color(uuid)
