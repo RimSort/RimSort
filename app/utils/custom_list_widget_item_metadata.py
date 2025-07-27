@@ -94,7 +94,7 @@ class CustomListWidgetItemMetadata:
         mod_color = None
         if entry:
             color_text = entry.color_hex
-            if mod_color is not None:
+            if color_text is not None:
                 mod_color = QColor(color_text)
 
         return mod_color

@@ -1509,7 +1509,7 @@ class ModListWidget(QListWidget):
                 # If user is changing mod color, display color picker once no matter how many mods are selected
                 if action == change_mod_color_action:
                     invalid_color = False
-                    new_color = QColorDialog().getColor(title="Select new mod color")
+                    new_color = QColorDialog().getColor()
                     if not new_color.isValid():
                         invalid_color = True
                 # Execute action for each selected mod
