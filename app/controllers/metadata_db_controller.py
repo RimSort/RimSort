@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from loguru import logger
 from sqlalchemy import create_engine, text
@@ -21,6 +21,39 @@ class AuxMetadataController(MetadataDbController):
     def __init__(self) -> None:
         super().__init__(AppInfo().aux_metadata_db)
         Base.metadata.create_all(self.engine)
+
+    @staticmethod
+    def update(session: Session, item_path: Path | str, **kwargs: Any) -> AuxMetadataEntry | None:
+        """
+        Update an aux metadata entry by the mod path.
+
+        :param session: The database session.
+        :type session: Session
+        :param item_path: The key path.
+        :type item_path: Path | str
+        :param kwargs: The fields to update.
+        :return: The updated aux metadata entry if found, otherwise None.
+        :rtype: AuxMetadataEntry | None
+        """
+        if isinstance(item_path, Path):
+            item_path = str(item_path)
+
+        entry = AuxMetadataController.get(session, item_path)
+        if entry is None:
+            return None
+
+        for key, value in kwargs.items():
+            setattr(entry, key, value)
+
+        try:
+            with session.begin_nested():
+                session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.exception(f"Failed to update aux metadata entry: {e}")
+            raise e
+
+        return entry
 
     @staticmethod
     def get(session: Session, item_path: Path | str) -> AuxMetadataEntry | None:

@@ -23,8 +23,8 @@ def test_get_or_create(temp_db: AuxMetadataController) -> None:
         entry = temp_db.get_or_create(session, item_path)
         assert entry is not None
         assert entry.path == str(item_path)
-        assert entry.notes == ""  # Default value
-        entry.notes = "test_notes"
+        assert entry.user_notes == ""  # Default value
+        entry.user_notes = "test_notes"
         session.commit()
 
     # Fetch the same entry again and ensure it's the same
@@ -32,7 +32,7 @@ def test_get_or_create(temp_db: AuxMetadataController) -> None:
         same_entry = temp_db.get_or_create(session, item_path)
         assert same_entry is not None
         assert same_entry.path == str(item_path)
-        assert same_entry.notes == "test_notes"
+        assert same_entry.user_notes == "test_notes"
 
     # Ensure only one entry exists
     with temp_db.Session() as session:
@@ -63,9 +63,9 @@ def test_get_value_equals(temp_db: AuxMetadataController) -> None:
 
         assert entry1 is not None
         assert entry2 is not None
-        entry1.notes = "test_key"
+        entry1.user_notes = "test_key"
         entry1.color_hex = "test_value"
-        entry2.notes = "test_key"
+        entry2.user_notes = "test_key"
         entry2.color_hex = "test_value"
 
         session.commit()

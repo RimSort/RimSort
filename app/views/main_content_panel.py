@@ -117,7 +117,6 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
-            self.main_window = None  # Will be set by set_main_window
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(

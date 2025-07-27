@@ -24,8 +24,8 @@ class AuxMetadataEntry(Base):
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 
-    notes: Mapped[str] = mapped_column(String, default="")
-    color_hex: Mapped[str] = mapped_column(String, default="19232d")
+    user_notes: Mapped[str] = mapped_column(String, default="")
+    color_hex: Mapped[str] = mapped_column(String, default=None, nullable=True) # None/NULL means use theme default
     ignore_warnings: Mapped[bool] = mapped_column(Boolean, default=False)
 
     tags: Mapped[list["TagsEntry"]] = relationship(

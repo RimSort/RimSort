@@ -3,6 +3,7 @@ from typing import Any, Optional
 from loguru import logger
 from PySide6.QtGui import QColor
 
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.utils.metadata import MetadataManager
 
 
@@ -46,6 +47,8 @@ class CustomListWidgetItemMetadata:
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
+        self.aux_metadata_controller = AuxMetadataController()
+        self.aux_metadata_session = self.aux_metadata_controller.Session()
 
         # Metadata attributes
         self.uuid = uuid
@@ -61,7 +64,10 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
-        self.mod_color = mod_color
+        if mod_color is None:
+            self.mod_color = self.get_mod_color(uuid)
+        else:
+            self.mod_color = mod_color
         self.alternative = (
             alternative
             if alternative is not None
@@ -71,6 +77,27 @@ class CustomListWidgetItemMetadata:
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
+
+    def get_mod_color(self, uuid: str) -> QColor | None:
+        """
+        Get the mod color from DB.
+
+        :param uuid: str, the uuid of the mod
+        :return: QColor | None, Color of hte mod, or None if no color
+        """
+        metadata_manager = MetadataManager.instance()
+        entry = self.aux_metadata_controller.get(
+            self.aux_metadata_session,
+            metadata_manager.internal_local_metadata[uuid]["path"],
+        )
+
+        mod_color = None
+        if entry:
+            color_text = entry.color_hex
+            if mod_color is not None:
+                mod_color = QColor(color_text)
+
+        return mod_color
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """
