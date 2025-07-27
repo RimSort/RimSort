@@ -2,6 +2,7 @@ from typing import Any, Optional
 
 from loguru import logger
 from PySide6.QtGui import QColor
+from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.utils.metadata import MetadataManager
@@ -26,7 +27,8 @@ class CustomListWidgetItemMetadata:
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
         alternative: Optional[str] = None,
-
+        aux_metadata_controller: Optional[AuxMetadataController] = None,
+        aux_metadata_session: Optional[Any] = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -48,8 +50,6 @@ class CustomListWidgetItemMetadata:
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
         # Do not cache the aux metadata controller, it will cause freezes/crashes when dragging mods.
-        # self.aux_metadata_controller = AuxMetadataController()
-        # self.aux_metadata_session = self.aux_metadata_controller.Session()
 
         # Metadata attributes
         self.uuid = uuid
@@ -66,7 +66,7 @@ class CustomListWidgetItemMetadata:
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
         if mod_color is None:
-            self.mod_color = self.get_mod_color(uuid)
+            self.mod_color = self.get_mod_color(uuid, aux_metadata_controller, aux_metadata_session)
         else:
             self.mod_color = mod_color
         self.alternative = (
@@ -79,7 +79,7 @@ class CustomListWidgetItemMetadata:
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
 
-    def get_mod_color(self, uuid: str) -> QColor | None:
+    def get_mod_color(self, uuid: str, controller: AuxMetadataController, session: Session) -> QColor | None:
         """
         Get the mod color from DB.
 
@@ -87,10 +87,10 @@ class CustomListWidgetItemMetadata:
         :return: QColor | None, Color of hte mod, or None if no color
         """
         metadata_manager = MetadataManager.instance()
-        aux_metadata_controller = AuxMetadataController()
-        aux_metadata_session = aux_metadata_controller.Session()
-        entry = aux_metadata_controller.get(
-            aux_metadata_session,
+        local_controller = controller or AuxMetadataController()
+        local_session = session or controller.Session()
+        entry = local_controller.get(
+            local_session,
             metadata_manager.internal_local_metadata[uuid]["path"],
         )
 

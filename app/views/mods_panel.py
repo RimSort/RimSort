@@ -160,10 +160,10 @@ class ModListItemInner(QWidget):
 
         super(ModListItemInner, self).__init__()
 
+        self.setAttribute(Qt.WA_Hover)
+
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
-        self.aux_metadata_controller = AuxMetadataController()
-        self.aux_metadata_session = self.aux_metadata_controller.Session()
 
         # Cache error and warning strings for tooltips
         self.errors_warnings = errors_warnings
@@ -307,18 +307,15 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip(self.tr("Subscribed via Steam"))
         # Set label color if mod has errors/warnings
+        # TODO: Is this part needed? Repolish seems to be called anyway...
         if self.mod_color is not None:
-            self.handle_mod_color_change(init=True)
             self.main_label.setObjectName("ListItemLabelCustomColor")
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
-            self.handle_mod_color_reset()
         elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
-            self.handle_mod_color_reset()
         else:
             self.main_label.setObjectName("ListItemLabel")
-            self.handle_mod_color_reset()
         # Add icons
         if self.git_icon:
             self.main_item_layout.addWidget(self.git_icon, Qt.AlignmentFlag.AlignRight)
@@ -354,6 +351,17 @@ class ModListItemInner(QWidget):
         if self.errors:
             self.error_icon_label.setToolTip(self.errors)
             self.error_icon_label.setHidden(False)
+
+    def enterEvent(self, event):
+        self.setStyleSheet("")
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        if self.mod_color is None:
+            self.setStyleSheet("")
+        else:
+            self.setStyleSheet(f"background: {self.mod_color.name()};")
+        super().leaveEvent(event)
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -519,26 +527,32 @@ class ModListItemInner(QWidget):
             # Color background
             if init:  # Running in ModListItemInner __init__ method
                 new_mod_color_name = self.mod_color.name()
-                self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
+                # self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
+                self.setStyleSheet(f"background: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
-                self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
+                # self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
+                self.setStyleSheet(f"background: {new_mod_color_name};")
         else:
             # Color text
             if init:  # Running in ModListItemInner __init__ method
                 new_mod_color_name = self.mod_color.name()
-                self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
+                # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
+                # self.setStyleSheet(f"color: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
-                self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
+                # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
+                self.setStyleSheet(f"color: {new_mod_color_name};")
 
         # Update DB
         if not init:
+            aux_metadata_controller = AuxMetadataController()
+            aux_metadata_session = aux_metadata_controller.Session()
             mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
-            self.aux_metadata_controller.update(
-                self.aux_metadata_session,
+            aux_metadata_controller.update(
+                aux_metadata_session,
                 mod_path,
                 color_hex=new_mod_color_name,
             )
@@ -546,11 +560,15 @@ class ModListItemInner(QWidget):
     def handle_mod_color_reset(self) -> None:
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
-        self.main_label.setStyleSheet("")
+        # self.main_label.setStyleSheet("")
+        self.setStyleSheet("")
         # Update DB
+        # TODO: Get cached AuxMetadataController()
+        aux_metadata_controller = AuxMetadataController()
+        aux_metadata_session = aux_metadata_controller.Session()
         mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
-        self.aux_metadata_controller.update(
-            self.aux_metadata_session,
+        aux_metadata_controller.update(
+            aux_metadata_session,
             mod_path,
             color_hex=None,
         )
@@ -1641,7 +1659,11 @@ class ModListWidget(QListWidget):
     def append_new_item(self, uuid: str) -> None:
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
         self.aux_metadata_controller.get_or_create(self.aux_metadata_session, mod_path)
-        data = CustomListWidgetItemMetadata(uuid=uuid)
+        data = CustomListWidgetItemMetadata(
+            uuid=uuid,
+            aux_metadata_controller=self.aux_metadata_controller,
+            aux_metadata_session=self.aux_metadata_session
+        )
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -2158,7 +2180,11 @@ class ModListWidget(QListWidget):
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key]["path"]
                 self.aux_metadata_controller.get_or_create(self.aux_metadata_session, mod_path)
                 list_item = CustomListWidgetItem(self)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                data = CustomListWidgetItemMetadata(
+                    uuid=uuid_key,
+                    aux_metadata_controller=self.aux_metadata_controller,
+                    aux_metadata_session=self.aux_metadata_session
+                )
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
