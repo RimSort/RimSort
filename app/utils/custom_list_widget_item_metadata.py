@@ -47,8 +47,9 @@ class CustomListWidgetItemMetadata:
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
-        self.aux_metadata_controller = AuxMetadataController()
-        self.aux_metadata_session = self.aux_metadata_controller.Session()
+        # Do not cache the aux metadata controller, it will cause freezes/crashes when dragging mods.
+        # self.aux_metadata_controller = AuxMetadataController()
+        # self.aux_metadata_session = self.aux_metadata_controller.Session()
 
         # Metadata attributes
         self.uuid = uuid
@@ -86,8 +87,10 @@ class CustomListWidgetItemMetadata:
         :return: QColor | None, Color of hte mod, or None if no color
         """
         metadata_manager = MetadataManager.instance()
-        entry = self.aux_metadata_controller.get(
-            self.aux_metadata_session,
+        aux_metadata_controller = AuxMetadataController()
+        aux_metadata_session = aux_metadata_controller.Session()
+        entry = aux_metadata_controller.get(
+            aux_metadata_session,
             metadata_manager.internal_local_metadata[uuid]["path"],
         )
 
