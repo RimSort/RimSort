@@ -112,7 +112,7 @@ rd /s /q "%update_source_folder%" 2>nul
 REM Launch updated RimSort
 echo.
 echo Launching RimSort in 5 seconds. Press any key to cancel.
-choice /t 5 /d y /n >nul
+choice /c YN /d Y /t 5 /n >nul
 if errorlevel 2 (
     echo Launch cancelled by user.
     pause
