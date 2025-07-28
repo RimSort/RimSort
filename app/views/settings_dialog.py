@@ -146,6 +146,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.game_location_clear_button)
 
         self.game_location = QLineEdit()
+        self.game_location.setPlaceholderText(
+            self.tr(
+                r"Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld"
+            )
+        )
         self.game_location.setTextMargins(GUIInfo().text_field_margins)
         self.game_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.game_location)
@@ -176,6 +181,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.config_folder_location_clear_button)
 
         self.config_folder_location = QLineEdit()
+        self.config_folder_location.setPlaceholderText(
+            self.tr(
+                r"Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config"
+            )
+        )
         self.config_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.config_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
@@ -208,6 +218,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.steam_mods_folder_location_clear_button)
 
         self.steam_mods_folder_location = QLineEdit()
+        self.steam_mods_folder_location.setPlaceholderText(
+            self.tr(
+                r"Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100"
+            )
+        )
         self.steam_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.steam_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
@@ -231,13 +246,23 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        self.local_mods_folder_location = QLineEdit(readOnly=True)
+        self.local_mods_folder_location_choose_button = QToolButton()
+        self.local_mods_folder_location_choose_button.setText(self.tr("Choose…"))
+        header_layout.addWidget(self.local_mods_folder_location_choose_button)
+
+        self.local_mods_folder_location_clear_button = QToolButton()
+        self.local_mods_folder_location_clear_button.setText(self.tr("Clear…"))
+        header_layout.addWidget(self.local_mods_folder_location_clear_button)
+
+        self.local_mods_folder_location = QLineEdit()
+        self.local_mods_folder_location.setPlaceholderText(
+            self.tr(
+                r"should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods"
+            )
+        )
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
-        )
-        self.local_mods_folder_location.setPlaceholderText(
-            self.tr("Game location sets local mods location.")
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
