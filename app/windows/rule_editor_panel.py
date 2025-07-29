@@ -239,6 +239,10 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_community_rules_loadBefore_list
         )
+        self.external_community_rules_loadTop_checkbox = QCheckBox(
+            self.tr("Force load at top of list")
+        )
+        self.external_community_rules_loadTop_checkbox.setObjectName("summaryValue")
         self.external_community_rules_loadBottom_checkbox = QCheckBox(
             self.tr("Force load at bottom of list")
         )
@@ -304,6 +308,10 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_user_rules_loadBefore_list
         )
+        self.external_user_rules_loadTop_checkbox = QCheckBox(
+            self.tr("Force load at top of list")
+        )
+        self.external_user_rules_loadTop_checkbox.setObjectName("summaryValue")
         self.external_user_rules_loadBottom_checkbox = QCheckBox(
             self.tr("Force load at bottom of list")
         )
@@ -473,6 +481,9 @@ class RuleEditor(QWidget):
             self.external_community_rules_loadBefore_list
         )
         self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadTop_checkbox
+        )
+        self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadBottom_checkbox
         )
         self.external_community_rules_layout.addWidget(
@@ -492,6 +503,9 @@ class RuleEditor(QWidget):
         )
         self.external_user_rules_layout.addWidget(
             self.external_user_rules_loadBefore_list
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadTop_checkbox
         )
         self.external_user_rules_layout.addWidget(
             self.external_user_rules_loadBottom_checkbox
@@ -541,6 +555,8 @@ class RuleEditor(QWidget):
             )
         # If no initial packageid supplied, lock checkboxes
         if not self.edit_packageid:
+            self.external_community_rules_loadTop_checkbox.setCheckable(False)
+            self.external_user_rules_loadTop_checkbox.setCheckable(False)
             self.external_community_rules_loadBottom_checkbox.setCheckable(False)
             self.external_user_rules_loadBottom_checkbox.setCheckable(False)
         # Initial mode
@@ -559,8 +575,14 @@ class RuleEditor(QWidget):
                 layout=self.external_user_rules_layout, override=False
             )
         # Connect these after metadata population
+        self.external_community_rules_loadTop_checkbox.stateChanged.connect(
+            partial(self._toggle_loadTop_rule, "Community Rules")
+        )
         self.external_community_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "Community Rules")
+        )
+        self.external_user_rules_loadTop_checkbox.stateChanged.connect(
+            partial(self._toggle_loadTop_rule, "User Rules")
         )
         self.external_user_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "User Rules")
@@ -773,6 +795,10 @@ class RuleEditor(QWidget):
                 metadata[self.edit_packageid][instruction[3]][instruction[1]][
                     "comment"
                 ] = instruction[4]
+            elif instruction[3] == "loadTop":
+                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
+                    4
+                ]
             elif instruction[3] == "loadBottom":
                 metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
                     4
@@ -803,6 +829,8 @@ class RuleEditor(QWidget):
         logger.debug(f"Opening mod in editor: {self.edit_packageid}")
         self.edit_packageid = context_item.data(Qt.ItemDataRole.UserRole)
         if self.edit_packageid:
+            self.external_community_rules_loadTop_checkbox.setCheckable(True)
+            self.external_user_rules_loadTop_checkbox.setCheckable(True)
             self.external_community_rules_loadBottom_checkbox.setCheckable(True)
             self.external_user_rules_loadBottom_checkbox.setCheckable(True)
         self._clear_widget()
@@ -867,6 +895,7 @@ class RuleEditor(QWidget):
             rules: dict[str, Any],
             loadAfter_list: QListWidget,
             loadBefore_list: QListWidget,
+            loadTop_checkbox: QCheckBox,
             loadBottom_checkbox: QCheckBox,
             incompatibilities_list: QListWidget,
             hidden: bool,
@@ -938,6 +967,22 @@ class RuleEditor(QWidget):
                             comment=rule_comment,
                             hidden=hidden,
                         )
+                rule_data = metadata.get("loadTop")
+                if rule_data:
+                    self.block_comment_prompt = True
+                    loadTop_checkbox.setChecked(rule_data.get("value", False))
+                    self.block_comment_prompt = False
+                    if rule_data.get("value"):
+                        self._add_rule_to_table(
+                            name=self.edit_name,
+                            packageid=self.edit_packageid,
+                            rule_source=rule_source,
+                            rule_type="loadTop",
+                            comment=_get_first_item_or_value(
+                                rule_data.get("comment", "")
+                            ),
+                            hidden=hidden,
+                        )
 
                 rule_data = metadata.get("loadBottom")
                 if rule_data:
@@ -962,6 +1007,7 @@ class RuleEditor(QWidget):
             rules=self.community_rules,
             loadAfter_list=self.external_community_rules_loadAfter_list,
             loadBefore_list=self.external_community_rules_loadBefore_list,
+            loadTop_checkbox=self.external_community_rules_loadTop_checkbox,
             loadBottom_checkbox=self.external_community_rules_loadBottom_checkbox,
             incompatibilities_list=self.external_community_rules_incompatibilities_list,
             hidden=self.community_rules_hidden,
@@ -974,6 +1020,7 @@ class RuleEditor(QWidget):
             rules=self.user_rules,
             loadAfter_list=self.external_user_rules_loadAfter_list,
             loadBefore_list=self.external_user_rules_loadBefore_list,
+            loadTop_checkbox=self.external_user_rules_loadTop_checkbox,
             loadBottom_checkbox=self.external_user_rules_loadBottom_checkbox,
             incompatibilities_list=self.external_user_rules_incompatibilities_list,
             hidden=self.user_rules_hidden,
@@ -1120,6 +1167,80 @@ class RuleEditor(QWidget):
                 item and item.text() == rule_type
             ):  # Toggle row visibility based on the value
                 self.editor_table_view.setRowHidden(row, visibility)
+
+    def _toggle_loadTop_rule(self, rule_source: str, state: int) -> None:
+        if self.edit_packageid:
+            logger.debug(f"Toggle loadTop for {self.edit_packageid}: {state}")
+            # Select database for editing
+            if rule_source == "Community Rules":
+                metadata = self.community_rules
+            elif rule_source == "User Rules":
+                metadata = self.user_rules
+            else:
+                raise ValueError(f"Invalid rule source: {rule_source}")
+
+            if state == 2:
+                comment = ""
+                if not self.block_comment_prompt:
+                    # Add a new row in the editor - prompt user to enter a comment for their rule addition
+                    args, ok = show_dialogue_input(
+                        title=self.tr("Enter comment"),
+                        label=self.tr(
+                            "Enter a comment to annotate why this rule exists."
+                            "This is useful for your own records, as well as others."
+                        ),
+                        parent=self,
+                    )
+                    if ok:
+                        comment = args
+                    self._add_rule_to_table(
+                        name=self.edit_name,
+                        packageid=self.edit_packageid,
+                        rule_source=rule_source,
+                        rule_type="loadTop",
+                        comment=comment,
+                    )
+                # Add rule to the database if it doesn't already exist
+                if not metadata.get(self.edit_packageid):
+                    metadata[self.edit_packageid] = {}
+                if not metadata[self.edit_packageid].get("loadTop"):
+                    metadata[self.edit_packageid]["loadTop"] = {}
+                metadata[self.edit_packageid]["loadTop"]["value"] = True
+                if comment:
+                    metadata[self.edit_packageid]["loadTop"]["comment"] = comment
+            else:
+                # Search for & remove the rule's row entry from the editor table
+                for row in range(self.editor_model.rowCount()):
+                    # Define criteria
+                    packageid_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
+                    # Search table for rows that match
+                    if (
+                        (
+                            packageid_value
+                            and self.edit_packageid in packageid_value.text()
+                        )
+                        and (
+                            rule_source_value
+                            and rule_source in rule_source_value.text()
+                        )
+                        and (rule_type_value and "loadTop" in rule_type_value.text())
+                    ):  # Remove row if criteria matches search
+                        self.editor_model.removeRow(row)
+                # Remove rule from the database
+                if (
+                    metadata.get(self.edit_packageid, {})
+                    .get("loadTop", {})
+                    .get("value")
+                ):
+                    metadata[self.edit_packageid].pop("loadTop")
 
     def _toggle_loadBottom_rule(self, rule_source: str, state: int) -> None:
         if self.edit_packageid:
