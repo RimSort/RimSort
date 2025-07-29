@@ -1,5 +1,6 @@
 from loguru import logger
 
+from app.utils.constants import KNOWN_TIER_ONE_MODS
 from app.utils.metadata import MetadataManager
 
 
@@ -82,17 +83,7 @@ def gen_tier_one_deps_graph(
 
     logger.info("Generating dependencies graph for tier one mods")
     metadata_manager = MetadataManager.instance()
-    known_tier_one_mods = {
-        "zetrith.prepatcher",
-        "brrainz.harmony",
-        "ludeon.rimworld",
-        "ludeon.rimworld.royalty",
-        "ludeon.rimworld.ideology",
-        "ludeon.rimworld.biotech",
-        "ludeon.rimworld.anomaly",
-        "ludeon.rimworld.odyssey",
-        "unlimitedhugs.hugslib",
-    }
+    known_tier_one_mods = KNOWN_TIER_ONE_MODS
     # Add mods with loadTop set to True to known_tier_one_mods
     for uuid in metadata_manager.internal_local_metadata:
         if metadata_manager.internal_local_metadata[uuid].get("loadTop"):
