@@ -81,6 +81,7 @@ def gen_tier_one_deps_graph(
     # TODO: pull from a config
 
     logger.info("Generating dependencies graph for tier one mods")
+    metadata_manager = MetadataManager.instance()
     known_tier_one_mods = {
         "zetrith.prepatcher",
         "brrainz.harmony",
@@ -92,6 +93,12 @@ def gen_tier_one_deps_graph(
         "ludeon.rimworld.odyssey",
         "unlimitedhugs.hugslib",
     }
+    # Add mods with loadTop set to True to known_tier_one_mods
+    for uuid in metadata_manager.internal_local_metadata:
+        if metadata_manager.internal_local_metadata[uuid].get("loadTop"):
+            known_tier_one_mods.add(
+                metadata_manager.internal_local_metadata[uuid]["packageid"]
+            )
     # Bug fix: if there are circular dependencies in tier one mods
     # then an infinite loop happens here unless we keep track of what has
     # already been processed.
