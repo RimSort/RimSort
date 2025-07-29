@@ -1094,6 +1094,15 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_community_rules[package_id].get(
+                        "loadTop"
+                    )
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1177,6 +1186,13 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_user_rules[package_id].get("loadTop")
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
                     )
