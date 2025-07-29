@@ -17,6 +17,7 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
     "incompatibleWith",
     "loadBefore",
     "loadAfter",
+    "loadTop",
     "loadBottom",
 ]
 MOD_RECURSE_EXCEPTIONS = [
