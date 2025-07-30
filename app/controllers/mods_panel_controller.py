@@ -1,5 +1,5 @@
 from loguru import logger
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+from PySide6.QtCore import QObject, Qt, Slot
 
 from app.utils.event_bus import EventBus
 from app.views.mods_panel import ModListWidget, ModsPanel

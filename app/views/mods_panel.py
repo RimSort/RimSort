@@ -193,7 +193,7 @@ class ModListItemInner(QWidget):
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
         # Cache the mod color
-        self.mod_color = mod_color
+        self.mod_color: QColor | None = mod_color
 
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
@@ -562,8 +562,9 @@ class ModListItemInner(QWidget):
         if self.settings_controller.settings.color_background_instead_of_text_toggle:
             # Color background
             if init:
-                new_mod_color_name = self.mod_color.name()
-                self.setStyleSheet(f"background: {new_mod_color_name};")
+                if self.mod_color:
+                    new_mod_color_name = self.mod_color.name()
+                    self.setStyleSheet(f"background: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
@@ -572,8 +573,9 @@ class ModListItemInner(QWidget):
         else:
             # Color text
             if init:
-                new_mod_color_name = self.mod_color.name()
-                self.setStyleSheet(f"color: {new_mod_color_name};")
+                if self.mod_color:
+                    new_mod_color_name = self.mod_color.name()
+                    self.setStyleSheet(f"color: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
@@ -594,13 +596,11 @@ class ModListItemInner(QWidget):
     def handle_mod_color_reset(self) -> None:
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
-        # TODO: This method gets called too often, and without need sometimes... eg. after reset toggle warning
-        # Look into optimizing it? Especially while it instantiates aux metadata controller each time...
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update DB
         # TODO: Create and get cached/shared AuxMetadataController()
+        # Update DB
         aux_metadata_controller = AuxMetadataController()
         aux_metadata_session = aux_metadata_controller.Session()
         mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
