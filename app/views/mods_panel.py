@@ -165,12 +165,12 @@ class ModListItemInner(QWidget):
         :param alternative: a bool representing whether the widget's item has a recommended alternative mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        mod_color: QColor, the color of the mod's text/background in the modlist
+        :param mod_color: QColor, the color of the mod's text/background in the modlist
         """
 
         super(ModListItemInner, self).__init__()
 
-        # Used to handle hover, select etc. behvaior for this custom widget
+        # Used to handle hover, select etc. behavior for this custom widget
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self._selected = False
         self._hovered = False
@@ -320,9 +320,9 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip(self.tr("Subscribed via Steam"))
         # Set label color if mod has errors/warnings
-        # TODO: Is this part needed? Repolish seems to be called anyway...
         if self.mod_color is not None:
             self.main_label.setObjectName("ListItemLabelCustomColor")
+            self.handle_mod_color_change(init=True)
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
         elif errors_warnings:
@@ -561,27 +561,23 @@ class ModListItemInner(QWidget):
         """
         if self.settings_controller.settings.color_background_instead_of_text_toggle:
             # Color background
-            if init:  # Running in ModListItemInner __init__ method
+            if init:
                 new_mod_color_name = self.mod_color.name()
-                # self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
                 self.setStyleSheet(f"background: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
                 self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
-                # self.main_label.setStyleSheet(f"background: {new_mod_color_name};")
                 self.setStyleSheet(f"background: {new_mod_color_name};")
         else:
             # Color text
-            if init:  # Running in ModListItemInner __init__ method
+            if init:
                 new_mod_color_name = self.mod_color.name()
-                # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
                 self.setStyleSheet(f"color: {new_mod_color_name};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
                 self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
-                # self.main_label.setStyleSheet(f"color: {new_mod_color_name};")
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
         # Update DB
@@ -598,14 +594,13 @@ class ModListItemInner(QWidget):
     def handle_mod_color_reset(self) -> None:
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
-        # self.main_label.setStyleSheet("")
         # TODO: This method gets called too often, and without need sometimes... eg. after reset toggle warning
         # Look into optimizing it? Especially while it instantiates aux metadata controller each time...
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
         # Update DB
-        # TODO: Get cached AuxMetadataController()
+        # TODO: Create and get cached/shared AuxMetadataController()
         aux_metadata_controller = AuxMetadataController()
         aux_metadata_session = aux_metadata_controller.Session()
         mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]

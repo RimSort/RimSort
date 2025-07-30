@@ -207,7 +207,6 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings_controller=self.settings_controller,
-            mods_panel_controller=self.mods_panel_controller,
         )
 
         self.main_content_controller = MainContentController(

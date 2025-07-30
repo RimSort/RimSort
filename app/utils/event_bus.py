@@ -44,6 +44,7 @@ class EventBus(QObject):
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
+    reset_warnings_signal = Signal()
     reset_mod_colors_signal = Signal()
 
     # Download Menu bar signals

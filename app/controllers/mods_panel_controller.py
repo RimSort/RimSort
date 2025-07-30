@@ -6,14 +6,11 @@ from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
-    reset_warnings_signal = Signal()
 
     def __init__(self, view: ModsPanel) -> None:
         super().__init__()
 
         self.mods_panel = view
-
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
 
         # Only one label can be active at a time; these are used only in the active modlist.
 
@@ -26,8 +23,9 @@ class ModsPanelController(QObject):
         self.mods_panel.errors_text.clicked.connect(
             self._change_visibility_of_mods_with_errors
         )
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
-
+        EventBus().reset_warnings_signal.connect(
+            self._on_menu_bar_reset_warnings_triggered
+        )
         EventBus().reset_mod_colors_signal.connect(
             self._on_menu_bar_reset_mod_colors_triggered
         )
