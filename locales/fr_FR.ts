@@ -1129,6 +1129,22 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Could not start the update process.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unsaved Changes</source>
+        <translation>Modifications non enregistrées</translation>
+    </message>
+    <message>
+        <source>You have unsaved changes. What would you like to do?</source>
+        <translation>Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?</translation>
+    </message>
+    <message>
+        <source>Save and Run</source>
+        <translation>Enregistrer et exécuter</translation>
+    </message>
+    <message>
+        <source>Run Anyway</source>
+        <translation>Exécuter quand même</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>

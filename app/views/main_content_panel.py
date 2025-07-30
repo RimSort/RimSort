@@ -3379,7 +3379,7 @@ class MainContent(QObject):
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Unsaved Changes"),
                 text=self.tr("You have unsaved changes. What would you like to do?"),
-                button_text_override=["Save and Run", "Run Anyway"],
+                button_text_override=[self.tr("Save and Run"), self.tr("Run Anyway")],
             )
             if answer == "Save and Run":
                 self._do_save()
