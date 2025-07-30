@@ -3375,6 +3375,19 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Unsaved Changes"),
+                text=self.tr("You have unsaved changes. What would you like to do?"),
+                button_text_override=["Save and Run", "Run Anyway"],
+            )
+            if answer == "Save and Run":
+                self._do_save()
+            elif answer == "Run Anyway":
+                pass
+            elif answer == QMessageBox.StandardButton.Cancel:
+                return
+        
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder
