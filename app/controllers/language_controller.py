@@ -1,10 +1,13 @@
 from pathlib import Path
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication, QComboBox
 
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
+from app.utils.generic import restart_application
+from app.views import dialogue
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -73,9 +76,8 @@ class LanguageController:
         self, settings_dialog: "SettingsDialog", settings: "Settings"
     ) -> None:
         """
-        Set up the settings dialog with current settings.
+        Set up the settings dialog with current settings and connect language change signal.
         """
-
         current_language = settings.language
         current_index = settings_dialog.language_combobox.findData(current_language)
         if current_index != -1:
@@ -84,3 +86,35 @@ class LanguageController:
             settings_dialog.language_combobox.setCurrentIndex(
                 settings_dialog.language_combobox.findData(self.default_language)
             )
+
+        settings_dialog.language_combobox.activated.connect(
+            lambda: self._on_language_changed(settings_dialog, settings)
+        )
+
+    def _on_language_changed(
+        self, settings_dialog: "SettingsDialog", settings: "Settings"
+    ) -> None:
+        """Handle language change and prompt user to restart."""
+        new_language = settings_dialog.language_combobox.currentData()
+        if new_language != settings.language:
+            settings.language = new_language
+            settings.save()
+
+            answer = dialogue.show_dialogue_conditional(
+                # title=QCoreApplication.translate("LanguageController", "Language Changed"),
+                title=self.tr("Language Changed"),
+                text=self.tr("The language has been updated."),
+                information=self.tr(
+                    "Restart the application to apply the change. Restart now?"
+                ),
+                button_text_override=[
+                    self.tr("Restart"),
+                ],
+            )
+
+            if answer == QCoreApplication.translate("LanguageController", "Restart"):
+                logger.info("User chose to restart the application.")
+                restart_application()
+
+    def tr(self, text: str) -> str:
+        return QCoreApplication.translate("LanguageController", text)
