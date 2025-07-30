@@ -3381,9 +3381,9 @@ class MainContent(QObject):
                 text=self.tr("You have unsaved changes. What would you like to do?"),
                 button_text_override=[self.tr("Save and Run"), self.tr("Run Anyway")],
             )
-            if answer == "Save and Run":
+            if answer == self.tr("Save and Run"):
                 self._do_save()
-            elif answer == "Run Anyway":
+            elif answer == self.tr("Run Anyway"):
                 pass
             elif answer == QMessageBox.StandardButton.Cancel:
                 return
