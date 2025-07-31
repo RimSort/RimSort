@@ -3,6 +3,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 from toposort import CircularDependencyError, toposort
 
+from app.sort.cycle_breaker import break_known_cycles
 from app.utils.metadata import MetadataManager
 from app.views.dialogue import show_warning
 
@@ -17,6 +18,10 @@ def do_topo_sort(
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
+
+    # Break known cycles before sorting
+    dependency_graph = break_known_cycles(dependency_graph)
+
     try:
         sorted_dependencies = list(toposort(dependency_graph))
     except CircularDependencyError as e:
