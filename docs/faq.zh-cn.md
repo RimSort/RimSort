@@ -28,7 +28,7 @@ RimSort 不是恶意软件，可以安全使用。你可以放心忽略任何杀
 
 对于 **_Windows Defender_**，我们通常会尝试向微软提交样本，以便在出现误报时将 RimSort 版本加入白名单。这个过程可能至少需要一整天，并且每次发布都需要重复。因此，如果 WD 误报 RimSort，我们仍然感谢你的报告，但你可以安全地忽略 WD 的警告。
 
-对于 **_macOS_**，我们需要向苹果支付类似的年费才能在 macOS 上签名应用程序。目前，Mac 用户可以使用 [这个临时解决方案](https://github.com/RimSort/RimSort/wiki/User-Guide#macos)。除了向苹果支付费用外，我们在 macOS 上没有其他方案解决这个问题。
+对于 **_macOS_**，我们需要向苹果支付类似的年费才能在 macOS 上签名应用程序。目前，Mac 用户可以使用 [这个临时解决方案](./user-guide/downloading-and-installing#macos)。除了向苹果支付费用外，我们在 macOS 上没有其他方案解决这个问题。
 
 ## 游戏路径在哪里？
 
@@ -40,11 +40,11 @@ RimSort 不是恶意软件，可以安全使用。你可以放心忽略任何杀
 
 ## Steam 创意工坊数据库有什么用？
 
-RimSort 使用 Steam 创意工坊数据库（Steam DB）来加载 Steam 平台提供的 Mod 依赖数据（指工坊中「必需物品」部分）。尽管 Mod 作者应尽量在其 Mod 的 about.xml 文件中也明确指定这些数据，但通过 Steam DB，RimSort 可以同时利用 Mod 的 Steam 数据和 about.xml 文件中的信息。有关详细信息，请参阅 [用户指南](/user-guide/databases)。
+RimSort 使用 Steam 创意工坊数据库（Steam DB）来加载 Steam 平台提供的 Mod 依赖数据（指工坊中「必需物品」部分）。尽管 Mod 作者应尽量在其 Mod 的 about.xml 文件中也明确指定这些数据，但通过 Steam DB，RimSort 可以同时利用 Mod 的 Steam 数据和 about.xml 文件中的信息。有关详细信息，请参阅 [用户指南](./user-guide/databases.zh-cn)。
 
 ## 社区规则数据库有什么作用？
 
-社区规则数据库（Community Rules DB）用于指导 RimSort 将 Mod 按正确顺序加载。这些规则由社区发现并提交，之后被收集到社区规则库中共用。你可以通过在 GitHub 上提交 pull request 来为社区规则库做贡献。有关该数据库的详细信息，请参阅 [用户指南](/user-guide/databases)。
+社区规则数据库（Community Rules DB）用于指导 RimSort 将 Mod 按正确顺序加载。这些规则由社区发现并提交，之后被收集到社区规则库中共用。你可以通过在 GitHub 上提交 pull request 来为社区规则库做贡献。有关该数据库的详细信息，请参阅 [用户指南](./user-guide/databases.zh-cn)。
 
 ## 如果已安装 Steam，如何启用如 `在 Steam 打开 Mod（Open mod in Steam）` 等 Steam 客户端集成功能？
 
