@@ -3387,7 +3387,7 @@ class MainContent(QObject):
                 pass
             elif answer == QMessageBox.StandardButton.Cancel:
                 return
-        
+
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder

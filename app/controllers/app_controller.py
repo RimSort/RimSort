@@ -28,13 +28,35 @@ class AppController(QObject):
         self.app = QApplication(sys.argv)
         self.app.setWindowIcon(GUIInfo().app_icon)
 
+        # Initialize user rules.
         self.initialize_user_rules()
+        # Initialize the application settings.
         self.initialize_settings()
+        # set the language of the application.
+        self.set_language()
+        # Initialize the theme controller
         self.initialize_theme_controller()
+        # Set the theme of the application.
+        self.set_theme()
+        # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
+        # Initialize the metadata manager
         self.initialize_metadata_manager()
+        # Initialize the main window controller
         self.initialize_main_window()
 
+    def set_language(self) -> None:
+        """Sets the language of the application on initial setup."""
+        available_languages = self.settings_controller.language_controller.languages
+        os_language = os.getenv("LANG", "").split(".")[0]
+        is_inital = self.settings_controller.active_instance.initial_setup
+        if is_inital and os_language in available_languages:
+            self.settings_controller.settings.language = os_language
+            self.settings_controller.settings.save()
+            self.initialize_settings()
+
+    def set_theme(self) -> None:
+        """Sets the theme for the application."""
         self.app.setStyle("Fusion")
         self.theme_controller.set_font(
             self.settings.font_family,
