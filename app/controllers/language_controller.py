@@ -101,7 +101,6 @@ class LanguageController:
             settings.save()
 
             answer = dialogue.show_dialogue_conditional(
-                # title=QCoreApplication.translate("LanguageController", "Language Changed"),
                 title=self.tr("Language Changed"),
                 text=self.tr("The language has been updated."),
                 information=self.tr(
