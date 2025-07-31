@@ -1169,6 +1169,22 @@ La base de datos resultante, C, se guarda en una ruta especificada por el usuari
         <source>Could not start the update process.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unsaved Changes</source>
+        <translation>Cambios sin guardar</translation>
+    </message>
+    <message>
+        <source>You have unsaved changes. What would you like to do?</source>
+        <translation>Tiene cambios sin guardar. ¿Qué le gustaría hacer?</translation>
+    </message>
+    <message>
+        <source>Save and Run</source>
+        <translation>Guardar y ejecutar</translation>
+    </message>
+    <message>
+        <source>Run Anyway</source>
+        <translation>Ejecutar de todos modos</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
