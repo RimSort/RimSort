@@ -5,7 +5,14 @@ from re import match
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QMouseEvent, QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
@@ -20,25 +27,25 @@ class ClickablePathLabel(QLabel):
     Inherits text color from the application's theme system.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.clickable = True
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("text-decoration: underline;")
         self.path = ""
 
-    def setPath(self, path: str):
+    def setPath(self, path: str | None) -> None:
         """Set the path and update the display text."""
-        self.path = path
         if path:
-            self.setText(f"{path}")
+            self.path = path
+            self.setText(path)
             self.setToolTip(f"Click to open folder: {path}")
         else:
+            self.path = ""
             self.setText("")
             self.setToolTip("")
-            self.path = ""
 
-    def setClickable(self, clickable: bool):
+    def setClickable(self, clickable: bool) -> None:
         """Set whether the label is clickable, updating cursor accordingly."""
         self.clickable = clickable
         if clickable:
@@ -46,14 +53,17 @@ class ClickablePathLabel(QLabel):
         else:
             self.setCursor(Qt.CursorShape.ArrowCursor)
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """Handle mouse click to open the folder if clickable."""
         if event.button() == Qt.MouseButton.LeftButton and self.path and self.clickable:
             try:
                 path_obj = Path(self.path)
                 if path_obj.exists():
-                    platform_specific_open(self.path)
-                    logger.info(f"Opening mod folder: {self.path}")
+                    if path_obj.is_dir():
+                        platform_specific_open(self.path)
+                        logger.info(f"Opening mod folder: {self.path}")
+                    else:
+                        logger.warning(f"Path is not a directory: {self.path}")
                 else:
                     logger.warning(f"Mod folder does not exist: {self.path}")
             except Exception as e:
