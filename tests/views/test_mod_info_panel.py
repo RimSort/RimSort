@@ -1,3 +1,4 @@
+# jscpd:ignore-file
 from typing import Any
 from unittest.mock import MagicMock
 
