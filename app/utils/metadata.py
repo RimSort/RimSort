@@ -210,7 +210,7 @@ class MetadataManager(QObject):
                             ).format(
                                 last_updated=strftime(
                                     "%Y-%m-%d %H:%M:%S",
-                                    localtime(db_data["version"] - life),
+                                    localtime(db_time),
                                 )
                             ),
                             "",
