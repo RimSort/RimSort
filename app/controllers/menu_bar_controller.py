@@ -150,7 +150,9 @@ class MenuBarController(QObject):
         )
         # Help menu
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.github_action.triggered.connect(self._on_menu_bar_github_triggered)
+        self.menu_bar.github_action.triggered.connect(
+            self._on_menu_bar_github_triggered
+        )
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)

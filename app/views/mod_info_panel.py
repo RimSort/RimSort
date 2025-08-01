@@ -70,6 +70,7 @@ class ClickablePathLabel(QLabel):
                 logger.error(f"Failed to open mod folder {self.path}: {e}")
         super().mousePressEvent(event)
 
+
 class ModInfo:
     """
     This class controls the layout and functionality for the
@@ -279,7 +280,9 @@ class ModInfo:
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
             # Set invalid path style (red color, no clickable styling)
-            self.mod_info_path_value.setStyleSheet("color: #cc0000; text-decoration: none;")
+            self.mod_info_path_value.setStyleSheet(
+                "color: #cc0000; text-decoration: none;"
+            )
             self.mod_info_path_value.setClickable(False)
         else:
             # Set valid value style

@@ -552,8 +552,9 @@ def check_internet_connection(
 
     return False
 
+
 def restart_application() -> None:
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         cmd = [sys.executable] + sys.argv[1:]
     else:
         cmd = [sys.executable] + sys.argv
@@ -566,4 +567,3 @@ def restart_application() -> None:
         instance.quit()
     else:
         logger.warning("No QApplication instance found, cannot restart the application")
-        
