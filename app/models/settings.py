@@ -80,12 +80,10 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
-        self.check_dependencies_on_sort: bool = (
-            True  # Whether to check for missing dependencies when sorting
-        )
-        self.use_moddependencies_as_loadTheseBefore: bool = (
-            False  # Whether to use moddependencies as loadTheseBefore
-        )
+        # Whether to use moddependencies as loadTheseBefore rules
+        self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to check for missing dependencies when sorting
+        self.check_dependencies_on_sort: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -169,9 +167,8 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
-                mitigations = (
-                    True  # Assume there are mitigations unless we reach else block
-                )
+                # Assume there are mitigations unless we reach else block
+                mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(
