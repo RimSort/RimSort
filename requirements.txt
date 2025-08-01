@@ -11,7 +11,7 @@ networkx==3.4.2
 platformdirs==4.3.8
 pygit2==1.18.0
 psutil==7.0.0
-PyGithub==2.6.1
+PyGithub==2.7.0
 pyperclip==1.9.0
 PySide6
 PySide6==6.9.1; sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'
