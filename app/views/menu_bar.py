@@ -55,6 +55,7 @@ class MenuBar(QObject):
         self.optimize_textures_action: QAction
         self.delete_dds_textures_action: QAction
         self.wiki_action: QAction
+        self.github_action: QAction
         self.check_for_updates_action: QAction
         self.check_for_updates_on_startup_action: QAction
 
@@ -291,6 +292,7 @@ class MenuBar(QObject):
         """
         help_menu = self.menu_bar.addMenu(self.tr("Help"))
         self.wiki_action = self._add_action(help_menu, self.tr("RimSort Wiki…"))
+        self.github_action = self._add_action(help_menu, self.tr("RimSort GitHub…"))
         help_menu.addSeparator()
         return help_menu
 
