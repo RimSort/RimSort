@@ -624,6 +624,7 @@ def git_pull(
     reset_working_tree: bool = True,
     force: bool = False,
     config: Optional[GitOperationConfig] = None,
+    stash_before_pull: bool = False,
 ) -> GitPullResult:
     """Pull updates from a git repository.
 
@@ -634,6 +635,7 @@ def git_pull(
         reset_working_tree: Whether to discard uncommitted changes.
         force: Whether to force the pull operation via forced checkout.
         config: Configuration for the operation.
+        stash_before_pull: Whether to stash changes before pulling to avoid conflicts.
 
     Returns:
         Result of the pull operation.
@@ -674,6 +676,16 @@ def git_pull(
         except Exception as e:
             logger.error(f"Fetch operation failed: {str(e)}")
             return GitPullResult.GIT_ERROR
+
+        # Stash changes before pull if requested
+        stash_result = None
+        if stash_before_pull:
+            try:
+                stash_result = git_stash(repo, message="Auto-stash before pull")
+                if stash_result.is_error():
+                    logger.warning("Failed to stash changes before pull")
+            except Exception as e:
+                logger.warning(f"Exception during stash before pull: {e}")
 
         # Get remote branch reference
         remote_ref = f"refs/remotes/{remote.name}/{branch}"
@@ -743,6 +755,16 @@ def git_pull(
                         )
                     else:
                         logger.error("Multiple git merge conflicts detected")
+
+                # Abort the merge to reset repository state
+                try:
+                    repo.state_cleanup()
+                    repo.checkout_head(strategy=CheckoutStrategy.FORCE)
+                    logger.info(
+                        "Aborted merge due to conflicts and reset repository state."
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to abort merge and reset state: {e}")
 
                 return GitPullResult.CONFLICT
             else:
