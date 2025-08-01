@@ -1213,6 +1213,10 @@ class SettingsDialog(QDialog):
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
             self.tr(
                 "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."

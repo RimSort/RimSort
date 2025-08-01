@@ -44,6 +44,8 @@ class EventBus(QObject):
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
+    reset_warnings_signal = Signal()
+    reset_mod_colors_signal = Signal()
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
@@ -87,6 +89,7 @@ class EventBus(QObject):
     do_import_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
+    do_change_mod_coloring_mode = Signal()
 
     # MainWindow signals
     do_button_animation = Signal(QPushButton)

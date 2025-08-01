@@ -1,19 +1,16 @@
 from loguru import logger
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+from PySide6.QtCore import QObject, Qt, Slot
 
 from app.utils.event_bus import EventBus
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
-    reset_warnings_signal = Signal()
 
     def __init__(self, view: ModsPanel) -> None:
         super().__init__()
 
         self.mods_panel = view
-
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
 
         # Only one label can be active at a time; these are used only in the active modlist.
 
@@ -26,7 +23,15 @@ class ModsPanelController(QObject):
         self.mods_panel.errors_text.clicked.connect(
             self._change_visibility_of_mods_with_errors
         )
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+        EventBus().reset_warnings_signal.connect(
+            self._on_menu_bar_reset_warnings_triggered
+        )
+        EventBus().reset_mod_colors_signal.connect(
+            self._on_menu_bar_reset_mod_colors_triggered
+        )
+        EventBus().do_change_mod_coloring_mode.connect(
+            self._on_change_mod_coloring_mode
+        )
         EventBus().filters_changed_in_active_modlist.connect(
             self._on_filters_changed_in_active_modlist
         )
@@ -85,6 +90,39 @@ class ModsPanelController(QObject):
         inactive_mods_list = self.mods_panel.inactive_mods_list.ignore_warning_list
         if package_id in inactive_mods_list:
             inactive_mods_list.remove(package_id)
+
+    def _on_menu_bar_reset_mod_colors_triggered(self) -> None:
+        """
+        Resets all mod colors to the default color.
+        """
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
+        for mod in active_mods :
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            self.mods_panel.active_mods_list.reset_mod_color(uuid)
+        for mod in inactive_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
+
+    def _on_change_mod_coloring_mode(self) -> None:
+        # TODO: Is calling change_mod_color() the most efficient way?
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.active_mods_list.change_mod_color(uuid, mod_color)
+
+        for mod in inactive_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)
 
     @Slot()
     def _change_visibility_of_mods_with_warnings(self) -> None:

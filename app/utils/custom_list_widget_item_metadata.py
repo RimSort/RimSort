@@ -1,7 +1,10 @@
 from typing import Any, Optional
 
 from loguru import logger
+from PySide6.QtGui import QColor
+from sqlalchemy.orm.session import Session
 
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.utils.metadata import MetadataManager
 
 
@@ -9,15 +12,6 @@ class CustomListWidgetItemMetadata:
     """
     A class to store metadata for CustomListWidgetItem.
 
-    Attributes:
-        uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        errors_warnings: str, a string of errors and warnings
-        errors: str, a string of errors for the notification tooltip
-        warnings: str, a string of warnings for the notification tooltip
-        warning_toggled: bool, representing if the warning/error icons are toggled off
-        filtered: bool, representing whether the widget's item is filtered
-        invalid: bool, representing whether the widget's item is an invalid mod
-        mismatch: bool, representing whether the widget's item has a version mismatch
     """
 
     def __init__(
@@ -29,9 +23,12 @@ class CustomListWidgetItemMetadata:
         warning_toggled: bool = False,
         filtered: bool = False,
         hidden_by_filter: bool = False,
-        invalid: Optional[bool] = None,
-        mismatch: Optional[bool] = None,
+        invalid: bool | None = None,
+        mismatch: bool | None = None,
+        mod_color: QColor | None = None,
         alternative: Optional[str] = None,
+        aux_metadata_controller: AuxMetadataController | None = None,
+        aux_metadata_session: Session | None = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -47,10 +44,12 @@ class CustomListWidgetItemMetadata:
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param mod_color: QColor, the color of the mod's text/background in the modlist
         :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
+        # Do not cache the aux metadata controller, it will cause freezes/crashes when dragging mods.
 
         # Metadata attributes
         self.uuid = uuid
@@ -66,14 +65,42 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
+        if mod_color is None:
+            self.mod_color = self.get_mod_color(uuid, aux_metadata_controller, aux_metadata_session)
+        else:
+            self.mod_color = mod_color
         self.alternative = (
             alternative
             if alternative is not None
             else self.get_alternative_by_uuid(uuid)
         )
+
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
+
+    def get_mod_color(self, uuid: str, controller: AuxMetadataController | None, session: Session | None) -> QColor | None:
+        """
+        Get the mod color from DB.
+
+        :param uuid: str, the uuid of the mod
+        :return: QColor | None, Color of hte mod, or None if no color
+        """
+        metadata_manager = MetadataManager.instance()
+        local_controller = controller or AuxMetadataController()
+        local_session = session or local_controller.Session()
+        entry = local_controller.get(
+            local_session,
+            metadata_manager.internal_local_metadata[uuid]["path"],
+        )
+
+        mod_color = None
+        if entry:
+            color_text = entry.color_hex
+            if color_text is not None:
+                mod_color = QColor(color_text)
+
+        return mod_color
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """
