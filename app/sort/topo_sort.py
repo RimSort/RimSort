@@ -42,7 +42,7 @@ def do_topo_sort(
                 temp_mod_set.add(mod_uuid)
 
         # Sort packages in this topological level by name
-        def safe_name(uuid: str) -> str:
+        """def safe_name(uuid: str) -> str:
             name = metadata_manager.internal_local_metadata[uuid].get("name")
             if isinstance(name, str):
                 return name.lower()
@@ -53,9 +53,9 @@ def do_topo_sort(
             temp_mod_set,
             key=safe_name,
             reverse=False,
-        )
+        )"""
         # Add into reordered set
-        for sorted_mod_uuid in sorted_temp_mod_set:
+        for sorted_mod_uuid in temp_mod_set:
             reordered.append(sorted_mod_uuid)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered
