@@ -1,6 +1,5 @@
 from loguru import logger
 
-from app.sort.cycle_breaker import break_known_cycles
 from app.utils.metadata import MetadataManager
 
 
@@ -10,9 +9,6 @@ def do_alphabetical_sort(
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
-
-    # Break known cycles before sorting
-    dependency_graph = break_known_cycles(dependency_graph)
 
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
