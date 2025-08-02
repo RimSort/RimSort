@@ -31,17 +31,17 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.12"
-          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
-          cache: "pip"
-          cache-dependency-path: |
-            **/requirements*.txt
+          python-version-file: "pyproject.toml"
 
-      - name: Install dependencies with pip + requirements.txt
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install -r requirements.txt
-          .venv/bin/pip install -r requirements_develop.txt
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          activate-environment: true
+
+      - name: Install Dependencies
+        shell: bash
+        run: uv sync --locked --dev
 
       - name: Move the dependencies
         run: mv .venv /home/runner/work/_temp/_github_workflow
