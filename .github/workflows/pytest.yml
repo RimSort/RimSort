@@ -32,7 +32,6 @@ jobs:
           set -e
           uv run --frozen python \
           ./distribute.py \
-          --skip-pip \
           --skip-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

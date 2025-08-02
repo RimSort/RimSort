@@ -138,8 +138,7 @@ jobs:
         run: |
           set -e
           uv run --frozen python \
-          distribute.py \
-          --skip-pip \
+          ./distribute.py \
           --product-version='${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
