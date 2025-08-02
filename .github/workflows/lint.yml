@@ -70,3 +70,4 @@ jobs:
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md"
+          IGNORE_GITIGNORED_FILES: true

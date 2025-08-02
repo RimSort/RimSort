@@ -1,9 +1,10 @@
-{   
+{
     "threshold": 0,
     "ignore": [
         "**/submodules/**",
         "**/.git/**",
         "**/*.md",
-        "**/.github/ISSUE_TEMPLATE/**"
+        "**/.github/ISSUE_TEMPLATE/**",
+        "**/.venv/**"
     ]
 }
