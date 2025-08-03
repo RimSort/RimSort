@@ -4,7 +4,7 @@
         "**/submodules/**",
         "**/.git/**",
         "**/*.md",
-        "**/.github/ISSUE_TEMPLATE/**",
+        "**/.github/**",
         "**/.venv/**"
     ]
 }
