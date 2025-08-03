@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 import time
 from pathlib import Path
 from typing import List, Optional, cast
@@ -8,7 +7,7 @@ from typing import List, Optional, cast
 from github import Github, Repository
 from loguru import logger
 from PySide6.QtCore import QObject, QThreadPool, Slot
-from PySide6.QtWidgets import QInputDialog
+from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from app.controllers.settings_controller import SettingsController
 from app.utils import git_utils
@@ -19,7 +18,7 @@ from app.utils.generic import (
     extract_git_dir_name,
     extract_git_user_or_org,
 )
-from app.utils.git_utils import GitOperationConfig
+from app.utils.git_utils import GitOperationConfig, pygit2
 from app.utils.git_worker import (
     GitBatchPushResults,
     GitBatchPushWorker,
@@ -39,21 +38,6 @@ from app.views.dialogue import (
     show_internet_connection_error,
 )
 from app.views.main_content_panel import MainContent
-
-try:
-    import pygit2
-except Exception:
-    import certifi
-
-    os.environ["SSL_CERT_FILE"] = certifi.where()
-    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
-    logger.warning("Set SSL certificates using certifi")
-
-    try:
-        import pygit2
-    except Exception as e:
-        logger.error("Failed to import pygit2 after setting SSL certificates. ")
-        raise ImportError("Failed to import pygit2. ") from e
 
 
 class MainContentController(QObject):
@@ -670,7 +654,7 @@ class MainContentController(QObject):
                 text=self.tr("Local repository does not exist."),
                 information=self.tr("Would you like to clone the repository first?"),
             )
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 self._do_git_clone(
                     base_path=str(AppInfo().databases_folder),
                     repo_url=repo_url,
@@ -1261,7 +1245,7 @@ class MainContentController(QObject):
                 ).format(url=pull_request.html_url),
             )
 
-            if answer == "&Yes":
+            if answer == QMessageBox.StandardButton.Yes:
                 # Open URL in browser
                 try:
                     import webbrowser

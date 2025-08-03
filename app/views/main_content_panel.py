@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -62,7 +63,7 @@ from app.utils.generic import (
 from app.utils.metadata import MetadataManager, SettingsController
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
-from app.utils.steam.browser import SteamBrowser
+from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
@@ -237,6 +238,9 @@ class MainContent(QObject):
             )  # Space between widgets and Frame border
             self.main_layout.setSpacing(5)  # Space between mod lists and action buttons
 
+            self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+            self.main_splitter.setChildrenCollapsible(False)
+
             # FRAME REQUIRED - to allow for styling
             self.main_layout_frame = QFrame()
             self.main_layout_frame.setObjectName("MainPanel")
@@ -248,9 +252,20 @@ class MainContent(QObject):
                 settings_controller=self.settings_controller,
             )
 
+            self.mod_info_container = QWidget()
+            self.mod_info_container.setLayout(self.mod_info_panel.panel)
+
+            self.mods_panel_container = QWidget()
+            self.mods_panel_container.setLayout(self.mods_panel.panel)
+
+            self.main_splitter.addWidget(self.mod_info_container)
+            self.main_splitter.addWidget(self.mods_panel_container)
+
+            self.main_splitter.setHandleWidth(1)
+
+            self.mod_info_container.setMinimumWidth(280)
             # WIDGETS INTO BASE LAYOUT
-            self.main_layout.addLayout(self.mod_info_panel.panel, 50)
-            self.main_layout.addLayout(self.mods_panel.panel, 50)
+            self.main_layout.addWidget(self.main_splitter)
 
             # SIGNALS AND SLOTS
             self.metadata_manager.mod_created_signal.connect(
@@ -794,13 +809,8 @@ class MainContent(QObject):
             current_version_parsed = version.parse("0.0.0")
 
         if current_version_parsed >= latest_version:
-            logger.debug("Up to date!")
-            dialogue.show_information(
-                title=self.tr("RimSort is up to date!"),
-                text=self.tr(
-                    "You are already running the latest release: {latest_tag_name}"
-                ).format(latest_tag_name=latest_tag_name),
-            )
+            # No update needed then return and log the check no need to notify user
+            logger.info("Up to date!")
             return
 
         # Show update prompt
@@ -814,7 +824,7 @@ class MainContent(QObject):
             ).format(current_version=current_version),
         )
 
-        if answer != "&Yes":
+        if answer != QMessageBox.StandardButton.Yes:
             return
 
         # Perform update
@@ -921,6 +931,7 @@ class MainContent(QObject):
                 },
             },
         }
+        extension = ".zip"
 
         if system not in platform_patterns:
             logger.warning(f"Unsupported system: {system}")
@@ -937,17 +948,27 @@ class MainContent(QObject):
 
         # Search for matching asset
         for asset in assets:
-            asset_name = asset.get("name", "").lower()
+            asset_name = asset.get("name", "")
+            if isinstance(asset_name, list):
+                # If asset_name is a list, join to string for checking
+                asset_name = " ".join(asset_name)
+            asset_name_lower = asset_name.lower()
 
-            # Check if asset matches platform and architecture
+            # Check if asset has the correct extension
+            if not asset_name_lower.endswith(extension):
+                continue
+
+            # Check if asset matches platform
             system_match = any(
-                pattern.lower() in asset_name for pattern in system_patterns
+                pattern.lower() in asset_name_lower for pattern in system_patterns
             )
-            arch_match = (
-                any(pattern.lower() in asset_name for pattern in arch_patterns)
-                if arch_patterns
-                else True
-            )
+
+            # Check if asset matches architecture (if arch_patterns is not empty)
+            arch_match = True
+            if arch_patterns:
+                arch_match = any(
+                    pattern.lower() in asset_name_lower for pattern in arch_patterns
+                )
 
             if system_match and arch_match:
                 download_url = asset.get("browser_download_url")
@@ -956,9 +977,14 @@ class MainContent(QObject):
                 )
                 return download_url
 
-        # Fallback: try to find any asset that contains the system name
+        # Fallback: try to find any asset that contains the system name and has correct extension
         for asset in assets:
             asset_name = asset.get("name", "").lower()
+
+            # Check if asset has the correct extension
+            if not asset_name.endswith(extension):
+                continue
+
             if any(pattern.lower() in asset_name for pattern in system_patterns):
                 download_url = asset.get("browser_download_url")
                 logger.debug(
@@ -1008,7 +1034,7 @@ class MainContent(QObject):
                 information=f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {temp_path}",
             )
 
-            if answer != "&Yes":
+            if answer != QMessageBox.StandardButton.Yes:
                 return
 
             # Launch update script
@@ -2242,7 +2268,9 @@ class MainContent(QObject):
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/", self.metadata_manager
+            "https://steamcommunity.com/app/294100/workshop/",
+            self.metadata_manager,
+            self.settings_controller,
         )
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
@@ -2739,7 +2767,7 @@ class MainContent(QObject):
                 )
             ),
         )
-        if answer == "&Yes":
+        if answer == QMessageBox.StandardButton.Yes:
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
@@ -2993,7 +3021,7 @@ class MainContent(QObject):
                         + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort."
                     ),
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     for (
                         metadata_values
                     ) in self.metadata_manager.internal_local_metadata.values():
@@ -3363,6 +3391,19 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Unsaved Changes"),
+                text=self.tr("You have unsaved changes. What would you like to do?"),
+                button_text_override=[self.tr("Save and Run"), self.tr("Run Anyway")],
+            )
+            if answer == self.tr("Save and Run"):
+                self._do_save()
+            elif answer == self.tr("Run Anyway"):
+                pass
+            elif answer == QMessageBox.StandardButton.Cancel:
+                return
+
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder

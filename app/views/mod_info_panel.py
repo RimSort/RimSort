@@ -3,14 +3,72 @@ from pathlib import Path
 from re import match
 
 from loguru import logger
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtGui import QMouseEvent, QPixmap
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
+
+
+class ClickablePathLabel(QLabel):
+    """
+    A clickable QLabel that opens the folder in the file manager when clicked.
+    Inherits text color from the application's theme system.
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.clickable = True
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setStyleSheet("text-decoration: underline;")
+        self.path = ""
+
+    def setPath(self, path: str | None) -> None:
+        """Set the path and update the display text."""
+        if path:
+            self.path = path
+            self.setText(path)
+            self.setToolTip(f"Click to open folder: {path}")
+        else:
+            self.path = ""
+            self.setText("")
+            self.setToolTip("")
+
+    def setClickable(self, clickable: bool) -> None:
+        """Set whether the label is clickable, updating cursor accordingly."""
+        self.clickable = clickable
+        if clickable:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Handle mouse click to open the folder if clickable."""
+        if event.button() == Qt.MouseButton.LeftButton and self.path and self.clickable:
+            try:
+                path_obj = Path(self.path)
+                if path_obj.exists():
+                    if path_obj.is_dir():
+                        platform_specific_open(self.path)
+                        logger.info(f"Opening mod folder: {self.path}")
+                    else:
+                        logger.warning(f"Path is not a directory: {self.path}")
+                else:
+                    logger.warning(f"Mod folder does not exist: {self.path}")
+            except Exception as e:
+                logger.error(f"Failed to open mod folder {self.path}: {e}")
+        super().mousePressEvent(event)
 
 
 class ModInfo:
@@ -122,7 +180,7 @@ class ModInfo:
         self.mod_info_supported_versions_value.setObjectName("summaryValue")
         self.mod_info_path_label = QLabel(self.tr("Path:"))
         self.mod_info_path_label.setObjectName("summaryLabel")
-        self.mod_info_path_value = QLabel()
+        self.mod_info_path_value = ClickablePathLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
         self.mod_info_path_value.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
@@ -199,8 +257,6 @@ class ModInfo:
 
     @staticmethod
     def tr(text: str) -> str:
-        from PySide6.QtCore import QCoreApplication
-
         return QCoreApplication.translate("ModInfo", text)
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
@@ -217,26 +273,36 @@ class ModInfo:
             # Set invalid value style
             for widget in (
                 self.mod_info_name_value,
-                self.mod_info_path_value,
                 self.mod_info_author_value,
                 self.mod_info_package_id_value,
             ):
                 widget.setObjectName("summaryValueInvalid")
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
+            # Set invalid path style (red color, no clickable styling)
+            self.mod_info_path_value.setStyleSheet(
+                "color: #cc0000; text-decoration: none;"
+            )
+            self.mod_info_path_value.setClickable(False)
         else:
             # Set valid value style
             for widget in (
                 self.mod_info_name_value,
-                self.mod_info_path_value,
                 self.mod_info_author_value,
                 self.mod_info_package_id_value,
             ):
                 widget.setObjectName("summaryValue")
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
+            # Set valid path style (inherits theme color, clickable styling)
+            self.mod_info_path_value.setStyleSheet("text-decoration: underline;")
+            self.mod_info_path_value.setClickable(True)
         # Set name value
-        self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
+        name_value = mod_info.get("name", "Not specified")
+        if isinstance(name_value, dict):
+            # Convert dict to string representation or fallback
+            name_value = str(name_value)
+        self.mod_info_name_value.setText(name_value)
         # Show essential info widgets
         for widget in self.essential_info_widgets:
             if not widget.isVisible():
@@ -305,7 +371,7 @@ class ModInfo:
             for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
                 widget.hide()
 
-        self.mod_info_path_value.setText(mod_info.get("path"))
+        self.mod_info_path_value.setPath(mod_info.get("path"))
         # Set the scrolling description for the Mod Info Panel
         self.description.setText("")
         if "description" in mod_info:

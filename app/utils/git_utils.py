@@ -1,5 +1,6 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import datetime
 import os
 import threading
 from contextlib import contextmanager
@@ -623,6 +624,7 @@ def git_pull(
     reset_working_tree: bool = True,
     force: bool = False,
     config: Optional[GitOperationConfig] = None,
+    stash_before_pull: bool = False,
 ) -> GitPullResult:
     """Pull updates from a git repository.
 
@@ -633,6 +635,7 @@ def git_pull(
         reset_working_tree: Whether to discard uncommitted changes.
         force: Whether to force the pull operation via forced checkout.
         config: Configuration for the operation.
+        stash_before_pull: Whether to stash changes before pulling to avoid conflicts.
 
     Returns:
         Result of the pull operation.
@@ -673,6 +676,16 @@ def git_pull(
         except Exception as e:
             logger.error(f"Fetch operation failed: {str(e)}")
             return GitPullResult.GIT_ERROR
+
+        # Stash changes before pull if requested
+        stash_result = None
+        if stash_before_pull:
+            try:
+                stash_result = git_stash(repo, message="Auto-stash before pull")
+                if stash_result.is_error():
+                    logger.warning("Failed to stash changes before pull")
+            except Exception as e:
+                logger.warning(f"Exception during stash before pull: {e}")
 
         # Get remote branch reference
         remote_ref = f"refs/remotes/{remote.name}/{branch}"
@@ -742,6 +755,16 @@ def git_pull(
                         )
                     else:
                         logger.error("Multiple git merge conflicts detected")
+
+                # Abort the merge to reset repository state
+                try:
+                    repo.state_cleanup()
+                    repo.checkout_head(strategy=CheckoutStrategy.FORCE)
+                    logger.info(
+                        "Aborted merge due to conflicts and reset repository state."
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to abort merge and reset state: {e}")
 
                 return GitPullResult.CONFLICT
             else:
@@ -1457,8 +1480,6 @@ def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
                 short_hash = str(commit.id)[:7]
                 message = commit.message.split("\n")[0]
                 author = commit.author.name
-                import datetime
-
                 commit_time = datetime.datetime.fromtimestamp(commit.commit_time)
                 time_str = commit_time.strftime("%Y-%m-%d %H:%M")
                 return f"{short_hash} - {message} ({author}, {time_str})"
@@ -1484,3 +1505,25 @@ def get_repository_latest_commit(
         error_msg = str(e)
         logger.error(f"Error getting latest commit for {repo_path}: {error_msg}")
         return False, None, error_msg
+
+
+__all__ = [
+    "git_check_updates",
+    "git_pull",
+    "git_push",
+    "git_stage_commit",
+    "git_get_status",
+    "git_get_commit_info",
+    "git_cleanup",
+    "git_stash",
+    "git_stash_list",
+    "git_stash_drop",
+    "git_has_uncommitted_changes",
+    "git_is_repository",
+    "git_get_current_branch",
+    "git_get_remote_url",
+    "git_is_clean",
+    "get_latest_commit_info",
+    "get_repository_latest_commit",
+    "pygit2",
+]

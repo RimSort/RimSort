@@ -210,7 +210,7 @@ class MetadataManager(QObject):
                             ).format(
                                 last_updated=strftime(
                                     "%Y-%m-%d %H:%M:%S",
-                                    localtime(db_data["version"] - life),
+                                    localtime(db_time),
                                 )
                             ),
                             "",
@@ -1094,6 +1094,15 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_community_rules[package_id].get(
+                        "loadTop"
+                    )
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1177,6 +1186,13 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_user_rules[package_id].get("loadTop")
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1304,6 +1320,12 @@ class MetadataManager(QObject):
         if not check_path.exists():
             return None
         replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
+
+        # check if replacement supports  the game version
+        major, minor = self.game_version.split(".")[:2]
+        version_regex = rf"{major}.{minor}"
+        if version_regex not in replacement_data["ReplacementVersions"]:
+            return None
 
         return ModReplacement(
             name=replacement_data["ReplacementName"],
@@ -1745,7 +1767,14 @@ class ModParser(QRunnable):
                                     mod_metadata["packageid"] = potential_packageid
                                     break
                         # Normalize package ID in metadata
-                        mod_metadata["packageid"] = mod_metadata["packageid"].lower()
+                        if isinstance(mod_metadata["packageid"], str):
+                            mod_metadata["packageid"] = mod_metadata[
+                                "packageid"
+                            ].lower()
+                        else:
+                            mod_metadata["packageid"] = (
+                                "packageid error in mod about.xml"
+                            )
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (

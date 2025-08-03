@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -35,6 +36,7 @@ from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
+from app.views.acf_log_reader import AcfLogReader
 from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
@@ -44,7 +46,6 @@ from app.views.dialogue import (
     show_warning,
 )
 from app.views.file_search_dialog import FileSearchDialog
-from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
@@ -79,9 +80,6 @@ class MainWindow(QMainWindow):
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
         self.__set_window_title(current_instance)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
-        print(f"Window geometry: {self.geometry()}")
 
         # Create the window layout
         app_layout = QVBoxLayout()
@@ -144,15 +142,18 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.main_content_tab, self.tr("Main Content"))
 
         # Create and add the ACF Data tab
-        self.log_reader_tab = QWidget()
-        self.log_reader_layout = QVBoxLayout()
-        self.log_reader_tab.setLayout(self.log_reader_layout)
+        self.acf_log_reader_tab = QWidget()
+        self.acf_log_reader_layout = QVBoxLayout()
+        self.acf_log_reader_tab.setLayout(self.acf_log_reader_layout)
 
         # Instantiate the AcfDataWindow and add it to the tab
-        self.log_reader = LogReader(settings_controller)
-        self.log_reader_layout.addWidget(self.log_reader)
+        self.acf_log_reader = AcfLogReader(
+            settings_controller,
+            active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
+        )
+        self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
-        self.tab_widget.addTab(self.log_reader_tab, self.tr("Log Reader"))
+        self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
 
         # Create and add the Search tab
         self.file_search_tab = QWidget()
@@ -223,7 +224,27 @@ class MainWindow(QMainWindow):
         EventBus().do_restore_instance_from_archive.connect(
             self.__restore_instance_from_archive
         )
+
+        # launch the main window
+        self._launch_main_window()
         logger.debug("Finished MainWindow initialization")
+
+    def _launch_main_window(self) -> None:
+        """Apply main window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
+        main_window_launch_state = (
+            self.settings_controller.settings.main_window_launch_state
+        )
+        custom_width = self.settings_controller.settings.main_window_custom_width
+        custom_height = self.settings_controller.settings.main_window_custom_height
+
+        apply_window_launch_state(
+            self, main_window_launch_state, custom_width, custom_height
+        )
+        logger.info(
+            f"Main window started with launch state: {main_window_launch_state}"
+        )
 
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
@@ -933,7 +954,7 @@ class MainWindow(QMainWindow):
                         "This will try to generate run args for the new instance based on the configured Game/Config folders."
                     ),
                 )
-                if answer == "&Yes":
+                if answer == QMessageBox.StandardButton.Yes:
                     # Append new run args to the existing run args
                     generated_instance_run_args = [
                         "-logfile",

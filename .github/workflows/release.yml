@@ -106,7 +106,7 @@ jobs:
           path: artifacts
 
       - name: Download artifacts - Previous Flow
-        if: ${{ inputs.skip_build == true}}
+        if: ${{ inputs.skip_build == true }}
         uses: actions/download-artifact@v4.3.0
         with:
           path: artifacts
@@ -116,39 +116,47 @@ jobs:
       - name: Rename artifacts and zip to versioned file
         id: artifacts
         run: |
+          mv artifacts/Windows_x86_64_msi artifacts/msi
           cd artifacts
           for artifact in ./*; do
             file=${artifact##*/} 
-            base=${file%%.tar}
-            name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
-            rootname=RimSort
-            if [[ $base == *"Darwin"* ]]; then
-              rootname=RimSort.app
-            fi
-            echo "Will zip $artifact to $name"
-            echo "Rootname $rootname"
-            cd "$artifact"
-            tar -xvf "${file}.tar"
-            mv "output" "$rootname"
-            echo "Doing commit match check."
-            version_xml=$(find "$rootname" -name version.xml)
-            commit=$(xmlstarlet sel -t -v "//commit" "$version_xml")
-            if [[ "$commit" != "${{  needs.pre-build.outputs.current_commit }}" ]]; then
-              echo "Commit mismatch for artifact $artifact. Expected ${{  needs.pre-build.outputs.current_commit }} but true build commit was $commit"
-              if [[ "${{ inputs.no_commit_match }}" == true ]]; then
-                echo "Ignoring commit mismatch and continuing."
-              else
-                exit 1
+            if [[ "$file" == "msi" ]]; then
+              cd "$artifact"
+              name="RimSort-${{ needs.pre-build.outputs.version }}-Windows_x86_64.msi"
+              mv ./*.msi "../$name"
+              cd ..
+            else
+              base=${file%%.tar}
+              name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
+              rootname=RimSort
+              if [[ $base == *"Darwin"* ]]; then
+                rootname=RimSort.app
               fi
+              echo "Will zip $artifact to $name"
+              echo "Rootname $rootname"
+              cd "$artifact"
+              tar -xvf "${file}.tar"
+              mv "output" "$rootname"
+              echo "Doing commit match check."
+              version_xml=$(find "$rootname" -name version.xml)
+              commit=$(xmlstarlet sel -t -v "//commit" "$version_xml")
+              if [[ "$commit" != "${{ needs.pre-build.outputs.current_commit }}" ]]; then
+                echo "Commit mismatch for artifact $artifact. Expected ${{ needs.pre-build.outputs.current_commit }} but true build commit was $commit"
+                if [[ "${{ inputs.no_commit_match }}" == true ]]; then
+                  echo "Ignoring commit mismatch and continuing."
+                else
+                  exit 1
+                fi
+              fi
+              zip -rmqq "../$name" "$rootname" &
+              cd ..
             fi
-            zip -rmqq "../$name" "$rootname" &
-            cd ..
           done
           echo "Waiting for zips to finish"
           wait
           echo "Cleaning up - Removing non-zip files"
           shopt -s extglob
-          rm -rf !(*.zip)
+          rm -rf -- ./!(*.zip|*.msi)
         shell: bash
 
       - name: Create body
@@ -175,7 +183,7 @@ jobs:
         uses: ncipollo/release-action@v1.18.0
         id: release
         with:
-          artifacts: artifacts/*
+          artifacts: "artifacts/*.zip,artifacts/*.msi"
           tag: ${{ steps.tag.outputs.tag }}
           generateReleaseNotes: true
           prerelease: ${{ needs.pre-build.outputs.prerelease }}
@@ -186,7 +194,7 @@ jobs:
           omitNameDuringUpdate: ${{ !inputs.replace_name_during_update }}
           omitBodyDuringUpdate: ${{ !inputs.replace_body_during_update }}
           removeArtifacts: true
-          commit: ${{  needs.pre-build.outputs.current_commit }}
+          commit: ${{ needs.pre-build.outputs.current_commit }}
 
       - name: Echo Release URL
         run: |

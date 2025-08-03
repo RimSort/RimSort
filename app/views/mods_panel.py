@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMenu,
+    QMessageBox,
     QPushButton,
     QToolButton,
     QVBoxLayout,
@@ -79,10 +80,13 @@ def uuid_to_mod_name(uuid: str) -> str:
     Args:
         uuid (str): The UUID of the mod.
     Returns:
-        str: If mod name not None, returns mod name in lowercase. Otherwise, returns "# unnamed mod".
+        str: If mod name not None and is a string, returns mod name in lowercase. Otherwise, returns "name error in mod about.xml".
     """
     name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
-    return name.lower() if name is not None else "# unnamed mod"
+    if isinstance(name, str):
+        return name.lower()
+    else:
+        return "name error in mod about.xml"
 
 
 class ModsPanelSortKey(Enum):
@@ -173,10 +177,12 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.uuid = uuid
-        self.list_item_name = (
-            self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get("name")
-            or "METADATA ERROR"
-        )
+        name_value = self.metadata_manager.internal_local_metadata.get(
+            self.uuid, {}
+        ).get("name")
+        if not isinstance(name_value, str):
+            name_value = "name error in mod about.xml"
+        self.list_item_name = name_value
         self.main_label = QLabel()
 
         # Visuals
@@ -1113,7 +1119,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(git_paths)),
                         information=self.tr("Do you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(f"Updating {len(git_paths)} git mod(s)")
                         self.update_git_mods_signal.emit(git_paths)
                     return True
@@ -1210,7 +1216,7 @@ class ModListWidget(QListWidget):
                             + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Deleting + redownloading {len(steamcmd_publishedfileid_to_redownload)} SteamCMD mod(s)"
                         )
@@ -1305,7 +1311,7 @@ class ModListWidget(QListWidget):
                             "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
                         ),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
                         )
@@ -1333,7 +1339,7 @@ class ModListWidget(QListWidget):
                         ).format(len=len(publishedfileids)),
                         information=self.tr("\nDo you want to proceed?"),
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
                             f"Unsubscribing from {len(publishedfileids)} mod(s)"
                         )
@@ -1406,7 +1412,7 @@ class ModListWidget(QListWidget):
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
-                    if answer == "&Yes":
+                    if answer == QMessageBox.StandardButton.Yes:
                         self.steamdb_blacklist_signal.emit(
                             [steamdb_remove_blacklist, False]
                         )

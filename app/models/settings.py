@@ -19,6 +19,20 @@ from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
+    MIN_SIZE = 400
+    MAX_SIZE = 1600
+    DEFAULT_WIDTH = 900
+    DEFAULT_HEIGHT = 600
+
+    @staticmethod
+    def validate_window_custom_size(width: int, height: int) -> tuple[int, int]:
+        """Validate custom width and height, resetting to defaults if out of range."""
+        if not (Settings.MIN_SIZE <= width <= Settings.MAX_SIZE):
+            width = Settings.DEFAULT_WIDTH
+        if not (Settings.MIN_SIZE <= height <= Settings.MAX_SIZE):
+            height = Settings.DEFAULT_HEIGHT
+        return width, height
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -66,12 +80,10 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
-        self.check_dependencies_on_sort: bool = (
-            True  # Whether to check for missing dependencies when sorting
-        )
-        self.use_moddependencies_as_loadTheseBefore: bool = (
-            False  # Whether to use moddependencies as loadTheseBefore
-        )
+        # Whether to use moddependencies as loadTheseBefore rules
+        self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to check for missing dependencies when sorting
+        self.check_dependencies_on_sort: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -81,6 +93,7 @@ class Settings(QObject):
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
+        self.steamcmd_delete_before_update: bool = False
 
         # todds
         self.todds_preset: str = "optimized"
@@ -98,15 +111,21 @@ class Settings(QObject):
         # Language
         self.language = "en_US"
 
-        # Window size configuration
-        self.window_x: int = 100
-        self.window_y: int = 100
-        self.window_width: int = 800
-        self.window_height: int = 600
+        # Launch state setting: "maximized", "normal", or "custom"
+        # Main Window
+        self.main_window_launch_state: str = "maximized"
+        self.main_window_custom_width: int = 900
+        self.main_window_custom_height: int = 600
 
-        # Runner panel size configuration
-        self.panel_width: int = 800
-        self.panel_height: int = 600
+        # Browser Window
+        self.browser_window_launch_state: str = "maximized"
+        self.browser_window_custom_width: int = 900
+        self.browser_window_custom_height: int = 600
+
+        # Settings Window
+        self.settings_window_launch_state: str = "custom"
+        self.settings_window_custom_width: int = 900
+        self.settings_window_custom_height: int = 600
 
         # Advanced
         self.debug_logging_enabled: bool = False
@@ -148,9 +167,8 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
-                mitigations = (
-                    True  # Assume there are mitigations unless we reach else block
-                )
+                # Assume there are mitigations unless we reach else block
+                mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(
