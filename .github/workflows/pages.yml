@@ -16,6 +16,7 @@ on:
         description: "Deploy to GitHub Pages"
         type: boolean
         default: false
+  merge_group:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
