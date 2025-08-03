@@ -121,21 +121,24 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.12"
-          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
-          cache: "pip"
-          cache-dependency-path: |
-            **/requirements*.txt
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          activate-environment: true
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt -r requirements_build.txt
+        shell: bash
+        run: uv sync --locked --no-dev --group build
 
       - name: Build Actions
         shell: bash
         run: |
           set -e
-          python distribute.py \
-          --skip-pip \
+          uv run --frozen python \
+          ./distribute.py \
           --product-version='${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
@@ -183,7 +186,7 @@ jobs:
         if: matrix.platform == 'Windows'
         run: |
           choco install wixtoolset -y
-          
+
           $env:PATH += ";C:\Program Files (x86)\WiX Toolset v3.11\bin"
 
           heat.exe dir "build\\__main__.dist" -cg MainDist -dr INSTALLFOLDER -gg -sfrag -sreg -srd -var var.DistDir -out maindist.wxs
