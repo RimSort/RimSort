@@ -13,12 +13,13 @@ on:
       - "app/**"
       - "distribute.py"
       - "requirements*.txt"
+  merge_group:
 
 permissions: {}
 
 jobs:
   pre-test:
-    permissions: 
+    permissions:
       contents: read
     uses: ./.github/workflows/pytest.yml
 

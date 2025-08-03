@@ -2,6 +2,7 @@ name: Run Pytest
 on:
   workflow_call: null
   workflow_dispatch: null
+  merge_group:
 
 permissions: {}
 

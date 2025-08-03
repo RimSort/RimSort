@@ -5,6 +5,7 @@ on:
       - main
       - master
   pull_request: null
+  merge_group:
 
 permissions: {}
 
