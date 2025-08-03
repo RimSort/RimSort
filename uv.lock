@@ -787,10 +787,13 @@ dev = [
     { name = "pytest-xvfb", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "ruff", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-beautifulsoup4", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "types-greenlet", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-lxml", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-networkx", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "types-pexpect", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-psutil", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-pygit2", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "types-pygments", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-toposort", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-xmltodict", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
@@ -836,10 +839,13 @@ dev = [
     { name = "pytest-xvfb", specifier = ">=3.1.1" },
     { name = "ruff", specifier = ">=0.12.7" },
     { name = "types-beautifulsoup4", specifier = ">=4.12.0.20250516" },
+    { name = "types-greenlet", specifier = ">=3.2.0.20250417" },
     { name = "types-lxml", specifier = ">=2025.3.30" },
     { name = "types-networkx", specifier = ">=3.5.0.20250728" },
+    { name = "types-pexpect", specifier = ">=4.9.0.20250516" },
     { name = "types-psutil", specifier = ">=7.0.0.20250801" },
     { name = "types-pygit2", specifier = ">=1.15.0.20250319" },
+    { name = "types-pygments", specifier = ">=2.19.0.20250715" },
     { name = "types-requests", specifier = ">=2.32.4.20250611" },
     { name = "types-toposort", specifier = ">=1.10.0.20250401" },
     { name = "types-xmltodict", specifier = ">=0.14.0.20241009" },
@@ -977,6 +983,24 @@ wheels = [
 ]
 
 [[package]]
+name = "types-docutils"
+version = "0.21.0.20250728"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/9c/223feef75550722e428bed338bff6d1692e1f32f0e3484a9c5c15a0bc601/types_docutils-0.21.0.20250728.tar.gz", hash = "sha256:fbfe44496c98c71437cd9ac20d71df2ea44878084f604960af7cf3696d562bab", size = 54656, upload-time = "2025-07-28T03:29:16.386Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/91/45beab84b3484446d4966deca4606c3e8427af168677776ebafaaf277690/types_docutils-0.21.0.20250728-py3-none-any.whl", hash = "sha256:48b8caaac0d572295f94865b7f97a93a78a305625e7c0d10ea289f3fc15d2fe5", size = 89533, upload-time = "2025-07-28T03:29:15.132Z" },
+]
+
+[[package]]
+name = "types-greenlet"
+version = "3.2.0.20250417"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/a3/0a2583e1542bd79cfdfd3ffc0407c9f0de5f62642cff13f4d191e1291e40/types_greenlet-3.2.0.20250417.tar.gz", hash = "sha256:eb006afcf281ec5756a75c1fd4a6c8a7be5d0cc09b2e82c4856c764760cfa0e3", size = 8785, upload-time = "2025-04-17T02:58:13.007Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/ce/61b00f3ffc1ab468d6d994c0880f1470bc0ee9b198dae9fbd773a0029c9f/types_greenlet-3.2.0.20250417-py3-none-any.whl", hash = "sha256:7798b9fdf19d718a62e2d63351e112e7bee622898c6e6cec539296c3dec27808", size = 8819, upload-time = "2025-04-17T02:58:11.816Z" },
+]
+
+[[package]]
 name = "types-html5lib"
 version = "1.1.11.20250708"
 source = { registry = "https://pypi.org/simple" }
@@ -1013,6 +1037,15 @@ wheels = [
 ]
 
 [[package]]
+name = "types-pexpect"
+version = "4.9.0.20250516"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/a3/3943fcb94c12af29a88c346b588f1eda180b8b99aeb388a046b25072732c/types_pexpect-4.9.0.20250516.tar.gz", hash = "sha256:7baed9ee566fa24034a567cbec56a5cff189a021344e84383b14937b35d83881", size = 13285, upload-time = "2025-05-16T03:08:33.327Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/d4/3128ae3365b46b9c4a33202af79b0e0d9d4308a6348a3317ce2331fea6cb/types_pexpect-4.9.0.20250516-py3-none-any.whl", hash = "sha256:84cbd7ae9da577c0d2629d4e4fd53cf074cd012296e01fd4fa1031e01973c28a", size = 17081, upload-time = "2025-05-16T03:08:32.127Z" },
+]
+
+[[package]]
 name = "types-psutil"
 version = "7.0.0.20250801"
 source = { registry = "https://pypi.org/simple" }
@@ -1031,6 +1064,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/94/82/0283cb568d2b556be8eefbd93006bdb57686a3ef00f2a27310a95cd9e1d3/types_pygit2-1.15.0.20250319.tar.gz", hash = "sha256:b5ef8b857eb712e1ea3e9897b7b0faf03d83b05dba8f70c72ca95e89d039c84a", size = 25286, upload-time = "2025-03-19T02:53:01.126Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/f7/fc358476efbdab03192d5513b225f67319c328fa363d0b0e354fcc505c25/types_pygit2-1.15.0.20250319-py3-none-any.whl", hash = "sha256:42653131c1049272040172488c8e1972cbe2370f7565c4712d67a20795747b42", size = 30497, upload-time = "2025-03-19T02:53:00.227Z" },
+]
+
+[[package]]
+name = "types-pygments"
+version = "2.19.0.20250715"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-docutils", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/e6/5ee8339d4122dccb08cf6b2d766221784960325767cf32a4b9e0aca08cd8/types_pygments-2.19.0.20250715.tar.gz", hash = "sha256:896e45cb5331492be0937b0e9cef976547dee5c507d546a1351289f3cea6eaac", size = 18491, upload-time = "2025-07-15T03:23:28.244Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/48/1b924b3cfbde33b296197615fa5aea5612b59369e5127e8302daec1ea165/types_pygments-2.19.0.20250715-py3-none-any.whl", hash = "sha256:90b45a484123727e125ffddf0379c627d88401dce768a2555038cb5be98b3f2c", size = 25451, upload-time = "2025-07-15T03:23:26.951Z" },
 ]
 
 [[package]]
