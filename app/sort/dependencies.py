@@ -209,6 +209,7 @@ def gen_tier_two_deps_graph(
 ) -> dict[str, set[str]]:
     """
     Generate the dependency graph for tier two mods, optionally treating About.xml dependencies as loadTheseBefore rules.
+    When conflicts exist, explicit loadTheseBefore rules take precedence over inferred dependencies.
 
     Args:
         active_mods_uuids: Set of UUIDs for active mods.
@@ -220,79 +221,108 @@ def gen_tier_two_deps_graph(
     Returns:
         Dependency graph for tier two mods.
     """
-    # Now, sort the rest of the mods while removing references to mods in tier one and tier three
-    # First, get the dependency graph for tier two mods, minus all references to tier one
-    # and tier three mods
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier two mods")
     logger.info(
         "Stripping all references to tier one and tier three mods and their dependencies"
     )
-    tier_two_dependency_graph = {}
+
+    # First pass: collect explicit loadTheseBefore rules (highest priority)
+    explicit_rules = {}  # mod_id -> set of dependencies from loadTheseBefore
+
+    # Second pass: collect inferred rules from dependencies (lower priority)
+    inferred_rules = {}  # mod_id -> set of dependencies from About.xml dependencies
+
     for uuid in active_mods_uuids:
         package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = set()
+            # Always collect explicit loadTheseBefore rules
+            explicit_dependencies = set()
+            loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
+                "loadTheseBefore"
+            )
+            if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
+                for dep in loadTheseBefore:
+                    if isinstance(dep, tuple):
+                        if (
+                            dep[0] not in tier_one_mods
+                            and dep[0] not in tier_three_mods
+                            and dep[0] in active_mod_ids
+                        ):
+                            explicit_dependencies.add(dep[0])
+                    else:
+                        logger.error(f"loadTheseBefore entry is not a tuple: [{dep}]")
+
+            explicit_rules[package_id] = explicit_dependencies
+
+            # Collect inferred rules from dependencies if enabled
+            inferred_dependencies = set()
             if use_moddependencies_as_loadTheseBefore:
-                # Use processed About.xml dependencies and loadTheseBefore
                 about_dependencies = metadata_manager.internal_local_metadata[uuid].get(
                     "dependencies"
                 )
-                loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
-                    "loadTheseBefore"
-                )
-                # dependencies: set of strings or tuples, loadTheseBefore: set/list of tuples
                 if about_dependencies and isinstance(about_dependencies, (set, list)):
                     for dep in about_dependencies:
                         # Accept both str and tuple for about_dependencies
-                        if isinstance(dep, str) and dep in active_mod_ids:
-                            dependencies.add((dep, True))
+                        dep_id = None
+                        if isinstance(dep, str):
+                            dep_id = dep
                         elif isinstance(dep, tuple):
-                            dependencies.add(dep)
+                            dep_id = dep[0]
                         else:
                             logger.error(
                                 f"About.xml dependency is not a string or tuple: [{dep}]"
                             )
-                if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
-                    for dep in loadTheseBefore:
-                        if isinstance(dep, tuple):
-                            dependencies.add(dep)
-                        else:
-                            logger.error(
-                                f"loadTheseBefore entry is not a tuple: [{dep}]"
-                            )
-                logger.debug(
-                    f"Combined About.xml dependencies and loadTheseBefore for {package_id}"
-                )
-            else:
-                loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
-                    "loadTheseBefore"
-                )
-                if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
-                    for dep in loadTheseBefore:
-                        if isinstance(dep, tuple):
-                            dependencies.add(dep)
-                        else:
-                            logger.error(
-                                f"loadTheseBefore entry is not a tuple: [{dep}]"
-                            )
-            stripped_dependencies = set()
-            if dependencies:
-                for dependency_id in dependencies:
-                    # Only process if tuple
-                    if not isinstance(dependency_id, tuple):
-                        logger.error(
-                            f"Expected load order rule to be a tuple: [{dependency_id}]"
-                        )
-                        continue
-                    # Now we can safely access dependency_id[0]
-                    if (
-                        dependency_id[0] not in tier_one_mods
-                        and dependency_id[0] not in tier_three_mods
-                        and dependency_id[0] in active_mod_ids
-                    ):
-                        stripped_dependencies.add(dependency_id[0])
-            tier_two_dependency_graph[package_id] = stripped_dependencies
-    logger.info("Generated tier two dependency graph, returning")
+                            continue
+
+                        if (
+                            dep_id in active_mod_ids
+                            and dep_id not in tier_one_mods
+                            and dep_id not in tier_three_mods
+                        ):
+                            inferred_dependencies.add(dep_id)
+
+            inferred_rules[package_id] = inferred_dependencies
+
+    # Resolve conflicts: explicit rules take precedence over inferred rules
+    tier_two_dependency_graph = {}
+    conflicts_ignored = 0
+
+    for package_id in explicit_rules:
+        final_dependencies = set()
+
+        # Start with explicit dependencies (always included)
+        final_dependencies.update(explicit_rules[package_id])
+
+        # Add inferred dependencies only if they don't conflict with explicit rules
+        for inferred_dep in inferred_rules.get(package_id, set()):
+            # Check for conflict: does any explicit rule say inferred_dep should load before package_id?
+            has_conflict = False
+
+            # Check if inferred_dep has an explicit rule that conflicts
+            if inferred_dep in explicit_rules:
+                if package_id in explicit_rules[inferred_dep]:
+                    # Conflict: explicit rule says inferred_dep -> package_id,
+                    # but we're trying to add package_id -> inferred_dep
+                    logger.warning(
+                        f"Ignoring inferred dependency {package_id} -> {inferred_dep} "
+                        f"due to explicit rule {inferred_dep} -> {package_id}"
+                    )
+                    has_conflict = True
+                    conflicts_ignored += 1
+
+            if not has_conflict:
+                final_dependencies.add(inferred_dep)
+
+        tier_two_dependency_graph[package_id] = final_dependencies
+
+    if conflicts_ignored > 0:
+        logger.info(
+            f"Resolved {conflicts_ignored} conflicts by prioritizing explicit loadTheseBefore rules"
+        )
+
+    logger.info(
+        "Generated tier two dependency graph with conflict resolution, returning"
+    )
     return tier_two_dependency_graph
