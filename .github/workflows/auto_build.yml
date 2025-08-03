@@ -53,3 +53,16 @@ jobs:
     with:
       version_format: ${{ needs.pre-build.outputs.version_format }}
       attest: false
+
+  status-check:
+    name: Status Check
+    runs-on: ubuntu-latest
+    needs:
+      - pre-test
+      - pre-build
+      - attested-build
+      - non-attested-build
+    if: always()
+    steps:
+      - name: Set status check
+        run: echo "All required jobs have completed."
