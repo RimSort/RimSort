@@ -967,14 +967,13 @@ class SettingsDialog(QDialog):
 
         # Main Window
         (
-            main_window_group,
+            self.main_window_group,
             self.main_launch_maximized_radio,
             self.main_launch_normal_radio,
             self.main_launch_custom_radio,
             self.main_custom_width_spinbox,
             self.main_custom_height_spinbox,
         ) = create_launch_state_group(
-            self.tr("Main Window Launch State"),
             self.tr("Maximized"),
             self.tr("Normal"),
             self.tr("Custom size"),
@@ -983,7 +982,11 @@ class SettingsDialog(QDialog):
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        group_layout.addWidget(main_window_group)
+        # Add QLabel as title for Main Window Launch State
+        main_window_title_label = QLabel(self.tr("Main Window Launch State"))
+        main_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(main_window_title_label)
+        group_layout.addWidget(self.main_window_group)
 
         # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
         self.main_launch_maximized_radio.toggled.connect(
@@ -998,14 +1001,13 @@ class SettingsDialog(QDialog):
 
         # Browser Window
         (
-            browser_window_group,
+            self.browser_window_group,
             self.browser_launch_maximized_radio,
             self.browser_launch_normal_radio,
             self.browser_launch_custom_radio,
             self.browser_custom_width_spinbox,
             self.browser_custom_height_spinbox,
         ) = create_launch_state_group(
-            self.tr("Browser Window Launch State"),
             self.tr("Maximized"),
             self.tr("Normal"),
             self.tr("Custom size"),
@@ -1014,7 +1016,11 @@ class SettingsDialog(QDialog):
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        group_layout.addWidget(browser_window_group)
+        # Add QLabel as title for Browser Window Launch State
+        browser_window_title_label = QLabel(self.tr("Browser Window Launch State"))
+        browser_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(browser_window_title_label)
+        group_layout.addWidget(self.browser_window_group)
 
         # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
         self.browser_launch_maximized_radio.toggled.connect(
@@ -1028,7 +1034,11 @@ class SettingsDialog(QDialog):
         )
 
         # Settings Window (only custom option)
-        settings_window_group = QGroupBox(self.tr("Settings Window Launch State"))
+        settings_window_title_label = QLabel(self.tr("Settings Window Launch State"))
+        settings_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(settings_window_title_label)
+
+        settings_window_group = QGroupBox()
         settings_window_layout = QHBoxLayout()
         settings_window_group.setLayout(settings_window_layout)
 
@@ -1039,7 +1049,9 @@ class SettingsDialog(QDialog):
         self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
         self.settings_custom_width_spinbox.setSuffix(" px")
         self.settings_custom_width_spinbox.setFixedWidth(100)
-        settings_window_layout.addWidget(QLabel(self.tr("Custom Width:")))
+        custom_width_label = QLabel(self.tr("Custom Width:"))
+        custom_width_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        settings_window_layout.addWidget(custom_width_label)
         settings_window_layout.addWidget(self.settings_custom_width_spinbox)
 
         self.settings_custom_height_spinbox = QSpinBox()
@@ -1049,7 +1061,9 @@ class SettingsDialog(QDialog):
         self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
         self.settings_custom_height_spinbox.setSuffix(" px")
         self.settings_custom_height_spinbox.setFixedWidth(100)
-        settings_window_layout.addWidget(QLabel(self.tr("Custom Height:")))
+        custom_height_label = QLabel(self.tr("Custom Height:"))
+        custom_height_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        settings_window_layout.addWidget(custom_height_label)
         settings_window_layout.addWidget(self.settings_custom_height_spinbox)
 
         group_layout.addWidget(settings_window_group)
@@ -1285,7 +1299,6 @@ class SettingsDialog(QDialog):
 
 
 def create_launch_state_group(
-    title: str,
     minimized_text: str,
     normal_text: str,
     custom_text: str,
@@ -1301,7 +1314,7 @@ def create_launch_state_group(
     QSpinBox,
     QSpinBox,
 ]:
-    group_box = QGroupBox(title)
+    group_box = QGroupBox()
     layout = QVBoxLayout()
     group_box.setLayout(layout)
 
