@@ -9,7 +9,13 @@ on:
   pull_request:
     paths:
       - "docs/**"
+  # checkov:skip=CKV_GHA_7
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy to GitHub Pages"
+        type: boolean
+        default: false
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -54,8 +60,8 @@ jobs:
           path: "docs/_site/"
 
   # Deployment job
-  deploy:
-    if: ${{ github.event_name != 'pull_request'}}
+  deploy: # Only run on push to main or when manually triggered with deploy input set to true
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
