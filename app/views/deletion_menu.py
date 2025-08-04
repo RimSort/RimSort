@@ -1,5 +1,6 @@
 from enum import Enum
 from errno import ENOTEMPTY
+from pathlib import Path
 from shutil import rmtree
 from typing import Callable
 
@@ -7,6 +8,9 @@ from loguru import logger
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QMessageBox
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     attempt_chmod,
@@ -48,6 +52,7 @@ class ModDeletionMenu(QMenu):
 
     def __init__(
         self,
+        settings_controller: SettingsController,
         get_selected_mod_metadata: Callable[[], list[ModMetadata]],
         remove_from_uuids: list[str] | None = None,
         menu_title: str = "Deletion options",
@@ -61,6 +66,7 @@ class ModDeletionMenu(QMenu):
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
+        self.settings_controller = settings_controller
         self._actions_initialized = False
 
         # Build actions based on enabled features
@@ -168,6 +174,7 @@ class ModDeletionMenu(QMenu):
         deletion_fn: Callable[[ModMetadata], bool],
         mods: list[ModMetadata],
         collect_for_unsubscribe: bool = False,
+        update_db: bool = True,
     ) -> DeletionResult:
         """
         Iterate through mods and apply the deletion function.
@@ -191,6 +198,8 @@ class ModDeletionMenu(QMenu):
                 continue
 
             try:
+                if update_db:
+                    self.delete_mod_from_aux_db(mod_metadata["path"])
                 if deletion_fn(mod_metadata):
                     result.success_count += 1
 
@@ -215,6 +224,7 @@ class ModDeletionMenu(QMenu):
                 else:
                     result.failed_count += 1
             except Exception as e:
+                # TODO: Rollback DB deletion or better to let it delete?
                 logger.error(
                     f"Unexpected error processing mod {mod_metadata.get('name', 'Unknown')}: {e}"
                 )
@@ -325,7 +335,9 @@ class ModDeletionMenu(QMenu):
         )
 
         if answer == DialogueResponse.YES.value:
-            result = self._iterate_mods(self._delete_dds_from_mod, selected_mods)
+            result = self._iterate_mods(
+                self._delete_dds_from_mod, selected_mods, update_db=False
+            )
             self._process_deletion_result(result)
 
     def _delete_dds_from_mod(self, mod_metadata: ModMetadata) -> bool:
@@ -524,6 +536,21 @@ class ModDeletionMenu(QMenu):
 
             # Handle Steam action for successfully deleted mods
             self._handle_steam_action(action, result.mods_for_unsubscribe)
+
+    def delete_mod_from_aux_db(self, path: str) -> None:
+        """
+        Delete mod entry from the auxillary metadata db.
+
+        This only deletes the mod for the relevant instance.
+        """
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        mod_path = Path(path)
+        with aux_metadata_controller.Session() as session:
+            aux_metadata_controller.delete(session, mod_path)
 
     # Backward compatibility aliases
     def delete_both(self) -> None:

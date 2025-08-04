@@ -611,7 +611,6 @@ class ModListItemInner(QWidget):
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # TODO: Create and get cached/shared AuxMetadataController()
         # Update DB
         instance_name = self.settings_controller.settings.current_instance
         instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
@@ -791,9 +790,10 @@ class ModListWidget(QListWidget):
         self.ignore_warning_list: list[str] = []
 
         self.deletion_sub_menu = ModDeletionMenu(
+            self.settings_controller,
             self._get_selected_metadata,
             self.uuids,
-        )  # TDOD: should we enable items conditionally? For now use all
+        )  # TODO: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
 
     def on_selection_changed(
