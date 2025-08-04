@@ -17,9 +17,21 @@ class MetadataDbController:
 
 
 class AuxMetadataController(MetadataDbController):
+    _instance = {}  # db_path : AuxMetadataController
+
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
         Base.metadata.create_all(self.engine)
+
+    @classmethod
+    def get_or_create_cached_instance(cls, db_path: Path) -> "AuxMetadataController":
+        """
+        Get or create a cached instance of the controller.
+        This cached controller is only for the specified db_path.
+        """
+        if db_path not in cls._instance:
+            cls._instance[db_path] = cls(db_path)
+        return cls._instance[db_path]
 
     @staticmethod
     def update(session: Session, item_path: Path | str, **kwargs: Any) -> AuxMetadataEntry | None:

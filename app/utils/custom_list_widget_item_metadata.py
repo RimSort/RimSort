@@ -104,14 +104,14 @@ class CustomListWidgetItemMetadata:
         metadata_manager = MetadataManager.instance()
         instance_name = self.settings_controller.settings.current_instance
         instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
-        local_controller = controller or AuxMetadataController(
+        local_controller = controller or AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )
-        local_session = session or local_controller.Session()
-        entry = local_controller.get(
-            local_session,
-            metadata_manager.internal_local_metadata[uuid]["path"],
-        )
+        with session or local_controller.Session() as local_session:
+            entry = local_controller.get(
+                local_session,
+                metadata_manager.internal_local_metadata[uuid]["path"],
+            )
 
         mod_color = None
         if entry:

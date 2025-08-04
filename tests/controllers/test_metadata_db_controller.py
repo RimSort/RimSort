@@ -12,9 +12,8 @@ from app.utils.app_info import AppInfo
 @pytest.fixture()
 def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
     db_path = tmp_path / "test_metadata.db"
-    with patch.object(AppInfo, "aux_metadata_db", db_path):
-        controller = AuxMetadataController(db_path)
-        yield controller
+    controller = AuxMetadataController(db_path)
+    yield controller
 
 
 def test_get_or_create(temp_db: AuxMetadataController) -> None:
