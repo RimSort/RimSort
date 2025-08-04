@@ -511,7 +511,7 @@ class MainContent(QObject):
                     count += 1
         # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
-    def __insert_data_into_lists(
+    def _insert_data_into_lists(
         self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
     ) -> None:
         """
@@ -632,7 +632,7 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state = active_mods_uuids
             self.inactive_mods_uuids_restore_state = inactive_mods_uuids
 
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
     #########
     # SLOTS # Can this be cleaned up & moved to own module...?
@@ -1255,7 +1255,7 @@ class MainContent(QObject):
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
         else:
-            self.__insert_data_into_lists([], [])
+            self._insert_data_into_lists([], [])
             logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
@@ -1319,7 +1319,7 @@ class MainContent(QObject):
         # Disable widgets while inserting
         self.disable_enable_widgets_signal.emit(False)
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         # Re-enable widgets after inserting
         self.disable_enable_widgets_signal.emit(True)
 
@@ -1411,7 +1411,7 @@ class MainContent(QObject):
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
-            self.__insert_data_into_lists(
+            self._insert_data_into_lists(
                 new_order,
                 [
                     uuid
@@ -1463,7 +1463,7 @@ class MainContent(QObject):
                 self.missing_mods,
             ) = metadata.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
-            self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+            self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
             if (
                 self.settings_controller.settings.duplicate_mods_warning
@@ -1690,7 +1690,7 @@ class MainContent(QObject):
         ) = metadata.get_mods_from_list(mod_list=rentry_import.package_ids)
 
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Rentry.co")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user
@@ -1747,7 +1747,7 @@ class MainContent(QObject):
         ) = metadata.get_mods_from_list(mod_list=collection_import.package_ids)
 
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Workshop collection")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user
@@ -2174,9 +2174,6 @@ class MainContent(QObject):
         # Save current modlists to their respective restore states
         self.active_mods_uuids_restore_state = active_mods_uuids
         self.inactive_mods_uuids_restore_state = inactive_mods_uuids
-        # TODO: Save modlist metadata to file for current instance
-        # instance_name = self.settings_controller.settings.current_instance
-        # instance = self.settings_controller.settings.instances.get(instance_name)                
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:
@@ -2205,7 +2202,7 @@ class MainContent(QObject):
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert items into lists
-            self.__insert_data_into_lists(
+            self._insert_data_into_lists(
                 self.active_mods_uuids_restore_state,
                 self.inactive_mods_uuids_restore_state,
             )

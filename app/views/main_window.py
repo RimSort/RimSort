@@ -1049,6 +1049,8 @@ class MainWindow(QMainWindow):
         self.__set_window_title(instance)
         # Save settings
         self.settings_controller.settings.save()
+        # Clear mod lists
+        self.main_content_panel._insert_data_into_lists([], [])
         # Initialize content
         self.initialize_content(is_initial=False)
 

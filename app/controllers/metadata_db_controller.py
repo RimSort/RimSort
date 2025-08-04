@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
 from app.models.metadata.metadata_structure import ModType
-from app.utils.app_info import AppInfo
 from app.utils.steam.steamfiles.wrapper import acf_to_dict
 
 
@@ -18,8 +17,8 @@ class MetadataDbController:
 
 
 class AuxMetadataController(MetadataDbController):
-    def __init__(self) -> None:
-        super().__init__(AppInfo().aux_metadata_db)
+    def __init__(self, db_path: Path) -> None:
+        super().__init__(db_path)
         Base.metadata.create_all(self.engine)
 
     @staticmethod

@@ -552,7 +552,9 @@ class ModListItemInner(QWidget):
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
 
-    def handle_mod_color_change(self, item: CustomListWidgetItem | None = None, init: bool = False) -> None:
+    def handle_mod_color_change(
+        self, item: CustomListWidgetItem | None = None, init: bool = False
+    ) -> None:
         """
         Handle mod color change (Background or Text).
 
@@ -568,7 +570,9 @@ class ModListItemInner(QWidget):
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
-                self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
+                self.mod_color = item_data[
+                    "mod_color"
+                ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"background: {new_mod_color_name};")
         else:
             # Color text
@@ -579,12 +583,18 @@ class ModListItemInner(QWidget):
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
                 new_mod_color_name = item_data["mod_color"].name()
-                self.mod_color = item_data["mod_color"]  # Update mod color in ModListItemInner
+                self.mod_color = item_data[
+                    "mod_color"
+                ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
         # Update DB
         if not init:
-            aux_metadata_controller = AuxMetadataController()
+            instance_name = self.settings_controller.settings.current_instance
+            instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+            aux_metadata_controller = AuxMetadataController(
+                instance_path / "aux_metadata.db"
+            )
             aux_metadata_session = aux_metadata_controller.Session()
             mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
             aux_metadata_controller.update(
@@ -601,7 +611,11 @@ class ModListItemInner(QWidget):
         self.mod_color = None
         # TODO: Create and get cached/shared AuxMetadataController()
         # Update DB
-        aux_metadata_controller = AuxMetadataController()
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        aux_metadata_controller = AuxMetadataController(
+            instance_path / "aux_metadata.db"
+        )
         aux_metadata_session = aux_metadata_controller.Session()
         mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
         aux_metadata_controller.update(
@@ -721,8 +735,6 @@ class ModListWidget(QListWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
-        self.aux_metadata_controller = AuxMetadataController()
-        self.aux_metadata_session = self.aux_metadata_controller.Session()
 
         self.settings_controller = settings_controller
 
@@ -782,7 +794,9 @@ class ModListWidget(QListWidget):
         )  # TDOD: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
 
-    def on_selection_changed(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+    def on_selection_changed(
+        self, selected: QItemSelection, deselected: QItemSelection
+    ) -> None:
         """
         Used to indicate when the custom widget is selected/not selected.
         """
@@ -1714,16 +1728,22 @@ class ModListWidget(QListWidget):
 
     def append_new_item(self, uuid: str) -> None:
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-        self.aux_metadata_controller.get_or_create(self.aux_metadata_session, mod_path)
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        aux_metadata_controller = AuxMetadataController(
+            instance_path / "aux_metadata.db"
+        )
+        aux_metadata_session = aux_metadata_controller.Session()
+        aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
         data = CustomListWidgetItemMetadata(
             uuid=uuid,
-            aux_metadata_controller=self.aux_metadata_controller,
-            aux_metadata_session=self.aux_metadata_session
+            aux_metadata_controller=aux_metadata_controller,
+            aux_metadata_session=aux_metadata_session,
+            settings_controller=self.settings_controller,
         )
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
-        
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
@@ -2233,13 +2253,24 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-                mod_path = self.metadata_manager.internal_local_metadata[uuid_key]["path"]
-                self.aux_metadata_controller.get_or_create(self.aux_metadata_session, mod_path)
+                mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
+                    "path"
+                ]
+                instance_name = self.settings_controller.settings.current_instance
+                instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+                aux_metadata_controller = AuxMetadataController(
+                    instance_path / "aux_metadata.db"
+                )
+                aux_metadata_session = aux_metadata_controller.Session()
+                aux_metadata_controller.get_or_create(
+                    aux_metadata_session, mod_path
+                )
                 list_item = CustomListWidgetItem(self)
                 data = CustomListWidgetItemMetadata(
                     uuid=uuid_key,
-                    aux_metadata_controller=self.aux_metadata_controller,
-                    aux_metadata_session=self.aux_metadata_session
+                    aux_metadata_controller=aux_metadata_controller,
+                    aux_metadata_session=aux_metadata_session,
+                    settings_controller=self.settings_controller,
                 )
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)

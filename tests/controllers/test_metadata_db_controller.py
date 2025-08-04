@@ -13,7 +13,7 @@ from app.utils.app_info import AppInfo
 def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
     db_path = tmp_path / "test_metadata.db"
     with patch.object(AppInfo, "aux_metadata_db", db_path):
-        controller = AuxMetadataController()
+        controller = AuxMetadataController(db_path)
         yield controller
 
 

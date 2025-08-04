@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
@@ -5,6 +6,8 @@ from PySide6.QtGui import QColor
 from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
+from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
 
 
@@ -17,6 +20,7 @@ class CustomListWidgetItemMetadata:
     def __init__(
         self,
         uuid: str,
+        settings_controller: SettingsController,
         errors_warnings: str = "",
         errors: str = "",
         warnings: str = "",
@@ -36,6 +40,7 @@ class CustomListWidgetItemMetadata:
         Unless explicitly provided, invalid and mismatch are automatically set based on the uuid using metadata manager.
 
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
+        :param settings_controller: SettingsController, instance of settings controller
         :param errors_warnings: a string of errors and warnings
         :param errors: a string of errors for the notification tooltip
         :param warnings: a string of warnings for the notification tooltip
@@ -46,6 +51,8 @@ class CustomListWidgetItemMetadata:
         :param mismatch: a bool representing whether the widget's item has a version mismatch
         :param mod_color: QColor, the color of the mod's text/background in the modlist
         :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
+        :param aux_metadata_controller: AuxMetadataController, an instance of the controller used for fetching mod color
+        :param aux_metadata_session: Session, an instance of the session used for fetching mod color
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
@@ -53,6 +60,7 @@ class CustomListWidgetItemMetadata:
 
         # Metadata attributes
         self.uuid = uuid
+        self.settings_controller = settings_controller
         self.errors_warnings = errors_warnings
         self.errors = errors
         self.warnings = warnings
@@ -66,7 +74,9 @@ class CustomListWidgetItemMetadata:
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
         if mod_color is None:
-            self.mod_color = self.get_mod_color(uuid, aux_metadata_controller, aux_metadata_session)
+            self.mod_color = self.get_mod_color(
+                uuid, aux_metadata_controller, aux_metadata_session
+            )
         else:
             self.mod_color = mod_color
         self.alternative = (
@@ -79,7 +89,12 @@ class CustomListWidgetItemMetadata:
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
 
-    def get_mod_color(self, uuid: str, controller: AuxMetadataController | None, session: Session | None) -> QColor | None:
+    def get_mod_color(
+        self,
+        uuid: str,
+        controller: AuxMetadataController | None,
+        session: Session | None,
+    ) -> QColor | None:
         """
         Get the mod color from DB.
 
@@ -87,7 +102,11 @@ class CustomListWidgetItemMetadata:
         :return: QColor | None, Color of hte mod, or None if no color
         """
         metadata_manager = MetadataManager.instance()
-        local_controller = controller or AuxMetadataController()
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        local_controller = controller or AuxMetadataController(
+            instance_path / "aux_metadata.db"
+        )
         local_session = session or local_controller.Session()
         entry = local_controller.get(
             local_session,
