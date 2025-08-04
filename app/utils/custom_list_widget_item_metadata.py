@@ -54,13 +54,11 @@ class CustomListWidgetItemMetadata:
         :param aux_metadata_controller: AuxMetadataController, an instance of the controller used for fetching mod color
         :param aux_metadata_session: Session, an instance of the session used for fetching mod color
         """
-        # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
-        # self.metatadata_manager = MetadataManager.instance()
-        # Do not cache the aux metadata controller, it will cause freezes/crashes when dragging mods.
+        # Do not cache the metadata manager, aux metadata controller or settings controller
+        # They will cause freezes/crashes when dragging mods from inactive->active or vice versa
 
         # Metadata attributes
         self.uuid = uuid
-        self.settings_controller = settings_controller
         self.errors_warnings = errors_warnings
         self.errors = errors
         self.warnings = warnings
@@ -75,7 +73,7 @@ class CustomListWidgetItemMetadata:
         )
         if mod_color is None:
             self.mod_color = self.get_mod_color(
-                uuid, aux_metadata_controller, aux_metadata_session
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.mod_color = mod_color
@@ -91,6 +89,7 @@ class CustomListWidgetItemMetadata:
 
     def get_mod_color(
         self,
+        settings_controller: SettingsController,
         uuid: str,
         controller: AuxMetadataController | None,
         session: Session | None,
@@ -102,7 +101,7 @@ class CustomListWidgetItemMetadata:
         :return: QColor | None, Color of hte mod, or None if no color
         """
         metadata_manager = MetadataManager.instance()
-        instance_name = self.settings_controller.settings.current_instance
+        instance_name = settings_controller.settings.current_instance
         instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
         local_controller = controller or AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
