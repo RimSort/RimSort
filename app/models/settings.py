@@ -134,7 +134,7 @@ class Settings(QObject):
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
-        self.color_background_instead_of_text_toggle: bool = False
+        self.color_background_instead_of_text_toggle: bool = True
         self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = True

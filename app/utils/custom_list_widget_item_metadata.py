@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
@@ -7,7 +6,7 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.app_info import AppInfo
+from app.utils.aux_db_utils import get_mod_color
 from app.utils.metadata import MetadataManager
 
 
@@ -72,7 +71,7 @@ class CustomListWidgetItemMetadata:
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
         if mod_color is None:
-            self.mod_color = self.get_mod_color(
+            self.mod_color = get_mod_color(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:
@@ -86,39 +85,6 @@ class CustomListWidgetItemMetadata:
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
-
-    def get_mod_color(
-        self,
-        settings_controller: SettingsController,
-        uuid: str,
-        controller: AuxMetadataController | None,
-        session: Session | None,
-    ) -> QColor | None:
-        """
-        Get the mod color from DB.
-
-        :param uuid: str, the uuid of the mod
-        :return: QColor | None, Color of hte mod, or None if no color
-        """
-        metadata_manager = MetadataManager.instance()
-        instance_name = settings_controller.settings.current_instance
-        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
-        local_controller = controller or AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
-        )
-        with session or local_controller.Session() as local_session:
-            entry = local_controller.get(
-                local_session,
-                metadata_manager.internal_local_metadata[uuid]["path"],
-            )
-
-        mod_color = None
-        if entry:
-            color_text = entry.color_hex
-            if color_text is not None:
-                mod_color = QColor(color_text)
-
-        return mod_color
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """
