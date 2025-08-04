@@ -61,6 +61,8 @@ class Settings(QObject):
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
+        # Default (0) means delete from aux db straight away
+        self.aux_db_time_limit: int = 0
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(

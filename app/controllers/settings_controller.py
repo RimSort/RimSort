@@ -542,6 +542,7 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
+        self.settings_dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -916,6 +917,11 @@ class SettingsController(QObject):
         self.settings.external_use_this_instead_repo_path = (
             self.settings_dialog.use_this_instead_db_github_url.text()
         )
+        try:
+            self.settings.aux_db_time_limit = int(self.settings_dialog.aux_db_time_limit.text())
+        except Exception:
+            logger.warning("Failed setting Aux DB time limit, falling back to 0")
+            self.settings.aux_db_time_limit = 0
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():

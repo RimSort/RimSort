@@ -1737,6 +1737,7 @@ class ModListWidget(QListWidget):
         )
         with aux_metadata_controller.Session() as  aux_metadata_session:
             aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
+            aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
             data = CustomListWidgetItemMetadata(
                 uuid=uuid,
                 aux_metadata_controller=aux_metadata_controller,
@@ -2269,6 +2270,7 @@ class ModListWidget(QListWidget):
                     aux_metadata_controller.get_or_create(
                         aux_metadata_session, mod_path
                     )
+                    aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
                     list_item = CustomListWidgetItem(self)
                     data = CustomListWidgetItemMetadata(
                         uuid=uuid_key,

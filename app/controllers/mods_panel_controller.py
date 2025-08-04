@@ -1,16 +1,25 @@
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
 from loguru import logger
 from PySide6.QtCore import QObject, Qt, Slot
+from sqlalchemy import delete, update
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_db import AuxMetadataEntry
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
 
-    def __init__(self, view: ModsPanel) -> None:
+    def __init__(self, view: ModsPanel, settings_controller: SettingsController) -> None:
         super().__init__()
 
         self.mods_panel = view
+        self.settings_controller = settings_controller
 
         # Only one label can be active at a time; these are used only in the active modlist.
 
@@ -37,6 +46,12 @@ class ModsPanelController(QObject):
         )
         EventBus().filters_changed_in_inactive_modlist.connect(
             self._on_filters_changed_in_inactive_modlist
+        )
+        EventBus().do_delete_outdated_entries_in_aux_db.connect(
+            self.delete_outdated_aux_db_entries
+        )
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.connect(
+            self.do_all_entries_in_aux_db_as_outdated
         )
 
     @Slot()
@@ -175,3 +190,58 @@ class ModsPanelController(QObject):
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
         logger.debug("Finished hiding mods without errors.")
+
+    def do_all_entries_in_aux_db_as_outdated(self) -> None:
+        """
+        Sets all entries in the aux db as outdated if not already outdated.
+
+        This means the previously outdated items DO NOT have their db_time_touched updated.
+        """
+        time_limit = self.settings_controller.settings.aux_db_time_limit
+        if time_limit < 0:
+            logger.debug("Skipping updating all items as outdated because time limit is negative.")
+            return
+
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            stmt = (
+                update(AuxMetadataEntry)
+                .where(not AuxMetadataEntry.outdated)  # type: ignore
+                .values(outdated=True)
+            )
+            aux_metadata_session.execute(stmt)
+            aux_metadata_session.commit()
+        logger.debug("Finished setting entries as outdated.")
+
+    def delete_outdated_aux_db_entries(self) -> None:
+        """
+        Based on settings option, it deletes aux db entries
+        after a certain time limit they have not been touched.
+
+        This is used at init phases of the applicaiton. Keeps DB
+        udpated even if mods have been deleted etc. outside of RimSort.
+        """
+        time_limit = self.settings_controller.settings.aux_db_time_limit
+        if time_limit < 0:
+            logger.debug("Skipping the deletion of outdated entries because time limit is negative.")
+            return
+
+        instance_name = self.settings_controller.settings.current_instance
+        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=time_limit)
+            stmt = (
+                delete(AuxMetadataEntry)
+                .where(AuxMetadataEntry.outdated)
+                .where(AuxMetadataEntry.db_time_touched < limit)
+            )
+            aux_metadata_session.execute(stmt)
+            aux_metadata_session.commit()
+        logger.debug("Finished deleting outdated entries.")

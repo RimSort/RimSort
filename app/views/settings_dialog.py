@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QIntValidator, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -285,6 +285,7 @@ class SettingsDialog(QDialog):
 
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
+        self._do_aux_db_time_limit_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -478,6 +479,27 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
+        aux_db_time_limit = QLabel(
+            self.tr(
+                "Auxillary Metadata DB deletion time limit in seconds. (Default 0, Never Delete -1)"
+            )
+        )
+        aux_db_tooltip = """After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxillary Metadata DB. 
+This Auxillary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)"""
+        aux_db_time_limit.setToolTip(aux_db_tooltip)
+        aux_db_time_limit.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(aux_db_time_limit)
+
+        self.aux_db_time_limit = QLineEdit()
+        int_validator = QIntValidator()
+        self.aux_db_time_limit.setValidator(int_validator)
+        self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
+        self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        tab_layout.addWidget(self.aux_db_time_limit)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()

@@ -103,6 +103,8 @@ class EventBus(QObject):
     do_run_game = Signal()
     do_steamworks_api_call = Signal(list)
     do_steamcmd_download = Signal(list)
+    do_delete_outdated_entries_in_aux_db = Signal()
+    do_set_all_entries_in_aux_db_as_outdated = Signal()
 
     refresh_started = Signal()
     refresh_finished = Signal()

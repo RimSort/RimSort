@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
 
         self.mods_panel_controller = ModsPanelController(
             view=self.main_content_panel.mods_panel,
+            settings_controller=self.settings_controller,
         )
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
@@ -258,6 +259,8 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
 
     def initialize_content(self, is_initial: bool = True) -> None:
+        # Set all items as outdated in aux DB
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.emit()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
@@ -299,6 +302,8 @@ class MainWindow(QMainWindow):
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+        # Delete outdated entries in aux DB
+        EventBus().do_delete_outdated_entries_in_aux_db.emit()
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
