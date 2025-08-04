@@ -17,7 +17,7 @@ class MetadataDbController:
 
 
 class AuxMetadataController(MetadataDbController):
-    _instance = {}  # db_path : AuxMetadataController
+    _instances: dict[Path, "AuxMetadataController"] = {}  # db_path : AuxMetadataController
 
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
@@ -29,9 +29,9 @@ class AuxMetadataController(MetadataDbController):
         Get or create a cached instance of the controller.
         This cached controller is only for the specified db_path.
         """
-        if db_path not in cls._instance:
-            cls._instance[db_path] = cls(db_path)
-        return cls._instance[db_path]
+        if db_path not in cls._instances:
+            cls._instances[db_path] = cls(db_path)
+        return cls._instances[db_path]
 
     @staticmethod
     def update(session: Session, item_path: Path | str, **kwargs: Any) -> AuxMetadataEntry | None:
