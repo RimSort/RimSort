@@ -17,6 +17,7 @@ def do_topo_sort(
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
+
     try:
         sorted_dependencies = list(toposort(dependency_graph))
     except CircularDependencyError as e:
@@ -57,7 +58,7 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    graph = nx.DiGraph(dependency_graph)  # use the networkx library
+    graph = nx.DiGraph(dependency_graph) # type: ignore # A set is fine, but linters warn about it
     cycles = list(nx.simple_cycles(graph))  # find all cycles in the graph
 
     cycle_strings = []

@@ -930,6 +930,7 @@ class MainContent(QObject):
                 },
             },
         }
+        extension = ".zip"
 
         if system not in platform_patterns:
             logger.warning(f"Unsupported system: {system}")
@@ -946,17 +947,27 @@ class MainContent(QObject):
 
         # Search for matching asset
         for asset in assets:
-            asset_name = asset.get("name", "").lower()
+            asset_name = asset.get("name", "")
+            if isinstance(asset_name, list):
+                # If asset_name is a list, join to string for checking
+                asset_name = " ".join(asset_name)
+            asset_name_lower = asset_name.lower()
 
-            # Check if asset matches platform and architecture
+            # Check if asset has the correct extension
+            if not asset_name_lower.endswith(extension):
+                continue
+
+            # Check if asset matches platform
             system_match = any(
-                pattern.lower() in asset_name for pattern in system_patterns
+                pattern.lower() in asset_name_lower for pattern in system_patterns
             )
-            arch_match = (
-                any(pattern.lower() in asset_name for pattern in arch_patterns)
-                if arch_patterns
-                else True
-            )
+
+            # Check if asset matches architecture (if arch_patterns is not empty)
+            arch_match = True
+            if arch_patterns:
+                arch_match = any(
+                    pattern.lower() in asset_name_lower for pattern in arch_patterns
+                )
 
             if system_match and arch_match:
                 download_url = asset.get("browser_download_url")
@@ -965,9 +976,14 @@ class MainContent(QObject):
                 )
                 return download_url
 
-        # Fallback: try to find any asset that contains the system name
+        # Fallback: try to find any asset that contains the system name and has correct extension
         for asset in assets:
             asset_name = asset.get("name", "").lower()
+
+            # Check if asset has the correct extension
+            if not asset_name.endswith(extension):
+                continue
+
             if any(pattern.lower() in asset_name for pattern in system_patterns):
                 download_url = asset.get("browser_download_url")
                 logger.debug(
@@ -3374,6 +3390,19 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Unsaved Changes"),
+                text=self.tr("You have unsaved changes. What would you like to do?"),
+                button_text_override=[self.tr("Save and Run"), self.tr("Run Anyway")],
+            )
+            if answer == self.tr("Save and Run"):
+                self._do_save()
+            elif answer == self.tr("Run Anyway"):
+                pass
+            elif answer == QMessageBox.StandardButton.Cancel:
+                return
+
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder

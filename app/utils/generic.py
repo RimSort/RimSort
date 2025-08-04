@@ -18,6 +18,7 @@ from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
     copy as copy_to_clipboard,
 )
 from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
 
@@ -550,3 +551,19 @@ def check_internet_connection(
         logger.warning(f"Curl command to www.microsoft.com failed: {e}")
 
     return False
+
+
+def restart_application() -> None:
+    if getattr(sys, "frozen", False):
+        cmd = [sys.executable] + sys.argv[1:]
+    else:
+        cmd = [sys.executable] + sys.argv
+
+    subprocess.Popen(cmd)
+
+    instance = QApplication.instance()
+    if instance:
+        logger.info("Restarting the application")
+        instance.quit()
+    else:
+        logger.warning("No QApplication instance found, cannot restart the application")

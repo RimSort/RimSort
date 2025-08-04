@@ -52,35 +52,19 @@ else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
 
-GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
-
-REQUIREMENTS_FILES = {
-    "main": "requirements.txt",
-    "build": "requirements_build.txt",
-    "dev": "requirements_develop.txt",
-}
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
-
-
-def get_rimsort_pip(build: bool = False, dev: bool = False) -> None:
-    print("Will install core RimSort requirements")
-    command = [PY_CMD, "-m", "pip", "install", "-r", REQUIREMENTS_FILES["main"]]
-
-    if build:
-        print("Will install RimSort build requirements")
-        command.extend(["-r", REQUIREMENTS_FILES["build"]])
-
-    if dev:
-        print("Will install RimSort development requirements")
-        command.extend(["-r", REQUIREMENTS_FILES["dev"]])
-
-    _execute(command)
-
 
 def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
 
+def setup_uv() -> None:
+    if shutil.which("uv"):
+        print("uv already installed")
+        return
+    else:
+        print("Installing uv to pip...")
+        _execute([PY_CMD, "-m", "pip", "install", "uv"])
 
 def build_steamworkspy() -> None:
     # Setup environment
@@ -263,7 +247,7 @@ def build_steamworkspy() -> None:
     print("Getting SteamworksPy requirements...")
     print(f"Entering directory {os.path.split(STEAMWORKS_PY_PATH)[0]}")
     os.chdir(os.path.split(STEAMWORKS_PY_PATH)[0])
-    _execute(GET_REQ_CMD)
+    _execute(["uv", "pip", "install", "-r", "requirements.txt"])
     print(f"Returning to cwd... {_CWD}")
     os.chdir(_CWD)
 
@@ -459,13 +443,6 @@ def make_args() -> argparse.ArgumentParser:
         help="skip installing RimSort submodules using git",
     )
 
-    # Skip dependencies
-    parser.add_argument(
-        "--skip-pip",
-        action="store_true",
-        help="skip installing RimSort pip requirements",
-    )
-
     # Skip SteamworksPy Copy
     parser.add_argument(
         "--skip-steamworkspy",
@@ -508,7 +485,6 @@ def main() -> None:
     # Parse arguments
     parser = make_args()
     args = parser.parse_args()
-    build = not args.skip_build
 
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
     if not args.skip_submodules:
@@ -517,15 +493,10 @@ def main() -> None:
     else:
         print("Skipped getting submodules")
 
-    # RimSort dependencies
-    if not args.skip_pip:
-        print("Getting RimSort python requirements...")
-        get_rimsort_pip(build=build, dev=args.dev)
-    else:
-        print("Skipped getting python pip requirements")
-
     if args.build_steamworkspy:
         print("Building SteamworksPy library. Skipping copy...")
+        print("Warning: Building the SteamworksPy library requires Python 11, and may need to be done in a separate environment.")
+        setup_uv()
         build_steamworkspy()
     elif not args.skip_steamworkspy:
         print("Copying SteamworksPy library")

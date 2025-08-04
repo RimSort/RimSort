@@ -1182,6 +1182,22 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Could not start the update process.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unsaved Changes</source>
+        <translation>未保存の変更</translation>
+    </message>
+    <message>
+        <source>You have unsaved changes. What would you like to do?</source>
+        <translation>未保存の変更があります。どうしますか？</translation>
+    </message>
+    <message>
+        <source>Save and Run</source>
+        <translation>保存して実行</translation>
+    </message>
+    <message>
+        <source>Run Anyway</source>
+        <translation>とにかく実行</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>

@@ -9,6 +9,7 @@ def do_alphabetical_sort(
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
+
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
         (

@@ -17,6 +17,7 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
     "incompatibleWith",
     "loadBefore",
     "loadAfter",
+    "loadTop",
     "loadBottom",
 ]
 MOD_RECURSE_EXCEPTIONS = [
@@ -78,4 +79,15 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
 KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
+}
+KNOWN_TIER_ONE_MODS = {
+    "zetrith.prepatcher",
+    "brrainz.harmony",
+    "ludeon.rimworld",
+    "ludeon.rimworld.royalty",
+    "ludeon.rimworld.ideology",
+    "ludeon.rimworld.biotech",
+    "ludeon.rimworld.anomaly",
+    "ludeon.rimworld.odyssey",
+    "unlimitedhugs.hugslib",
 }

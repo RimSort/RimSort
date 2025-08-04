@@ -150,8 +150,17 @@ class SettingsController(QObject):
             self._on_steam_mods_folder_location_clear_button_clicked
         )
 
+        self.settings_dialog.local_mods_folder_location.textChanged.connect(
+            self._on_local_mods_folder_location_text_changed
+        )
         self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
             self._on_local_mods_folder_location_open_button_clicked
+        )
+        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
+            self._on_local_mods_folder_location_choose_button_clicked
+        )
+        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
+            self._on_local_mods_folder_location_clear_button_clicked
         )
 
         self.settings_dialog.locations_clear_button.clicked.connect(
@@ -446,13 +455,6 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
         )
-        game_folder = self.settings.instances[
-            self.settings.current_instance
-        ].game_folder  # Automatically set local folder from game folder
-        if game_folder != "":
-            self.settings_dialog.local_mods_folder_location.setText(
-                str(Path(game_folder) / "Mods")
-            )
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -797,12 +799,10 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
-        steam_client_integration = self.settings.instances[
-            self.settings.current_instance
-        ].steam_client_integration
-        # Weird workaround since the return is a string sometimes apparently
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            True if steam_client_integration is True else False
+            self.settings.instances[
+                self.settings.current_instance
+            ].steam_client_integration
         )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
@@ -1118,19 +1118,9 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
-        game_folder = self.settings_dialog.game_location.text()
-        self.settings_dialog.game_location_open_button.setEnabled(game_folder != "")
-        # Automatically set local folder from game folder
-        if game_folder:
-            self.settings_dialog.local_mods_folder_location.setText(
-                str(Path(game_folder) / "Mods")
-            )
-            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(True)
-        else:  # Reset local mods folder location
-            self.settings_dialog.local_mods_folder_location.setText("")
-            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-                False
-            )
+        self.settings_dialog.game_location_open_button.setEnabled(
+            self.settings_dialog.game_location.text() != ""
+        )
 
     @Slot()
     def _on_game_location_open_button_clicked(self) -> None:
@@ -1246,8 +1236,36 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
 
     @Slot()
+    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
+        """
+        Open a directory dialog to select the local mods folder and handle the result.
+        """
+        local_mods_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Local Mods Folder",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not local_mods_folder_location:
+            return
+
+        self.settings_dialog.local_mods_folder_location.setText(
+            local_mods_folder_location
+        )
+        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
+
+    @Slot()
+    def _on_local_mods_folder_location_text_changed(self) -> None:
+        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
+            self.settings_dialog.local_mods_folder_location.text() != ""
+        )
+
+    @Slot()
     def _on_local_mods_folder_location_open_button_clicked(self) -> None:
         platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
+
+    @Slot()
+    def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_locations_clear_button_clicked(

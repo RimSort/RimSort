@@ -146,6 +146,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.game_location_clear_button)
 
         self.game_location = QLineEdit()
+        self.game_location.setPlaceholderText(
+            self.tr(
+                r"Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld"
+            )
+        )
         self.game_location.setTextMargins(GUIInfo().text_field_margins)
         self.game_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.game_location)
@@ -176,6 +181,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.config_folder_location_clear_button)
 
         self.config_folder_location = QLineEdit()
+        self.config_folder_location.setPlaceholderText(
+            self.tr(
+                r"Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config"
+            )
+        )
         self.config_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.config_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
@@ -208,6 +218,11 @@ class SettingsDialog(QDialog):
         header_layout.addWidget(self.steam_mods_folder_location_clear_button)
 
         self.steam_mods_folder_location = QLineEdit()
+        self.steam_mods_folder_location.setPlaceholderText(
+            self.tr(
+                r"Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100"
+            )
+        )
         self.steam_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.steam_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
@@ -231,13 +246,23 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        self.local_mods_folder_location = QLineEdit(readOnly=True)
+        self.local_mods_folder_location_choose_button = QToolButton()
+        self.local_mods_folder_location_choose_button.setText(self.tr("Choose…"))
+        header_layout.addWidget(self.local_mods_folder_location_choose_button)
+
+        self.local_mods_folder_location_clear_button = QToolButton()
+        self.local_mods_folder_location_clear_button.setText(self.tr("Clear…"))
+        header_layout.addWidget(self.local_mods_folder_location_clear_button)
+
+        self.local_mods_folder_location = QLineEdit()
+        self.local_mods_folder_location.setPlaceholderText(
+            self.tr(
+                r"should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods"
+            )
+        )
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
-        )
-        self.local_mods_folder_location.setPlaceholderText(
-            self.tr("Game location sets local mods location.")
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
@@ -942,14 +967,13 @@ class SettingsDialog(QDialog):
 
         # Main Window
         (
-            main_window_group,
+            self.main_window_group,
             self.main_launch_maximized_radio,
             self.main_launch_normal_radio,
             self.main_launch_custom_radio,
             self.main_custom_width_spinbox,
             self.main_custom_height_spinbox,
         ) = create_launch_state_group(
-            self.tr("Main Window Launch State"),
             self.tr("Maximized"),
             self.tr("Normal"),
             self.tr("Custom size"),
@@ -958,7 +982,11 @@ class SettingsDialog(QDialog):
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        group_layout.addWidget(main_window_group)
+        # Add QLabel as title for Main Window Launch State
+        main_window_title_label = QLabel(self.tr("Main Window Launch State"))
+        main_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(main_window_title_label)
+        group_layout.addWidget(self.main_window_group)
 
         # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
         self.main_launch_maximized_radio.toggled.connect(
@@ -973,14 +1001,13 @@ class SettingsDialog(QDialog):
 
         # Browser Window
         (
-            browser_window_group,
+            self.browser_window_group,
             self.browser_launch_maximized_radio,
             self.browser_launch_normal_radio,
             self.browser_launch_custom_radio,
             self.browser_custom_width_spinbox,
             self.browser_custom_height_spinbox,
         ) = create_launch_state_group(
-            self.tr("Browser Window Launch State"),
             self.tr("Maximized"),
             self.tr("Normal"),
             self.tr("Custom size"),
@@ -989,7 +1016,11 @@ class SettingsDialog(QDialog):
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        group_layout.addWidget(browser_window_group)
+        # Add QLabel as title for Browser Window Launch State
+        browser_window_title_label = QLabel(self.tr("Browser Window Launch State"))
+        browser_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(browser_window_title_label)
+        group_layout.addWidget(self.browser_window_group)
 
         # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
         self.browser_launch_maximized_radio.toggled.connect(
@@ -1003,7 +1034,11 @@ class SettingsDialog(QDialog):
         )
 
         # Settings Window (only custom option)
-        settings_window_group = QGroupBox(self.tr("Settings Window Launch State"))
+        settings_window_title_label = QLabel(self.tr("Settings Window Launch State"))
+        settings_window_title_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(settings_window_title_label)
+
+        settings_window_group = QGroupBox()
         settings_window_layout = QHBoxLayout()
         settings_window_group.setLayout(settings_window_layout)
 
@@ -1014,7 +1049,9 @@ class SettingsDialog(QDialog):
         self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
         self.settings_custom_width_spinbox.setSuffix(" px")
         self.settings_custom_width_spinbox.setFixedWidth(100)
-        settings_window_layout.addWidget(QLabel(self.tr("Custom Width:")))
+        custom_width_label = QLabel(self.tr("Custom Width:"))
+        custom_width_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        settings_window_layout.addWidget(custom_width_label)
         settings_window_layout.addWidget(self.settings_custom_width_spinbox)
 
         self.settings_custom_height_spinbox = QSpinBox()
@@ -1024,7 +1061,9 @@ class SettingsDialog(QDialog):
         self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
         self.settings_custom_height_spinbox.setSuffix(" px")
         self.settings_custom_height_spinbox.setFixedWidth(100)
-        settings_window_layout.addWidget(QLabel(self.tr("Custom Height:")))
+        custom_height_label = QLabel(self.tr("Custom Height:"))
+        custom_height_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        settings_window_layout.addWidget(custom_height_label)
         settings_window_layout.addWidget(self.settings_custom_height_spinbox)
 
         group_layout.addWidget(settings_window_group)
@@ -1264,7 +1303,6 @@ class SettingsDialog(QDialog):
 
 
 def create_launch_state_group(
-    title: str,
     minimized_text: str,
     normal_text: str,
     custom_text: str,
@@ -1280,7 +1318,7 @@ def create_launch_state_group(
     QSpinBox,
     QSpinBox,
 ]:
-    group_box = QGroupBox(title)
+    group_box = QGroupBox()
     layout = QVBoxLayout()
     group_box.setLayout(layout)
 
