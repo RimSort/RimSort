@@ -1,12 +1,10 @@
 from pathlib import Path
 from typing import Generator
-from unittest.mock import patch
 
 import pytest
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import AuxMetadataEntry, TagsEntry
-from app.utils.app_info import AppInfo
 
 
 @pytest.fixture()
