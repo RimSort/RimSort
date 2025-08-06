@@ -1,6 +1,6 @@
 from loguru import logger
 
-from app.utils.constants import KNOWN_TIER_ONE_MODS
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.metadata import MetadataManager
 
 
@@ -71,16 +71,43 @@ def gen_rev_deps_graph(
     return reverse_dependencies_graph
 
 
+def gen_tier_zero_deps_graph(
+    dependencies_graph: dict[str, set[str]],
+) -> tuple[dict[str, set[str]], set[str]]:
+    """
+    Generate the dependency graph for tier zero mods, which are mods that should be loaded before any other mod.
+    This includes mods that are required for the game to function properly,
+    These are Harmony, Core, DLC's, etc which are essential.
+    This list of mods is exhaustive, so we need to add any other mod that these mods
+    eg. "Faster Game Loading" before "Core" but after "Harmony".
+    These mods have to be added to the list of known tier zero mods, using the loadBefore flag in the database.
+    but this is not recommended. so we add it manually for now.
+    TODO: pull from a config like the other tiers incase we want to allow users to add more mods
+    """
+    logger.info("Generating dependencies graph for tier zero mods")
+    tier_zero_mods = KNOWN_TIER_ZERO_MODS
+    tier_zero_dependency_graph = {}
+    for tier_zero_mod in tier_zero_mods:
+        # Tier zero mods will only ever reference other tier zero mods in their dependencies graph
+        if tier_zero_mod in dependencies_graph:
+            tier_zero_dependency_graph[tier_zero_mod] = dependencies_graph[
+                tier_zero_mod
+            ]
+    logger.info("Attached corresponding dependencies to every tier zero mod, returning")
+    return tier_zero_dependency_graph, tier_zero_mods
+
+
 def gen_tier_one_deps_graph(
     dependencies_graph: dict[str, set[str]],
 ) -> tuple[dict[str, set[str]], set[str]]:
-    # Below is a list of mods determined to be "tier one", in the sense that they
-    # should be loaded first before any other regular mod. Tier one mods will have specific
-    # load order needs within themselves, e.g. Harmony before core. There is no guarantee that
-    # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
-    # into this list as well.
-    # TODO: pull from a config
-
+    """
+    Generate the dependency graph for "tier one" mods, which are mods that are required by other mods to function properly,
+    These are mods such as Framework mods.
+    Tier one mods will have specific load order needs within themselves,
+    This list of mods is exhaustive, so we need to add any other mod that these mods
+    e.g. "Vanilla Backgrounds Expanded" before "Vaniila Expanded Framework".
+    These can also be added to the list of known tier one mods, using the "loadTop" flag, in the database.
+    """
     logger.info("Generating dependencies graph for tier one mods")
     metadata_manager = MetadataManager.instance()
     known_tier_one_mods = KNOWN_TIER_ONE_MODS
@@ -141,13 +168,14 @@ def gen_tier_three_deps_graph(
     reverse_dependencies_graph: dict[str, set[str]],
     active_mods_uuids: set[str],
 ) -> tuple[dict[str, set[str]], set[str]]:
-    # Below is a list of mods determined to be "tier three", in the sense that they
-    # should be loaded after any other regular mod, potentially at the very end of the load order.
-    # Tier three mods will have specific load order needs within themselves. There is no guarantee that
-    # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
-    # into this list as well.
-    # TODO: pull from a config
-    # Cache MetadataManager instance
+    """
+    Below is a list of mods determined to be "tier three",
+    These should be loaded after any other regular mod, potentially at the very end of the load order.
+    Tier three mods will have specific load order needs within themselves. There is no guarantee that his list of mods is exhaustive,
+    So we need to add any other mod that these mods depend on into this list as well.
+    eg. "RocketMan".
+    These can also be added to the list of known tier one mods, using the "loadBottom" flag, in the database.
+    """
     metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier three mods")
     known_tier_three_mods = {
