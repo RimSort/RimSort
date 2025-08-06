@@ -80,7 +80,7 @@ KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
 }
-KNOWN_TIER_ONE_MODS = {
+KNOWN_TIER_ZERO_MODS = {
     "zetrith.prepatcher",
     "brrainz.harmony",
     "ludeon.rimworld",
@@ -89,5 +89,7 @@ KNOWN_TIER_ONE_MODS = {
     "ludeon.rimworld.biotech",
     "ludeon.rimworld.anomaly",
     "ludeon.rimworld.odyssey",
+}
+KNOWN_TIER_ONE_MODS = {
     "unlimitedhugs.hugslib",
 }
