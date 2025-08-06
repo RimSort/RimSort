@@ -1,6 +1,6 @@
 from loguru import logger
 
-from app.utils.constants import KNOWN_TIER_ONE_MODS
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.metadata import MetadataManager
 
 
@@ -69,6 +69,26 @@ def gen_rev_deps_graph(
         f"Finished generating reverse dependencies graph of {len(reverse_dependencies_graph)}"
     )
     return reverse_dependencies_graph
+
+
+def gen_tier_zero_deps_graph(
+    dependencies_graph: dict[str, set[str]],
+) -> tuple[dict[str, set[str]], set[str]]:
+    """
+    Generate the dependency graph for tier zero mods, which are mods that should be loaded before any other mod.
+    This includes mods that are required for the game to function properly, such as core mods or essential libraries.
+    """
+    logger.info("Generating dependencies graph for tier zero mods")
+    tier_zero_mods = KNOWN_TIER_ZERO_MODS
+    tier_zero_dependency_graph = {}
+    for tier_zero_mod in tier_zero_mods:
+        # Tier zero mods will only ever reference other tier zero mods in their dependencies graph
+        if tier_zero_mod in dependencies_graph:
+            tier_zero_dependency_graph[tier_zero_mod] = dependencies_graph[
+                tier_zero_mod
+            ]
+    logger.info("Attached corresponding dependencies to every tier zero mod, returning")
+    return tier_zero_dependency_graph, tier_zero_mods
 
 
 def gen_tier_one_deps_graph(
