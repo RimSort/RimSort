@@ -58,7 +58,7 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    graph = nx.DiGraph(dependency_graph) # type: ignore # A set is fine, but linters warn about it
+    graph = nx.DiGraph(dependency_graph)  # type: ignore # A set is fine, but linters warn about it
     cycles = list(nx.simple_cycles(graph))  # find all cycles in the graph
 
     cycle_strings = []
