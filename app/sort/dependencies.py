@@ -77,15 +77,32 @@ def gen_tier_zero_deps_graph(
     """
     Generate the dependency graph for tier zero mods, which are mods that should be loaded before any other mod.
     This includes mods that are required for the game to function properly,
-    These are Harmony, Core, DLC's, etc which are essential.
-    This list of mods is exhaustive, so we need to add any other mod that these mods
-    eg. "Faster Game Loading" before "Core" but after "Harmony".
-    These mods have to be added to the list of known tier zero mods, using the loadBefore flag in the database.
-    but this is not recommended. so we add it manually for now.
-    TODO: pull from a config like the other tiers incase we want to allow users to add more mods
+    These are Core abd DLC's, which are essential.
+    Mods in this list is limited, so we do not need to add any other mods to this list unless DLC's.
+    Mods in list are only added to the list of known tier zero mods, using the loadBefore Core flag in the database,
+    Or have the loadBefore Core flag set in their About.xml.
+    This will only happens when the mod author specifically states that it is a tier zero mod.
+    eg : Harmony, PrePatcher, Fishery, FasterGameLoading, LoadingProgress, VisualExceptions, etc.
+    These mods are mostly well known and this only happens when the mod author specifically states that it is a tier zero mod.
     """
     logger.info("Generating dependencies graph for tier zero mods")
-    tier_zero_mods = KNOWN_TIER_ZERO_MODS
+    known_tier_zero_mods = KNOWN_TIER_ZERO_MODS
+    # Bug fix: if there are circular dependencies in tier zero mods
+    # then an infinite loop happens here unless we keep track of what has
+    # already been processed.
+    processed_ids: set[str] = set()
+    tier_zero_mods: set[str] = set()
+    for known_tier_zero_mod in known_tier_zero_mods:
+        if known_tier_zero_mod in dependencies_graph:
+            # Some known tier zero mods might not actually be active
+            tier_zero_mods.add(known_tier_zero_mod)
+            dependencies_set = get_dependencies_recursive(
+                known_tier_zero_mod, dependencies_graph, processed_ids
+            )
+            tier_zero_mods.update(dependencies_set)
+    logger.info(
+        f"Recursively generated the following set of tier one mods: {tier_zero_mods}"
+    )
     tier_zero_dependency_graph = {}
     for tier_zero_mod in tier_zero_mods:
         # Tier zero mods will only ever reference other tier zero mods in their dependencies graph
