@@ -81,11 +81,6 @@ KNOWN_MOD_REPLACEMENTS = {
     "aoba.motorization.engine": {"rimthunder.core"},
 }
 KNOWN_TIER_ZERO_MODS = {
-    "zetrith.prepatcher",
-    "brrainz.harmony",
-    "taranchuk.fastergameloading",
-    "ilyvion.loadingprogress",
-    "brrainz.visualexceptions",
     "ludeon.rimworld",
     "ludeon.rimworld.royalty",
     "ludeon.rimworld.ideology",
