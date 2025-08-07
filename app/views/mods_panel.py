@@ -89,6 +89,25 @@ def uuid_to_mod_name(uuid: str) -> str:
         return "name error in mod about.xml"
 
 
+def uuid_to_filesystem_modified_time(uuid: str) -> int:
+    """
+    Converts a UUID to the corresponding mod's filesystem modification time.
+    Args:
+        uuid (str): The UUID of the mod.
+    Returns:
+        int: The filesystem modification time, or 0 if not available.
+    """
+    import os
+    metadata = MetadataManager.instance().internal_local_metadata[uuid]
+    mod_path = metadata.get("path")
+    if mod_path and os.path.exists(mod_path):
+        fs_time = int(os.path.getmtime(mod_path))
+        mod_name = metadata.get("name", "Unknown")
+        logger.debug(f"Mod: {mod_name}, Filesystem time: {fs_time}")
+        return fs_time
+    return 0
+
+
 class ModsPanelSortKey(Enum):
     """
     Enum class representing different sorting keys for mods.
@@ -96,6 +115,7 @@ class ModsPanelSortKey(Enum):
 
     NOKEY = 0
     MODNAME = 1
+    FILESYSTEM_MODIFIED_TIME = 2
 
 
 def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
@@ -104,14 +124,17 @@ def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
     Args:
         key (ModsPanelSortKey): The key to sort the list by.
     Returns:
-        None
+        list[str]: The sorted list of UUIDs.
     """
     # Sort the list of UUIDs based on the provided key
     if key == ModsPanelSortKey.MODNAME:
         key_function = uuid_to_mod_name
+        return sorted(uuids, key=key_function)
+    elif key == ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME:
+        # Sort by filesystem modification time in descending order (most recent first)
+        return sorted(uuids, key=uuid_to_filesystem_modified_time, reverse=True)
     else:
         return sorted(uuids, key=lambda x: x)
-    return sorted(uuids, key=key_function)
 
 
 class ModListItemInner(QWidget):
@@ -386,7 +409,25 @@ class ModListItemInner(QWidget):
         supported_versions_line = f"Supported Versions: {supported_versions_text}\n"
 
         path = metadata.get("path", "Not specified")
-        path_line = f"Path: {path}"
+        path_line = f"Path: {path}\n"
+
+        # Add filesystem modification time information
+        mod_path = metadata.get("path")
+        if mod_path:
+            try:
+                import os
+                from datetime import datetime
+                if os.path.exists(mod_path):
+                    fs_time = int(os.path.getmtime(mod_path))
+                    dt_fs = datetime.fromtimestamp(fs_time)
+                    formatted_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
+                    last_touched_line = f"Filesystem Modified: {formatted_time}"
+                else:
+                    last_touched_line = "Filesystem Modified: Path not found"
+            except (ValueError, OSError, OverflowError):
+                last_touched_line = "Filesystem Modified: Invalid timestamp"
+        else:
+            last_touched_line = "Filesystem Modified: Not available"
 
         return "".join(
             [
@@ -396,6 +437,7 @@ class ModListItemInner(QWidget):
                 modversion_line,
                 supported_versions_line,
                 path_line,
+                last_touched_line,
             ]
         )
 
@@ -2425,6 +2467,18 @@ class ModsPanel(QWidget):
                 self.tr("Version"),
             ]
         )
+        self.inactive_mods_sort_combobox: QComboBox = QComboBox()
+        self.inactive_mods_sort_combobox.setObjectName("MainUI")
+        self.inactive_mods_sort_combobox.setMaximumWidth(120)
+        self.inactive_mods_sort_combobox.setToolTip(self.tr("Sort inactive mods by"))
+        self.inactive_mods_sort_combobox.addItems(
+            [
+                self.tr("Name"),
+                self.tr("Modified Time"),
+            ]
+        )
+        # Set default to "Modified Time" since that's the current sorting
+        self.inactive_mods_sort_combobox.setCurrentText(self.tr("Modified Time"))
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
@@ -2437,6 +2491,7 @@ class ModsPanel(QWidget):
         )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_combobox, 120)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -2459,6 +2514,28 @@ class ModsPanel(QWidget):
         self.inactive_mods_list.recalculate_warnings_signal.connect(
             partial(self.recalculate_list_errors_warnings, list_type="Inactive")
         )
+        self.inactive_mods_sort_combobox.currentTextChanged.connect(
+            self.on_inactive_mods_sort_changed
+        )
+
+    def on_inactive_mods_sort_changed(self, text: str) -> None:
+        """Handle inactive mods sorting selection change."""
+        # Determine the sorting key based on the selected text
+        if text == self.tr("Name"):
+            sort_key = ModsPanelSortKey.MODNAME
+        elif text == self.tr("Modified Time"):
+            sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
+        else:
+            sort_key = ModsPanelSortKey.MODNAME  # Default fallback
+        
+        # Re-sort the inactive mods list with the new key
+        current_uuids = self.inactive_mods_list.uuids.copy()
+        if current_uuids:
+            self.inactive_mods_list.recreate_mod_list_and_sort(
+                list_type="inactive",
+                uuids=current_uuids,
+                key=sort_key,
+            )
 
     def mod_list_updated(
         self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True
