@@ -163,7 +163,7 @@ jobs:
           file-description: "RimSort"
           include-data-files: |
             version.xml=version.xml
-          low-memory: true
+          nofollow-import-to: "sqlalchemy.dialects.oracle"
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 
