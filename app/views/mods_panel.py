@@ -5,10 +5,10 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import cast
+from typing import Optional, cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal, QTimer, QThread, Slot
 from PySide6.QtGui import (
     QAction,
     QCursor,
@@ -21,6 +21,7 @@ from PySide6.QtGui import (
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QAbstractItemView,
     QComboBox,
     QFrame,
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QPushButton,
+    QProgressDialog,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -62,6 +64,9 @@ from app.views.dialogue import (
     show_warning,
 )
 
+
+# Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
+_FOLDER_SIZE_CACHE: dict[str, tuple[int, int]] = {}
 
 def uuid_no_key(uuid: str) -> str:
     """
@@ -108,6 +113,73 @@ def uuid_to_filesystem_modified_time(uuid: str) -> int:
     return 0
 
 
+def uuid_to_author(uuid: str) -> str:
+    """
+    Converts a UUID to the corresponding author's name used for sorting.
+    Returns the first author in lowercase if available; otherwise an empty string.
+    """
+    metadata = MetadataManager.instance().internal_local_metadata[uuid]
+    authors = metadata.get("authors")
+    author: Optional[str] = None
+    if isinstance(authors, dict):
+        # Possible formats: {"li": ["a", "b"]} or {"li": "a"}
+        li_value = authors.get("li")
+        if isinstance(li_value, list) and li_value:
+            author = li_value[0]
+        elif isinstance(li_value, str):
+            author = li_value
+    elif isinstance(authors, list):
+        if authors:
+            author = authors[0]
+    elif isinstance(authors, str):
+        author = authors
+
+    return author.lower() if isinstance(author, str) else ""
+
+
+def uuid_to_folder_size(uuid: str) -> int:
+    """
+    Calculate the total size in bytes of the mod folder for the given UUID.
+    Returns 0 if the path is missing.
+    """
+    metadata = MetadataManager.instance().internal_local_metadata[uuid]
+    mod_path = metadata.get("path")
+    if not mod_path or not os.path.isdir(mod_path):
+        return 0
+    try:
+        mtime = int(os.path.getmtime(mod_path))
+    except OSError:
+        return 0
+
+    cached = _FOLDER_SIZE_CACHE.get(mod_path)
+    if cached and cached[0] == mtime:
+        return cached[1]
+
+    total_size = 0
+    for root, _, files in os.walk(mod_path):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            try:
+                total_size += os.path.getsize(file_path)
+            except OSError:
+                # Skip files we cannot access
+                continue
+    _FOLDER_SIZE_CACHE[mod_path] = (mtime, total_size)
+    return total_size
+
+
+def format_file_size(size_in_bytes: int) -> str:
+    """Format bytes to a human-readable string."""
+    if size_in_bytes < 1024:
+        return f"{size_in_bytes} B"
+    elif size_in_bytes < 1024 * 1024:
+        return f"{size_in_bytes / 1024:.1f} KB"
+    elif size_in_bytes < 1024 * 1024 * 1024:
+        return f"{size_in_bytes / (1024 * 1024):.1f} MB"
+    else:
+        return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
 class ModsPanelSortKey(Enum):
     """
     Enum class representing different sorting keys for mods.
@@ -116,9 +188,11 @@ class ModsPanelSortKey(Enum):
     NOKEY = 0
     MODNAME = 1
     FILESYSTEM_MODIFIED_TIME = 2
+    AUTHOR = 3
+    FOLDER_SIZE = 4
 
 
-def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
+def sort_uuids(uuids: list[str], key: ModsPanelSortKey, descending: Optional[bool] = None) -> list[str]:
     """
     Sort the list of UUIDs based on the provided key.
     Args:
@@ -128,13 +202,43 @@ def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
     """
     # Sort the list of UUIDs based on the provided key
     if key == ModsPanelSortKey.MODNAME:
-        key_function = uuid_to_mod_name
-        return sorted(uuids, key=key_function)
+        # Default alphabetical ascending unless explicitly overridden
+        reverse_flag = bool(descending) if descending is not None else False
+        return sorted(uuids, key=uuid_to_mod_name, reverse=reverse_flag)
     elif key == ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME:
-        # Sort by filesystem modification time in descending order (most recent first)
-        return sorted(uuids, key=uuid_to_filesystem_modified_time, reverse=True)
+        # Default to most recent first unless explicitly overridden
+        reverse_flag = bool(descending) if descending is not None else True
+        return sorted(uuids, key=uuid_to_filesystem_modified_time, reverse=reverse_flag)
+    elif key == ModsPanelSortKey.AUTHOR:
+        reverse_flag = bool(descending) if descending is not None else False
+        return sorted(uuids, key=uuid_to_author, reverse=reverse_flag)
+    elif key == ModsPanelSortKey.FOLDER_SIZE:
+        # Default to largest first unless explicitly overridden
+        reverse_flag = bool(descending) if descending is not None else True
+        return sorted(uuids, key=uuid_to_folder_size, reverse=reverse_flag)
     else:
-        return sorted(uuids, key=lambda x: x)
+        reverse_flag = bool(descending) if descending is not None else False
+        return sorted(uuids, key=lambda x: x, reverse=reverse_flag)
+
+
+class FolderSizeWorker(QObject):
+    """Background worker to compute folder sizes with progress updates."""
+
+    progress = Signal(int, int)  # current, total
+    finished = Signal(dict)  # uuid -> size bytes
+
+    def __init__(self, uuids: list[str]) -> None:
+        super().__init__()
+        self._uuids = uuids
+
+    @Slot()
+    def run(self) -> None:
+        total = len(self._uuids)
+        sizes: dict[str, int] = {}
+        for idx, uuid in enumerate(self._uuids, start=1):
+            sizes[uuid] = uuid_to_folder_size(uuid)
+            self.progress.emit(idx, total)
+        self.finished.emit(sizes)
 
 
 class ModListItemInner(QWidget):
@@ -411,12 +515,13 @@ class ModListItemInner(QWidget):
         path = metadata.get("path", "Not specified")
         path_line = f"Path: {path}\n"
 
-        # Add filesystem modification time information
+        # Add folder size and filesystem modification time information
         mod_path = metadata.get("path")
         if mod_path:
             try:
                 import os
                 from datetime import datetime
+                folder_size_line = f"Folder Size: {format_file_size(uuid_to_folder_size(self.uuid))}\n"
                 if os.path.exists(mod_path):
                     fs_time = int(os.path.getmtime(mod_path))
                     dt_fs = datetime.fromtimestamp(fs_time)
@@ -426,8 +531,10 @@ class ModListItemInner(QWidget):
                     last_touched_line = "Filesystem Modified: Path not found"
             except (ValueError, OSError, OverflowError):
                 last_touched_line = "Filesystem Modified: Invalid timestamp"
+                folder_size_line = "Folder Size: Not available\n"
         else:
             last_touched_line = "Filesystem Modified: Not available"
+            folder_size_line = "Folder Size: Not available\n"
 
         return "".join(
             [
@@ -435,6 +542,7 @@ class ModListItemInner(QWidget):
                 author_line,
                 package_id_line,
                 modversion_line,
+                folder_size_line,
                 supported_versions_line,
                 path_line,
                 last_touched_line,
@@ -2474,11 +2582,20 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox.addItems(
             [
                 self.tr("Name"),
+                self.tr("Author"),
                 self.tr("Modified Time"),
+                self.tr("Folder Size"),
             ]
         )
         # Set default to "Modified Time" since that's the current sorting
         self.inactive_mods_sort_combobox.setCurrentText(self.tr("Modified Time"))
+        # Sort order toggle (Asc/Desc)
+        self.inactive_sort_descending: bool = True
+        self.inactive_mods_sort_order_button: QToolButton = QToolButton()
+        self.inactive_mods_sort_order_button.setObjectName("MainUI")
+        self.inactive_mods_sort_order_button.setMaximumWidth(60)
+        self.inactive_mods_sort_order_button.setToolTip(self.tr("Toggle sort order"))
+        self.inactive_mods_sort_order_button.setText(self.tr("Desc"))
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
@@ -2492,6 +2609,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_combobox, 120)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -2517,6 +2635,70 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox.currentTextChanged.connect(
             self.on_inactive_mods_sort_changed
         )
+        self.inactive_mods_sort_order_button.clicked.connect(
+            self.on_inactive_mods_sort_order_toggled
+        )
+
+    def on_inactive_mods_sort_order_toggled(self) -> None:
+        # Toggle state and update button label
+        self.inactive_sort_descending = not self.inactive_sort_descending
+        self.inactive_mods_sort_order_button.setText(
+            self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
+        )
+        # Re-apply sort using current selection
+        self.on_inactive_mods_sort_changed(self.inactive_mods_sort_combobox.currentText())
+
+    # Slots for folder-size sorting (ensure UI updates happen on the main thread)
+    @Slot(int, int)
+    def _on_folder_size_progress(self, current: int, total: int) -> None:
+        if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
+            self._size_progress_dialog.setMaximum(total)
+            self._size_progress_dialog.setValue(current)
+
+    @Slot(dict)
+    def _on_folder_size_finished(self, sizes: dict[str, int]) -> None:
+        try:
+            # Sort and rebuild with visible progress to avoid post-close pause
+            current_uuids: list[str] = getattr(self, "_size_current_uuids", [])
+            sorted_uuids = sorted(
+                current_uuids,
+                key=lambda u: sizes.get(u, 0),
+                reverse=self.inactive_sort_descending,
+            )
+            if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
+                self._size_progress_dialog.setLabelText(self.tr("Rebuilding list..."))
+                self._size_progress_dialog.setRange(0, len(sorted_uuids))
+                self._size_progress_dialog.setValue(0)
+
+            lw = self.inactive_mods_list
+            lw.setUpdatesEnabled(False)
+            lw.clear()
+            lw.uuids = list()
+            for idx, uuid_key in enumerate(sorted_uuids, start=1):
+                list_item = CustomListWidgetItem(lw)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                list_item.setData(Qt.ItemDataRole.UserRole, data)
+                lw.addItem(list_item)
+                if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
+                    self._size_progress_dialog.setValue(idx)
+            lw.setUpdatesEnabled(True)
+            lw.repaint()
+        finally:
+            if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
+                self._size_progress_dialog.close()
+                self._size_progress_dialog = None
+            QApplication.restoreOverrideCursor()
+            if hasattr(self, "_size_thread") and self._size_thread:
+                # Let the thread finish asynchronously and clean up safely
+                self._size_thread.quit()
+                self._size_thread.deleteLater()
+                self._size_thread = None
+            if hasattr(self, "_size_worker") and self._size_worker:
+                try:
+                    self._size_worker.deleteLater()
+                except Exception:
+                    pass
+                self._size_worker = None
 
     def on_inactive_mods_sort_changed(self, text: str) -> None:
         """Handle inactive mods sorting selection change."""
@@ -2525,17 +2707,57 @@ class ModsPanel(QWidget):
             sort_key = ModsPanelSortKey.MODNAME
         elif text == self.tr("Modified Time"):
             sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
+        elif text == self.tr("Author"):
+            sort_key = ModsPanelSortKey.AUTHOR
+        elif text == self.tr("Folder Size"):
+            sort_key = ModsPanelSortKey.FOLDER_SIZE
         else:
             sort_key = ModsPanelSortKey.MODNAME  # Default fallback
         
         # Re-sort the inactive mods list with the new key
         current_uuids = self.inactive_mods_list.uuids.copy()
         if current_uuids:
-            self.inactive_mods_list.recreate_mod_list_and_sort(
-                list_type="inactive",
-                uuids=current_uuids,
-                key=sort_key,
-            )
+            # Show a modal progress dialog for heavy sorts
+            is_heavy = sort_key in (ModsPanelSortKey.FOLDER_SIZE,)
+            if is_heavy:
+                # Set up dialog
+                self._size_progress_dialog = QProgressDialog(
+                    self.tr("Calculating folder sizes..."),
+                    None,
+                    0,
+                    len(current_uuids),
+                    self,
+                )
+                self._size_progress_dialog.setWindowModality(
+                    Qt.WindowModality.WindowModal
+                )
+                self._size_progress_dialog.setMinimumDuration(0)
+                self._size_progress_dialog.setCancelButton(None)
+                self._size_progress_dialog.setAutoClose(True)
+                self._size_progress_dialog.setAutoReset(True)
+                self._size_progress_dialog.setValue(0)
+                QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+                # Start worker thread
+                self._size_thread = QThread(self)
+                self._size_current_uuids = current_uuids
+                self._size_worker = FolderSizeWorker(current_uuids)
+                self._size_worker.moveToThread(self._size_thread)
+
+                self._size_worker.progress.connect(self._on_folder_size_progress)
+                self._size_worker.finished.connect(self._on_folder_size_finished)
+                self._size_thread.started.connect(self._size_worker.run)
+                self._size_thread.start()
+                self._size_progress_dialog.show()
+            else:
+                # Fast path for other sort keys
+                # Apply order by passing flag to sort_uuids via recreate_mod_list_and_sort
+                sorted_uuids = sort_uuids(
+                    current_uuids, key=sort_key, descending=self.inactive_sort_descending
+                )
+                self.inactive_mods_list.recreate_mod_list(
+                    list_type="inactive", uuids=sorted_uuids
+                )
 
     def mod_list_updated(
         self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True

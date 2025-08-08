@@ -102,6 +102,7 @@ class ModInfo:
         self.mod_info_authors = QHBoxLayout()
         self.mod_info_mod_version = QHBoxLayout()
         self.mod_info_supported_versions = QHBoxLayout()
+        self.mod_info_folder_size = QHBoxLayout()
         self.mod_info_path = QHBoxLayout()
         self.mod_info_last_touched = QHBoxLayout()
         self.mod_info_filesystem_time = QHBoxLayout()
@@ -182,6 +183,10 @@ class ModInfo:
         self.mod_info_supported_versions_label.setObjectName("summaryLabel")
         self.mod_info_supported_versions_value = QLabel()
         self.mod_info_supported_versions_value.setObjectName("summaryValue")
+        self.mod_info_folder_size_label = QLabel(self.tr("Folder Size:"))
+        self.mod_info_folder_size_label.setObjectName("summaryLabel")
+        self.mod_info_folder_size_value = QLabel()
+        self.mod_info_folder_size_value.setObjectName("summaryValue")
         self.mod_info_path_label = QLabel(self.tr("Path:"))
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = ClickablePathLabel()
@@ -240,6 +245,8 @@ class ModInfo:
         self.mod_info_supported_versions.addWidget(
             self.mod_info_supported_versions_value, 80
         )
+        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_label, 20)
+        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_value, 80)
         self.mod_info_last_touched.addWidget(self.mod_info_last_touched_label, 20)
         self.mod_info_last_touched.addWidget(self.mod_info_last_touched_value, 80)
         self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_label, 20)
@@ -252,6 +259,7 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_authors)
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
+        self.mod_info_layout.addLayout(self.mod_info_folder_size)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
@@ -275,6 +283,8 @@ class ModInfo:
             self.mod_info_mod_version_value,
             self.mod_info_supported_versions_label,
             self.mod_info_supported_versions_value,
+            self.mod_info_folder_size_label,
+            self.mod_info_folder_size_value,
             self.mod_info_last_touched_label,
             self.mod_info_last_touched_value,
             self.mod_info_filesystem_time_label,
@@ -400,6 +410,14 @@ class ModInfo:
                     if supported_versions_list
                     else "Not specified"
                 )
+
+            # Set folder size
+            from app.views.mods_panel import uuid_to_folder_size, format_file_size
+            try:
+                size_bytes = uuid_to_folder_size(uuid)
+                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
+            except Exception:
+                self.mod_info_folder_size_value.setText("Not available")
 
             # Set last touched
             internal_time_touched = mod_info.get("internal_time_touched")
