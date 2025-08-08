@@ -593,7 +593,7 @@ class ModListItemInner(QWidget):
                     instance_path / "aux_metadata.db"
                 )
             )
-            with aux_metadata_controller.Session() as  aux_metadata_session:
+            with aux_metadata_controller.Session() as aux_metadata_session:
                 mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
                 aux_metadata_controller.update(
                     aux_metadata_session,
@@ -613,7 +613,7 @@ class ModListItemInner(QWidget):
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )
-        with aux_metadata_controller.Session() as  aux_metadata_session:
+        with aux_metadata_controller.Session() as aux_metadata_session:
             mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
             aux_metadata_controller.update(
                 aux_metadata_session,
@@ -1731,7 +1731,7 @@ class ModListWidget(QListWidget):
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )
-        with aux_metadata_controller.Session() as  aux_metadata_session:
+        with aux_metadata_controller.Session() as aux_metadata_session:
             aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
             aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
             data = CustomListWidgetItemMetadata(
@@ -2262,7 +2262,7 @@ class ModListWidget(QListWidget):
                         instance_path / "aux_metadata.db"
                     )
                 )
-                with aux_metadata_controller.Session() as  aux_metadata_session:
+                with aux_metadata_controller.Session() as aux_metadata_session:
                     aux_metadata_controller.get_or_create(
                         aux_metadata_session, mod_path
                     )

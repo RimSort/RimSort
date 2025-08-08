@@ -122,7 +122,6 @@ class ModsPanelController(QObject):
             self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
 
     def _on_change_mod_coloring_mode(self) -> None:
-        # TODO: Is calling change_mod_color() the most efficient way?
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
         for mod in active_mods:

@@ -27,6 +27,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
@@ -1026,6 +1027,12 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
+                instance_name = self.settings_controller.settings.current_instance
+                instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                    instance_path / "aux_metadata.db"
+                )
+                aux_metadata_controller.engine.dispose()
                 try:
                     rmtree(
                         str(
