@@ -12,7 +12,11 @@ from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebChannel import QWebChannel
-from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineScript
+from PySide6.QtWebEngineCore import (
+    QWebEnginePage,
+    QWebEngineProfile,
+    QWebEngineScript,
+)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -77,6 +81,16 @@ class SteamBrowser(QWidget):
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
         # VARIABLES
+        profile_dir = Path(AppInfo()._browser_profile_folder)
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        self._web_profile_storage = str(profile_dir)
+
+        # Create persistent profile (persists cookies, localStorage, indexedDB, service workers)
+        self.web_profile = QWebEngineProfile("SteamBrowserProfile", self)
+        self.web_profile.setPersistentStoragePath(self._web_profile_storage)
+        self.web_profile.setPersistentCookiesPolicy(
+            QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies
+        )
         self.current_html = ""
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
@@ -145,6 +159,10 @@ class SteamBrowser(QWidget):
         )
         # WebEngineView
         self.web_view = QWebEngineView()
+
+        page = QWebEnginePage(self.web_profile, self.web_view)
+        self.web_view.setPage(page)
+
         self.web_view.hide()
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
