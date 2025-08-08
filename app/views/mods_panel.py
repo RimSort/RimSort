@@ -369,8 +369,7 @@ class ModListItemInner(QWidget):
         self._hovered = True
         if self._selected:
             return
-        if self.settings_controller.settings.color_background_instead_of_text_toggle:
-            self.setStyleSheet("")
+        self.setStyleSheet("")
         super().enterEvent(event)
 
     def leaveEvent(self, event: QEvent) -> None:
@@ -380,8 +379,7 @@ class ModListItemInner(QWidget):
         if self.mod_color is None:
             self.setStyleSheet("")
         else:
-            if self.settings_controller.settings.color_background_instead_of_text_toggle:
-                self.handle_mod_color_change(init=True)
+            self.handle_mod_color_change(init=True)
         super().leaveEvent(event)
 
     def set_selected(self, selected: bool) -> None:
@@ -390,12 +388,10 @@ class ModListItemInner(QWidget):
 
     def handle_selected(self) -> None:
         if self._selected:
-            if self.settings_controller.settings.color_background_instead_of_text_toggle:
-                self.setStyleSheet("")
+            self.setStyleSheet("")
         elif not self._selected:
             if self.mod_color:
-                if self.settings_controller.settings.color_background_instead_of_text_toggle:
-                    self.handle_mod_color_change(init=True)
+                self.handle_mod_color_change(init=True)
             else:
                 self.setStyleSheet("")
 
