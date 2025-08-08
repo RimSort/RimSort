@@ -30,19 +30,18 @@ class MenuBarController(QObject):
             raise RuntimeError("QApplication instance not found")
         self.menu_bar.quit_action.triggered.connect(instance.quit)
 
-        # TODO: updates not implemented yet
-        # self.menu_bar.check_for_updates_action.triggered.connect(
-        #     EventBus().do_check_for_application_update.emit
-        # )
+        # Update menu
+        self.menu_bar.check_for_updates_action.triggered.connect(
+            EventBus().do_check_for_application_update.emit
+        )
+        self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
+            self._on_menu_bar_check_for_updates_on_startup_triggered
+        )
+        self.menu_bar.check_for_updates_on_startup_action.setChecked(
+            self.settings_controller.settings.check_for_update_startup
+        )
 
-        # self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
-        #     self._on_menu_bar_check_for_updates_on_startup_triggered
-        # )
-
-        # self.menu_bar.check_for_updates_on_startup_action.setChecked(
-        #     self.settings_controller.settings.check_for_update_startup
-        # )
-
+        # Settings menu
         self.menu_bar.settings_action.triggered.connect(
             self.settings_controller.show_settings_dialog
         )
@@ -115,6 +114,9 @@ class MenuBarController(QObject):
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
         )
+        self.menu_bar.add_zip_mod_action.triggered.connect(
+            EventBus().do_add_zip_mod.emit
+        )
         self.menu_bar.browse_workshop_action.triggered.connect(
             EventBus().do_browse_workshop
         )
@@ -148,8 +150,8 @@ class MenuBarController(QObject):
         )
         # Help menu
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.validate_steam_client_action.triggered.connect(
-            EventBus().do_validate_steam_client
+        self.menu_bar.github_action.triggered.connect(
+            self._on_menu_bar_github_triggered
         )
 
         # External signals
@@ -182,7 +184,11 @@ class MenuBarController(QObject):
     def _on_set_current_instance(
         self, current_instance: str, initialize: bool = False
     ) -> None:
-        self.menu_bar.instances_submenu.setTitle(f"Current: {current_instance}")
+        self.menu_bar.instances_submenu.setTitle(
+            self.tr("Current: {current_instance}").format(
+                current_instance=current_instance
+            )
+        )
         self.menu_bar.instances_submenu.setActiveAction(
             next(
                 (
@@ -231,6 +237,10 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
         open_url_browser("https://rimsort.github.io/RimSort/")
+
+    @Slot()
+    def _on_menu_bar_github_triggered(self) -> None:
+        open_url_browser("https://github.com/RimSort/RimSort")
 
     @Slot()
     def _on_refresh_started(self) -> None:

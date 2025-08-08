@@ -45,7 +45,9 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
         return data
 
 
-def json_to_xml_write(data: dict[str, Any], path: str) -> None:
+def json_to_xml_write(
+    data: dict[str, Any], path: str, raise_errs: bool = False
+) -> None:
     """
     Write JSON data to an XML file.
 
@@ -60,6 +62,8 @@ def json_to_xml_write(data: dict[str, Any], path: str) -> None:
         with open(path, "w", encoding="utf-8") as file:
             file.write(xml_data)
     except Exception as e:
+        if raise_errs:
+            raise e
         logger.error(f"Error writing XML file: {e}")
         return
 

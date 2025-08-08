@@ -9,6 +9,7 @@ from typing import Any, Dict
 import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
@@ -18,14 +19,28 @@ from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
+    MIN_SIZE = 400
+    MAX_SIZE = 1600
+    DEFAULT_WIDTH = 900
+    DEFAULT_HEIGHT = 600
+
+    @staticmethod
+    def validate_window_custom_size(width: int, height: int) -> tuple[int, int]:
+        """Validate custom width and height, resetting to defaults if out of range."""
+        if not (Settings.MIN_SIZE <= width <= Settings.MAX_SIZE):
+            width = Settings.DEFAULT_WIDTH
+        if not (Settings.MIN_SIZE <= height <= Settings.MAX_SIZE):
+            height = Settings.DEFAULT_HEIGHT
+        return width, height
+
     def __init__(self) -> None:
         super().__init__()
 
         self._settings_file = AppInfo().app_settings_file
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
-        # Other
-        self.check_for_update_startup: bool = False
+        # RimSort Update check
+        self.check_for_update_startup: bool = True
 
         # Databases
         self.external_steam_metadata_source: str = "None"
@@ -43,10 +58,32 @@ class Settings(QObject):
         self.external_community_rules_repo: str = (
             "https://github.com/RimSort/Community-Rules-Database"
         )
-        self.database_expiry: int = 604800  # 7 days
+
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
+
+        self.external_no_version_warning_metadata_source: str = "None"
+        self.external_no_version_warning_file_path: str = str(
+            AppInfo().app_storage_folder / "ModIdsToFix.xml"
+        )
+        self.external_no_version_warning_repo_path: str = (
+            "https://github.com/emipa606/NoVersionWarning"
+        )
+
+        self.external_use_this_instead_metadata_source: str = "None"
+        self.external_use_this_instead_folder_path: str = str(
+            AppInfo().app_storage_folder / "UseThisInstead" / "Replacements"
+        )
+        self.external_use_this_instead_repo_path: str = (
+            "https://github.com/emipa606/UseThisInstead"
+        )
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
+        # Whether to use moddependencies as loadTheseBefore rules
+        self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to check for missing dependencies when sorting
+        self.check_dependencies_on_sort: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -56,6 +93,7 @@ class Settings(QObject):
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
+        self.steamcmd_delete_before_update: bool = False
 
         # todds
         self.todds_preset: str = "optimized"
@@ -67,15 +105,38 @@ class Settings(QObject):
         self.enable_themes: bool = True
         self.theme_name: str = "RimPy"
 
+        self.font_family: str = QApplication.font().family()
+        self.font_size: int = 12
+
+        # Language
+        self.language = "en_US"
+
+        # Launch state setting: "maximized", "normal", or "custom"
+        # Main Window
+        self.main_window_launch_state: str = "maximized"
+        self.main_window_custom_width: int = 900
+        self.main_window_custom_height: int = 600
+
+        # Browser Window
+        self.browser_window_launch_state: str = "maximized"
+        self.browser_window_custom_width: int = 900
+        self.browser_window_custom_height: int = 600
+
+        # Settings Window
+        self.settings_window_launch_state: str = "custom"
+        self.settings_window_custom_width: int = 900
+        self.settings_window_custom_height: int = 600
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
-        self.duplicate_mods_warning: bool = False
+        self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
-        self.try_download_missing_mods: bool = False
+        self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
+        self.update_databases_on_startup: bool = True
 
         self.rentry_auth_code: str = ""
 
@@ -106,9 +167,8 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
-                mitigations = (
-                    True  # Assume there are mitigations unless we reach else block
-                )
+                # Assume there are mitigations unless we reach else block
+                mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(

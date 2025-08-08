@@ -2,11 +2,12 @@ from pathlib import Path
 from typing import Optional
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication, QComboBox
 
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.views import dialogue
+from app.views.dialogue import show_warning
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -27,6 +28,8 @@ class ThemeController:
             self.app_info.theme_storage_folder,
             self.app_info.theme_data_folder,
         ]
+        self.font_family = "Tahoma"
+        self.font_size = 12
 
     def _get_supported_themes(self) -> set[str]:
         """Retrieves a set of supported themes from the theme data and storage folders."""
@@ -83,7 +86,15 @@ class ThemeController:
             if stylesheet_path:
                 try:
                     with open(stylesheet_path, "r") as f:
-                        return f.read()
+                        raw_stylesheet = f.read()
+                        font_style = f"""
+                        * {{
+                            font-family: "{self.font_family}";
+                            font-size: {self.font_size}px;
+                        }}
+                        """
+                        # return f.read()
+                        return font_style + raw_stylesheet
                 except Exception as e:
                     logger.error(f"Error loading theme: {e}")
         else:
@@ -94,6 +105,10 @@ class ThemeController:
             logger.info(f"Falling back to default theme: {self.default_theme}")
             return self.load_theme(self.default_theme)
         return None
+
+    def set_font(self, family: str, size: int) -> None:
+        self.font_family = family
+        self.font_size = size
 
     def get_theme_stylesheet_path(self, theme_name: str) -> Optional[Path]:
         """Returns the path to the stylesheet for the specified theme.
@@ -114,9 +129,15 @@ class ThemeController:
                 )
                 return potential_path
         logger.error(f"Stylesheet path does not exist for theme '{theme_name}'")
-        dialogue.show_warning(
-            title="Theme path Error",
-            text=f"Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{self.default_theme}'.",
+        show_warning(
+            title=QCoreApplication.translate("ThemeController", "Theme path Error"),
+            text=QCoreApplication.translate(
+                "ThemeController",
+                "Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.",
+            ).format(
+                theme_name=theme_name,
+                default_theme=self.default_theme,
+            ),
         )
         return None
 
@@ -143,10 +164,16 @@ class ThemeController:
                     f"Failed to apply theme: {selected_theme_name},"
                     f"Resetting to default theme: {self.default_theme}"
                 )
-                dialogue.show_warning(
-                    title="Theme Error",
-                    text=f"Failed to apply theme: {selected_theme_name},"
-                    f"Resetting to default theme: {self.default_theme}",
+                show_warning(
+                    title=QCoreApplication.translate("ThemeController", "Theme Error"),
+                    text=QCoreApplication.translate(
+                        "ThemeController",
+                        "Failed to apply theme: {selected_theme_name},"
+                        "Resetting to default theme: {self.default_theme}",
+                    ).format(
+                        selected_theme_name=selected_theme_name,
+                        default_theme=self.default_theme,
+                    ),
                 )
                 self.reset_to_default_theme()
         else:
@@ -188,6 +215,18 @@ class ThemeController:
             # Set the current theme in the combobox
             current_theme_name = settings.theme_name
             current_index = settings_dialog.themes_combobox.findText(current_theme_name)
+            current_font_family = settings.font_family
+            current_font_size = settings.font_size
+            current_font_family_index = settings_dialog.font_family_combobox.findText(
+                current_font_family
+            )
+            settings_dialog.font_size_spinbox.setValue(current_font_size)
+            if current_font_family_index != -1:
+                settings_dialog.font_family_combobox.setCurrentIndex(
+                    current_font_family_index
+                )
+            else:
+                settings_dialog.font_family_combobox.setCurrentIndex(-1)
             if current_index != -1:
                 settings_dialog.themes_combobox.setCurrentIndex(current_index)
             else:

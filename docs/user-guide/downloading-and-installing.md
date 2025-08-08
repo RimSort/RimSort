@@ -2,6 +2,7 @@
 title: Downloading and Installing
 parent: User Guide
 nav_order: 1
+permalink: user-guide/downloading-and-installing
 ---
 
 # Downloading and Installing
@@ -40,7 +41,7 @@ Windows
 - Download and extract the `Windows x86-64` release
 - Run the executable: `RimSort.exe`
 
-![](../../assets/images/previews/windows_preview.png)
+![](../assets/images/previews/windows_preview.png)
 
 ## macOS
 {: .d-inline-block}
@@ -88,7 +89,7 @@ Linux
 
 {: .important }
 
-> We only release compiled releases for Ubuntu. If you use a different distribution or a special flavor, you may run into unexpected issues. If none of our offered pre-built releases work for you, you may need to [build RimSort yourself from the source code, or run RimSort from the Python interpreter]({% link development-guide/development-setup.md%}).
+> We only release compiled releases for Ubuntu. If you use a different distribution or a special flavor, you may run into unexpected issues. If none of our offered pre-built releases work for you, you may need to [build RimSort yourself from the source code, or run RimSort from the Python interpreter](../development-guide/development-setup).
 
 
 

@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
+from app.controllers.language_controller import LanguageController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -59,6 +60,8 @@ class SettingsController(QObject):
 
         self.theme_controller = ThemeController()
 
+        self.language_controller = LanguageController()
+
         self.app_instance = QApplication.instance()
 
         # Initialize the settings dialog from the settings model
@@ -78,6 +81,32 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.clicked.connect(
             self._on_global_ok_button_clicked
         )
+
+        # Connect launch state radio buttons to update spinbox enabled/disabled state
+        # Main Window
+        self.settings_dialog.main_launch_maximized_radio.toggled.connect(
+            self.settings_dialog.disable_main_custom_size_spinboxes
+        )
+        self.settings_dialog.main_launch_normal_radio.toggled.connect(
+            self.settings_dialog.disable_main_custom_size_spinboxes
+        )
+        self.settings_dialog.main_launch_custom_radio.toggled.connect(
+            self.settings_dialog.enable_main_custom_size_spinboxes
+        )
+        # Browser Window
+        self.settings_dialog.browser_launch_maximized_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_normal_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_custom_radio.toggled.connect(
+            self.settings_dialog.enable_browser_custom_size_spinboxes
+        )
+
+        # Settings Window (only custom option, spinboxes always enabled)
+        self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
+        self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
 
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
@@ -180,6 +209,47 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
             EventBus().do_download_steam_workshop_db_from_github
+        )
+
+        # Cross Version DB tab
+        self.settings_dialog.no_version_warning_db_none_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+        self.settings_dialog.no_version_warning_db_github_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+        self.settings_dialog.no_version_warning_db_local_file_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+
+        self.settings_dialog.no_version_warning_db_local_file_choose_button.clicked.connect(
+            self._on_no_version_warning_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.no_version_warning_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_no_version_warning_db_to_github
+        )
+        self.settings_dialog.no_version_warning_db_github_download_button.clicked.connect(
+            EventBus().do_download_no_version_warning_db_from_github
+        )
+
+        self.settings_dialog.use_this_instead_db_none_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+        self.settings_dialog.use_this_instead_db_github_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+        self.settings_dialog.use_this_instead_db_local_file_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+
+        self.settings_dialog.use_this_instead_db_local_file_choose_button.clicked.connect(
+            self._on_use_this_instead_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.use_this_instead_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_use_this_instead_db_to_github
+        )
+        self.settings_dialog.use_this_instead_db_github_download_button.clicked.connect(
+            EventBus().do_download_use_this_instead_db_from_github
         )
 
         # Build DB tab
@@ -291,6 +361,10 @@ class SettingsController(QObject):
         Update the view from the model and show the settings dialog.
         """
         self._update_view_from_model()
+        # Apply custom size for settings window
+        custom_width = self.settings.settings_window_custom_width
+        custom_height = self.settings.settings_window_custom_height
+        self.settings_dialog.resize(custom_width, custom_height)
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
@@ -417,7 +491,7 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
-        self.settings_dialog.community_rules_db_github_url.setCursorPosition(0)
+
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -460,11 +534,118 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
 
+        # Cross Version DB Tab
+        if self.settings.external_no_version_warning_metadata_source == "None":
+            self.settings_dialog.no_version_warning_db_none_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
+        ):
+            self.settings_dialog.no_version_warning_db_github_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured file path"
+        ):
+            self.settings_dialog.no_version_warning_db_local_file_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                True
+            )
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            self.settings.external_no_version_warning_file_path
+        )
+        self.settings_dialog.no_version_warning_db_local_file.setCursorPosition(0)
+        self.settings_dialog.no_version_warning_db_github_url.setText(
+            self.settings.external_no_version_warning_repo_path
+        )
+        self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
+
+        if self.settings.external_use_this_instead_metadata_source == "None":
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_none_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+        ):
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_github_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_use_this_instead_metadata_source
+            == "Configured file path"
+        ):
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_local_file_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                True
+            )
+        self.settings_dialog.use_this_instead_db_local_file.setText(
+            self.settings.external_use_this_instead_folder_path
+        )
+        self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
+        self.settings_dialog.use_this_instead_db_github_url.setText(
+            self.settings.external_use_this_instead_repo_path
+        )
+        self.settings_dialog.use_this_instead_db_github_url.setCursorPosition(0)
+
         # Sorting tab
         if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
+
+        # Use dependencies for sorting checkbox
+        if self.settings.use_moddependencies_as_loadTheseBefore:
+            (
+                self.settings_dialog.use_moddependencies_as_loadTheseBefore.setChecked(
+                    True
+                )
+            )
+
+        # Set dependencies checkbox
+        self.settings_dialog.check_deps_checkbox.setChecked(
+            self.settings.check_dependencies_on_sort
+        )
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -489,6 +670,9 @@ class SettingsController(QObject):
             self.settings.instances[
                 self.settings.current_instance
             ].steamcmd_auto_clear_depot_cache
+        )
+        self.settings_dialog.steamcmd_delete_before_update_checkbox.setChecked(
+            self.settings.steamcmd_delete_before_update
         )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
@@ -523,6 +707,69 @@ class SettingsController(QObject):
         )
         self.theme_controller.setup_theme_dialog(self.settings_dialog, self.settings)
 
+        self.language_controller.populate_languages_combobox(
+            self.settings_dialog.language_combobox
+        )
+        self.language_controller.setup_language_dialog(
+            self.settings_dialog, self.settings
+        )
+
+        # Windows launch state
+        # Main Window
+        main_window_launch_state = self.settings.main_window_launch_state
+        if main_window_launch_state == "maximized":
+            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
+            self.settings_dialog.disable_main_custom_size_spinboxes()
+        elif main_window_launch_state == "normal":
+            self.settings_dialog.main_launch_normal_radio.setChecked(True)
+            self.settings_dialog.disable_main_custom_size_spinboxes()
+        elif main_window_launch_state == "custom":
+            self.settings_dialog.main_launch_custom_radio.setChecked(True)
+            self.settings_dialog.enable_main_custom_size_spinboxes()
+            # Validate main window custom width and height before setting
+            min_size, max_size = 400, 1600
+            width = self.settings.main_window_custom_width
+            height = self.settings.main_window_custom_height
+            if not (min_size <= width <= max_size):
+                width = 900
+            if not (min_size <= height <= max_size):
+                height = 600
+            self.settings_dialog.main_custom_width_spinbox.setValue(width)
+            self.settings_dialog.main_custom_height_spinbox.setValue(height)
+        else:
+            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
+        # Browser Window
+        browser_window_launch_state = self.settings.browser_window_launch_state
+        if browser_window_launch_state == "maximized":
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        if browser_window_launch_state == "normal":
+            self.settings_dialog.browser_launch_normal_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        elif browser_window_launch_state == "custom":
+            self.settings_dialog.browser_launch_custom_radio.setChecked(True)
+            self.settings_dialog.enable_browser_custom_size_spinboxes()
+            # Validate custom width and height before setting
+            min_size, max_size = 400, 1600
+            width = self.settings.browser_window_custom_width
+            height = self.settings.browser_window_custom_height
+            if not (min_size <= width <= max_size):
+                width = 900
+            if not (min_size <= height <= max_size):
+                height = 600
+            self.settings_dialog.browser_custom_width_spinbox.setValue(width)
+            self.settings_dialog.browser_custom_height_spinbox.setValue(height)
+        else:
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
+
+        # Settings Window (only custom option)
+        self.settings_dialog.settings_custom_width_spinbox.setValue(
+            self.settings.settings_window_custom_width
+        )
+        self.settings_dialog.settings_custom_height_spinbox.setValue(
+            self.settings.settings_window_custom_height
+        )
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -540,18 +787,19 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
-        steam_client_integration = self.settings.instances[
-            self.settings.current_instance
-        ].steam_client_integration
-        # Weird workaround since the return is a string sometimes apparently
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            True if steam_client_integration is True else False
+            self.settings.instances[
+                self.settings.current_instance
+            ].steam_client_integration
         )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
         )
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
+        )
+        self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
+            self.settings.update_databases_on_startup
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -622,11 +870,56 @@ class SettingsController(QObject):
         )
         self.settings.database_expiry = int(self.settings_dialog.database_expiry.text())
 
+        # Cross Version Databases Tab
+        if self.settings_dialog.no_version_warning_db_none_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = "None"
+        elif self.settings_dialog.no_version_warning_db_local_file_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured file path"
+            )
+        elif self.settings_dialog.no_version_warning_db_github_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured git repository"
+            )
+        self.settings.external_no_version_warning_file_path = (
+            self.settings_dialog.no_version_warning_db_local_file.text()
+        )
+        self.settings.external_no_version_warning_repo_path = (
+            self.settings_dialog.no_version_warning_db_github_url.text()
+        )
+
+        if self.settings_dialog.use_this_instead_db_none_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = "None"
+        elif self.settings_dialog.use_this_instead_db_local_file_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = (
+                "Configured file path"
+            )
+        elif self.settings_dialog.use_this_instead_db_github_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = (
+                "Configured git repository"
+            )
+        self.settings.external_use_this_instead_folder_path = (
+            self.settings_dialog.use_this_instead_db_local_file.text()
+        )
+        self.settings.external_use_this_instead_repo_path = (
+            self.settings_dialog.use_this_instead_db_github_url.text()
+        )
+
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
+
+        # Use moddependencies as loadTheseBefore
+        self.settings.use_moddependencies_as_loadTheseBefore = (
+            self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
+        )
+
+        # Set dependencies checkbox
+        self.settings.check_dependencies_on_sort = (
+            self.settings_dialog.check_deps_checkbox.isChecked()
+        )
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():
@@ -644,6 +937,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_delete_before_update = (
+            self.settings_dialog.steamcmd_delete_before_update_checkbox.isChecked()
         )
         self.settings.instances[
             self.settings.current_instance
@@ -676,6 +972,52 @@ class SettingsController(QObject):
         )
         self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
 
+        self.settings.font_family = (
+            self.settings_dialog.font_family_combobox.currentText()
+        )
+        self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
+        self.settings.language = self.settings_dialog.language_combobox.currentData()
+
+        # Windows launch state
+        # Main Window
+        if self.settings_dialog.main_launch_maximized_radio.isChecked():
+            self.settings.main_window_launch_state = "maximized"
+        elif self.settings_dialog.main_launch_normal_radio.isChecked():
+            self.settings.main_window_launch_state = "normal"
+        elif self.settings_dialog.main_launch_custom_radio.isChecked():
+            self.settings.main_window_launch_state = "custom"
+            self.settings.main_window_custom_width = (
+                self.settings_dialog.main_custom_width_spinbox.value()
+            )
+            self.settings.main_window_custom_height = (
+                self.settings_dialog.main_custom_height_spinbox.value()
+            )
+        else:
+            self.settings.main_window_launch_state = "maximized"
+        # Browser Window
+        if self.settings_dialog.browser_launch_maximized_radio.isChecked():
+            self.settings.browser_window_launch_state = "maximized"
+        elif self.settings_dialog.browser_launch_normal_radio.isChecked():
+            self.settings.browser_window_launch_state = "normal"
+        elif self.settings_dialog.browser_launch_custom_radio.isChecked():
+            self.settings.browser_window_launch_state = "custom"
+            self.settings.browser_window_custom_width = (
+                self.settings_dialog.browser_custom_width_spinbox.value()
+            )
+            self.settings.browser_window_custom_height = (
+                self.settings_dialog.browser_custom_height_spinbox.value()
+            )
+        else:
+            self.settings.browser_window_launch_state = "maximized"
+
+        # Settings Window (only custom option)
+        self.settings.settings_window_custom_width = (
+            self.settings_dialog.settings_custom_width_spinbox.value()
+        )
+        self.settings.settings_window_custom_height = (
+            self.settings_dialog.settings_custom_height_spinbox.value()
+        )
+
         # Advanced tab
         self.settings.debug_logging_enabled = (
             self.settings_dialog.debug_logging_checkbox.isChecked()
@@ -706,6 +1048,9 @@ class SettingsController(QObject):
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
         )
+        self.settings.update_databases_on_startup = (
+            self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
@@ -720,8 +1065,10 @@ class SettingsController(QObject):
         Reset the settings to their default values.
         """
         answer = BinaryChoiceDialog(
-            title="Reset to defaults",
-            text="Are you sure you want to reset all settings to their default values?",
+            title=self.tr("Reset to defaults"),
+            text=self.tr(
+                "Are you sure you want to reset all settings to their default values?"
+            ),
         )
         if not answer.exec_is_positive():
             return
@@ -745,6 +1092,10 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+        self.theme_controller.set_font(
+            self.settings.font_family,
+            self.settings.font_size,
+        )
         self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,
@@ -805,6 +1156,7 @@ class SettingsController(QObject):
     @Slot()
     def _on_game_location_clear_button_clicked(self) -> None:
         self.settings_dialog.game_location.setText("")
+        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_config_folder_location_text_changed(self) -> None:
@@ -869,16 +1221,6 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
 
     @Slot()
-    def _on_local_mods_folder_location_text_changed(self) -> None:
-        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.local_mods_folder_location.text() != ""
-        )
-
-    @Slot()
-    def _on_local_mods_folder_location_open_button_clicked(self) -> None:
-        platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
-
-    @Slot()
     def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
         """
         Open a directory dialog to select the local mods folder and handle the result.
@@ -897,6 +1239,16 @@ class SettingsController(QObject):
         self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
 
     @Slot()
+    def _on_local_mods_folder_location_text_changed(self) -> None:
+        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
+            self.settings_dialog.local_mods_folder_location.text() != ""
+        )
+
+    @Slot()
+    def _on_local_mods_folder_location_open_button_clicked(self) -> None:
+        platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
+
+    @Slot()
     def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
         self.settings_dialog.local_mods_folder_location.setText("")
 
@@ -909,8 +1261,8 @@ class SettingsController(QObject):
         """
         if not skip_confirmation:
             answer = BinaryChoiceDialog(
-                title="Clear all locations",
-                text="Are you sure you want to clear all locations?",
+                title=self.tr("Clear all locations"),
+                text=self.tr("Are you sure you want to clear all locations?"),
             )
             if not answer.exec_is_positive():
                 return
@@ -1199,6 +1551,152 @@ class SettingsController(QObject):
         )
         self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
 
+    @Slot(bool)
+    def _on_no_version_warning_db_radio_clicked(self, checked: bool = True) -> None:
+        """
+        This function handles the "No Version Warning" db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_none_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+            app_instance = QApplication.instance()
+            if isinstance(app_instance, QApplication):
+                focused_widget = app_instance.focusWidget()
+                if focused_widget is not None:
+                    focused_widget.clearFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_github_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_github_url.setFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_local_file_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setFocus()
+            return
+
+    @Slot()
+    def _on_no_version_warning_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the "No Version Warning" xml file and handle the result.
+        """
+        no_version_warning_db_location = show_dialogue_file(
+            mode="open",
+            caption="Select No Version Warning XML File",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not no_version_warning_db_location:
+            return
+
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            no_version_warning_db_location
+        )
+        self._last_file_dialog_path = str(Path(no_version_warning_db_location).parent)
+
+    @Slot(bool)
+    def _on_use_this_instead_db_radio_clicked(self, checked: bool = True) -> None:
+        """
+        This function handles the "Use This Instead" db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_none_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+            app_instance = QApplication.instance()
+            if isinstance(app_instance, QApplication):
+                focused_widget = app_instance.focusWidget()
+                if focused_widget is not None:
+                    focused_widget.clearFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_github_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_github_url.setFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_local_file_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setFocus()
+            return
+
+    @Slot()
+    def _on_use_this_instead_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the "Use This Instead" folder and handle the result.
+        """
+        use_this_instead_db_location = show_dialogue_file(
+            mode="open_dir",
+            caption='Select "Use This Instead" Folder',
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not use_this_instead_db_location:
+            return
+
+        self.settings_dialog.use_this_instead_db_local_file.setText(
+            use_this_instead_db_location
+        )
+        self._last_file_dialog_path = str(Path(use_this_instead_db_location).parent)
+
     @Slot()
     def _on_steamcmd_install_location_choose_button_clicked(self) -> None:
         """
@@ -1312,12 +1810,14 @@ class SettingsController(QObject):
         Build the Steam Workshop database.
         """
         confirm_diag = BinaryChoiceDialog(
-            title="Confirm Build Database",
-            text="Are you sure you want to build the Steam Workshop database?",
+            title=self.tr("Confirm Build Database"),
+            text=self.tr("Are you sure you want to build the Steam Workshop database?"),
             information=(
-                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
-                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                self.tr(
+                    "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                    "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
+                    "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                )
             ),
             icon=QMessageBox.Icon.Warning,
         )
