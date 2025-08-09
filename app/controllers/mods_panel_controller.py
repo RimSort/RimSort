@@ -44,7 +44,6 @@ class ModsPanelController(QObject):
     def _on_filters_changed_in_active_modlist(self) -> None:
         """When filters are changed in the active modlist."""
 
-        # On filter change, disable warning/error label if active
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
         elif self.errors_label_active:
@@ -56,7 +55,6 @@ class ModsPanelController(QObject):
     def _on_filters_changed_in_inactive_modlist(self) -> None:
         """When filters are changed in the inactive modlist."""
 
-        # On filter change, disable warning/error label if active
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
         elif self.errors_label_active:

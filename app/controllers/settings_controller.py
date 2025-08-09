@@ -82,14 +82,6 @@ class SettingsController(QObject):
             self._on_global_ok_button_clicked
         )
 
-        # Advanced: wiring for save comparison indicator toggle
-        try:
-            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
-                self._on_toggle_show_save_comparison_indicators
-            )
-        except Exception:
-            pass
-
         # Connect launch state radio buttons to update spinbox enabled/disabled state
         # Main Window
         self.settings_dialog.main_launch_maximized_radio.toggled.connect(

@@ -494,11 +494,8 @@ class ModListItemInner(QWidget):
         # New / In-save icon visibility depends on list type and user setting
         is_new = bool(item_data.__dict__.get("is_new", False))
         in_save = bool(item_data.__dict__.get("in_save", False))
-        list_widget = item.listWidget()
-        try:
-            list_type = list_widget.list_type if list_widget is not None else None
-        except Exception:
-            list_type = None
+        # Read list_type from persisted item metadata instead of Qt widget to satisfy static typing
+        list_type = cast(str | None, item_data.__dict__.get("list_type"))
         # Respect setting toggle
         show_indicators = self.settings_controller.settings.show_save_comparison_indicators
         if not show_indicators:
@@ -1608,7 +1605,7 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = CustomListWidgetItemMetadata(uuid=uuid)
+        data = CustomListWidgetItemMetadata(uuid=uuid, list_type=self.list_type)
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -2185,7 +2182,7 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = CustomListWidgetItem(self)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key, list_type=self.list_type)
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
