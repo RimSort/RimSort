@@ -12,7 +12,11 @@ from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebChannel import QWebChannel
-from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineScript
+from PySide6.QtWebEngineCore import (
+    QWebEnginePage,
+    QWebEngineProfile,
+    QWebEngineScript,
+)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -77,6 +81,16 @@ class SteamBrowser(QWidget):
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
         # VARIABLES
+        profile_dir = Path(AppInfo()._browser_profile_folder)
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        self._web_profile_storage = str(profile_dir)
+
+        # Create persistent profile (persists cookies, localStorage, indexedDB, service workers)
+        self.web_profile = QWebEngineProfile("SteamBrowserProfile", self)
+        self.web_profile.setPersistentStoragePath(self._web_profile_storage)
+        self.web_profile.setPersistentCookiesPolicy(
+            QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies
+        )
         self.current_html = ""
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
@@ -145,6 +159,10 @@ class SteamBrowser(QWidget):
         )
         # WebEngineView
         self.web_view = QWebEngineView()
+
+        page = QWebEnginePage(self.web_profile, self.web_view)
+        self.web_view.setPage(page)
+
         self.web_view.hide()
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
@@ -532,23 +550,23 @@ class SteamBrowser(QWidget):
             self.web_view.page().runJavaScript(
                 install_button_removal_script, 0, lambda result: None
             )
-            remove_top_banner = """
-            var element = document.getElementById("global_header"); 
-            var elements = document.getElementsByClassName("responsive_header")
-            if (element) {
-                element.parentNode.removeChild(element);
-            }
-            if (elements){
-                elements[0].parentNode.removeChild(elements[0])
-                document.getElementsByClassName("responsive_page_content")[0].setAttribute("style","padding-top: 0px;")
-                document.getElementsByClassName("apphub_HeaderTop workshop")[0].setAttribute("style","padding-top: 0px;")
-                document.getElementsByClassName("apphub_HomeHeaderContent")[0].setAttribute("style","padding-top: 0px;")
-            }
-            
-            """
-            self.web_view.page().runJavaScript(
-                remove_top_banner, 0, lambda result: None
-            )
+            # remove_top_banner = """
+            # var element = document.getElementById("global_header");
+            # var elements = document.getElementsByClassName("responsive_header")
+            # if (element) {
+            #     element.parentNode.removeChild(element);
+            # }
+            # if (elements){
+            #     elements[0].parentNode.removeChild(elements[0])
+            #     document.getElementsByClassName("responsive_page_content")[0].setAttribute("style","padding-top: 0px;")
+            #     document.getElementsByClassName("apphub_HeaderTop workshop")[0].setAttribute("style","padding-top: 0px;")
+            #     document.getElementsByClassName("apphub_HomeHeaderContent")[0].setAttribute("style","padding-top: 0px;")
+            # }
+
+            # """
+            # self.web_view.page().runJavaScript(
+            #     remove_top_banner, 0, lambda result: None
+            # )
             # change target <a>
             change_target_a_script = """
             var elements = document.getElementsByTagName("a");
