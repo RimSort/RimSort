@@ -13,6 +13,7 @@ from PySide6.QtCore import (
     QItemSelection,
     QModelIndex,
     QObject,
+    QPoint,
     QRectF,
     QSize,
     Qt,
@@ -1972,11 +1973,37 @@ class ModListWidget(QListWidget):
 
     def check_widgets_visible(self) -> None:
         # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
-        for idx in range(self.count()):
+        indexes = self.get_visible_indexes()
+        for idx in indexes:
             item = self.item(idx)
             # Check for visible item without a widget set
             if item and self.check_item_visible(item) and self.itemWidget(item) is None:
                 self.create_widget_for_item(item)
+
+    def get_visible_indexes(self) -> set[int]:
+        """
+        Tries to go through the viewport and find the indexes for all visible items.
+        """
+        indexes: set[int] = set()
+        model = self.model()
+        if not model:
+            return indexes
+
+        viewport_rect = self.viewport().rect()
+
+        y = viewport_rect.top()
+        while y <= viewport_rect.bottom():
+            idx = self.indexAt(QPoint(0, y))
+            if not idx.isValid():
+                break
+
+            indexes.add(idx.row())
+            rect = self.visualRect(idx)
+            if rect.height() <= 0:
+                break  # This shouldn't happen
+            y += rect.height()
+
+        return indexes
 
     def handle_item_data_changed(self, item: CustomListWidgetItem) -> None:
         """
@@ -3031,10 +3058,15 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Active")
 
     def on_active_mods_search(self, pattern: str) -> None:
-        self.signal_search_and_filters(list_type="Active", pattern=pattern)
+        self.signal_search_and_filters(
+            list_type="Active",
+            pattern=pattern,
+        )
 
     def on_active_mods_search_clear(self) -> None:
-        self.signal_clear_search(list_type="Active")
+        self.signal_clear_search(
+            list_type="Active",
+        )
 
     def on_active_mods_search_data_source_filter(self) -> None:
         self.signal_search_source_filter(list_type="Active")
@@ -3049,10 +3081,15 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Inactive")
 
     def on_inactive_mods_search(self, pattern: str) -> None:
-        self.signal_search_and_filters(list_type="Inactive", pattern=pattern)
+        self.signal_search_and_filters(
+            list_type="Inactive",
+            pattern=pattern,
+        )
 
     def on_inactive_mods_search_clear(self) -> None:
-        self.signal_clear_search(list_type="Inactive")
+        self.signal_clear_search(
+            list_type="Inactive",
+        )
 
     def on_inactive_mods_search_data_source_filter(self) -> None:
         self.signal_search_source_filter(list_type="Inactive")
@@ -3199,14 +3236,13 @@ class ModsPanel(QWidget):
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
     def signal_clear_search(
-        self, list_type: str, recalculate_list_errors_warnings: bool = True
+        self, list_type: str,
     ) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()
             self.signal_search_and_filters(
                 list_type=list_type,
                 pattern="",
-                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
             )
             self.active_mods_search.clearFocus()
         elif list_type == "Inactive":
@@ -3214,7 +3250,6 @@ class ModsPanel(QWidget):
             self.signal_search_and_filters(
                 list_type=list_type,
                 pattern="",
-                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
             )
             self.inactive_mods_search.clearFocus()
 
@@ -3223,7 +3258,6 @@ class ModsPanel(QWidget):
         list_type: str,
         pattern: str,
         filters_active: bool = False,
-        recalculate_list_errors_warnings: bool = True,
     ) -> None:
         """
         Performs a search and/or applies filters based on the given parameters.
@@ -3234,7 +3268,6 @@ class ModsPanel(QWidget):
             list_type (str): The type of list to search within (Active or Inactive).
             pattern (str): The pattern to search for.
             filters_active (bool): If any filter is active (inc. pattern search).
-            recalculate_list_errors_warnings (bool): If the list errors and warnings should be recalculated, defaults to True.
         """
 
         _filter = None
@@ -3273,11 +3306,14 @@ class ModsPanel(QWidget):
         elif _filter.currentText() == self.tr("Version"):
             search_filter = "version"
         # Filter the list using any search and filter state
+        num_filtered = 0
+        num_unfiltered = 0
+        uuid_to_index = {u: i for i, u in enumerate(uuids)}
         for uuid in uuids:
             item = (
-                self.active_mods_list.item(uuids.index(uuid))
+                self.active_mods_list.item(uuid_to_index[uuid])
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
+                else self.inactive_mods_list.item(uuid_to_index[uuid])
             )
             if item is None:
                 continue
@@ -3339,20 +3375,25 @@ class ModsPanel(QWidget):
                 if item_filtered:
                     item_data["hidden_by_filter"] = True
                     item_filtered = False
+                    num_filtered += 1
                 else:
                     item_data["hidden_by_filter"] = False
+                    num_unfiltered += 1
             else:
                 if item_filtered and item.isHidden():
                     item.setHidden(False)
                     item_data["hidden_by_filter"] = False
+                    num_unfiltered += 1
+
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
-        self.mod_list_updated(
-            str(len(uuids)),
-            list_type,
-            recalculate_list_errors_warnings=recalculate_list_errors_warnings,
-        )
+
+        self.direct_update_count(list_type, num_filtered, num_unfiltered)
+        if list_type == "Active":
+            self.active_mods_list.check_widgets_visible()
+        else:
+            self.inactive_mods_list.check_widgets_visible()
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         if list_type == "Active":
@@ -3438,6 +3479,36 @@ class ModsPanel(QWidget):
         self.signal_search_and_filters(
             list_type=list_type, pattern=search.text(), filters_active=filters_active
         )
+
+    def direct_update_count(
+        self, list_type: str, filtered: int, unfiltered: int
+    ) -> None:
+        """
+        This version of update_count allows you to pass in direct values.
+
+        It does not calculate anything, only updates the label.
+        """
+        if filtered > 0:
+            # If any filter is active, show how many mods are displayed out of total
+            list_type_label = (
+                self.tr("Active") if list_type == "Active" else self.tr("Inactive")
+            )
+            label = (
+                self.active_mods_label
+                if list_type == "Active"
+                else self.inactive_mods_label
+            )
+            label.setText(f"{list_type_label} [{unfiltered}/{filtered + unfiltered}]")
+        else:
+            list_type_label = (
+                self.tr("Active") if list_type == "Active" else self.tr("Inactive")
+            )
+            label = (
+                self.active_mods_label
+                if list_type == "Active"
+                else self.inactive_mods_label
+            )
+            label.setText(f"{list_type_label} [{filtered + unfiltered}]")
 
     def update_count(self, list_type: str) -> None:
         # Calculate filtered items
