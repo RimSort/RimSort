@@ -2763,6 +2763,38 @@ Should be Loaded Before:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Modified Time</source>
+        <translation>Änderungszeit</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Autor</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Ordnergröße</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Sortierreihenfolge umschalten</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>Absteigend</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>Aufsteigend</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Ordnergrößen werden berechnet...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Liste wird neu aufgebaut...</translation>
+    </message>
+    <message>
         <source>Search by...</source>
         <translation type="unfinished"></translation>
     </message>

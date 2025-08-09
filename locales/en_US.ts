@@ -2826,6 +2826,38 @@ Should be Loaded Before:</source>
         <source>Inactive</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Modified Time</source>
+        <translation>Modified Time</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Author</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Folder Size</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Toggle sort order</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>Desc</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>Asc</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Calculating folder sizes...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Rebuilding list...</translation>
+    </message>
 </context>
 <context>
     <name>Rentry Auth Code Not Found </name>

@@ -2874,6 +2874,38 @@ Should be Loaded Before:</source>
         <source>Inactive</source>
         <translation>Inactivo</translation>
     </message>
+    <message>
+        <source>Modified Time</source>
+        <translation>Hora de modificación</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Autor</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Tamaño de carpeta</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Alternar orden</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>Desc</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>Asc</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Calculando tamaños de carpeta...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Reconstruyendo la lista...</translation>
+    </message>
 </context>
 <context>
     <name>Rentry Auth Code Not Found </name>

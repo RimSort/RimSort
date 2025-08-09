@@ -533,7 +533,7 @@ class MainContent(QObject):
         self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
             list_type="inactive",
             uuids=inactive_mods_uuids,
-            key=ModsPanelSortKey.MODNAME,
+            key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
         )
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
