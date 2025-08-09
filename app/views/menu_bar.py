@@ -25,6 +25,7 @@ class MenuBar(QObject):
         self.save_mod_list_action: QAction
         self.import_from_rentry_action: QAction
         self.import_from_workshop_collection_action: QAction
+        self.import_from_save_file_action: QAction
         self.export_to_clipboard_action: QAction
         self.export_to_rentry_action: QAction
         self.upload_rimsort_log_action: QAction
@@ -121,6 +122,9 @@ class MenuBar(QObject):
         )
         self.import_from_workshop_collection_action = self._add_action(
             self.import_submenu, self.tr("From Workshop collection")
+        )
+        self.import_from_save_file_action = self._add_action(
+            self.import_submenu, self.tr("From Save file…")
         )
         self.export_submenu = QMenu(self.tr("Export"))
         file_menu.addMenu(self.export_submenu)

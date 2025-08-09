@@ -80,14 +80,18 @@ KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
 }
-KNOWN_TIER_ONE_MODS = {
-    "zetrith.prepatcher",
-    "brrainz.harmony",
+KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld",
     "ludeon.rimworld.royalty",
     "ludeon.rimworld.ideology",
     "ludeon.rimworld.biotech",
     "ludeon.rimworld.anomaly",
     "ludeon.rimworld.odyssey",
+}
+KNOWN_TIER_ONE_MODS = {
+    "vanillaexpanded.backgrounds",
+    "redmattis.betterprerequisites",
+    "adaptive.storage.framework",
+    "oskarpotocki.vanillafactionsexpanded.core",
     "unlimitedhugs.hugslib",
 }

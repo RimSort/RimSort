@@ -2876,6 +2876,38 @@ Should be Loaded Before:</source>
         <translation>非アクティブ[0]</translation>
     </message>
     <message>
+        <source>Modified Time</source>
+        <translation>更新時刻</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>フォルダーサイズ</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>並び順を切り替え</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>降順</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>昇順</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>フォルダーサイズを計算中...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>リストを再構築中...</translation>
+    </message>
+    <message>
         <source>Search by...</source>
         <translation>検索</translation>
     </message>
