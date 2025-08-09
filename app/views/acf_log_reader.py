@@ -106,6 +106,8 @@ class AcfLogReader(QDialog):
 
         # Status bar
         self.status_bar = QStatusBar()
+        # Improve readability: make status text white
+        self.status_bar.setStyleSheet("QStatusBar, QStatusBar QLabel { color: white; }")
         self.status_bar.showMessage(self.tr("Ready"))
 
         # Top controls layout
@@ -142,6 +144,25 @@ class AcfLogReader(QDialog):
         # Table widget
         self.table_widget = QTableWidget()
         self.table_widget.setSortingEnabled(True)
+        # Keep table width within the window: stretch columns to viewport
+        try:
+            from PySide6.QtWidgets import QHeaderView
+
+            # Fit total columns width to available viewport width
+            self.table_widget.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
+            header = self.table_widget.horizontalHeader()
+            if isinstance(header, QHeaderView):
+                # Allow user to drag-resize columns
+                header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+                # Keep the table fitting the viewport by stretching the last column
+                header.setStretchLastSection(True)
+        except Exception:
+            # Fail-safe: disable horizontal scrollbar for a cleaner fit
+            self.table_widget.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
         main_layout.addWidget(self.table_widget)
 
         main_layout.addWidget(self.status_bar)

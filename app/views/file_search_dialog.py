@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QKeyEvent
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QCheckBox,
     QComboBox,
@@ -296,7 +297,7 @@ class FileSearchDialog(QDialog):
         results_header.addWidget(results_label)
 
         # Add a right-aligned label with instructions
-        results_help = QLabel(self.tr("Double-click a result to open the file"))
+        results_help = QLabel(self.tr("Right-click a result for actions"))
         results_help.setAlignment(Qt.AlignmentFlag.AlignRight)
         results_header.addWidget(results_help)
 
@@ -325,25 +326,24 @@ class FileSearchDialog(QDialog):
         # Set a minimum height for the results table
         self.results_table.setMinimumHeight(300)
 
-        # Configure column stretching
+        # Configure columns to fit window and allow user-resizing
+        self.results_table.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
         header = self.results_table.horizontalHeader()
-        header.setSectionResizeMode(
-            0, QHeaderView.ResizeMode.ResizeToContents
-        )  # Mod name
-        header.setSectionResizeMode(
-            1, QHeaderView.ResizeMode.ResizeToContents
-        )  # File name
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Path
-        header.setSectionResizeMode(
-            3, QHeaderView.ResizeMode.Stretch
-        )  # Preview (stretch to fill remaining space)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(True)
 
         # Enable context menu
         self.results_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.results_table.customContextMenuRequested.connect(self._show_context_menu)
 
-        # Connect double-click to open file
-        self.results_table.cellDoubleClicked.connect(self._on_cell_double_clicked)
+        # Make double-click edit cells (like ACF Log Reader)
+        self.results_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.SelectedClicked
+            | QAbstractItemView.EditTrigger.EditKeyPressed
+        )
 
         # Add table to results layout
         results_table_layout.addWidget(self.results_table)
@@ -547,13 +547,7 @@ class FileSearchDialog(QDialog):
         else:
             super().keyPressEvent(event)
 
-    def _on_cell_double_clicked(self, row: int, column: int) -> None:
-        """Handle double-click on a cell"""
-        logger.debug(f"Cell double-clicked at row {row}, column {column}.")
-        if row >= 0:
-            path_item = self.results_table.item(row, 2)
-            if path_item is not None:
-                self._open_file(path_item.text())
+    # Note: Double-click now edits cells; no open-on-double-click handler
 
     def get_search_options(self) -> dict[str, Any]:
         """Get current search options as a dictionary, including exclude options."""
@@ -652,7 +646,7 @@ class FileSearchDialog(QDialog):
             mod_item.setToolTip(f"Mod: {mod_name}")
             file_item.setToolTip(f"File: {file_name}")
             path_item.setToolTip(f"Path: {path}")
-            preview_item.setToolTip(self.tr("Double-click to open file"))
+            preview_item.setToolTip(self.tr("Right-click for actions"))
             preview_item.setFont(QFont("Courier New", 9))
             preview_item.setFlags(preview_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
 
