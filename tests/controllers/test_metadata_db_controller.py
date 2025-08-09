@@ -1,20 +1,17 @@
 from pathlib import Path
 from typing import Generator
-from unittest.mock import patch
 
 import pytest
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import AuxMetadataEntry, TagsEntry
-from app.utils.app_info import AppInfo
 
 
 @pytest.fixture()
 def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
     db_path = tmp_path / "test_metadata.db"
-    with patch.object(AppInfo, "aux_metadata_db", db_path):
-        controller = AuxMetadataController()
-        yield controller
+    controller = AuxMetadataController(db_path)
+    yield controller
 
 
 def test_get_or_create(temp_db: AuxMetadataController) -> None:
@@ -23,8 +20,8 @@ def test_get_or_create(temp_db: AuxMetadataController) -> None:
         entry = temp_db.get_or_create(session, item_path)
         assert entry is not None
         assert entry.path == str(item_path)
-        assert entry.notes == ""  # Default value
-        entry.notes = "test_notes"
+        assert entry.user_notes == ""  # Default value
+        entry.user_notes = "test_notes"
         session.commit()
 
     # Fetch the same entry again and ensure it's the same
@@ -32,7 +29,7 @@ def test_get_or_create(temp_db: AuxMetadataController) -> None:
         same_entry = temp_db.get_or_create(session, item_path)
         assert same_entry is not None
         assert same_entry.path == str(item_path)
-        assert same_entry.notes == "test_notes"
+        assert same_entry.user_notes == "test_notes"
 
     # Ensure only one entry exists
     with temp_db.Session() as session:
@@ -63,9 +60,9 @@ def test_get_value_equals(temp_db: AuxMetadataController) -> None:
 
         assert entry1 is not None
         assert entry2 is not None
-        entry1.notes = "test_key"
+        entry1.user_notes = "test_key"
         entry1.color_hex = "test_value"
-        entry2.notes = "test_key"
+        entry2.user_notes = "test_key"
         entry2.color_hex = "test_value"
 
         session.commit()

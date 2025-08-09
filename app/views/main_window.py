@@ -27,6 +27,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
@@ -201,13 +202,13 @@ class MainWindow(QMainWindow):
 
         self.mods_panel_controller = ModsPanelController(
             view=self.main_content_panel.mods_panel,
+            settings_controller=self.settings_controller,
         )
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings_controller=self.settings_controller,
-            mods_panel_controller=self.mods_panel_controller,
         )
 
         self.main_content_controller = MainContentController(
@@ -259,6 +260,8 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
 
     def initialize_content(self, is_initial: bool = True) -> None:
+        # Set all items as outdated in aux DB
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.emit()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
@@ -300,6 +303,8 @@ class MainWindow(QMainWindow):
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+        # Delete outdated entries in aux DB
+        EventBus().do_delete_outdated_entries_in_aux_db.emit()
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
@@ -935,9 +940,7 @@ class MainWindow(QMainWindow):
             if not instance_data:
                 instance_data = {}
             # Create new instance folder if it does not exist
-            instance_path = str(
-                Path(AppInfo().app_storage_folder) / "instances" / instance_name
-            )
+            instance_path = self.settings_controller.settings.current_instance_path
             if not os.path.exists(instance_path):
                 os.makedirs(instance_path)
             # Get run args from instance data, autogenerate additional config items if desired
@@ -1022,6 +1025,11 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
+                instance_path = Path(self.settings_controller.settings.current_instance_path)
+                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                    instance_path / "aux_metadata.db"
+                )
+                aux_metadata_controller.engine.dispose()
                 try:
                     rmtree(
                         str(
@@ -1046,10 +1054,14 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
+        instance_path = str(Path(AppInfo().app_storage_folder) / "instances" / instance)
+        self.settings_controller.settings.current_instance_path = instance_path
         # Update window title with current instance
         self.__set_window_title(instance)
         # Save settings
         self.settings_controller.settings.save()
+        # Clear mod lists
+        self.main_content_panel._insert_data_into_lists([], [])
         # Initialize content
         self.initialize_content(is_initial=False)
 

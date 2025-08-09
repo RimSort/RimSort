@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QIntValidator, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -285,6 +285,7 @@ class SettingsDialog(QDialog):
 
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
+        self._do_aux_db_time_limit_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -478,6 +479,28 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
+        aux_db_time_limit = QLabel(
+            self.tr(
+                "Auxillary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            )
+        )
+        aux_db_tooltip = """To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxillary Metadata DB. 
+This Auxillary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)"""
+        aux_db_time_limit.setToolTip(aux_db_tooltip)
+        aux_db_time_limit.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(aux_db_time_limit)
+
+        self.aux_db_time_limit = QLineEdit()
+        int_validator = QIntValidator()
+        self.aux_db_time_limit.setValidator(int_validator)
+        self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
+        self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        tab_layout.addWidget(self.aux_db_time_limit)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
@@ -1093,6 +1116,11 @@ class SettingsDialog(QDialog):
         self.font_family_combobox.setCurrentFont(default_font)
         self.font_size_spinbox.setValue(12)
 
+    def enable_aux_db_time_limit_line_edit(self) -> None:
+        """Enables/Disables aux DB time limit line edit if relevant setting is checked/unchecked."""
+        enable = self.enable_aux_db_behavior_editing.isChecked()
+        self.aux_db_time_limit.setEnabled(enable)
+
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
         from app.controllers.theme_controller import ThemeController
@@ -1227,6 +1255,10 @@ class SettingsDialog(QDialog):
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
             self.tr(
                 "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
@@ -1244,6 +1276,19 @@ class SettingsDialog(QDialog):
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
+
+        self.enable_aux_db_behavior_editing = QCheckBox(
+            self.tr("Enable Aux Metadata DB delete behavior editing")
+        )
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
+        self.enable_aux_db_behavior_editing.setToolTip(
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
+        )
+        group_layout.addWidget(self.enable_aux_db_behavior_editing)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

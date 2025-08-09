@@ -10,6 +10,7 @@ from typing import Optional, cast
 from loguru import logger
 from PySide6.QtCore import (
     QEvent,
+    QItemSelection,
     QModelIndex,
     QObject,
     QPoint,
@@ -22,8 +23,10 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QAction,
+    QColor,
     QCursor,
     QDropEvent,
+    QEnterEvent,
     QFocusEvent,
     QFontMetrics,
     QIcon,
@@ -34,6 +37,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QColorDialog,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -49,6 +53,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
@@ -271,6 +276,7 @@ class ModListItemInner(QWidget):
         alternative: bool,
         settings_controller: SettingsController,
         uuid: str,
+        mod_color: QColor,
     ) -> None:
         """
         Initialize the QWidget with mod uuid. Metadata can be accessed via MetadataManager.
@@ -288,12 +294,19 @@ class ModListItemInner(QWidget):
         :param alternative: a bool representing whether the widget's item has a recommended alternative mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
+        :param mod_color: QColor, the color of the mod's text/background in the modlist
         """
 
         super(ModListItemInner, self).__init__()
 
+        # Used to handle hover, select etc. behavior for this custom widget
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
+        self._selected = False
+        self._hovered = False
+
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+
         # Cache error and warning strings for tooltips
         self.errors_warnings = errors_warnings
         self.errors = errors
@@ -308,6 +321,8 @@ class ModListItemInner(QWidget):
         self.alternative = alternative
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
+        # Cache the mod color
+        self.mod_color: QColor | None = mod_color
 
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
@@ -434,7 +449,10 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip(self.tr("Subscribed via Steam"))
         # Set label color if mod has errors/warnings
-        if self.filtered:
+        if self.mod_color is not None:
+            self.main_label.setObjectName("ListItemLabelCustomColor")
+            self.handle_mod_color_change(init=True)
+        elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
         elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
@@ -475,6 +493,36 @@ class ModListItemInner(QWidget):
         if self.errors:
             self.error_icon_label.setToolTip(self.errors)
             self.error_icon_label.setHidden(False)
+
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._hovered = True
+        if self._selected:
+            return
+        self.setStyleSheet("")
+        super().enterEvent(event)
+
+    def leaveEvent(self, event: QEvent) -> None:
+        self._hovered = False
+        if self._selected:
+            return
+        if self.mod_color is None:
+            self.setStyleSheet("")
+        else:
+            self.handle_mod_color_change(init=True)
+        super().leaveEvent(event)
+
+    def set_selected(self, selected: bool) -> None:
+        self._selected = selected
+        self.handle_selected()
+
+    def handle_selected(self) -> None:
+        if self._selected:
+            self.setStyleSheet("")
+        elif not self._selected:
+            if self.mod_color:
+                self.handle_mod_color_change(init=True)
+            else:
+                self.setStyleSheet("")
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -634,17 +682,94 @@ class ModListItemInner(QWidget):
             self.warning_icon_label.setToolTip("")
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
-        if item_data["filtered"]:
+        if item_data["mod_color"] is not None:
+            self.handle_mod_color_change(item)
+            new_widget_object_name = "ListItemLabelCustomColor"
+        elif item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
+            self.handle_mod_color_reset()
         elif error_tooltip or warning_tooltip:
             new_widget_object_name = "ListItemLabelInvalid"
+            self.handle_mod_color_reset()
         else:
             new_widget_object_name = "ListItemLabel"
+            self.handle_mod_color_reset()
         if widget_object_name != new_widget_object_name:
             logger.debug("Repolishing: " + new_widget_object_name)
             self.main_label.setObjectName(new_widget_object_name)
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
+
+    def handle_mod_color_change(
+        self, item: CustomListWidgetItem | None = None, init: bool = False
+    ) -> None:
+        """
+        Handle mod color change (Background or Text).
+
+        :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
+        :param init: bool, if running inside __init__ method, uses class attribute.
+        """
+        if self.settings_controller.settings.color_background_instead_of_text_toggle:
+            # Color background
+            if init:
+                if self.mod_color:
+                    new_mod_color_name = self.mod_color.name()
+                    self.setStyleSheet(f"background: {new_mod_color_name};")
+            elif item:
+                item_data = item.data(Qt.ItemDataRole.UserRole)
+                new_mod_color_name = item_data["mod_color"].name()
+                self.mod_color = item_data[
+                    "mod_color"
+                ]  # Update mod color in ModListItemInner
+                self.setStyleSheet(f"background: {new_mod_color_name};")
+        else:
+            # Color text
+            if init:
+                if self.mod_color:
+                    new_mod_color_name = self.mod_color.name()
+                    self.setStyleSheet(f"color: {new_mod_color_name};")
+            elif item:
+                item_data = item.data(Qt.ItemDataRole.UserRole)
+                new_mod_color_name = item_data["mod_color"].name()
+                self.mod_color = item_data[
+                    "mod_color"
+                ]  # Update mod color in ModListItemInner
+                self.setStyleSheet(f"color: {new_mod_color_name};")
+
+        # Update DB
+        if not init:
+            instance_path = Path(self.settings_controller.settings.current_instance_path)
+            aux_metadata_controller = (
+                AuxMetadataController.get_or_create_cached_instance(
+                    instance_path / "aux_metadata.db"
+                )
+            )
+            with aux_metadata_controller.Session() as aux_metadata_session:
+                mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
+                aux_metadata_controller.update(
+                    aux_metadata_session,
+                    mod_path,
+                    color_hex=new_mod_color_name,
+                )
+
+    def handle_mod_color_reset(self) -> None:
+        # Need to reset custom colors this way because the color is set using setStyleSheet
+        # After reseting, the behavior for unpolish() and polish() works as expected
+        self.setStyleSheet("")
+        # Update ModListItemInner color
+        self.mod_color = None
+        # Update DB
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
+            aux_metadata_controller.update(
+                aux_metadata_session,
+                mod_path,
+                color_hex=None,
+            )
 
 
 class ModListIcons:
@@ -762,6 +887,9 @@ class ModListWidget(QListWidget):
 
         super(ModListWidget, self).__init__()
 
+        # Track when a custom widget (ModListItemInner) is selected/not selected
+        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
+
         # Allow for dragging and dropping between lists
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
@@ -808,10 +936,29 @@ class ModListWidget(QListWidget):
         self.ignore_warning_list: list[str] = []
 
         self.deletion_sub_menu = ModDeletionMenu(
+            self.settings_controller,
             self._get_selected_metadata,
             self.uuids,
-        )  # TDOD: should we enable items conditionally? For now use all
+        )  # TODO: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
+
+    def on_selection_changed(
+        self, selected: QItemSelection, deselected: QItemSelection
+    ) -> None:
+        """
+        Used to indicate when the custom widget is selected/not selected.
+        """
+        for index in selected.indexes():
+            item = self.item(index.row())
+            widget = self.itemWidget(item)
+            if widget:
+                widget.set_selected(True)  # type: ignore
+
+        for index in deselected.indexes():
+            item = self.item(index.row())
+            widget = self.itemWidget(item)
+            if widget:
+                widget.set_selected(False)  # type: ignore
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -954,6 +1101,10 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
+            # Change mod color
+            change_mod_color_action = None
+            # Reset mod color
+            reset_mod_color_action = None
 
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
@@ -970,6 +1121,11 @@ class ModListWidget(QListWidget):
                     # Open folder action text
                     open_folder_action = QAction()
                     open_folder_action.setText(self.tr("Open folder"))
+                    # Change mod color action
+                    change_mod_color_action = QAction()
+                    change_mod_color_action.setText("Change mod color")
+                    reset_mod_color_action = QAction()
+                    reset_mod_color_action.setText("Reset mod color")
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -1106,6 +1262,11 @@ class ModListWidget(QListWidget):
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText(self.tr("Open folder(s)"))
+                        # Change mod color action
+                        change_mod_color_action = QAction()
+                        change_mod_color_action.setText("Change mod colors")
+                        reset_mod_color_action = QAction()
+                        reset_mod_color_action.setText("Reset mod colors")
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
@@ -1200,6 +1361,10 @@ class ModListWidget(QListWidget):
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
+            if change_mod_color_action:
+                context_menu.addAction(change_mod_color_action)
+            if reset_mod_color_action:
+                context_menu.addAction(reset_mod_color_action)
             if open_url_browser_action:
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
@@ -1577,6 +1742,12 @@ class ModListWidget(QListWidget):
                             [steamdb_remove_blacklist, False]
                         )
                     return True
+                # If user is changing mod color, display color picker once no matter how many mods are selected
+                if action == change_mod_color_action:
+                    invalid_color = False
+                    new_color = QColorDialog().getColor()
+                    if not new_color.isValid():
+                        invalid_color = True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is CustomListWidgetItem:
@@ -1591,6 +1762,10 @@ class ModListWidget(QListWidget):
                         # Toggle warning action
                         if action == toggle_warning_action:
                             self.toggle_warning(mod_metadata["packageid"], uuid)
+                        elif action == change_mod_color_action and not invalid_color:
+                            self.change_mod_color(uuid, new_color)
+                        elif action == reset_mod_color_action:
+                            self.reset_mod_color(uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -1700,7 +1875,20 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = CustomListWidgetItemMetadata(uuid=uuid)
+        mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
+            aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
+            data = CustomListWidgetItemMetadata(
+                uuid=uuid,
+                aux_metadata_controller=aux_metadata_controller,
+                aux_metadata_session=aux_metadata_session,
+                settings_controller=self.settings_controller,
+            )
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -1764,6 +1952,7 @@ class ModListWidget(QListWidget):
         mismatch = data["mismatch"]
         alternative = data["alternative"]
         uuid = data["uuid"]
+        mod_color = data["mod_color"]
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
@@ -1775,6 +1964,7 @@ class ModListWidget(QListWidget):
                 alternative=alternative,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
+                mod_color=mod_color,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -2237,10 +2427,31 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-                list_item = CustomListWidgetItem(self)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
+                    "path"
+                ]
+                instance_path = Path(self.settings_controller.settings.current_instance_path)
+                aux_metadata_controller = (
+                    AuxMetadataController.get_or_create_cached_instance(
+                        instance_path / "aux_metadata.db"
+                    )
+                )
+                with aux_metadata_controller.Session() as aux_metadata_session:
+                    aux_metadata_controller.get_or_create(
+                        aux_metadata_session, mod_path
+                    )
+                    aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
+                    list_item = CustomListWidgetItem(self)
+                    data = CustomListWidgetItemMetadata(
+                        uuid=uuid_key,
+                        aux_metadata_controller=aux_metadata_controller,
+                        aux_metadata_session=aux_metadata_session,
+                        settings_controller=self.settings_controller,
+                    )
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
+                # When refreshing, update entry if needed?
+
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
             return
@@ -2261,6 +2472,20 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
+
+    def change_mod_color(self, uuid: str, new_color: QColor) -> None:
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_color"] = new_color
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+    def reset_mod_color(self, uuid: str) -> None:
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_color"] = None
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
@@ -2731,7 +2956,7 @@ class ModsPanel(QWidget):
             lw.uuids = list()
             for idx, uuid_key in enumerate(sorted_uuids, start=1):
                 list_item = CustomListWidgetItem(lw)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key, settings_controller=self.settings_controller)
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 lw.addItem(list_item)
                 if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
