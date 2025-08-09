@@ -32,6 +32,7 @@ class CustomListWidgetItemMetadata:
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
         alternative: Optional[str] = None,
+        list_type: str | None = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -71,6 +72,9 @@ class CustomListWidgetItemMetadata:
             if alternative is not None
             else self.get_alternative_by_uuid(uuid)
         )
+        # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
+        self.list_type = list_type
+
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
