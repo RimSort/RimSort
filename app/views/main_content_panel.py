@@ -2,6 +2,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -1083,39 +1084,73 @@ class MainContent(QObject):
         self.stop_watchdog_signal.emit()
 
         try:
+            # Ensure updater logs are captured to a persistent location
+            log_dir = AppInfo().user_log_folder
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "updater.log"
+
+            # Small prologue in the updater log to aid debugging
+            try:
+                from datetime import datetime
+
+                with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
+                    lf.write(
+                        f"\n===== RimSort updater launched: {datetime.now().isoformat()} ({system}) =====\n"
+                    )
+            except Exception:
+                # Non-fatal; continue without preface
+                pass
+
+            args_repr: str = ""
+
             if system == "Darwin":  # MacOS
                 current_dir = os.path.dirname(
                     os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
                 )
                 script_path = Path(current_dir) / "Contents" / "MacOS" / "update.sh"
                 popen_args = ["/bin/bash", str(script_path)]
-                p = subprocess.Popen(popen_args)
+                args_repr = " ".join(shlex.quote(a) for a in popen_args)
+                with open(log_path, "ab", buffering=0) as lf:
+                    p = subprocess.Popen(
+                        popen_args,
+                        stdout=lf,
+                        stderr=subprocess.STDOUT,
+                    )
 
             elif system == "Windows":
                 script_path = AppInfo().application_folder / "update.bat"
-                popen_args = ["start", "/wait", "cmd", "/c", str(script_path)]
+                # Redirect batch output into the updater log for diagnostics
+                # Using a single command string to support shell redirection
+                cmd_str = (
+                    f'cmd /c "\"{script_path}\"" >> "{log_path}" 2>&1'
+                )
                 creationflags_value = (
                     subprocess.CREATE_NEW_PROCESS_GROUP
                     if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
                     else 0
                 )
                 p = subprocess.Popen(
-                    popen_args,
+                    cmd_str,
                     creationflags=creationflags_value,
                     shell=True,
                     cwd=str(AppInfo().application_folder),
                 )
+                args_repr = cmd_str
 
             else:  # Linux and other POSIX systems
                 script_path = AppInfo().application_folder / "update.sh"
                 popen_args = ["/bin/bash", str(script_path)]
-                p = subprocess.Popen(
-                    popen_args,
-                    start_new_session=True,
-                )
+                args_repr = " ".join(shlex.quote(a) for a in popen_args)
+                with open(log_path, "ab", buffering=0) as lf:
+                    p = subprocess.Popen(
+                        popen_args,
+                        start_new_session=True,
+                        stdout=lf,
+                        stderr=subprocess.STDOUT,
+                    )
 
             logger.debug(f"External updater script launched with PID: {p.pid}")
-            logger.debug(f"Arguments used: {popen_args}")
+            logger.debug(f"Arguments used: {args_repr}")
 
             # Exit the application to allow update
             sys.exit(0)
