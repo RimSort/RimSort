@@ -483,10 +483,11 @@ class SettingsDialog(QDialog):
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
         aux_db_time_limit = QLabel(
             self.tr(
-                "Auxillary Metadata DB deletion time limit in seconds. (Default 0, Never Delete -1)"
+                "Auxillary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
             )
         )
-        aux_db_tooltip = """After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxillary Metadata DB. 
+        aux_db_tooltip = """To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxillary Metadata DB. 
 This Auxillary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)"""
@@ -1115,6 +1116,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.font_family_combobox.setCurrentFont(default_font)
         self.font_size_spinbox.setValue(12)
 
+    def enable_aux_db_time_limit_line_edit(self) -> None:
+        """Enables/Disables aux DB time limit line edit if relevant setting is checked/unchecked."""
+        enable = self.enable_aux_db_behavior_editing.isChecked()
+        self.aux_db_time_limit.setEnabled(enable)
+
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
         from app.controllers.theme_controller import ThemeController
@@ -1270,6 +1276,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
+
+        self.enable_aux_db_behavior_editing = QCheckBox(
+            self.tr("Enable Aux Metadata DB delete behavior editing")
+        )
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
+        self.enable_aux_db_behavior_editing.setToolTip(
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
+        )
+        group_layout.addWidget(self.enable_aux_db_behavior_editing)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

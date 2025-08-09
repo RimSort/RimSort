@@ -61,8 +61,8 @@ class Settings(QObject):
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
-        # Default (0) means delete from aux db straight away
-        self.aux_db_time_limit: int = 0
+        # Default (-1) means do not delete data from Aux Metadata DB
+        self.aux_db_time_limit: int = -1
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
@@ -140,6 +140,8 @@ class Settings(QObject):
         self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
+
+        self.enable_aux_db_behavior_editing: bool = False
 
         self.rentry_auth_code: str = ""
 

@@ -2929,7 +2929,7 @@ class ModsPanel(QWidget):
             lw.uuids = list()
             for idx, uuid_key in enumerate(sorted_uuids, start=1):
                 list_item = CustomListWidgetItem(lw)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key, settings_controller=self.settings_controller)
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 lw.addItem(list_item)
                 if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:

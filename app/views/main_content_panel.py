@@ -2051,7 +2051,7 @@ class MainContent(QObject):
         ) = metadata.get_mods_from_list(mod_list=file_path)
         logger.info("Got new mods according to imported save file")
 
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
         # If we have duplicate mods, prompt user
         if (

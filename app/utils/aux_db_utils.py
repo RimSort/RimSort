@@ -5,7 +5,6 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
 
 

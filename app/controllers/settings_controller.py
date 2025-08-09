@@ -543,6 +543,7 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
         self.settings_dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
+        self.settings_dialog.aux_db_time_limit.setEnabled(self.settings.enable_aux_db_behavior_editing)
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -814,6 +815,9 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+        self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
+            self.settings.enable_aux_db_behavior_editing
+        )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
         self.settings_dialog.github_username.setText(self.settings.github_username)
@@ -920,8 +924,8 @@ class SettingsController(QObject):
         try:
             self.settings.aux_db_time_limit = int(self.settings_dialog.aux_db_time_limit.text())
         except Exception:
-            logger.warning("Failed setting Aux DB time limit, falling back to 0")
-            self.settings.aux_db_time_limit = 0
+            logger.warning("Failed setting Aux DB time limit, falling back to -1")
+            self.settings.aux_db_time_limit = -1
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
@@ -1071,6 +1075,9 @@ class SettingsController(QObject):
         )
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
+        self.settings.enable_aux_db_behavior_editing = (
+            self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
