@@ -564,9 +564,9 @@ class SteamBrowser(QWidget):
             }
             
             """
-            self.web_view.page().runJavaScript(
-                remove_top_banner, 0, lambda result: None
-            )
+            # self.web_view.page().runJavaScript(
+            #     remove_top_banner, 0, lambda result: None
+            # )
             # change target <a>
             change_target_a_script = """
             var elements = document.getElementsByTagName("a");
