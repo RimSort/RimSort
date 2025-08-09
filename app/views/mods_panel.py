@@ -8,7 +8,17 @@ from traceback import format_exc
 from typing import Optional, cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal, QThread, Slot
+from PySide6.QtCore import (
+    QEvent,
+    QModelIndex,
+    QObject,
+    QRectF,
+    QSize,
+    Qt,
+    QThread,
+    Signal,
+    Slot,
+)
 from PySide6.QtGui import (
     QAction,
     QCursor,
@@ -21,8 +31,8 @@ from PySide6.QtGui import (
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
-    QApplication,
     QAbstractItemView,
+    QApplication,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -31,8 +41,8 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMenu,
     QMessageBox,
-    QPushButton,
     QProgressDialog,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -63,7 +73,6 @@ from app.views.dialogue import (
     show_dialogue_input,
     show_warning,
 )
-
 
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
 _FOLDER_SIZE_CACHE: dict[str, tuple[int, int]] = {}
