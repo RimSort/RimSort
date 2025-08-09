@@ -940,9 +940,7 @@ class MainWindow(QMainWindow):
             if not instance_data:
                 instance_data = {}
             # Create new instance folder if it does not exist
-            instance_path = str(
-                Path(AppInfo().app_storage_folder) / "instances" / instance_name
-            )
+            instance_path = self.settings_controller.settings.current_instance_path
             if not os.path.exists(instance_path):
                 os.makedirs(instance_path)
             # Get run args from instance data, autogenerate additional config items if desired
@@ -1027,8 +1025,7 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
-                instance_name = self.settings_controller.settings.current_instance
-                instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+                instance_path = Path(self.settings_controller.settings.current_instance_path)
                 aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
                     instance_path / "aux_metadata.db"
                 )
@@ -1057,6 +1054,8 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
+        instance_path = str(Path(AppInfo().app_storage_folder) / "instances" / instance)
+        self.settings_controller.settings.current_instance_path = instance_path
         # Update window title with current instance
         self.__set_window_title(instance)
         # Save settings

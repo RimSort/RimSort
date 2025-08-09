@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QMenu, QMessageBox
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     attempt_chmod,
@@ -548,8 +547,7 @@ class ModDeletionMenu(QMenu):
             logger.debug("Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative.")
             return
 
-        instance_name = self.settings_controller.settings.current_instance
-        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )

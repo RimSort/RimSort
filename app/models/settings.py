@@ -148,6 +148,9 @@ class Settings(QObject):
 
         # Instances
         self.current_instance: str = "Default"
+        self.current_instance_path: str = str(
+            Path(AppInfo().app_storage_folder) / "instances" / self.current_instance
+        )
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
     def __setattr__(self, key: str, value: Any) -> None:
@@ -269,6 +272,20 @@ class Settings(QObject):
                         "Current instance not found in settings.json. Performing mitigation."
                     )
                     data["current_instance"] = "Default"
+
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
+                elif not data.get("current_instance_path"):
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False

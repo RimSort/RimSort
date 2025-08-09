@@ -24,8 +24,7 @@ def get_mod_color(
     :return: QColor | None, Color of hte mod, or None if no color
     """
     metadata_manager = MetadataManager.instance()
-    instance_name = settings_controller.settings.current_instance
-    instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+    instance_path = Path(settings_controller.settings.current_instance_path)
     local_controller = (
         aux_db_controller
         or AuxMetadataController.get_or_create_cached_instance(

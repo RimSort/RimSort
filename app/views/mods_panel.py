@@ -35,8 +35,8 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QColorDialog,
     QApplication,
+    QColorDialog,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -737,8 +737,7 @@ class ModListItemInner(QWidget):
 
         # Update DB
         if not init:
-            instance_name = self.settings_controller.settings.current_instance
-            instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+            instance_path = Path(self.settings_controller.settings.current_instance_path)
             aux_metadata_controller = (
                 AuxMetadataController.get_or_create_cached_instance(
                     instance_path / "aux_metadata.db"
@@ -759,8 +758,7 @@ class ModListItemInner(QWidget):
         # Update ModListItemInner color
         self.mod_color = None
         # Update DB
-        instance_name = self.settings_controller.settings.current_instance
-        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )
@@ -1877,8 +1875,7 @@ class ModListWidget(QListWidget):
 
     def append_new_item(self, uuid: str) -> None:
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-        instance_name = self.settings_controller.settings.current_instance
-        instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
         )
@@ -2406,8 +2403,7 @@ class ModListWidget(QListWidget):
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
-                instance_name = self.settings_controller.settings.current_instance
-                instance_path = Path(AppInfo().app_storage_folder) / "instances" / instance_name
+                instance_path = Path(self.settings_controller.settings.current_instance_path)
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
                         instance_path / "aux_metadata.db"
