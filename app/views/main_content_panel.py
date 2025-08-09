@@ -130,6 +130,9 @@ class MainContent(QObject):
             EventBus().do_import_mod_list_from_workshop_collection.connect(
                 self._do_import_list_workshop_collection
             )
+            EventBus().do_import_mod_list_from_save_file.connect(
+                self._do_import_list_from_save_file
+            )
             EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
             EventBus().do_export_mod_list_to_clipboard.connect(
                 self._do_export_list_clipboard
@@ -530,7 +533,7 @@ class MainContent(QObject):
         self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
             list_type="inactive",
             uuids=inactive_mods_uuids,
-            key=ModsPanelSortKey.MODNAME,
+            key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
         )
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
@@ -1999,6 +2002,72 @@ class MainContent(QObject):
                 title=self.tr("Failed to upload"),
                 text=self.tr("Failed to upload exported active mod list to Rentry.co"),
             )
+
+    def _do_import_list_from_save_file(self) -> None:
+        """
+        Import a mod list from a RimWorld save (.rws) file.
+
+        Opens a file dialog defaulting to the RimWorld Saves directory and
+        reuses the existing XML import flow to populate the lists.
+        """
+        logger.info("Opening file dialog to select RimWorld save (.rws)")
+        # Default to the instance's Saves directory (sibling of Config)
+        saves_dir = str(
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].config_folder
+            ).parent
+            / "Saves"
+        )
+        file_path = dialogue.show_dialogue_file(
+            mode="open",
+            caption=self.tr("Import from RimWorld Save File"),
+            _dir=saves_dir,
+            _filter=self.tr("RimWorld save (*.rws);;All files (*.*)"),
+        )
+        logger.info(f"Selected save path: {file_path}")
+        if not file_path:
+            logger.debug("USER ACTION: pressed cancel, passing")
+            return
+
+        # Clear searches and data source filters just like XML import
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        logger.info(f"Trying to import mods list from save file: {file_path}")
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = metadata.get_mods_from_list(mod_list=file_path)
+        logger.info("Got new mods according to imported save file")
+
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+
+        # If we have duplicate mods, prompt user
+        if (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            self.__duplicate_mods_prompt()
+        elif not self.settings_controller.settings.duplicate_mods_warning:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
+        # If we have missing mods, prompt user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt()
 
     def _do_open_app_directory(self) -> None:
         app_directory = os.getcwd()

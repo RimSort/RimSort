@@ -2875,6 +2875,38 @@ Should be Loaded Before:</source>
         <translation>Неактивные [0]</translation>
     </message>
     <message>
+        <source>Modified Time</source>
+        <translation>Время изменения</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Автор</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Размер папки</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Переключить порядок сортировки</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>По убыв.</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>По возр.</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Вычисление размеров папок...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Обновление списка...</translation>
+    </message>
+    <message>
         <source>Search by...</source>
         <translation>Поиск по...</translation>
     </message>

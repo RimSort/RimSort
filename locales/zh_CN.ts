@@ -2879,6 +2879,38 @@ Should be Loaded Before:</source>
         <translation>未启用 [0]</translation>
     </message>
     <message>
+        <source>Modified Time</source>
+        <translation>修改时间</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>文件夹大小</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>切换排序顺序</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>降序</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>升序</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>正在计算文件夹大小...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>正在重建列表...</translation>
+    </message>
+    <message>
         <source>Search by...</source>
         <translation>按...搜索</translation>
     </message>

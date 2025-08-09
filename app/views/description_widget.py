@@ -67,6 +67,7 @@ class DescriptionWidget(QTextBrowser):
         }
         tag_mapping_type2 = {
             r"<color=(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|[a-zA-Z]+)>": r'<span style="color:\1">',
+            r"<color=\"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|[a-zA-Z]+)\">": r'<span style="color:\1">',
             r"</color>": "</span>",
             r"<size=(\d+)>": r'<span style="font-size:\1px">',
             r"</size>": "</span>",
