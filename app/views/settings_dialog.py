@@ -80,6 +80,7 @@ class SettingsDialog(QDialog):
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
+        self._do_performance_settings_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -287,6 +288,16 @@ class SettingsDialog(QDialog):
         self._do_use_this_instead_db_group(tab_layout)
         self._do_aux_db_time_limit_group(tab_layout)
 
+    def _do_performance_settings_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Performance"))
+
+        tab_layout = QVBoxLayout()
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab.setLayout(tab_layout)
+
+        self._do_aux_db_performance_group(tab_layout)
+
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
     ) -> tuple[
@@ -483,12 +494,12 @@ class SettingsDialog(QDialog):
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
         self.aux_db_time_limit_label = QLabel(
             self.tr(
-                "Auxillary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+                "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
             )
         )
         aux_db_tooltip = """To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxillary Metadata DB. 
-This Auxillary DB contains info for mod colors, toggled warning, user notes etc. 
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)"""
         self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
@@ -519,6 +530,27 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         tab_layout.addLayout(label_layout)
         tab_layout.addWidget(self.aux_db_time_limit)
+
+    def _do_aux_db_performance_group(self, tab_layout: QBoxLayout) -> None:
+        self.aux_db_performance_mode = QCheckBox(
+            self.tr("Enable Auxiliary Metadata DB performance mode")
+        )
+        self.aux_db_performance_mode.setToolTip(
+            self.tr(
+                "This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes."
+                "\nImproves performance by ~50%."
+            )
+        )
+
+        aux_db_label = QLabel(self.tr("Auxiliary Metadata DB"))
+        aux_db_label.setFont(GUIInfo().emphasis_font)
+        aux_db_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        aux_db_group = QHBoxLayout()
+        aux_db_group.addWidget(self.aux_db_performance_mode)
+
+        tab_layout.addWidget(aux_db_label)
+        tab_layout.addLayout(aux_db_group)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
@@ -1135,7 +1167,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.font_size_spinbox.setValue(12)
 
     def enable_aux_db_time_limit_line_edit(self) -> None:
-        """Enables/Disables aux DB time limit line edit if relevant setting is checked/unchecked."""
+        """Enables/Disables aux DB time limit line edit based on the checkbox state."""
         enable = self.enable_aux_db_behavior_editing.isChecked()
         self.aux_db_time_limit.setEnabled(enable)
 

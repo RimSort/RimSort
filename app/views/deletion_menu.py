@@ -538,7 +538,7 @@ class ModDeletionMenu(QMenu):
 
     def delete_mod_from_aux_db(self, path: str) -> None:
         """
-        Delete mod entry from the auxillary metadata db.
+        Delete mod entry from the auxiliary metadata db.
 
         This only deletes the mod for the relevant instance.
         """

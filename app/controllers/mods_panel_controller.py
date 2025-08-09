@@ -197,6 +197,12 @@ class ModsPanelController(QObject):
         
         This means the previously outdated items DO NOT have their db_time_touched updated.
         """
+        # This is more performant, but we dont update db_time_touched. But that should be ok
+        time_limit = self.settings_controller.settings.aux_db_time_limit
+        if time_limit < 0:
+            logger.debug("Skipping the setting entries as outdated because time limit is negative.")
+            return
+
         instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
@@ -204,11 +210,12 @@ class ModsPanelController(QObject):
         with aux_metadata_controller.Session() as aux_metadata_session:
             stmt = (
                 update(AuxMetadataEntry)
-                .where(~AuxMetadataEntry.outdated)  # type: ignore
+                .where(AuxMetadataEntry.outdated.is_(False))
                 .values(outdated=True)
             )
             aux_metadata_session.execute(stmt)
             aux_metadata_session.commit()
+            
         logger.debug("Finished setting entries as outdated.")
 
     def delete_outdated_aux_db_entries(self) -> None:

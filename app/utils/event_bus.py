@@ -124,6 +124,9 @@ class EventBus(QObject):
     do_check_for_application_update = Signal()
     do_check_for_update_startup = Signal()
 
+    # Performance settings signals
+    enable_aux_db_performance_mode = Signal()
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.

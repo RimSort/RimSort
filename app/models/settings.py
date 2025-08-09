@@ -141,12 +141,16 @@ class Settings(QObject):
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
 
-        self.enable_aux_db_behavior_editing: bool = False
-
+        # Authentication
         self.rentry_auth_code: str = ""
-
         self.github_username: str = ""
         self.github_token: str = ""
+
+        # Auxiliary Metadata DB
+        self.enable_aux_db_behavior_editing: bool = False
+
+        # Performance Settings
+        self.enable_aux_db_performance_mode: bool = False
 
         # Instances
         self.current_instance: str = "Default"

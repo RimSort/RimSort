@@ -57,8 +57,7 @@ class AuxMetadataController(MetadataDbController):
             setattr(entry, key, value)
 
         try:
-            with session.begin_nested():
-                session.commit()
+            session.commit()
         except Exception as e:
             session.rollback()
             logger.exception(f"Failed to update aux metadata entry: {e}")
