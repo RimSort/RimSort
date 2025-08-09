@@ -1359,6 +1359,25 @@ class MainContent(QObject):
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
 
+        # Reset color filters for both lists
+        try:
+            # Active
+            self.mods_panel.active_color_filter_index = 0
+            alabel, aval = self.mods_panel.color_filter_options[0]
+            self.mods_panel._style_color_filter_button(
+                self.mods_panel.active_mods_color_filter_button, aval
+            )
+            self.mods_panel.active_mods_color_filter_button.setToolTip(alabel)
+            # Inactive
+            self.mods_panel.inactive_color_filter_index = 0
+            ilabel, ival = self.mods_panel.color_filter_options[0]
+            self.mods_panel._style_color_filter_button(
+                self.mods_panel.inactive_mods_color_filter_button, ival
+            )
+            self.mods_panel.inactive_mods_color_filter_button.setToolTip(ilabel)
+        except Exception:
+            pass
+
         # Get active mods
         active_mods = set(self.mods_panel.active_mods_list.uuids)
 
@@ -1439,6 +1458,20 @@ class MainContent(QObject):
             # Enable widgets again after inserting
             self.disable_enable_widgets_signal.emit(True)
             logger.info("Insertion finished!")
+            # Reapply current filters (including color) to both lists
+            try:
+                self.mods_panel.signal_search_and_filters(
+                    list_type="Active",
+                    pattern=self.mods_panel.active_mods_search.text(),
+                    recalculate_list_errors_warnings=True,
+                )
+                self.mods_panel.signal_search_and_filters(
+                    list_type="Inactive",
+                    pattern=self.mods_panel.inactive_mods_search.text(),
+                    recalculate_list_errors_warnings=False,
+                )
+            except Exception as e:
+                logger.error(f"Failed to reapply filters after sort: {e}")
         elif success and new_order == current_order:
             logger.info(
                 "Sort completed, but the order of mods has not changed. No insertion needed."

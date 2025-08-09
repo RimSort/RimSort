@@ -192,6 +192,11 @@ class ModListItemInner(QWidget):
         self.main_item_layout.setSpacing(0)
         self.font_metrics = QFontMetrics(self.font())
 
+        # Optional colored strip for user tagging (added to layout at the far right later)
+        self.color_strip = QFrame()
+        self.color_strip.setFixedWidth(6)
+        self.color_strip.setHidden(True)
+
         # Icons that are conditional
         self.csharp_icon = None
         self.xml_icon = None
@@ -329,6 +334,8 @@ class ModListItemInner(QWidget):
             self.error_icon_label, Qt.AlignmentFlag.AlignRight
         )
         self.main_item_layout.addStretch()
+        # Add color strip at the right-most side
+        self.main_item_layout.addWidget(self.color_strip, Qt.AlignmentFlag.AlignRight)
         self.setLayout(self.main_item_layout)
 
         # Reveal if errors or warnings exist
@@ -338,6 +345,28 @@ class ModListItemInner(QWidget):
         if self.errors:
             self.error_icon_label.setToolTip(self.errors)
             self.error_icon_label.setHidden(False)
+
+        # Apply color tag if present in settings (packageId-based)
+        package_id = self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get(
+            "packageid"
+        )
+        color = None
+        if isinstance(package_id, str):
+            try:
+                color = self.settings_controller.settings.mod_color_tags_by_packageid.get(
+                    package_id
+                )
+            except AttributeError:
+                color = None
+        self.set_color_tag(color)
+
+    def set_color_tag(self, color: str | None) -> None:
+        """Update the left color strip visibility and style based on color hex string."""
+        if color:
+            self.color_strip.setStyleSheet(f"background-color: {color};")
+            self.color_strip.setHidden(False)
+        else:
+            self.color_strip.setHidden(True)
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -485,6 +514,20 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName(new_widget_object_name)
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
+
+        # Ensure current color tag remains applied after repolish
+        package_id = self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get(
+            "packageid"
+        )
+        color = None
+        if isinstance(package_id, str):
+            try:
+                color = self.settings_controller.settings.mod_color_tags_by_packageid.get(
+                    package_id
+                )
+            except AttributeError:
+                color = None
+        self.set_color_tag(color)
 
 
 class ModListIcons:
@@ -795,6 +838,28 @@ class ModListWidget(QListWidget):
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
 
+            # Color tagging submenu and actions
+            color_menu = QMenu(title=self.tr("Color tag"))
+            color_action_map: dict[QAction, str | None] = {}
+            # Predefined colors
+            predefined_colors: list[tuple[str, str]] = [
+                (self.tr("Red"), "#ff6b6b"),
+                (self.tr("Orange"), "#f59f00"),
+                (self.tr("Yellow"), "#ffd43b"),
+                (self.tr("Green"), "#69db7c"),
+                (self.tr("Blue"), "#74c0fc"),
+                (self.tr("Purple"), "#b197fc"),
+                (self.tr("Gray"), "#ced4da"),
+            ]
+            clear_color_action = QAction(self.tr("Clear color"))
+            color_action_map[clear_color_action] = None
+            color_menu.addAction(clear_color_action)
+            color_menu.addSeparator()
+            for color_name, color_hex in predefined_colors:
+                act = QAction(color_name)
+                color_action_map[act] = color_hex
+                color_menu.addAction(act)
+
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
             # Single item selected
@@ -1047,6 +1112,9 @@ class ModListWidget(QListWidget):
             if toggle_warning_action:
                 context_menu.addAction(toggle_warning_action)
 
+            # Always include color tagging submenu
+            context_menu.addMenu(color_menu)
+
             context_menu.addMenu(self.deletion_sub_menu)
             context_menu.addSeparator()
             if (
@@ -1108,6 +1176,45 @@ class ModListWidget(QListWidget):
             # Execute QMenu and return it's ACTION
             action = context_menu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
+                # Handle color tag selections
+                if action in color_action_map:
+                    chosen_color = color_action_map[action]
+                    # Apply to all selected items
+                    for source_item in selected_items:
+                        if type(source_item) is CustomListWidgetItem:
+                            item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                            uuid = item_data["uuid"]
+                            mod_metadata = self.metadata_manager.internal_local_metadata.get(
+                                uuid, {}
+                            )
+                            package_id = mod_metadata.get("packageid")
+                            if not isinstance(package_id, str):
+                                continue
+                            # Update settings storage
+                            if chosen_color:
+                                self.settings_controller.settings.mod_color_tags_by_packageid[
+                                    package_id
+                                ] = chosen_color
+                            else:
+                                # Clear color
+                                try:
+                                    if (
+                                        package_id
+                                        in self.settings_controller.settings.mod_color_tags_by_packageid
+                                    ):
+                                        self.settings_controller.settings.mod_color_tags_by_packageid.pop(
+                                            package_id
+                                        )
+                                except AttributeError:
+                                    pass
+                            # Rebuild the item widget to reflect the change
+                            self.rebuild_item_widget_from_uuid(uuid)
+                    # Persist settings
+                    try:
+                        self.settings_controller.settings.save()
+                    except Exception as e:
+                        logger.error(f"Failed to save color tags: {e}")
+                    return True
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
                 ):
@@ -2170,6 +2277,19 @@ class ModsPanel(QWidget):
         )
         self.mode_nofilter_tooltip = self.tr("Hide Filter Enabled")
 
+        # Color filter options: (label, value). Value None = All, "__any__" = Colored Only, else hex
+        self.color_filter_options: list[tuple[str, str | None]] = [
+            (self.tr("All Colors"), None),
+            (self.tr("Colored Only"), "__any__"),
+            (self.tr("Red"), "#ff6b6b"),
+            (self.tr("Orange"), "#f59f00"),
+            (self.tr("Yellow"), "#ffd43b"),
+            (self.tr("Green"), "#69db7c"),
+            (self.tr("Blue"), "#74c0fc"),
+            (self.tr("Purple"), "#b197fc"),
+            (self.tr("Gray"), "#ced4da"),
+        ]
+
         # ACTIVE mod list widget
         self.active_mods_label = QLabel(self.tr("Active [0]"))
         self.active_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -2211,7 +2331,34 @@ class ModsPanel(QWidget):
         # Connect signals and slots
         self.connect_signals()
 
+        # After refresh completes, prune color tags for missing entries
+        EventBus().refresh_finished.connect(self._prune_color_tags)
+
         logger.debug("Finished ModsPanel initialization")
+
+    def _prune_color_tags(self) -> None:
+        """Prune color-tag cache for missing mods by packageId."""
+        try:
+            settings = self.settings_controller.settings
+            mm = self.metadata_manager
+            # Build current set of packageIds
+            current_package_ids = set(
+                metadata.get("packageid")
+                for metadata in mm.internal_local_metadata.values()
+                if isinstance(metadata.get("packageid"), str)
+            )
+            # Prune packageId color tags for mods no longer present
+            before = len(settings.mod_color_tags_by_packageid)
+            settings.mod_color_tags_by_packageid = {
+                pkg: col
+                for pkg, col in settings.mod_color_tags_by_packageid.items()
+                if pkg in current_package_ids
+            }
+            after = len(settings.mod_color_tags_by_packageid)
+            if before != after:
+                settings.save()
+        except Exception as e:
+            logger.error(f"Failed pruning color tags: {e}")
 
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
@@ -2246,6 +2393,25 @@ class ModsPanel(QWidget):
         )
         self.active_data_source_filter_type_button.clicked.connect(
             self.on_active_mods_search_data_source_filter_type
+        )
+        # Color filter (Active)
+        self.active_color_filter_index = 0
+        self.active_mods_color_filter_button = QToolButton()
+        self._style_color_filter_button(
+            self.active_mods_color_filter_button,
+            self.color_filter_options[self.active_color_filter_index][1],
+        )
+        self.active_mods_color_filter_button.setToolTip(
+            self.color_filter_options[self.active_color_filter_index][0]
+        )
+        self.active_mods_color_filter_button.clicked.connect(
+            self.on_active_mods_color_filter
+        )
+        self.active_mods_color_filter_button.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.active_mods_color_filter_button.customContextMenuRequested.connect(
+            self.on_active_mods_color_filter_clear
         )
         self.active_mods_search_filter_state = True
         self.active_mods_search_mode_filter_button = QToolButton()
@@ -2289,6 +2455,9 @@ class ModsPanel(QWidget):
             self.active_mods_search_layout.addWidget(
                 self.active_data_source_filter_type_button
             )
+        self.active_mods_search_layout.addWidget(
+            self.active_mods_color_filter_button
+        )
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
@@ -2387,6 +2556,25 @@ class ModsPanel(QWidget):
         self.inactive_data_source_filter_type_button.clicked.connect(
             self.on_inactive_mods_search_data_source_filter_type
         )
+        # Color filter (Inactive)
+        self.inactive_color_filter_index = 0
+        self.inactive_mods_color_filter_button = QToolButton()
+        self._style_color_filter_button(
+            self.inactive_mods_color_filter_button,
+            self.color_filter_options[self.inactive_color_filter_index][1],
+        )
+        self.inactive_mods_color_filter_button.setToolTip(
+            self.color_filter_options[self.inactive_color_filter_index][0]
+        )
+        self.inactive_mods_color_filter_button.clicked.connect(
+            self.on_inactive_mods_color_filter
+        )
+        self.inactive_mods_color_filter_button.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.inactive_mods_color_filter_button.customContextMenuRequested.connect(
+            self.on_inactive_mods_color_filter_clear
+        )
         self.inactive_mods_search_filter_state = True
         self.inactive_mods_search_mode_filter_button = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
@@ -2432,6 +2620,9 @@ class ModsPanel(QWidget):
             self.inactive_mods_search_layout.addWidget(
                 self.inactive_data_source_filter_type_button
             )
+        self.inactive_mods_search_layout.addWidget(
+            self.inactive_mods_color_filter_button
+        )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
@@ -2488,6 +2679,12 @@ class ModsPanel(QWidget):
     def on_active_mods_search_data_source_filter_type(self) -> None:
         self.apply_mods_filter_type(list_type="Active")
 
+    def on_active_mods_color_filter(self) -> None:
+        # Open a dropdown menu to select color filter
+        self._open_color_filter_menu(
+            list_type="Active", button=self.active_mods_color_filter_button
+        )
+
     def on_active_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Active")
 
@@ -2505,6 +2702,90 @@ class ModsPanel(QWidget):
 
     def on_inactive_mods_search_data_source_filter_type(self) -> None:
         self.apply_mods_filter_type(list_type="Inactive")
+
+    def on_inactive_mods_color_filter(self) -> None:
+        # Open a dropdown menu to select color filter
+        self._open_color_filter_menu(
+            list_type="Inactive", button=self.inactive_mods_color_filter_button
+        )
+
+    def on_active_mods_color_filter_clear(self, _pos) -> None:
+        # Right-click clears filter
+        self.active_color_filter_index = 0
+        label, value = self.color_filter_options[self.active_color_filter_index]
+        self._style_color_filter_button(self.active_mods_color_filter_button, value)
+        self.active_mods_color_filter_button.setToolTip(label)
+        self.signal_search_and_filters(
+            list_type="Active",
+            pattern=self.active_mods_search.text(),
+            filters_active=True,
+        )
+
+    def on_inactive_mods_color_filter_clear(self, _pos) -> None:
+        # Right-click clears filter
+        self.inactive_color_filter_index = 0
+        label, value = self.color_filter_options[self.inactive_color_filter_index]
+        self._style_color_filter_button(
+            self.inactive_mods_color_filter_button, value
+        )
+        self.inactive_mods_color_filter_button.setToolTip(label)
+        self.signal_search_and_filters(
+            list_type="Inactive",
+            pattern=self.inactive_mods_search.text(),
+            filters_active=True,
+        )
+
+    def _open_color_filter_menu(self, list_type: str, button: QToolButton) -> None:
+        menu = QMenu()
+        actions_map: dict[QAction, int] = {}
+        for idx, (label, value) in enumerate(self.color_filter_options):
+            act = QAction(label, menu)
+            actions_map[act] = idx
+            # Optionally mark current selection
+            current_idx = (
+                self.active_color_filter_index
+                if list_type == "Active"
+                else self.inactive_color_filter_index
+            )
+            if idx == current_idx:
+                act.setCheckable(True)
+                act.setChecked(True)
+            menu.addAction(act)
+        action = menu.exec_(button.mapToGlobal(button.rect().bottomLeft()))
+        if not action:
+            return
+        chosen_idx = actions_map.get(action, 0)
+        if list_type == "Active":
+            self.active_color_filter_index = chosen_idx
+            label, value = self.color_filter_options[self.active_color_filter_index]
+            self._style_color_filter_button(self.active_mods_color_filter_button, value)
+            self.active_mods_color_filter_button.setToolTip(label)
+            self.signal_search_and_filters(
+                list_type="Active",
+                pattern=self.active_mods_search.text(),
+                filters_active=True,
+            )
+        else:
+            self.inactive_color_filter_index = chosen_idx
+            label, value = self.color_filter_options[self.inactive_color_filter_index]
+            self._style_color_filter_button(
+                self.inactive_mods_color_filter_button, value
+            )
+            self.inactive_mods_color_filter_button.setToolTip(label)
+            self.signal_search_and_filters(
+                list_type="Inactive",
+                pattern=self.inactive_mods_search.text(),
+                filters_active=True,
+            )
+
+    def _style_color_filter_button(self, button: QToolButton, value: str | None) -> None:
+        # Simple visual: fill background when a specific color is selected
+        if isinstance(value, str) and value != "__any__":
+            button.setStyleSheet(
+                f"QToolButton {{ background-color: {value}; border: 1px solid rgba(0,0,0,0.2); }}"
+            )
+        else:
+            button.setStyleSheet("")
 
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
@@ -2698,11 +2979,13 @@ class ModsPanel(QWidget):
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
             uuids = self.active_mods_list.uuids
+            color_filter_index = getattr(self, "active_color_filter_index", 0)
         elif list_type == "Inactive":
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
             uuids = self.inactive_mods_list.uuids
+            color_filter_index = getattr(self, "inactive_color_filter_index", 0)
         else:
             raise NotImplementedError(f"Unknown list type: {list_type}")
         # Evaluate the search filter state for the list
@@ -2718,6 +3001,13 @@ class ModsPanel(QWidget):
             search_filter = "publishedfileid"
         elif _filter.currentText() == self.tr("Version"):
             search_filter = "version"
+        # If color filter is not default, mark filters as active
+        if (
+            color_filter_index is not None
+            and self.color_filter_options[color_filter_index][1] is not None
+        ):
+            filters_active = True
+
         # Filter the list using any search and filter state
         for uuid in uuids:
             item = (
@@ -2778,6 +3068,22 @@ class ModsPanel(QWidget):
                 item_filtered = True
             elif type_filter_index == 2 and metadata.get("csharp"):
                 item_filtered = True
+
+            # Color filter application
+            color_filter_value = self.color_filter_options[color_filter_index][1]
+            if color_filter_value is not None:
+                pkg = metadata.get("packageid")
+                current_color = None
+                if isinstance(pkg, str):
+                    current_color = self.settings_controller.settings.mod_color_tags_by_packageid.get(
+                        pkg
+                    )
+                if color_filter_value == "__any__":
+                    if not current_color:
+                        item_filtered = True
+                else:  # specific hex
+                    if current_color != color_filter_value:
+                        item_filtered = True
 
             # Check if the item should be filtered or hidden based on filter state
             if filter_state:

@@ -147,6 +147,10 @@ class Settings(QObject):
         self.current_instance: str = "Default"
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
+        # UI: Mod color tags by packageId (packageId -> hex color string)
+        # Example: {"author.modid": "#74c0fc"}
+        self.mod_color_tags_by_packageid: dict[str, str] = {}
+
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
         if key.startswith("_"):
