@@ -20,6 +20,7 @@ from app.utils.app_info import AppInfo
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
+from app.views.mods_panel import format_file_size, uuid_to_folder_size
 
 
 class ClickablePathLabel(QLabel):
@@ -412,7 +413,6 @@ class ModInfo:
                 )
 
             # Set folder size
-            from app.views.mods_panel import uuid_to_folder_size, format_file_size
             try:
                 size_bytes = uuid_to_folder_size(uuid)
                 self.mod_info_folder_size_value.setText(format_file_size(size_bytes))

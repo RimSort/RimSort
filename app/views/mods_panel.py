@@ -8,7 +8,7 @@ from traceback import format_exc
 from typing import Optional, cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal, QTimer, QThread, Slot
+from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal, QThread, Slot
 from PySide6.QtGui import (
     QAction,
     QCursor,
@@ -2275,6 +2275,12 @@ class ModsPanel(QWidget):
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
 
+        # Background folder-size sorting state
+        self._size_progress_dialog: Optional[QProgressDialog] = None
+        self._size_thread: Optional[QThread] = None
+        self._size_worker: Optional[FolderSizeWorker] = None
+        self._size_current_uuids: list[str] = []
+
         # Base layout horizontal, sub-layouts vertical
         self.panel = QHBoxLayout()
         self.active_panel = QVBoxLayout()
@@ -2721,34 +2727,36 @@ class ModsPanel(QWidget):
             is_heavy = sort_key in (ModsPanelSortKey.FOLDER_SIZE,)
             if is_heavy:
                 # Set up dialog
-                self._size_progress_dialog = QProgressDialog(
+                dlg = QProgressDialog(
                     self.tr("Calculating folder sizes..."),
-                    None,
+                    "",
                     0,
                     len(current_uuids),
                     self,
                 )
-                self._size_progress_dialog.setWindowModality(
-                    Qt.WindowModality.WindowModal
-                )
-                self._size_progress_dialog.setMinimumDuration(0)
-                self._size_progress_dialog.setCancelButton(None)
-                self._size_progress_dialog.setAutoClose(True)
-                self._size_progress_dialog.setAutoReset(True)
-                self._size_progress_dialog.setValue(0)
+                dlg.setWindowModality(Qt.WindowModality.WindowModal)
+                dlg.setMinimumDuration(0)
+                dlg.setCancelButton(None)
+                dlg.setAutoClose(True)
+                dlg.setAutoReset(True)
+                dlg.setValue(0)
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
                 # Start worker thread
-                self._size_thread = QThread(self)
+                thr = QThread(self)
+                self._size_thread = thr
                 self._size_current_uuids = current_uuids
-                self._size_worker = FolderSizeWorker(current_uuids)
-                self._size_worker.moveToThread(self._size_thread)
+                worker = FolderSizeWorker(current_uuids)
+                self._size_worker = worker
+                worker.moveToThread(thr)
 
-                self._size_worker.progress.connect(self._on_folder_size_progress)
-                self._size_worker.finished.connect(self._on_folder_size_finished)
-                self._size_thread.started.connect(self._size_worker.run)
-                self._size_thread.start()
-                self._size_progress_dialog.show()
+                worker.progress.connect(self._on_folder_size_progress)
+                worker.finished.connect(self._on_folder_size_finished)
+                thr.started.connect(worker.run)
+                thr.start()
+
+                self._size_progress_dialog = dlg
+                dlg.show()
             else:
                 # Fast path for other sort keys
                 # Apply order by passing flag to sort_uuids via recreate_mod_list_and_sort
