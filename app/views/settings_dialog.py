@@ -1204,6 +1204,11 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
+        self.show_save_comparison_indicators_checkbox = QCheckBox(
+            self.tr("Show save-comparison indicators")
+        )
+        group_layout.addWidget(self.show_save_comparison_indicators_checkbox)
+
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             self.tr("Show duplicate mods warning")
         )

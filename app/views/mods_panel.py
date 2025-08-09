@@ -55,6 +55,8 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager, ModMetadata
+from app.utils.schema import validate_rimworld_mods_list
+from app.utils.xml import xml_path_to_json
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
@@ -255,6 +257,19 @@ class ModListItemInner(QWidget):
         )
         # Default to hidden to avoid showing early
         self.warning_icon_label.setHidden(True)
+        # New icon hidden by default
+        self.new_icon_label = QLabel()
+        self.new_icon_label.setPixmap(ModListIcons.new_icon().pixmap(QSize(20, 20)))
+        self.new_icon_label.setToolTip(self.tr("Not in latest save"))
+        # Default to hidden to avoid showing early
+        self.new_icon_label.setHidden(True)
+        # In-save icon (for inactive list items): hidden by default
+        self.in_save_icon_label = QLabel()
+        self.in_save_icon_label.setPixmap(
+            ModListIcons.clear_icon().pixmap(QSize(20, 20))
+        )
+        self.in_save_icon_label.setToolTip(self.tr("In latest save"))
+        self.in_save_icon_label.setHidden(True)
         # Error icon hidden by default
         self.error_icon_label = ClickableQLabel()
         self.error_icon_label.clicked.connect(
@@ -322,6 +337,10 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.xml_icon, Qt.AlignmentFlag.AlignRight)
         # Compose the layout of our widget and set it to the main layout
         self.main_item_layout.addWidget(self.main_label, Qt.AlignmentFlag.AlignCenter)
+        self.main_item_layout.addWidget(
+            self.in_save_icon_label, Qt.AlignmentFlag.AlignRight
+        )
+        self.main_item_layout.addWidget(self.new_icon_label, Qt.AlignmentFlag.AlignRight)
         self.main_item_layout.addWidget(
             self.warning_icon_label, Qt.AlignmentFlag.AlignRight
         )
@@ -472,6 +491,28 @@ class ModListItemInner(QWidget):
         else:  # Hide the warning icon if no warning tool tip text
             self.warning_icon_label.setHidden(True)
             self.warning_icon_label.setToolTip("")
+        # New / In-save icon visibility depends on list type and user setting
+        is_new = bool(item_data.__dict__.get("is_new", False))
+        in_save = bool(item_data.__dict__.get("in_save", False))
+        list_widget = item.listWidget()
+        try:
+            list_type = list_widget.list_type if list_widget is not None else None
+        except Exception:
+            list_type = None
+        # Respect setting toggle
+        show_indicators = self.settings_controller.settings.show_save_comparison_indicators
+        if not show_indicators:
+            self.new_icon_label.setHidden(True)
+            self.in_save_icon_label.setHidden(True)
+        elif list_type == "Active":
+            self.new_icon_label.setHidden(not is_new)
+            self.in_save_icon_label.setHidden(True)
+        elif list_type == "Inactive":
+            self.new_icon_label.setHidden(True)
+            self.in_save_icon_label.setHidden(not in_save)
+        else:
+            self.new_icon_label.setHidden(True)
+            self.in_save_icon_label.setHidden(True)
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["filtered"]:
@@ -498,6 +539,8 @@ class ModListIcons:
     _steamcmd_icon_path: str = str(_data_path / "steamcmd_icon.png")
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
+    _new_icon_path: str = str(_data_path / "new.png")
+    _clear_icon_path: str = str(_data_path / "clear.png")
 
     _ludeon_icon: QIcon | None = None
     _local_icon: QIcon | None = None
@@ -508,6 +551,8 @@ class ModListIcons:
     _steamcmd_icon: QIcon | None = None
     _warning_icon: QIcon | None = None
     _error_icon: QIcon | None = None
+    _new_icon: QIcon | None = None
+    _clear_icon: QIcon | None = None
 
     @classmethod
     def ludeon_icon(cls) -> QIcon:
@@ -562,6 +607,27 @@ class ModListIcons:
         if cls._error_icon is None:
             cls._error_icon = QIcon(cls._error_icon_path)
         return cls._error_icon
+
+    @classmethod
+    def new_icon(cls) -> QIcon:
+        if cls._new_icon is None:
+            # Reuse an existing icon if new.png is not present
+            cls._new_icon = (
+                QIcon(cls._new_icon_path)
+                if Path(cls._new_icon_path).exists()
+                else QIcon(str(cls._data_path / "AppIcon_b.png"))
+            )
+        return cls._new_icon
+
+    @classmethod
+    def clear_icon(cls) -> QIcon:
+        if cls._clear_icon is None:
+            cls._clear_icon = (
+                QIcon(cls._clear_icon_path)
+                if Path(cls._clear_icon_path).exists()
+                else QIcon(str(cls._data_path / "AppIcon_b.png"))
+            )
+        return cls._clear_icon
 
 
 class ModListWidget(QListWidget):
@@ -646,6 +712,8 @@ class ModListWidget(QListWidget):
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids: list[str] = []
         self.ignore_warning_list: list[str] = []
+        # Cache of latest save package ids to check new mods
+        self._latest_save_package_ids: set[str] | None = None
 
         self.deletion_sub_menu = ModDeletionMenu(
             self._get_selected_metadata,
@@ -1620,6 +1688,8 @@ class ModListWidget(QListWidget):
             widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
+            # Ensure initial icon states reflect current item data
+            widget.repolish(item)
 
     def check_widgets_visible(self) -> None:
         # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
@@ -1820,6 +1890,9 @@ class ModListWidget(QListWidget):
         num_errors = 0
         total_error_text = ""
 
+        # Load latest save package ids once for this run
+        latest_save_ids = self._get_latest_save_package_ids()
+
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
@@ -1829,6 +1902,19 @@ class ModListWidget(QListWidget):
             current_item_data["mismatch"] = False
             current_item_data["errors"] = ""
             current_item_data["warnings"] = ""
+            # Mark active as new if not present in latest save; mark inactive as in_save if present in save
+            try:
+                pkg_id = internal_local_metadata[uuid]["packageid"]
+                is_in_save = pkg_id in latest_save_ids if latest_save_ids is not None else False
+                if self.list_type == "Active":
+                    current_item_data.__dict__["is_new"] = not is_in_save
+                    current_item_data.__dict__["in_save"] = False
+                else:
+                    current_item_data.__dict__["is_new"] = False
+                    current_item_data.__dict__["in_save"] = is_in_save
+            except Exception:
+                current_item_data.__dict__["is_new"] = False
+                current_item_data.__dict__["in_save"] = False
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
@@ -1996,6 +2082,53 @@ class ModListWidget(QListWidget):
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors and warnings")
         return total_error_text, total_warning_text, num_errors, num_warnings
+
+    def _get_latest_save_package_ids(self) -> set[str] | None:
+        """Attempt to find the latest RimWorld save file in the configured instance and extract modIds.
+
+        Returns a set of packageIds in the save, or None on failure. Cached per list instance.
+        """
+        if self._latest_save_package_ids is not None:
+            return self._latest_save_package_ids
+
+        try:
+            # Config path typically points to the RimWorld config folder; Saves is sibling folder
+            cfg_path = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].config_folder
+            if not cfg_path:
+                return None
+            saves_dir = Path(cfg_path).parent / "Saves"
+            if not saves_dir.exists():
+                # Try common default path
+                from platformdirs import PlatformDirs
+
+                pd = PlatformDirs(appname="RimWorld by Ludeon Studios", appauthor=False)
+                candidate = Path(pd.user_data_dir).parent / "Saves"
+                saves_dir = candidate if candidate.exists() else saves_dir
+
+            if not saves_dir.exists():
+                return None
+
+            # Find latest .rws by modified time
+            latest: Path | None = None
+            latest_mtime = -1.0
+            for p in saves_dir.glob("*.rws"):
+                m = p.stat().st_mtime
+                if m > latest_mtime:
+                    latest_mtime = m
+                    latest = p
+            if latest is None:
+                return None
+
+            data = xml_path_to_json(str(latest))
+            # Reuse existing validator to support all RimWorld formats
+            ids_list = validate_rimworld_mods_list(data)
+            # Normalize to lowercase
+            self._latest_save_package_ids = {str(i).lower() for i in ids_list}
+            return self._latest_save_package_ids
+        except Exception:
+            return None
 
     def _has_replacement(
         self, package_id: str, dep: str, package_ids_set: set[str]
@@ -2350,6 +2483,16 @@ class ModsPanel(QWidget):
         # Add to the outer frame
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
+        # New mods label (next to warnings/errors)
+        self.news_layout = QHBoxLayout()
+        self.new_icon: QLabel = QLabel()
+        self.new_icon.setPixmap(QIcon(str(AppInfo().theme_data_folder / "default-icons" / "new.png")).pixmap(QSize(20, 20)))
+        self.new_text: AdvancedClickableQLabel = AdvancedClickableQLabel(self.tr("0 new"))
+        self.new_text.setObjectName("summaryValue")
+        self.new_text.setToolTip(self.tr("Click to only show active mods not in latest save"))
+        self.news_layout.addWidget(self.new_icon, 1)
+        self.news_layout.addWidget(self.new_text, 99)
+        self.warnings_errors_layout.addLayout(self.news_layout, 50)
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
@@ -2629,12 +2772,23 @@ class ModsPanel(QWidget):
                 self.warnings_icon.setToolTip(
                     total_warning_text.lstrip() if total_warning_text else ""
                 )
+                # Count "new" mods
+                try:
+                    new_count = 0
+                    for item in self.active_mods_list.get_all_mod_list_items():
+                        data = item.data(Qt.ItemDataRole.UserRole)
+                        if bool(data.__dict__.get("is_new", False)):
+                            new_count += 1
+                    self.new_text.setText(self.tr("{padding}{count} new").format(padding=padding, count=new_count))
+                except Exception:
+                    self.new_text.setText(self.tr("0 new"))
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
                 self.warnings_text.setText(self.tr("0 warnings"))
                 self.errors_text.setText(self.tr("0 errors"))
                 self.errors_icon.setToolTip("")
                 self.warnings_icon.setToolTip("")
+                self.new_text.setText(self.tr("0 new"))
             # First time, and when Refreshing, the slot will evaluate false and do nothing.
             # The purpose of this is for the _do_save_animation slot in the main_content_panel
             EventBus().list_updated_signal.emit()
