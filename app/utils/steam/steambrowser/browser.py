@@ -550,20 +550,20 @@ class SteamBrowser(QWidget):
             self.web_view.page().runJavaScript(
                 install_button_removal_script, 0, lambda result: None
             )
-            remove_top_banner = """
-            var element = document.getElementById("global_header"); 
-            var elements = document.getElementsByClassName("responsive_header")
-            if (element) {
-                element.parentNode.removeChild(element);
-            }
-            if (elements){
-                elements[0].parentNode.removeChild(elements[0])
-                document.getElementsByClassName("responsive_page_content")[0].setAttribute("style","padding-top: 0px;")
-                document.getElementsByClassName("apphub_HeaderTop workshop")[0].setAttribute("style","padding-top: 0px;")
-                document.getElementsByClassName("apphub_HomeHeaderContent")[0].setAttribute("style","padding-top: 0px;")
-            }
-            
-            """
+            # remove_top_banner = """
+            # var element = document.getElementById("global_header");
+            # var elements = document.getElementsByClassName("responsive_header")
+            # if (element) {
+            #     element.parentNode.removeChild(element);
+            # }
+            # if (elements){
+            #     elements[0].parentNode.removeChild(elements[0])
+            #     document.getElementsByClassName("responsive_page_content")[0].setAttribute("style","padding-top: 0px;")
+            #     document.getElementsByClassName("apphub_HeaderTop workshop")[0].setAttribute("style","padding-top: 0px;")
+            #     document.getElementsByClassName("apphub_HomeHeaderContent")[0].setAttribute("style","padding-top: 0px;")
+            # }
+
+            # """
             # self.web_view.page().runJavaScript(
             #     remove_top_banner, 0, lambda result: None
             # )
