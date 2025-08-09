@@ -1943,6 +1943,12 @@ class ModListWidget(QListWidget):
                 if data is None:
                     logger.debug(f"Attempted to insert item with None data. Idx: {idx}")
                     continue
+                # Ensure the item's persisted list_type matches the destination list after insertion
+                try:
+                    data["list_type"] = self.list_type
+                    item.setData(Qt.ItemDataRole.UserRole, data)
+                except Exception:
+                    pass
                 uuid = data["uuid"]
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
@@ -2411,6 +2417,14 @@ class ModListWidget(QListWidget):
         # Perform the replacement
         self.takeItem(index)
         self.insertItem(index, item)
+        # Ensure the item's metadata reflects this list's type after replacement
+        try:
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if data is not None:
+                data["list_type"] = self.list_type
+                item.setData(Qt.ItemDataRole.UserRole, data)
+        except Exception:
+            pass
 
         # Reconnect to ALL slots
         self.model().rowsInserted.connect(
