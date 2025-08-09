@@ -326,6 +326,8 @@ def copy_swp_libs() -> None:
         shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
 
 
+
+
 def get_latest_todds_release() -> None:
     # Parse latest release
     headers = None
@@ -396,6 +398,66 @@ def freeze_application() -> None:
     os.environ["PYTHONPATH"] = os.path.join(_CWD, "submodules", "SteamworksPy")
 
     _execute(_NUITKA_CMD, env=os.environ)
+
+
+def _find_macos_bundles(cwd: str) -> list[str]:
+    bundles: list[str] = []
+    for root, dirs, _ in os.walk(cwd):
+        for d in dirs:
+            if d.endswith(".app"):
+                bundles.append(os.path.join(root, d))
+    return bundles
+
+
+def post_build_fixup_macos_steamworks() -> None:
+    """Ensure SteamworksPy.dylib exists inside .app after build on macOS."""
+    if _SYSTEM != "Darwin":
+        return
+    try:
+        bundles = _find_macos_bundles(_CWD)
+        if not bundles:
+            print("No .app bundle found — skipping Steamworks fixup")
+            return
+        for bundle in bundles:
+            macos_dir = os.path.join(bundle, "Contents", "MacOS")
+            if not os.path.isdir(macos_dir):
+                continue
+            generic = os.path.join(macos_dir, "SteamworksPy.dylib")
+            if os.path.exists(generic):
+                continue
+            # Prefer a suffixed dylib inside the bundle
+            candidates = [
+                os.path.join(macos_dir, f)
+                for f in os.listdir(macos_dir)
+                if f.startswith("SteamworksPy_") and f.endswith(".dylib")
+            ]
+            if not candidates:
+                # Fall back to libs directory
+                libs_dir = os.path.join(_CWD, "libs")
+                if os.path.isdir(libs_dir):
+                    candidates = [
+                        os.path.join(libs_dir, f)
+                        for f in os.listdir(libs_dir)
+                        if f.startswith("SteamworksPy_") and f.endswith(".dylib")
+                    ]
+            if candidates:
+                # Choose best candidate by host processor
+                m = (_PROCESSOR or "").lower()
+                preferred = None
+                for c in candidates:
+                    name = os.path.basename(c).lower()
+                    if "arm" in m and "arm" in name:
+                        preferred = c
+                        break
+                    if ("x86" in m or "i386" in m or "amd64" in m) and "i386" in name:
+                        preferred = c
+                        break
+                if preferred is None:
+                    preferred = candidates[0]
+                shutil.copyfile(preferred, generic)
+                print(f"Added SteamworksPy.dylib to bundle: {bundle}")
+    except Exception as e:
+        print(f"Warning: post_build_fixup_macos_steamworks failed: {e}")
 
 
 def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
@@ -525,6 +587,8 @@ def main() -> None:
 
         print("Building RimSort application with Nuitka...")
         freeze_application()
+        # After build, ensure the app bundle contains the generic Steamworks dylib
+        post_build_fixup_macos_steamworks()
     else:
         print("Skipped distribute.py build")
 
