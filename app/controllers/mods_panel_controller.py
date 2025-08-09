@@ -194,14 +194,9 @@ class ModsPanelController(QObject):
     def do_all_entries_in_aux_db_as_outdated(self) -> None:
         """
         Sets all entries in the aux db as outdated if not already outdated.
-
+        
         This means the previously outdated items DO NOT have their db_time_touched updated.
         """
-        time_limit = self.settings_controller.settings.aux_db_time_limit
-        if time_limit < 0:
-            logger.debug("Skipping updating all items as outdated because time limit is negative.")
-            return
-
         instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
@@ -209,7 +204,7 @@ class ModsPanelController(QObject):
         with aux_metadata_controller.Session() as aux_metadata_session:
             stmt = (
                 update(AuxMetadataEntry)
-                .where(not AuxMetadataEntry.outdated)  # type: ignore
+                .where(~AuxMetadataEntry.outdated)  # type: ignore
                 .values(outdated=True)
             )
             aux_metadata_session.execute(stmt)
@@ -222,7 +217,7 @@ class ModsPanelController(QObject):
         after a certain time limit they have not been touched.
 
         This is used at init phases of the applicaiton. Keeps DB
-        udpated even if mods have been deleted etc. outside of RimSort.
+        updated even if mods have been deleted etc. outside of RimSort.
         """
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
