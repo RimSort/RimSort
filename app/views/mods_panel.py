@@ -2256,12 +2256,45 @@ class ModsPanel(QWidget):
         self.settings_controller = settings_controller
 
         # Base layout horizontal, sub-layouts vertical
-        self.panel = QHBoxLayout()
+        self.panel = QVBoxLayout()
+        self.lists_panel = QHBoxLayout()
         self.active_panel = QVBoxLayout()
         self.inactive_panel = QVBoxLayout()
-        # Add vertical layouts to it
-        self.panel.addLayout(self.inactive_panel)
-        self.panel.addLayout(self.active_panel)
+        # Add vertical layouts to the horizontal lists panel
+        self.lists_panel.addLayout(self.inactive_panel)
+        self.lists_panel.addLayout(self.active_panel)
+        # Add the lists panel to the main vertical panel
+        self.panel.addLayout(self.lists_panel)
+
+        # Create the buttons layout
+        self.button_panel = QHBoxLayout()
+        # Create buttons frame
+        self.button_panel_frame: QFrame = QFrame()
+        self.button_panel_frame.setObjectName("MainWindowButtons")
+
+        # Create and add Use This Instead button
+        self.use_this_instead_button = QPushButton(
+            self.tr('Check "Use This Instead" Database')
+        )
+        self.use_this_instead_button.setObjectName("UseThisInsteadButton")
+        self.use_this_instead_button.clicked.connect(
+            EventBus().use_this_instead_clicked.emit
+        )
+        self.button_panel.addWidget(self.use_this_instead_button)
+
+        # Create and add Check Dependencies button
+        self.check_dependencies_button: QPushButton = QPushButton(
+            self.tr("Check Dependencies")
+        )
+        self.check_dependencies_button.setObjectName("CheckDependenciesButton")
+        self.button_panel.addWidget(self.check_dependencies_button)
+        self.check_dependencies_button.clicked.connect(
+            self.check_dependencies_signal.emit
+        )
+        self.button_panel_frame.setLayout(self.button_panel)
+
+        # Add the buttons frame below the lists panel
+        self.panel.addWidget(self.button_panel_frame)
 
         # Filter icons and tooltips
         self.data_source_filter_icons = [
@@ -2456,26 +2489,6 @@ class ModsPanel(QWidget):
 
         # Add warnings/errors layout to main vertical layout
         self.errors_summary_layout.addLayout(self.warnings_errors_layout)
-
-        # Create and add Use This Instead button
-        self.use_this_instead_button = QPushButton(
-            self.tr('Check "Use This Instead" Database')
-        )
-        self.use_this_instead_button.setObjectName("useThisInsteadButton")
-        self.use_this_instead_button.clicked.connect(
-            EventBus().use_this_instead_clicked.emit
-        )
-        self.errors_summary_layout.addWidget(self.use_this_instead_button)
-
-        # Create and add Check Dependencies button
-        self.check_dependencies_button: QPushButton = QPushButton(
-            self.tr("Check Dependencies")
-        )
-        self.check_dependencies_button.setObjectName("MainUI")
-        self.errors_summary_layout.addWidget(self.check_dependencies_button)
-        self.check_dependencies_button.clicked.connect(
-            self.check_dependencies_signal.emit
-        )
 
         # Add to the outer frame
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
