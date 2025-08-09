@@ -481,7 +481,7 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
-        aux_db_time_limit = QLabel(
+        self.aux_db_time_limit_label = QLabel(
             self.tr(
                 "Auxillary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
             )
@@ -491,15 +491,33 @@ After a mod is deleted, this is the time we wait until this mod item is deleted 
 This Auxillary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)"""
-        aux_db_time_limit.setToolTip(aux_db_tooltip)
-        aux_db_time_limit.setFont(GUIInfo().emphasis_font)
-        tab_layout.addWidget(aux_db_time_limit)
+        self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
+        self.aux_db_time_limit_label.setFont(GUIInfo().emphasis_font)
 
         self.aux_db_time_limit = QLineEdit()
         int_validator = QIntValidator()
         self.aux_db_time_limit.setValidator(int_validator)
         self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
         self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+
+        self.enable_aux_db_behavior_editing = QCheckBox(
+            self.tr("Enable editing")
+        )
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
+        self.enable_aux_db_behavior_editing.setToolTip(
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
+        )
+
+        label_layout = QHBoxLayout()
+        label_layout.addWidget(self.aux_db_time_limit_label)
+        label_layout.addStretch()
+        label_layout.addWidget(self.enable_aux_db_behavior_editing)
+
+        tab_layout.addLayout(label_layout)
         tab_layout.addWidget(self.aux_db_time_limit)
 
     def _do_sorting_tab(self) -> None:
@@ -1276,19 +1294,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
-
-        self.enable_aux_db_behavior_editing = QCheckBox(
-            self.tr("Enable Aux Metadata DB delete behavior editing")
-        )
-        self.enable_aux_db_behavior_editing.stateChanged.connect(
-            self.enable_aux_db_time_limit_line_edit
-        )
-        self.enable_aux_db_behavior_editing.setToolTip(
-            self.tr(
-                "This enables the editing of the time limit for Aux Metadata DB data deletion."
-            )
-        )
-        group_layout.addWidget(self.enable_aux_db_behavior_editing)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)
