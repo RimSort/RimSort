@@ -1219,13 +1219,13 @@ class MainContent(QObject):
                 self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_clear_search(
-                list_type="Active", recalculate_list_errors_warnings=False
+                list_type="Active",
             )
             self.mods_panel.inactive_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_clear_search(
-                list_type="Inactive", recalculate_list_errors_warnings=False
+                list_type="Inactive",
             )
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
