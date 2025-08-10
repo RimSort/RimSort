@@ -1127,9 +1127,7 @@ class MainContent(QObject):
                 script_path = AppInfo().application_folder / "update.bat"
                 # Redirect batch output into the updater log for diagnostics
                 # Using a single command string to support shell redirection
-                cmd_str = (
-                    f'cmd /c "\"{script_path}\"" >> "{log_path}" 2>&1'
-                )
+                cmd_str = f'cmd /c ""{script_path}"" >> "{log_path}" 2>&1'
                 creationflags_value = (
                     subprocess.CREATE_NEW_PROCESS_GROUP
                     if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")

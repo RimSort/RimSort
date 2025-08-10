@@ -512,11 +512,11 @@ class SettingsDialog(QDialog):
                 "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
             )
         )
-        aux_db_tooltip = """To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+        aux_db_tooltip = self.tr("""To enable editing of this time limit, check the relevant checkbox in Advanced settings.
 After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)"""
+(This applies to deletion outside of RimSort too)""")
         self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
         self.aux_db_time_limit_label.setFont(GUIInfo().emphasis_font)
 
@@ -526,9 +526,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
         self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
 
-        self.enable_aux_db_behavior_editing = QCheckBox(
-            self.tr("Enable editing")
-        )
+        self.enable_aux_db_behavior_editing = QCheckBox(self.tr("Enable editing"))
         self.enable_aux_db_behavior_editing.stateChanged.connect(
             self.enable_aux_db_time_limit_line_edit
         )
@@ -1041,7 +1039,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         size_note = QLabel(
             self.tr(
-                f"Min is {Settings.MIN_SIZE} and Max is {Settings.MAX_SIZE}. Values outside this range will be reset to defaults."
+                "Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults."
+            ).format(
+                MIN_SIZE=Settings.MIN_SIZE,
+                MAX_SIZE=Settings.MAX_SIZE
             )
         )
         size_note.setFont(GUIInfo().emphasis_font)
