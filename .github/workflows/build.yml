@@ -189,6 +189,11 @@ jobs:
 
           $env:PATH += ";C:\Program Files (x86)\WiX Toolset v3.11\bin"
 
+          # Generate EULA.rtf from LICENSE.md for WiX License dialog
+          New-Item -ItemType Directory -Force -Path "themes\windows" | Out-Null
+          choco install pandoc -y
+          pandoc -s -o "themes\windows\EULA.rtf" "LICENSE.md"
+
           heat.exe dir "build\\__main__.dist" -cg MainDist -dr INSTALLFOLDER -gg -sfrag -sreg -srd -var var.DistDir -out maindist.wxs
 
           $wixContent = @"
@@ -248,6 +253,9 @@ jobs:
               <UIRef Id="WixUI_InstallDir" />
 
               <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+              <!-- Provide the license content for the WiX UI -->
+              <WixVariable Id="WixUILicenseRtf" Value="themes\\windows\\EULA.rtf" />
 
               <InstallExecuteSequence>
                 <Custom Action="SetDefaultInstallDir" After="ValidateProductID">NOT Installed</Custom>
