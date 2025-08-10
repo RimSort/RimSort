@@ -828,6 +828,10 @@ class SettingsController(QObject):
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
+        # Clear button behavior
+        self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
+            self.settings.clear_moves_dlc
+        )
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
@@ -1091,6 +1095,10 @@ class SettingsController(QObject):
         )
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
+        )
+        # Clear button behavior
+        self.settings.clear_moves_dlc = (
+            self.settings_dialog.clear_moves_dlc_checkbox.isChecked()
         )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
@@ -1955,5 +1963,4 @@ class SettingsController(QObject):
         if self.change_mod_coloring_mode:
             self.change_mod_coloring_mode = False
             EventBus().do_change_mod_coloring_mode.emit()
-
 
