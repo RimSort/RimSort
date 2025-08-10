@@ -82,7 +82,6 @@ from app.views.mods_panel import (
     ModListWidget,
     ModsPanel,
     ModsPanelSortKey,
-    uuid_to_folder_size,
 )
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
