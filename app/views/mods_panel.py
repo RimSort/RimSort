@@ -174,14 +174,20 @@ def uuid_to_folder_size(uuid: str) -> int:
         return cached[1]
 
     total_size = 0
-    for root, _, files in os.walk(mod_path):
-        for file_name in files:
-            file_path = os.path.join(root, file_name)
-            try:
-                total_size += os.path.getsize(file_path)
-            except OSError:
-                # Skip files we cannot access
-                continue
+
+    try:
+        total_size = os.path.getsize(Path(mod_path))
+    except OSError:
+        # Use slower method to get as accurate size as possible
+        for root, _, files in os.walk(mod_path):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                try:
+                    total_size += os.path.getsize(file_path)
+                except OSError:
+                    # Skip files we cannot access
+                    continue
+   
     _FOLDER_SIZE_CACHE[mod_path] = (mtime, total_size)
     return total_size
 
@@ -2580,6 +2586,8 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
+                # Build foldersize cache at cost of load time
+                uuid_to_folder_size(uuid_key)
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]

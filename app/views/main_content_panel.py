@@ -78,7 +78,11 @@ from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
+from app.views.mods_panel import (
+    ModListWidget,
+    ModsPanel,
+    ModsPanelSortKey,
+)
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
