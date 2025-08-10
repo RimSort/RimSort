@@ -1249,11 +1249,6 @@ class MainContent(QObject):
         """
         EventBus().refresh_started.emit()
         EventBus().do_save_button_animation_stop.emit()
-        # Build foldersize cache at cost of load time
-        active_uuids = self.mods_panel.active_mods_list.uuids
-        inactive_uuids = self.mods_panel.inactive_mods_list.uuids
-        for uuid in active_uuids + inactive_uuids:
-            uuid_to_folder_size(uuid)
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches

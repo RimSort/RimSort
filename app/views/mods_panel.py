@@ -2433,6 +2433,8 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
+                # Build foldersize cache at cost of load time
+                uuid_to_folder_size(uuid_key)
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
