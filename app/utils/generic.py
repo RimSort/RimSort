@@ -379,6 +379,9 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
         return list(obj)
     elif isinstance(obj, list):
         return [flatten_to_list(e) for e in obj]
+    elif isinstance(obj, tuple):
+        # Convert tuples to lists and recurse into elements
+        return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
         return {k: flatten_to_list(v) for k, v in obj.items()}
     else:

@@ -408,10 +408,25 @@ def create_base_rules(
 
     for dependency in mod_dependencies:
         if isinstance(dependency, dict):
-            deps = dict()
+            deps: dict[str, Any] = {}
             for key, value in dependency.items():
                 if isinstance(value, str):
                     deps[key] = value
+                elif key == "alternativePackageIds" and isinstance(value, dict):
+                    # Parse <alternativePackageIds> list
+                    alt_li = value.get("li")
+                    alt_list: list[str] = []
+                    if isinstance(alt_li, list):
+                        for v in alt_li:
+                            if isinstance(v, str):
+                                alt_list.append(v)
+                            elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
+                                alt_list.append(v["#text"])  # MayRequire-like form
+                    elif isinstance(alt_li, str):
+                        alt_list.append(alt_li)
+                    # Store as a normalized list for create_mod_dependency
+                    if alt_list:
+                        deps["alternativePackageIds"] = alt_list
                 else:
                     logger.warning(
                         f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
@@ -505,6 +520,13 @@ def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
     workshop_url = input_dict.get("workshopUrl", False)
     if isinstance(workshop_url, str):
         mod.workshop_url = workshop_url
+
+    # New: alternativePackageIds support
+    alts = input_dict.get("alternativePackageIds", False)
+    if isinstance(alts, list):
+        for a in alts:
+            if isinstance(a, str) and a.strip():
+                mod.alternative_package_ids.add(CaseInsensitiveStr(a))
 
     return mod
 
