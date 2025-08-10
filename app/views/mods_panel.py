@@ -1940,7 +1940,21 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = CustomListWidgetItemMetadata(uuid=uuid, list_type=self.list_type)
+        mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
+            aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
+            data = CustomListWidgetItemMetadata(
+                uuid=uuid,
+                list_type=self.list_type,
+                aux_metadata_controller=aux_metadata_controller,
+                aux_metadata_session=aux_metadata_session,
+                settings_controller=self.settings_controller,
+            )
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
