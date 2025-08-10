@@ -66,9 +66,6 @@ def show_dialogue_conditional(
     if button_text_override:
         # Remove standard buttons
         dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
-        dialogue.button(QMessageBox.StandardButton.Cancel).setText(
-            QCoreApplication.translate("show_dialogue_conditional", "Cancel")
-        )
 
         # Add custom buttons
         custom_btns = []
@@ -173,10 +170,6 @@ def show_information(
     info_message_box.setTextFormat(Qt.TextFormat.RichText)
     info_message_box.setIcon(QMessageBox.Icon.Information)
     info_message_box.setObjectName("dialogue")
-    info_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
-    info_message_box.button(QMessageBox.StandardButton.Ok).setText(
-        QCoreApplication.translate("show_dialogue_information", "OK")
-    )
     if title:
         info_message_box.setWindowTitle(title)
     else:
@@ -229,11 +222,6 @@ def show_warning(
         warning_message_box.setWindowTitle(title)
     else:
         warning_message_box.setWindowTitle(DEFAULT_TITLE)
-
-    warning_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
-    warning_message_box.button(QMessageBox.StandardButton.Ok).setText(
-        QCoreApplication.translate("show_warning", "OK")
-    )
 
     # Add data
     if text:

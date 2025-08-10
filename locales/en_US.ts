@@ -2,6 +2,157 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
+    <name>AcfLogReader</name>
+    <message>
+        <source>Ready</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import ACF Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export ACF Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export to CSV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loaded {count} items | Last updated: {time}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export canceled by user.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: File system error - {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: File system error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exporting to CSV...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exporting rows...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed due to an unknown error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View in Steam Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Mod Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Published File ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Conform acf import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD interface not properly initialized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF file not found: {acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid file path provided for export: {file_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exportfailed unknown exception occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
@@ -305,10 +456,6 @@ When unchecked, search all file types with standard search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Double-click a result to open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mod Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -361,10 +508,6 @@ When unchecked, search all file types with standard search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Double-click to open file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Clear Recent Searches</source>
         <translation type="unfinished"></translation>
     </message>
@@ -374,6 +517,14 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Found {total_rows} results</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Right-click a result for actions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Right-click for actions</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -389,153 +540,21 @@ When unchecked, search all file types with standard search.</source>
     </message>
 </context>
 <context>
-    <name>LogReader</name>
+    <name>LanguageController</name>
     <message>
-        <source>Search...</source>
+        <source>Language Changed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh</source>
+        <source>The language has been updated.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Import ACF Data</source>
+        <source>Restart the application to apply the change. Restart now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Export ACF Data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export to CSV</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ready</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Exporting rows...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Last Updated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Relative Time</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
+        <source>Restart</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -621,10 +640,6 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Failed to download latest RimSort release!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort is up to date!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -747,10 +762,6 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Uploaded file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to http://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1098,10 +1109,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You are already running the latest release: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1143,6 +1150,18 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Run Anyway</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import from RimWorld Save File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimWorld save (*.rws);;All files (*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1733,10 +1752,6 @@ Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Log Reader</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>File Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1952,6 +1967,10 @@ How would you like to proceed?</source>
         <source>Cancelled</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>ACF Log Reader</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2137,6 +2156,14 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>RimSort Wiki…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>From Save file…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort GitHub…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2390,19 +2417,6 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Steam {action.capitalize()}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{action.capitalize()} Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2411,25 +2425,54 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action.capitalize()}</source>
+        <source>Deletion options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len(selected_mods)} mod(s) for deletion.
-{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
+        <source>Steam {action}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{action} Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>
 This operation will:
 • Delete the selected mod directories from your filesystem
-• {action.capitalize()} Steam Workshop mods from your Steam account
+• {action} Steam Workshop mods from your Steam account
 
 Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Deletion options</source>
+        <source>unsubscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>resubscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unsubscribed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>resubscribed</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2467,6 +2510,22 @@ Do you want to proceed?</source>
         <source>Welcome to RimSort!</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Folder Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Last Touched:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filesystem Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Times:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2496,6 +2555,14 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Subscribed via Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not in latest save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In latest save</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2696,6 +2763,25 @@ Should be Loaded After:</source>
 Should be Loaded Before:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Change mod color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset mod color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+Mod and Game Version Mismatch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+An alternative updated mod is recommended:
+{alternative}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2857,6 +2943,22 @@ Should be Loaded Before:</source>
     <message>
         <source>Rebuilding list...</source>
         <translation>Rebuilding list...</translation>
+    </message>
+    <message>
+        <source>Sort inactive mods by</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>0 new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click to only show active mods not in latest save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3082,6 +3184,10 @@ Should be Loaded Before:</source>
         <source>User Rules (incompatibilitiesWith)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Force load at top of list</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RunnerPanel</name>
@@ -3234,10 +3340,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Local mods location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Game location sets local mods location.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3597,43 +3699,116 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reset Window Size based on Screen Dimensions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Authentication</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window X Position (px): minimum: 100, maximum: {}</source>
+        <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
+        <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Width (px): minimum: 600, maximum: {}</source>
+        <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Height (px): minimum: 400, maximum: {}</source>
+        <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Panel Width (px): minimum: 600, maximum: {}</source>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Panel Height (px): minimum: 400, maximum: {}</source>
+        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable editing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Auxiliary Metadata DB performance mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
+Improves performance by ~50%.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete before update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is useful if you want to ensure clean mod updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply mod coloring to background instead of text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auxiliary DB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compare mod lists with the recent save file</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3807,6 +3982,14 @@ New symlink:
 [{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>&amp;Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Don&apos;t Ask Again</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ThemeController</name>
@@ -3926,10 +4109,6 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     </message>
     <message>
         <source>Location Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to get Location: {save_path}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4071,15 +4250,15 @@ Details: {e}</source>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Error: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>⚠️ Warning: These operations will delete selected files permanently!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4127,15 +4306,7 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Apply the selected recovery options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel and clear selections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4171,31 +4342,11 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Clear Mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Delete all mods and reset to vanilla state</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Steam Utilities</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>🔄 Clear Download Cache</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>✓ Verify Game Files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>🔧 Repair Steam library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4208,6 +4359,46 @@ Details: {e}</source>
     </message>
     <message>
         <source>Verify integrity of all installed Steam games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: These operations will delete selected files permanently!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset to Vanilla</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear All Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam-specific utilities to help resolve download and game file issues.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear Download Cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repair Steam Library</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4445,27 +4636,6 @@ The following table displays Workshop mods with suggested replacements according
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_conditional</name>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_information</name>
-    <message>
-        <source>OK</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>show_warning</name>
-    <message>
-        <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

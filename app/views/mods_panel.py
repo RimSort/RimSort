@@ -86,6 +86,7 @@ from app.views.dialogue import (
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
 _FOLDER_SIZE_CACHE: dict[str, tuple[int, int]] = {}
 
+
 def uuid_no_key(uuid: str) -> str:
     """
     Returns the UUID of the mod.
@@ -121,6 +122,7 @@ def uuid_to_filesystem_modified_time(uuid: str) -> int:
         int: The filesystem modification time, or 0 if not available.
     """
     import os
+
     metadata = MetadataManager.instance().internal_local_metadata[uuid]
     mod_path = metadata.get("path")
     if mod_path and os.path.exists(mod_path):
@@ -187,7 +189,7 @@ def uuid_to_folder_size(uuid: str) -> int:
                 except OSError:
                     # Skip files we cannot access
                     continue
-   
+
     _FOLDER_SIZE_CACHE[mod_path] = (mtime, total_size)
     return total_size
 
@@ -216,7 +218,9 @@ class ModsPanelSortKey(Enum):
     FOLDER_SIZE = 4
 
 
-def sort_uuids(uuids: list[str], key: ModsPanelSortKey, descending: Optional[bool] = None) -> list[str]:
+def sort_uuids(
+    uuids: list[str], key: ModsPanelSortKey, descending: Optional[bool] = None
+) -> list[str]:
     """
     Sort the list of UUIDs based on the provided key.
     Args:
@@ -783,14 +787,18 @@ class ModListItemInner(QWidget):
 
         # Update DB
         if not init:
-            instance_path = Path(self.settings_controller.settings.current_instance_path)
+            instance_path = Path(
+                self.settings_controller.settings.current_instance_path
+            )
             aux_metadata_controller = (
                 AuxMetadataController.get_or_create_cached_instance(
                     instance_path / "aux_metadata.db"
                 )
             )
             with aux_metadata_controller.Session() as aux_metadata_session:
-                mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
+                mod_path = self.metadata_manager.internal_local_metadata[self.uuid][
+                    "path"
+                ]
                 aux_metadata_controller.update(
                     aux_metadata_session,
                     mod_path,
@@ -1195,9 +1203,9 @@ class ModListWidget(QListWidget):
                     open_folder_action.setText(self.tr("Open folder"))
                     # Change mod color action
                     change_mod_color_action = QAction()
-                    change_mod_color_action.setText("Change mod color")
+                    change_mod_color_action.setText(self.tr("Change mod color"))
                     reset_mod_color_action = QAction()
-                    reset_mod_color_action.setText("Reset mod color")
+                    reset_mod_color_action.setText(self.tr("Reset mod color"))
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -1954,7 +1962,9 @@ class ModListWidget(QListWidget):
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
-            aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
+            aux_metadata_controller.update(
+                aux_metadata_session, mod_path, outdated=False
+            )
             data = CustomListWidgetItemMetadata(
                 uuid=uuid,
                 list_type=self.list_type,
@@ -2428,13 +2438,15 @@ class ModListWidget(QListWidget):
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 # Add tool tip to indicate mod and game version mismatch
-                tool_tip_text += "\nMod and Game Version Mismatch"
+                tool_tip_text += self.tr("\nMod and Game Version Mismatch")
             # Handle "use this instead" behavior
             if (
                 current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data['alternative']}"
+                tool_tip_text += self.tr(
+                    "\nAn alternative updated mod is recommended:\n{alternative}"
+                ).format(alternative=current_item_data["alternative"])
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
@@ -2591,7 +2603,9 @@ class ModListWidget(QListWidget):
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
-                instance_path = Path(self.settings_controller.settings.current_instance_path)
+                instance_path = Path(
+                    self.settings_controller.settings.current_instance_path
+                )
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
                         instance_path / "aux_metadata.db"
@@ -2601,7 +2615,9 @@ class ModListWidget(QListWidget):
                     aux_metadata_controller.get_or_create(
                         aux_metadata_session, mod_path
                     )
-                    aux_metadata_controller.update(aux_metadata_session, mod_path, outdated=False)
+                    aux_metadata_controller.update(
+                        aux_metadata_session, mod_path, outdated=False
+                    )
                     list_item = CustomListWidgetItem(self)
                     data = CustomListWidgetItemMetadata(
                         uuid=uuid_key,
@@ -3068,7 +3084,9 @@ class ModsPanel(QWidget):
         )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_combobox, 120)
+        self.inactive_mods_search_layout.addWidget(
+            self.inactive_mods_sort_combobox, 120
+        )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
         # Adding Completer.
@@ -3106,7 +3124,9 @@ class ModsPanel(QWidget):
             self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
         )
         # Re-apply sort using current selection
-        self.on_inactive_mods_sort_changed(self.inactive_mods_sort_combobox.currentText())
+        self.on_inactive_mods_sort_changed(
+            self.inactive_mods_sort_combobox.currentText()
+        )
 
     # Slots for folder-size sorting (ensure UI updates happen on the main thread)
     @Slot(int, int)
@@ -3136,10 +3156,15 @@ class ModsPanel(QWidget):
             lw.uuids = list()
             for idx, uuid_key in enumerate(sorted_uuids, start=1):
                 list_item = CustomListWidgetItem(lw)
-                data = CustomListWidgetItemMetadata(uuid=uuid_key, settings_controller=self.settings_controller)
+                data = CustomListWidgetItemMetadata(
+                    uuid=uuid_key, settings_controller=self.settings_controller
+                )
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 lw.addItem(list_item)
-                if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
+                if (
+                    hasattr(self, "_size_progress_dialog")
+                    and self._size_progress_dialog
+                ):
                     self._size_progress_dialog.setValue(idx)
             lw.setUpdatesEnabled(True)
             lw.repaint()
@@ -3173,7 +3198,7 @@ class ModsPanel(QWidget):
             sort_key = ModsPanelSortKey.FOLDER_SIZE
         else:
             sort_key = ModsPanelSortKey.MODNAME  # Default fallback
-        
+
         # Re-sort the inactive mods list with the new key
         current_uuids = self.inactive_mods_list.uuids.copy()
         if current_uuids:
@@ -3215,7 +3240,9 @@ class ModsPanel(QWidget):
                 # Fast path for other sort keys
                 # Apply order by passing flag to sort_uuids via recreate_mod_list_and_sort
                 sorted_uuids = sort_uuids(
-                    current_uuids, key=sort_key, descending=self.inactive_sort_descending
+                    current_uuids,
+                    key=sort_key,
+                    descending=self.inactive_sort_descending,
                 )
                 self.inactive_mods_list.recreate_mod_list(
                     list_type="inactive", uuids=sorted_uuids
@@ -3441,7 +3468,8 @@ class ModsPanel(QWidget):
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
     def signal_clear_search(
-        self, list_type: str,
+        self,
+        list_type: str,
     ) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()

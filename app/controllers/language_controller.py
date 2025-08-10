@@ -66,6 +66,7 @@ class LanguageController:
             "zh_CN": "简体中文",
             "ja_JP": "日本語",
             "ru_RU": "Русский",
+            "tr_TR": "Türkçe",
         }
         available_languages = self.languages
         for lang_code in available_languages:
