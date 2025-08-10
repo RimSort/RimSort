@@ -37,7 +37,6 @@ class ModsPanelController(QObject):
             self.mods_panel.new_text.clicked.connect(
                 self._change_visibility_of_new_mods
             )
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
         EventBus().reset_warnings_signal.connect(
             self._on_menu_bar_reset_warnings_triggered
         )
@@ -63,6 +62,17 @@ class ModsPanelController(QObject):
     @Slot()
     def _on_filters_changed_in_active_modlist(self) -> None:
         """When filters are changed in the active modlist."""
+
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        elif self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+        elif self.news_label_active and hasattr(self.mods_panel, "new_text"):
+            self.mods_panel.new_text.clicked.emit()
+
+    @Slot()
+    def _on_filters_changed_in_inactive_modlist(self) -> None:
+        """When filters are changed in the inactive modlist."""
 
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()

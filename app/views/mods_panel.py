@@ -2550,7 +2550,7 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-h                mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
+                mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
                 instance_path = Path(self.settings_controller.settings.current_instance_path)
@@ -2567,7 +2567,7 @@ h                mod_path = self.metadata_manager.internal_local_metadata[uuid_k
                     list_item = CustomListWidgetItem(self)
                     data = CustomListWidgetItemMetadata(
                         uuid=uuid_key,
-                        list_type=self.list_type
+                        list_type=self.list_type,
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
                         settings_controller=self.settings_controller,
