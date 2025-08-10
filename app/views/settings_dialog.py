@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QIntValidator, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -80,6 +80,7 @@ class SettingsDialog(QDialog):
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
+        self._do_performance_settings_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -285,6 +286,17 @@ class SettingsDialog(QDialog):
 
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
+        self._do_aux_db_time_limit_group(tab_layout)
+
+    def _do_performance_settings_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Performance"))
+
+        tab_layout = QVBoxLayout()
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab.setLayout(tab_layout)
+
+        self._do_aux_db_performance_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -478,6 +490,67 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
+        self.aux_db_time_limit_label = QLabel(
+            self.tr(
+                "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            )
+        )
+        aux_db_tooltip = """To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)"""
+        self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
+        self.aux_db_time_limit_label.setFont(GUIInfo().emphasis_font)
+
+        self.aux_db_time_limit = QLineEdit()
+        int_validator = QIntValidator()
+        self.aux_db_time_limit.setValidator(int_validator)
+        self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
+        self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+
+        self.enable_aux_db_behavior_editing = QCheckBox(
+            self.tr("Enable editing")
+        )
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
+        self.enable_aux_db_behavior_editing.setToolTip(
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
+        )
+
+        label_layout = QHBoxLayout()
+        label_layout.addWidget(self.aux_db_time_limit_label)
+        label_layout.addStretch()
+        label_layout.addWidget(self.enable_aux_db_behavior_editing)
+
+        tab_layout.addLayout(label_layout)
+        tab_layout.addWidget(self.aux_db_time_limit)
+
+    def _do_aux_db_performance_group(self, tab_layout: QBoxLayout) -> None:
+        self.aux_db_performance_mode = QCheckBox(
+            self.tr("Enable Auxiliary Metadata DB performance mode")
+        )
+        self.aux_db_performance_mode.setToolTip(
+            self.tr(
+                "This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes."
+                "\nImproves performance by ~50%."
+            )
+        )
+
+        aux_db_label = QLabel(self.tr("Auxiliary Metadata DB"))
+        aux_db_label.setFont(GUIInfo().emphasis_font)
+        aux_db_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        aux_db_group = QHBoxLayout()
+        aux_db_group.addWidget(self.aux_db_performance_mode)
+
+        tab_layout.addWidget(aux_db_label)
+        tab_layout.addLayout(aux_db_group)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
@@ -1093,6 +1166,11 @@ class SettingsDialog(QDialog):
         self.font_family_combobox.setCurrentFont(default_font)
         self.font_size_spinbox.setValue(12)
 
+    def enable_aux_db_time_limit_line_edit(self) -> None:
+        """Enables/Disables aux DB time limit line edit based on the checkbox state."""
+        enable = self.enable_aux_db_behavior_editing.isChecked()
+        self.aux_db_time_limit.setEnabled(enable)
+
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
         from app.controllers.theme_controller import ThemeController
@@ -1232,6 +1310,10 @@ class SettingsDialog(QDialog):
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
             self.tr(
                 "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."

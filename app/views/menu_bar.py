@@ -44,6 +44,7 @@ class MenuBar(QObject):
         self.paste_action: QAction
         self.rule_editor_action: QAction
         self.reset_all_warnings_action: QAction
+        self.reset_all_mod_colors_action: QAction
         self.add_git_mod_action: QAction
         self.add_zip_mod_action: QAction
         self.browse_workshop_action: QAction
@@ -204,6 +205,9 @@ class MenuBar(QObject):
         self.rule_editor_action = self._add_action(edit_menu, self.tr("Rule Editor…"))
         self.reset_all_warnings_action = self._add_action(
             edit_menu, self.tr("Reset Warning Toggles")
+        )
+        self.reset_all_mod_colors_action = self._add_action(
+            edit_menu, "Reset Mod Colors"
         )
         return edit_menu
 
