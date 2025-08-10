@@ -531,36 +531,6 @@ class MetadataManager(QObject):
             # Wait for pool to complete
             self.parser_threadpool.waitForDone()
             self.parser_threadpool.clear()
-            logger.info(
-                "Finished querying Official expansions. Supplementing metadata..."
-            )
-            # Create a packageid to appid mapping for quicker lookup
-            package_to_app = {
-                dlc["packageid"]: appid for appid, dlc in RIMWORLD_DLC_METADATA.items()
-            }
-            # Base game and expansion About.xml do not contain name, so these
-            # must be manually added
-            for metadata in self.internal_local_metadata.values():
-                package_id = metadata["packageid"]
-                appid = package_to_app.get(package_id)
-                if appid:
-                    dlc_metadata = RIMWORLD_DLC_METADATA[appid]
-                    # Default for supported versions if not already present
-                    default_versions = {
-                        "li": ".".join(self.game_version.split(".")[:2])
-                    }
-                    # Update metadata efficiently
-                    metadata.update(
-                        {
-                            "appid": appid,
-                            "name": dlc_metadata["name"],
-                            "steam_url": dlc_metadata["steam_url"],
-                            "description": dlc_metadata["description"],
-                            "supportedversions": metadata.get(
-                                "supportedversions", default_versions
-                            ),
-                        }
-                    )
         else:
             logger.error(
                 "Skipping parsing data from empty game data path. Is the game path configured?"
@@ -657,6 +627,45 @@ class MetadataManager(QObject):
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
 
+    def supplement_dlc_metadata(self, uuid: str) -> None:
+        """
+        Normalize metadata for official RimWorld content (Core + DLC).
+
+        Applies canonical fields (name, steam_url, description, appid) and ensures
+        a default supportedversions if missing. Safe to call for any UUID.
+        """
+        mod = self.internal_local_metadata.get(uuid)
+        if not mod:
+            return
+        # Only adjust for entries parsed from the game's Data folder
+        if mod.get("data_source") != "expansion":
+            return
+        package_id = mod.get("packageid")
+        if not isinstance(package_id, str):
+            return
+        # Map packageId -> appid
+        package_to_app = {v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()}
+        appid = package_to_app.get(package_id)
+        if not appid:
+            return
+        dlc_meta = RIMWORLD_DLC_METADATA[appid]
+        # Ensure supportedversions exists and is sane
+        if not isinstance(mod.get("supportedversions"), dict):
+            version = ".".join(self.game_version.split(".")[:2]) if self.game_version else None
+            if version:
+                mod["supportedversions"] = {"li": version}
+            else:
+                mod.pop("supportedversions", None)
+        # Apply canonical fields
+        mod.update(
+            {
+                "appid": appid,
+                "name": dlc_meta["name"],
+                "steam_url": dlc_meta["steam_url"],
+                "description": dlc_meta["description"],
+            }
+        )
+
     def compile_metadata(self, uuids: list[str] = []) -> None:
         """
         Iterate through each expansion or mod and add new key-values describing the
@@ -671,6 +680,11 @@ class MetadataManager(QObject):
         # Go through each mod and add dependencies
         dependencies = None
         for uuid in uuids:
+            # Normalize DLC/base game entries so they always show canonical names
+            try:
+                self.supplement_dlc_metadata(uuid)
+            except Exception as e:
+                logger.debug(f"supplement_dlc_metadata failed for {uuid}: {e}")
             logger.debug(
                 f"UUID: {uuid} packageid: "
                 + self.internal_local_metadata[uuid].get("packageid")
