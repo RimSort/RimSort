@@ -4,7 +4,6 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
-from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
 from app.utils.generic import open_url_browser
@@ -16,13 +15,11 @@ class MenuBarController(QObject):
         self,
         view: MenuBar,
         settings_controller: SettingsController,
-        mods_panel_controller: ModsPanelController,
     ) -> None:
         super().__init__()
 
         self.menu_bar = view
         self.settings_controller = settings_controller
-        self.mods_panel_controller = mods_panel_controller
 
         # Application menu
         instance = QApplication.instance()
@@ -58,6 +55,9 @@ class MenuBarController(QObject):
         )
         self.menu_bar.import_from_workshop_collection_action.triggered.connect(
             EventBus().do_import_mod_list_from_workshop_collection
+        )
+        self.menu_bar.import_from_save_file_action.triggered.connect(
+            EventBus().do_import_mod_list_from_save_file
         )
         self.menu_bar.export_to_clipboard_action.triggered.connect(
             EventBus().do_export_mod_list_to_clipboard
@@ -107,7 +107,10 @@ class MenuBarController(QObject):
         self.menu_bar.paste_action.triggered.connect(self._on_menu_bar_paste_triggered)
         self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
         self.menu_bar.reset_all_warnings_action.triggered.connect(
-            self._on_reset_warnings_triggered
+            self._on_menu_bar_reset_warnings_triggered
+        )
+        self.menu_bar.reset_all_mod_colors_action.triggered.connect(
+            self._on_menu_bar_reset_all_mod_colors_triggered
         )
 
         # Download menu
@@ -201,8 +204,11 @@ class MenuBarController(QObject):
         if initialize:
             EventBus().do_activate_current_instance.emit(current_instance)
 
-    def _on_reset_warnings_triggered(self) -> None:
-        self.mods_panel_controller.reset_warnings_signal.emit()
+    def _on_menu_bar_reset_warnings_triggered(self) -> None:
+        EventBus().reset_warnings_signal.emit()
+        
+    def _on_menu_bar_reset_all_mod_colors_triggered(self) -> None:
+        EventBus().reset_mod_colors_signal.emit()
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:

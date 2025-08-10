@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pathlib import Path
 from re import match
 
@@ -21,6 +22,7 @@ from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
+from app.views.mods_panel import format_file_size, uuid_to_folder_size
 
 
 class ClickablePathLabel(QLabel):
@@ -107,7 +109,11 @@ class ModInfo:
         self.mod_info_authors = QHBoxLayout()
         self.mod_info_mod_version = QHBoxLayout()
         self.mod_info_supported_versions = QHBoxLayout()
+        self.mod_info_folder_size = QHBoxLayout()
         self.mod_info_path = QHBoxLayout()
+        self.mod_info_last_touched = QHBoxLayout()
+        self.mod_info_filesystem_time = QHBoxLayout()
+        self.mod_info_external_times = QHBoxLayout()
         self.description_layout = QHBoxLayout()
         self.notes_layout = QHBoxLayout()
 
@@ -186,6 +192,10 @@ class ModInfo:
         self.mod_info_supported_versions_label.setObjectName("summaryLabel")
         self.mod_info_supported_versions_value = QLabel()
         self.mod_info_supported_versions_value.setObjectName("summaryValue")
+        self.mod_info_folder_size_label = QLabel(self.tr("Folder Size:"))
+        self.mod_info_folder_size_label.setObjectName("summaryLabel")
+        self.mod_info_folder_size_value = QLabel()
+        self.mod_info_folder_size_value.setObjectName("summaryValue")
         self.mod_info_path_label = QLabel(self.tr("Path:"))
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = ClickablePathLabel()
@@ -194,6 +204,30 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_path_value.setWordWrap(True)
+        self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
+        self.mod_info_last_touched_label.setObjectName("summaryLabel")
+        self.mod_info_last_touched_value = QLabel()
+        self.mod_info_last_touched_value.setObjectName("summaryValue")
+        self.mod_info_last_touched_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_last_touched_value.setWordWrap(True)
+        self.mod_info_filesystem_time_label = QLabel(self.tr("Filesystem Modified:"))
+        self.mod_info_filesystem_time_label.setObjectName("summaryLabel")
+        self.mod_info_filesystem_time_value = QLabel()
+        self.mod_info_filesystem_time_value.setObjectName("summaryValue")
+        self.mod_info_filesystem_time_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_filesystem_time_value.setWordWrap(True)
+        self.mod_info_external_times_label = QLabel(self.tr("Workshop Times:"))
+        self.mod_info_external_times_label.setObjectName("summaryLabel")
+        self.mod_info_external_times_value = QLabel()
+        self.mod_info_external_times_value.setObjectName("summaryValue")
+        self.mod_info_external_times_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_external_times_value.setWordWrap(True)
         self.description = DescriptionWidget()
         self.description_text = self.tr("Welcome to RimSort!")
         self.description.setText(
@@ -225,14 +259,26 @@ class ModInfo:
         self.mod_info_supported_versions.addWidget(
             self.mod_info_supported_versions_value, 80
         )
+        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_label, 20)
+        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_value, 80)
+        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_label, 20)
+        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_value, 80)
+        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_label, 20)
+        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_value, 80)
+        self.mod_info_external_times.addWidget(self.mod_info_external_times_label, 20)
+        self.mod_info_external_times.addWidget(self.mod_info_external_times_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_name)
         self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
+        self.mod_info_layout.addLayout(self.mod_info_folder_size)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.notes_layout.addWidget(self.notes)
+        self.mod_info_layout.addLayout(self.mod_info_last_touched)
+        self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
+        self.mod_info_layout.addLayout(self.mod_info_external_times)
         self.description_layout.addWidget(self.description)
 
         # Hide label/value by default
@@ -252,6 +298,14 @@ class ModInfo:
             self.mod_info_mod_version_value,
             self.mod_info_supported_versions_label,
             self.mod_info_supported_versions_value,
+            self.mod_info_folder_size_label,
+            self.mod_info_folder_size_value,
+            self.mod_info_last_touched_label,
+            self.mod_info_last_touched_value,
+            self.mod_info_filesystem_time_label,
+            self.mod_info_filesystem_time_value,
+            self.mod_info_external_times_label,
+            self.mod_info_external_times_value,
         ]
 
         self.scenario_info_widgets = [
@@ -388,6 +442,72 @@ class ModInfo:
                     if supported_versions_list
                     else "Not specified"
                 )
+
+            # Set folder size
+            try:
+                size_bytes = uuid_to_folder_size(uuid)
+                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
+            except Exception:
+                self.mod_info_folder_size_value.setText("Not available")
+
+            # Set last touched
+            internal_time_touched = mod_info.get("internal_time_touched")
+            if internal_time_touched and internal_time_touched != 0:
+                try:
+                    dt_touched = datetime.fromtimestamp(int(internal_time_touched))
+                    formatted_time = dt_touched.strftime("%Y-%m-%d %H:%M:%S")
+                    self.mod_info_last_touched_value.setText(formatted_time)
+                except (ValueError, OSError, OverflowError) as e:
+                    logger.error(f"Error formatting internal_time_touched: {e}")
+                    self.mod_info_last_touched_value.setText("Invalid timestamp")
+            else:
+                self.mod_info_last_touched_value.setText("Not available")
+
+            # Set filesystem modification time
+            mod_path = mod_info.get("path")
+            if mod_path and os.path.exists(mod_path):
+                try:
+                    fs_time = int(os.path.getmtime(mod_path))
+                    dt_fs = datetime.fromtimestamp(fs_time)
+                    formatted_fs_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
+                    self.mod_info_filesystem_time_value.setText(formatted_fs_time)
+                except (ValueError, OSError, OverflowError) as e:
+                    logger.error(f"Error formatting filesystem time: {e}")
+                    self.mod_info_filesystem_time_value.setText("Invalid timestamp")
+            else:
+                self.mod_info_filesystem_time_value.setText("Not available")
+
+            # Set external workshop times
+            external_times = []
+            external_time_created = mod_info.get("external_time_created")
+            external_time_updated = mod_info.get("external_time_updated")
+            internal_time_updated = mod_info.get("internal_time_updated")
+            
+            if external_time_created:
+                try:
+                    dt_created = datetime.fromtimestamp(int(external_time_created))
+                    external_times.append(f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}")
+                except (ValueError, OSError, OverflowError):
+                    external_times.append("Created: Invalid")
+            
+            if external_time_updated:
+                try:
+                    dt_updated = datetime.fromtimestamp(int(external_time_updated))
+                    external_times.append(f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                except (ValueError, OSError, OverflowError):
+                    external_times.append("Updated: Invalid")
+            
+            if internal_time_updated:
+                try:
+                    dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
+                    external_times.append(f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                except (ValueError, OSError, OverflowError):
+                    external_times.append("Steam Updated: Invalid")
+            
+            if external_times:
+                self.mod_info_external_times_value.setText("\n".join(external_times))
+            else:
+                self.mod_info_external_times_value.setText("Not available")
         elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
             for widget in self.base_mod_info_widgets:
                 widget.hide()

@@ -25,6 +25,7 @@ class MenuBar(QObject):
         self.save_mod_list_action: QAction
         self.import_from_rentry_action: QAction
         self.import_from_workshop_collection_action: QAction
+        self.import_from_save_file_action: QAction
         self.export_to_clipboard_action: QAction
         self.export_to_rentry_action: QAction
         self.upload_rimsort_log_action: QAction
@@ -43,6 +44,7 @@ class MenuBar(QObject):
         self.paste_action: QAction
         self.rule_editor_action: QAction
         self.reset_all_warnings_action: QAction
+        self.reset_all_mod_colors_action: QAction
         self.add_git_mod_action: QAction
         self.add_zip_mod_action: QAction
         self.browse_workshop_action: QAction
@@ -120,6 +122,9 @@ class MenuBar(QObject):
         )
         self.import_from_workshop_collection_action = self._add_action(
             self.import_submenu, self.tr("From Workshop collection")
+        )
+        self.import_from_save_file_action = self._add_action(
+            self.import_submenu, self.tr("From Save file…")
         )
         self.export_submenu = QMenu(self.tr("Export"))
         file_menu.addMenu(self.export_submenu)
@@ -200,6 +205,9 @@ class MenuBar(QObject):
         self.rule_editor_action = self._add_action(edit_menu, self.tr("Rule Editor…"))
         self.reset_all_warnings_action = self._add_action(
             edit_menu, self.tr("Reset Warning Toggles")
+        )
+        self.reset_all_mod_colors_action = self._add_action(
+            edit_menu, "Reset Mod Colors"
         )
         return edit_menu
 

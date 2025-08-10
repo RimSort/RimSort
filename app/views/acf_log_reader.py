@@ -9,7 +9,7 @@ from typing import Any, Optional, Union, cast
 
 from loguru import logger
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QPoint, Qt, QTimer
-from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtGui import QColor, QFont, QPainter, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -106,6 +106,8 @@ class AcfLogReader(QDialog):
 
         # Status bar
         self.status_bar = QStatusBar()
+        # Improve readability: make status text white
+        self.status_bar.setStyleSheet("QStatusBar, QStatusBar QLabel { color: white; }")
         self.status_bar.showMessage(self.tr("Ready"))
 
         # Top controls layout
@@ -142,6 +144,21 @@ class AcfLogReader(QDialog):
         # Table widget
         self.table_widget = QTableWidget()
         self.table_widget.setSortingEnabled(True)
+        # Ensure columns fit window width but allow manual resizing
+        from PySide6.QtWidgets import QHeaderView
+
+        self.table_widget.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        header = self.table_widget.horizontalHeader()
+        if isinstance(header, QHeaderView):
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            header.setMinimumSectionSize(40)
+        # Track proportional column widths to keep full-width fit
+        self._table_col_weights: list[float] = []
+        self.table_widget.horizontalHeader().sectionResized.connect(
+            self._on_table_section_resized
+        )
         main_layout.addWidget(self.table_widget)
 
         main_layout.addWidget(self.status_bar)
@@ -206,6 +223,70 @@ class AcfLogReader(QDialog):
             self.export_to_csv()
         finally:
             self._set_buttons_enabled(True)
+
+    # ----- Table width management (manual resize + full-width fit) -----
+    def _viewport_width(self) -> int:
+        try:
+            return max(0, int(self.table_widget.viewport().width()))
+        except Exception:
+            return max(0, int(self.table_widget.width()))
+
+    def _init_or_sync_column_weights(self) -> None:
+        """Ensure column weights exist and match current column count."""
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        if not getattr(self, "_table_col_weights", None) or len(self._table_col_weights) != col_count:
+            # Initialize equal weights
+            self._table_col_weights = [1.0 / col_count for _ in range(col_count)]
+
+    def _recalculate_weights_from_current_widths(self) -> None:
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        header = self.table_widget.horizontalHeader()
+        sizes = [header.sectionSize(i) for i in range(col_count)]
+        total = sum(sizes) or 1
+        self._table_col_weights = [s / total for s in sizes]
+
+    def _apply_table_widths_to_viewport(self) -> None:
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        self._init_or_sync_column_weights()
+        vpw = self._viewport_width()
+        if vpw <= 0:
+            return
+        header = self.table_widget.horizontalHeader()
+        # Compute widths from weights, clamp min, fix rounding on the last
+        min_w = max(40, int(vpw * 0.05 / col_count))
+        widths = [max(min_w, int(round(w * vpw))) for w in self._table_col_weights]
+        # Adjust last section to fill exact viewport width
+        diff = vpw - sum(widths)
+        widths[-1] = max(min_w, widths[-1] + diff)
+        # Apply sizes
+        self._suppress_section_resize_updates = True
+        try:
+            for i, w in enumerate(widths):
+                header.resizeSection(i, w)
+        finally:
+            self._suppress_section_resize_updates = False
+
+    def _on_table_section_resized(self, index: int, old: int, new: int) -> None:  # noqa: ARG002
+        if getattr(self, "_suppress_section_resize_updates", False):
+            return
+        # Update weights and normalize to viewport width immediately
+        self._recalculate_weights_from_current_widths()
+        self._apply_table_widths_to_viewport()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._apply_table_widths_to_viewport()
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        # Defer width application until after layout is finalized
+        QTimer.singleShot(0, self._apply_table_widths_to_viewport)
 
     def load_acf_data(self) -> None:
         """
@@ -772,11 +853,14 @@ class AcfLogReader(QDialog):
             self.table_widget.setItemDelegate(ActiveModDelegate(self))
 
             self.table_widget.setSortingEnabled(True)
-            self.table_widget.resizeColumnsToContents()
             # Auto sort by Last Updated column descending on load
             self.table_widget.sortItems(
                 self.COL_MOD_DOWNLOADED, order=Qt.SortOrder.DescendingOrder
             )
+            # Initialize/sync column weights after columns are defined
+            self._init_or_sync_column_weights()
+            # Apply weights to fit viewport width
+            self._apply_table_widths_to_viewport()
         finally:
             self.table_widget.setUpdatesEnabled(True)
 

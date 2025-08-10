@@ -1,7 +1,12 @@
 from typing import Any, Optional
 
 from loguru import logger
+from PySide6.QtGui import QColor
+from sqlalchemy.orm.session import Session
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
+from app.utils.aux_db_utils import get_mod_color
 from app.utils.metadata import MetadataManager
 
 
@@ -13,16 +18,20 @@ class CustomListWidgetItemMetadata:
     def __init__(
         self,
         uuid: str,
+        settings_controller: SettingsController,
         errors_warnings: str = "",
         errors: str = "",
         warnings: str = "",
         warning_toggled: bool = False,
         filtered: bool = False,
         hidden_by_filter: bool = False,
-        invalid: Optional[bool] = None,
-        mismatch: Optional[bool] = None,
         user_notes: str = "",
+        invalid: bool | None = None,
+        mismatch: bool | None = None,
+        mod_color: QColor | None = None,
         alternative: Optional[str] = None,
+        aux_metadata_controller: AuxMetadataController | None = None,
+        aux_metadata_session: Session | None = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -30,6 +39,7 @@ class CustomListWidgetItemMetadata:
         Unless explicitly provided, invalid and mismatch are automatically set based on the uuid using metadata manager.
 
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
+        :param settings_controller: SettingsController, instance of settings controller
         :param errors_warnings: a string of errors and warnings
         :param errors: a string of errors for the notification tooltip
         :param warnings: a string of warnings for the notification tooltip
@@ -39,10 +49,13 @@ class CustomListWidgetItemMetadata:
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param user_notes: str, representing the users own notes for this mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param mod_color: QColor, the color of the mod's text/background in the modlist
         :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
+        :param aux_metadata_controller: AuxMetadataController, an instance of the controller used for fetching mod color
+        :param aux_metadata_session: Session, an instance of the session used for fetching mod color
         """
-        # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
-        # self.metatadata_manager = MetadataManager.instance()
+        # Do not cache the metadata manager, aux metadata controller or settings controller
+        # They will cause freezes/crashes when dragging mods from inactive->active or vice versa
 
         # Metadata attributes
         self.uuid = uuid
@@ -58,11 +71,18 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
+        if mod_color is None:
+            self.mod_color = get_mod_color(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+        else:
+            self.mod_color = mod_color
         self.alternative = (
             alternative
             if alternative is not None
             else self.get_alternative_by_uuid(uuid)
         )
+
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
