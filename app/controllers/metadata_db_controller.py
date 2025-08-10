@@ -12,7 +12,17 @@ from app.utils.steam.steamfiles.wrapper import acf_to_dict
 
 class MetadataDbController:
     def __init__(self, db: Path | str) -> None:
-        self.engine = create_engine(f"sqlite+pysqlite:///{db}")
+        # Ensure parent directory exists before opening SQLite file
+        db_path = Path(db) if not isinstance(db, Path) else db
+        try:
+            if db_path.parent:
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.exception(
+                f"Failed to ensure database directory exists for {db_path}: {e}"
+            )
+
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}")
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
 
 
