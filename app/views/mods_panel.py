@@ -2951,10 +2951,6 @@ class ModsPanel(QWidget):
         self.news_layout.addWidget(self.new_icon, 1)
         self.news_layout.addWidget(self.new_text, 99)
         self.warnings_errors_layout.addLayout(self.news_layout, 50)
-        # Hide the "is new" filter if save-comparison is disabled
-        if not self.settings_controller.settings.show_save_comparison_indicators:
-            self.new_icon.setHidden(True)
-            self.new_text.setHidden(True)
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
