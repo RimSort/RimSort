@@ -140,6 +140,8 @@ class Settings(QObject):
         self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
+        # UI: Save-comparison labels and icons
+        self.show_save_comparison_indicators: bool = True
 
         # Authentication
         self.rentry_auth_code: str = ""

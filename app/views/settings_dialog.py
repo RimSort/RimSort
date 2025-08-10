@@ -297,6 +297,21 @@ class SettingsDialog(QDialog):
 
         self._do_aux_db_time_limit_group(tab_layout)
         self._do_aux_db_performance_group(tab_layout)
+        # New section for save-comparison feature
+        self._do_recent_save_integration_group(tab_layout)
+
+    def _do_recent_save_integration_group(self, tab_layout: QBoxLayout) -> None:
+        section_label = QLabel(self.tr("Integration with recent save"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        section_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tab_layout.addWidget(section_label)
+
+        row_layout = QHBoxLayout()
+        self.show_save_comparison_indicators_checkbox = QCheckBox(
+            self.tr("Compare mod lists with the recent save file")
+        )
+        row_layout.addWidget(self.show_save_comparison_indicators_checkbox)
+        tab_layout.addLayout(row_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -1276,6 +1291,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Hide invalid mods when filtering")
         )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
+
+        # Moved to Performance tab under "Integration with recent save"
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             self.tr("Show duplicate mods warning")

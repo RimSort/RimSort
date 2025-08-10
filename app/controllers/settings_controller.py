@@ -112,6 +112,14 @@ class SettingsController(QObject):
         self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
         self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
 
+        # Advanced: wiring for save-comparison indicator toggle
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
+                self._on_toggle_show_save_comparison_indicators
+            )
+        except Exception:
+            pass
+
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
             self._on_game_location_text_changed
@@ -385,6 +393,12 @@ class SettingsController(QObject):
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
+
+    @Slot(bool)
+    def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:
+        # Update model immediately for live UI response
+        self.settings.show_save_comparison_indicators = checked
+        self.settings.save()
 
     def create_instance(
         self,
@@ -732,6 +746,14 @@ class SettingsController(QObject):
         self.language_controller.setup_language_dialog(
             self.settings_dialog, self.settings
         )
+
+        # Advanced tab values
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
+                self.settings.show_save_comparison_indicators
+            )
+        except Exception:
+            pass
 
         # Windows launch state
         # Main Window

@@ -24,6 +24,7 @@ class ModsPanelController(QObject):
 
         self.warnings_label_active = False
         self.errors_label_active = False
+        self.news_label_active = False
 
         self.mods_panel.warnings_text.clicked.connect(
             self._change_visibility_of_mods_with_warnings
@@ -31,6 +32,14 @@ class ModsPanelController(QObject):
         self.mods_panel.errors_text.clicked.connect(
             self._change_visibility_of_mods_with_errors
         )
+        # New mods filter label (only when save-comparison feature enabled)
+        if (
+            hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.connect(
+                self._change_visibility_of_new_mods
+            )
         EventBus().reset_warnings_signal.connect(
             self._on_menu_bar_reset_warnings_triggered
         )
@@ -53,25 +62,31 @@ class ModsPanelController(QObject):
             self.do_all_entries_in_aux_db_as_outdated
         )
 
-    @Slot()
-    def _on_filters_changed_in_active_modlist(self) -> None:
-        """When filters are changed in the active modlist."""
+    def _reemit_active_filter_signal(self) -> None:
+        """Re-emit the active filter label's click signal to reapply filtering."""
 
-        # On filter change, disable warning/error label if active
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
         elif self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
+        elif (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
+
+    @Slot()
+    def _on_filters_changed_in_active_modlist(self) -> None:
+        """When filters are changed in the active modlist."""
+
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_filters_changed_in_inactive_modlist(self) -> None:
         """When filters are changed in the inactive modlist."""
 
-        # On filter change, disable warning/error label if active
-        if self.warnings_label_active:
-            self.mods_panel.warnings_text.clicked.emit()
-        elif self.errors_label_active:
-            self.mods_panel.errors_text.clicked.emit()
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
@@ -148,6 +163,12 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
 
         self.warnings_label_active = not self.warnings_label_active
 
@@ -175,6 +196,12 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
 
         self.errors_label_active = not self.errors_label_active
 
@@ -191,6 +218,34 @@ class ModsPanelController(QObject):
         self.mods_panel.active_mods_list.check_widgets_visible()
         logger.debug("Finished hiding mods without errors.")
 
+    @Slot()
+    def _change_visibility_of_new_mods(self) -> None:
+        """When on, shows only active mods that are not in the latest save file.
+
+        When off, shows all mods. Respects other active filters.
+        """
+
+        # If the other labels are active, disable them
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        if self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+
+        self.news_label_active = not self.news_label_active
+
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            is_new = bool(mod_data.__dict__.get("is_new", False))
+            # If a mod is already hidden because of filters, dont unhide it
+            if not is_new:
+                if self.news_label_active:
+                    mod.setHidden(True)
+                elif not mod_data["hidden_by_filter"]:
+                    mod.setHidden(False)
+        self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.check_widgets_visible()
+        logger.debug("Finished hiding mods that are in save (showing only new).")
     def do_all_entries_in_aux_db_as_outdated(self) -> None:
         """
         Sets all entries in the aux db as outdated if not already outdated.

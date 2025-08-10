@@ -30,6 +30,7 @@ class CustomListWidgetItemMetadata:
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
         alternative: Optional[str] = None,
+        list_type: str | None = None,
         aux_metadata_controller: AuxMetadataController | None = None,
         aux_metadata_session: Session | None = None,
     ) -> None:
@@ -81,6 +82,8 @@ class CustomListWidgetItemMetadata:
             if alternative is not None
             else self.get_alternative_by_uuid(uuid)
         )
+        # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
+        self.list_type = list_type
 
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
