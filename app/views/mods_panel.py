@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from enum import Enum
 from functools import partial
 from pathlib import Path
@@ -592,26 +593,26 @@ class ModListItemInner(QWidget):
         path = metadata.get("path", "Not specified")
         path_line = f"Path: {path}\n"
 
-        # Add folder size and filesystem modification time information
+        # Add folder size and filesystem modification time information without heavy IO on hover
         mod_path = metadata.get("path")
-        if mod_path:
+        # Folder size: read from in-memory cache only; avoid computing on tooltip
+        folder_size_line = "Folder Size: Not available\n"
+        if isinstance(mod_path, str):
+            cached = _FOLDER_SIZE_CACHE.get(mod_path)
+            if cached:
+                folder_size_line = f"Folder Size: {format_file_size(cached[1])}\n"
+
+        # Filesystem modified time: prefer cached metadata value
+        fs_time_val = metadata.get("internal_time_touched")
+        if isinstance(fs_time_val, int) and fs_time_val > 0:
             try:
-                import os
-                from datetime import datetime
-                folder_size_line = f"Folder Size: {format_file_size(uuid_to_folder_size(self.uuid))}\n"
-                if os.path.exists(mod_path):
-                    fs_time = int(os.path.getmtime(mod_path))
-                    dt_fs = datetime.fromtimestamp(fs_time)
-                    formatted_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
-                    last_touched_line = f"Filesystem Modified: {formatted_time}"
-                else:
-                    last_touched_line = "Filesystem Modified: Path not found"
+                dt_fs = datetime.fromtimestamp(fs_time_val)
+                formatted_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
+                last_touched_line = f"Filesystem Modified: {formatted_time}"
             except (ValueError, OSError, OverflowError):
                 last_touched_line = "Filesystem Modified: Invalid timestamp"
-                folder_size_line = "Folder Size: Not available\n"
         else:
             last_touched_line = "Filesystem Modified: Not available"
-            folder_size_line = "Folder Size: Not available\n"
 
         return "".join(
             [
