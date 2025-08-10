@@ -78,7 +78,12 @@ from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
+from app.views.mods_panel import (
+    ModListWidget,
+    ModsPanel,
+    ModsPanelSortKey,
+    uuid_to_folder_size,
+)
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
@@ -1244,6 +1249,11 @@ class MainContent(QObject):
         """
         EventBus().refresh_started.emit()
         EventBus().do_save_button_animation_stop.emit()
+        # Build foldersize cache at cost of load time
+        active_uuids = self.mods_panel.active_mods_list.uuids
+        inactive_uuids = self.mods_panel.inactive_mods_list.uuids
+        for uuid in active_uuids + inactive_uuids:
+            uuid_to_folder_size(uuid)
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches
