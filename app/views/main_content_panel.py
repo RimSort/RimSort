@@ -251,7 +251,9 @@ class MainContent(QObject):
             self.main_layout_frame.setLayout(self.main_layout)
 
             # INSTANTIATE WIDGETS
-            self.mod_info_panel = ModInfo()
+            self.mod_info_panel = ModInfo(
+                settings_controller=self.settings_controller,
+            )
             self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )

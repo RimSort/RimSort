@@ -6,7 +6,7 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.aux_db_utils import get_mod_color
+from app.utils.aux_db_utils import get_mod_color, get_mod_user_notes
 from app.utils.metadata import MetadataManager
 
 
@@ -86,7 +86,12 @@ class CustomListWidgetItemMetadata:
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
-        self.user_notes = user_notes
+        if user_notes == "":
+            self.user_notes = get_mod_user_notes(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+        else:
+            self.user_notes = user_notes
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """

@@ -20,7 +20,7 @@ def get_mod_color(
     :param settings_controller: SettingsController, settings controller instance
     :param uuid: str, the uuid of the mod
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
-    :return: QColor | None, Color of hte mod, or None if no color
+    :return: QColor | None, Color of the mod, or None if no color
     """
     metadata_manager = MetadataManager.instance()
     instance_path = Path(settings_controller.settings.current_instance_path)
@@ -43,3 +43,38 @@ def get_mod_color(
             mod_color = QColor(color_text)
 
     return mod_color
+
+
+def get_mod_user_notes(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None,
+    session: Session | None,
+) -> str:
+    """
+    Get the user notes for a mod from Aux Metadata DB.
+
+    :param settings_controller: SettingsController, settings controller instance
+    :param uuid: str, the uuid of the mod
+    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
+    :return: str, User notes for the mod, or empty string if no notes
+    """
+    metadata_manager = MetadataManager.instance()
+    instance_path = Path(settings_controller.settings.current_instance_path)
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+    )
+    with session or local_controller.Session() as local_session:
+        entry = local_controller.get(
+            local_session,
+            metadata_manager.internal_local_metadata[uuid]["path"],
+        )
+
+    user_notes = ""
+    if entry:
+        user_notes = entry.user_notes
+
+    return user_notes

@@ -736,7 +736,7 @@ class ModListItemInner(QWidget):
                 ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
-        # Update DB
+        # Update Aux DB
         if not init:
             instance_path = Path(self.settings_controller.settings.current_instance_path)
             aux_metadata_controller = (
@@ -758,7 +758,7 @@ class ModListItemInner(QWidget):
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update DB
+        # Update Aux DB
         instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"

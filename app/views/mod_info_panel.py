@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
@@ -81,7 +83,7 @@ class ModInfo:
     mod information panel on the GUI.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the class.
         """
@@ -89,6 +91,7 @@ class ModInfo:
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+        self.settings_controller = settings_controller
 
         # Used to keep track of which mod items notes we are viewing/editing
         # This is set when a mod is clicked on
@@ -234,7 +237,7 @@ class ModInfo:
             f"<br><br><br><center>{self.description_text}<h3></h3></center>",
             convert=False,
         )
-        self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow clickable hyperlinks?
+        self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow markdown and clickable hyperlinks? Also make collapsible?
         self.notes.setObjectName("userModNotes")
         self.notes.setPlaceholderText("Put your personal mod notes here!")
         self.notes.textChanged.connect(self.update_user_mod_notes)
@@ -329,6 +332,22 @@ class ModInfo:
         new_notes = self.notes.toPlainText()
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
+        # Update Aux DB
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        uuid = mod_data["uuid"]
+        if not uuid:
+            logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
+            return
+        with aux_metadata_controller.Session() as aux_metadata_session:
+                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+                aux_metadata_controller.update(
+                    aux_metadata_session,
+                    mod_path,
+                    user_notes=new_notes,
+                )
         logger.debug(f"Finished updating notes for UUID: {mod_data["uuid"]}")
 
     def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
@@ -337,7 +356,9 @@ class ModInfo:
         self.current_mod_item = item
         mod_data = item.data(Qt.ItemDataRole.UserRole)
         mod_notes = mod_data["user_notes"]
+        self.notes.blockSignals(True)
         self.notes.setText(mod_notes)
+        self.notes.blockSignals(False)
         logger.debug(f"Finished setting notes for UUID: {mod_data["uuid"]}")
 
     @staticmethod
