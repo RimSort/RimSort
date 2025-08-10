@@ -21,6 +21,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
+from app.utils.app_info import AppInfo
 
 translate = QCoreApplication.translate
 
@@ -386,18 +387,25 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
 
 def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
-    Function to upload data to http://0x0.st/
+    Function to upload data to https://0x0.st/
 
     :param path: a string path to a file containing data to upload
-    :return: a string that is the URL returned from http://0x0.st/
+    :return: a string that is the URL returned from https://0x0.st/
     """
-    logger.info(f"Uploading data to http://0x0.st/: {path}")
+    logger.info(f"Uploading data to https://0x0.st/: {path}")
     try:
-        request = requests.post(
-            url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
-        )
+        with open(path, "rb") as f:
+            headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
+            request = requests.post(
+                url="https://0x0.st/",
+                files={"file": (Path(path).name, f)},
+                headers=headers,
+            )
     except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error. Failed to upload data to http://0x0.st: {e}")
+        logger.error(f"Connection Error. Failed to upload data to https://0x0.st: {e}")
+        return False, str(e)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request Error. Failed to upload data to https://0x0.st: {e}")
         return False, str(e)
 
     if request.status_code == 200:
@@ -405,10 +413,11 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
         return True, url
     else:
+        body_snippet = request.text.strip()
         logger.warning(
-            f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
+            f"Failed to upload data to https://0x0.st. Status code: {request.status_code}; body: {body_snippet[:200]}"
         )
-        return False, f"Status code: {request.status_code}"
+        return False, f"Status code: {request.status_code}\n{body_snippet}"
 
 
 def extract_git_dir_name(url: str) -> str:

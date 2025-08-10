@@ -2220,7 +2220,7 @@ class MainContent(QObject):
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
                 title=self.tr("Uploaded file"),
-                text=self.tr("Uploaded {path.name} to http://0x0.st/").format(
+                text=self.tr("Uploaded {path.name} to https://0x0.st/").format(
                     path=path
                 ),
                 information=self.tr(
