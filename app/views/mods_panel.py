@@ -2270,8 +2270,14 @@ class ModListWidget(QListWidget):
         num_errors = 0
         total_error_text = ""
 
-        # Load latest save package ids once for this run
-        latest_save_ids = self._get_latest_save_package_ids()
+        # Load latest save package ids once for this run, only if feature enabled
+        save_compare_enabled: bool = (
+            self.settings_controller.settings.show_save_comparison_indicators
+        )
+        if save_compare_enabled:
+            latest_save_ids = self._get_latest_save_package_ids()
+        else:
+            latest_save_ids = None
 
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
@@ -2283,16 +2289,22 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = ""
             current_item_data["warnings"] = ""
             # Mark active as new if not present in latest save; mark inactive as in_save if present in save
-            try:
-                pkg_id = internal_local_metadata[uuid]["packageid"]
-                is_in_save = pkg_id in latest_save_ids if latest_save_ids is not None else False
-                if self.list_type == "Active":
-                    current_item_data.__dict__["is_new"] = not is_in_save
-                    current_item_data.__dict__["in_save"] = False
-                else:
+            if save_compare_enabled:
+                try:
+                    pkg_id = internal_local_metadata[uuid]["packageid"]
+                    is_in_save = (
+                        pkg_id in latest_save_ids if latest_save_ids is not None else False
+                    )
+                    if self.list_type == "Active":
+                        current_item_data.__dict__["is_new"] = not is_in_save
+                        current_item_data.__dict__["in_save"] = False
+                    else:
+                        current_item_data.__dict__["is_new"] = False
+                        current_item_data.__dict__["in_save"] = is_in_save
+                except Exception:
                     current_item_data.__dict__["is_new"] = False
-                    current_item_data.__dict__["in_save"] = is_in_save
-            except Exception:
+                    current_item_data.__dict__["in_save"] = False
+            else:
                 current_item_data.__dict__["is_new"] = False
                 current_item_data.__dict__["in_save"] = False
             mod_data = internal_local_metadata[uuid]
@@ -2468,6 +2480,9 @@ class ModListWidget(QListWidget):
 
         Returns a set of packageIds in the save, or None on failure. Cached per list instance.
         """
+        # Respect setting: fully disable feature to avoid performance impact
+        if not self.settings_controller.settings.show_save_comparison_indicators:
+            return None
         if self._latest_save_package_ids is not None:
             return self._latest_save_package_ids
 
@@ -2936,6 +2951,10 @@ class ModsPanel(QWidget):
         self.news_layout.addWidget(self.new_icon, 1)
         self.news_layout.addWidget(self.new_text, 99)
         self.warnings_errors_layout.addLayout(self.news_layout, 50)
+        # Hide the "is new" filter if save-comparison is disabled
+        if not self.settings_controller.settings.show_save_comparison_indicators:
+            self.new_icon.setHidden(True)
+            self.new_text.setHidden(True)
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
@@ -3376,15 +3395,29 @@ class ModsPanel(QWidget):
                 self.warnings_icon.setToolTip(
                     total_warning_text.lstrip() if total_warning_text else ""
                 )
-                # Count "new" mods
-                try:
-                    new_count = 0
-                    for item in self.active_mods_list.get_all_mod_list_items():
-                        data = item.data(Qt.ItemDataRole.UserRole)
-                        if bool(data.__dict__.get("is_new", False)):
-                            new_count += 1
-                    self.new_text.setText(self.tr("{padding}{count} new").format(padding=padding, count=new_count))
-                except Exception:
+                # Show/Hide the "is new" filter UI based on setting
+                if self.settings_controller.settings.show_save_comparison_indicators:
+                    self.new_icon.setHidden(False)
+                    self.new_text.setHidden(False)
+                else:
+                    self.new_icon.setHidden(True)
+                    self.new_text.setHidden(True)
+                # Count "new" mods (only when save-comparison feature enabled)
+                if self.settings_controller.settings.show_save_comparison_indicators:
+                    try:
+                        new_count = 0
+                        for item in self.active_mods_list.get_all_mod_list_items():
+                            data = item.data(Qt.ItemDataRole.UserRole)
+                            if bool(data.__dict__.get("is_new", False)):
+                                new_count += 1
+                        self.new_text.setText(
+                            self.tr("{padding}{count} new").format(
+                                padding=padding, count=new_count
+                            )
+                        )
+                    except Exception:
+                        self.new_text.setText(self.tr("0 new"))
+                else:
                     self.new_text.setText(self.tr("0 new"))
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)

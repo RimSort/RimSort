@@ -32,8 +32,11 @@ class ModsPanelController(QObject):
         self.mods_panel.errors_text.clicked.connect(
             self._change_visibility_of_mods_with_errors
         )
-        # New mods filter label
-        if hasattr(self.mods_panel, "new_text"):
+        # New mods filter label (only when save-comparison feature enabled)
+        if (
+            hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
             self.mods_panel.new_text.clicked.connect(
                 self._change_visibility_of_new_mods
             )
@@ -59,27 +62,31 @@ class ModsPanelController(QObject):
             self.do_all_entries_in_aux_db_as_outdated
         )
 
-    @Slot()
-    def _on_filters_changed_in_active_modlist(self) -> None:
-        """When filters are changed in the active modlist."""
+    def _reemit_active_filter_signal(self) -> None:
+        """Re-emit the active filter label's click signal to reapply filtering."""
 
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
         elif self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
-        elif self.news_label_active and hasattr(self.mods_panel, "new_text"):
+        elif (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
             self.mods_panel.new_text.clicked.emit()
+
+    @Slot()
+    def _on_filters_changed_in_active_modlist(self) -> None:
+        """When filters are changed in the active modlist."""
+
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_filters_changed_in_inactive_modlist(self) -> None:
         """When filters are changed in the inactive modlist."""
 
-        if self.warnings_label_active:
-            self.mods_panel.warnings_text.clicked.emit()
-        elif self.errors_label_active:
-            self.mods_panel.errors_text.clicked.emit()
-        elif self.news_label_active and hasattr(self.mods_panel, "new_text"):
-            self.mods_panel.new_text.clicked.emit()
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
@@ -156,7 +163,11 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
-        if self.news_label_active and hasattr(self.mods_panel, "new_text"):
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
             self.mods_panel.new_text.clicked.emit()
 
         self.warnings_label_active = not self.warnings_label_active
@@ -185,7 +196,11 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
-        if self.news_label_active and hasattr(self.mods_panel, "new_text"):
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
             self.mods_panel.new_text.clicked.emit()
 
         self.errors_label_active = not self.errors_label_active

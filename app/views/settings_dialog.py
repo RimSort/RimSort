@@ -1283,7 +1283,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
         self.show_save_comparison_indicators_checkbox = QCheckBox(
-            self.tr("Show save-comparison indicators")
+            self.tr("Compare mod lists with the recent save file")
         )
         group_layout.addWidget(self.show_save_comparison_indicators_checkbox)
 
