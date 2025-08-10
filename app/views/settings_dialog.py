@@ -80,7 +80,7 @@ class SettingsDialog(QDialog):
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
-        self._do_performance_settings_tab()
+        self._do_aux_db_settings_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -286,16 +286,16 @@ class SettingsDialog(QDialog):
 
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
-        self._do_aux_db_time_limit_group(tab_layout)
 
-    def _do_performance_settings_tab(self) -> None:
+    def _do_aux_db_settings_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Performance"))
+        self.tab_widget.addTab(tab, self.tr("Auxiliary DB"))
 
         tab_layout = QVBoxLayout()
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         tab.setLayout(tab_layout)
 
+        self._do_aux_db_time_limit_group(tab_layout)
         self._do_aux_db_performance_group(tab_layout)
 
     def __create_db_group(
@@ -542,14 +542,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
 
-        aux_db_label = QLabel(self.tr("Auxiliary Metadata DB"))
-        aux_db_label.setFont(GUIInfo().emphasis_font)
-        aux_db_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         aux_db_group = QHBoxLayout()
         aux_db_group.addWidget(self.aux_db_performance_mode)
 
-        tab_layout.addWidget(aux_db_label)
         tab_layout.addLayout(aux_db_group)
 
     def _do_sorting_tab(self) -> None:
