@@ -2266,6 +2266,7 @@ class ModListWidget(QListWidget):
         package_id_to_errors: dict[str, dict[str, None | set[str] | bool]] = {
             uuid: {
                 "missing_dependencies": set() if self.list_type == "Active" else None,
+                "alternative_dependencies": set() if self.list_type == "Active" else None,
                 "conflicting_incompatibilities": (
                     set() if self.list_type == "Active" else None
                 ),
@@ -2352,14 +2353,45 @@ class ModListWidget(QListWidget):
                 # Check dependencies (and replacements for dependencies)
                 # Note: dependency replacements are NOT assumed to be subject
                 # to the same load order rules as the orignal mods!
-                mod_errors["missing_dependencies"] = {
-                    dep
-                    for dep in mod_data.get("dependencies", [])
-                    if dep not in package_ids_set
-                    and not self._has_replacement(
-                        mod_data["packageid"], dep, package_ids_set
-                    )
-                }
+                # Build missing dependencies set while honoring alternativePackageIds
+                missing_deps: set[str] = set()
+                alternative_deps: set[str] = set()
+                consider_alternatives = (
+                    self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
+                )
+                for dep_entry in mod_data.get("dependencies", []):
+                    alt_ids: set[str] = set()
+                    if isinstance(dep_entry, tuple):
+                        dep_id = dep_entry[0]
+                        if (
+                            len(dep_entry) > 1
+                            and isinstance(dep_entry[1], dict)
+                            and isinstance(dep_entry[1].get("alternatives"), set)
+                        ):
+                            alt_ids = dep_entry[1]["alternatives"]
+                    else:
+                        dep_id = dep_entry
+
+                    # Consider satisfied if main dep is present; optionally consider alternatives
+                    satisfied = dep_id in package_ids_set
+                    if not satisfied and consider_alternatives:
+                        satisfied = any(alt in package_ids_set for alt in alt_ids)
+                    # If not satisfied, also consider external replacement mapping
+                    if not satisfied and self._has_replacement(
+                        mod_data["packageid"], dep_id, package_ids_set
+                    ):
+                        satisfied = True
+
+                    if not satisfied:
+                        missing_deps.add(dep_id)
+                        # Only record alternatives if the advanced option is enabled
+                        if consider_alternatives:
+                            # Prefer to show only alternatives not already installed
+                            alt_candidates = {a for a in alt_ids if a not in package_ids_set}
+                            alternative_deps.update(alt_candidates if alt_candidates else alt_ids)
+
+                mod_errors["missing_dependencies"] = missing_deps
+                mod_errors["alternative_dependencies"] = alternative_deps
 
                 # Check incompatibilities
                 mod_errors["conflicting_incompatibilities"] = {
@@ -2391,10 +2423,15 @@ class ModListWidget(QListWidget):
                         mod_errors["load_after_violations"].add(load_this_after[0])
             # Calculate any needed string for errors
             tool_tip_text = ""
-            for error_type, tooltip_header in [
+            # Build tooltip sections, conditionally include alternatives
+            tooltip_sections = [
                 ("missing_dependencies", self.tr("\nMissing Dependencies:")),
                 ("conflicting_incompatibilities", self.tr("\nIncompatibilities:")),
-            ]:
+            ]
+            if self.metadata_manager.settings_controller.settings.consider_alternative_package_ids:
+                tooltip_sections.insert(1, ("alternative_dependencies", self.tr("\nAlternative Dependencies:")))
+
+            for error_type, tooltip_header in tooltip_sections:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
                     errors = mod_errors[error_type]
