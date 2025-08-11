@@ -146,11 +146,7 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
                 elif event == "end":
                     stack.pop()
 
-                if len(stack) == 4 \
-                    and "savegame" in stack \
-                    and "meta" in stack \
-                    and "modIds" in stack \
-                    and "li" in stack:
+                if stack == ["savegame", "meta", "modIds", "li"]:
                     return True
                 
                 if event == "end" and (elem.tag == "modIds" \
@@ -193,4 +189,4 @@ def __open_save_file(path: str) -> Any:
     if using_gzip(path):
         return gzip.open(path, "rb")
     else:
-        return open(path, "rb")  # type: ignore
+        return open(path, "rb")
