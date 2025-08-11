@@ -175,24 +175,22 @@ def uuid_to_folder_size(uuid: str) -> int:
     if cached and cached[0] == mtime:
         return cached[1]
 
-    total_size = 0
-
-    try:
-        total_size = os.path.getsize(Path(mod_path))
-    except OSError:
-        # Use slower method to get as accurate size as possible
-        for root, _, files in os.walk(mod_path):
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                try:
-                    total_size += os.path.getsize(file_path)
-                except OSError:
-                    # Skip files we cannot access
-                    continue
+    total_size = get_dir_size(mod_path)
 
     _FOLDER_SIZE_CACHE[mod_path] = (mtime, total_size)
     return total_size
 
+def get_dir_size(path: str) -> int:
+    total = 0
+    for entry in os.scandir(path):
+        try:
+            if entry.is_file():
+                total += entry.stat().st_size
+            elif entry.is_dir():
+                total += get_dir_size(entry.path)
+        except OSError:
+            pass  # Skip file
+    return total
 
 def format_file_size(size_in_bytes: int) -> str:
     """Format bytes to a human-readable string."""
