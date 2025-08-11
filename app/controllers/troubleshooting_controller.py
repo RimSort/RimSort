@@ -432,12 +432,6 @@ class TroubleshootingController:
         )
         if not save_path:
             logger.error(f"Failed to save to Location: {save_path}.")
-            show_warning(
-                title=self.translate("TroubleshootingController", "Location Error"),
-                text=self.translate(
-                    "TroubleshootingController", "Failed to get Location: {save_path}."
-                ),
-            )
             return
 
         # ensure .xml extension
@@ -498,12 +492,15 @@ class TroubleshootingController:
                 json.dump(export_data, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to export mod list: {e}")
-            show_dialogue_conditional(
+            show_warning(
                 title=self.translate("TroubleshootingController", "Error"),
                 text=self.translate(
                     "TroubleshootingController", "Failed to export mod list."
                 ),
-                icon="warning",
+                information=self.translate(
+                    "TroubleshootingController",
+                    "Error: {e}",
+                ).format(e=str(e)),
             )
 
     def _on_mod_import_list_button_clicked(self) -> None:

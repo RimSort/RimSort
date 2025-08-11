@@ -1,382 +1,386 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="fr_FR">
+<TS version="2.1" language="tr_TR">
 <context>
     <name>AcfLogReader</name>
     <message>
         <source>Ready</source>
-        <translation type="unfinished">Prêt</translation>
+        <translation>Hazır</translation>
     </message>
     <message>
         <source>Search...</source>
-        <translation type="unfinished">Recherche...</translation>
+        <translation>Ara...</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Actualiser</translation>
+        <translation>Yenile</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
-        <translation type="unfinished">Importer les données ACF</translation>
+        <translation>ACF Verisini İçe Aktar</translation>
     </message>
     <message>
         <source>Export ACF Data</source>
-        <translation type="unfinished">Exporter les données ACF</translation>
+        <translation>ACF Verisini Dışa Aktar</translation>
     </message>
     <message>
         <source>Export to CSV</source>
-        <translation type="unfinished">Exporter vers CSV</translation>
+        <translation>CSV&apos;ye aktar</translation>
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished">Chargé {count} éléments | Dernière mise à jour : {time}</translation>
+        <translation>{count} öğe yüklendi | Son güncelleme: {time} </translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
-        <translation type="unfinished">Exportation annulée par l&apos;utilisateur.</translation>
+        <translation>Dışa aktarma kullanıcı tarafından iptal edildi.</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Permission refusée - vérifiez les autorisations de fichier</translation>
+        <translation>Dışa aktarma başarısız: İsin reddedildi - dosya izinlerini kontrol edin</translation>
     </message>
     <message>
         <source>Export Error</source>
-        <translation type="unfinished">Erreur d&apos;exportation</translation>
+        <translation>Dışa Aktarma Hatası</translation>
     </message>
     <message>
         <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Erreur du système de fichiers - {e}</translation>
+        <translation>Dışa aktarma başarısız: Dosya sistemi hatası - {e}</translation>
     </message>
     <message>
         <source>Export failed: File system error</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Erreur du système de fichiers</translation>
+        <translation>Dışa aktarma başarısız: Dosya sistemi hatası</translation>
     </message>
     <message>
         <source>Exporting to CSV...</source>
-        <translation type="unfinished">Exportation vers CSV...</translation>
+        <translation>CSV&apos;ye aktarılıyor...</translation>
     </message>
     <message>
         <source>Exporting rows...</source>
-        <translation type="unfinished">Exportation des lignes...</translation>
+        <translation>Satırlar aktarılıyor...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Annuler</translation>
+        <translation>İptal Et</translation>
     </message>
     <message>
         <source>Export failed due to an unknown error</source>
-        <translation type="unfinished">Échec de l&apos;exportation en raison d&apos;une erreur inconnue</translation>
+        <translation>Dışa aktarırken bilinmeyen bir hata ile karşılaşıldı</translation>
     </message>
     <message>
         <source>View in Steam Workshop</source>
-        <translation type="unfinished">Voir dans le Steam Workshop</translation>
+        <translation>Steam Atöylesinde görüntüle</translation>
     </message>
     <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished">Ouvrir le dossier du mod</translation>
+        <translation>Mod Klasörünü Aç</translation>
     </message>
     <message>
         <source>Published File ID</source>
-        <translation type="unfinished">ID de fichier publié</translation>
+        <translation>Yayınlanmış Dosya ID&apos;si</translation>
     </message>
     <message>
         <source>Mod downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Type</translation>
+        <translation>Tür</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished">Nom du mod</translation>
+        <translation>Mod İsmi</translation>
     </message>
     <message>
         <source>Mod Path</source>
-        <translation type="unfinished">Chemin du mod</translation>
+        <translation>Mod Klasör Yolu</translation>
     </message>
     <message>
         <source>Conform acf import</source>
-        <translation type="unfinished">Conformer l&apos;importation ACF</translation>
+        <translation>ACF içe aktarmasını doğrula</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished">Cela remplacera votre fichier .acf steamcmd actuel</translation>
+        <translation>Bu işlem, kullandığınız steamcmd .acf dosyasını yenisiyle değiştirecek</translation>
     </message>
     <message>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
+        <translation>.acf dosyasını içe aktarmak istediğinizden emin misiniz? Bu yalnızca steamcmd için çalışır.</translation>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished"></translation>
+        <translation>.acf İçe Aktar</translation>
     </message>
     <message>
         <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished">Interface SteamCMD mal initialisée</translation>
+        <translation>SteamCMD arayüzü düzgün başlatılamadı</translation>
     </message>
     <message>
         <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished">Fichier ACF non trouvé : {acf_path}</translation>
+        <translation>ACF dosyasu bulunamadı: {acf_path}</translation>
     </message>
     <message>
         <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished">Fichier ACF non trouvé à : {acf_path}</translation>
+        <translation>ACF dosyası {acf_path} yolunda bulunamadı</translation>
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished">Chemin de fichier invalide fourni pour l&apos;exportation : {file_path}</translation>
+        <translation>Dışa aktarma için geçersiz bir dosya yolu belirtildi: {file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished">ACF exporté avec succès vers {file_path}</translation>
+        <translation>ACF başarıyla {file_path} yoluna aktarıldı</translation>
     </message>
     <message>
         <source>Export Success</source>
-        <translation type="unfinished">Exportation réussie</translation>
+        <translation>Dışa Aktarma Başarılı</translation>
     </message>
     <message>
         <source>Export failed: {e}</source>
-        <translation type="unfinished">Échec de l&apos;exportation : {e}</translation>
+        <translation>Dışa aktarma başarısız: {e}</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished">Échec de l&apos;exportation</translation>
+        <translation>Dışa aktarma Başarısız</translation>
     </message>
     <message>
         <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished">Échec de l&apos;exportation : une exception inconnue s&apos;est produite</translation>
+        <translation>Dışa aktarılamadı, bilinmeyen bir hata meydana geldi</translation>
     </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
-        <translation>Tout désélectionner</translation>
+        <translation>Tümünün seçimini kaldır</translation>
     </message>
     <message>
         <source>Select all</source>
-        <translation>Tout sélectionner</translation>
+        <translation>Tümünü seç</translation>
     </message>
     <message>
         <source>Do nothing and exit</source>
-        <translation>Ne rien faire et quitter</translation>
+        <translation>Hiçbir şey yapma ve çık</translation>
     </message>
 </context>
 <context>
     <name>CollectionImport</name>
     <message>
         <source>Add Workshop collection link</source>
-        <translation type="unfinished"></translation>
+        <translation>Atölye koleksiyon linki ekle</translation>
     </message>
     <message>
         <source>Invalid Link</source>
-        <translation type="unfinished"></translation>
+        <translation>Geçersiz link</translation>
     </message>
     <message>
         <source>Invalid Workshop collection link. Please enter a valid Workshop collection link.</source>
-        <translation type="unfinished"></translation>
+        <translation>Geçersiz atölye linki. Lütfen geçerli bir atölye linki giriniz.</translation>
     </message>
     <message>
         <source>Invalid Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Geçersiz veritabanı</translation>
     </message>
     <message>
         <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamDB ayarlanmadığından koleksiyon içe aktarılamaz lütfen ayarlardan Steam atöyle veritabanını yapılandırın</translation>
     </message>
 </context>
 <context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Detayları göster</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Kapat</translation>
     </message>
     <message>
         <source>Open Log Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Log klasörünü aç</translation>
     </message>
     <message>
         <source>Upload Log</source>
-        <translation type="unfinished">Télécharger le journal</translation>
+        <translation>Log yükle</translation>
     </message>
     <message>
         <source>Upload the log file to 0x0.st</source>
-        <translation type="unfinished"></translation>
+        <translation>Log dosyasını 0x0.st &apos;ye yükle</translation>
     </message>
     <message>
         <source>Hide Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Detayları gizle</translation>
     </message>
 </context>
 <context>
     <name>FileSearchController</name>
     <message>
         <source>Preparing search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama hazırlanıyor</translation>
     </message>
     <message>
         <source>Starting new search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Yeni arama başlatılıyor...</translation>
     </message>
     <message>
         <source>Active Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif modlarda hata</translation>
     </message>
     <message>
         <source>No active mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif mod bulunamadı</translation>
     </message>
     <message>
         <source>Inactive Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif olmayan modlarda hata</translation>
     </message>
     <message>
         <source>No inactive mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif olmayan mod bulunamadı</translation>
     </message>
     <message>
         <source>Stopping search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama durduruluyor...</translation>
     </message>
     <message>
         <source>Search stopped by user</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama kullanıcı tarafından durduruldu</translation>
     </message>
     <message>
         <source>Regular Expression Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Regular Expression Hatası</translation>
     </message>
     <message>
         <source>There was an error with your regular expression pattern.</source>
-        <translation type="unfinished"></translation>
+        <translation>Regular expression paterninizle bir hata oluştu</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try simplifying your pattern or check for syntax errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+		Paterninizi basitleştirmeyi veya Syntax hataları için kontrol edin.</translation>
+    </message>
+    <message>
+        <source>File Access Error</source>
+        <translation>Dosya erişimi hatası</translation>
+    </message>
+    <message>
+        <source>RimSort doesn&apos;t have permission to access some files.</source>
+        <translation>RimSort&apos;un bazı dosyala erişim izni yok</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+		RimSort&apos;u yönetici olarak çalıştırmayı deneyin veya dosya izinlerini kontrol edin.</translation>
+    </message>
+    <message>
+        <source>Memory Error</source>
+        <translation>Bellek Hatası</translation>
+    </message>
+    <message>
+        <source>RimSort ran out of memory while searching.</source>
+        <translation>RimSort arama yaparken bellek yetersizliği yaşadı</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+		Aramayı daha küçük gruplar halinde yapmayı deneyin veya büyük dosyalar için Streaming Search yöntemini kullanın</translation>
+    </message>
+    <message>
+        <source>Search Error</source>
+        <translation>Arama Hatası</translation>
+    </message>
+    <message>
+        <source>An error occurred during the search.</source>
+        <translation>Arama sırasında bir hata oluştu</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Please check your settings and try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>File Access Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort doesn&apos;t have permission to access some files.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Memory Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort ran out of memory while searching.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Search Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred during the search.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+		Ayarlarınızı kontrol edip tekrar deneyin</translation>
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama başarısız: {error_msg[:100]}...</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtre: {rowCount} sonuçtan {visible_rows} tanesi görünür durumda</translation>
     </message>
     <message>
         <source>Location Not Set</source>
-        <translation type="unfinished"></translation>
+        <translation>Yer belirtilmemiş</translation>
+    </message>
+    <message>
+        <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
+        <translation>Seçilen alanda arama yapılabilecek geçerli bir konum bulunamadı. Ayarlardan oyun klasörlerinizi yapılandırınız</translation>
     </message>
 </context>
 <context>
     <name>FileSearchDialog</name>
     <message>
         <source>Search for:</source>
-        <translation type="unfinished"></translation>
+        <translation>Şunu ara:</translation>
     </message>
     <message>
         <source>Enter text to search for in files</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosyalarda şunu aramak için metin gir</translation>
     </message>
     <message>
         <source>Recent Searches</source>
-        <translation type="unfinished"></translation>
+        <translation>Son Aramalar</translation>
     </message>
     <message>
         <source>Search in:</source>
-        <translation type="unfinished"></translation>
+        <translation>Şurada ara:</translation>
     </message>
     <message>
         <source>active mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif Modlar</translation>
     </message>
     <message>
         <source>inactive mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif olmayan Modlar</translation>
     </message>
     <message>
         <source>all mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Tüm Modlar</translation>
     </message>
     <message>
         <source>configs folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Konfigürasyon klasörü</translation>
     </message>
     <message>
         <source>Search Options:</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama Ayarları:</translation>
     </message>
     <message>
         <source>Case sensitive</source>
-        <translation type="unfinished"></translation>
+        <translation>Büyük/Küçük Harfe duyarlı</translation>
     </message>
     <message>
         <source>Match exact case when searching</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama yaparken harflerin tam olarak eşleşmesini sağla</translation>
     </message>
     <message>
         <source>Use regex (pattern search)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XML files only</source>
-        <translation type="unfinished"></translation>
+        <translation>Regex (Patern araması) kullan</translation>
     </message>
     <message>
         <source>Enable to use regular expressions in search
@@ -384,140 +388,150 @@ Examples:
 - &apos;def.*\(&apos; to find function definitions
 - &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
 - &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
-        <translation type="unfinished"></translation>
+        <translation>Armada düzenli ifadelerin (regular expressions) kullanımı etkinleştir
+		Örnekler:
+- &apos;def.*\(&apos; fonksiyon tanımlarını bulmak için
+- &apos;&lt;[^&gt;]+&gt;&apos; XML etiketlerini bulmak için
+- &apos;\d+\.\d+(\.\d+)?&apos; sürüm numaralarını bulmak için
+		</translation>
+    </message>
+    <message>
+        <source>XML files only</source>
+        <translation>Yalnızca XML dosyaları desteklenir</translation>
     </message>
     <message>
         <source>When checked, search only XML files and use optimized XML search.
 When unchecked, search all file types with standard search.</source>
-        <translation type="unfinished"></translation>
+        <translation>İşaretlendiğinde, yalnızca XML dosyalarında arama yapılır ve optimize edilmiş XML araması kullanılır.
+		 İşaretlenmediğinde, tüm dosya türlerinde standart arama yapılır.</translation>
     </message>
     <message>
         <source>Exclude from Search:</source>
-        <translation type="unfinished"></translation>
+        <translation>Aramadan hariç tut:</translation>
     </message>
     <message>
         <source>Skip translations</source>
-        <translation type="unfinished"></translation>
+        <translation>Çevirileri atla</translation>
     </message>
     <message>
         <source>Skip translation files to improve search speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama hızını arttırmak için çevirileri atla</translation>
     </message>
     <message>
         <source>Skip .git folder</source>
-        <translation type="unfinished"></translation>
+        <translation>.git Dosyasını atla</translation>
     </message>
     <message>
         <source>Skip Git repository folders</source>
-        <translation type="unfinished"></translation>
+        <translation>Git deposu klasörlerini atla</translation>
     </message>
     <message>
         <source>Skip Source folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Kaynak dosyasını atla</translation>
     </message>
     <message>
         <source>Skip Source folders containing C# code</source>
-        <translation type="unfinished"></translation>
+        <translation>C# Barındıran kaynak dosyalarını atla</translation>
     </message>
     <message>
         <source>Skip Textures folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Kaplamalar dosyasını atla</translation>
     </message>
     <message>
         <source>Skip Textures folders containing images</source>
-        <translation type="unfinished"></translation>
+        <translation>Resim barındıran kaplama dosyalarını atla</translation>
     </message>
     <message>
         <source>Search method is automatically selected based on options</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama yöntemi, ayarlara göre kendiliğinden belirlenir.</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Ara</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Durdur</translation>
     </message>
     <message>
         <source>Ready to search</source>
-        <translation type="unfinished"></translation>
+        <translation>Aramaya hazır</translation>
     </message>
     <message>
         <source>Filter results:</source>
-        <translation type="unfinished"></translation>
+        <translation>Sonuçları filtrele</translation>
     </message>
     <message>
         <source>Filter results by mod name, file name, or path</source>
-        <translation type="unfinished"></translation>
+        <translation>Sonuçları mod ismine, dosya ismine veya dosya yoluna göre filtrele</translation>
     </message>
     <message>
         <source>Search Results:</source>
-        <translation type="unfinished"></translation>
+        <translation>Arama sonuçları:</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished">Nom du mod</translation>
+        <translation>Mod İsmi</translation>
     </message>
     <message>
         <source>File Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosya İsmi</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Yol</translation>
     </message>
     <message>
         <source>Preview</source>
-        <translation type="unfinished"></translation>
+        <translation>Önizleme</translation>
     </message>
     <message>
         <source>Found {result_count} results</source>
-        <translation type="unfinished"></translation>
+        <translation>{result_count} sonuç bulundu</translation>
     </message>
     <message>
         <source>No results found</source>
-        <translation type="unfinished"></translation>
+        <translation>Hiçbir sonuç bulunamadı</translation>
     </message>
     <message>
         <source>Open File (Enter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosyayı Aç (Enter)</translation>
     </message>
     <message>
         <source>Open Containing Folder (Ctrl+O)</source>
-        <translation type="unfinished"></translation>
+        <translation>Bulunduğu Klasörü Aç (Ctrl+O)</translation>
     </message>
     <message>
         <source>Copy Path (Ctrl+C)</source>
-        <translation type="unfinished"></translation>
+        <translation>Yolu Kopyala (Ctrl+C)</translation>
     </message>
     <message>
         <source>Open With...</source>
-        <translation type="unfinished"></translation>
+        <translation>Birlikte Aç...</translation>
     </message>
     <message>
         <source>Notepad</source>
-        <translation type="unfinished"></translation>
+        <translation>Notepad</translation>
     </message>
     <message>
         <source>VS Code</source>
-        <translation type="unfinished"></translation>
+        <translation>VS Code</translation>
     </message>
     <message>
         <source>Default Editor</source>
-        <translation type="unfinished"></translation>
+        <translation>Varsayılan Düzenleyici</translation>
     </message>
     <message>
         <source>Clear Recent Searches</source>
-        <translation type="unfinished"></translation>
+        <translation>Son Aramaları Temizle</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {total_rows} results visible</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtre:{total_rows} sonuçtan {visible_rows} tanesi görüntüleniyor</translation>
     </message>
     <message>
         <source>Found {total_rows} results</source>
-        <translation type="unfinished"></translation>
+        <translation>{total_rows} sonuç bulundu</translation>
     </message>
     <message>
         <source>Right-click a result for actions</source>
@@ -532,225 +546,409 @@ When unchecked, search all file types with standard search.</source>
     <name>InstanceController</name>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Öğe geri yüklenirken hata</translation>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Öğe arşivini okurken bir hata oluştu: {e}</translation>
     </message>
 </context>
 <context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Dil Değiştirildi</translation>
     </message>
     <message>
         <source>The language has been updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dil güncellendi</translation>
     </message>
     <message>
         <source>Restart the application to apply the change. Restart now?</source>
-        <translation type="unfinished"></translation>
+        <translation>Değişiklikleri uygulamak için uygulamayı yeniden başlatın. Şimdi yeniden başlat?</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished"></translation>
+        <translation>Yeniden başlat</translation>
     </message>
 </context>
 <context>
     <name>MainContent</name>
     <message>
         <source>Essential path(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Temel yol(lar)</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!
+</source>
+        <translation>Temel yol(lar) geçersiz veya belirtilmemiş!
+</translation>
+    </message>
+    <message>
+        <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
+
+Would you like to configure them now?</source>
+        <translation>RimSort&apos;un çalışabilmesi için oyunun bulunduğu klasörü ve config klasörü yollarının belirtilmeş ve bu yolların mevcut olması gerekir. Lütfen bu klasörleri manuel olarak yada otomatik algılama özelliğini kullanarak belirtin
+
+Şimdi yapılandırmak ister misiniz?</translation>
     </message>
     <message>
         <source>Duplicate mod(s) found</source>
-        <translation type="unfinished"></translation>
+        <translation>Tekrar eden mod(lar) bulundu</translation>
     </message>
     <message>
         <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation type="unfinished"></translation>
+        <translation>ModsConfig.xml dosyanızdaki paket kimliği için tekrar eden mod(lar) bulundu (aktif mod listesi).</translation>
+    </message>
+    <message>
+        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
+        <translation>ModsConfig.xml dosyanızda aşağıdaki modlar aktif olarak ayarlanmış ve mod veri kaynaklarınızda bu modların tekrar eden örnekleri bulunmuştur. Orijinal oyun, belirli bir paket kimliği için bulunan ilk ‘yerel mod’u kullanacaktır RimSort da bu mantığa uyacaktır.</translation>
     </message>
     <message>
         <source>Could not find data for some mods!</source>
-        <translation type="unfinished"></translation>
+        <translation>Bazı modlar için veri bulunamadı!</translation>
     </message>
     <message>
         <source>Update skipped</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncelleme atlandı</translation>
     </message>
     <message>
         <source>You are running from Python interpreter.</source>
-        <translation type="unfinished"></translation>
+        <translation>Python yorumlayıcısı üzerinden çalıştırıyorsunuz.</translation>
     </message>
     <message>
         <source>Skipping update check...</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncelleme kontrolü atlanıyor...</translation>
     </message>
     <message>
         <source>Unable to retrieve latest release information</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncel sürüm bilgisi alınamadı</translation>
     </message>
     <message>
         <source>RimSort update found</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort güncellemesi bulundu</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>RimSort&apos;un {current_version} sürümünü kullanıyorsunuz
+Şimdi güncellemek istermisiniz?</translation>
     </message>
     <message>
         <source>Unable to complete update</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncelleme tamamlanılamadı</translation>
     </message>
     <message>
         <source>Update downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncelleme indirildi</translation>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncellemeye devam etmek istermisiniz?</translation>
     </message>
     <message>
         <source>Failed to download update</source>
-        <translation type="unfinished"></translation>
+        <translation>Güncelleme indirilemedi</translation>
     </message>
     <message>
         <source>Failed to download latest RimSort release!</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort&apos;un son sürümü indirilemedi!</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
+        <translation>Lütfen internet bağlantınızı kontrol edip tekrar deneyin, Ayrıca &apos;https://github.com/RimSort/RimSort/releases&apos; adresini doğrudan kontrol edebilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Scanning mod sources and populating metadata...</source>
+        <translation>Mod kaynakları kontrol ediliyor ve metaveriler güncelleniyor...</translation>
     </message>
     <message>
         <source>Sorting algorithm not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>Sıralama algoritması tanımlanmamış</translation>
     </message>
     <message>
         <source>The selected sorting algorithm is not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçilen sıralama algoritması tanımlanmamış</translation>
+    </message>
+    <message>
+        <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
+        <translation>Bu durum, bozuk ayarlar, sürümler arası yanlış geçiş veya farklı bir mod yöneticisi kullanımı nedeniyle olabilir. Ayarlarınızı sıfırlamayı, farklı bir sıralama algoritması seçmeyi veya ayar dosyanızı silmeyi deneyin. Sorun devam ederse, lütfen geliştiricilere bildirin.</translation>
     </message>
     <message>
         <source>Failed to export to file</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosyaya aktarma başarısız oldu</translation>
     </message>
     <message>
         <source>Failed to export active mods to file:</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif modları dosyaya aktarma başarısız oldu</translation>
     </message>
     <message>
         <source>Important</source>
-        <translation type="unfinished"></translation>
+        <translation>Önemli</translation>
     </message>
     <message>
         <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
-        <translation type="unfinished"></translation>
+        <translation>İndirmeler tamamlandıktan sonra Rentry içe aktarma işlemini tekrar yapmanız gerekecek. İndirme tamamlandıktan sonra eksik modlar varsa, bunlar eksik modlar panelinde gösterilecektir. RimSort hâlâ bazı modları indiremezse, bunun nedeni mod verilerinin hem Rentry bağlantısında hem de Steam veritabanında bulunmamasıdır.</translation>
     </message>
     <message>
         <source>Steam client integration not set up</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam istemci entegrasyonu ayarlanmamış</translation>
     </message>
     <message>
         <source>Steam client integration is not set up. Please set it up to download mods using Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam istemci entegrasyonu ayarlanmamış. Steam&apos;i kullanarak mod indirmek istiyorsanız lütfen ayarlayın</translation>
     </message>
     <message>
         <source>Download Rentry Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Renrty modlarını indirin</translation>
     </message>
     <message>
         <source>Please select a download method.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lütfen bir indirme yöntemi seçin.</translation>
     </message>
     <message>
         <source>Select which method you want to use to download missing Rentry mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kayıp Rentry modlarını indirmek için kullanmak istediğiniz yöntemi seçin.</translation>
     </message>
     <message>
         <source>Export active mod list</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif mod listesini dışarı aktar</translation>
     </message>
     <message>
         <source>Copied active mod list report to clipboard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif mod listesi raporu kopyalandı...</translation>
     </message>
     <message>
         <source>Click &quot;Show Details&quot; to see the full report!</source>
-        <translation type="unfinished"></translation>
+        <translation>Tüm raporu görmek için  &quot;Detayları Göster&quot; butonuna tıklayın!</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktif mod listesi yüklendi</translation>
+    </message>
+    <message>
+        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
+
+{rentry_uploader.url}</source>
+        <translation>Aktif mod listesi raporu Rentry.co&apos;ya yüklendi! Bağlantı panonuza kopyalandı:
+{rentry_uploader.url}</translation>
+    </message>
+    <message>
+        <source>Failed to upload</source>
+        <translation>Yükleme başarısız</translation>
+    </message>
+    <message>
+        <source>Failed to upload exported active mod list to Rentry.co</source>
+        <translation>Dışa aktarılan etkin mod listesi Rentry.co&apos;ya yüklenemedi</translation>
+    </message>
+    <message>
+        <source>Could not open directory</source>
+        <translation>Klasör açılamadı</translation>
+    </message>
+    <message>
+        <source>{directory_name} path does not exist or is not set.</source>
+        <translation>{directory_name} Yolu mevcut değil veya ayarlanmamış.</translation>
+    </message>
+    <message>
+        <source>Would you like to set the path now?</source>
+        <translation>Yolu şimdi ayarlamak istermisiniz?</translation>
+    </message>
+    <message>
+        <source>Open settings</source>
+        <translation>Ayarları aç</translation>
+    </message>
+    <message>
+        <source>File not found</source>
+        <translation>Dosya bulunamadı</translation>
+    </message>
+    <message>
+        <source>The file you are trying to upload does not exist.</source>
+        <translation>Yüklemeye çalıştığınız dosya mevcut değiş</translation>
+    </message>
+    <message>
+        <source>File: {path}</source>
+        <translation>Dosya: {path}</translation>
+    </message>
+    <message>
+        <source>Uploading {path.name} to 0x0.st...</source>
+        <translation>{path.name} Dosyası 0x0.st... bölgesine yükleniyor</translation>
+    </message>
+    <message>
+        <source>Uploaded file</source>
+        <translation>Dosya yüklendi</translation>
+    </message>
+    <message>
+        <source>The URL has been copied to your clipboard:
+
+{ret}</source>
+        <translation>Bağlantı panonuza kopyalandı:
+
+{ret}</translation>
+    </message>
+    <message>
+        <source>Failed to upload file.</source>
+        <translation>Dosya yükleme başarısız.</translation>
+    </message>
+    <message>
+        <source>Failed to upload the file to 0x0.st</source>
+        <translation>Dosya 0x0.st&apos; yüklenemedi</translation>
+    </message>
+    <message>
+        <source>Could not save active mods</source>
+        <translation>Aktif modlar kaydedilemedi</translation>
+    </message>
+    <message>
+        <source>Failed to save active mods to file:</source>
+        <translation>Aktif modlar dosyaya kaydedilemedi:</translation>
+    </message>
+    <message>
+        <source>Checking Steam Workshop mods for updates...</source>
+        <translation>Mod güncellemeleri için Steam Atölyesi kontrol ediliyor...</translation>
+    </message>
+    <message>
+        <source>Unable to check for updates</source>
+        <translation>Güncellemeler kontrol edilemedi</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to query Steam WebAPI for update information!
+</source>
+        <translation>RimSort, Steam WebAPI’den güncelleme bilgilerini alamadı!
+</translation>
+    </message>
+    <message>
+        <source>Are you connected to the Internet?</source>
+        <translation>İnternete bağlı mısınız?</translation>
+    </message>
+    <message>
+        <source>All Workshop mods appear to be up to date!</source>
+        <translation>Tüm Atölye modları güncel!</translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD setup</source>
+        <translation>RimSort - SteamCMD Kurulumu</translation>
+    </message>
+    <message>
+        <source>Unable to create SteamCMD runner!</source>
+        <translation>SteamCMD çalıştırıcısı oluşturulamadı!</translation>
+    </message>
+    <message>
+        <source>There is an active process already running!</source>
+        <translation>Halihazırda çalışan bir işlem mevcut!</translation>
+    </message>
+    <message>
+        <source>Unable to initiate SteamCMD installation. Local mods path not set!</source>
+        <translation>SteamCMD kurulumu başlatılamadı. Yerel modlar için dosya yolu ayarlanmamış!</translation>
+    </message>
+    <message>
+        <source>Please configure local mods path in Settings before attempting to install.</source>
+        <translation>Kuruluma başlamadan önce lütfen yerel modlar için dosya yolunu ayarlayın.</translation>
+    </message>
+    <message>
+        <source>RimSort</source>
+        <translation>RimSort</translation>
+    </message>
+    <message>
+        <source>No PublishedFileIds were supplied in operation.</source>
+        <translation>İşlem sırasında hiçbir PublishedFileId sağlanmadı</translation>
+    </message>
+    <message>
+        <source>Please add mods to list before attempting to download.</source>
+        <translation>İndirmeye başlamadan önce lütfen modları listeye ekleyin.</translation>
+    </message>
+    <message>
+        <source>SteamCMD not found</source>
+        <translation>SteamCMD bulunamadı</translation>
+    </message>
+    <message>
+        <source>SteamCMD executable was not found.</source>
+        <translation>SteamCMD çalıştırıcısı bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
+        <translation>Lütfen mevcut bir SteamCMD önekini ayarlayın veya &quot;SteamCMD’yi Ayarla&quot; ile yeni bir önek oluşturun.</translation>
+    </message>
+    <message>
+        <source>Processing Steam subscription action(s) via Steamworks API...</source>
+        <translation>Steam abonelik işlemleri Steamworks API aracılığıyla işleniyor...</translation>
     </message>
     <message>
         <source>Download or select from local</source>
-        <translation type="unfinished"></translation>
+        <translation>Yerel bir kaynaktan indirin veya seçin</translation>
     </message>
     <message>
         <source>Please select a ZIP file to add to the local mods directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>Yerel mod klasörüne eklemek için lütfen bir ZIP dosyası seçin.</translation>
     </message>
     <message>
         <source>You can download a ZIP file from the internet, or select a file from your local machine.</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP dosyasını internetten indirebilir veya cihazınızdan seçebilirsiniz.</translation>
     </message>
     <message>
         <source>Enter zip file url</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP dosyası bağlantısını girin</translation>
     </message>
     <message>
         <source>Enter a zip file url (http/https) to download to local mods:</source>
-        <translation type="unfinished"></translation>
+        <translation>Yerel modlara indirmek için bir zip dosyası bağlantısı girin (http/https):</translation>
     </message>
     <message>
         <source>Failed to download zip file</source>
-        <translation type="unfinished"></translation>
+        <translation>Zip dosya indirmesi başarısız</translation>
     </message>
     <message>
         <source>The zip file could not be downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zip dosyası indirilemedi.</translation>
     </message>
     <message>
         <source>File: {file_path}
 Error: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosya: {file_path}</translation>
     </message>
     <message>
         <source>The selected file does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçilen dosya mevcut değil.</translation>
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosya: {file_path}</translation>
     </message>
     <message>
         <source>Unsupported Compression Method</source>
-        <translation type="unfinished"></translation>
+        <translation>Desteklenmeyen Sıkıştırma Yöntemi</translation>
     </message>
     <message>
         <source>This ZIP file uses a compression method that is not supported by this version.</source>
-        <translation type="unfinished"></translation>
+        <translation>Seçilen ZIP dosyası bu sürümde desteklenmeyen bir sıkıştırma yöntemi kullanıyor.</translation>
     </message>
     <message>
         <source>Failed to extract zip file</source>
-        <translation type="unfinished"></translation>
+        <translation>Zip dosyasını çıkartma başarısız oldu. </translation>
     </message>
     <message>
         <source>The zip file could not be extracted.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zip dosyası çıkartılınamadı.</translation>
     </message>
     <message>
         <source>Existing files or directories found</source>
-        <translation type="unfinished"></translation>
+        <translation>Mevcut dosyalar veya dosya yolları bulundu</translation>
     </message>
     <message>
         <source>All files in the archive already exist in the target path.</source>
-        <translation type="unfinished"></translation>
+        <translation>Arşivdeki tüm dosyalar zaten hedef yolda mevcut.</translation>
     </message>
     <message>
         <source>How would you like to proceed?
 
 1) Overwrite All — Replace all existing files and directories.
 2) Cancel — Abort the operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nasıl devam etmek istersiniz
+
+1)Tümünün Üzerine Yaz - Mevcut dosyaları ve yollarını değiştir.
+2)İptal Et - İşlemi durdur.</translation>
     </message>
     <message>
         <source>The following files or directories already exist in the target path:</source>
-        <translation type="unfinished"></translation>
+        <translation>Aşağıdaki dosyalar veya dosya yolları zaten hedef yolda mevcut:</translation>
     </message>
     <message>
         <source>{conflicts_list}
@@ -760,269 +958,53 @@ How would you like to proceed?
 1) Overwrite All — Replace all existing files and directories.
 2) Skip Existing — Extract only new files and leave existing ones untouched.
 3) Cancel — Abort the extraction.</source>
-        <translation type="unfinished"></translation>
+        <translation>{conflicts_list}
+
+Nasıl devam etmek istersiniz?
+
+1)Tümünün Üzerine Yaz - Mevcut dosyaları ve yollarını değiştir.
+2) Mevcut olanları atla - Sadece yeni dosyaları çıkart ve mevcut olanlara dokunma.
+3)İptal Et - Çıkartmayı durdur.</translation>
     </message>
     <message>
         <source>Extraction completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Çıkartma tamamlandı</translation>
     </message>
     <message>
         <source>The ZIP file was successfully extracted!</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP dosyası başarıyla çıkartıldı!</translation>
     </message>
     <message>
         <source>Extraction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Çıkartma başarısız</translation>
     </message>
     <message>
         <source>An error occurred during extraction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Çıkartma sırasında bir hata oluştu.</translation>
     </message>
     <message>
-        <source>Essential path(s) are invalid or not set!
-</source>
-        <translation type="unfinished"></translation>
+        <source>Steam DB comparison report: {len} found</source>
+        <translation>Steam DB karşılaştırma raporu: {len} bulundu</translation>
     </message>
     <message>
-        <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
-
-Would you like to configure them now?</source>
-        <translation type="unfinished"></translation>
+        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <translation>&quot;Use This Instead&quot; veritabanında bir öneri bulunamadı.</translation>
     </message>
     <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation type="unfinished"></translation>
+        <source>git not found</source>
+        <translation>git bulunamadı</translation>
     </message>
     <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
-
-{rentry_uploader.url}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to upload</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to upload exported active mod list to Rentry.co</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not open directory</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{directory_name} path does not exist or is not set.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Would you like to set the path now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>File not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The file you are trying to upload does not exist.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>File: {path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploaded file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The URL has been copied to your clipboard:
-
-{ret}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
-        <translation type="unfinished"></translation>
+        <source>git executable was not found in $PATH!</source>
+        <translation>git çalıştırıcısı $PATH yolunda bulunamadı!</translation>
     </message>
     <message>
         <source>Git integration will not work without Git installed! Do you want to open download page for Git?
 
 If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
-PublishedFileIDs are needed to retrieve mods from Steam!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. This can take longer due to rate limits, but you can also re-use the script generated by RimSort with a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This operation will compare 2 databases, A &amp; B, by checking dependencies from A with dependencies from B.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
-A report of discrepancies is generated. You will be prompted for these paths in order:
+        <translation>Git entegrasyonu Git indirilmeden çalışmaz! Git için indirme sayfasını açmak istermisiniz?
 
-	1) Select input A
-	2) Select input B</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB comparison report: {len} found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.
-- The following exceptions will be made:
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
-
-	1) Select input A (db to-be-updated)
-	2) Select input B (update source)
-	3) Select output C (resultant db)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This operation will overwrite the {rules_source} database located at the following path:
-
-{path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to upload file.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scanning mod sources and populating metadata...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not save active mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to save active mods to file:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Checking Steam Workshop mods for updates...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to check for updates</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>All Workshop mods appear to be up to date!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to create SteamCMD runner!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>There is an active process already running!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to initiate SteamCMD installation. Local mods path not set!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please configure local mods path in Settings before attempting to install.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort</source>
-        <translation type="unfinished">RimSort</translation>
-    </message>
-    <message>
-        <source>No PublishedFileIds were supplied in operation.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please add mods to list before attempting to download.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>SteamCMD not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>SteamCMD executable was not found.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Processing Steam subscription action(s) via Steamworks API...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>git not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>git executable was not found in $PATH!</source>
-        <translation type="unfinished"></translation>
+Eğer Git&apos;i yeni indirdiyseniz PATH değişikliklerinin etkili olması için lütfen RimSort&apos;u yeniden başlatın.</translation>
     </message>
     <message>
         <source>Edit Steam DB repo</source>
@@ -1045,11 +1027,20 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
+PublishedFileIDs are needed to retrieve mods from Steam!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Are you sure?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Here be dragons.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. This can take longer due to rate limits, but you can also re-use the script generated by RimSort with a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1065,7 +1056,37 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This operation will compare 2 databases, A &amp; B, by checking dependencies from A with dependencies from B.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
+A report of discrepancies is generated. You will be prompted for these paths in order:
+
+	1) Select input A
+	2) Select input B</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Click &apos;Show Details&apos; to see the full report!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
+- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.
+- The following exceptions will be made:
+
+	{DB_BUILDER_RECURSE_EXCEPTIONS}
+
+The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
+
+	1) Select input A (db to-be-updated)
+	2) Select input B (update source)
+	3) Select output C (resultant db)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1089,6 +1110,12 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This operation will overwrite the {rules_source} database located at the following path:
+
+{path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit SteamDB expiry:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1101,11 +1128,11 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Use This Instead</source>
+        <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <source>Use This Instead</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1138,19 +1165,25 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Unsaved Changes</source>
-        <translation>Modifications non enregistrées</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You have unsaved changes. What would you like to do?</source>
-        <translation>Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Save and Run</source>
-        <translation>Enregistrer et exécuter</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Run Anyway</source>
-        <translation>Exécuter quand même</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
+
+Are your game configuration paths correct?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
@@ -1230,7 +1263,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Annuler</translation>
+        <translation type="unfinished">İptal Et</translation>
     </message>
     <message>
         <source>Updates Completed</source>
@@ -1494,7 +1527,7 @@ Repository:
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Dosya: {file_path}</translation>
     </message>
     <message>
         <source>Database parse error</source>
@@ -1725,39 +1758,39 @@ Error: {error}</source>
     <name>MainWindow</name>
     <message>
         <source>Refresh</source>
-        <translation>Actualiser</translation>
+        <translation type="unfinished">Yenile</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Effacer</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restore</source>
-        <translation>Restaurer</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sort</source>
-        <translation>Trier</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>Enregistrer</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Run</source>
-        <translation>Exécuter</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Main Content</source>
-        <translation>Contenu principal</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>File Search</source>
-        <translation>Recherche de fichiers</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Troubleshooting</source>
-        <translation>Dépannage</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Steam Client Integration</source>
@@ -1792,12 +1825,6 @@ Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
-                &lt;br&gt;&lt;br&gt;
-                You can change this in the settings under the Advanced tab.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
 
 RimSort can copy all of your Workshop mods to the new instance&apos;s local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
@@ -1825,7 +1852,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Öğe geri yüklenirken hata</translation>
     </message>
     <message>
         <source>Archive not found at path: {input_path}</source>
@@ -1833,7 +1860,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Öğe arşivini okurken bir hata oluştu: {e}</translation>
     </message>
     <message>
         <source>Instance folder exists</source>
@@ -1868,23 +1895,19 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Couldn&apos;t restore steamcmd symlink/junction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1913,6 +1936,10 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1971,199 +1998,205 @@ How would you like to proceed?</source>
         <source>ACF Log Reader</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
+                &lt;br&gt;&lt;br&gt;
+                You can change this in the settings under the Advanced tab.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
     <message>
         <source>File</source>
-        <translation>Fichier</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Mod List…</source>
-        <translation>Ouvrir la liste de mods…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Save Mod List As…</source>
-        <translation>Enregistrer la liste de mods sous…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Import</source>
-        <translation>Importer</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>From Rentry.co</source>
-        <translation>Depuis Rentry.co</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>From Workshop collection</source>
-        <translation>Depuis la collection Workshop</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Export</source>
-        <translation>Exporter</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>To Clipboard…</source>
-        <translation>Vers le presse-papiers…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>To Rentry.co…</source>
-        <translation>Vers Rentry.co…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Upload Log</source>
-        <translation>Télécharger le journal</translation>
+        <translation type="unfinished">Log yükle</translation>
     </message>
     <message>
         <source>Open...</source>
-        <translation>Ouvrir...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>RimSort</source>
-        <translation>RimSort</translation>
+        <translation type="unfinished">RimSort</translation>
     </message>
     <message>
         <source>RimWorld</source>
-        <translation>RimWorld</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Root Directory</source>
-        <translation>Répertoire racine</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Config Directory</source>
-        <translation>Répertoire de configuration</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Logs Directory</source>
-        <translation>Répertoire des journaux</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Local Mods Directory</source>
-        <translation>Répertoire des mods locaux</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Steam Mods Directory</source>
-        <translation>Répertoire des mods Steam</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings…</source>
-        <translation>Paramètres…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Exit</source>
-        <translation>Quitter</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Éditer</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Couper</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copier</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Coller</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Rule Editor…</source>
-        <translation>Éditeur de règles…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
-        <translation>Réinitialiser les avertissements</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Download</source>
-        <translation>Télécharger</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add Git Mod</source>
-        <translation>Ajouter un mod Git</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add Zip Mod</source>
-        <translation>Ajouter un mod Zip</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Browse Workshop</source>
-        <translation>Parcourir le Workshop</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Update Workshop Mods</source>
-        <translation>Mettre à jour les mods Workshop</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Instances</source>
-        <translation>Instances</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current: &quot;Default&quot;</source>
-        <translation>Actuel : &quot;Par défaut&quot;</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Backup Instance…</source>
-        <translation>Sauvegarder l&apos;instance…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restore Instance…</source>
-        <translation>Restaurer l&apos;instance…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clone Instance…</source>
-        <translation>Cloner l&apos;instance…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create Instance…</source>
-        <translation>Créer une instance…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete Instance…</source>
-        <translation>Supprimer l&apos;instance…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Textures</source>
-        <translation>Textures</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Optimize Textures</source>
-        <translation>Optimiser les textures</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete .dds Textures</source>
-        <translation>Supprimer les textures .dds</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Update</source>
-        <translation>Mise à jour</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Check for Updates…</source>
-        <translation>Vérifier les mises à jour…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Check for Updates on Startup</source>
-        <translation>Vérifier les mises à jour au démarrage</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Help</source>
-        <translation>Aide</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>RimSort Wiki…</source>
-        <translation>Wiki RimSort…</translation>
-    </message>
-    <message>
-        <source>From Save file…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>RimSort GitHub…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>From Save file…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2191,6 +2224,14 @@ Please make sure your Database location settings are correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Steam DB is expired! Consider updating!
 </source>
         <translation type="unfinished"></translation>
@@ -2202,24 +2243,16 @@ Falling back to cached, but EXPIRED Steam Database...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Missing Version.txt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2275,15 +2308,6 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
-
-Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
-
-Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2309,6 +2333,15 @@ Please select your preferred mod variant in the table below. You can also open e
     </message>
     <message>
         <source>Download with Steam client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
+
+Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
+
+Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2710,12 +2743,12 @@ This operation will recursively delete all mod files, except for .dds textures f
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <source>You have selected {len} mods for unsubscribe.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe.</source>
+        <source>
+This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2724,7 +2757,19 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Add comment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to add to blacklist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2739,18 +2784,6 @@ Missing Dependencies:</source>
     <message>
         <source>
 Incompatibilities:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add comment</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to add to blacklist</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2849,38 +2882,6 @@ An alternative updated mod is recommended:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Modified Time</source>
-        <translation>Date de modification</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Auteur</translation>
-    </message>
-    <message>
-        <source>Folder Size</source>
-        <translation>Taille du dossier</translation>
-    </message>
-    <message>
-        <source>Toggle sort order</source>
-        <translation>Basculer l&apos;ordre de tri</translation>
-    </message>
-    <message>
-        <source>Desc</source>
-        <translation>Desc</translation>
-    </message>
-    <message>
-        <source>Asc</source>
-        <translation>Asc</translation>
-    </message>
-    <message>
-        <source>Calculating folder sizes...</source>
-        <translation>Calcul des tailles des dossiers...</translation>
-    </message>
-    <message>
-        <source>Rebuilding list...</source>
-        <translation>Reconstruction de la liste...</translation>
-    </message>
-    <message>
         <source>Search by...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2946,6 +2947,38 @@ An alternative updated mod is recommended:
     </message>
     <message>
         <source>Sort inactive mods by</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3129,18 +3162,6 @@ An alternative updated mod is recommended:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove this rule</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Editing rules for: {name}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3169,7 +3190,19 @@ An alternative updated mod is recommended:
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open this mod in the editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove this rule</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3296,7 +3329,7 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Annuler</translation>
+        <translation type="unfinished">İptal Et</translation>
     </message>
     <message>
         <source>OK</source>
@@ -3383,50 +3416,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Automatically clear the depot cache before downloading mods through SteamCMD.
-This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To add your own theme / stylesheet 
-
-1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
-2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
-3) Edit the copied &apos;style.qss&apos; as per your imagination 
-4) Start &apos;RimSort&apos; and select your theme from dropdown 
-5) Click &apos;ok&apos; to save settings and apply the selected theme 
-
-NOTE 
-Name of folder will be used as name of the theme and any invalid theme will be ignored 
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
-
- Examples : 
-
- -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3479,7 +3468,15 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Get PublishedFileIDs from the Steam Workshop.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3527,6 +3524,11 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Automatically clear the depot cache before downloading mods through SteamCMD.
+This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>SteamCMD installation location</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3535,8 +3537,12 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Import .acf</source>
+        <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished">.acf İçe Aktar</translation>
     </message>
     <message>
         <source>Delete .acf</source>
@@ -3663,6 +3669,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Update databases on startup</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3719,35 +3729,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable editing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Delete before update</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3757,10 +3738,6 @@ Improves performance by ~50%.</source>
     </message>
     <message>
         <source>Launch State</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3796,11 +3773,67 @@ Improves performance by ~50%.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Auxiliary DB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable editing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Auxiliary Metadata DB performance mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
+Improves performance by ~50%.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To add your own theme / stylesheet 
+
+1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
+2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
+3) Edit the copied &apos;style.qss&apos; as per your imagination 
+4) Start &apos;RimSort&apos; and select your theme from dropdown 
+5) Click &apos;ok&apos; to save settings and apply the selected theme 
+
+NOTE 
+Name of folder will be used as name of the theme and any invalid theme will be ignored 
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auxiliary DB</source>
+        <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
+
+ Examples : 
+
+ -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
+</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3879,11 +3912,6 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please reach out to us on Github Issues page or
-#rimsort-testing on the Rocketman/CAI discord</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add All Mods</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3897,6 +3925,11 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Empty list of mods returned, unable to add collection to list!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please reach out to us on Github Issues page or
+#rimsort-testing on the Rocketman/CAI discord</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3916,7 +3949,7 @@ Please choose one of the following options to proceed.</source>
     <name>SteamcmdInterface</name>
     <message>
         <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">RimSort - SteamCMD Kurulumu</translation>
     </message>
     <message>
         <source>RimSort was unable to find SteamCMD installed in the configured prefix:
@@ -3970,16 +4003,16 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Create Symlink?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New symlink:
+[{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4025,7 +4058,28 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Could not automatically start game installation through Steam.
+
+Please manually verify/install the game through Steam.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleted all files in the Steam mods directory.
+
+ Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Steam Workshop Redownload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
+
+If mods don&apos;t download automatically, try:
+1. Restart Steam
+2. Verify game files in Steam
+3. Visit the Workshop page of each mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4057,27 +4111,6 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Could not automatically start game installation through Steam.
-
-Please manually verify/install the game through Steam.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Deleted all files in the Steam mods directory.
-
- Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
-
-If mods don&apos;t download automatically, try:
-1. Restart Steam
-2. Verify game files in Steam
-3. Visit the Workshop page of each mod</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Are you sure you want to delete all mods?
 
 WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
@@ -4097,7 +4130,7 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished">Échec de l&apos;exportation</translation>
+        <translation type="unfinished">Dışa aktarma Başarısız</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod export.</source>
@@ -4157,45 +4190,12 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Cache Cleared</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Successfully deleted Steam&apos;s downloading folder.
 Restart Steam for the changes to take effect.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not delete Steam&apos;s downloading folder.
-Please delete it manually: Steam/steamapps/downloading
-Details: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam&apos;s game properties.
-Details: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No installed games found in this Steam library folder.
-You may have games installed in a different Steam library folder or drive.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will verify all {len} games in your Steam library.
-This may take a while. Continue?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam will now verify {len} games.
-You can monitor progress in the Steam client.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not repair Steam library.
-Please verify your games manually through Steam.
-Details: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cache Cleared</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4211,7 +4211,19 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Could not delete Steam&apos;s downloading folder.
+Please delete it manually: Steam/steamapps/downloading
+Details: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Steam Action Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open Steam to verify game files.
+Please verify game files manually through Steam&apos;s game properties.
+Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4219,11 +4231,32 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No installed games found in this Steam library folder.
+You may have games installed in a different Steam library folder or drive.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm Library Repair</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This will verify all {len} games in your Steam library.
+This may take a while. Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Library Repair Started</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam will now verify {len} games.
+You can monitor progress in the Steam client.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not repair Steam library.
+Please verify your games manually through Steam.
+Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4262,6 +4295,10 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reset game files (Preserves local mods, deletes and redownloads game files)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4294,23 +4331,19 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Apply Recovery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Annuler</translation>
+        <translation type="unfinished">İptal Et</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4463,7 +4496,7 @@ The following table displays Workshop mods with suggested replacements according
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Actualiser</translation>
+        <translation type="unfinished">Yenile</translation>
     </message>
     <message>
         <source>Refresh Mod List</source>
@@ -4585,7 +4618,7 @@ The following table displays Workshop mods with suggested replacements according
     <name>launch_game_process</name>
     <message>
         <source>File not found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Dosya bulunamadı</translation>
     </message>
     <message>
         <source>Unable to launch game process</source>
@@ -4596,15 +4629,15 @@ The following table displays Workshop mods with suggested replacements according
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unable to launch RimWorld</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

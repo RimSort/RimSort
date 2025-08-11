@@ -1,24 +1,30 @@
-from loguru import logger
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
+from loguru import logger
+from PySide6.QtCore import QObject, Qt, Slot
+from sqlalchemy import delete, update
+
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.event_bus import EventBus
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
-    reset_warnings_signal = Signal()
 
-    def __init__(self, view: ModsPanel) -> None:
+    def __init__(self, view: ModsPanel, settings_controller: SettingsController) -> None:
         super().__init__()
 
         self.mods_panel = view
-
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+        self.settings_controller = settings_controller
 
         # Only one label can be active at a time; these are used only in the active modlist.
 
         self.warnings_label_active = False
         self.errors_label_active = False
+        self.news_label_active = False
 
         self.mods_panel.warnings_text.clicked.connect(
             self._change_visibility_of_mods_with_warnings
@@ -26,33 +32,61 @@ class ModsPanelController(QObject):
         self.mods_panel.errors_text.clicked.connect(
             self._change_visibility_of_mods_with_errors
         )
-        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+        # New mods filter label (only when save-comparison feature enabled)
+        if (
+            hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.connect(
+                self._change_visibility_of_new_mods
+            )
+        EventBus().reset_warnings_signal.connect(
+            self._on_menu_bar_reset_warnings_triggered
+        )
+        EventBus().reset_mod_colors_signal.connect(
+            self._on_menu_bar_reset_mod_colors_triggered
+        )
+        EventBus().do_change_mod_coloring_mode.connect(
+            self._on_change_mod_coloring_mode
+        )
         EventBus().filters_changed_in_active_modlist.connect(
             self._on_filters_changed_in_active_modlist
         )
         EventBus().filters_changed_in_inactive_modlist.connect(
             self._on_filters_changed_in_inactive_modlist
         )
+        EventBus().do_delete_outdated_entries_in_aux_db.connect(
+            self.delete_outdated_aux_db_entries
+        )
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.connect(
+            self.do_all_entries_in_aux_db_as_outdated
+        )
+
+    def _reemit_active_filter_signal(self) -> None:
+        """Re-emit the active filter label's click signal to reapply filtering."""
+
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        elif self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+        elif (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
 
     @Slot()
     def _on_filters_changed_in_active_modlist(self) -> None:
         """When filters are changed in the active modlist."""
 
-        # On filter change, disable warning/error label if active
-        if self.warnings_label_active:
-            self.mods_panel.warnings_text.clicked.emit()
-        elif self.errors_label_active:
-            self.mods_panel.errors_text.clicked.emit()
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_filters_changed_in_inactive_modlist(self) -> None:
         """When filters are changed in the inactive modlist."""
 
-        # On filter change, disable warning/error label if active
-        if self.warnings_label_active:
-            self.mods_panel.warnings_text.clicked.emit()
-        elif self.errors_label_active:
-            self.mods_panel.errors_text.clicked.emit()
+        self._reemit_active_filter_signal()
 
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
@@ -86,6 +120,38 @@ class ModsPanelController(QObject):
         if package_id in inactive_mods_list:
             inactive_mods_list.remove(package_id)
 
+    def _on_menu_bar_reset_mod_colors_triggered(self) -> None:
+        """
+        Resets all mod colors to the default color.
+        """
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
+        for mod in active_mods :
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            self.mods_panel.active_mods_list.reset_mod_color(uuid)
+        for mod in inactive_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
+
+    def _on_change_mod_coloring_mode(self) -> None:
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.active_mods_list.change_mod_color(uuid, mod_color)
+
+        for mod in inactive_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            mod_color = mod_data["mod_color"]
+            if mod_color:
+                self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)
+
     @Slot()
     def _change_visibility_of_mods_with_warnings(self) -> None:
         """When on, shows only mods that have warnings.
@@ -97,6 +163,12 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
 
         self.warnings_label_active = not self.warnings_label_active
 
@@ -110,6 +182,7 @@ class ModsPanelController(QObject):
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.check_widgets_visible()
         logger.debug("Finished hiding mods without warnings.")
 
     @Slot()
@@ -123,6 +196,12 @@ class ModsPanelController(QObject):
         # If the other label is active, disable it
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
+        if (
+            self.news_label_active
+            and hasattr(self.mods_panel, "new_text")
+            and self.settings_controller.settings.show_save_comparison_indicators
+        ):
+            self.mods_panel.new_text.clicked.emit()
 
         self.errors_label_active = not self.errors_label_active
 
@@ -136,4 +215,88 @@ class ModsPanelController(QObject):
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.check_widgets_visible()
         logger.debug("Finished hiding mods without errors.")
+
+    @Slot()
+    def _change_visibility_of_new_mods(self) -> None:
+        """When on, shows only active mods that are not in the latest save file.
+
+        When off, shows all mods. Respects other active filters.
+        """
+
+        # If the other labels are active, disable them
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        if self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+
+        self.news_label_active = not self.news_label_active
+
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            is_new = bool(mod_data.__dict__.get("is_new", False))
+            # If a mod is already hidden because of filters, dont unhide it
+            if not is_new:
+                if self.news_label_active:
+                    mod.setHidden(True)
+                elif not mod_data["hidden_by_filter"]:
+                    mod.setHidden(False)
+        self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.check_widgets_visible()
+        logger.debug("Finished hiding mods that are in save (showing only new).")
+    def do_all_entries_in_aux_db_as_outdated(self) -> None:
+        """
+        Sets all entries in the aux db as outdated if not already outdated.
+        
+        This means the previously outdated items DO NOT have their db_time_touched updated.
+        """
+        # This is more performant, but we dont update db_time_touched. But that should be ok
+        time_limit = self.settings_controller.settings.aux_db_time_limit
+        if time_limit < 0:
+            logger.debug("Skipping the setting entries as outdated because time limit is negative.")
+            return
+
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            stmt = (
+                update(AuxMetadataEntry)
+                .where(AuxMetadataEntry.outdated.is_(False))
+                .values(outdated=True)
+            )
+            aux_metadata_session.execute(stmt)
+            aux_metadata_session.commit()
+            
+        logger.debug("Finished setting entries as outdated.")
+
+    def delete_outdated_aux_db_entries(self) -> None:
+        """
+        Based on settings option, it deletes aux db entries
+        after a certain time limit they have not been touched.
+
+        This is used at init phases of the applicaiton. Keeps DB
+        updated even if mods have been deleted etc. outside of RimSort.
+        """
+        time_limit = self.settings_controller.settings.aux_db_time_limit
+        if time_limit < 0:
+            logger.debug("Skipping the deletion of outdated entries because time limit is negative.")
+            return
+
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as aux_metadata_session:
+            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=time_limit)
+            stmt = (
+                delete(AuxMetadataEntry)
+                .where(AuxMetadataEntry.outdated)
+                .where(AuxMetadataEntry.db_time_touched < limit)
+            )
+            aux_metadata_session.execute(stmt)
+            aux_metadata_session.commit()
+        logger.debug("Finished deleting outdated entries.")

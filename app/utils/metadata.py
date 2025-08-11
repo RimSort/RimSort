@@ -210,7 +210,7 @@ class MetadataManager(QObject):
                             ).format(
                                 last_updated=strftime(
                                     "%Y-%m-%d %H:%M:%S",
-                                    localtime(db_data["version"] - life),
+                                    localtime(db_time),
                                 )
                             ),
                             "",
@@ -531,36 +531,6 @@ class MetadataManager(QObject):
             # Wait for pool to complete
             self.parser_threadpool.waitForDone()
             self.parser_threadpool.clear()
-            logger.info(
-                "Finished querying Official expansions. Supplementing metadata..."
-            )
-            # Create a packageid to appid mapping for quicker lookup
-            package_to_app = {
-                dlc["packageid"]: appid for appid, dlc in RIMWORLD_DLC_METADATA.items()
-            }
-            # Base game and expansion About.xml do not contain name, so these
-            # must be manually added
-            for metadata in self.internal_local_metadata.values():
-                package_id = metadata["packageid"]
-                appid = package_to_app.get(package_id)
-                if appid:
-                    dlc_metadata = RIMWORLD_DLC_METADATA[appid]
-                    # Default for supported versions if not already present
-                    default_versions = {
-                        "li": ".".join(self.game_version.split(".")[:2])
-                    }
-                    # Update metadata efficiently
-                    metadata.update(
-                        {
-                            "appid": appid,
-                            "name": dlc_metadata["name"],
-                            "steam_url": dlc_metadata["steam_url"],
-                            "description": dlc_metadata["description"],
-                            "supportedversions": metadata.get(
-                                "supportedversions", default_versions
-                            ),
-                        }
-                    )
         else:
             logger.error(
                 "Skipping parsing data from empty game data path. Is the game path configured?"
@@ -657,6 +627,45 @@ class MetadataManager(QObject):
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
 
+    def supplement_dlc_metadata(self, uuid: str) -> None:
+        """
+        Normalize metadata for official RimWorld content (Core + DLC).
+
+        Applies canonical fields (name, steam_url, description, appid) and ensures
+        a default supportedversions if missing. Safe to call for any UUID.
+        """
+        mod = self.internal_local_metadata.get(uuid)
+        if not mod:
+            return
+        # Only adjust for entries parsed from the game's Data folder
+        if mod.get("data_source") != "expansion":
+            return
+        package_id = mod.get("packageid")
+        if not isinstance(package_id, str):
+            return
+        # Map packageId -> appid
+        package_to_app = {v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()}
+        appid = package_to_app.get(package_id)
+        if not appid:
+            return
+        dlc_meta = RIMWORLD_DLC_METADATA[appid]
+        # Ensure supportedversions exists and is sane
+        if not isinstance(mod.get("supportedversions"), dict):
+            version = ".".join(self.game_version.split(".")[:2]) if self.game_version else None
+            if version:
+                mod["supportedversions"] = {"li": version}
+            else:
+                mod.pop("supportedversions", None)
+        # Apply canonical fields
+        mod.update(
+            {
+                "appid": appid,
+                "name": dlc_meta["name"],
+                "steam_url": dlc_meta["steam_url"],
+                "description": dlc_meta["description"],
+            }
+        )
+
     def compile_metadata(self, uuids: list[str] = []) -> None:
         """
         Iterate through each expansion or mod and add new key-values describing the
@@ -671,6 +680,11 @@ class MetadataManager(QObject):
         # Go through each mod and add dependencies
         dependencies = None
         for uuid in uuids:
+            # Normalize DLC/base game entries so they always show canonical names
+            try:
+                self.supplement_dlc_metadata(uuid)
+            except Exception as e:
+                logger.debug(f"supplement_dlc_metadata failed for {uuid}: {e}")
             logger.debug(
                 f"UUID: {uuid} packageid: "
                 + self.internal_local_metadata[uuid].get("packageid")
@@ -1094,6 +1108,15 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_community_rules[package_id].get(
+                        "loadTop"
+                    )
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1177,6 +1200,13 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
+                    load_this_top = self.external_user_rules[package_id].get("loadTop")
+                    if load_this_top:
+                        logger.debug(
+                            "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
+                        )
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadTop"] = True
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
                     )
@@ -1304,6 +1334,12 @@ class MetadataManager(QObject):
         if not check_path.exists():
             return None
         replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
+
+        # check if replacement supports  the game version
+        major, minor = self.game_version.split(".")[:2]
+        version_regex = rf"{major}.{minor}"
+        if version_regex not in replacement_data["ReplacementVersions"]:
+            return None
 
         return ModReplacement(
             name=replacement_data["ReplacementName"],
@@ -1526,12 +1562,29 @@ class MetadataManager(QObject):
 
             # get mod's dependencies
             if mod_data.get("dependencies"):
-                # check which dependencies are missing
-                missing = {
-                    dep_id
-                    for dep_id in mod_data["dependencies"]
-                    if dep_id not in active_mod_ids
-                }
+                # check which dependencies are missing, honoring alternativePackageIds
+                missing: set[str] = set()
+                for dep_entry in mod_data["dependencies"]:
+                    alt_ids: set[str] = set()
+                    if isinstance(dep_entry, tuple):
+                        dep_id = dep_entry[0]
+                        if (
+                            len(dep_entry) > 1
+                            and isinstance(dep_entry[1], dict)
+                            and isinstance(dep_entry[1].get("alternatives"), set)
+                        ):
+                            alt_ids = dep_entry[1]["alternatives"]
+                    else:
+                        dep_id = dep_entry
+
+                    consider_alternatives = (
+                        self.settings_controller.settings.consider_alternative_package_ids
+                    )
+                    satisfied = dep_id in active_mod_ids
+                    if not satisfied and consider_alternatives:
+                        satisfied = any(alt in active_mod_ids for alt in alt_ids)
+                    if not satisfied:
+                        missing.add(dep_id)
                 if missing:
                     missing_deps[mod_id] = missing
 
@@ -1745,7 +1798,14 @@ class ModParser(QRunnable):
                                     mod_metadata["packageid"] = potential_packageid
                                     break
                         # Normalize package ID in metadata
-                        mod_metadata["packageid"] = mod_metadata["packageid"].lower()
+                        if isinstance(mod_metadata["packageid"], str):
+                            mod_metadata["packageid"] = mod_metadata[
+                                "packageid"
+                            ].lower()
+                        else:
+                            mod_metadata["packageid"] = (
+                                "packageid error in mod about.xml"
+                            )
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (
@@ -2015,35 +2075,103 @@ def add_dependency_to_mod(
     if A depends on B, B does not necessarily depend on A.
     """
     if mod_data:
-        # Create a new key with empty set as value by default
-        mod_data.setdefault("dependencies", set())
+        # Shape of stored dependencies
+        # - We keep a list to support rich entries (tuples containing a dict + set)
+        # - Each element is either:
+        #     "<packageId>"  (plain string), or
+        #     ("<packageId>", {"alternatives": set[str]})  (primary + alternatives)
+        # A list is used instead of a set because Python sets cannot contain dicts.
+        mod_data.setdefault("dependencies", [])
+
+        # Helper: ensure a dependency with alternatives is present, merging when needed.
+        # - If a tuple for the same dep already exists, merge the alternatives into it.
+        # - If only a plain string exists for that dep, upgrade it to the tuple form.
+        # - Otherwise append a new tuple entry.
+        def _ensure_dep_with_alts(dep_list: list[Any], dep_id: str, alt_ids: set[str]) -> None:
+            """Add or merge a dependency with alternatives into dep_list.
+
+            Typical sources that may converge here:
+            - Base <modDependencies>
+            - Matched <modDependenciesByVersion> section for the current game version
+              If both specify the same dependency but different alternatives,
+              this function merges them, keeping a single entry per primary dep.
+            """
+            for i, existing in enumerate(dep_list):
+                if isinstance(existing, tuple) and existing and existing[0] == dep_id:
+                    # Merge alternatives into existing set if present
+                    alt = existing[1].get("alternatives") if isinstance(existing[1], dict) else None
+                    if isinstance(alt, set):
+                        alt.update(alt_ids)
+                    else:
+                        dep_list[i] = (dep_id, {"alternatives": set(alt_ids)})
+                    return
+                if existing == dep_id:
+                    # Replace simple dep with dep+alternatives
+                    dep_list[i] = (dep_id, {"alternatives": set(alt_ids)})
+                    return
+            dep_list.append((dep_id, {"alternatives": set(alt_ids)}))
+
+        # Helper: ensure a plain dependency is present, without duplicating
+        # an existing plain entry or a tuple entry for the same dep.
+        def _ensure_plain_dep(dep_list: list[Any], dep_id: str) -> None:
+            """Add a plain dependency if it doesn't already exist (as string or tuple)."""
+            for existing in dep_list:
+                if existing == dep_id:
+                    return
+                if isinstance(existing, tuple) and existing and existing[0] == dep_id:
+                    return
+            dep_list.append(dep_id)
+
+        def _parse_alt_ids(alt_obj: Any) -> set[str]:
+            alt_ids: set[str] = set()
+            if isinstance(alt_obj, dict):
+                li = alt_obj.get("li")
+                if isinstance(li, list):
+                    for v in li:
+                        if isinstance(v, str):
+                            alt_ids.add(v.lower())
+                        elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
+                            alt_ids.add(v["#text"].lower())
+                elif isinstance(li, str):
+                    alt_ids.add(li.lower())
+            elif isinstance(alt_obj, list):
+                for v in alt_obj:
+                    if isinstance(v, str):
+                        alt_ids.add(v.lower())
+            elif isinstance(alt_obj, str):
+                alt_ids.add(alt_obj.lower())
+            return alt_ids
 
         # If the value is a single dict (for moddependencies)
         if isinstance(dependency_or_dependency_ids, dict):
-            if (
-                dependency_or_dependency_ids.get("packageId")
-                and not isinstance(dependency_or_dependency_ids["packageId"], list)
-                and not isinstance(dependency_or_dependency_ids["packageId"], dict)
-            ):
-                # if dependency_id in all_mods:
-                # ^ dependencies are required regardless of whether they are in all_mods
-                mod_data["dependencies"].add(
-                    dependency_or_dependency_ids["packageId"].lower()
+            pkg = dependency_or_dependency_ids.get("packageId")
+            if pkg and not isinstance(pkg, (list, dict)):
+                dep_id = str(pkg).lower()
+                alt_ids = _parse_alt_ids(
+                    dependency_or_dependency_ids.get("alternativePackageIds")
                 )
+                if alt_ids:
+                    _ensure_dep_with_alts(mod_data["dependencies"], dep_id, alt_ids)
+                else:
+                    _ensure_plain_dep(mod_data["dependencies"], dep_id)
             else:
                 logger.error(
                     f"Dependency dict does not contain packageid or correct format: [{dependency_or_dependency_ids}]"
                 )
         # If the value is a LIST of dicts
         elif isinstance(dependency_or_dependency_ids, list):
-            if isinstance(dependency_or_dependency_ids[0], dict):
+            if dependency_or_dependency_ids and isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency.get("packageId"):
-                        # Below works with `MayRequire` dependencies
-                        dependency_id = dependency["packageId"].lower()
-                        # if dependency_id in all_mods:
-                        # ^ dependencies are required regardless of whether they are in all_mods
-                        mod_data["dependencies"].add(dependency_id)
+                    pkg = dependency.get("packageId") if isinstance(dependency, dict) else None
+                    if pkg:
+                        dep_id = str(pkg).lower()
+                        alt_ids = set()
+                        if isinstance(dependency, dict):
+                            alt_ids = _parse_alt_ids(dependency.get("alternativePackageIds"))
+                        if alt_ids:
+                            _ensure_dep_with_alts(mod_data["dependencies"], dep_id, alt_ids)
+                        else:
+                            _ensure_plain_dep(mod_data["dependencies"], dep_id)
                     else:
                         logger.error(
                             f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
@@ -2062,12 +2190,21 @@ def add_dependency_to_mod_from_steamdb(
     mod_data: dict[str, Any], dependency_id: Any, all_mods: dict[str, Any]
 ) -> None:
     mod_name = mod_data.get("name")
-    # Create a new key with empty set as value by default
-    mod_data.setdefault("dependencies", set())
+    # Store dependencies as a list to support rich entries
+    mod_data.setdefault("dependencies", [])
 
     # If the value is a single str (for steamDB)
     if isinstance(dependency_id, str):
-        mod_data["dependencies"].add(dependency_id)
+        # Avoid duplicates if present
+        dep_list = mod_data["dependencies"]
+        if all(
+            not (
+                existing == dependency_id
+                or (isinstance(existing, tuple) and existing and existing[0] == dependency_id)
+            )
+            for existing in dep_list
+        ):
+            dep_list.append(dependency_id)
     else:
         logger.error(f"Dependencies is not a single str: [{dependency_id}]")
     logger.debug(f"Added dependency to [{mod_name}] from SteamDB: [{dependency_id}]")

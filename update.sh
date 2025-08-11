@@ -66,9 +66,13 @@ validate_update_source() {
     
     # Check if update source contains expected files
     if [ "$OS" = "Darwin" ]; then
-        if [ ! -d "$UPDATE_SOURCE_FOLDER/$EXECUTABLE_NAME" ]; then
-            log_error "Update source folder is missing $EXECUTABLE_NAME"
+        # On macOS, UPDATE_SOURCE_FOLDER points directly to RimSort.app
+        if [ ! -d "$UPDATE_SOURCE_FOLDER/Contents/MacOS" ]; then
+            log_error "Update source does not look like an app bundle: $UPDATE_SOURCE_FOLDER"
             exit 1
+        fi
+        if [ ! -x "$UPDATE_SOURCE_FOLDER/Contents/MacOS/RimSort" ]; then
+            log_warning "RimSort binary not marked executable; attempting later in set_permissions"
         fi
     else
         if [ ! -f "$UPDATE_SOURCE_FOLDER/$EXECUTABLE_NAME" ]; then
@@ -107,9 +111,11 @@ set_permissions() {
     if [ "$OS" = "Darwin" ]; then
         chmod +x "$target_dir/Contents/MacOS/RimSort" 2>/dev/null || log_warning "Could not set permissions for RimSort"
         chmod +x "$target_dir/Contents/MacOS/todds/todds" 2>/dev/null || log_warning "Could not set permissions for todds"
+        chmod +x "$target_dir/Contents/MacOS/QtWebEngineProcess" 2>/dev/null || log_warning "Could not set permissions for QtWebEngineProcess"
     else
         chmod +x "$target_dir/$EXECUTABLE_NAME" 2>/dev/null || log_warning "Could not set permissions for $EXECUTABLE_NAME"
         chmod +x "$target_dir/todds/todds" 2>/dev/null || log_warning "Could not set permissions for todds"
+        chmod +x "$target_dir/QtWebEngineProcess" 2>/dev/null || log_warning "Could not set permissions for QtWebEngineProcess"
     fi
 }
 
@@ -157,12 +163,15 @@ log_info "Operating system: $OS"
 if [ "$OS" = "Darwin" ]; then
     # macOS detected
     EXECUTABLE_NAME="RimSort.app"
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    INSTALL_DIR="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"               # .../RimSort.app/Contents/MacOS
+    APP_BUNDLE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"      # .../RimSort.app
+    INSTALL_PARENT_DIR="$(dirname "$APP_BUNDLE_DIR")"            # Parent of .app (e.g. /Applications)
+    INSTALL_DIR="$APP_BUNDLE_DIR"                                  # For common messaging/backup
     UPDATE_SOURCE_FOLDER="${TMPDIR:-/tmp}/$EXECUTABLE_NAME"
-    
+
     log_info "macOS detected"
-    log_info "Installation directory: $INSTALL_DIR"
+    log_info "App bundle: $APP_BUNDLE_DIR"
+    log_info "Install parent: $INSTALL_PARENT_DIR"
     log_info "Update source: $UPDATE_SOURCE_FOLDER"
 else
     # Assume Linux if not macOS
@@ -210,20 +219,29 @@ log_info "Performing update..."
 
 if [ "$OS" = "Darwin" ]; then
     # macOS update process
-    if [ -d "$INSTALL_DIR" ]; then
-        if ! rm -rf "$INSTALL_DIR"; then
-            log_error "Failed to remove old installation at $INSTALL_DIR"
+    # Safety guard: never operate on root or /Applications itself
+    if [ -z "$APP_BUNDLE_DIR" ] || [ "$APP_BUNDLE_DIR" = "/" ] || [ "$INSTALL_PARENT_DIR" = "/" ]; then
+        log_error "Unsafe install paths detected. Aborting update."
+        exit 1
+    fi
+
+    # Remove old app bundle
+    if [ -d "$APP_BUNDLE_DIR" ]; then
+        if ! rm -rf "$APP_BUNDLE_DIR"; then
+            log_error "Failed to remove old app bundle at $APP_BUNDLE_DIR"
             exit 1
         fi
     fi
-    
-    if ! mv "$UPDATE_SOURCE_FOLDER" "$INSTALL_DIR"; then
-        log_error "Failed to move update files to $INSTALL_DIR"
+
+    # Move new app bundle into install parent dir
+    if ! mv "$UPDATE_SOURCE_FOLDER" "$INSTALL_PARENT_DIR"; then
+        log_error "Failed to move update files to $INSTALL_PARENT_DIR"
         exit 1
     fi
-    
-    set_permissions "$INSTALL_DIR"
-    launch_app "$INSTALL_DIR"
+
+    # Set permissions on the newly installed app bundle
+    set_permissions "$INSTALL_PARENT_DIR/$EXECUTABLE_NAME"
+    launch_app "$INSTALL_PARENT_DIR/$EXECUTABLE_NAME"
     
 else
     # Linux update process

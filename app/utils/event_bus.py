@@ -29,6 +29,7 @@ class EventBus(QObject):
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
     do_import_mod_list_from_workshop_collection = Signal()
+    do_import_mod_list_from_save_file = Signal()
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
 
@@ -44,6 +45,8 @@ class EventBus(QObject):
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
+    reset_warnings_signal = Signal()
+    reset_mod_colors_signal = Signal()
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
@@ -87,6 +90,7 @@ class EventBus(QObject):
     do_import_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
+    do_change_mod_coloring_mode = Signal()
 
     # MainWindow signals
     do_button_animation = Signal(QPushButton)
@@ -100,6 +104,8 @@ class EventBus(QObject):
     do_run_game = Signal()
     do_steamworks_api_call = Signal(list)
     do_steamcmd_download = Signal(list)
+    do_delete_outdated_entries_in_aux_db = Signal()
+    do_set_all_entries_in_aux_db_as_outdated = Signal()
 
     refresh_started = Signal()
     refresh_finished = Signal()
@@ -117,6 +123,9 @@ class EventBus(QObject):
     # Help Menu bar signals
     do_check_for_application_update = Signal()
     do_check_for_update_startup = Signal()
+
+    # Performance settings signals
+    enable_aux_db_performance_mode = Signal()
 
     def __new__(cls) -> "EventBus":
         """

@@ -1,6 +1,6 @@
 import os
 from platform import system
-from re import compile, findall, search
+from re import compile, search
 from typing import Any, Optional, Sequence
 
 import psutil
@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.app_info import AppInfo
-from app.utils.gui_info import GUIInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -80,6 +79,9 @@ class RunnerPanel(QWidget):
 
         # Clear the display
         self._do_clear_runner()
+
+        # Set the window size
+        self.resize(900, 600)
 
     def _setup_text_display(self) -> None:
         """Set up the text display area."""
@@ -178,9 +180,6 @@ class RunnerPanel(QWidget):
 
         # Set the main layout
         self.setLayout(self.main_layout)
-
-        # Use GUIInfo to set size from settings
-        self.resize(GUIInfo().get_panel_size())
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()
@@ -337,7 +336,11 @@ class RunnerPanel(QWidget):
     def handle_output(self) -> None:
         data = self.process.readAll()
         stdout = self.ansi_escape.sub("", bytes(data.data()).decode("utf8"))
-        self.message(stdout)
+        if self._is_process_running("steamcmd"):
+            for line in stdout.splitlines():
+                self.message(line)
+        else:
+            self.message(stdout)
 
     def message(self, line: str) -> None:
         """
@@ -419,12 +422,13 @@ class RunnerPanel(QWidget):
             line = line.replace(") quit", ")\n\nquit")
 
         # Handle download success and errors
-        success_matches = findall(r"Success. Downloaded item (\d+)", line)
-        if success_matches:
-            for success_pfid in success_matches:
-                if success_pfid in self.steamcmd_download_tracking:
-                    self.steamcmd_download_tracking.remove(success_pfid)
-                    self.progress_bar.setValue(self.progress_bar.value() + 1)
+        if (
+            f"Success. Downloaded item {self.steamcmd_current_pfid}" in line
+            and self.steamcmd_current_pfid in self.steamcmd_download_tracking
+        ):
+            # Remove the current PFID from tracking if it was successfully downloaded
+            self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
+            self.progress_bar.setValue(self.progress_bar.value() + 1)
         elif "ERROR! Download item " in line:
             self.change_progress_bar_color("warn")
             self.progress_bar.setValue(self.progress_bar.value() + 1)

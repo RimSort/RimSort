@@ -19,6 +19,20 @@ from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
+    MIN_SIZE = 400
+    MAX_SIZE = 1600
+    DEFAULT_WIDTH = 900
+    DEFAULT_HEIGHT = 600
+
+    @staticmethod
+    def validate_window_custom_size(width: int, height: int) -> tuple[int, int]:
+        """Validate custom width and height, resetting to defaults if out of range."""
+        if not (Settings.MIN_SIZE <= width <= Settings.MAX_SIZE):
+            width = Settings.DEFAULT_WIDTH
+        if not (Settings.MIN_SIZE <= height <= Settings.MAX_SIZE):
+            height = Settings.DEFAULT_HEIGHT
+        return width, height
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -47,6 +61,8 @@ class Settings(QObject):
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
+        # Default (-1) means do not delete data from Aux Metadata DB
+        self.aux_db_time_limit: int = -1
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
@@ -66,12 +82,10 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
-        self.check_dependencies_on_sort: bool = (
-            True  # Whether to check for missing dependencies when sorting
-        )
-        self.use_moddependencies_as_loadTheseBefore: bool = (
-            False  # Whether to use moddependencies as loadTheseBefore
-        )
+        # Whether to use moddependencies as loadTheseBefore rules
+        self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to check for missing dependencies when sorting
+        self.check_dependencies_on_sort: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -81,6 +95,7 @@ class Settings(QObject):
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
+        self.steamcmd_delete_before_update: bool = False
 
         # todds
         self.todds_preset: str = "optimized"
@@ -98,34 +113,54 @@ class Settings(QObject):
         # Language
         self.language = "en_US"
 
-        # Window size configuration
-        self.window_x: int = 100
-        self.window_y: int = 100
-        self.window_width: int = 800
-        self.window_height: int = 600
+        # Launch state setting: "maximized", "normal", or "custom"
+        # Main Window
+        self.main_window_launch_state: str = "maximized"
+        self.main_window_custom_width: int = 900
+        self.main_window_custom_height: int = 600
 
-        # Runner panel size configuration
-        self.panel_width: int = 800
-        self.panel_height: int = 600
+        # Browser Window
+        self.browser_window_launch_state: str = "maximized"
+        self.browser_window_custom_width: int = 900
+        self.browser_window_custom_height: int = 600
+
+        # Settings Window
+        self.settings_window_launch_state: str = "custom"
+        self.settings_window_custom_width: int = 900
+        self.settings_window_custom_height: int = 600
 
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
+        self.color_background_instead_of_text_toggle: bool = True
         self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
+        # UI: Save-comparison labels and icons
+        self.show_save_comparison_indicators: bool = True
+        # Dependencies: treat alternativePackageIds as satisfying dependencies
+        self.consider_alternative_package_ids: bool = False
 
+        # Authentication
         self.rentry_auth_code: str = ""
-
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # Auxiliary Metadata DB
+        self.enable_aux_db_behavior_editing: bool = False
+
+        # Performance Settings
+        self.enable_aux_db_performance_mode: bool = False
+
         # Instances
         self.current_instance: str = "Default"
+        self.current_instance_path: str = str(
+            Path(AppInfo().app_storage_folder) / "instances" / self.current_instance
+        )
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
     def __setattr__(self, key: str, value: Any) -> None:
@@ -148,9 +183,8 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
-                mitigations = (
-                    True  # Assume there are mitigations unless we reach else block
-                )
+                # Assume there are mitigations unless we reach else block
+                mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(
@@ -248,6 +282,20 @@ class Settings(QObject):
                         "Current instance not found in settings.json. Performing mitigation."
                     )
                     data["current_instance"] = "Default"
+
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
+                elif not data.get("current_instance_path"):
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False

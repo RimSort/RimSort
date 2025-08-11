@@ -6,8 +6,10 @@ from pathlib import Path
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
+from sqlalchemy import text
 
 from app.controllers.language_controller import LanguageController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -68,6 +70,8 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
+        self.change_mod_coloring_mode = False
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -85,6 +89,40 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.clicked.connect(
             self._on_global_ok_button_clicked
         )
+
+        # Connect launch state radio buttons to update spinbox enabled/disabled state
+        # Main Window
+        self.settings_dialog.main_launch_maximized_radio.toggled.connect(
+            self.settings_dialog.disable_main_custom_size_spinboxes
+        )
+        self.settings_dialog.main_launch_normal_radio.toggled.connect(
+            self.settings_dialog.disable_main_custom_size_spinboxes
+        )
+        self.settings_dialog.main_launch_custom_radio.toggled.connect(
+            self.settings_dialog.enable_main_custom_size_spinboxes
+        )
+        # Browser Window
+        self.settings_dialog.browser_launch_maximized_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_normal_radio.toggled.connect(
+            self.settings_dialog.disable_browser_custom_size_spinboxes
+        )
+        self.settings_dialog.browser_launch_custom_radio.toggled.connect(
+            self.settings_dialog.enable_browser_custom_size_spinboxes
+        )
+
+        # Settings Window (only custom option, spinboxes always enabled)
+        self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
+        self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
+
+        # Advanced: wiring for save-comparison indicator toggle
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
+                self._on_toggle_show_save_comparison_indicators
+            )
+        except Exception:
+            pass
 
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
@@ -126,8 +164,17 @@ class SettingsController(QObject):
             self._on_steam_mods_folder_location_clear_button_clicked
         )
 
+        self.settings_dialog.local_mods_folder_location.textChanged.connect(
+            self._on_local_mods_folder_location_text_changed
+        )
         self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
             self._on_local_mods_folder_location_open_button_clicked
+        )
+        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
+            self._on_local_mods_folder_location_choose_button_clicked
+        )
+        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
+            self._on_local_mods_folder_location_clear_button_clicked
         )
 
         self.settings_dialog.locations_clear_button.clicked.connect(
@@ -260,6 +307,19 @@ class SettingsController(QObject):
             self._on_theme_location_open_button_clicked
         )
 
+        # Advanced tab
+        self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
+            self._on_use_background_coloring_checkbox_changed
+        )
+
+        # Performance tab
+        self._enable_aux_db_performance_mode()
+        self.settings_dialog.aux_db_performance_mode.stateChanged.connect(
+            self._enable_aux_db_performance_mode
+        )
+
+        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
+
         # Connect signals from dialogs
         EventBus().reset_settings_file.connect(self._do_reset_settings_file)
 
@@ -330,9 +390,19 @@ class SettingsController(QObject):
         Update the view from the model and show the settings dialog.
         """
         self._update_view_from_model()
+        # Apply custom size for settings window
+        custom_width = self.settings.settings_window_custom_width
+        custom_height = self.settings.settings_window_custom_height
+        self.settings_dialog.resize(custom_width, custom_height)
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
+
+    @Slot(bool)
+    def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:
+        # Update model immediately for live UI response
+        self.settings.show_save_comparison_indicators = checked
+        self.settings.save()
 
     def create_instance(
         self,
@@ -411,13 +481,6 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
         )
-        game_folder = self.settings.instances[
-            self.settings.current_instance
-        ].game_folder  # Automatically set local folder from game folder
-        if game_folder != "":
-            self.settings_dialog.local_mods_folder_location.setText(
-                str(Path(game_folder) / "Mods")
-            )
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -505,6 +568,8 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
+        self.settings_dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
+        self.settings_dialog.aux_db_time_limit.setEnabled(self.settings.enable_aux_db_behavior_editing)
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -643,6 +708,9 @@ class SettingsController(QObject):
                 self.settings.current_instance
             ].steamcmd_auto_clear_depot_cache
         )
+        self.settings_dialog.steamcmd_delete_before_update_checkbox.setChecked(
+            self.settings.steamcmd_delete_before_update
+        )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
                 self.settings.instances[
@@ -682,12 +750,70 @@ class SettingsController(QObject):
         self.language_controller.setup_language_dialog(
             self.settings_dialog, self.settings
         )
-        self.settings_dialog.window_x_spinbox.setValue(self.settings.window_x)
-        self.settings_dialog.window_y_spinbox.setValue(self.settings.window_y)
-        self.settings_dialog.window_width_spinbox.setValue(self.settings.window_width)
-        self.settings_dialog.window_height_spinbox.setValue(self.settings.window_height)
-        self.settings_dialog.panel_width_spinbox.setValue(self.settings.panel_width)
-        self.settings_dialog.panel_height_spinbox.setValue(self.settings.panel_height)
+
+        # Advanced tab values
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
+                self.settings.show_save_comparison_indicators
+            )
+        except Exception:
+            pass
+
+        # Windows launch state
+        # Main Window
+        main_window_launch_state = self.settings.main_window_launch_state
+        if main_window_launch_state == "maximized":
+            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
+            self.settings_dialog.disable_main_custom_size_spinboxes()
+        elif main_window_launch_state == "normal":
+            self.settings_dialog.main_launch_normal_radio.setChecked(True)
+            self.settings_dialog.disable_main_custom_size_spinboxes()
+        elif main_window_launch_state == "custom":
+            self.settings_dialog.main_launch_custom_radio.setChecked(True)
+            self.settings_dialog.enable_main_custom_size_spinboxes()
+            # Validate main window custom width and height before setting
+            min_size, max_size = 400, 1600
+            width = self.settings.main_window_custom_width
+            height = self.settings.main_window_custom_height
+            if not (min_size <= width <= max_size):
+                width = 900
+            if not (min_size <= height <= max_size):
+                height = 600
+            self.settings_dialog.main_custom_width_spinbox.setValue(width)
+            self.settings_dialog.main_custom_height_spinbox.setValue(height)
+        else:
+            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
+        # Browser Window
+        browser_window_launch_state = self.settings.browser_window_launch_state
+        if browser_window_launch_state == "maximized":
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        if browser_window_launch_state == "normal":
+            self.settings_dialog.browser_launch_normal_radio.setChecked(True)
+            self.settings_dialog.disable_browser_custom_size_spinboxes()
+        elif browser_window_launch_state == "custom":
+            self.settings_dialog.browser_launch_custom_radio.setChecked(True)
+            self.settings_dialog.enable_browser_custom_size_spinboxes()
+            # Validate custom width and height before setting
+            min_size, max_size = 400, 1600
+            width = self.settings.browser_window_custom_width
+            height = self.settings.browser_window_custom_height
+            if not (min_size <= width <= max_size):
+                width = 900
+            if not (min_size <= height <= max_size):
+                height = 600
+            self.settings_dialog.browser_custom_width_spinbox.setValue(width)
+            self.settings_dialog.browser_custom_height_spinbox.setValue(height)
+        else:
+            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
+
+        # Settings Window (only custom option)
+        self.settings_dialog.settings_custom_width_spinbox.setValue(
+            self.settings.settings_window_custom_width
+        )
+        self.settings_dialog.settings_custom_height_spinbox.setValue(
+            self.settings.settings_window_custom_height
+        )
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -700,18 +826,19 @@ class SettingsController(QObject):
         self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering_toggle
         )
+        self.settings_dialog.color_background_instead_of_text_checkbox.setChecked(
+            self.settings.color_background_instead_of_text_toggle
+        )
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
-        steam_client_integration = self.settings.instances[
-            self.settings.current_instance
-        ].steam_client_integration
-        # Weird workaround since the return is a string sometimes apparently
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            True if steam_client_integration is True else False
+            self.settings.instances[
+                self.settings.current_instance
+            ].steam_client_integration
         )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
@@ -721,6 +848,19 @@ class SettingsController(QObject):
         )
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
+        )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
+                self.settings.consider_alternative_package_ids
+            )
+        except Exception:
+            pass
+        self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
+            self.settings.enable_aux_db_behavior_editing
+        )
+        self.settings_dialog.aux_db_performance_mode.setChecked(
+            self.settings.enable_aux_db_performance_mode
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -825,6 +965,11 @@ class SettingsController(QObject):
         self.settings.external_use_this_instead_repo_path = (
             self.settings_dialog.use_this_instead_db_github_url.text()
         )
+        try:
+            self.settings.aux_db_time_limit = int(self.settings_dialog.aux_db_time_limit.text())
+        except Exception:
+            logger.warning("Failed setting Aux DB time limit, falling back to -1")
+            self.settings.aux_db_time_limit = -1
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
@@ -858,6 +1003,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_delete_before_update = (
+            self.settings_dialog.steamcmd_delete_before_update_checkbox.isChecked()
         )
         self.settings.instances[
             self.settings.current_instance
@@ -895,12 +1043,46 @@ class SettingsController(QObject):
         )
         self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
         self.settings.language = self.settings_dialog.language_combobox.currentData()
-        self.settings.window_x = self.settings_dialog.window_x_spinbox.value()
-        self.settings.window_y = self.settings_dialog.window_y_spinbox.value()
-        self.settings.window_width = self.settings_dialog.window_width_spinbox.value()
-        self.settings.window_height = self.settings_dialog.window_height_spinbox.value()
-        self.settings.panel_width = self.settings_dialog.panel_width_spinbox.value()
-        self.settings.panel_height = self.settings_dialog.panel_height_spinbox.value()
+
+        # Windows launch state
+        # Main Window
+        if self.settings_dialog.main_launch_maximized_radio.isChecked():
+            self.settings.main_window_launch_state = "maximized"
+        elif self.settings_dialog.main_launch_normal_radio.isChecked():
+            self.settings.main_window_launch_state = "normal"
+        elif self.settings_dialog.main_launch_custom_radio.isChecked():
+            self.settings.main_window_launch_state = "custom"
+            self.settings.main_window_custom_width = (
+                self.settings_dialog.main_custom_width_spinbox.value()
+            )
+            self.settings.main_window_custom_height = (
+                self.settings_dialog.main_custom_height_spinbox.value()
+            )
+        else:
+            self.settings.main_window_launch_state = "maximized"
+        # Browser Window
+        if self.settings_dialog.browser_launch_maximized_radio.isChecked():
+            self.settings.browser_window_launch_state = "maximized"
+        elif self.settings_dialog.browser_launch_normal_radio.isChecked():
+            self.settings.browser_window_launch_state = "normal"
+        elif self.settings_dialog.browser_launch_custom_radio.isChecked():
+            self.settings.browser_window_launch_state = "custom"
+            self.settings.browser_window_custom_width = (
+                self.settings_dialog.browser_custom_width_spinbox.value()
+            )
+            self.settings.browser_window_custom_height = (
+                self.settings_dialog.browser_custom_height_spinbox.value()
+            )
+        else:
+            self.settings.browser_window_launch_state = "maximized"
+
+        # Settings Window (only custom option)
+        self.settings.settings_window_custom_width = (
+            self.settings_dialog.settings_custom_width_spinbox.value()
+        )
+        self.settings.settings_window_custom_height = (
+            self.settings_dialog.settings_custom_height_spinbox.value()
+        )
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
@@ -914,6 +1096,9 @@ class SettingsController(QObject):
         )
         self.settings.hide_invalid_mods_when_filtering_toggle = (
             self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
+        )
+        self.settings.color_background_instead_of_text_toggle = (
+            self.settings_dialog.color_background_instead_of_text_checkbox.isChecked()
         )
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
@@ -934,6 +1119,19 @@ class SettingsController(QObject):
         )
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings.consider_alternative_package_ids = (
+                self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        self.settings.enable_aux_db_behavior_editing = (
+            self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
+        )
+        self.settings.enable_aux_db_performance_mode = (
+            self.settings_dialog.aux_db_performance_mode.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
@@ -976,7 +1174,6 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
-        self.settings_dialog.apply_window_geometry_from_spinboxes()
         self.theme_controller.set_font(
             self.settings.font_family,
             self.settings.font_size,
@@ -988,19 +1185,9 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
-        game_folder = self.settings_dialog.game_location.text()
-        self.settings_dialog.game_location_open_button.setEnabled(game_folder != "")
-        # Automatically set local folder from game folder
-        if game_folder:
-            self.settings_dialog.local_mods_folder_location.setText(
-                str(Path(game_folder) / "Mods")
-            )
-            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(True)
-        else:  # Reset local mods folder location
-            self.settings_dialog.local_mods_folder_location.setText("")
-            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-                False
-            )
+        self.settings_dialog.game_location_open_button.setEnabled(
+            self.settings_dialog.game_location.text() != ""
+        )
 
     @Slot()
     def _on_game_location_open_button_clicked(self) -> None:
@@ -1116,8 +1303,36 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
 
     @Slot()
+    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
+        """
+        Open a directory dialog to select the local mods folder and handle the result.
+        """
+        local_mods_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Local Mods Folder",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not local_mods_folder_location:
+            return
+
+        self.settings_dialog.local_mods_folder_location.setText(
+            local_mods_folder_location
+        )
+        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
+
+    @Slot()
+    def _on_local_mods_folder_location_text_changed(self) -> None:
+        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
+            self.settings_dialog.local_mods_folder_location.text() != ""
+        )
+
+    @Slot()
     def _on_local_mods_folder_location_open_button_clicked(self) -> None:
         platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
+
+    @Slot()
+    def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_locations_clear_button_clicked(
@@ -1735,3 +1950,38 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
+
+    @Slot()
+    def _on_use_background_coloring_checkbox_changed(self) -> None:
+        self.change_mod_coloring_mode = not self.change_mod_coloring_mode
+
+    @Slot()
+    def _enable_aux_db_performance_mode(self) -> None:
+        """
+        Enable/disable the auxiliary metadata database performance mode based on the checkbox state.
+        """
+        instance_path = Path(self.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as session:
+            if self.settings_dialog.aux_db_performance_mode.isChecked():
+                session.execute(text("PRAGMA synchronous = OFF"))
+                session.execute(text("PRAGMA journal_mode = MEMORY"))
+            else:
+                session.execute(text("PRAGMA synchronous = FULL"))
+                session.execute(text("PRAGMA journal_mode = DELETE"))
+
+            session.commit()
+            session.close()
+
+    @Slot()
+    def _handle_mod_coloring_mode_changed(self) -> None:
+        """
+        If user changes coloring from text to background or vice versa,
+        update all mod items to use that coloring mode.
+        """
+        if self.change_mod_coloring_mode:
+            self.change_mod_coloring_mode = False
+            EventBus().do_change_mod_coloring_mode.emit()
+

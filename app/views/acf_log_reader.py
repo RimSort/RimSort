@@ -5,10 +5,11 @@ import shutil
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union, cast
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QPoint, Qt, QTimer
+from PySide6.QtGui import QColor, QFont, QPainter, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -18,13 +19,17 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QPushButton,
     QStatusBar,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
+from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import (
     get_mod_name_from_pfid,
     get_mod_path_from_pfid,
@@ -39,15 +44,15 @@ from app.views.dialogue import (
 )
 
 
-class LogReader(QDialog):
+class AcfLogReader(QDialog):
     from enum import IntEnum
 
     class TableColumn(IntEnum):
         """Enumeration of table columns with descriptions."""
 
         PFID = 0
-        LAST_UPDATED = 1
-        RELATIVE_TIME = 2
+        MOD_DOWNLOADED = 1
+        UPDATED_ON_WORKSHOP = 2
         TYPE = 3
         MOD_NAME = 4
         MOD_PATH = 5
@@ -57,8 +62,8 @@ class LogReader(QDialog):
             """Get human-readable description of the column."""
             return {
                 self.PFID: "Steam Workshop Published File ID",
-                self.LAST_UPDATED: "Last update timestamp (UTC)",
-                self.RELATIVE_TIME: "Time since last update",
+                self.MOD_DOWNLOADED: "Mod downloaded",
+                self.UPDATED_ON_WORKSHOP: "Last update timestamp (UTC) / Relative Time",
                 self.TYPE: "Item type (workshop/local)",
                 self.MOD_NAME: "Mod name from Steam metadata",
                 self.MOD_PATH: "Filesystem path to mod",
@@ -66,16 +71,21 @@ class LogReader(QDialog):
 
     # Maintain backward compatibility with old constant names
     COL_PFID = TableColumn.PFID
-    COL_LAST_UPDATED = TableColumn.LAST_UPDATED
-    COL_RELATIVE_TIME = TableColumn.RELATIVE_TIME
+    COL_MOD_DOWNLOADED = TableColumn.MOD_DOWNLOADED
+    COL_UPDATED_ON_WORKSHOP = TableColumn.UPDATED_ON_WORKSHOP
     COL_TYPE = TableColumn.TYPE
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self,
+        settings_controller: SettingsController,
+        active_mods_list: Optional[object] = None,
+    ) -> None:
         super().__init__()
         self.setWindowTitle("Log Reader")
         self.settings_controller = settings_controller
+        self.active_mods_list = active_mods_list
         self._metadata_cache: dict[str, dict[str, Any]] = {}
 
         self.entries: list[dict[str, Union[str, int, None]]] = []
@@ -88,11 +98,16 @@ class LogReader(QDialog):
         self.refresh_timer.setInterval(15000)  # 15 seconds
         self.refresh_timer.timeout.connect(self.load_acf_data)
 
+        # Add attribute to track time display mode: True for absolute, False for relative
+        self.show_absolute_time = True
+
         # Main layout
         main_layout = QVBoxLayout()
 
         # Status bar
         self.status_bar = QStatusBar()
+        # Improve readability: make status text white
+        self.status_bar.setStyleSheet("QStatusBar, QStatusBar QLabel { color: white; }")
         self.status_bar.showMessage(self.tr("Ready"))
 
         # Top controls layout
@@ -129,15 +144,37 @@ class LogReader(QDialog):
         # Table widget
         self.table_widget = QTableWidget()
         self.table_widget.setSortingEnabled(True)
+        # Ensure columns fit window width but allow manual resizing
+        from PySide6.QtWidgets import QHeaderView
+
+        self.table_widget.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        header = self.table_widget.horizontalHeader()
+        if isinstance(header, QHeaderView):
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            header.setMinimumSectionSize(40)
+        # Track proportional column widths to keep full-width fit
+        self._table_col_weights: list[float] = []
+        self.table_widget.horizontalHeader().sectionResized.connect(
+            self._on_table_section_resized
+        )
         main_layout.addWidget(self.table_widget)
 
         main_layout.addWidget(self.status_bar)
         self.setLayout(main_layout)
 
+        # Set up custom context menu for table widget
+        self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_widget.customContextMenuRequested.connect(self.show_context_menu)
+
         # Remove immediate load; rely on timer to trigger after 15 seconds
         # Initialize last modification times for ACF files
-        self._last_steamcmd_acf_mtime: float | None = None
-        self._last_steam_acf_mtime: float | None = None
+        self._last_steamcmd_acf_mtime: Optional[float] = None
+        self._last_steam_acf_mtime: Optional[float] = None
+
+        # Set the check for initial application load.
+        self.is_initial_load = True
 
         # Start the refresh timer to trigger load_acf_data after 15 seconds
         self.refresh_timer.start()
@@ -186,6 +223,70 @@ class LogReader(QDialog):
             self.export_to_csv()
         finally:
             self._set_buttons_enabled(True)
+
+    # ----- Table width management (manual resize + full-width fit) -----
+    def _viewport_width(self) -> int:
+        try:
+            return max(0, int(self.table_widget.viewport().width()))
+        except Exception:
+            return max(0, int(self.table_widget.width()))
+
+    def _init_or_sync_column_weights(self) -> None:
+        """Ensure column weights exist and match current column count."""
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        if not getattr(self, "_table_col_weights", None) or len(self._table_col_weights) != col_count:
+            # Initialize equal weights
+            self._table_col_weights = [1.0 / col_count for _ in range(col_count)]
+
+    def _recalculate_weights_from_current_widths(self) -> None:
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        header = self.table_widget.horizontalHeader()
+        sizes = [header.sectionSize(i) for i in range(col_count)]
+        total = sum(sizes) or 1
+        self._table_col_weights = [s / total for s in sizes]
+
+    def _apply_table_widths_to_viewport(self) -> None:
+        col_count = self.table_widget.columnCount()
+        if col_count <= 0:
+            return
+        self._init_or_sync_column_weights()
+        vpw = self._viewport_width()
+        if vpw <= 0:
+            return
+        header = self.table_widget.horizontalHeader()
+        # Compute widths from weights, clamp min, fix rounding on the last
+        min_w = max(40, int(vpw * 0.05 / col_count))
+        widths = [max(min_w, int(round(w * vpw))) for w in self._table_col_weights]
+        # Adjust last section to fill exact viewport width
+        diff = vpw - sum(widths)
+        widths[-1] = max(min_w, widths[-1] + diff)
+        # Apply sizes
+        self._suppress_section_resize_updates = True
+        try:
+            for i, w in enumerate(widths):
+                header.resizeSection(i, w)
+        finally:
+            self._suppress_section_resize_updates = False
+
+    def _on_table_section_resized(self, index: int, old: int, new: int) -> None:  # noqa: ARG002
+        if getattr(self, "_suppress_section_resize_updates", False):
+            return
+        # Update weights and normalize to viewport width immediately
+        self._recalculate_weights_from_current_widths()
+        self._apply_table_widths_to_viewport()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._apply_table_widths_to_viewport()
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        # Defer width application until after layout is finalized
+        QTimer.singleShot(0, self._apply_table_widths_to_viewport)
 
     def load_acf_data(self) -> None:
         """
@@ -264,9 +365,10 @@ class LogReader(QDialog):
                     "SteamCMD", steamcmd_acf_path, steamcmd_acf_data
                 )
             else:
-                logger.warning(
-                    "SteamCMD ACF path is None, skipping log_acf_load_result call"
-                )
+                if self.is_initial_load:
+                    logger.warning(
+                        "SteamCMD ACF path is None, skipping log_acf_load_result call"
+                    )
 
             # Load Steam ACF data
             steam_acf_data = {}
@@ -280,9 +382,13 @@ class LogReader(QDialog):
             if workshop_acf_path is not None:
                 self._log_acf_load_result("Steam", workshop_acf_path, steam_acf_data)
             else:
-                logger.warning(
-                    "Steam ACF path is None, skipping log_acf_load_result call"
-                )
+                if self.is_initial_load:
+                    logger.warning(
+                        "Steam ACF path is None, skipping log_acf_load_result call"
+                    )
+
+            # set the inital load flag to False
+            self.is_initial_load = False
 
             # Merge AppWorkshop data carefully to avoid overwriting
             combined_acf_data = {}
@@ -589,8 +695,35 @@ class LogReader(QDialog):
                     )
                 )
 
+                """ Disabled for now will remove it if  no fyture use case
+                # Add open URL in browser action
+                def open_mod_url() -> None:
+                    metadata_manager = MetadataManager.instance()
+                    mod_metadata = None
+                    # Find mod metadata by matching publishedfileid
+                    for (
+                        uuid,
+                        metadata,
+                    ) in metadata_manager.internal_local_metadata.items():
+                        if metadata.get("publishedfileid") == pfid:
+                            mod_metadata = metadata
+                            break
+                    if mod_metadata:
+                        url = mod_metadata.get("url") or mod_metadata.get("steam_url")
+                        if url:
+                            logger.info(f"Opening mod URL in browser: {url}")
+                            open_url_browser(url)
+                        else:
+                            logger.warning(f"No URL found for mod with PFID {pfid}")
+                    else:
+                        logger.warning(f"No metadata found for mod with PFID {pfid}")
+
+                open_url_action = menu.addAction(self.tr("Open URL in browser"))
+                open_url_action.triggered.connect(open_mod_url)
+                """
+
                 # Add open folder action
-                path_item = self.table_widget.item(selected_row, 5)
+                path_item = self.table_widget.item(selected_row, 4)
                 mod_path = path_item.text() if path_item else None
                 if mod_path and Path(mod_path).exists():
                     open_folder = menu.addAction(self.tr("Open Mod Folder"))
@@ -619,8 +752,8 @@ class LogReader(QDialog):
             self.table_widget.setHorizontalHeaderLabels(
                 [
                     self.tr("Published File ID"),
-                    self.tr("Last Updated"),
-                    self.tr("Relative Time"),
+                    self.tr("Mod downloaded"),
+                    self.tr("Updated on Workshop"),
                     self.tr("Type"),
                     self.tr("Mod Name"),
                     self.tr("Mod Path"),
@@ -629,6 +762,18 @@ class LogReader(QDialog):
 
             self.table_widget.setSortingEnabled(False)
             self._metadata_cache.clear()
+
+            # Build set of active PFIDs if active_mods_list is provided
+            self.active_pfids = set()
+            if self.active_mods_list is not None:
+                metadata_manager = MetadataManager.instance()
+                uuids = getattr(self.active_mods_list, "uuids", None)
+                if uuids is not None:
+                    for uuid in uuids:
+                        mod_data = metadata_manager.internal_local_metadata.get(uuid)
+                        if mod_data and "publishedfileid" in mod_data:
+                            self.active_pfids.add(mod_data["publishedfileid"])
+            logger.debug(f"Active PFIDs: {self.active_pfids}")
 
             for row_index, entry in enumerate(entries):
                 # Ensure pfid is a valid string before passing to get_mod_name_from_pfid
@@ -646,44 +791,76 @@ class LogReader(QDialog):
                     mod_name = f"Error retrieving name: {pfid}"
                     mod_path = f"Error retrieving path: {pfid}"
 
+                # Get internal_time_touched from MetadataManager by matching pfid
+                internal_time_touched_str = "Unknown"
+                try:
+                    metadata_manager = MetadataManager.instance()
+                    for metadata in metadata_manager.internal_local_metadata.values():
+                        if metadata.get("publishedfileid") == pfid:
+                            internal_time_touched = metadata.get(
+                                "internal_time_touched"
+                            )
+                            if internal_time_touched:
+                                dt_touched = datetime.fromtimestamp(
+                                    int(internal_time_touched)
+                                )
+                                internal_time_touched_str = dt_touched.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
+                                rel_time = self.get_relative_time(internal_time_touched)
+                                internal_time_touched_str = (
+                                    f"{internal_time_touched_str} | {rel_time}"
+                                )
+                            break
+                except Exception as e:
+                    logger.error(
+                        f"Error getting internal_time_touched for PFID {pfid}: {str(e)}"
+                    )
+
                 items = [
                     QTableWidgetItem(pfid),  # COL_PFID
+                    QTableWidgetItem(internal_time_touched_str),  # COL_MOD_DOWNLOADED
                     None,  # COL_LAST_UPDATED placeholder
-                    None,  # COL_RELATIVE_TIME placeholder
                     QTableWidgetItem(str(entry.get("type", "unknown"))),  # COL_TYPE
                     QTableWidgetItem(mod_name),  # COL_MOD_NAME
                     QTableWidgetItem(mod_path),  # COL_MOD_PATH
                 ]
 
-                # Handle timestamp columns
+                # Handle timestamp column with toggle display
                 timeupdated = self.timeupdated_data.get(pfid)
                 if timeupdated:
                     try:
                         dt = datetime.fromtimestamp(int(timeupdated))
-                        time_item = QTableWidgetItem(dt.strftime("%Y-%m-%d %H:%M:%S"))
+                        abs_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        rel_time = self.get_relative_time(timeupdated)
+                        combined_text = f"{abs_time} | {rel_time}"
+                        time_item = QTableWidgetItem(combined_text)
                         time_item.setData(Qt.ItemDataRole.UserRole, int(timeupdated))
-                        items[self.COL_LAST_UPDATED] = time_item
-                        items[self.COL_RELATIVE_TIME] = QTableWidgetItem(
-                            self.get_relative_time(timeupdated)
-                        )
+                        items[self.COL_UPDATED_ON_WORKSHOP] = time_item
                     except (ValueError, TypeError):
-                        items[self.COL_LAST_UPDATED] = QTableWidgetItem(
-                            "Invalid timestamp"
-                        )
-                        items[self.COL_RELATIVE_TIME] = QTableWidgetItem(
+                        items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem(
                             "Invalid timestamp"
                         )
                 else:
-                    items[self.COL_LAST_UPDATED] = QTableWidgetItem("Unknown")
-                    items[self.COL_RELATIVE_TIME] = QTableWidgetItem("Unknown")
+                    items[self.COL_UPDATED_ON_WORKSHOP] = QTableWidgetItem("Unknown")
 
                 # Set all items at once
                 for col, item in enumerate(items):
                     if item is not None:
                         self.table_widget.setItem(row_index, col, item)
 
+            # Set custom delegate for row coloring
+            self.table_widget.setItemDelegate(ActiveModDelegate(self))
+
             self.table_widget.setSortingEnabled(True)
-            self.table_widget.resizeColumnsToContents()
+            # Auto sort by Last Updated column descending on load
+            self.table_widget.sortItems(
+                self.COL_MOD_DOWNLOADED, order=Qt.SortOrder.DescendingOrder
+            )
+            # Initialize/sync column weights after columns are defined
+            self._init_or_sync_column_weights()
+            # Apply weights to fit viewport width
+            self._apply_table_widths_to_viewport()
         finally:
             self.table_widget.setUpdatesEnabled(True)
 
@@ -778,3 +955,45 @@ class LogReader(QDialog):
                 text=self.tr("Exportfailed unknown exception occurred"),
                 details=error_msg,
             )
+
+
+class ActiveModDelegate(QStyledItemDelegate):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.acf_log_reader: Optional["AcfLogReader"] = cast("AcfLogReader", parent)
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        acf_log_reader = self.acf_log_reader
+        if acf_log_reader is None:
+            super().paint(painter, option, index)
+            return
+
+        pfid_index: QModelIndex = index.sibling(index.row(), acf_log_reader.COL_PFID)
+        pfid_item = acf_log_reader.table_widget.item(
+            pfid_index.row(), pfid_index.column()
+        )
+        pfid: Optional[str] = pfid_item.text() if pfid_item else None
+
+        if pfid and pfid in getattr(acf_log_reader, "active_pfids", set()):
+            painter.save()
+
+            rect = option.rect  # type: ignore[attr-defined]
+            font: QFont = option.font  # type: ignore[attr-defined]
+
+            painter.fillRect(rect, QColor(0, 100, 0))  # Dark green background
+            font.setBold(True)
+            painter.setFont(font)
+            painter.setPen(QColor(255, 255, 255))  # White text
+            painter.drawText(
+                rect.adjusted(5, 0, 0, 0),
+                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                index.data(),
+            )
+            painter.restore()
+        else:
+            super().paint(painter, option, index)

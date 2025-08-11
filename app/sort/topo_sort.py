@@ -17,6 +17,7 @@ def do_topo_sort(
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
+
     try:
         sorted_dependencies = list(toposort(dependency_graph))
     except CircularDependencyError as e:
@@ -35,10 +36,18 @@ def do_topo_sort(
             if package_id in active_mods_packageid_to_uuid:
                 mod_uuid = active_mods_packageid_to_uuid[package_id]
                 temp_mod_set.add(mod_uuid)
+
         # Sort packages in this topological level by name
+        def safe_name(uuid: str) -> str:
+            name = metadata_manager.internal_local_metadata[uuid].get("name")
+            if isinstance(name, str):
+                return name.lower()
+            else:
+                return "name error in mod about.xml"
+
         sorted_temp_mod_set = sorted(
             temp_mod_set,
-            key=lambda uuid: metadata_manager.internal_local_metadata[uuid]["name"],
+            key=safe_name,
             reverse=False,
         )
         # Add into reordered set
@@ -49,7 +58,7 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    graph = nx.DiGraph(dependency_graph)  # use the networkx library
+    graph = nx.DiGraph(dependency_graph)  # type: ignore # A set is fine, but linters warn about it
     cycles = list(nx.simple_cycles(graph))  # find all cycles in the graph
 
     cycle_strings = []

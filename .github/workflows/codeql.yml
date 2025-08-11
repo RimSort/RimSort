@@ -18,6 +18,7 @@ on:
     branches: ["main"]
   schedule:
     - cron: "18 23 * * 6"
+  merge_group:
 
 permissions: {}
 

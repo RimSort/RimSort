@@ -27,6 +27,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
@@ -36,6 +37,7 @@ from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
+from app.views.acf_log_reader import AcfLogReader
 from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
@@ -45,7 +47,6 @@ from app.views.dialogue import (
     show_warning,
 )
 from app.views.file_search_dialog import FileSearchDialog
-from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
@@ -80,9 +81,6 @@ class MainWindow(QMainWindow):
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
         self.__set_window_title(current_instance)
-        # Use GUIInfo to set the window size and position from settings
-        self.setGeometry(*GUIInfo().get_window_geometry())
-        print(f"Window geometry: {self.geometry()}")
 
         # Create the window layout
         app_layout = QVBoxLayout()
@@ -145,15 +143,18 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.main_content_tab, self.tr("Main Content"))
 
         # Create and add the ACF Data tab
-        self.log_reader_tab = QWidget()
-        self.log_reader_layout = QVBoxLayout()
-        self.log_reader_tab.setLayout(self.log_reader_layout)
+        self.acf_log_reader_tab = QWidget()
+        self.acf_log_reader_layout = QVBoxLayout()
+        self.acf_log_reader_tab.setLayout(self.acf_log_reader_layout)
 
         # Instantiate the AcfDataWindow and add it to the tab
-        self.log_reader = LogReader(settings_controller)
-        self.log_reader_layout.addWidget(self.log_reader)
+        self.acf_log_reader = AcfLogReader(
+            settings_controller,
+            active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
+        )
+        self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
-        self.tab_widget.addTab(self.log_reader_tab, self.tr("Log Reader"))
+        self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
 
         # Create and add the Search tab
         self.file_search_tab = QWidget()
@@ -201,13 +202,13 @@ class MainWindow(QMainWindow):
 
         self.mods_panel_controller = ModsPanelController(
             view=self.main_content_panel.mods_panel,
+            settings_controller=self.settings_controller,
         )
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings_controller=self.settings_controller,
-            mods_panel_controller=self.mods_panel_controller,
         )
 
         self.main_content_controller = MainContentController(
@@ -224,7 +225,27 @@ class MainWindow(QMainWindow):
         EventBus().do_restore_instance_from_archive.connect(
             self.__restore_instance_from_archive
         )
+
+        # launch the main window
+        self._launch_main_window()
         logger.debug("Finished MainWindow initialization")
+
+    def _launch_main_window(self) -> None:
+        """Apply main window launch state from settings"""
+        from app.utils.window_launch_state import apply_window_launch_state
+
+        main_window_launch_state = (
+            self.settings_controller.settings.main_window_launch_state
+        )
+        custom_width = self.settings_controller.settings.main_window_custom_width
+        custom_height = self.settings_controller.settings.main_window_custom_height
+
+        apply_window_launch_state(
+            self, main_window_launch_state, custom_width, custom_height
+        )
+        logger.info(
+            f"Main window started with launch state: {main_window_launch_state}"
+        )
 
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
@@ -239,6 +260,8 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
 
     def initialize_content(self, is_initial: bool = True) -> None:
+        # Set all items as outdated in aux DB
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.emit()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
@@ -280,6 +303,8 @@ class MainWindow(QMainWindow):
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+        # Delete outdated entries in aux DB
+        EventBus().do_delete_outdated_entries_in_aux_db.emit()
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
@@ -915,9 +940,7 @@ class MainWindow(QMainWindow):
             if not instance_data:
                 instance_data = {}
             # Create new instance folder if it does not exist
-            instance_path = str(
-                Path(AppInfo().app_storage_folder) / "instances" / instance_name
-            )
+            instance_path = self.settings_controller.settings.current_instance_path
             if not os.path.exists(instance_path):
                 os.makedirs(instance_path)
             # Get run args from instance data, autogenerate additional config items if desired
@@ -1002,6 +1025,11 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
+                instance_path = Path(self.settings_controller.settings.current_instance_path)
+                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                    instance_path / "aux_metadata.db"
+                )
+                aux_metadata_controller.engine.dispose()
                 try:
                     rmtree(
                         str(
@@ -1026,10 +1054,14 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
+        instance_path = str(Path(AppInfo().app_storage_folder) / "instances" / instance)
+        self.settings_controller.settings.current_instance_path = instance_path
         # Update window title with current instance
         self.__set_window_title(instance)
         # Save settings
         self.settings_controller.settings.save()
+        # Clear mod lists
+        self.main_content_panel._insert_data_into_lists([], [])
         # Initialize content
         self.initialize_content(is_initial=False)
 
