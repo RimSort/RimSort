@@ -783,7 +783,7 @@ class ModListItemInner(QWidget):
                 ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
-        # Update DB
+        # Update Aux DB
         if not init:
             instance_path = Path(
                 self.settings_controller.settings.current_instance_path
@@ -809,7 +809,7 @@ class ModListItemInner(QWidget):
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update DB
+        # Update Aux DB
         instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
@@ -936,7 +936,7 @@ class ModListWidget(QListWidget):
     item_added_signal = Signal(str)
     key_press_signal = Signal(str)
     list_update_signal = Signal(str)
-    mod_info_signal = Signal(str)
+    mod_info_signal = Signal(str, CustomListWidgetItem)
     recalculate_warnings_signal = Signal()
     refresh_signal = Signal()
     update_git_mods_signal = Signal(list)
@@ -2206,7 +2206,7 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
-            self.mod_info_signal.emit(data["uuid"])
+            self.mod_info_signal.emit(data["uuid"], current)
 
     def mod_clicked(self, current: CustomListWidgetItem) -> None:
         """
@@ -2218,7 +2218,7 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
-            self.mod_info_signal.emit(data["uuid"])
+            self.mod_info_signal.emit(data["uuid"], current)
             mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
             mod_info = flatten_to_list(mod_info)
             mod_info_pretty = json.dumps(mod_info, indent=4)
@@ -2246,7 +2246,7 @@ class ModListWidget(QListWidget):
             self.create_widget_for_item(item)
         # If the current item is selected, update the info panel
         if self.currentItem() == item:
-            self.mod_info_signal.emit(uuid)
+            self.mod_info_signal.emit(uuid, item)
 
     def recalculate_internal_errors_warnings(self) -> tuple[str, str, int, int]:
         """

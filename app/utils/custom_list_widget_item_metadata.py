@@ -6,14 +6,13 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.aux_db_utils import get_mod_color
+from app.utils.aux_db_utils import get_mod_color, get_mod_user_notes
 from app.utils.metadata import MetadataManager
 
 
 class CustomListWidgetItemMetadata:
     """
     A class to store metadata for CustomListWidgetItem.
-
     """
 
     def __init__(
@@ -26,6 +25,7 @@ class CustomListWidgetItemMetadata:
         warning_toggled: bool = False,
         filtered: bool = False,
         hidden_by_filter: bool = False,
+        user_notes: str = "",
         invalid: bool | None = None,
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
@@ -48,6 +48,7 @@ class CustomListWidgetItemMetadata:
         :param filtered: a bool representing whether the widget's item is filtered
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        :param user_notes: str, representing the users own notes for this mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
         :param mod_color: QColor, the color of the mod's text/background in the modlist
         :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
@@ -88,6 +89,12 @@ class CustomListWidgetItemMetadata:
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
+        if user_notes == "":
+            self.user_notes = get_mod_user_notes(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+        else:
+            self.user_notes = user_notes
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """

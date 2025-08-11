@@ -11,12 +11,16 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSizePolicy,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
@@ -79,7 +83,7 @@ class ModInfo:
     mod information panel on the GUI.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the class.
         """
@@ -87,6 +91,11 @@ class ModInfo:
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+        self.settings_controller = settings_controller
+
+        # Used to keep track of which mod items notes we are viewing/editing
+        # This is set when a mod is clicked on
+        self.current_mod_item: CustomListWidgetItem | None = None
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -109,10 +118,12 @@ class ModInfo:
         self.mod_info_filesystem_time = QHBoxLayout()
         self.mod_info_external_times = QHBoxLayout()
         self.description_layout = QHBoxLayout()
+        self.notes_layout = QHBoxLayout()
 
         # Add child layouts to base
-        self.info_layout.addLayout(self.image_layout, 50)
+        self.info_layout.addLayout(self.image_layout, 35)
         self.info_layout.addLayout(self.mod_info_layout, 20)
+        self.info_layout.addLayout(self.notes_layout, 15)
         self.info_layout.addLayout(self.description_layout, 30)
         self.info_panel_frame.setLayout(self.info_layout)
         self.panel.addWidget(self.info_panel_frame)
@@ -226,6 +237,11 @@ class ModInfo:
             f"<br><br><br><center>{self.description_text}<h3></h3></center>",
             convert=False,
         )
+        self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow markdown and clickable hyperlinks? Also make collapsible?
+        self.notes.setObjectName("userModNotes")
+        self.notes.setPlaceholderText("Put your personal mod notes here!")
+        self.notes.textChanged.connect(self.update_user_mod_notes)
+        self.notes.setVisible(False)  # Only shows when a mod is selected
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
@@ -262,6 +278,7 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
         self.mod_info_layout.addLayout(self.mod_info_folder_size)
         self.mod_info_layout.addLayout(self.mod_info_path)
+        self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
         self.mod_info_layout.addLayout(self.mod_info_external_times)
@@ -308,6 +325,41 @@ class ModInfo:
             widget.hide()
 
         logger.debug("Finished ModInfo initialization")
+
+    def update_user_mod_notes(self) -> None:
+        if self.current_mod_item is None:
+            return
+        new_notes = self.notes.toPlainText()
+        mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
+        mod_data["user_notes"] = new_notes
+        # Update Aux DB
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        uuid = mod_data["uuid"]
+        if not uuid:
+            logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
+            return
+        with aux_metadata_controller.Session() as aux_metadata_session:
+                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+                aux_metadata_controller.update(
+                    aux_metadata_session,
+                    mod_path,
+                    user_notes=new_notes,
+                )
+        logger.debug(f"Finished updating notes for UUID: {mod_data["uuid"]}")
+
+    def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
+        # Only show notes tab when a mod is selected
+        self.notes.setVisible(True)
+        self.current_mod_item = item
+        mod_data = item.data(Qt.ItemDataRole.UserRole)
+        mod_notes = mod_data["user_notes"]
+        self.notes.blockSignals(True)
+        self.notes.setText(mod_notes)
+        self.notes.blockSignals(False)
+        logger.debug(f"Finished setting notes for UUID: {mod_data["uuid"]}")
 
     @staticmethod
     def tr(text: str) -> str:

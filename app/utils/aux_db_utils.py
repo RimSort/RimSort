@@ -5,22 +5,18 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.metadata import MetadataManager
 
 
-def get_mod_color(
+def get_aux_db_entry(
     settings_controller: SettingsController,
     uuid: str,
     aux_db_controller: AuxMetadataController | None,
     session: Session | None,
-) -> QColor | None:
+) -> AuxMetadataEntry | None:
     """
-    Get the mod color from Aux Metadata DB.
-
-    :param settings_controller: SettingsController, settings controller instance
-    :param uuid: str, the uuid of the mod
-    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
-    :return: QColor | None, Color of hte mod, or None if no color
+    Get the AuxMetadataEntry for a given UUID from the Aux Metadata DB.
     """
     metadata_manager = MetadataManager.instance()
     instance_path = Path(settings_controller.settings.current_instance_path)
@@ -36,6 +32,24 @@ def get_mod_color(
             metadata_manager.internal_local_metadata[uuid]["path"],
         )
 
+    return entry
+def get_mod_color(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None,
+    session: Session | None,
+) -> QColor | None:
+    """
+    Get the mod color from Aux Metadata DB.
+
+    :param settings_controller: SettingsController, settings controller instance
+    :param uuid: str, the uuid of the mod
+    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
+    :return: QColor | None, Color of the mod, or None if no color
+    """
+    entry = get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
     mod_color = None
     if entry:
         color_text = entry.color_hex
@@ -43,3 +57,27 @@ def get_mod_color(
             mod_color = QColor(color_text)
 
     return mod_color
+
+
+def get_mod_user_notes(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None,
+    session: Session | None,
+) -> str:
+    """
+    Get the user notes for a mod from Aux Metadata DB.
+
+    :param settings_controller: SettingsController, settings controller instance
+    :param uuid: str, the uuid of the mod
+    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
+    :return: str, User notes for the mod, or empty string if no notes
+    """
+    entry = get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
+    user_notes = ""
+    if entry:
+        user_notes = entry.user_notes
+
+    return user_notes
