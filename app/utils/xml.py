@@ -5,6 +5,7 @@ import xmltodict
 from bs4 import BeautifulSoup
 from loguru import logger
 from lxml import etree
+import gzip
 
 
 def xml_path_to_json(path: str) -> dict[str, Any]:
@@ -74,35 +75,109 @@ def json_to_xml_write(
 def extract_xml_package_ids(path: str) -> set[str]:
     """
     Extracts package ids between <modIds> and </modIds>.
+
+    Compatible with gzip. (RimKeeper)
+
+    :param path: Path to the XML file.
+    :return: Set of package ids found in the XML file.
     """
     if not os.path.exists(path):
-        logger.error(f"Path does not exist for xml package id extraction: {path}")
+        logger.error(f"Path does not exist for XML package id extraction: {path}")
         return set()
 
     package_ids = set()
     found_modIds = False
 
     try:
-        context = etree.iterparse(path, events=("start", "end"))
-        for event, elem in context:
-            if not found_modIds and event == "start" and elem.tag == "modIds":
-                found_modIds = True
-            elif event == "end" and elem.tag == "modIds":
-                text = (elem.text or "")
-                if text != "":
-                    package_ids.add(text)
-                elem.clear()
-                break
+        if using_gzip(path):
+            file = gzip.open(path, "rb")
+        else:
+            file = open(path, "rb")
+        with file:
+            context = etree.iterparse(file, events=("start", "end"))
+            for event, elem in context:
+                if not found_modIds and event == "start" and elem.tag == "modIds":
+                    found_modIds = True
+                elif event == "end" and elem.tag == "modIds":
+                    text = (elem.text or "").strip()
+                    if text != "":
+                        package_ids.add(text)
+                    elem.clear()
+                    break
 
-            if found_modIds and event == "end" and elem.tag == "li":
-                text = (elem.text or "")
-                if text != "":
-                    package_ids.add(text)
-                elem.clear()
+                if found_modIds and event == "end" and elem.tag == "li":
+                    text = (elem.text or "").strip()
+                    if text != "":
+                        package_ids.add(text)
+                    elem.clear()
 
         return package_ids
 
     except Exception as e:
-        logger.error(f"Error running xml package id extraction: {e}")
+        logger.error(f"Error running XML package id extraction: {e}")
         return set()
-    
+
+
+def fast_rimworld_xml_save_validation(path: str) -> bool:
+    """
+    Very quickly runs really basic structure validation of RimWorlds save.
+
+    Checks we have the following tags (Each tag inside the previous one):
+
+    <savegame>
+        <meta>
+            <modIds>
+                <li>
+
+    Compatible with gzip. (RimKeeper)
+
+    :param path: Path to the XML file.
+    :return: True if the XML file has the expected structure, False otherwise.
+    """
+    if not os.path.exists(path):
+        logger.error(f"Path does not exist for RimWorld XML save validation: {path}")
+        return False
+
+    stack = []
+
+    try:
+        if using_gzip(path):
+            file = gzip.open(path, "rb")
+        else:
+            file = open(path, "rb")
+        with file:
+            context = etree.iterparse(file, events=("start", "end"))
+            for event, elem in context:
+                if event == "start":
+                    stack.append(elem.tag)
+                elif event == "end":
+                    stack.pop()
+
+                if len(stack) == 4 \
+                    and "savegame" in stack \
+                    and "meta" in stack \
+                    and "modIds" in stack \
+                    and "li" in stack:
+                    return True
+                
+                elem.clear()
+    except Exception as e:
+        logger.error(f"Error running RimWorld XML save validation: {e}")
+        return False
+
+    return False
+
+
+def using_gzip(fp: str) -> bool:
+    """
+    RimKeeper compatibility. Check if dealing with gzip save file
+
+    :param fp: File path to check.
+    :return: True if the file is gzipped, False otherwise.
+    """
+    try:
+        with open(fp, "rb") as f:
+            return f.read(2) == b'\x1f\x8b'
+    except Exception as e:
+        logger.error(f"Failed checking if save file is using gzip: {e}")
+        return False

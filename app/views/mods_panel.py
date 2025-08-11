@@ -74,7 +74,7 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager, ModMetadata
-from app.utils.xml import extract_xml_package_ids
+from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
@@ -2534,9 +2534,12 @@ class ModListWidget(QListWidget):
             if latest is None:
                 return None
 
-            ids_list = extract_xml_package_ids(str(latest))
+            if fast_rimworld_xml_save_validation(str(latest)):
+                ids_set = extract_xml_package_ids(str(latest))
+            else:
+                ids_set = ["Ludeon.RimWorld"]
             # Normalize to lowercase
-            self._latest_save_package_ids = {str(i).lower() for i in ids_list}
+            self._latest_save_package_ids = {str(i).lower() for i in ids_set}
             return self._latest_save_package_ids
         except Exception:
             return None
