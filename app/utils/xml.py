@@ -1,3 +1,4 @@
+import gzip
 import os
 from typing import Any
 
@@ -5,7 +6,6 @@ import xmltodict
 from bs4 import BeautifulSoup
 from loguru import logger
 from lxml import etree
-import gzip
 
 
 def xml_path_to_json(path: str) -> dict[str, Any]:
@@ -89,11 +89,7 @@ def extract_xml_package_ids(path: str) -> set[str]:
     found_modIds = False
 
     try:
-        if using_gzip(path):
-            file = gzip.open(path, "rb")
-        else:
-            file = open(path, "rb")
-        with file:
+        with __open_save_file(path) as file:
             context = etree.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if not found_modIds and event == "start" and elem.tag == "modIds":
@@ -141,11 +137,8 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
     stack = []
 
     try:
-        if using_gzip(path):
-            file = gzip.open(path, "rb")
-        else:
-            file = open(path, "rb")
-        with file:
+
+        with __open_save_file(path) as file:
             context = etree.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if event == "start":
@@ -159,6 +152,12 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
                     and "modIds" in stack \
                     and "li" in stack:
                     return True
+                
+                if event == "end" and (elem.tag == "modIds" \
+                    or elem.tag == "meta" \
+                    or elem.tag == "savegame"):
+                    # No package ids or save file format is not right
+                    return False
                 
                 elem.clear()
     except Exception as e:
@@ -181,3 +180,17 @@ def using_gzip(fp: str) -> bool:
     except Exception as e:
         logger.error(f"Failed checking if save file is using gzip: {e}")
         return False
+    
+def __open_save_file(path: str) -> Any:
+    """
+    Open a save file.
+
+    Compatible with gzip. (RimKeeper)
+
+    :param path: Path to the save file.
+    :return: File object for the opened save file.
+    """
+    if using_gzip(path):
+        return gzip.open(path, "rb")
+    else:
+        return open(path, "rb")  # type: ignore

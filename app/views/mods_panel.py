@@ -2537,7 +2537,7 @@ class ModListWidget(QListWidget):
             if fast_rimworld_xml_save_validation(str(latest)):
                 ids_set = extract_xml_package_ids(str(latest))
             else:
-                ids_set = ["Ludeon.RimWorld"]
+                ids_set = set("Ludeon.RimWorld")
             # Normalize to lowercase
             self._latest_save_package_ids = {str(i).lower() for i in ids_set}
             return self._latest_save_package_ids
