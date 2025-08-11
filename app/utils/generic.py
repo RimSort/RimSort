@@ -526,16 +526,19 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         """
         rimworld_path = ""
         data = vdf.load(f)
-        library_folders = data["libraryfolders"]
+        library_folders = data.get("libraryfolders", None)
+        if not library_folders:
+            return ""
         # Find 294100 (RimWorld)
-        for dict in library_folders.items():
-            if "294100" in dict[1]["apps"]:
-                rimworld_path = dict[1]["path"]
+        for _, folder in library_folders.items():
+            if "294100" in folder.get("apps", {}):
+                rimworld_path = folder.get("path", "")
+                break
         return rimworld_path
 
     rimworld_path = ""
     steam_folder = Path(steam_folder)
-    # TODO: I am unable to actually confirm which one is the primary one...
+
     primary_library = "config/libraryfolders.vdf"
     backup_library = "steamapps/libraryfolders.vdf"
 
