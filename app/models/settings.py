@@ -147,6 +147,11 @@ class Settings(QObject):
         # Dependencies: treat alternativePackageIds as satisfying dependencies
         self.consider_alternative_package_ids: bool = False
 
+        # XML parsing behavior
+        # If enabled, About.xml *ByVersion tags take precedence over base tags
+        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
+        self.prefer_versioned_about_tags: bool = False
+
         # Authentication
         self.rentry_auth_code: str = ""
         self.github_username: str = ""

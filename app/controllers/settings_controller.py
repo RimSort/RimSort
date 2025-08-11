@@ -856,6 +856,13 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(
+                self.settings.prefer_versioned_about_tags
+            )
+        except Exception:
+            pass
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
         )
@@ -1128,6 +1135,13 @@ class SettingsController(QObject):
         try:
             self.settings.consider_alternative_package_ids = (
                 self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings.prefer_versioned_about_tags = (
+                self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
             )
         except Exception:
             pass
