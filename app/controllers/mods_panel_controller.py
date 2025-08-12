@@ -182,6 +182,7 @@ class ModsPanelController(QObject):
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.repaint()
         self.mods_panel.active_mods_list.check_widgets_visible()
         logger.debug("Finished hiding mods without warnings.")
 
@@ -215,6 +216,7 @@ class ModsPanelController(QObject):
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.repaint()
         self.mods_panel.active_mods_list.check_widgets_visible()
         logger.debug("Finished hiding mods without errors.")
 
