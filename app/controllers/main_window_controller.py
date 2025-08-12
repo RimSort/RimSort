@@ -73,6 +73,12 @@ class MainWindowController(QObject):
         # Create a dictionary to store missing dependencies
         missing_deps: dict[str, set[str]] = {}
 
+        # Precompute active package IDs for quick lookup
+        active_ids = {
+            self.metadata_manager.internal_local_metadata[u].get("packageid")
+            for u in active_mods
+        }
+
         # Check each active mod's dependencies
         for uuid in active_mods:
             mod_data = self.metadata_manager.internal_local_metadata[uuid]
@@ -85,20 +91,32 @@ class MainWindowController(QObject):
             if not dependencies:
                 continue
 
-            # Check each dependency
+            # Check each dependency, honoring alternativePackageIds
+            # E.g. [], ['brrainz.harmony'], [('oels.vehiclemapframework', {'alternatives': {'oels.vehiclemapframework.dev'}})]
             missing = set()
+            consider_alternatives = (
+                self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
+            )
             for dep in dependencies:
-                # Check if the dependency is in the active mods list
-                found = False
-                for active_uuid in active_mods:
-                    active_mod_data = self.metadata_manager.internal_local_metadata[
-                        active_uuid
-                    ]
-                    if active_mod_data.get("packageid") == dep:
-                        found = True
-                        break
-                if not found:
-                    missing.add(dep)
+                if isinstance(dep, tuple):
+                    dep_id = dep[0]
+                    alt_ids = set()
+                    if (
+                        len(dep) > 1
+                        and isinstance(dep[1], dict)
+                        and isinstance(dep[1].get("alternatives"), set)
+                    ):
+                        alt_ids = dep[1]["alternatives"]
+                else:
+                    dep_id = dep
+                    alt_ids = set()
+
+                # Check if the dependency is in the active mods list; optionally consider alternatives
+                satisfied = dep_id in active_ids
+                if not satisfied and consider_alternatives:
+                    satisfied = any(alt in active_ids for alt in alt_ids)
+                if not satisfied:
+                    missing.add(dep_id)
 
             if missing:
                 missing_deps[mod_id] = missing

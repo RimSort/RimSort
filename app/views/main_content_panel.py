@@ -51,6 +51,7 @@ import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     check_internet_connection,
@@ -254,7 +255,9 @@ class MainContent(QObject):
             self.main_layout_frame.setLayout(self.main_layout)
 
             # INSTANTIATE WIDGETS
-            self.mod_info_panel = ModInfo()
+            self.mod_info_panel = ModInfo(
+                settings_controller=self.settings_controller,
+            )
             self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )
@@ -432,9 +435,10 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            data = iml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
+            item = iml.selectedItems()[0]
+            data = item.data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
-            self.__mod_list_slot(uuid)
+            self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -485,9 +489,10 @@ class MainContent(QObject):
             aml.setFocus()
             if not aml.selectedIndexes():
                 aml.setCurrentRow(self.___get_relative_middle(aml))
-            data = aml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
+            item = aml.selectedItems()[0]
+            data = item.data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
-            self.__mod_list_slot(uuid)
+            self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -594,19 +599,26 @@ class MainContent(QObject):
                 details=list_of_missing_mods,
             )
 
-    def __mod_list_slot(self, uuid: str) -> None:
+    def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
         """
         This slot method is triggered when the user clicks on an item
-        on a mod list. It takes the internal uuid and gets the
+        on a mod list.
+        
+        It takes the internal uuid and gets the
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
+        It also takes the selected mod (CustomListWidgetItem) and passes 
+        this to the mod info panel to display that mod's notes.
+
         :param uuid: uuid of mod
+        :param item: selected CustomListWidgetItem 
         """
         self.mod_info_panel.display_mod_info(
             uuid=uuid,
             render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
         )
+        self.mod_info_panel.show_user_mod_notes(item)
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """

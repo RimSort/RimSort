@@ -175,24 +175,22 @@ def uuid_to_folder_size(uuid: str) -> int:
     if cached and cached[0] == mtime:
         return cached[1]
 
-    total_size = 0
-
-    try:
-        total_size = os.path.getsize(Path(mod_path))
-    except OSError:
-        # Use slower method to get as accurate size as possible
-        for root, _, files in os.walk(mod_path):
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                try:
-                    total_size += os.path.getsize(file_path)
-                except OSError:
-                    # Skip files we cannot access
-                    continue
+    total_size = get_dir_size(mod_path)
 
     _FOLDER_SIZE_CACHE[mod_path] = (mtime, total_size)
     return total_size
 
+def get_dir_size(path: str) -> int:
+    total = 0
+    for entry in os.scandir(path):
+        try:
+            if entry.is_file():
+                total += entry.stat().st_size
+            elif entry.is_dir():
+                total += get_dir_size(entry.path)
+        except OSError:
+            pass  # Skip file
+    return total
 
 def format_file_size(size_in_bytes: int) -> str:
     """Format bytes to a human-readable string."""
@@ -785,7 +783,7 @@ class ModListItemInner(QWidget):
                 ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
-        # Update DB
+        # Update Aux DB
         if not init:
             instance_path = Path(
                 self.settings_controller.settings.current_instance_path
@@ -811,7 +809,7 @@ class ModListItemInner(QWidget):
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update DB
+        # Update Aux DB
         instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             instance_path / "aux_metadata.db"
@@ -938,7 +936,7 @@ class ModListWidget(QListWidget):
     item_added_signal = Signal(str)
     key_press_signal = Signal(str)
     list_update_signal = Signal(str)
-    mod_info_signal = Signal(str)
+    mod_info_signal = Signal(str, CustomListWidgetItem)
     recalculate_warnings_signal = Signal()
     refresh_signal = Signal()
     update_git_mods_signal = Signal(list)
@@ -2208,7 +2206,7 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
-            self.mod_info_signal.emit(data["uuid"])
+            self.mod_info_signal.emit(data["uuid"], current)
 
     def mod_clicked(self, current: CustomListWidgetItem) -> None:
         """
@@ -2220,7 +2218,7 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
-            self.mod_info_signal.emit(data["uuid"])
+            self.mod_info_signal.emit(data["uuid"], current)
             mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
             mod_info = flatten_to_list(mod_info)
             mod_info_pretty = json.dumps(mod_info, indent=4)
@@ -2248,7 +2246,7 @@ class ModListWidget(QListWidget):
             self.create_widget_for_item(item)
         # If the current item is selected, update the info panel
         if self.currentItem() == item:
-            self.mod_info_signal.emit(uuid)
+            self.mod_info_signal.emit(uuid, item)
 
     def recalculate_internal_errors_warnings(self) -> tuple[str, str, int, int]:
         """
@@ -2268,6 +2266,7 @@ class ModListWidget(QListWidget):
         package_id_to_errors: dict[str, dict[str, None | set[str] | bool]] = {
             uuid: {
                 "missing_dependencies": set() if self.list_type == "Active" else None,
+                "alternative_dependencies": set() if self.list_type == "Active" else None,
                 "conflicting_incompatibilities": (
                     set() if self.list_type == "Active" else None
                 ),
@@ -2354,14 +2353,45 @@ class ModListWidget(QListWidget):
                 # Check dependencies (and replacements for dependencies)
                 # Note: dependency replacements are NOT assumed to be subject
                 # to the same load order rules as the orignal mods!
-                mod_errors["missing_dependencies"] = {
-                    dep
-                    for dep in mod_data.get("dependencies", [])
-                    if dep not in package_ids_set
-                    and not self._has_replacement(
-                        mod_data["packageid"], dep, package_ids_set
-                    )
-                }
+                # Build missing dependencies set while honoring alternativePackageIds
+                missing_deps: set[str] = set()
+                alternative_deps: set[str] = set()
+                consider_alternatives = (
+                    self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
+                )
+                for dep_entry in mod_data.get("dependencies", []):
+                    alt_ids: set[str] = set()
+                    if isinstance(dep_entry, tuple):
+                        dep_id = dep_entry[0]
+                        if (
+                            len(dep_entry) > 1
+                            and isinstance(dep_entry[1], dict)
+                            and isinstance(dep_entry[1].get("alternatives"), set)
+                        ):
+                            alt_ids = dep_entry[1]["alternatives"]
+                    else:
+                        dep_id = dep_entry
+
+                    # Consider satisfied if main dep is present; optionally consider alternatives
+                    satisfied = dep_id in package_ids_set
+                    if not satisfied and consider_alternatives:
+                        satisfied = any(alt in package_ids_set for alt in alt_ids)
+                    # If not satisfied, also consider external replacement mapping
+                    if not satisfied and self._has_replacement(
+                        mod_data["packageid"], dep_id, package_ids_set
+                    ):
+                        satisfied = True
+
+                    if not satisfied:
+                        missing_deps.add(dep_id)
+                        # Only record alternatives if the advanced option is enabled
+                        if consider_alternatives:
+                            # Prefer to show only alternatives not already installed
+                            alt_candidates = {a for a in alt_ids if a not in package_ids_set}
+                            alternative_deps.update(alt_candidates if alt_candidates else alt_ids)
+
+                mod_errors["missing_dependencies"] = missing_deps
+                mod_errors["alternative_dependencies"] = alternative_deps
 
                 # Check incompatibilities
                 mod_errors["conflicting_incompatibilities"] = {
@@ -2393,10 +2423,15 @@ class ModListWidget(QListWidget):
                         mod_errors["load_after_violations"].add(load_this_after[0])
             # Calculate any needed string for errors
             tool_tip_text = ""
-            for error_type, tooltip_header in [
+            # Build tooltip sections, conditionally include alternatives
+            tooltip_sections = [
                 ("missing_dependencies", self.tr("\nMissing Dependencies:")),
                 ("conflicting_incompatibilities", self.tr("\nIncompatibilities:")),
-            ]:
+            ]
+            if self.metadata_manager.settings_controller.settings.consider_alternative_package_ids:
+                tooltip_sections.insert(1, ("alternative_dependencies", self.tr("\nAlternative Dependencies:")))
+
+            for error_type, tooltip_header in tooltip_sections:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
                     errors = mod_errors[error_type]

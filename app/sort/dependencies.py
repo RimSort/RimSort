@@ -311,22 +311,41 @@ def gen_tier_two_deps_graph(
                     for dep in about_dependencies:
                         # Accept both str and tuple for about_dependencies
                         dep_id = None
+                        alt_ids: set[str] = set()
                         if isinstance(dep, str):
                             dep_id = dep
                         elif isinstance(dep, tuple):
                             dep_id = dep[0]
+                            if (
+                                len(dep) > 1
+                                and isinstance(dep[1], dict)
+                                and isinstance(dep[1].get("alternatives"), set)
+                            ):
+                                alt_ids = dep[1]["alternatives"]
                         else:
                             logger.error(
                                 f"About.xml dependency is not a string or tuple: [{dep}]"
                             )
                             continue
 
+                        # Prefer primary dep when present; optionally use alternatives
                         if (
                             dep_id in active_mod_ids
                             and dep_id not in tier_one_mods
                             and dep_id not in tier_three_mods
                         ):
                             inferred_dependencies.add(dep_id)
+                        else:
+                            # Only use alternatives if allowed by settings
+                            if metadata_manager.settings_controller.settings.consider_alternative_package_ids:
+                                for alt in alt_ids:
+                                    if (
+                                        alt in active_mod_ids
+                                        and alt not in tier_one_mods
+                                        and alt not in tier_three_mods
+                                    ):
+                                        inferred_dependencies.add(alt)
+                                        break
 
             inferred_rules[package_id] = inferred_dependencies
 

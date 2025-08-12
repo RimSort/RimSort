@@ -144,6 +144,8 @@ class Settings(QObject):
         self.show_save_comparison_indicators: bool = True
         # Clear button behavior
         self.clear_moves_dlc: bool = False
+        # Dependencies: treat alternativePackageIds as satisfying dependencies
+        self.consider_alternative_package_ids: bool = False
 
         # Authentication
         self.rentry_auth_code: str = ""

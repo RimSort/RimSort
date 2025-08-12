@@ -346,7 +346,26 @@ def platform_specific_open(path: str | Path) -> None:
             subprocess.Popen(["open", path])
     elif sys.platform == "win32":
         logger.info(f"Opening {path} with startfile on Windows")
-        os.startfile(path)
+        try:
+            os.startfile(path)
+        except OSError as e:
+            # Handle cases where no default application is associated
+            if e.winerror == -2147221003:  # Application not found
+                logger.warning(f"No default application found for {path}, trying notepad")
+                # Try to open with notepad as fallback
+                try:
+                    subprocess.Popen(["notepad.exe", path])
+                except Exception as notepad_error:
+                    logger.error(f"Failed to open with notepad: {notepad_error}")
+                    dialogue.show_warning(
+                        title="Failed to open file",
+                        text="Could not open the file",
+                        information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
+                        details=str(e)
+                    )
+            else:
+                # Re-raise other OSErrors
+                raise
     elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
         subprocess.Popen(["xdg-open", path])
@@ -378,6 +397,9 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
     if isinstance(obj, set):
         return list(obj)
     elif isinstance(obj, list):
+        return [flatten_to_list(e) for e in obj]
+    elif isinstance(obj, tuple):
+        # Convert tuples to lists and recurse into elements
         return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
         return {k: flatten_to_list(v) for k, v in obj.items()}

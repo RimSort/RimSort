@@ -849,6 +849,13 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
+                self.settings.consider_alternative_package_ids
+            )
+        except Exception:
+            pass
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
         )
@@ -1117,6 +1124,13 @@ class SettingsController(QObject):
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings.consider_alternative_package_ids = (
+                self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+            )
+        except Exception:
+            pass
         self.settings.enable_aux_db_behavior_editing = (
             self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
         )

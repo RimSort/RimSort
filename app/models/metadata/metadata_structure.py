@@ -228,6 +228,8 @@ class DependencyMod(BaseMod, PackageIdMod):
     """A mod which is a dependency of another mod."""
 
     workshop_url: str = ""
+    # New: alternative package IDs that can satisfy this dependency
+    alternative_package_ids: set[CaseInsensitiveStr] = field(default_factory=set)
 
 
 @dataclass

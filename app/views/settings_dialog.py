@@ -1335,6 +1335,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
+        # Dependencies: alternativePackageIds support
+        self.consider_alternative_package_ids_checkbox = QCheckBox(
+            self.tr("Consider alternativePackageIds as satisfying dependencies")
+        )
+        self.consider_alternative_package_ids_checkbox.setToolTip(
+            self.tr(
+                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing."
+            )
+        )
+        group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
+
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")
         )
