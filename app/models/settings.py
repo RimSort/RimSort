@@ -142,6 +142,8 @@ class Settings(QObject):
         self.update_databases_on_startup: bool = True
         # UI: Save-comparison labels and icons
         self.show_save_comparison_indicators: bool = True
+        # Clear button behavior
+        self.clear_moves_dlc: bool = False
         # Dependencies: treat alternativePackageIds as satisfying dependencies
         self.consider_alternative_package_ids: bool = False
 

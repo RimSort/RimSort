@@ -1363,13 +1363,18 @@ class MainContent(QObject):
             app_constants.RIMWORLD_DLC_METADATA["2380740"]["packageid"],
             app_constants.RIMWORLD_DLC_METADATA["3022790"]["packageid"],
         ]
+        # If user wants Clear to also move DLC, only keep the base game in Active
+        if self.settings_controller.settings.clear_moves_dlc and package_id_order:
+            package_ids_to_keep_active = [package_id_order[0]]  # Base game only
+        else:
+            package_ids_to_keep_active = package_id_order
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
             mod_data["packageid"]
             for mod_data in self.metadata_manager.internal_local_metadata.values()
         )
-        # Iterate over the DLC package IDs in the correct order
-        for package_id in package_id_order:
+        # Iterate over the package IDs we want to keep active
+        for package_id in package_ids_to_keep_active:
             if package_id in package_ids_set:
                 # Append the UUIDs to active_mods_uuids if the package ID exists in mod_data
                 active_mods_uuids.extend(
