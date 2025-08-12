@@ -2683,6 +2683,22 @@ class ModListWidget(QListWidget):
         else:
             self.ignore_warning_list.remove(packageid)
             item_data["warning_toggled"] = False
+        # Update Aux DB
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        uuid = item_data["uuid"]
+        if not uuid:
+            logger.error("Unable to retrieve uuid when saving toggle_warning to Aux DB.")
+            return
+        with aux_metadata_controller.Session() as aux_metadata_session:
+                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+                aux_metadata_controller.update(
+                    aux_metadata_session,
+                    mod_path,
+                    ignore_warnings=item_data["warning_toggled"],
+                )
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
 
