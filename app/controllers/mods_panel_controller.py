@@ -176,20 +176,8 @@ class ModsPanelController(QObject):
             self.errors_label_active = not self.errors_label_active
             label_active = self.errors_label_active
 
-        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
-        for mod in active_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden becasue of filters, dont unhide it
-            if mod_data[type] == "":
-                if label_active:
-                    mod.setHidden(True)
-                elif not mod_data["hidden_by_filter"]:
-                    mod.setHidden(False)
-        self.mods_panel.update_count("Active")
-        self.mods_panel.active_mods_list.repaint()
-        self.mods_panel.active_mods_list.check_widgets_visible()
+        self.__change_visibility_helper(label_active, type)
         logger.debug("Finished hiding mods without " + type)
-
 
     @Slot()
     def _change_visibility_of_new_mods(self) -> None:
@@ -206,20 +194,28 @@ class ModsPanelController(QObject):
 
         self.news_label_active = not self.news_label_active
 
+        self.__change_visibility_helper(self.news_label_active, "new_text")
+        logger.debug("Finished hiding mods that are in save (showing only new).")
+
+    def __change_visibility_helper(self, label_active: bool, type: str) -> None:
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            is_new = bool(mod_data.__dict__.get("is_new", False))
-            # If a mod is already hidden because of filters, dont unhide it
-            if not is_new:
-                if self.news_label_active:
+            if type == "new_text":
+                apply_filter = not bool(mod_data.__dict__.get("is_new", False))
+            else:
+                apply_filter = mod_data[type] == ""
+
+            # If a mod is already hidden becasue of filters, dont unhide it
+            if apply_filter:
+                if label_active:
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
         self.mods_panel.active_mods_list.repaint()
         self.mods_panel.active_mods_list.check_widgets_visible()
-        logger.debug("Finished hiding mods that are in save (showing only new).")
+
     def do_all_entries_in_aux_db_as_outdated(self) -> None:
         """
         Sets all entries in the aux db as outdated if not already outdated.
