@@ -81,3 +81,27 @@ def get_mod_user_notes(
         user_notes = entry.user_notes
 
     return user_notes
+
+
+def get_mod_warning_toggled(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None,
+    session: Session | None,
+) -> bool:
+    """
+    Get the warning_toggled status for a mod from Aux Metadata DB.
+
+    :param settings_controller: SettingsController, settings controller instance
+    :param uuid: str, the uuid of the mod
+    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
+    :return: bool, Warning toggled status for the mod
+    """
+    entry = get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
+    warning_toggled = False
+    if entry:
+        warning_toggled = entry.ignore_warnings
+
+    return warning_toggled

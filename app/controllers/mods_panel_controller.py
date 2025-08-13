@@ -108,6 +108,22 @@ class ModsPanelController(QObject):
                         mod_data["uuid"]
                     ]["packageid"]
                     self._remove_from_all_ignore_lists(package_id)
+                    # Update Aux DB
+                    instance_path = Path(self.settings_controller.settings.current_instance_path)
+                    aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                        instance_path / "aux_metadata.db"
+                    )
+                    uuid = mod_data["uuid"]
+                    if not uuid:
+                        logger.error("Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset.")
+                        return
+                    with aux_metadata_controller.Session() as aux_metadata_session:
+                            mod_path = widget.metadata_manager.internal_local_metadata[uuid]["path"]
+                            aux_metadata_controller.update(
+                                aux_metadata_session,
+                                mod_path,
+                                ignore_warnings=mod_data["warning_toggled"],
+                            )
                     logger.debug(f"Reset warning toggle for: {package_id}")
         self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
         self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()

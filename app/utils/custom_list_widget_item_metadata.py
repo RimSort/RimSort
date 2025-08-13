@@ -6,7 +6,11 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.aux_db_utils import get_mod_color, get_mod_user_notes
+from app.utils.aux_db_utils import (
+    get_mod_color,
+    get_mod_user_notes,
+    get_mod_warning_toggled,
+)
 from app.utils.metadata import MetadataManager
 
 
@@ -65,7 +69,12 @@ class CustomListWidgetItemMetadata:
         self.warnings = warnings
         self.filtered = filtered
         self.hidden_by_filter = hidden_by_filter
-        self.warning_toggled = warning_toggled
+        if not warning_toggled:
+            self.warning_toggled = get_mod_warning_toggled(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+        else:
+            self.warning_toggled = warning_toggled
         self.invalid = (
             invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
         )
