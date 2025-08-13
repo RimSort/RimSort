@@ -74,8 +74,7 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager, ModMetadata
-from app.utils.schema import validate_rimworld_mods_list
-from app.utils.xml import xml_path_to_json
+from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
@@ -2570,11 +2569,12 @@ class ModListWidget(QListWidget):
             if latest is None:
                 return None
 
-            data = xml_path_to_json(str(latest))
-            # Reuse existing validator to support all RimWorld formats
-            ids_list = validate_rimworld_mods_list(data)
+            if fast_rimworld_xml_save_validation(str(latest)):
+                ids_set = extract_xml_package_ids(str(latest))
+            else:
+                ids_set = set("Ludeon.RimWorld")
             # Normalize to lowercase
-            self._latest_save_package_ids = {str(i).lower() for i in ids_list}
+            self._latest_save_package_ids = {str(i).lower() for i in ids_set}
             return self._latest_save_package_ids
         except Exception:
             return None
