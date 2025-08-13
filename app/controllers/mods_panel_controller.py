@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from pathlib import Path
 
 from loguru import logger
@@ -27,10 +28,10 @@ class ModsPanelController(QObject):
         self.news_label_active = False
 
         self.mods_panel.warnings_text.clicked.connect(
-            self._change_visibility_of_mods_with_warnings
+            partial(self._change_visibility_of_mods_with_warnings_errors, "warnings")
         )
         self.mods_panel.errors_text.clicked.connect(
-            self._change_visibility_of_mods_with_errors
+            partial(self._change_visibility_of_mods_with_warnings_errors, "errors")
         )
         # New mods filter label (only when save-comparison feature enabled)
         if (
@@ -169,70 +170,30 @@ class ModsPanelController(QObject):
                 self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)
 
     @Slot()
-    def _change_visibility_of_mods_with_warnings(self) -> None:
-        """When on, shows only mods that have warnings.
+    def _change_visibility_of_mods_with_warnings_errors(self, type: str) -> None:
+        """
+        When on, shows only mods have either warnings or errors. Based on passed in type. 
 
         When off, shows all mods.
 
-        Works with filters, meaning it won't show mods with warnings if they don't match the filters."""
-
-        # If the other label is active, disable it
-        if self.errors_label_active:
-            self.mods_panel.errors_text.clicked.emit()
-        if (
-            self.news_label_active
-            and hasattr(self.mods_panel, "new_text")
-            and self.settings_controller.settings.show_save_comparison_indicators
-        ):
+        Works partially with filters, meaning it won't show mods with warnings if they don't match the filters.
+        """
+        # If the other labels are active, disable them
+        if (self.news_label_active):
             self.mods_panel.new_text.clicked.emit()
+        if type == "warnings":
+            if self.errors_label_active:
+                self.mods_panel.errors_text.clicked.emit()
+            self.warnings_label_active = not self.warnings_label_active
+            label_active = self.warnings_label_active
+        else:
+            if self.warnings_label_active:
+                self.mods_panel.warnings_text.clicked.emit()
+            self.errors_label_active = not self.errors_label_active
+            label_active = self.errors_label_active
 
-        self.warnings_label_active = not self.warnings_label_active
-
-        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
-        for mod in active_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden becasue of filters, dont unhide it
-            if mod_data["warnings"] == "":
-                if self.warnings_label_active:
-                    mod.setHidden(True)
-                elif not mod_data["hidden_by_filter"]:
-                    mod.setHidden(False)
-        self.mods_panel.update_count("Active")
-        self.mods_panel.active_mods_list.check_widgets_visible()
-        logger.debug("Finished hiding mods without warnings.")
-
-    @Slot()
-    def _change_visibility_of_mods_with_errors(self) -> None:
-        """When on, shows only mods that have errors.
-
-        When off, shows all mods.
-
-        Works with filters, meaning it won't show mods with errors if they don't match the filters."""
-
-        # If the other label is active, disable it
-        if self.warnings_label_active:
-            self.mods_panel.warnings_text.clicked.emit()
-        if (
-            self.news_label_active
-            and hasattr(self.mods_panel, "new_text")
-            and self.settings_controller.settings.show_save_comparison_indicators
-        ):
-            self.mods_panel.new_text.clicked.emit()
-
-        self.errors_label_active = not self.errors_label_active
-
-        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
-        for mod in active_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden because of filters, dont unhide it
-            if mod_data["errors"] == "":
-                if self.errors_label_active:
-                    mod.setHidden(True)
-                elif not mod_data["hidden_by_filter"]:
-                    mod.setHidden(False)
-        self.mods_panel.update_count("Active")
-        self.mods_panel.active_mods_list.check_widgets_visible()
-        logger.debug("Finished hiding mods without errors.")
+        self.__change_visibility_helper(label_active, type)
+        logger.debug("Finished hiding mods without " + type)
 
     @Slot()
     def _change_visibility_of_new_mods(self) -> None:
@@ -249,19 +210,28 @@ class ModsPanelController(QObject):
 
         self.news_label_active = not self.news_label_active
 
+        self.__change_visibility_helper(self.news_label_active, "new_text")
+        logger.debug("Finished hiding mods that are in save (showing only new).")
+
+    def __change_visibility_helper(self, label_active: bool, type: str) -> None:
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            is_new = bool(mod_data.__dict__.get("is_new", False))
-            # If a mod is already hidden because of filters, dont unhide it
-            if not is_new:
-                if self.news_label_active:
+            if type == "new_text":
+                apply_filter = not bool(mod_data.__dict__.get("is_new", False))
+            else:
+                apply_filter = mod_data[type] == ""
+
+            # If a mod is already hidden becasue of filters, dont unhide it
+            if apply_filter:
+                if label_active:
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
         self.mods_panel.update_count("Active")
+        self.mods_panel.active_mods_list.repaint()
         self.mods_panel.active_mods_list.check_widgets_visible()
-        logger.debug("Finished hiding mods that are in save (showing only new).")
+
     def do_all_entries_in_aux_db_as_outdated(self) -> None:
         """
         Sets all entries in the aux db as outdated if not already outdated.
