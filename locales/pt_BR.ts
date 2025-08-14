@@ -2,6 +2,157 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
 <context>
+    <name>AcfLogReader</name>
+    <message>
+        <source>Ready</source>
+        <translation>Pronto</translation>
+    </message>
+    <message>
+        <source>Search...</source>
+        <translation>Pesquisar...</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Atualizar</translation>
+    </message>
+    <message>
+        <source>Import ACF Data</source>
+        <translation>Importar dados ACF</translation>
+    </message>
+    <message>
+        <source>Export ACF Data</source>
+        <translation>Exportar dados ACF</translation>
+    </message>
+    <message>
+        <source>Export to CSV</source>
+        <translation>Exportar para CSV</translation>
+    </message>
+    <message>
+        <source>Loaded {count} items | Last updated: {time}</source>
+        <translation>Carregados {count} itens | Última atualização: {time}</translation>
+    </message>
+    <message>
+        <source>Export canceled by user.</source>
+        <translation>Exportação cancelada pelo usuário.</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>Falha na exportação: Permissão negada - verifique as permissões do arquivo</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>Erro na exportação</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error - {e}</source>
+        <translation>Falha na exportação: Erro no sistema de arquivos - {e}</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error</source>
+        <translation>Falha na exportação: erro no sistema de arquivos</translation>
+    </message>
+    <message>
+        <source>Exporting to CSV...</source>
+        <translation>Exportando para CSV...</translation>
+    </message>
+    <message>
+        <source>Exporting rows...</source>
+        <translation>Exportando linhas...</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Export failed due to an unknown error</source>
+        <translation>Falha na exportação devido a um erro desconhecido</translation>
+    </message>
+    <message>
+        <source>View in Steam Workshop</source>
+        <translation>Ver no Steam Workshop</translation>
+    </message>
+    <message>
+        <source>Open Mod Folder</source>
+        <translation>Abrir pasta do Mod</translation>
+    </message>
+    <message>
+        <source>Published File ID</source>
+        <translation>ID do arquivo publicado</translation>
+    </message>
+    <message>
+        <source>Mod downloaded</source>
+        <translation>Mod baixado</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>Atualizado na Oficina</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tipo</translation>
+    </message>
+    <message>
+        <source>Mod Name</source>
+        <translation>Nome do Mod</translation>
+    </message>
+    <message>
+        <source>Mod Path</source>
+        <translation>Pasta do Mod</translation>
+    </message>
+    <message>
+        <source>Conform acf import</source>
+        <translation>Importação conforme acf</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>Isso substituirá seu arquivo steamcmd .acf atual</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
+        <translation>Tem certeza de que deseja importar .acf? Isso só funciona para steamcmd</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>Importar .acf</translation>
+    </message>
+    <message>
+        <source>SteamCMD interface not properly initialized</source>
+        <translation>Interface SteamCMD não inicializada corretamente</translation>
+    </message>
+    <message>
+        <source>ACF file not found: {acf_path}</source>
+        <translation>Arquivo ACF não encontrado: {acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>Arquivo ACF não encontrado em: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Invalid file path provided for export: {file_path}</source>
+        <translation>Caminho do arquivo inválido fornecido para exportação: {file_path}</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>ACF exportado com sucesso para {file_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>Sucesso na exportação</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>Falha na exportação: {e}</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>Falha na exportação</translation>
+    </message>
+    <message>
+        <source>Exportfailed unknown exception occurred</source>
+        <translation>Ocorreu uma exceção desconhecida durante a exportação</translation>
+    </message>
+</context>
+<context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
@@ -170,7 +321,7 @@ Verifique suas configurações e tente novamente.</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
-        <translation>Filtro: {linhas visíveis} de {contagem de linhas} resultados visíveis</translation>
+        <translation>Filtro: {visible_rows} de {rowCount} resultados visíveis</translation>
     </message>
     <message>
         <source>Location Not Set</source>
@@ -318,10 +469,6 @@ Quando desmarcado, pesquisa todos os tipos de arquivos com a pesquisa padrão.</
         <translation>Resultados da pesquisa:</translation>
     </message>
     <message>
-        <source>Double-click a result to open the file</source>
-        <translation>Clique duas vezes em um resultado para abrir o arquivo</translation>
-    </message>
-    <message>
         <source>Mod Name</source>
         <translation>Nome do Mod</translation>
     </message>
@@ -374,10 +521,6 @@ Quando desmarcado, pesquisa todos os tipos de arquivos com a pesquisa padrão.</
         <translation>Editor Padrão</translation>
     </message>
     <message>
-        <source>Double-click to open file</source>
-        <translation>Clique duas vezes para abrir o arquivo</translation>
-    </message>
-    <message>
         <source>Clear Recent Searches</source>
         <translation>Limpar pesquisas recentes</translation>
     </message>
@@ -388,6 +531,14 @@ Quando desmarcado, pesquisa todos os tipos de arquivos com a pesquisa padrão.</
     <message>
         <source>Found {total_rows} results</source>
         <translation>Encontrados {total_rows} resultados</translation>
+    </message>
+    <message>
+        <source>Right-click a result for actions</source>
+        <translation>Clique com o botão direito em um resultado para ver as ações</translation>
+    </message>
+    <message>
+        <source>Right-click for actions</source>
+        <translation>Clique com o botão direito para ver as ações</translation>
     </message>
 </context>
 <context>
@@ -402,154 +553,22 @@ Quando desmarcado, pesquisa todos os tipos de arquivos com a pesquisa padrão.</
     </message>
 </context>
 <context>
-    <name>LogReader</name>
+    <name>LanguageController</name>
     <message>
-        <source>Search...</source>
-        <translation>Pesquisar...</translation>
+        <source>Language Changed</source>
+        <translation>Idioma alterado</translation>
     </message>
     <message>
-        <source>Refresh</source>
-        <translation>Atualizar</translation>
+        <source>The language has been updated.</source>
+        <translation>O idioma foi atualizado.</translation>
     </message>
     <message>
-        <source>Import ACF Data</source>
-        <translation>Importar dados ACF</translation>
+        <source>Restart the application to apply the change. Restart now?</source>
+        <translation>Reinicie o aplicativo para aplicar a alteração. Reiniciar agora?</translation>
     </message>
     <message>
-        <source>Export ACF Data</source>
-        <translation>Exportar dados ACF</translation>
-    </message>
-    <message>
-        <source>Export to CSV</source>
-        <translation>Exportar para CSV</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>Erro na exportação</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>Falha na exportação: Permissão negada - verifique as permissões do arquivo</translation>
-    </message>
-    <message>
-        <source>Ready</source>
-        <translation>Pronto</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Carregados {count} itens | Última atualização: {time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>Exportação cancelada pelo usuário.</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>Falha na exportação: Erro no sistema de arquivos - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>Falha na exportação: erro no sistema de arquivos</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>Exportando para CSV...</translation>
-    </message>
-    <message>
-        <source>Exporting rows...</source>
-        <translation>Exportando linhas...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>Falha na exportação devido a um erro desconhecido</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Ver no Steam Workshop</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>Abrir pasta do Mod</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>ID do arquivo publicado</translation>
-    </message>
-    <message>
-        <source>Last Updated</source>
-        <translation>Última atualização</translation>
-    </message>
-    <message>
-        <source>Relative Time</source>
-        <translation>Tempo relativo</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tipo</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Nome do Mod</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>Pasta do Mod</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>Importação conforme acf</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>Isso substituirá seu arquivo steamcmd .acf atual</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation>Tem certeza de que deseja importar .acf? Isso só funciona para steamcmd</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>Interface SteamCMD não inicializada corretamente</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>Arquivo ACF não encontrado: {acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>Arquivo ACF não encontrado em: {acf_path}</translation>
-    </message>
-    <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Caminho do arquivo inválido fornecido para exportação: {file_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>ACF exportado com sucesso para {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>Sucesso na exportação</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>Falha na exportação: {e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>Falha na exportação</translation>
-    </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>Ocorreu uma exceção desconhecida durante a exportação</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>Importar .acf</translation>
+        <source>Restart</source>
+        <translation>Reiniciar</translation>
     </message>
 </context>
 <context>
@@ -641,10 +660,6 @@ Deseja atualizar agora?</translation>
     <message>
         <source>Failed to download latest RimSort release!</source>
         <translation>Falha ao baixar a versão mais recente do RimSort!</translation>
-    </message>
-    <message>
-        <source>RimSort is up to date!</source>
-        <translation>O RimSort está atualizado!</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -769,10 +784,6 @@ Deseja atualizar agora?</translation>
     <message>
         <source>Uploaded file</source>
         <translation>Arquivo enviado</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to http://0x0.st/</source>
-        <translation>Enviado {path.name} para http://0x0.st/</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:
@@ -1151,10 +1162,6 @@ O banco de dados resultante, C, será salvo em um caminho definido pelo usuário
         <translation>Usar Isto em Vez</translation>
     </message>
     <message>
-        <source>You are already running the latest release: {latest_tag_name}</source>
-        <translation>Você já está usando a versão mais recente: {latest_tag_name}</translation>
-    </message>
-    <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Uma atualização do RimSort foi lançada: {latest_tag_name}</translation>
     </message>
@@ -1197,6 +1204,18 @@ O banco de dados resultante, C, será salvo em um caminho definido pelo usuário
     <message>
         <source>Run Anyway</source>
         <translation>Executar Mesmo Assim</translation>
+    </message>
+    <message>
+        <source>Import from RimWorld Save File</source>
+        <translation>Importar do arquivo de salvamento do RimWorld</translation>
+    </message>
+    <message>
+        <source>RimWorld save (*.rws);;All files (*.*)</source>
+        <translation>RimWorld save (*.rws);;Todos os arquivos (*.*)</translation>
+    </message>
+    <message>
+        <source>Uploaded {path.name} to https://0x0.st/</source>
+        <translation>{path.name} enviado para https://0x0.st/</translation>
     </message>
 </context>
 <context>
@@ -1803,10 +1822,6 @@ Erro: {error}</translation>
         <translation>Conteúdo principal</translation>
     </message>
     <message>
-        <source>Log Reader</source>
-        <translation>Leitor de registros</translation>
-    </message>
-    <message>
         <source>File Search</source>
         <translation>Pesquisar arquivos</translation>
     </message>
@@ -1862,7 +1877,7 @@ RimSort can copy all of your Workshop mods to the new instance&apos;s local mods
 Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
 
 How would you like to proceed?</source>
-        <translation>Pasta da oficina: {pasta_da_oficina_existente}
+        <translation>Pasta da oficina: {existing_instance_workshop_folder}
 
 O RimSort pode copiar todos os seus mods da Oficina para a pasta de mods local da nova instância. Isso converterá efetivamente todos os mods existentes do cliente Steam em mods SteamCMD, que você poderá gerenciar dentro da nova instância.
 
@@ -1916,7 +1931,7 @@ Como você gostaria de prosseguir?</translation>
     </message>
     <message>
         <source>Restoring instance [{name}] from archive...</source>
-        <translation>Restaurando instância [{nome}] do arquivo...</translation>
+        <translation>Restaurando instância [{name}] do arquivo...</translation>
     </message>
     <message>
         <source>Invalid instance folder paths</source>
@@ -1952,7 +1967,7 @@ Como você gostaria de prosseguir?</translation>
     </message>
     <message>
         <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>Pasta de mods do workshop em [existing_instance_workshop_folder}] não encontrada.</translation>
+        <translation>Pasta de mods do workshop em [{existing_instance_workshop_folder}] não encontrada.</translation>
     </message>
     <message>
         <source>Error cloning instance</source>
@@ -2029,6 +2044,10 @@ Como você gostaria de prosseguir?</translation>
     <message>
         <source>Cancelled</source>
         <translation>Cancelado</translation>
+    </message>
+    <message>
+        <source>ACF Log Reader</source>
+        <translation>Leitor de log ACF</translation>
     </message>
 </context>
 <context>
@@ -2216,6 +2235,14 @@ Como você gostaria de prosseguir?</translation>
     <message>
         <source>RimSort Wiki…</source>
         <translation>Wiki  do RimSort...</translation>
+    </message>
+    <message>
+        <source>From Save file…</source>
+        <translation>Do arquivo de salvamento…</translation>
+    </message>
+    <message>
+        <source>RimSort GitHub…</source>
+        <translation>GitHub do RimSort …</translation>
     </message>
 </context>
 <context>
@@ -2491,20 +2518,6 @@ Os arquivos .dds serão preservados.
 Deseja continuar?</translation>
     </message>
     <message>
-        <source>Steam {action.capitalize()}</source>
-        <translation>Steam {action.capitalize()}</translation>
-    </message>
-    <message>
-        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation>Ação {action} iniciada com sucesso para {len(publishedfileids)} mod(s) do Steam Workshop.
-O processo pode levar alguns instantes para ser concluído.</translation>
-    </message>
-    <message>
-        <source>{action.capitalize()} Error</source>
-        <translation>{action.capitalize()} Erro</translation>
-    </message>
-    <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>Ocorreu um erro ao tentar {action} mods do Steam Workshop.</translation>
     </message>
@@ -2513,32 +2526,62 @@ O processo pode levar alguns instantes para ser concluído.</translation>
         <translation>Selecione pelo menos um mod para excluir e {action}.</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action.capitalize()}</source>
-        <translation>Confirmar Exclusão e {action.capitalize()}</translation>
+        <source>Deletion options</source>
+        <translation>Opções de exclusão</translation>
     </message>
     <message>
-        <source>You have selected {len(selected_mods)} mod(s) for deletion.
-{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
-        <translation>Você selecionou {len(selected_mods)} mod(s) para exclusão.
-Destes, {len(steam_mods)} são mods do Steam Workshop que também serão {action}d.</translation>
+        <source>Steam {action}</source>
+        <translation>Steam {action}</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation>{action} iniciado com sucesso a partir de {len} mod(s) da Steam Workshop.
+O processo pode levar alguns momentos para ser concluído.</translation>
+    </message>
+    <message>
+        <source>{action} Error</source>
+        <translation>Erro ao {action}</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action}</source>
+        <translation>Confirmar exclusão e {action}</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
+        <translation>Você selecionou {count} mod(s) para exclusão.
+{steam_count} destes são mods da Steam Workshop que também serão {action}.</translation>
     </message>
     <message>
         <source>
 This operation will:
 • Delete the selected mod directories from your filesystem
-• {action.capitalize()} Steam Workshop mods from your Steam account
+• {action} Steam Workshop mods from your Steam account
 
 Do you want to proceed?</source>
         <translation>
 Esta operação irá:
 • Excluir os diretórios dos mods selecionados do seu sistema de arquivos
-• {action.capitalize()} mods do Steam Workshop da sua conta Steam
+• {action} os mods da Steam Workshop da sua conta Steam
 
 Deseja continuar?</translation>
     </message>
     <message>
-        <source>Deletion options</source>
-        <translation>Opções de exclusão</translation>
+        <source>unsubscribe</source>
+        <translation>cancelar inscrição</translation>
+    </message>
+    <message>
+        <source>resubscribe</source>
+        <translation>reescrever</translation>
+    </message>
+    <message>
+        <source>unsubscribed</source>
+        <translation>cancelada inscrição</translation>
+    </message>
+    <message>
+        <source>resubscribed</source>
+        <translation>inscrição restabelecida</translation>
     </message>
 </context>
 <context>
@@ -2575,6 +2618,22 @@ Deseja continuar?</translation>
         <source>Welcome to RimSort!</source>
         <translation>Bem-vindo ao RimSort!</translation>
     </message>
+    <message>
+        <source>Folder Size:</source>
+        <translation>Tamanho da pasta:</translation>
+    </message>
+    <message>
+        <source>Last Touched:</source>
+        <translation>Último acesso:</translation>
+    </message>
+    <message>
+        <source>Filesystem Modified:</source>
+        <translation>Modificado no sistema de arquivos:</translation>
+    </message>
+    <message>
+        <source>Workshop Times:</source>
+        <translation>Horários da Workshop:</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2605,6 +2664,14 @@ Deseja continuar?</translation>
     <message>
         <source>Subscribed via Steam</source>
         <translation>Inscrito via Steam</translation>
+    </message>
+    <message>
+        <source>Not in latest save</source>
+        <translation>Não está no salvamento mais recente</translation>
+    </message>
+    <message>
+        <source>In latest save</source>
+        <translation>No salvamento mais recente</translation>
     </message>
 </context>
 <context>
@@ -2811,6 +2878,34 @@ Should be Loaded Before:</source>
         <translation>
 Deve ser carregado antes:</translation>
     </message>
+    <message>
+        <source>Change mod color</source>
+        <translation>Alterar cor do mod</translation>
+    </message>
+    <message>
+        <source>Reset mod color</source>
+        <translation>Redefinir cor do mod</translation>
+    </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation>
+Dependência Alternativa:</translation>
+    </message>
+    <message>
+        <source>
+Mod and Game Version Mismatch</source>
+        <translation>
+Incompatibilidade entre a versão do mod e do jogo</translation>
+    </message>
+    <message>
+        <source>
+An alternative updated mod is recommended:
+{alternative}</source>
+        <translation>
+Um mod alternativo atualizado é recomendado:
+{alternative}</translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2941,6 +3036,54 @@ Deve ser carregado antes:</translation>
         <source>Inactive</source>
         <translation>Desativado</translation>
     </message>
+    <message>
+        <source>0 new</source>
+        <translation>0 novo</translation>
+    </message>
+    <message>
+        <source>Click to only show active mods not in latest save</source>
+        <translation>Clique para mostrar apenas mods ativos que não estão no salvamento mais recente</translation>
+    </message>
+    <message>
+        <source>Sort inactive mods by</source>
+        <translation>Classificar mods inativos por</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Autor</translation>
+    </message>
+    <message>
+        <source>Modified Time</source>
+        <translation>Hora de modificação</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Tamanho da pasta</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Alternar ordem de classificação</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>Descre</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>Cresce</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Reconstruindo lista...</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Calculando tamanhos das pastas...</translation>
+    </message>
+    <message>
+        <source>{padding}{count} new</source>
+        <translation>{padding}{count} novo(s)</translation>
+    </message>
 </context>
 <context>
     <name>Rentry Auth Code Not Found </name>
@@ -3018,7 +3161,7 @@ Deve ser carregado antes:</translation>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
-        <translation></translation>
+        <translation>Nenhum mod está sendo editado no momento</translation>
     </message>
     <message>
         <source>About.xml (loadAfter)</source>
@@ -3165,6 +3308,10 @@ Deve ser carregado antes:</translation>
     <message>
         <source>User Rules (incompatibilitiesWith)</source>
         <translation>Regras do Usuário (incompatibilitiesWith)</translation>
+    </message>
+    <message>
+        <source>Force load at top of list</source>
+        <translation>Forçar carregamento no topo da lista</translation>
     </message>
 </context>
 <context>
@@ -3321,10 +3468,6 @@ Clique em “Mostrar Detalhes” para ver a lista de mods que falharam.</transla
     <message>
         <source>Local mods location</source>
         <translation>Localização dos mods locais</translation>
-    </message>
-    <message>
-        <source>Game location sets local mods location.</source>
-        <translation>A localização do jogo define a localização dos mods locais.</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3698,44 +3841,134 @@ Exemplos:
         <translation>Expiração do banco de dados em segundos, por exemplo, 604800 para 7 dias, e 0 para sem expiração.</translation>
     </message>
     <message>
-        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
-        <translation>Configuração de Tamanho da Janela — tamanho detectado da tela: {max_width} x {max_height} pixels</translation>
-    </message>
-    <message>
-        <source>Reset Window Size based on Screen Dimensions</source>
-        <translation>Redefinir Tamanho da Janela com base nas Dimensões da Tela</translation>
-    </message>
-    <message>
-        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
-        <translation>Aviso: A janela pode não caber na tela atual! Ajuste os valores.</translation>
-    </message>
-    <message>
         <source>Authentication</source>
         <translation>Autenticação</translation>
     </message>
     <message>
-        <source>Window X Position (px): minimum: 100, maximum: {}</source>
-        <translation>Posição X da Janela (px): mínimo: 100, máximo: {}</translation>
+        <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
+        <translation>Deve ser como: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</translation>
     </message>
     <message>
-        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
-        <translation>Posição Y da Janela (px): mínimo: 100, máximo: {}</translation>
+        <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
+        <translation>Deve ser como: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</translation>
     </message>
     <message>
-        <source>Window Width (px): minimum: 600, maximum: {}</source>
-        <translation>Largura da Janela (px): mínimo: 600, máximo: {}</translation>
+        <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
+        <translation>Somente se você usar a Steam deve ser como: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</translation>
     </message>
     <message>
-        <source>Window Height (px): minimum: 400, maximum: {}</source>
-        <translation>Altura da Janela (px): mínimo: 400, máximo: {}</translation>
+        <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
+        <translation>Deve ser como: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</translation>
     </message>
     <message>
-        <source>Panel Width (px): minimum: 600, maximum: {}</source>
-        <translation>Largura do Painel (px): mínimo: 600, máximo: {}</translation>
+        <source>Auxiliary DB</source>
+        <translation>Banco de dados auxiliar</translation>
     </message>
     <message>
-        <source>Panel Height (px): minimum: 400, maximum: {}</source>
-        <translation>Altura do Painel (px): mínimo: 400, máximo: {}</translation>
+        <source>Integration with recent save</source>
+        <translation>Integração com o salvamento recente</translation>
+    </message>
+    <message>
+        <source>Compare mod lists with the recent save file</source>
+        <translation>Comparar listas de mods com o arquivo de salvamento mais recente</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>Tempo limite para exclusão do banco de dados auxiliar de metadados, em segundos. (Excluir imediatamente 0, Nunca excluir -1)</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Para habilitar a edição desse tempo limite, marque a caixa de seleção correspondente nas configurações avançadas.
+Após um mod ser excluído, este é o tempo de espera até que esse item de mod seja excluído do banco de dados auxiliar de metadados.
+Esse banco de dados auxiliar contém informações sobre cores dos mods, avisos desativados, anotações do usuário etc.
+Basicamente, ele preserva as cores dos mods, anotações do usuário etc. por esse tempo (em segundos) após a exclusão.
+(Isso também se aplica a exclusões feitas fora do RimSort)</translation>
+    </message>
+    <message>
+        <source>Enable editing</source>
+        <translation>Habilitar edição</translation>
+    </message>
+    <message>
+        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
+        <translation>Permite a edição do tempo limite para exclusão de dados do banco de dados auxiliar de metadados.</translation>
+    </message>
+    <message>
+        <source>Enable Auxiliary Metadata DB performance mode</source>
+        <translation>Habilitar modo de desempenho do banco de dados auxiliar de metadados</translation>
+    </message>
+    <message>
+        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
+Improves performance by ~50%.</source>
+        <translation>Melhora o desempenho do banco de dados auxiliar, com maior risco de perda/corrupção de dados em caso de travamentos.
+Melhora o desempenho em cerca de 50%.</translation>
+    </message>
+    <message>
+        <source>Delete before update</source>
+        <translation>Excluir antes de atualizar</translation>
+    </message>
+    <message>
+        <source>This is useful if you want to ensure clean mod updates.</source>
+        <translation>Útil para garantir atualizações limpas dos mods.</translation>
+    </message>
+    <message>
+        <source>Launch State</source>
+        <translation>Estado de inicialização</translation>
+    </message>
+    <message>
+        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
+        <translation>Mínimo é {MIN_SIZE} e máximo é {MAX_SIZE}. Valores fora desse intervalo serão redefinidos para os padrões.</translation>
+    </message>
+    <message>
+        <source>Maximized</source>
+        <translation>Maximizado</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Custom size</source>
+        <translation>Tamanho personalizado</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>Estado de inicialização da janela principal</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>Estado de inicialização da janela do navegador</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>Estado de inicialização da janela de configurações</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>Largura personalizada:</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>Altura personalizada:</translation>
+    </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation>Limpar também inclui DLCs</translation>
+    </message>
+    <message>
+        <source>Apply mod coloring to background instead of text</source>
+        <translation>Aplicar coloração do mod no plano de fundo em vez do texto</translation>
+    </message>
+    <message>
+        <source>Consider alternativePackageIds as satisfying dependencies</source>
+        <translation>Considerar alternativePackageIds como atendendo dependências</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
+        <translation>Se ativado, uma entrada alternativePackageIds no About.xml pode satisfazer a dependência de um mod quando a dependência principal estiver ausente.</translation>
     </message>
 </context>
 <context>
@@ -3918,6 +4151,14 @@ Novo link simbólico:
         <translation>Novo link simbólico:
 [{symlink_source_path}] -&gt; </translation>
     </message>
+    <message>
+        <source>&amp;Yes</source>
+        <translation>&amp;Sim</translation>
+    </message>
+    <message>
+        <source>&amp;Don&apos;t Ask Again</source>
+        <translation>&amp;Não perguntar novamente</translation>
+    </message>
 </context>
 <context>
     <name>ThemeController</name>
@@ -4049,10 +4290,6 @@ AVISO: Isso excluirá permanentemente todos os mods na sua pasta Mods e restaura
     <message>
         <source>Location Error</source>
         <translation>Erro de localização</translation>
-    </message>
-    <message>
-        <source>Failed to get Location: {save_path}.</source>
-        <translation>Falha ao obter localização: {save_path}.</translation>
     </message>
     <message>
         <source>Confirm Export</source>
@@ -4204,16 +4441,16 @@ Detalhes: {e}</translation>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
         <translation>Você não é um usuário Steam ou o caminho não está definido. Verifique as configurações e tente novamente.</translation>
     </message>
+    <message>
+        <source>Error: {e}</source>
+        <translation>Error: {e}</translation>
+    </message>
 </context>
 <context>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
         <translation>Recuperar Arquivos do Jogo</translation>
-    </message>
-    <message>
-        <source>⚠️ Warning: These operations will delete selected files permanently!</source>
-        <translation>⚠️ Aviso: Estas operações excluirão permanentemente os arquivos selecionados!</translation>
     </message>
     <message>
         <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
@@ -4260,16 +4497,8 @@ Detalhes: {e}</translation>
         <translation>Aplicar Recuperação</translation>
     </message>
     <message>
-        <source>Apply the selected recovery options</source>
-        <translation>Aplicar as opções de recuperação selecionadas</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Cancel and clear selections</source>
-        <translation>Canclear e limpar seleções</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
@@ -4304,32 +4533,12 @@ Detalhes: {e}</translation>
         <translation>Importar uma lista de mod de um arquivo</translation>
     </message>
     <message>
-        <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation>⚠️ Aviso: Isso excluirá todos os mods da pasta Mods e restaurará o estado padrão do jogo (vanilla)</translation>
-    </message>
-    <message>
-        <source>Clear Mods</source>
-        <translation>Limpar Mods</translation>
-    </message>
-    <message>
         <source>Delete all mods and reset to vanilla state</source>
         <translation>Excluir todos os mods e restaurar para o estado vanilla</translation>
     </message>
     <message>
         <source>Steam Utilities</source>
         <translation>Utilitários da Steam</translation>
-    </message>
-    <message>
-        <source>🔄 Clear Download Cache</source>
-        <translation>🔄 Limpar Cache de Download</translation>
-    </message>
-    <message>
-        <source>✓ Verify Game Files</source>
-        <translation>✓ Verificar Arquivos do Jogo</translation>
-    </message>
-    <message>
-        <source>🔧 Repair Steam library</source>
-        <translation>🔧 Reparar biblioteca da Steam</translation>
     </message>
     <message>
         <source>Delete Steam&apos;s downloading folder to fix download issues</source>
@@ -4342,6 +4551,46 @@ Detalhes: {e}</translation>
     <message>
         <source>Verify integrity of all installed Steam games</source>
         <translation>Verificar a integridade de todos os jogos instalados na Steam</translation>
+    </message>
+    <message>
+        <source>Warning: These operations will delete selected files permanently!</source>
+        <translation>Aviso: Essas operações excluirão permanentemente os arquivos selecionados!</translation>
+    </message>
+    <message>
+        <source>Export List</source>
+        <translation>Exportar Lista</translation>
+    </message>
+    <message>
+        <source>Import List</source>
+        <translation>Importar Lista</translation>
+    </message>
+    <message>
+        <source>Reset to Vanilla</source>
+        <translation>Redefinir para Padrão</translation>
+    </message>
+    <message>
+        <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
+        <translation>Isso excluirá todos os mods na sua pasta Mods e restaurará para o estado original do jogo</translation>
+    </message>
+    <message>
+        <source>Clear All Mods</source>
+        <translation>Limpar Todos os Mods</translation>
+    </message>
+    <message>
+        <source>Steam-specific utilities to help resolve download and game file issues.</source>
+        <translation>Utilitários específicos da Steam para ajudar a resolver problemas de download e arquivos do jogo.</translation>
+    </message>
+    <message>
+        <source>Clear Download Cache</source>
+        <translation>Limpar cache de download</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>Verificar arquivos do jogo</translation>
+    </message>
+    <message>
+        <source>Repair Steam Library</source>
+        <translation>Reparar biblioteca da Steam</translation>
     </message>
 </context>
 <context>
@@ -4580,27 +4829,6 @@ A tabela a seguir exibe mods do Workshop com substituições sugeridas de acordo
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} ocorreu em {e.filename} com o código de erro {error_code}.</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_conditional</name>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_information</name>
-    <message>
-        <source>OK</source>
-        <translation>Ok</translation>
-    </message>
-</context>
-<context>
-    <name>show_warning</name>
-    <message>
-        <source>OK</source>
-        <translation>Ok</translation>
     </message>
 </context>
 <context>
