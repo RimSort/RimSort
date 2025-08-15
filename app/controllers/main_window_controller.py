@@ -1,4 +1,5 @@
 import os
+from xml.etree.ElementTree import Element
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
@@ -63,6 +64,39 @@ class MainWindowController(QObject):
         EventBus().reset_use_this_instead_cache.connect(
             self.on_reset_use_this_instead_cache
         )
+
+    def _parse_workshop_id(self, url: str) -> str | None:
+        """Extract a Steam Workshop ID from a dependency URL."""
+        workshop_id: str | None = None
+        if "?id=" in url:
+            workshop_id = url.split("?id=")[1]
+        elif "CommunityFilePage/" in url:
+            workshop_id = url.split("CommunityFilePage/")[1]
+        else:
+            return None
+        # Clean up trailing query or path
+        if "?" in workshop_id:
+            workshop_id = workshop_id.split("?")[0]
+        if "/" in workshop_id:
+            workshop_id = workshop_id.split("/")[0]
+        return workshop_id
+
+    def _find_workshop_id_in_deps(
+        self, deps_node: Element, target_pkg_id: str
+    ) -> str | None:
+        """Search a <modDependencies> or versioned child node for a matching packageId and return its Workshop ID."""
+        target = target_pkg_id.lower()
+        for dep in deps_node.findall("li"):
+            package_id = dep.find("packageId")
+            if (
+                package_id is not None
+                and package_id.text is not None
+                and package_id.text.lower() == target
+            ):
+                workshop_url = dep.find("steamWorkshopUrl")
+                if workshop_url is not None and workshop_url.text is not None:
+                    return self._parse_workshop_id(workshop_url.text)
+        return None
 
     def check_dependencies(self) -> None:
         # Get the active mods list
@@ -184,59 +218,78 @@ class MainWindowController(QObject):
                                         tree = ET.parse(about_path)
                                         root = tree.getroot()
 
-                                        # Look for modDependencies
-                                        deps = root.find("modDependencies")
-                                        if deps is None:
-                                            continue
+                                        prefer_versioned = False
+                                        try:
+                                            prefer_versioned = (
+                                                self.metadata_manager.settings_controller.settings.prefer_versioned_about_tags
+                                            )
+                                        except Exception:
+                                            prefer_versioned = False
 
-                                        for dep in deps.findall("li"):
-                                            package_id = dep.find("packageId")
-                                            if package_id is not None:
-                                                if (
-                                                    package_id is not None
-                                                    and package_id.text is not None
-                                                    and package_id.text.lower()
-                                                    == dep_id.lower()
-                                                ):
-                                                    workshop_url = dep.find(
-                                                        "steamWorkshopUrl"
-                                                    )
-                                                    if (
-                                                        workshop_url is not None
-                                                        and workshop_url.text
-                                                        is not None
-                                                    ):
-                                                        url = workshop_url.text
-                                                        # Extract workshop ID from URL
-                                                        if "?id=" in url:
-                                                            workshop_id = url.split(
-                                                                "?id="
-                                                            )[1]
-                                                        elif (
-                                                            "CommunityFilePage/" in url
-                                                        ):
-                                                            workshop_id = url.split(
-                                                                "CommunityFilePage/"
-                                                            )[1]
+                                        # First check versioned deps if preference enabled
+                                        # ByVersion precedence here mirrors MetadataManager.compile_metadata:
+                                        # - If ON and matching version key exists:
+                                        #   * empty → suppress base (no fallback)
+                                        #   * non-empty → use versioned only (no additive merge)
+                                        # - If ON and no matching key → fall back to base
+                                        # - If OFF → skip ByVersion entirely and use base only
+                                        used_versioned = False
+                                        if prefer_versioned:
+                                            try:
+                                                major, minor = (
+                                                    self.metadata_manager.game_version.split(".")[:2]
+                                                )
+                                                target_keys = [f"v{major}.{minor}", f"{major}.{minor}"]
+                                            except Exception:
+                                                target_keys = []
 
-                                                        if workshop_id:
-                                                            # Clean up workshop ID
-                                                            if "?" in workshop_id:
-                                                                workshop_id = (
-                                                                    workshop_id.split(
-                                                                        "?"
-                                                                    )[0]
-                                                                )
-                                                            if "/" in workshop_id:
-                                                                workshop_id = (
-                                                                    workshop_id.split(
-                                                                        "/"
-                                                                    )[0]
-                                                                )
-                                                            mods_to_download.append(
-                                                                workshop_id
-                                                            )
+                                            deps_by_version = root.find("modDependenciesByVersion")
+                                            if deps_by_version is not None and target_keys:
+                                                # Try exact matches, then prefix matches
+                                                candidate = None
+                                                for child in list(deps_by_version):
+                                                    if child.tag in target_keys:
+                                                        candidate = child
+                                                        break
+                                                if candidate is None:
+                                                    for child in list(deps_by_version):
+                                                        if any(child.tag.startswith(k) for k in target_keys if k):
+                                                            candidate = child
                                                             break
+
+                                                if candidate is not None:
+                                                    used_versioned = True
+                                                    lis = candidate.findall("li")
+                                                    if not lis:
+                                                        logger.debug(
+                                                            f"Prefer versioned tags: {candidate.tag} is present but empty; suppressing base modDependencies for {about_path}"
+                                                        )
+                                                    else:
+                                                        logger.debug(
+                                                            f"Prefer versioned tags: using dependencies from {candidate.tag} in {about_path}"
+                                                        )
+                                                        workshop_id = self._find_workshop_id_in_deps(
+                                                            candidate, dep_id
+                                                        )
+                                                        if workshop_id:
+                                                            mods_to_download.append(workshop_id)
+                                                            break
+
+                                        if used_versioned:
+                                            # If versioned key existed (even if empty), don't fall back to base
+                                            pass
+                                        else:
+                                            # Fall back to base modDependencies
+                                            deps = root.find("modDependencies")
+                                            if deps is None:
+                                                continue
+
+                                            workshop_id = self._find_workshop_id_in_deps(
+                                                deps, dep_id
+                                            )
+                                            if workshop_id:
+                                                mods_to_download.append(workshop_id)
+                                                break
                                         if workshop_id:
                                             break  # Found the workshop ID, no need to check other mods
                                     except Exception:

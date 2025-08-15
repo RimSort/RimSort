@@ -670,6 +670,22 @@ class MetadataManager(QObject):
         """
         Iterate through each expansion or mod and add new key-values describing the
         dependencies, incompatibilities, and load order rules compiled from metadata.
+
+        About.xml ByVersion precedence (controlled by settings.prefer_versioned_about_tags):
+        - Toggle OFF: Ignore all ByVersion tags entirely; use only base tags
+          (preserves pre-ByVersion behavior).
+        - Toggle ON: For each supported tag group (descriptionsByVersion,
+          modDependenciesByVersion, incompatibleWithByVersion, loadAfterByVersion,
+          loadBeforeByVersion):
+          * If a matching key for current v<major>.<minor> exists and has content,
+            use only that versioned value and suppress the base tag (non-additive).
+          * If a matching key exists but is empty/invalid, treat as "no requirement"
+            for this version and suppress the base tag.
+          * If a ByVersion block exists but there is no matching key, fall back to
+            the base tag for that group.
+          * If the game version cannot be parsed, treat as "no matching key".
+        All collections (dependencies, incompatibilities, load rules) are sets, so
+        repeated additions from base/versioned paths do not duplicate.
         """
         # Compile metadata for all mods if uuids is None
         uuids = uuids or list(self.internal_local_metadata.keys())
@@ -680,6 +696,14 @@ class MetadataManager(QObject):
         # Go through each mod and add dependencies
         dependencies = None
         for uuid in uuids:
+            # Toggle: prefer versioned About.xml tags over base tags
+            prefer_versioned = False
+            try:
+                prefer_versioned = (
+                    self.settings_controller.settings.prefer_versioned_about_tags
+                )
+            except Exception:
+                prefer_versioned = False
             # Normalize DLC/base game entries so they always show canonical names
             try:
                 self.supplement_dlc_metadata(uuid)
@@ -689,144 +713,200 @@ class MetadataManager(QObject):
                 f"UUID: {uuid} packageid: "
                 + self.internal_local_metadata[uuid].get("packageid")
             )
-            # moddependencies are not equal to mod load order rules
+            # Prefer descriptionsByVersion over base description if enabled
+            if prefer_versioned and self.internal_local_metadata[uuid].get("descriptionsbyversion"):
+                try:
+                    major, minor = self.game_version.split(".")[:2]
+                    version_regex = rf"v{major}\.{minor}"
+                except Exception:
+                    version_regex = None
+                if version_regex:
+                    for version, desc_by_ver in self.internal_local_metadata[uuid]["descriptionsbyversion"].items():
+                        if match(version_regex, version):
+                            if isinstance(desc_by_ver, str):
+                                self.internal_local_metadata[uuid]["description"] = desc_by_ver
+                                logger.debug(
+                                    "Prefer versioned tags: using descriptionsByVersion over base description"
+                                )
+                            else:
+                                # Empty or invalid means override to empty description
+                                self.internal_local_metadata[uuid]["description"] = ""
+                                logger.debug(
+                                    "Prefer versioned tags: descriptionsByVersion present but empty; clearing base description"
+                                )
+                            break
+            # modDependencies and modDependenciesByVersion with precedence
+            base_deps = None
             if self.internal_local_metadata[uuid].get("moddependencies"):
-                if isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], dict
-                ):
-                    dependencies = self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ].get("li")
-                elif isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], list
-                ):
-                    # Loop through the list and try to find dictionary. If we find one, use it.
-                    for potential_dependencies in self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ]:
-                        if (
-                            potential_dependencies
-                            and isinstance(potential_dependencies, dict)
-                            and potential_dependencies.get("li")
-                        ):
-                            dependencies = potential_dependencies["li"]
-                if dependencies:
+                if isinstance(self.internal_local_metadata[uuid]["moddependencies"], dict):
+                    base_deps = self.internal_local_metadata[uuid]["moddependencies"].get("li")
+                elif isinstance(self.internal_local_metadata[uuid]["moddependencies"], list):
+                    for potential_dependencies in self.internal_local_metadata[uuid]["moddependencies"]:
+                        if potential_dependencies and isinstance(potential_dependencies, dict) and potential_dependencies.get("li"):
+                            base_deps = potential_dependencies["li"]
+
+            matched_versioned_deps = None
+            version_key_matched = False
+            if self.internal_local_metadata[uuid].get("moddependenciesbyversion"):
+                try:
+                    major, minor = self.game_version.split(".")[:2]
+                    version_regex = rf"v{major}\.{minor}"
+                except Exception:
+                    version_regex = None
+                if version_regex:
+                    for version, deps_by_ver in self.internal_local_metadata[uuid]["moddependenciesbyversion"].items():
+                        if match(version_regex, version):
+                            version_key_matched = True
+                            if deps_by_ver and isinstance(deps_by_ver, dict) and deps_by_ver.get("li"):
+                                matched_versioned_deps = deps_by_ver.get("li")
+                            else:
+                                matched_versioned_deps = []
+                            break
+
+            if prefer_versioned and version_key_matched:
+                if matched_versioned_deps:
                     logger.debug(
-                        f"Current mod requires these mods to work: {dependencies}"
+                        f"Current mod requires these mods by version to work: {matched_versioned_deps}"
                     )
                     add_dependency_to_mod(
                         self.internal_local_metadata[uuid],
-                        dependencies,
+                        matched_versioned_deps,
                         self.internal_local_metadata,
                     )
-
-            if self.internal_local_metadata[uuid].get("moddependenciesbyversion"):
-                major, minor = self.game_version.split(".")[
-                    :2
-                ]  # Split the version and take the first two parts
-                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-                for version, dependencies_by_ver in self.internal_local_metadata[uuid][
-                    "moddependenciesbyversion"
-                ].items():
-                    if match(version_regex, version):
-                        if (
-                            dependencies_by_ver
-                            and isinstance(dependencies_by_ver, dict)
-                            and dependencies_by_ver.get("li")
-                        ):
-                            logger.debug(
-                                f"Current mod requires these mods by version to work: {dependencies_by_ver['li']}"
-                            )
-                            add_dependency_to_mod(
-                                self.internal_local_metadata[uuid],
-                                dependencies_by_ver["li"],
-                                self.internal_local_metadata,
-                            )
-                        else:
-                            logger.warning(
-                                f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                            )
-                            logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get(
-                "incompatiblewith"
-            ) and isinstance(
-                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
-            ):
-                incompatibilities = self.internal_local_metadata[uuid][
-                    "incompatiblewith"
-                ].get("li")
-                if incompatibilities:
+                else:
                     logger.debug(
-                        f"Current mod is incompatible with these mods: {incompatibilities}"
+                        "Prefer versioned tags: dependencies key present for this version but empty; suppressing base modDependencies"
+                    )
+            else:
+                if base_deps:
+                    logger.debug(
+                        f"Current mod requires these mods to work: {base_deps}"
+                    )
+                    add_dependency_to_mod(
+                        self.internal_local_metadata[uuid],
+                        base_deps,
+                        self.internal_local_metadata,
+                    )
+                # prefer_versioned is disabled: ignore versioned deps entirely and rely on base only
+            # incompatibleWith + incompatibleWithByVersion precedence
+            # Found an example: 'incompatiblewith': {'li': ['majorhoff.rimthreaded', 'nova.rimworldtogether']}
+            base_incompat = None
+            if (
+                self.internal_local_metadata[uuid].get("incompatiblewith")
+                and isinstance(self.internal_local_metadata[uuid].get("incompatiblewith"), dict)
+            ):
+                base_incompat = self.internal_local_metadata[uuid]["incompatiblewith"].get("li")
+
+            matched_versioned_incompat = None
+            version_key_matched_incompat = False
+            if self.internal_local_metadata[uuid].get("incompatiblewithbyversion"):
+                try:
+                    major, minor = self.game_version.split(".")[:2]
+                    version_regex = rf"v{major}\.{minor}"
+                except Exception:
+                    version_regex = None
+                if version_regex:
+                    for version, inc_by_ver in self.internal_local_metadata[uuid]["incompatiblewithbyversion"].items():
+                        if match(version_regex, version):
+                            version_key_matched_incompat = True
+                            if inc_by_ver and isinstance(inc_by_ver, dict) and inc_by_ver.get("li"):
+                                matched_versioned_incompat = inc_by_ver.get("li")
+                            else:
+                                matched_versioned_incompat = []
+                            break
+
+            if prefer_versioned and version_key_matched_incompat:
+                if matched_versioned_incompat:
+                    logger.debug(
+                        f"Current mod is incompatible by version with these mods: {matched_versioned_incompat}"
                     )
                     add_incompatibility_to_mod(
                         self.internal_local_metadata[uuid],
-                        incompatibilities,
+                        matched_versioned_incompat,
                         self.internal_local_metadata,
                     )
-
-            if self.internal_local_metadata[uuid].get("incompatiblewithbyversion"):
-                major, minor = self.game_version.split(".")[
-                    :2
-                ]  # Split the version and take the first two parts
-                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-                for version, incompatibilities_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["incompatiblewithbyversion"].items():
-                    if match(version_regex, version):
-                        if (
-                            incompatibilities_by_ver
-                            and isinstance(incompatibilities_by_ver, dict)
-                            and incompatibilities_by_ver.get("li")
-                        ):
-                            logger.debug(
-                                f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver['li']}"
-                            )
-                            add_incompatibility_to_mod(
-                                self.internal_local_metadata[uuid],
-                                incompatibilities_by_ver["li"],
-                                self.internal_local_metadata,
-                            )
-                        else:
-                            logger.warning(
-                                f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                            )
-                            logger.debug(incompatibilities_by_ver)
+                else:
+                    logger.debug(
+                        "Prefer versioned tags: incompatibleWith key present for this version but empty; suppressing base incompatibleWith"
+                    )
+            else:
+                if base_incompat:
+                    logger.debug(
+                        f"Current mod is incompatible with these mods: {base_incompat}"
+                    )
+                    add_incompatibility_to_mod(
+                        self.internal_local_metadata[uuid],
+                        base_incompat,
+                        self.internal_local_metadata,
+                    )
+                # prefer_versioned is disabled: ignore versioned incompat entries
             # Current mod should be loaded AFTER these mods. These mods can be thought
-            # of as "load these before". These are not necessarily dependencies in the sense
-            # that they "depend" on them. But, if they exist in the same mod list, they
-            # should be loaded before.
+            # of as "load these before".
+            base_after = None
             if self.internal_local_metadata[uuid].get("loadafter"):
                 try:
-                    load_these_before = self.internal_local_metadata[uuid][
-                        "loadafter"
-                    ].get("li")
-                    if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            load_these_before,
-                            "loadTheseBefore",
-                            "loadTheseAfter",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
+                    base_after = self.internal_local_metadata[uuid]["loadafter"].get("li")
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
+            matched_after = None
+            version_key_matched_after = False
+            if self.internal_local_metadata[uuid].get("loadafterbyversion"):
+                try:
+                    major, minor = self.game_version.split(".")[:2]
+                    version_regex = rf"v{major}\.{minor}"
+                except Exception:
+                    version_regex = None
+                if version_regex:
+                    for version, load_these_before_by_ver in self.internal_local_metadata[uuid]["loadafterbyversion"].items():
+                        if match(version_regex, version):
+                            version_key_matched_after = True
+                            if load_these_before_by_ver and isinstance(load_these_before_by_ver, dict) and load_these_before_by_ver.get("li"):
+                                matched_after = load_these_before_by_ver.get("li")
+                            else:
+                                matched_after = []
+                            break
+
+            if prefer_versioned and version_key_matched_after:
+                if matched_after:
+                    logger.debug(
+                        f"Current mod should load after these mods by version: {matched_after}"
+                    )
+                    add_load_rule_to_mod(
+                        self.internal_local_metadata[uuid],
+                        matched_after,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
+                        self.internal_local_metadata,
+                        self.packageid_to_uuids,
+                    )
+                else:
+                    logger.debug(
+                        "Prefer versioned tags: loadAfter key present for this version but empty; suppressing base loadAfter"
+                    )
+            else:
+                if base_after:
+                    logger.debug(
+                        f"Current mod should load after these mods: {base_after}"
+                    )
+                    add_load_rule_to_mod(
+                        self.internal_local_metadata[uuid],
+                        base_after,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
+                        self.internal_local_metadata,
+                        self.packageid_to_uuids,
+                    )
+                # prefer_versioned is disabled: ignore versioned loadAfter entries
+
+            # Always respect forceloadafter regardless of precedence flag
             if self.internal_local_metadata[uuid].get("forceloadafter"):
                 try:
-                    force_load_these_before = self.internal_local_metadata[uuid][
-                        "forceloadafter"
-                    ].get("li")
+                    force_load_these_before = self.internal_local_metadata[uuid]["forceloadafter"].get("li")
                     if force_load_these_before:
                         logger.debug(
                             f"Current mod should force load after these mods: {force_load_these_before}"
@@ -840,75 +920,20 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "mod_metadata_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid].get("metadata_file_path")
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
-            if self.internal_local_metadata[uuid].get("loadafterbyversion"):
-                major, minor = self.game_version.split(".")[:2]
-                version_regex = rf"v{major}\.{minor}"
-                for version, load_these_before_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["loadafterbyversion"].items():
-                    if match(version_regex, version):
-                        try:
-                            if (
-                                load_these_before_by_ver
-                                and isinstance(load_these_before_by_ver, dict)
-                                and load_these_before_by_ver.get("li")
-                            ):
-                                logger.debug(
-                                    f"Current mod should load before these mods for {version}: {load_these_before_by_ver['li']}"
-                                )
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[uuid],
-                                    load_these_before_by_ver["li"],
-                                    "loadTheseBefore",
-                                    "loadTheseAfter",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
-                            else:
-                                logger.warning(
-                                    f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                                )
-                                logger.debug(load_these_before_by_ver)
-                        except Exception as e:
-                            mod_metadata_path = self.internal_local_metadata[uuid].get(
-                                "metadata_file_path"
-                            )
-                            logger.warning(
-                                f"Error processing <loadafterbyversion> tag for {version} from XML: {mod_metadata_path}"
-                            )
-                            logger.debug(e)
-
             # Current mod should be loaded BEFORE these mods
             # The current mod is a dependency for all these mods
+            base_before = None
             if self.internal_local_metadata[uuid].get("loadbefore"):
                 try:
-                    load_these_after = self.internal_local_metadata[uuid][
-                        "loadbefore"
-                    ].get("li")
-                    if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            load_these_after,
-                            "loadTheseAfter",
-                            "loadTheseBefore",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
+                    base_before = self.internal_local_metadata[uuid]["loadbefore"].get("li")
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_metadata_path}"
                     )
@@ -940,43 +965,55 @@ class MetadataManager(QObject):
                     )
                     logger.debug(e)
 
+            matched_before = None
+            version_key_matched_before = False
             if self.internal_local_metadata[uuid].get("loadbeforebyversion"):
-                major, minor = self.game_version.split(".")[:2]
-                version_regex = rf"v{major}\.{minor}"
-                for version, load_these_after_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["loadbeforebyversion"].items():
-                    if match(version_regex, version):
-                        try:
-                            if (
-                                load_these_after_by_ver
-                                and isinstance(load_these_after_by_ver, dict)
-                                and load_these_after_by_ver.get("li")
-                            ):
-                                logger.debug(
-                                    f"Current mod should load after these mods for {version}: {load_these_after_by_ver['li']}"
-                                )
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[uuid],
-                                    load_these_after_by_ver["li"],
-                                    "loadTheseAfter",
-                                    "loadTheseBefore",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
+                try:
+                    major, minor = self.game_version.split(".")[:2]
+                    version_regex = rf"v{major}\.{minor}"
+                except Exception:
+                    version_regex = None
+                if version_regex:
+                    for version, loadbefore_by_ver in self.internal_local_metadata[uuid]["loadbeforebyversion"].items():
+                        if match(version_regex, version):
+                            version_key_matched_before = True
+                            if loadbefore_by_ver and isinstance(loadbefore_by_ver, dict) and loadbefore_by_ver.get("li"):
+                                matched_before = loadbefore_by_ver.get("li")
                             else:
-                                logger.warning(
-                                    f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                                )
-                                logger.debug(load_these_after_by_ver)
-                        except Exception as e:
-                            mod_metadata_path = self.internal_local_metadata[uuid].get(
-                                "metadata_file_path"
-                            )
-                            logger.warning(
-                                f"Error processing <loadbeforebyversion> tag for {version} from XML: {mod_metadata_path}"
-                            )
-                            logger.debug(e)
+                                matched_before = []
+                            break
+
+            if prefer_versioned and version_key_matched_before:
+                if matched_before:
+                    logger.debug(
+                        f"Current mod should load before these mods by version: {matched_before}"
+                    )
+                    add_load_rule_to_mod(
+                        self.internal_local_metadata[uuid],
+                        matched_before,
+                        "loadTheseAfter",
+                        "loadTheseBefore",
+                        self.internal_local_metadata,
+                        self.packageid_to_uuids,
+                    )
+                else:
+                    logger.debug(
+                        "Prefer versioned tags: loadBefore key present for this version but empty; suppressing base loadBefore"
+                    )
+            else:
+                if base_before:
+                    logger.debug(
+                        f"Current mod should load before these mods: {base_before}"
+                    )
+                    add_load_rule_to_mod(
+                        self.internal_local_metadata[uuid],
+                        base_before,
+                        "loadTheseAfter",
+                        "loadTheseBefore",
+                        self.internal_local_metadata,
+                        self.packageid_to_uuids,
+                    )
+                # prefer_versioned is disabled: ignore versioned loadBefore entries
 
         logger.info("Finished adding dependencies through About.xml information")
         log_deps_order_info(self.internal_local_metadata)
@@ -1335,10 +1372,13 @@ class MetadataManager(QObject):
             return None
         replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
 
-        # check if replacement supports  the game version
-        major, minor = self.game_version.split(".")[:2]
-        version_regex = rf"{major}.{minor}"
-        if version_regex not in replacement_data["ReplacementVersions"]:
+        # check if replacement supports the game version
+        try:
+            major, minor = self.game_version.split(".")[:2]
+            version_regex = rf"{major}.{minor}"
+        except Exception:
+            version_regex = None
+        if not version_regex or version_regex not in replacement_data.get("ReplacementVersions", {}):
             return None
 
         return ModReplacement(
@@ -2980,3 +3020,5 @@ def recursively_update_dict(
         for key in purge_keys:
             if key in a_dict:
                 del a_dict[key]
+
+            # (removed misplaced block: loadBefore byVersion processing belongs in compile_metadata)
