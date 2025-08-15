@@ -832,6 +832,10 @@ class SettingsController(QObject):
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
+        # Clear button behavior
+        self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
+            self.settings.clear_moves_dlc
+        )
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
@@ -853,6 +857,13 @@ class SettingsController(QObject):
         try:
             self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
                 self.settings.consider_alternative_package_ids
+            )
+        except Exception:
+            pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(
+                self.settings.prefer_versioned_about_tags
             )
         except Exception:
             pass
@@ -1103,6 +1114,10 @@ class SettingsController(QObject):
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
         )
+        # Clear button behavior
+        self.settings.clear_moves_dlc = (
+            self.settings_dialog.clear_moves_dlc_checkbox.isChecked()
+        )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
         )
@@ -1124,6 +1139,13 @@ class SettingsController(QObject):
         try:
             self.settings.consider_alternative_package_ids = (
                 self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings.prefer_versioned_about_tags = (
+                self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
             )
         except Exception:
             pass

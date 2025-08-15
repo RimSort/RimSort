@@ -1300,6 +1300,12 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
+        # Clear button behavior
+        self.clear_moves_dlc_checkbox = QCheckBox(
+            self.tr("Clear also moves DLC")
+        )
+        group_layout.addWidget(self.clear_moves_dlc_checkbox)
+
         self.show_mod_updates_checkbox = QCheckBox(
             self.tr("Check for mod updates on refresh")
         )
@@ -1350,6 +1356,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
+
+        # Prefer versioned About.xml tags over base tags
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
+        self.prefer_versioned_about_tags_checkbox.setToolTip(
+            self.tr(
+                "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
+                "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
+                "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
+            )
+        )
+        group_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)
