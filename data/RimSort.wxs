@@ -25,8 +25,8 @@
         <Property Id="ARPPRODUCTICON" Value="RimSortIcon" />
 
         <!-- Check if D drive exists -->
-        <Property Id="D_DRIVE_EXISTS">
-            <DirectorySearch Id="CheckDDrive" Path="D:\" Depth="0" AssignToProperty="yes" />
+        <Property Id="D_PROGRAM_FILES_EXISTS">
+            <DirectorySearch Id="CheckDProgramFiles" Path="D:\Program Files" Depth="0" AssignToProperty="yes" />
         </Property>
 
         <!-- Custom action to set install folder to D drive if available -->
@@ -39,7 +39,7 @@
         <InstallUISequence>
             <Custom Action="SetInstallFolderToD"
                 Before="CostFinalize"
-                Condition="D_DRIVE_EXISTS AND NOT INSTALLFOLDER" />
+                Condition="D_PROGRAM_FILES_EXISTS AND NOT INSTALLFOLDER" />
         </InstallUISequence>
 
         <!-- Directory structure -->
