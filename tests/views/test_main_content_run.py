@@ -111,15 +111,11 @@ def main_content(
     mc.deleteLater()
 
 
-def test_cancel_on_unsaved(
-    patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
-    main_content: Tuple[MainContent, List[bool]],
-) -> None:
+def test_cancel_on_unsaved(patch_dialogue: Mock, patch_launch: List[Tuple[Path, List[str]]], main_content: Tuple[MainContent, List[bool]]) -> None:
     mc, save_calls = main_content
     # Set unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
-    mc.active_mods_uuids_last_save = ["a"]
+    mc.mods_panel.active_mods_list.uuids = ['a', 'b']
+    mc.active_mods_uuids_last_save = ['a']
     # Simulate Cancel
     patch_dialogue.return_value = QMessageBox.StandardButton.Cancel
     mc._do_run_game()
@@ -127,19 +123,15 @@ def test_cancel_on_unsaved(
     assert patch_launch == []
 
 
-def test_run_anyway_on_unsaved(
-    patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
-    main_content: Tuple[MainContent, List[bool]],
-) -> None:
+def test_run_anyway_on_unsaved(patch_dialogue: Mock, patch_launch: List[Tuple[Path, List[str]]], main_content: Tuple[MainContent, List[bool]]) -> None:
     mc, save_calls = main_content
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
-    mc.active_mods_uuids_last_save = ["a"]
-    patch_dialogue.return_value = mc.tr("Run Anyway")
+    mc.mods_panel.active_mods_list.uuids = ['a', 'b']
+    mc.active_mods_uuids_last_save = ['a']
+    patch_dialogue.return_value = mc.tr('Run Anyway')
     mc._do_run_game()
     assert save_calls == []
     # launch_game_process with dummy args
-    assert patch_launch == [(Path("/fake/path"), ["--test"])]
+    assert patch_launch == [(Path('/fake/path'), ['--test'])]
 
 
 def test_save_and_run_on_unsaved(
