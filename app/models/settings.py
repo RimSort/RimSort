@@ -146,6 +146,8 @@ class Settings(QObject):
         self.clear_moves_dlc: bool = False
         # Dependencies: treat alternativePackageIds as satisfying dependencies
         self.consider_alternative_package_ids: bool = False
+        # Advanced filtering options
+        self.enable_advanced_filtering: bool = True
 
         # XML parsing behavior
         # If enabled, About.xml *ByVersion tags take precedence over base tags
