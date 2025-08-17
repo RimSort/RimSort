@@ -1040,10 +1040,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         size_note = QLabel(
             self.tr(
                 "Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults."
-            ).format(
-                MIN_SIZE=Settings.MIN_SIZE,
-                MAX_SIZE=Settings.MAX_SIZE
-            )
+            ).format(MIN_SIZE=Settings.MIN_SIZE, MAX_SIZE=Settings.MAX_SIZE)
         )
         size_note.setFont(GUIInfo().emphasis_font)
         size_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1301,9 +1298,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
         # Clear button behavior
-        self.clear_moves_dlc_checkbox = QCheckBox(
-            self.tr("Clear also moves DLC")
-        )
+        self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
         self.show_mod_updates_checkbox = QCheckBox(
@@ -1345,6 +1340,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
+
+        self.enable_advanced_filtering_checkbox = QCheckBox(
+            self.tr("Enable advanced filtering options")
+        )
+        self.enable_advanced_filtering_checkbox.setToolTip(
+            self.tr(
+                "If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. "
+                "Disabling this can improve performance by avoiding heavy calculations."
+            )
+        )
+        group_layout.addWidget(self.enable_advanced_filtering_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")

@@ -564,8 +564,12 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
-        self.settings_dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
-        self.settings_dialog.aux_db_time_limit.setEnabled(self.settings.enable_aux_db_behavior_editing)
+        self.settings_dialog.aux_db_time_limit.setText(
+            str(self.settings.aux_db_time_limit)
+        )
+        self.settings_dialog.aux_db_time_limit.setEnabled(
+            self.settings.enable_aux_db_behavior_editing
+        )
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -863,6 +867,13 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
+        # Advanced: enable advanced filtering toggle
+        try:
+            self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
+                self.settings.enable_advanced_filtering
+            )
+        except Exception:
+            pass
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
         )
@@ -973,7 +984,9 @@ class SettingsController(QObject):
             self.settings_dialog.use_this_instead_db_github_url.text()
         )
         try:
-            self.settings.aux_db_time_limit = int(self.settings_dialog.aux_db_time_limit.text())
+            self.settings.aux_db_time_limit = int(
+                self.settings_dialog.aux_db_time_limit.text()
+            )
         except Exception:
             logger.warning("Failed setting Aux DB time limit, falling back to -1")
             self.settings.aux_db_time_limit = -1
@@ -1133,8 +1146,13 @@ class SettingsController(QObject):
         )
         # Advanced: alternativePackageIds toggle
         try:
-            self.settings.consider_alternative_package_ids = (
-                self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+            self.settings.consider_alternative_package_ids = self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+        except Exception:
+            pass
+        # Advanced: enable advanced filtering toggle
+        try:
+            self.settings.enable_advanced_filtering = (
+                self.settings_dialog.enable_advanced_filtering_checkbox.isChecked()
             )
         except Exception:
             pass
@@ -1991,4 +2009,3 @@ class SettingsController(QObject):
         if self.change_mod_coloring_mode:
             self.change_mod_coloring_mode = False
             EventBus().do_change_mod_coloring_mode.emit()
-

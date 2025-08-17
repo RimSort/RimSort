@@ -466,8 +466,13 @@ class ModInfo:
 
             # Set folder size
             try:
-                size_bytes = uuid_to_folder_size(uuid)
-                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
+                if self.settings_controller.settings.enable_advanced_filtering:
+                    size_bytes = uuid_to_folder_size(uuid)
+                    self.mod_info_folder_size_value.setText(
+                        format_file_size(size_bytes)
+                    )
+                else:
+                    self.mod_info_folder_size_value.setText("Not available")
             except Exception:
                 self.mod_info_folder_size_value.setText("Not available")
 
@@ -486,7 +491,11 @@ class ModInfo:
 
             # Set filesystem modification time
             mod_path = mod_info.get("path")
-            if mod_path and os.path.exists(mod_path):
+            if (
+                self.settings_controller.settings.enable_advanced_filtering
+                and mod_path
+                and os.path.exists(mod_path)
+            ):
                 try:
                     fs_time = int(os.path.getmtime(mod_path))
                     dt_fs = datetime.fromtimestamp(fs_time)
