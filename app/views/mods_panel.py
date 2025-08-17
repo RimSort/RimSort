@@ -502,12 +502,13 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.xml_icon, Qt.AlignmentFlag.AlignRight)
         # Compose the layout of our widget and set it to the main layout
         self.main_item_layout.addWidget(self.main_label, Qt.AlignmentFlag.AlignCenter)
-        self.main_item_layout.addWidget(
-            self.in_save_icon_label, Qt.AlignmentFlag.AlignRight
-        )
-        self.main_item_layout.addWidget(
-            self.new_icon_label, Qt.AlignmentFlag.AlignRight
-        )
+        if self.settings_controller.settings.show_save_comparison_indicators:
+            self.main_item_layout.addWidget(
+                self.in_save_icon_label, Qt.AlignmentFlag.AlignRight
+            )
+            self.main_item_layout.addWidget(
+                self.new_icon_label, Qt.AlignmentFlag.AlignRight
+            )
         self.main_item_layout.addWidget(
             self.warning_icon_label, Qt.AlignmentFlag.AlignRight
         )
