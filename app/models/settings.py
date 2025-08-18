@@ -99,10 +99,11 @@ class Settings(QObject):
 
         # todds
         self.todds_preset: str = "optimized"
+        self.todds_custom_command: str = ""
         self.todds_active_mods_target: bool = True
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
-        self.todds_custom_command: str = ""
+        self.auto_delete_orphaned_dds: bool = False
 
         # Theme
         self.enable_themes: bool = True
