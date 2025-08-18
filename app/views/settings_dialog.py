@@ -914,6 +914,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
 
+        self.auto_delete_orphaned_dds_checkbox = QCheckBox(
+            self.tr(
+                "Automatically delete .dds files if no corresponding .png file exists"
+            )
+        )
+        self.auto_delete_orphaned_dds_checkbox.setToolTip(
+            self.tr(
+                "This will delete .dds files that are not paired with a .png file,\n\n"
+                "This checks may take few seconds depending on the number of .dds files present."
+            )
+        )
+        group_layout.addWidget(self.auto_delete_orphaned_dds_checkbox)
+
         # Connect radio buttons to enable/disable custom command input
         self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
         self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)

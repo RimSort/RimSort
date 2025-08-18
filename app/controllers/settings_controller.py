@@ -742,6 +742,9 @@ class SettingsController(QObject):
         self.settings_dialog.todds_custom_command_lineedit.setText(
             self.settings.todds_custom_command
         )
+        self.settings_dialog.auto_delete_orphaned_dds_checkbox.setChecked(
+            self.settings.auto_delete_orphaned_dds
+        )
 
         # Themes tab
         self.settings_dialog.enable_themes_checkbox.setChecked(
@@ -1063,6 +1066,9 @@ class SettingsController(QObject):
         )
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
+        )
+        self.settings.auto_delete_orphaned_dds = (
+            self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
         )
 
         # Themes tab
