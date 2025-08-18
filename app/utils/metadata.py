@@ -644,14 +644,20 @@ class MetadataManager(QObject):
         if not isinstance(package_id, str):
             return
         # Map packageId -> appid
-        package_to_app = {v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()}
+        package_to_app = {
+            v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()
+        }
         appid = package_to_app.get(package_id)
         if not appid:
             return
         dlc_meta = RIMWORLD_DLC_METADATA[appid]
         # Ensure supportedversions exists and is sane
         if not isinstance(mod.get("supportedversions"), dict):
-            version = ".".join(self.game_version.split(".")[:2]) if self.game_version else None
+            version = (
+                ".".join(self.game_version.split(".")[:2])
+                if self.game_version
+                else None
+            )
             if version:
                 mod["supportedversions"] = {"li": version}
             else:
@@ -714,17 +720,23 @@ class MetadataManager(QObject):
                 + self.internal_local_metadata[uuid].get("packageid")
             )
             # Prefer descriptionsByVersion over base description if enabled
-            if prefer_versioned and self.internal_local_metadata[uuid].get("descriptionsbyversion"):
+            if prefer_versioned and self.internal_local_metadata[uuid].get(
+                "descriptionsbyversion"
+            ):
                 try:
                     major, minor = self.game_version.split(".")[:2]
                     version_regex = rf"v{major}\.{minor}"
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, desc_by_ver in self.internal_local_metadata[uuid]["descriptionsbyversion"].items():
+                    for version, desc_by_ver in self.internal_local_metadata[uuid][
+                        "descriptionsbyversion"
+                    ].items():
                         if match(version_regex, version):
                             if isinstance(desc_by_ver, str):
-                                self.internal_local_metadata[uuid]["description"] = desc_by_ver
+                                self.internal_local_metadata[uuid]["description"] = (
+                                    desc_by_ver
+                                )
                                 logger.debug(
                                     "Prefer versioned tags: using descriptionsByVersion over base description"
                                 )
@@ -738,11 +750,23 @@ class MetadataManager(QObject):
             # modDependencies and modDependenciesByVersion with precedence
             base_deps = None
             if self.internal_local_metadata[uuid].get("moddependencies"):
-                if isinstance(self.internal_local_metadata[uuid]["moddependencies"], dict):
-                    base_deps = self.internal_local_metadata[uuid]["moddependencies"].get("li")
-                elif isinstance(self.internal_local_metadata[uuid]["moddependencies"], list):
-                    for potential_dependencies in self.internal_local_metadata[uuid]["moddependencies"]:
-                        if potential_dependencies and isinstance(potential_dependencies, dict) and potential_dependencies.get("li"):
+                if isinstance(
+                    self.internal_local_metadata[uuid]["moddependencies"], dict
+                ):
+                    base_deps = self.internal_local_metadata[uuid][
+                        "moddependencies"
+                    ].get("li")
+                elif isinstance(
+                    self.internal_local_metadata[uuid]["moddependencies"], list
+                ):
+                    for potential_dependencies in self.internal_local_metadata[uuid][
+                        "moddependencies"
+                    ]:
+                        if (
+                            potential_dependencies
+                            and isinstance(potential_dependencies, dict)
+                            and potential_dependencies.get("li")
+                        ):
                             base_deps = potential_dependencies["li"]
 
             matched_versioned_deps = None
@@ -754,10 +778,16 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, deps_by_ver in self.internal_local_metadata[uuid]["moddependenciesbyversion"].items():
+                    for version, deps_by_ver in self.internal_local_metadata[uuid][
+                        "moddependenciesbyversion"
+                    ].items():
                         if match(version_regex, version):
                             version_key_matched = True
-                            if deps_by_ver and isinstance(deps_by_ver, dict) and deps_by_ver.get("li"):
+                            if (
+                                deps_by_ver
+                                and isinstance(deps_by_ver, dict)
+                                and deps_by_ver.get("li")
+                            ):
                                 matched_versioned_deps = deps_by_ver.get("li")
                             else:
                                 matched_versioned_deps = []
@@ -791,11 +821,14 @@ class MetadataManager(QObject):
             # incompatibleWith + incompatibleWithByVersion precedence
             # Found an example: 'incompatiblewith': {'li': ['majorhoff.rimthreaded', 'nova.rimworldtogether']}
             base_incompat = None
-            if (
-                self.internal_local_metadata[uuid].get("incompatiblewith")
-                and isinstance(self.internal_local_metadata[uuid].get("incompatiblewith"), dict)
+            if self.internal_local_metadata[uuid].get(
+                "incompatiblewith"
+            ) and isinstance(
+                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
             ):
-                base_incompat = self.internal_local_metadata[uuid]["incompatiblewith"].get("li")
+                base_incompat = self.internal_local_metadata[uuid][
+                    "incompatiblewith"
+                ].get("li")
 
             matched_versioned_incompat = None
             version_key_matched_incompat = False
@@ -806,10 +839,16 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, inc_by_ver in self.internal_local_metadata[uuid]["incompatiblewithbyversion"].items():
+                    for version, inc_by_ver in self.internal_local_metadata[uuid][
+                        "incompatiblewithbyversion"
+                    ].items():
                         if match(version_regex, version):
                             version_key_matched_incompat = True
-                            if inc_by_ver and isinstance(inc_by_ver, dict) and inc_by_ver.get("li"):
+                            if (
+                                inc_by_ver
+                                and isinstance(inc_by_ver, dict)
+                                and inc_by_ver.get("li")
+                            ):
                                 matched_versioned_incompat = inc_by_ver.get("li")
                             else:
                                 matched_versioned_incompat = []
@@ -845,9 +884,13 @@ class MetadataManager(QObject):
             base_after = None
             if self.internal_local_metadata[uuid].get("loadafter"):
                 try:
-                    base_after = self.internal_local_metadata[uuid]["loadafter"].get("li")
+                    base_after = self.internal_local_metadata[uuid]["loadafter"].get(
+                        "li"
+                    )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "metadata_file_path"
+                    ]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_metadata_path}"
                     )
@@ -862,10 +905,19 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, load_these_before_by_ver in self.internal_local_metadata[uuid]["loadafterbyversion"].items():
+                    for (
+                        version,
+                        load_these_before_by_ver,
+                    ) in self.internal_local_metadata[uuid][
+                        "loadafterbyversion"
+                    ].items():
                         if match(version_regex, version):
                             version_key_matched_after = True
-                            if load_these_before_by_ver and isinstance(load_these_before_by_ver, dict) and load_these_before_by_ver.get("li"):
+                            if (
+                                load_these_before_by_ver
+                                and isinstance(load_these_before_by_ver, dict)
+                                and load_these_before_by_ver.get("li")
+                            ):
                                 matched_after = load_these_before_by_ver.get("li")
                             else:
                                 matched_after = []
@@ -906,7 +958,9 @@ class MetadataManager(QObject):
             # Always respect forceloadafter regardless of precedence flag
             if self.internal_local_metadata[uuid].get("forceloadafter"):
                 try:
-                    force_load_these_before = self.internal_local_metadata[uuid]["forceloadafter"].get("li")
+                    force_load_these_before = self.internal_local_metadata[uuid][
+                        "forceloadafter"
+                    ].get("li")
                     if force_load_these_before:
                         logger.debug(
                             f"Current mod should force load after these mods: {force_load_these_before}"
@@ -920,7 +974,9 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid].get("metadata_file_path")
+                    mod_metadata_path = self.internal_local_metadata[uuid].get(
+                        "metadata_file_path"
+                    )
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_metadata_path}"
                     )
@@ -931,9 +987,13 @@ class MetadataManager(QObject):
             base_before = None
             if self.internal_local_metadata[uuid].get("loadbefore"):
                 try:
-                    base_before = self.internal_local_metadata[uuid]["loadbefore"].get("li")
+                    base_before = self.internal_local_metadata[uuid]["loadbefore"].get(
+                        "li"
+                    )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "metadata_file_path"
+                    ]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_metadata_path}"
                     )
@@ -974,10 +1034,16 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, loadbefore_by_ver in self.internal_local_metadata[uuid]["loadbeforebyversion"].items():
+                    for version, loadbefore_by_ver in self.internal_local_metadata[
+                        uuid
+                    ]["loadbeforebyversion"].items():
                         if match(version_regex, version):
                             version_key_matched_before = True
-                            if loadbefore_by_ver and isinstance(loadbefore_by_ver, dict) and loadbefore_by_ver.get("li"):
+                            if (
+                                loadbefore_by_ver
+                                and isinstance(loadbefore_by_ver, dict)
+                                and loadbefore_by_ver.get("li")
+                            ):
                                 matched_before = loadbefore_by_ver.get("li")
                             else:
                                 matched_before = []
@@ -1378,7 +1444,9 @@ class MetadataManager(QObject):
             version_regex = rf"{major}.{minor}"
         except Exception:
             version_regex = None
-        if not version_regex or version_regex not in replacement_data.get("ReplacementVersions", {}):
+        if not version_regex or version_regex not in replacement_data.get(
+            "ReplacementVersions", {}
+        ):
             return None
 
         return ModReplacement(
@@ -1617,9 +1685,7 @@ class MetadataManager(QObject):
                     else:
                         dep_id = dep_entry
 
-                    consider_alternatives = (
-                        self.settings_controller.settings.consider_alternative_package_ids
-                    )
+                    consider_alternatives = self.settings_controller.settings.consider_alternative_package_ids
                     satisfied = dep_id in active_mod_ids
                     if not satisfied and consider_alternatives:
                         satisfied = any(alt in active_mod_ids for alt in alt_ids)
@@ -2127,7 +2193,9 @@ def add_dependency_to_mod(
         # - If a tuple for the same dep already exists, merge the alternatives into it.
         # - If only a plain string exists for that dep, upgrade it to the tuple form.
         # - Otherwise append a new tuple entry.
-        def _ensure_dep_with_alts(dep_list: list[Any], dep_id: str, alt_ids: set[str]) -> None:
+        def _ensure_dep_with_alts(
+            dep_list: list[Any], dep_id: str, alt_ids: set[str]
+        ) -> None:
             """Add or merge a dependency with alternatives into dep_list.
 
             Typical sources that may converge here:
@@ -2139,7 +2207,11 @@ def add_dependency_to_mod(
             for i, existing in enumerate(dep_list):
                 if isinstance(existing, tuple) and existing and existing[0] == dep_id:
                     # Merge alternatives into existing set if present
-                    alt = existing[1].get("alternatives") if isinstance(existing[1], dict) else None
+                    alt = (
+                        existing[1].get("alternatives")
+                        if isinstance(existing[1], dict)
+                        else None
+                    )
                     if isinstance(alt, set):
                         alt.update(alt_ids)
                     else:
@@ -2170,7 +2242,11 @@ def add_dependency_to_mod(
                     for v in li:
                         if isinstance(v, str):
                             alt_ids.add(v.lower())
-                        elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
+                        elif (
+                            isinstance(v, dict)
+                            and "#text" in v
+                            and isinstance(v["#text"], str)
+                        ):
                             alt_ids.add(v["#text"].lower())
                 elif isinstance(li, str):
                     alt_ids.add(li.lower())
@@ -2200,16 +2276,26 @@ def add_dependency_to_mod(
                 )
         # If the value is a LIST of dicts
         elif isinstance(dependency_or_dependency_ids, list):
-            if dependency_or_dependency_ids and isinstance(dependency_or_dependency_ids[0], dict):
+            if dependency_or_dependency_ids and isinstance(
+                dependency_or_dependency_ids[0], dict
+            ):
                 for dependency in dependency_or_dependency_ids:
-                    pkg = dependency.get("packageId") if isinstance(dependency, dict) else None
+                    pkg = (
+                        dependency.get("packageId")
+                        if isinstance(dependency, dict)
+                        else None
+                    )
                     if pkg:
                         dep_id = str(pkg).lower()
                         alt_ids = set()
                         if isinstance(dependency, dict):
-                            alt_ids = _parse_alt_ids(dependency.get("alternativePackageIds"))
+                            alt_ids = _parse_alt_ids(
+                                dependency.get("alternativePackageIds")
+                            )
                         if alt_ids:
-                            _ensure_dep_with_alts(mod_data["dependencies"], dep_id, alt_ids)
+                            _ensure_dep_with_alts(
+                                mod_data["dependencies"], dep_id, alt_ids
+                            )
                         else:
                             _ensure_plain_dep(mod_data["dependencies"], dep_id)
                     else:
@@ -2240,7 +2326,11 @@ def add_dependency_to_mod_from_steamdb(
         if all(
             not (
                 existing == dependency_id
-                or (isinstance(existing, tuple) and existing and existing[0] == dependency_id)
+                or (
+                    isinstance(existing, tuple)
+                    and existing
+                    and existing[0] == dependency_id
+                )
             )
             for existing in dep_list
         ):

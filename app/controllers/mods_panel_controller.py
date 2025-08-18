@@ -14,8 +14,9 @@ from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
-
-    def __init__(self, view: ModsPanel, settings_controller: SettingsController) -> None:
+    def __init__(
+        self, view: ModsPanel, settings_controller: SettingsController
+    ) -> None:
         super().__init__()
 
         self.mods_panel = view
@@ -110,21 +111,29 @@ class ModsPanelController(QObject):
                     ]["packageid"]
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
-                    instance_path = Path(self.settings_controller.settings.current_instance_path)
-                    aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-                        instance_path / "aux_metadata.db"
+                    instance_path = Path(
+                        self.settings_controller.settings.current_instance_path
+                    )
+                    aux_metadata_controller = (
+                        AuxMetadataController.get_or_create_cached_instance(
+                            instance_path / "aux_metadata.db"
+                        )
                     )
                     uuid = mod_data["uuid"]
                     if not uuid:
-                        logger.error("Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset.")
+                        logger.error(
+                            "Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset."
+                        )
                         return
                     with aux_metadata_controller.Session() as aux_metadata_session:
-                            mod_path = widget.metadata_manager.internal_local_metadata[uuid]["path"]
-                            aux_metadata_controller.update(
-                                aux_metadata_session,
-                                mod_path,
-                                ignore_warnings=mod_data["warning_toggled"],
-                            )
+                        mod_path = widget.metadata_manager.internal_local_metadata[
+                            uuid
+                        ]["path"]
+                        aux_metadata_controller.update(
+                            aux_metadata_session,
+                            mod_path,
+                            ignore_warnings=mod_data["warning_toggled"],
+                        )
                     logger.debug(f"Reset warning toggle for: {package_id}")
         self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
         self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
@@ -143,7 +152,7 @@ class ModsPanelController(QObject):
         """
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
-        for mod in active_mods :
+        for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             uuid = mod_data["uuid"]
             self.mods_panel.active_mods_list.reset_mod_color(uuid)
@@ -172,14 +181,14 @@ class ModsPanelController(QObject):
     @Slot()
     def _change_visibility_of_mods_with_warnings_errors(self, type: str) -> None:
         """
-        When on, shows only mods have either warnings or errors. Based on passed in type. 
+        When on, shows only mods have either warnings or errors. Based on passed in type.
 
         When off, shows all mods.
 
         Works partially with filters, meaning it won't show mods with warnings if they don't match the filters.
         """
         # If the other labels are active, disable them
-        if (self.news_label_active):
+        if self.news_label_active:
             self.mods_panel.new_text.clicked.emit()
         if type == "warnings":
             if self.errors_label_active:
@@ -235,13 +244,15 @@ class ModsPanelController(QObject):
     def do_all_entries_in_aux_db_as_outdated(self) -> None:
         """
         Sets all entries in the aux db as outdated if not already outdated.
-        
+
         This means the previously outdated items DO NOT have their db_time_touched updated.
         """
         # This is more performant, but we dont update db_time_touched. But that should be ok
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug("Skipping the setting entries as outdated because time limit is negative.")
+            logger.debug(
+                "Skipping the setting entries as outdated because time limit is negative."
+            )
             return
 
         instance_path = Path(self.settings_controller.settings.current_instance_path)
@@ -256,7 +267,7 @@ class ModsPanelController(QObject):
             )
             aux_metadata_session.execute(stmt)
             aux_metadata_session.commit()
-            
+
         logger.debug("Finished setting entries as outdated.")
 
     def delete_outdated_aux_db_entries(self) -> None:
@@ -269,7 +280,9 @@ class ModsPanelController(QObject):
         """
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug("Skipping the deletion of outdated entries because time limit is negative.")
+            logger.debug(
+                "Skipping the deletion of outdated entries because time limit is negative."
+            )
             return
 
         instance_path = Path(self.settings_controller.settings.current_instance_path)
@@ -277,7 +290,9 @@ class ModsPanelController(QObject):
             instance_path / "aux_metadata.db"
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
-            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=time_limit)
+            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
+                seconds=time_limit
+            )
             stmt = (
                 delete(AuxMetadataEntry)
                 .where(AuxMetadataEntry.outdated)
