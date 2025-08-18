@@ -102,6 +102,7 @@ class Settings(QObject):
         self.todds_active_mods_target: bool = True
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
+        self.todds_custom_command: str = ""
 
         # Theme
         self.enable_themes: bool = True
