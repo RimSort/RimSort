@@ -721,9 +721,14 @@ class SettingsController(QObject):
 
         # todds tab
         if self.settings.todds_preset == "optimized":
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
+        elif self.settings.todds_preset == "custom":
+            self.settings_dialog.todds_preset_custom_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(True)
         else:
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
         if self.settings.todds_active_mods_target:
             self.settings_dialog.todds_active_mods_only_radio.setChecked(True)
         else:
@@ -733,6 +738,9 @@ class SettingsController(QObject):
         )
         self.settings_dialog.todds_overwrite_checkbox.setChecked(
             self.settings.todds_overwrite
+        )
+        self.settings_dialog.todds_custom_command_lineedit.setText(
+            self.settings.todds_custom_command
         )
 
         # Themes tab
@@ -1037,8 +1045,13 @@ class SettingsController(QObject):
         ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
-        if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
+        if self.settings_dialog.todds_preset_optimized_radio.isChecked():
             self.settings.todds_preset = "optimized"
+        if self.settings_dialog.todds_preset_custom_radio.isChecked():
+            self.settings.todds_preset = "custom"
+            self.settings.todds_custom_command = (
+                self.settings_dialog.todds_custom_command_lineedit.text()
+            )
         else:
             self.settings.todds_preset = "optimized"
         if self.settings_dialog.todds_active_mods_only_radio.isChecked():

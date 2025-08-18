@@ -1025,9 +1025,13 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
-                instance_path = Path(self.settings_controller.settings.current_instance_path)
-                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-                    instance_path / "aux_metadata.db"
+                instance_path = Path(
+                    self.settings_controller.settings.current_instance_path
+                )
+                aux_metadata_controller = (
+                    AuxMetadataController.get_or_create_cached_instance(
+                        instance_path / "aux_metadata.db"
+                    )
                 )
                 aux_metadata_controller.engine.dispose()
                 try:

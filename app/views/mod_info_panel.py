@@ -342,13 +342,13 @@ class ModInfo:
             logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
             return
         with aux_metadata_controller.Session() as aux_metadata_session:
-                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-                aux_metadata_controller.update(
-                    aux_metadata_session,
-                    mod_path,
-                    user_notes=new_notes,
-                )
-        logger.debug(f"Finished updating notes for UUID: {mod_data["uuid"]}")
+            mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
+            aux_metadata_controller.update(
+                aux_metadata_session,
+                mod_path,
+                user_notes=new_notes,
+            )
+        logger.debug(f"Finished updating notes for UUID: {mod_data['uuid']}")
 
     def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
         # Only show notes tab when a mod is selected
@@ -359,7 +359,7 @@ class ModInfo:
         self.notes.blockSignals(True)
         self.notes.setText(mod_notes)
         self.notes.blockSignals(False)
-        logger.debug(f"Finished setting notes for UUID: {mod_data["uuid"]}")
+        logger.debug(f"Finished setting notes for UUID: {mod_data['uuid']}")
 
     @staticmethod
     def tr(text: str) -> str:
@@ -512,28 +512,34 @@ class ModInfo:
             external_time_created = mod_info.get("external_time_created")
             external_time_updated = mod_info.get("external_time_updated")
             internal_time_updated = mod_info.get("internal_time_updated")
-            
+
             if external_time_created:
                 try:
                     dt_created = datetime.fromtimestamp(int(external_time_created))
-                    external_times.append(f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}")
+                    external_times.append(
+                        f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                 except (ValueError, OSError, OverflowError):
                     external_times.append("Created: Invalid")
-            
+
             if external_time_updated:
                 try:
                     dt_updated = datetime.fromtimestamp(int(external_time_updated))
-                    external_times.append(f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                    external_times.append(
+                        f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                 except (ValueError, OSError, OverflowError):
                     external_times.append("Updated: Invalid")
-            
+
             if internal_time_updated:
                 try:
                     dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
-                    external_times.append(f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                    external_times.append(
+                        f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                 except (ValueError, OSError, OverflowError):
                     external_times.append("Steam Updated: Invalid")
-            
+
             if external_times:
                 self.mod_info_external_times_value.setText("\n".join(external_times))
             else:

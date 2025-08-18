@@ -236,7 +236,10 @@ class AcfLogReader(QDialog):
         col_count = self.table_widget.columnCount()
         if col_count <= 0:
             return
-        if not getattr(self, "_table_col_weights", None) or len(self._table_col_weights) != col_count:
+        if (
+            not getattr(self, "_table_col_weights", None)
+            or len(self._table_col_weights) != col_count
+        ):
             # Initialize equal weights
             self._table_col_weights = [1.0 / col_count for _ in range(col_count)]
 

@@ -351,7 +351,9 @@ def platform_specific_open(path: str | Path) -> None:
         except OSError as e:
             # Handle cases where no default application is associated
             if e.winerror == -2147221003:  # Application not found
-                logger.warning(f"No default application found for {path}, trying notepad")
+                logger.warning(
+                    f"No default application found for {path}, trying notepad"
+                )
                 # Try to open with notepad as fallback
                 try:
                     subprocess.Popen(["notepad.exe", path])
@@ -361,7 +363,7 @@ def platform_specific_open(path: str | Path) -> None:
                         title="Failed to open file",
                         text="Could not open the file",
                         information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
-                        details=str(e)
+                        details=str(e),
                     )
             else:
                 # Re-raise other OSErrors
