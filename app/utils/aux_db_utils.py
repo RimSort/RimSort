@@ -83,6 +83,41 @@ def get_mod_user_notes(
     return user_notes
 
 
+def get_mod_tags(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None,
+    session: Session | None,
+) -> list[str]:
+    """
+    Get the user-defined tags for a mod from Aux Metadata DB.
+
+    :param settings_controller: SettingsController instance
+    :param uuid: str, the uuid of the mod
+    :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
+    :param session: Session | None, optional SQLAlchemy session
+    :return: list[str], tags assigned to the mod (may be empty)
+    """
+    # Ensure we fetch within an active session so relationship loads
+    metadata_manager = MetadataManager.instance()
+    instance_path = Path(settings_controller.settings.current_instance_path)
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+    )
+    mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
+    with session or local_controller.Session() as local_session:
+        entry = local_controller.get(local_session, mod_path)
+        if not entry or getattr(entry, "tags", None) is None:
+            return []
+        try:
+            return sorted([t.tag for t in entry.tags if isinstance(t.tag, str)], key=lambda s: s.lower())
+        except Exception:
+            return []
+
+
 def get_mod_warning_toggled(
     settings_controller: SettingsController,
     uuid: str,

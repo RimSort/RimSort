@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox, QLabel
 from sqlalchemy import text
 
 from app.controllers.language_controller import LanguageController
@@ -68,9 +68,18 @@ class SettingsController(QObject):
 
         self.change_mod_coloring_mode = False
 
+        # Internal: guard to connect tag color save only once
+        self._tag_color_save_connected: bool = False
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
+
+        # Setup Tag Colors handlers (connect once)
+        try:
+            self._setup_tag_colors_bindings()
+        except Exception:
+            logger.exception("Failed setting up tag color bindings")
 
         # Wire up the settings dialog's global buttons
 
@@ -839,6 +848,14 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
+        # Silent auto-download is dependent on update check
+        if hasattr(self.settings_dialog, "silent_auto_download_updates_checkbox"):
+            self.settings_dialog.silent_auto_download_updates_checkbox.setChecked(
+                getattr(self.settings, "auto_download_mod_updates_silently", False)
+            )
+            self.settings_dialog.silent_auto_download_updates_checkbox.setEnabled(
+                self.settings.steam_mods_update_check
+            )
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
             self.settings.instances[
                 self.settings.current_instance
@@ -872,6 +889,25 @@ class SettingsController(QObject):
             self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
                 self.settings.enable_advanced_filtering
             )
+        except Exception:
+            pass
+        # Advanced: mod tags toggle
+        try:
+            self.settings_dialog.enable_mod_tags_checkbox.setChecked(
+                getattr(self.settings, "enable_mod_tags", False)
+            )
+        except Exception:
+            pass
+        # Populate tag colors UI
+        try:
+            # show last picked color if exists
+            if getattr(self.settings, "tag_colors", None):
+                # just pick arbitrary first to preview
+                first = next(iter(self.settings.tag_colors.values()), "#000000")
+                self.settings_dialog.tag_color_preview.setText(first)
+                self.settings_dialog.tag_color_preview.setStyleSheet(f"background: {first}; color: white;")
+            # populate known tags into combobox
+            self._populate_tag_colors_combobox()
         except Exception:
             pass
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
@@ -1130,6 +1166,10 @@ class SettingsController(QObject):
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
         )
+        if hasattr(self.settings_dialog, "silent_auto_download_updates_checkbox"):
+            self.settings.auto_download_mod_updates_silently = (
+                self.settings_dialog.silent_auto_download_updates_checkbox.isChecked()
+            )
         self.settings.instances[
             self.settings.current_instance
         ].steam_client_integration = (
@@ -1156,6 +1196,149 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
+        # Advanced: mod tags toggle
+        try:
+            self.settings.enable_mod_tags = (
+                self.settings_dialog.enable_mod_tags_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        # (moved) Tag color button connection now happens during initialization
+
+    def _populate_tag_colors_combobox(self) -> None:
+        try:
+            # Pull all tags from Aux DB and settings
+            instance_path = Path(self.settings.current_instance_path)
+            aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                instance_path / "aux_metadata.db"
+            )
+            from app.models.metadata.metadata_db import TagsEntry
+            tags: set[str] = set()
+            with aux_metadata_controller.Session() as session:
+                for t in session.query(TagsEntry).all():
+                    if isinstance(t.tag, str) and t.tag.strip():
+                        tags.add(t.tag)
+            if getattr(self.settings, "tag_colors", None):
+                tags.update(self.settings.tag_colors.keys())
+            # Refill combobox
+            self.settings_dialog.tag_color_select.blockSignals(True)
+            self.settings_dialog.tag_color_select.clear()
+            for t in sorted(tags, key=lambda s: s.lower()):
+                self.settings_dialog.tag_color_select.addItem(t)
+            self.settings_dialog.tag_color_select.blockSignals(False)
+            # Also rebuild the saved tags editable list
+            self._rebuild_saved_tag_colors_list()
+        except Exception:
+            pass
+
+    def _rebuild_saved_tag_colors_list(self) -> None:
+        try:
+            container = self.settings_dialog.tag_colors_list_container
+            layout = self.settings_dialog.tag_colors_list_layout
+            # Clear existing widgets
+            while layout.count():
+                item = layout.takeAt(0)
+                w = item.widget()
+                if w:
+                    w.deleteLater()
+            colors = getattr(self.settings, "tag_colors", {}) or {}
+            # Build one row per saved tag using same widgets style
+            from PySide6.QtWidgets import QHBoxLayout, QToolButton, QLabel, QLineEdit, QWidget
+            from PySide6.QtWidgets import QColorDialog
+            from PySide6.QtCore import Qt
+            for tag, color in sorted(colors.items(), key=lambda kv: kv[0].lower()):
+                row = QHBoxLayout()
+                name_edit = QLineEdit(tag)
+                name_edit.setPlaceholderText(self.tr("Tag name"))
+                pick_btn = QToolButton()
+                pick_btn.setText(self.tr("Pick"))
+                preview = QLabel(color)
+                preview.setFixedWidth(70)
+                preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                preview.setStyleSheet(f"background: {color}; color: white;")
+                save_btn = QToolButton()
+                save_btn.setText(self.tr("Save"))
+                delete_btn = QToolButton()
+                delete_btn.setText(self.tr("Delete"))
+
+                # Bind using lambdas that pass current widgets/values to stable helper methods
+                pick_btn.clicked.connect(lambda _=None, p=preview: self._pick_tag_color_in_row(p))
+                save_btn.clicked.connect(
+                    lambda _=None, old=tag, n=name_edit, p=preview: self._save_tag_color_row(old, n, p)
+                )
+                delete_btn.clicked.connect(lambda _=None, old=tag: self._delete_tag_color_row(old))
+
+                row.addWidget(name_edit)
+                row.addWidget(pick_btn)
+                row.addWidget(preview)
+                row.addWidget(save_btn)
+                row.addWidget(delete_btn)
+                # Wrap row in a QWidget for layout
+                row_widget = QWidget(container)
+                row_widget.setLayout(row)
+                layout.addWidget(row_widget)
+        except Exception:
+            logger.exception("Failed to rebuild saved tag colors list")
+
+    def _pick_tag_color_in_row(self, preview_label: QLabel) -> None:
+        try:
+            from PySide6.QtWidgets import QColorDialog
+            col = QColorDialog.getColor()
+            if col.isValid():
+                preview_label.setText(col.name())
+                preview_label.setStyleSheet(f"background: {col.name()}; color: white;")
+        except Exception:
+            logger.exception("Failed to pick color for tag row")
+
+    def _save_tag_color_row(self, existing_tag: str, name_edit: QLineEdit, preview_label: QLabel) -> None:
+        try:
+            new_name = name_edit.text().strip()
+            new_color = preview_label.text().strip()
+            if not new_name or not new_color:
+                logger.warning("Tag color save attempted with empty name or color (row)")
+                return
+            new_map = dict(getattr(self.settings, "tag_colors", {}))
+            if existing_tag in new_map and existing_tag != new_name:
+                del new_map[existing_tag]
+            new_map[new_name] = new_color
+            self.settings.tag_colors = new_map
+            logger.info(f"Saved tag color (row): {existing_tag} -> {new_name} = {new_color}")
+            self._populate_tag_colors_combobox()
+        except Exception:
+            logger.exception("Failed to save tag color (row)")
+
+    def _delete_tag_color_row(self, existing_tag: str) -> None:
+        try:
+            new_map = dict(getattr(self.settings, "tag_colors", {}))
+            if existing_tag in new_map:
+                del new_map[existing_tag]
+                self.settings.tag_colors = new_map
+                logger.info(f"Deleted tag color: {existing_tag}")
+                self._populate_tag_colors_combobox()
+        except Exception:
+            logger.exception("Failed to delete tag color (row)")
+
+    def _setup_tag_colors_bindings(self) -> None:
+        # Connect Save button (if not yet)
+        if not getattr(self, "_tag_color_save_connected", False):
+            def _save_tag_color() -> None:
+                try:
+                    name = self.settings_dialog.tag_color_name.text().strip()
+                    color_hex = self.settings_dialog.tag_color_preview.text().strip()
+                    if not name or not color_hex:
+                        logger.warning("Tag color save attempted with empty name or color")
+                        return
+                    new_map = dict(getattr(self.settings, "tag_colors", {}))
+                    new_map[name] = color_hex
+                    self.settings.tag_colors = new_map
+                    self._populate_tag_colors_combobox()
+                    logger.debug(f"Saved tag color: {name} -> {color_hex}")
+                except Exception:
+                    logger.exception("Failed to save tag color")
+            self.settings_dialog.tag_color_add_btn.clicked.connect(_save_tag_color)
+            self._tag_color_save_connected = True
+        # Populate known tags initially
+        self._populate_tag_colors_combobox()
         # Prefer versioned About.xml tags over base tags
         try:
             self.settings.prefer_versioned_about_tags = (
@@ -1210,6 +1393,12 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+        # After saving settings, refresh mods panel styling if tag colors changed
+        try:
+            EventBus().filters_changed_in_active_modlist.emit()
+            EventBus().filters_changed_in_inactive_modlist.emit()
+        except Exception:
+            pass
         self.theme_controller.set_font(
             self.settings.font_family,
             self.settings.font_size,

@@ -137,6 +137,8 @@ class Settings(QObject):
         self.color_background_instead_of_text_toggle: bool = True
         self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
+        # When enabled, if update checks find updates, download them silently without prompting
+        self.auto_download_mod_updates_silently: bool = False
         self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
@@ -164,6 +166,11 @@ class Settings(QObject):
 
         # Performance Settings
         self.enable_aux_db_performance_mode: bool = False
+
+        # Feature toggles
+        self.enable_mod_tags: bool = False
+        # Tag colors: mapping tag -> color hex (e.g., "#ff0000")
+        self.tag_colors: dict[str, str] = {}
 
         # Instances
         self.current_instance: str = "Default"
