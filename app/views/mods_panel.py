@@ -3274,6 +3274,16 @@ class ModsPanel(QWidget):
                         self.on_active_mods_search(tag_text)
                     act.triggered.connect(partial(_apply_filter, t))
                     menu.addAction(act)
+                # Add untagged last
+                if menu.actions():
+                    menu.addSeparator()
+                untagged_act = QAction(self.tr("Untagged"), self)
+                def _apply_untagged() -> None:
+                    self.active_mods_search_filter.setCurrentText(self.tr("Untagged"))
+                    self.active_mods_search.setText("")
+                    self.on_active_mods_search("")
+                untagged_act.triggered.connect(_apply_untagged)
+                menu.addAction(untagged_act)
                 menu.exec_(self.active_mods_quick_tag_button.mapToGlobal(self.active_mods_quick_tag_button.rect().bottomLeft()))
             self.active_mods_quick_tag_button.clicked.connect(_show_active_tags_menu)
             self.active_mods_search_layout.addWidget(self.active_mods_quick_tag_button)
@@ -3406,6 +3416,7 @@ class ModsPanel(QWidget):
                 self.tr("PublishedFileId"),
                 self.tr("Version"),
                 self.tr("Tags"),
+                self.tr("Untagged"),
             ]
         )
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
@@ -3456,6 +3467,16 @@ class ModsPanel(QWidget):
                         self.on_inactive_mods_search(tag_text)
                     act.triggered.connect(partial(_apply_filter, t))
                     menu.addAction(act)
+                # Add untagged last
+                if menu.actions():
+                    menu.addSeparator()
+                untagged_act = QAction(self.tr("Untagged"), self)
+                def _apply_untagged() -> None:
+                    self.inactive_mods_search_filter.setCurrentText(self.tr("Untagged"))
+                    self.inactive_mods_search.setText("")
+                    self.on_inactive_mods_search("")
+                untagged_act.triggered.connect(_apply_untagged)
+                menu.addAction(untagged_act)
                 menu.exec_(self.inactive_mods_quick_tag_button.mapToGlobal(self.inactive_mods_quick_tag_button.rect().bottomLeft()))
             self.inactive_mods_quick_tag_button.clicked.connect(_show_inactive_tags_menu)
             self.inactive_mods_search_layout.addWidget(self.inactive_mods_quick_tag_button)
@@ -3970,6 +3991,8 @@ class ModsPanel(QWidget):
             search_filter = "version"
         elif _filter.currentText() == self.tr("Tags"):
             search_filter = "tags"
+        elif _filter.currentText() == self.tr("Untagged"):
+            search_filter = "untagged"
         # Filter the list using any search and filter state
         num_filtered = 0
         num_unfiltered = 0
@@ -4021,6 +4044,13 @@ class ModsPanel(QWidget):
                 and pattern.lower() not in str(metadata.get(search_filter)).lower()
             ):
                 item_filtered = True
+            elif search_filter == "untagged":
+                try:
+                    tags: list[str] = getattr(item_data, "tags", []) if hasattr(item_data, "tags") else []
+                    if tags:
+                        item_filtered = True
+                except Exception:
+                    pass
             elif source_filter == "all":  # or data source
                 item_filtered = False
             elif source_filter == "git_repo":
