@@ -22,7 +22,7 @@ dependencies = [
     "pygithub==2.7.0",
     "pyperclip==1.9.0",
     "pyside6==6.9.1",
-    "requests==2.32.4",
+    "requests==2.32.5",
     "sqlalchemy==2.0.43",
     "steam==1.4.4",
     "steamfiles",
