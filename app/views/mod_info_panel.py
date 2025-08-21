@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from re import match
+from typing import Any, Callable
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
@@ -368,6 +369,16 @@ class ModInfo:
             session, self.metadata_manager.internal_local_metadata[uuid]["path"]
         )
 
+    def _perform_database_tag_operation(self, uuid: str, tag_text: str, operation_func: Callable[[Any, Any, str, Any], None]) -> None:
+        """Perform a database tag operation with consistent session management."""
+        aux_metadata_controller = self._get_aux_controller_and_session()
+        from app.models.metadata.metadata_db import TagsEntry
+        with aux_metadata_controller.Session() as session:
+            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
+            if entry:
+                operation_func(entry, session, tag_text, TagsEntry)
+                session.commit()
+
     def _update_mod_item_tags(self, uuid: str, tag_text: str, is_add: bool) -> None:
         """Update in-memory tags for the current mod item."""
         try:
@@ -417,16 +428,13 @@ class ModInfo:
         self.mod_info_tags_layout_inner.addStretch(1)
 
     def _remove_tag(self, uuid: str, tag_text: str) -> None:
-        aux_metadata_controller = self._get_aux_controller_and_session()
-        from app.models.metadata.metadata_db import TagsEntry
-        with aux_metadata_controller.Session() as session:
-            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
-            if entry:
-                try:
-                    entry.tags.remove(TagsEntry(tag=tag_text))
-                    session.commit()
-                except ValueError:
-                    pass
+        def remove_operation(entry: Any, session: Any, tag_text: str, TagsEntry: Any) -> None:
+            try:
+                entry.tags.remove(TagsEntry(tag=tag_text))
+            except ValueError:
+                pass
+        
+        self._perform_database_tag_operation(uuid, tag_text, remove_operation)
         self._update_mod_item_tags(uuid, tag_text, is_add=False)
         self._rebuild_tags_row(uuid)
 
@@ -467,18 +475,15 @@ class ModInfo:
         menu.exec_(self.mod_info_tags_add_btn.mapToGlobal(self.mod_info_tags_add_btn.rect().bottomLeft()))
 
     def _add_tag(self, uuid: str, tag_text: str) -> None:
-        aux_metadata_controller = self._get_aux_controller_and_session()
-        from app.models.metadata.metadata_db import TagsEntry
-        with aux_metadata_controller.Session() as session:
-            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
-            if entry:
-                current = [t.tag for t in (entry.tags or [])]
-                if tag_text not in current:
-                    existing = (
-                        session.query(TagsEntry).filter(TagsEntry.tag == tag_text).first()
-                    )
-                    entry.tags.append(existing or TagsEntry(tag=tag_text))
-                    session.commit()
+        def add_operation(entry: Any, session: Any, tag_text: str, TagsEntry: Any) -> None:
+            current = [t.tag for t in (entry.tags or [])]
+            if tag_text not in current:
+                existing = (
+                    session.query(TagsEntry).filter(TagsEntry.tag == tag_text).first()
+                )
+                entry.tags.append(existing or TagsEntry(tag=tag_text))
+        
+        self._perform_database_tag_operation(uuid, tag_text, add_operation)
         self._update_mod_item_tags(uuid, tag_text, is_add=True)
         self._rebuild_tags_row(uuid)
 

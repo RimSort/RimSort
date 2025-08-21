@@ -354,7 +354,6 @@ class ModListItemInner(QWidget):
         # If tags feature is enabled, append tags to the displayed name in angle brackets
         try:
             if getattr(self.settings_controller.settings, "enable_mod_tags", False):
-                entry = self.metadata_manager.internal_local_metadata.get(self.uuid, {})
                 # Tags are stored in item data when the widget is created
                 # Defer reading from item data for accurate, up-to-date tags
                 pass
@@ -2069,7 +2068,6 @@ class ModListWidget(QListWidget):
                             )
                 # ACTIONS: Tags add/remove
                 if getattr(self.settings_controller.settings, "enable_mod_tags", False) and action in [tags_add_action, tags_remove_action]:
-                    from app.views.dialogue import show_dialogue_input
                     tag_label = self.tr("Enter tag name")
                     if action == tags_remove_action:
                         tag_label = self.tr("Enter tag to remove")
