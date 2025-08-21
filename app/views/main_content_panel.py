@@ -603,16 +603,16 @@ class MainContent(QObject):
         """
         This slot method is triggered when the user clicks on an item
         on a mod list.
-        
+
         It takes the internal uuid and gets the
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
-        It also takes the selected mod (CustomListWidgetItem) and passes 
+        It also takes the selected mod (CustomListWidgetItem) and passes
         this to the mod info panel to display that mod's notes.
 
         :param uuid: uuid of mod
-        :param item: selected CustomListWidgetItem 
+        :param item: selected CustomListWidgetItem
         """
         self.mod_info_panel.display_mod_info(
             uuid=uuid,

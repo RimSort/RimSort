@@ -901,14 +901,34 @@ This basically preserves your mod coloring, user notes etc. for this many second
         quality_preset_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(quality_preset_label)
 
-        self.todds_preset_combobox = QComboBox()
-        self.todds_preset_combobox.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
-        )
-        self.todds_preset_combobox.addItem(
+        self.todds_preset_optimized_radio = QRadioButton(
             self.tr("Optimized - Recommended for RimWorld")
         )
-        group_layout.addWidget(self.todds_preset_combobox)
+        group_layout.addWidget(self.todds_preset_optimized_radio)
+
+        self.todds_preset_custom_radio = QRadioButton(self.tr("Custom todds command"))
+        group_layout.addWidget(self.todds_preset_custom_radio)
+
+        custom_command_label = QLabel(
+            self.tr(
+                "If -p as in path is not specified, path from current active or all mods selection will be used."
+            )
+        )
+        custom_command_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(custom_command_label)
+
+        self.todds_custom_command_lineedit = QLineEdit()
+        todds_example = (
+            '-f BC1 -af BC7 -on -vf -fs -r Textures -t -p "D:\\Games\\RimWorld\\Mods"'
+        )
+        self.todds_custom_command_lineedit.setPlaceholderText(
+            self.tr("eg: {todds_example}").format(todds_example=todds_example)
+        )
+        self.todds_custom_command_lineedit.setTextMargins(GUIInfo().text_field_margins)
+        self.todds_custom_command_lineedit.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.todds_custom_command_lineedit)
 
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -941,6 +961,29 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Overwrite existing optimized textures")
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
+
+        self.auto_delete_orphaned_dds_checkbox = QCheckBox(
+            self.tr(
+                "Automatically delete .dds files if no corresponding .png file exists"
+            )
+        )
+        self.auto_delete_orphaned_dds_checkbox.setToolTip(
+            self.tr(
+                "This will delete .dds files that are not paired with a .png file,\n\n"
+                "This checks may take few seconds depending on the number of .dds files present."
+            )
+        )
+        group_layout.addWidget(self.auto_delete_orphaned_dds_checkbox)
+
+        # Connect radio buttons to enable/disable custom command input
+        self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
+        self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
+
+    def _on_preset_radio_toggled(self, checked: bool) -> None:
+        if self.todds_preset_custom_radio.isChecked():
+            self.todds_custom_command_lineedit.setEnabled(True)
+        else:
+            self.todds_custom_command_lineedit.setEnabled(False)
 
     def _do_themes_tab(self) -> None:
         tab = QWidget()

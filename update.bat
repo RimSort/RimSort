@@ -14,7 +14,11 @@ set "current_dir_no_slash=%current_dir:~0,-1%"
 set "executable_path=%current_dir%RimSort.exe"
 
 REM Path to the update files (should be copied here externally)
+if "%TMPDIR%" == "" (
 set "update_source_folder=%TEMP%\RimSort"
+) else (
+set "update_source_folder=%TMPDIR%\RimSort"
+)
 
 REM Attempt to stop RimSort if it's already running
 call :KillRimSort

@@ -544,7 +544,9 @@ class ModDeletionMenu(QMenu):
         """
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug("Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative.")
+            logger.debug(
+                "Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative."
+            )
             return
 
         instance_path = Path(self.settings_controller.settings.current_instance_path)
@@ -554,7 +556,9 @@ class ModDeletionMenu(QMenu):
         mod_path = Path(path)
         with aux_metadata_controller.Session() as session:
             if time_limit > 0:
-                logger.debug("Not deleting item from Aux Metadata DB as time limit is over 0. Setting as outdated instead.")
+                logger.debug(
+                    "Not deleting item from Aux Metadata DB as time limit is over 0. Setting as outdated instead."
+                )
                 aux_metadata_controller.update(session, mod_path, outdated=True)
                 return
             aux_metadata_controller.delete(session, mod_path)

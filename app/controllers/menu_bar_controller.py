@@ -206,7 +206,7 @@ class MenuBarController(QObject):
 
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
         EventBus().reset_warnings_signal.emit()
-        
+
     def _on_menu_bar_reset_all_mod_colors_triggered(self) -> None:
         EventBus().reset_mod_colors_signal.emit()
 
