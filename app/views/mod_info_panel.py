@@ -5,30 +5,31 @@ from re import match
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
-from PySide6.QtGui import QMouseEvent, QPixmap
+from PySide6.QtGui import QAction, QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QSizePolicy,
     QTextEdit,
+    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolButton,
-    QMenu,
 )
-from PySide6.QtGui import QAction
+from sqlalchemy.orm import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
+from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
-from app.views.mods_panel import format_file_size, uuid_to_folder_size
 from app.views.dialogue import show_dialogue_input
+from app.views.mods_panel import format_file_size, uuid_to_folder_size
 
 
 class ClickablePathLabel(QLabel):
@@ -306,14 +307,14 @@ class ModInfo:
         self.description_layout.addWidget(self.description)
 
         # Hide label/value by default
-        self.essential_info_widgets = [
+        self.essential_info_widgets: list[QWidget] = [
             self.mod_info_name_label,
             self.mod_info_name_value,
             self.mod_info_path_label,
             self.mod_info_path_value,
         ]
 
-        self.base_mod_info_widgets = [
+        self.base_mod_info_widgets: list[QWidget] = [
             self.mod_info_package_id_label,
             self.mod_info_package_id_value,
             self.mod_info_author_label,
@@ -335,7 +336,7 @@ class ModInfo:
             self.mod_info_external_times_value,
         ]
 
-        self.scenario_info_widgets = [
+        self.scenario_info_widgets: list[QWidget] = [
             self.scenario_info_summary_label,
             self.scenario_info_summary_value,
         ]
@@ -353,6 +354,36 @@ class ModInfo:
         # Wire add button
         self.mod_info_tags_add_btn.clicked.connect(self._on_add_tag_clicked)
 
+    def _get_aux_controller_and_session(self) -> AuxMetadataController:
+        """Get auxiliary metadata controller and create a new session context manager."""
+        instance_path = Path(self.settings_controller.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        return aux_metadata_controller
+
+    def _get_mod_entry(self, aux_metadata_controller: AuxMetadataController, session: Session, uuid: str) -> AuxMetadataEntry | None:
+        """Get the metadata entry for a mod by UUID."""
+        return aux_metadata_controller.get(
+            session, self.metadata_manager.internal_local_metadata[uuid]["path"]
+        )
+
+    def _update_mod_item_tags(self, uuid: str, tag_text: str, is_add: bool) -> None:
+        """Update in-memory tags for the current mod item."""
+        try:
+            if self.current_mod_item is not None:
+                item_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
+                tags = list(getattr(item_data, "tags", []))
+                if is_add and tag_text not in tags:
+                    tags.append(tag_text)
+                elif not is_add and tag_text in tags:
+                    tags.remove(tag_text)
+                item_data["tags"] = sorted(tags, key=lambda s: s.lower())
+                self.current_mod_item.setData(Qt.ItemDataRole.UserRole, item_data)
+        except Exception:
+            action = "add" if is_add else "removal"
+            logger.exception(f"Failed to update in-memory tags after {action}")
+
     def _rebuild_tags_row(self, uuid: str) -> None:
         # Clear existing tag chips
         while self.mod_info_tags_layout_inner.count():
@@ -361,16 +392,10 @@ class ModInfo:
             if w:
                 w.deleteLater()
         # Load tags from Aux DB
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
-        )
-        from app.models.metadata.metadata_db import TagsEntry
+        aux_metadata_controller = self._get_aux_controller_and_session()
         tags: list[str] = []
         with aux_metadata_controller.Session() as session:
-            entry = aux_metadata_controller.get(
-                session, self.metadata_manager.internal_local_metadata[uuid]["path"]
-            )
+            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
             if entry and entry.tags:
                 tags = sorted([t.tag for t in entry.tags if isinstance(t.tag, str)], key=lambda s: s.lower())
         # Create a chip (label + remove) for each tag
@@ -392,30 +417,17 @@ class ModInfo:
         self.mod_info_tags_layout_inner.addStretch(1)
 
     def _remove_tag(self, uuid: str, tag_text: str) -> None:
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
-        )
+        aux_metadata_controller = self._get_aux_controller_and_session()
         from app.models.metadata.metadata_db import TagsEntry
         with aux_metadata_controller.Session() as session:
-            entry = aux_metadata_controller.get(
-                session, self.metadata_manager.internal_local_metadata[uuid]["path"]
-            )
+            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
             if entry:
                 try:
                     entry.tags.remove(TagsEntry(tag=tag_text))
                     session.commit()
                 except ValueError:
                     pass
-        # Update current row's in-memory tags and list title
-        try:
-            if self.current_mod_item is not None:
-                item_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
-                tags = [t for t in getattr(item_data, "tags", []) if t != tag_text]
-                item_data["tags"] = sorted(tags, key=lambda s: s.lower())
-                self.current_mod_item.setData(Qt.ItemDataRole.UserRole, item_data)
-        except Exception:
-            logger.exception("Failed to update in-memory tags after removal")
+        self._update_mod_item_tags(uuid, tag_text, is_add=False)
         self._rebuild_tags_row(uuid)
 
     def _on_add_tag_clicked(self) -> None:
@@ -428,19 +440,16 @@ class ModInfo:
         # Build menu with existing tags + actions
         menu = QMenu()
         # Existing tags
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
-        )
+        aux_metadata_controller = self._get_aux_controller_and_session()
         from app.models.metadata.metadata_db import TagsEntry
         existing_tags: list[str] = []
         with aux_metadata_controller.Session() as session:
             for t in session.query(TagsEntry).all():
                 if isinstance(t.tag, str) and t.tag.strip():
                     existing_tags.append(t.tag)
-        for t in sorted(existing_tags, key=lambda s: s.lower()):
-            act = QAction(t, menu)
-            act.triggered.connect(lambda _=None, tag=t: self._add_tag(uuid, tag))
+        for tag_text in sorted(existing_tags, key=lambda s: s.lower()):
+            act = QAction(tag_text, menu)
+            act.triggered.connect(lambda _=None, tag=tag_text: self._add_tag(uuid, tag))
             menu.addAction(act)
         if existing_tags:
             menu.addSeparator()
@@ -458,15 +467,10 @@ class ModInfo:
         menu.exec_(self.mod_info_tags_add_btn.mapToGlobal(self.mod_info_tags_add_btn.rect().bottomLeft()))
 
     def _add_tag(self, uuid: str, tag_text: str) -> None:
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
-        )
+        aux_metadata_controller = self._get_aux_controller_and_session()
         from app.models.metadata.metadata_db import TagsEntry
         with aux_metadata_controller.Session() as session:
-            entry = aux_metadata_controller.get(
-                session, self.metadata_manager.internal_local_metadata[uuid]["path"]
-            )
+            entry = self._get_mod_entry(aux_metadata_controller, session, uuid)
             if entry:
                 current = [t.tag for t in (entry.tags or [])]
                 if tag_text not in current:
@@ -475,17 +479,7 @@ class ModInfo:
                     )
                     entry.tags.append(existing or TagsEntry(tag=tag_text))
                     session.commit()
-        # Update current row's in-memory tags and list title
-        try:
-            if self.current_mod_item is not None:
-                item_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
-                tags = list(getattr(item_data, "tags", []))
-                if tag_text not in tags:
-                    tags.append(tag_text)
-                    item_data["tags"] = sorted(tags, key=lambda s: s.lower())
-                    self.current_mod_item.setData(Qt.ItemDataRole.UserRole, item_data)
-        except Exception:
-            logger.exception("Failed to update in-memory tags after add")
+        self._update_mod_item_tags(uuid, tag_text, is_add=True)
         self._rebuild_tags_row(uuid)
 
     def update_user_mod_notes(self) -> None:
@@ -536,6 +530,7 @@ class ModInfo:
         :param mod_info: complete json info for the mod
         """
         mod_info = self.metadata_manager.internal_local_metadata.get(uuid, {})
+        w: QWidget  # Type annotation for widget loop variable
         # Style summary values based on validity
         if mod_info and mod_info.get("invalid"):
             # Set invalid value style
@@ -577,17 +572,17 @@ class ModInfo:
         except Exception:
             logger.exception("Failed to rebuild tags row")
         # Show essential info widgets
-        for widget in self.essential_info_widgets:
-            if not widget.isVisible():
-                widget.show()
+        for w in self.essential_info_widgets:
+            if not w.isVisible():
+                w.show()
         # If it's not invalid, and it's not a scenario, it must be a mod!
         if not mod_info.get("invalid") and not mod_info.get("scenario"):
             # Show valid-mod-specific fields, hide scenario summary
-            for widget in self.base_mod_info_widgets:
-                widget.show()
+            for w in self.base_mod_info_widgets:
+                w.show()
 
-            for widget in self.scenario_info_widgets:
-                widget.hide()
+            for w in self.scenario_info_widgets:
+                w.hide()
 
             # Populate values from metadata
 
@@ -706,18 +701,18 @@ class ModInfo:
             else:
                 self.mod_info_external_times_value.setText("Not available")
         elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
-            for widget in self.base_mod_info_widgets:
-                widget.hide()
+            for w in self.base_mod_info_widgets:
+                w.hide()
 
-            for widget in self.scenario_info_widgets:
-                widget.show()
+            for w in self.scenario_info_widgets:
+                w.show()
 
             self.scenario_info_summary_value.setText(
                 mod_info.get("summary", "Not specified")
             )
         elif mod_info.get("invalid"):  # Hide all except bare minimum if invalid
-            for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
-                widget.hide()
+            for w in self.base_mod_info_widgets + self.scenario_info_widgets:
+                w.hide()
 
         self.mod_info_path_value.setPath(mod_info.get("path"))
         # Set the scrolling description for the Mod Info Panel

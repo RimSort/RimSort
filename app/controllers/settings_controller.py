@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox, QLabel
+from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QMessageBox
 from sqlalchemy import text
 
 from app.controllers.language_controller import LanguageController
@@ -1223,8 +1223,8 @@ class SettingsController(QObject):
             # Refill combobox
             self.settings_dialog.tag_color_select.blockSignals(True)
             self.settings_dialog.tag_color_select.clear()
-            for t in sorted(tags, key=lambda s: s.lower()):
-                self.settings_dialog.tag_color_select.addItem(t)
+            for tag_text in sorted(tags, key=lambda s: s.lower()):
+                self.settings_dialog.tag_color_select.addItem(tag_text)
             self.settings_dialog.tag_color_select.blockSignals(False)
             # Also rebuild the saved tags editable list
             self._rebuild_saved_tag_colors_list()
@@ -1243,9 +1243,14 @@ class SettingsController(QObject):
                     w.deleteLater()
             colors = getattr(self.settings, "tag_colors", {}) or {}
             # Build one row per saved tag using same widgets style
-            from PySide6.QtWidgets import QHBoxLayout, QToolButton, QLabel, QLineEdit, QWidget
-            from PySide6.QtWidgets import QColorDialog
             from PySide6.QtCore import Qt
+            from PySide6.QtWidgets import (
+                QHBoxLayout,
+                QLabel,
+                QLineEdit,
+                QToolButton,
+                QWidget,
+            )
             for tag, color in sorted(colors.items(), key=lambda kv: kv[0].lower()):
                 row = QHBoxLayout()
                 name_edit = QLineEdit(tag)
@@ -1323,6 +1328,9 @@ class SettingsController(QObject):
         if not getattr(self, "_tag_color_save_connected", False):
             def _save_tag_color() -> None:
                 try:
+                    if self.settings_dialog.tag_color_name is None:
+                        logger.warning("Tag color name input is None")
+                        return
                     name = self.settings_dialog.tag_color_name.text().strip()
                     color_hex = self.settings_dialog.tag_color_preview.text().strip()
                     if not name or not color_hex:

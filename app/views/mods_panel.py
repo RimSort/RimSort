@@ -76,7 +76,6 @@ from app.utils.generic import (
 from app.utils.metadata import MetadataManager, ModMetadata
 from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
-from app.models.metadata.metadata_db import TagsEntry
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
@@ -1595,9 +1594,10 @@ class ModListWidget(QListWidget):
                                             source_item.setData(Qt.ItemDataRole.UserRole, item_data)
                                     aux_metadata_session.commit()
                                 for it in selected_items:
-                                    w = self.itemWidget(it)
-                                    if isinstance(w, ModListItemInner):
-                                        w.repolish(it)
+                                    if isinstance(it, CustomListWidgetItem):
+                                        w = self.itemWidget(it)
+                                        if isinstance(w, ModListItemInner):
+                                            w.repolish(it)
                             act.triggered.connect(partial(_assign_tag, tag))
                             tags_menu.addAction(act)
                     context_menu.addMenu(tags_menu)
@@ -4046,8 +4046,8 @@ class ModsPanel(QWidget):
                 item_filtered = True
             elif search_filter == "untagged":
                 try:
-                    tags: list[str] = getattr(item_data, "tags", []) if hasattr(item_data, "tags") else []
-                    if tags:
+                    item_tags: list[str] = getattr(item_data, "tags", []) if hasattr(item_data, "tags") else []
+                    if item_tags:
                         item_filtered = True
                 except Exception:
                     pass
