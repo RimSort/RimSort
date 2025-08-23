@@ -8,6 +8,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.aux_db_utils import (
     get_mod_color,
+    get_mod_tags,
     get_mod_user_notes,
     get_mod_warning_toggled,
 )
@@ -104,6 +105,17 @@ class CustomListWidgetItemMetadata:
             )
         else:
             self.user_notes = user_notes
+
+        # Tags (empty list if feature disabled)
+        try:
+            if getattr(settings_controller.settings, "enable_mod_tags", False):
+                self.tags: list[str] = get_mod_tags(
+                    settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+                )
+            else:
+                self.tags = []
+        except Exception:
+            self.tags = []
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """

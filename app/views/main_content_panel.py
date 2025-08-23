@@ -2430,9 +2430,23 @@ class MainContent(QObject):
             return
         workshop_mod_updater = ModUpdaterPrompt()
         workshop_mod_updater._populate_from_metadata()
-        if workshop_mod_updater._row_count() > 0:
-            logger.debug("Displaying potential Workshop mod updates")
-            workshop_mod_updater.show()
+        rows = workshop_mod_updater._row_count()
+        if rows > 0:
+            if self.settings_controller.settings.auto_download_mod_updates_silently:
+                logger.info(
+                    f"Auto-downloading updates silently for {rows} mod(s)"
+                )
+                # Select and update all without showing the dialog
+                workshop_mod_updater._update_all_mods()
+                # Optionally notify user in status bar
+                self.status_signal.emit(
+                    self.tr("Auto-downloading updates for {count} mod(s)...").format(
+                        count=rows
+                    )
+                )
+            else:
+                logger.debug("Displaying potential Workshop mod updates")
+                workshop_mod_updater.show()
         else:
             self.status_signal.emit(
                 self.tr("All Workshop mods appear to be up to date!")
