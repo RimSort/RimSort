@@ -1201,7 +1201,9 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
 
 Are your game configuration paths correct?</source>
-        <translation>你的游戏配置路径正确吗？</translation>
+        <translation>以下模组已在你的模组列表中被设置为激活，但在本地或创意工坊模组路径中未找到相关数据。
+
+你的游戏配置路径正确吗？</translation>
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
@@ -2242,6 +2244,10 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
         <source>From Save file…</source>
         <translation>从 游戏存档导入</translation>
     </message>
+    <message>
+        <source>Reset Mod Colors</source>
+        <translation>重置模组颜色</translation>
+    </message>
 </context>
 <context>
     <name>MenuBarController</name>
@@ -2632,6 +2638,10 @@ Do you want to proceed?</source>
         <source>Workshop Times:</source>
         <translation>创意工坊时间：</translation>
     </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
+        <translation>在这里放置你的模组备注！</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2897,6 +2907,11 @@ An alternative updated mod is recommended:
     <message>
         <source>Reset mod color</source>
         <translation>重置模组颜色</translation>
+    </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation>替代依赖：</translation>
     </message>
 </context>
 <context>
@@ -3950,6 +3965,58 @@ This basically preserves your mod coloring, user notes etc. for this many second
         <source>Compare mod lists with the recent save file</source>
         <translation>将模组列表与最近的存档文件进行比较</translation>
     </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation>清除也会移动DLC</translation>
+    </message>
+    <message>
+        <source>Consider alternativePackageIds as satisfying dependencies</source>
+        <translation>将alternativePackageIds视为满足依赖关系</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
+        <translation>如果启用，About.xml 中的 alternativePackageIds 条目可以满足模组的依赖关系，即使主要依赖项缺失。</translation>
+    </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation>自定义 todds 命令</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>如果未指定 -p（路径），则会选择使用当前启用的或所有模组的路径。</translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation>例如：{todds_example}</translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation>自动删除没有对应 .png 文件的 .dds 文件</translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation>删除没有对应 .png 文件的 .dds 文件。
+
+根据 .dds 文件数量，检查可能需要几秒钟。</translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation>启用高级筛选选项</translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation>启用后，模组面板将提供额外的筛选选项，例如文件夹大小、作者和修改日期。禁用此功能可以通过避免大量计算来提升性能。</translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation>优先使用带版本信息的 About.xml 标签，而不是基础标签。</translation>
+    </message>
+    <message>
+        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
+        <translation>启用后，*ByVersion 标签（例如 modDependenciesByVersion、loadAfterByVersion、loadBeforeByVersion、incompatibleWithByVersion、descriptionsByVersion）将优先于基础标签。如果存在匹配的版本标签但内容为空，则会忽略基础标签。</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4156,6 +4223,17 @@ New symlink:
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
         <translation>应用主题失败：{selected_theme_name}，重置为默认主题：{self.default_theme}</translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
+        <translation>错误：未找到 todds。如果你是从源码运行，请确保已按照 {development_guide_url} 中的正确步骤操作。
+
+如需帮助，请通过以下地址联系我们：{support_url}</translation>
     </message>
 </context>
 <context>
