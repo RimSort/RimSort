@@ -167,6 +167,9 @@ class Settings(QObject):
         # Performance Settings
         self.enable_aux_db_performance_mode: bool = False
 
+        # Player Log
+        self.auto_load_player_log_on_startup: bool = False
+
         # Instances
         self.current_instance: str = "Default"
         self.current_instance_path: str = str(
