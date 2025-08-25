@@ -370,7 +370,7 @@ def platform_specific_open(path: str | Path) -> None:
                 raise
     elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
-        subprocess.Popen(["xdg-open", path])
+        subprocess.Popen(["xdg-open", path], env=dict(os.environ, LD_LIBRARY_PATH=""))
     else:
         logger.error("Attempting to open directory on an unknown system")
 
