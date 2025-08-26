@@ -239,7 +239,7 @@ class ModInfo:
         )
         self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow markdown and clickable hyperlinks? Also make collapsible?
         self.notes.setObjectName("userModNotes")
-        self.notes.setPlaceholderText("Put your personal mod notes here!")
+        self.notes.setPlaceholderText(self.tr("Put your personal mod notes here!"))
         self.notes.textChanged.connect(self.update_user_mod_notes)
         self.notes.setVisible(False)  # Only shows when a mod is selected
         # Add widgets to child layouts

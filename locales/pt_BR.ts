@@ -2244,6 +2244,10 @@ Como você gostaria de prosseguir?</translation>
         <source>RimSort GitHub…</source>
         <translation>GitHub do RimSort …</translation>
     </message>
+    <message>
+        <source>Reset Mod Colors</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBarController</name>
@@ -2633,6 +2637,10 @@ Deseja continuar?</translation>
     <message>
         <source>Workshop Times:</source>
         <translation>Horários da Workshop:</translation>
+    </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3970,6 +3978,44 @@ Melhora o desempenho em cerca de 50%.</translation>
         <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
         <translation>Se ativado, uma entrada alternativePackageIds no About.xml pode satisfazer a dependência de um mod quando a dependência principal estiver ausente.</translation>
     </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4177,6 +4223,15 @@ Novo link simbólico:
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
         <translation>Falha ao aplicar o tema: {selected_theme_name}, Redefinindo para o tema padrão: {self.default_theme}</translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
