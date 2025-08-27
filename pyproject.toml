@@ -16,7 +16,7 @@ dependencies = [
     "natsort==8.4.0",
     "networkx==3.5",
     "packaging==25.0",
-    "platformdirs==4.3.8",
+    "platformdirs==4.4.0",
     "psutil==7.0.0",
     "pygit2==1.18.2",
     "pygithub==2.7.0",
