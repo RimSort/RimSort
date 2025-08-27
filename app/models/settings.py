@@ -173,6 +173,8 @@ class Settings(QObject):
         self.enable_mod_tags: bool = False
         # Tag colors: mapping tag -> color hex (e.g., "#ff0000")
         self.tag_colors: dict[str, str] = {}
+        # Player Log
+        self.auto_load_player_log_on_startup: bool = False
 
         # Instances
         self.current_instance: str = "Default"
