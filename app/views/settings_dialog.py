@@ -81,6 +81,7 @@ class SettingsDialog(QDialog):
         self._do_launch_state_tab()
         self._do_authentication_tab()
         self._do_aux_db_settings_tab()
+        self._do_tags_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -300,9 +301,6 @@ class SettingsDialog(QDialog):
         # New section for save-comparison feature
         self._do_recent_save_integration_group(tab_layout)
 
-        # Tag Colors & Tags section
-        self._do_tag_colors_group(tab_layout)
-
     def _do_recent_save_integration_group(self, tab_layout: QBoxLayout) -> None:
         section_label = QLabel(self.tr("Integration with recent save"))
         section_label.setFont(GUIInfo().emphasis_font)
@@ -320,6 +318,12 @@ class SettingsDialog(QDialog):
         section_label = QLabel(self.tr("Tag colors"))
         section_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(section_label)
+
+        # Priority description
+        priority_desc = QLabel(self.tr("Tag color priority: Colors are applied based on the order below. The topmost tag has highest priority and will be used if a mod has multiple tags."))
+        priority_desc.setWordWrap(True)
+        priority_desc.setStyleSheet("color: #888888; font-style: italic;")
+        tab_layout.addWidget(priority_desc)
 
         # Simple controls: input + choose color + add/update
         row = QHBoxLayout()
@@ -350,16 +354,28 @@ class SettingsDialog(QDialog):
         row.addWidget(self.tag_color_add_btn)
         tab_layout.addLayout(row)
 
-        # Saved tags list header and container
-        saved_hdr = QLabel(self.tr("Saved tag colors"))
-        saved_hdr.setFont(GUIInfo().emphasis_font)
-        tab_layout.addWidget(saved_hdr)
-
         self.tag_colors_list_container = QWidget()
         self.tag_colors_list_layout = QVBoxLayout(self.tag_colors_list_container)
         self.tag_colors_list_layout.setContentsMargins(0, 0, 0, 0)
         self.tag_colors_list_layout.setSpacing(6)
         tab_layout.addWidget(self.tag_colors_list_container)
+
+    def _do_tags_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Tags"))
+        self.enable_mod_tags_checkbox = QCheckBox(self.tr("Enable mod tags (require restart)"))
+        self.enable_mod_tags_checkbox.setToolTip(
+            self.tr(
+                "If enabled, you can assign tags to mods, display them in the list, and filter by them."
+            )
+        )
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab_layout.addWidget(self.enable_mod_tags_checkbox)
+
+        # Tag Colors & Tags section
+        self._do_tag_colors_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -1445,14 +1461,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
 
-        # Mod tags feature toggle
-        self.enable_mod_tags_checkbox = QCheckBox(self.tr("Enable mod tags"))
-        self.enable_mod_tags_checkbox.setToolTip(
-            self.tr(
-                "If enabled, you can assign tags to mods, display them in the list, and filter by them."
-            )
-        )
-        group_layout.addWidget(self.enable_mod_tags_checkbox)
 
         self.enable_advanced_filtering_checkbox = QCheckBox(
             self.tr("Enable advanced filtering options")

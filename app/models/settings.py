@@ -171,8 +171,9 @@ class Settings(QObject):
 
         # Feature toggles
         self.enable_mod_tags: bool = False
-        # Tag colors: mapping tag -> color hex (e.g., "#ff0000")
-        self.tag_colors: dict[str, str] = {}
+        # Tag colors: ordered list of (tag, color_hex) tuples for priority-based coloring
+        # First item in list has highest priority
+        self.tag_colors: list[tuple[str, str]] = []
         # Player Log
         self.auto_load_player_log_on_startup: bool = False
 
@@ -347,6 +348,12 @@ class Settings(QObject):
             if not hasattr(self, key):
                 continue
             setattr(self, key, value)
+
+        # Migrate old tag_colors dict format to new list format
+        if hasattr(self, "tag_colors") and isinstance(self.tag_colors, dict):
+            logger.info("Migrating tag_colors from dict to list format")
+            old_tag_colors = self.tag_colors
+            self.tag_colors = [(tag, color) for tag, color in old_tag_colors.items()]
 
         if "instances" in data:
             # Convert to Instance objects

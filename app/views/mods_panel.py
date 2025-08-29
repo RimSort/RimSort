@@ -77,6 +77,7 @@ from app.utils.metadata import MetadataManager, ModMetadata
 from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
+    show_dialogue_combobox,
     show_dialogue_conditional,
     show_dialogue_input,
     show_warning,
@@ -799,12 +800,13 @@ class ModListItemInner(QWidget):
         # Apply tag color override if configured (and not superseded by warnings/errors or custom text color)
         try:
             if (not priority_color_style_applied) and not (error_tooltip or warning_tooltip) and getattr(self.settings_controller.settings, "enable_mod_tags", False):
-                tag_colors = getattr(self.settings_controller.settings, "tag_colors", {}) or {}
+                tag_colors = getattr(self.settings_controller.settings, "tag_colors", []) or []
                 tags = getattr(item_data, "tags", []) if hasattr(item_data, "tags") else []
                 color_to_apply = None
-                for t in tags:
-                    if t in tag_colors:
-                        color_to_apply = tag_colors[t]
+                # Apply colors based on priority order (first in list = highest priority)
+                for tag_name, tag_color in tag_colors:
+                    if tag_name in tags:
+                        color_to_apply = tag_color
                         break
                 if color_to_apply:
                     # If background color mode is enabled, set background; else set text color
@@ -2068,14 +2070,50 @@ class ModListWidget(QListWidget):
                             )
                 # ACTIONS: Tags add/remove
                 if getattr(self.settings_controller.settings, "enable_mod_tags", False) and action in [tags_add_action, tags_remove_action]:
-                    tag_label = self.tr("Enter tag name")
-                    if action == tags_remove_action:
-                        tag_label = self.tr("Enter tag to remove")
-                    tag_value, ok = show_dialogue_input(
-                        title=self.tr("Tag"),
-                        label=tag_label,
-                        text="",
-                    )
+                    if action == tags_add_action:
+                        tag_label = self.tr("Enter tag name")
+                        tag_value, ok = show_dialogue_input(
+                            title=self.tr("Tag"),
+                            label=tag_label,
+                            text="",
+                        )
+                    else:  # tags_remove_action
+                        # Get tags assigned to selected mods for the combobox
+                        all_mod_tags = []
+                        for item in selected_items:
+                            if type(item) is CustomListWidgetItem:
+                                item_data = item.data(Qt.ItemDataRole.UserRole)
+                                mod_tags = list(getattr(item_data, "tags", []))
+                                all_mod_tags.append(set(mod_tags))
+                        
+                        if not all_mod_tags:
+                            return True
+                        
+                        # For multiple mods, show only tags that are common to all selected mods
+                        if len(all_mod_tags) > 1:
+                            common_tags = set.intersection(*all_mod_tags)
+                            mod_tags = list(common_tags)
+                        else:
+                            mod_tags = list(all_mod_tags[0])
+                        
+                        if not mod_tags:
+                            # Show message if no tags are assigned or no common tags
+                            from app.views.dialogue import show_information
+                            if len(selected_items) == 1:
+                                message = self.tr("This mod has no tags assigned to remove.")
+                            else:
+                                message = self.tr("The selected mods have no common tags to remove.")
+                            show_information(
+                                title=self.tr("No Tags"),
+                                text=message
+                            )
+                            return True
+                        
+                        tag_value, ok = show_dialogue_combobox(
+                            title=self.tr("Remove Tag"),
+                            label=self.tr("Select tag to remove:"),
+                            items=mod_tags,
+                        )
                     if not ok:
                         return True
                     tag_value = str(tag_value).strip()
@@ -3235,16 +3273,21 @@ class ModsPanel(QWidget):
         self.active_mods_search_filter: QComboBox = QComboBox()
         self.active_mods_search_filter.setObjectName("MainUI")
         self.active_mods_search_filter.setMaximumWidth(125)
-        self.active_mods_search_filter.addItems(
-            [
-                self.tr("Name"),
-                self.tr("PackageId"),
-                self.tr("Author(s)"),
-                self.tr("PublishedFileId"),
-                self.tr("Version"),
-                self.tr("Tags"),
-            ]
-        )
+        
+        # Build filter items list conditionally
+        filter_items = [
+            self.tr("Name"),
+            self.tr("PackageId"),
+            self.tr("Author(s)"),
+            self.tr("PublishedFileId"),
+            self.tr("Version"),
+        ]
+        
+        # Add "Tags" item only if mod tags are enabled
+        if getattr(self.settings_controller.settings, "enable_mod_tags", False):
+            filter_items.append(self.tr("Tags"))
+        
+        self.active_mods_search_filter.addItems(filter_items)
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
@@ -3406,17 +3449,21 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter.setParent(self)
         self.inactive_mods_search_filter.setObjectName("MainUI")
         self.inactive_mods_search_filter.setMaximumWidth(140)
-        self.inactive_mods_search_filter.addItems(
-            [
-                self.tr("Name"),
-                self.tr("PackageId"),
-                self.tr("Author(s)"),
-                self.tr("PublishedFileId"),
-                self.tr("Version"),
-                self.tr("Tags"),
-                self.tr("Untagged"),
-            ]
-        )
+        
+        # Build filter items list conditionally
+        inactive_filter_items = [
+            self.tr("Name"),
+            self.tr("PackageId"),
+            self.tr("Author(s)"),
+            self.tr("PublishedFileId"),
+            self.tr("Version"),
+        ]
+        
+        # Add "Tags" and "Untagged" items only if mod tags are enabled
+        if getattr(self.settings_controller.settings, "enable_mod_tags", False):
+            inactive_filter_items.extend([self.tr("Tags"), self.tr("Untagged")])
+        
+        self.inactive_mods_search_filter.addItems(inactive_filter_items)
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
         self.inactive_mods_sort_combobox.setObjectName("MainUI")

@@ -912,9 +912,9 @@ class SettingsController(QObject):
         # Populate tag colors UI
         try:
             # show last picked color if exists
-            if getattr(self.settings, "tag_colors", None):
+            if getattr(self.settings, "tag_colors", None) and self.settings.tag_colors:
                 # just pick arbitrary first to preview
-                first = next(iter(self.settings.tag_colors.values()), "#000000")
+                first = self.settings.tag_colors[0][1] if self.settings.tag_colors else "#000000"
                 self.settings_dialog.tag_color_preview.setText(first)
                 self.settings_dialog.tag_color_preview.setStyleSheet(f"background: {first}; color: white;")
             # populate known tags into combobox
@@ -1238,7 +1238,7 @@ class SettingsController(QObject):
                     if isinstance(t.tag, str) and t.tag.strip():
                         tags.add(t.tag)
             if getattr(self.settings, "tag_colors", None):
-                tags.update(self.settings.tag_colors.keys())
+                tags.update(tag_name for tag_name, _ in self.settings.tag_colors)
             # Refill combobox
             self.settings_dialog.tag_color_select.blockSignals(True)
             self.settings_dialog.tag_color_select.clear()
@@ -1260,7 +1260,7 @@ class SettingsController(QObject):
                 w = item.widget()
                 if w:
                     w.deleteLater()
-            colors = getattr(self.settings, "tag_colors", {}) or {}
+            colors = getattr(self.settings, "tag_colors", []) or []
             # Build one row per saved tag using same widgets style
             from PySide6.QtCore import Qt
             from PySide6.QtWidgets import (
@@ -1270,7 +1270,7 @@ class SettingsController(QObject):
                 QToolButton,
                 QWidget,
             )
-            for tag, color in sorted(colors.items(), key=lambda kv: kv[0].lower()):
+            for i, (tag, color) in enumerate(colors):
                 row = QHBoxLayout()
                 name_edit = QLineEdit(tag)
                 name_edit.setPlaceholderText(self.tr("Tag name"))
@@ -1284,6 +1284,17 @@ class SettingsController(QObject):
                 save_btn.setText(self.tr("Save"))
                 delete_btn = QToolButton()
                 delete_btn.setText(self.tr("Delete"))
+                
+                # Add up/down buttons for reordering
+                up_btn = QToolButton()
+                up_btn.setText("↑")
+                up_btn.setToolTip(self.tr("Move up (higher priority)"))
+                up_btn.setEnabled(i > 0)  # Disable up button for first item
+                
+                down_btn = QToolButton()
+                down_btn.setText("↓")
+                down_btn.setToolTip(self.tr("Move down (lower priority)"))
+                down_btn.setEnabled(i < len(colors) - 1)  # Disable down button for last item
 
                 # Bind using lambdas that pass current widgets/values to stable helper methods
                 pick_btn.clicked.connect(lambda _=None, p=preview: self._pick_tag_color_in_row(p))
@@ -1291,12 +1302,16 @@ class SettingsController(QObject):
                     lambda _=None, old=tag, n=name_edit, p=preview: self._save_tag_color_row(old, n, p)
                 )
                 delete_btn.clicked.connect(lambda _=None, old=tag: self._delete_tag_color_row(old))
+                up_btn.clicked.connect(lambda _=None, idx=i: self._move_tag_color_up(idx))
+                down_btn.clicked.connect(lambda _=None, idx=i: self._move_tag_color_down(idx))
 
                 row.addWidget(name_edit)
                 row.addWidget(pick_btn)
                 row.addWidget(preview)
                 row.addWidget(save_btn)
                 row.addWidget(delete_btn)
+                row.addWidget(up_btn)
+                row.addWidget(down_btn)
                 # Wrap row in a QWidget for layout
                 row_widget = QWidget(container)
                 row_widget.setLayout(row)
@@ -1321,11 +1336,12 @@ class SettingsController(QObject):
             if not new_name or not new_color:
                 logger.warning("Tag color save attempted with empty name or color (row)")
                 return
-            new_map = dict(getattr(self.settings, "tag_colors", {}))
-            if existing_tag in new_map and existing_tag != new_name:
-                del new_map[existing_tag]
-            new_map[new_name] = new_color
-            self.settings.tag_colors = new_map
+            new_list = list(getattr(self.settings, "tag_colors", []))
+            # Remove existing tag if it exists
+            new_list = [(tag, color) for tag, color in new_list if tag != existing_tag]
+            # Add new tag (will be at the end, maintaining order)
+            new_list.append((new_name, new_color))
+            self.settings.tag_colors = new_list
             logger.info(f"Saved tag color (row): {existing_tag} -> {new_name} = {new_color}")
             self._populate_tag_colors_combobox()
         except Exception:
@@ -1333,14 +1349,41 @@ class SettingsController(QObject):
 
     def _delete_tag_color_row(self, existing_tag: str) -> None:
         try:
-            new_map = dict(getattr(self.settings, "tag_colors", {}))
-            if existing_tag in new_map:
-                del new_map[existing_tag]
-                self.settings.tag_colors = new_map
-                logger.info(f"Deleted tag color: {existing_tag}")
-                self._populate_tag_colors_combobox()
+            new_list = list(getattr(self.settings, "tag_colors", []))
+            # Remove the tag
+            new_list = [(tag, color) for tag, color in new_list if tag != existing_tag]
+            self.settings.tag_colors = new_list
+            logger.info(f"Deleted tag color: {existing_tag}")
+            self._populate_tag_colors_combobox()
         except Exception:
             logger.exception("Failed to delete tag color (row)")
+
+    def _move_tag_color_up(self, index: int) -> None:
+        try:
+            if index <= 0:
+                return
+            new_list = list(getattr(self.settings, "tag_colors", []))
+            if index < len(new_list):
+                # Swap with previous item
+                new_list[index], new_list[index - 1] = new_list[index - 1], new_list[index]
+                self.settings.tag_colors = new_list
+                logger.info(f"Moved tag color up: {new_list[index][0]}")
+                self._populate_tag_colors_combobox()
+        except Exception:
+            logger.exception("Failed to move tag color up")
+
+    def _move_tag_color_down(self, index: int) -> None:
+        try:
+            new_list = list(getattr(self.settings, "tag_colors", []))
+            if index >= len(new_list) - 1:
+                return
+            # Swap with next item
+            new_list[index], new_list[index + 1] = new_list[index + 1], new_list[index]
+            self.settings.tag_colors = new_list
+            logger.info(f"Moved tag color down: {new_list[index][0]}")
+            self._populate_tag_colors_combobox()
+        except Exception:
+            logger.exception("Failed to move tag color down")
 
     def _setup_tag_colors_bindings(self) -> None:
         # Connect Save button (if not yet)
@@ -1355,9 +1398,12 @@ class SettingsController(QObject):
                     if not name or not color_hex:
                         logger.warning("Tag color save attempted with empty name or color")
                         return
-                    new_map = dict(getattr(self.settings, "tag_colors", {}))
-                    new_map[name] = color_hex
-                    self.settings.tag_colors = new_map
+                    new_list = list(getattr(self.settings, "tag_colors", []))
+                    # Remove existing tag if it exists
+                    new_list = [(tag, color) for tag, color in new_list if tag != name]
+                    # Add new tag (will be at the end, maintaining order)
+                    new_list.append((name, color_hex))
+                    self.settings.tag_colors = new_list
                     self._populate_tag_colors_combobox()
                     logger.debug(f"Saved tag color: {name} -> {color_hex}")
                 except Exception:
