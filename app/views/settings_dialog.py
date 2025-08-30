@@ -77,6 +77,7 @@ class SettingsDialog(QDialog):
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
+        self._do_other_external_tools_tab()
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
@@ -930,6 +931,35 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Connect radio buttons to enable/disable custom command input
         self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
         self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
+
+    def _do_other_external_tools_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Other External Tools"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        header_layout = QHBoxLayout()
+        group_layout.addLayout(header_layout)
+
+        section_label = QLabel(self.tr("Text Editor command location"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        header_layout.addWidget(section_label)
+
+        self.text_editor_location_choose_button = QToolButton()
+        self.text_editor_location_choose_button.setText(self.tr("Choose…"))
+        header_layout.addWidget(self.text_editor_location_choose_button)
+
+        self.text_editor_location = QLineEdit()
+        self.text_editor_location.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        group_layout.addWidget(self.text_editor_location)
 
     def _on_preset_radio_toggled(self, checked: bool) -> None:
         if self.todds_preset_custom_radio.isChecked():

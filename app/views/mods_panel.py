@@ -69,6 +69,7 @@ from app.utils.generic import (
     copy_to_clipboard_safely,
     delete_files_except_extension,
     flatten_to_list,
+    launch_process,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
@@ -1160,6 +1161,8 @@ class ModListWidget(QListWidget):
             context_menu = QMenu()
             # Open folder action
             open_folder_action = None
+            # Open folder in text editor action
+            open_folder_text_editor_action = None
             # Open URL in browser action
             open_url_browser_action = None
             # Open URL in Steam
@@ -1206,6 +1209,14 @@ class ModListWidget(QListWidget):
                     # Open folder action text
                     open_folder_action = QAction()
                     open_folder_action.setText(self.tr("Open folder"))
+                    # Open folder in text editor text
+                    if self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ].text_editor_location:
+                        open_folder_text_editor_action = QAction()
+                        open_folder_text_editor_action.setText(
+                            self.tr("Open folder in text editor")
+                        )
                     # Change mod color action
                     change_mod_color_action = QAction()
                     change_mod_color_action.setText(self.tr("Change mod color"))
@@ -1347,6 +1358,13 @@ class ModListWidget(QListWidget):
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText(self.tr("Open folder(s)"))
+                        if self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ].text_editor_location:
+                            open_folder_text_editor_action = QAction()
+                            open_folder_text_editor_action.setText(
+                                self.tr("Open folder(s) in text editor")
+                            )
                         # Change mod color action
                         change_mod_color_action = QAction()
                         change_mod_color_action.setText("Change mod colors")
@@ -1446,6 +1464,8 @@ class ModListWidget(QListWidget):
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
+            if open_folder_text_editor_action:
+                context_menu.addAction(open_folder_text_editor_action)
             if change_mod_color_action:
                 context_menu.addAction(change_mod_color_action)
             if reset_mod_color_action:
@@ -1856,6 +1876,21 @@ class ModListWidget(QListWidget):
                             if os.path.exists(mod_path):  # If the path actually exists
                                 logger.info(f"Opening folder: {mod_path}")
                                 platform_specific_open(mod_path)
+                        elif (
+                            action == open_folder_text_editor_action
+                        ):  # ACTION: Open folder in text editor
+                            if os.path.exists(mod_path):
+                                logger.info(
+                                    f"Opening folder in text editor: {mod_path}"
+                                )
+                                launch_process(
+                                    self.settings_controller.settings.instances[
+                                        self.settings_controller.settings.current_instance
+                                    ].text_editor_location,
+                                    [mod_path],
+                                    str(AppInfo().application_folder),
+                                )
+
                         # Open url action
                         elif (
                             action == open_url_browser_action

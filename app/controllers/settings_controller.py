@@ -298,6 +298,11 @@ class SettingsController(QObject):
             self._on_steamcmd_install_button_clicked
         )
 
+        # Other External Tools Tab
+        self.settings_dialog.text_editor_location_choose_button.clicked.connect(
+            self._on_text_editor_location_choose_button_clicked
+        )
+
         # Theme tab
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
@@ -746,6 +751,15 @@ class SettingsController(QObject):
             self.settings.auto_delete_orphaned_dds
         )
 
+        # Other External Tools Tab
+        self.settings_dialog.text_editor_location.setText(
+            str(
+                self.settings.instances[
+                    self.settings.current_instance
+                ].text_editor_location
+            )
+        )
+
         # Themes tab
         self.settings_dialog.enable_themes_checkbox.setChecked(
             self.settings.enable_themes
@@ -1070,6 +1084,11 @@ class SettingsController(QObject):
         self.settings.auto_delete_orphaned_dds = (
             self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
         )
+
+        # Other External Tools Tab
+        self.settings.instances[
+            self.settings.current_instance
+        ].text_editor_location = self.settings_dialog.text_editor_location.text()
 
         # Themes tab
         self.settings.enable_themes = (
@@ -1879,6 +1898,22 @@ class SettingsController(QObject):
         """
         self.settings_dialog.global_ok_button.click()
         EventBus().do_install_steamcmd.emit()
+
+    @Slot()
+    def _on_text_editor_location_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the Steamcmd install location and handle the result.
+        """
+        text_editor_location = show_dialogue_file(
+            mode="open",
+            caption="Select Text Editor Command",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not text_editor_location:
+            return
+
+        self.settings_dialog.text_editor_location.setText(text_editor_location)
+        self._last_file_dialog_path = str(Path(text_editor_location).parent)
 
     @Slot()
     def _on_db_builder_download_all_mods_via_steamcmd_button_clicked(self) -> None:
