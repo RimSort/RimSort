@@ -14,6 +14,7 @@ from PySide6.QtCore import (
     Slot,
 )
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QFileDialog,
     QHBoxLayout,
@@ -117,6 +118,67 @@ def show_dialogue_input(
 ) -> Tuple[str, bool]:
     actual_parent = parent if parent is not None else QWidget()
     return QInputDialog().getText(actual_parent, title, label, text=text)
+
+
+def show_dialogue_combobox(
+    title: str = "",
+    label: str = "",
+    items: list[str] | None = None,
+    parent: QWidget | None = None,
+) -> Tuple[str, bool]:
+    """
+    Shows a dialog with a combobox for selecting from a list of items.
+    
+    :param title: Window title
+    :param label: Label text for the combobox
+    :param items: List of items to show in the combobox
+    :param parent: Parent widget
+    :return: Tuple of (selected_item, ok_pressed)
+    """
+    if items is None:
+        items = []
+    
+    actual_parent = parent if parent is not None else QWidget()
+    
+    # Create custom dialog
+    dialog = QDialog(actual_parent)
+    dialog.setWindowTitle(title)
+    dialog.setModal(True)
+    
+    # Create layout
+    layout = QVBoxLayout(dialog)
+    
+    # Add label
+    if label:
+        label_widget = QLabel(label)
+        layout.addWidget(label_widget)
+    
+    # Add combobox
+    combobox = QComboBox()
+    combobox.addItems(items)
+    if items:
+        combobox.setCurrentIndex(0)
+    layout.addWidget(combobox)
+    
+    # Add buttons
+    button_layout = QHBoxLayout()
+    ok_button = QPushButton("OK")
+    cancel_button = QPushButton("Cancel")
+    button_layout.addWidget(ok_button)
+    button_layout.addWidget(cancel_button)
+    layout.addLayout(button_layout)
+    
+    # Connect signals
+    ok_button.clicked.connect(dialog.accept)
+    cancel_button.clicked.connect(dialog.reject)
+    
+    # Show dialog
+    result = dialog.exec_()
+    
+    if result == QDialog.DialogCode.Accepted and items:
+        return combobox.currentText(), True
+    else:
+        return "", False
 
 
 def show_dialogue_file(
