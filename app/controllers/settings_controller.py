@@ -907,6 +907,9 @@ class SettingsController(QObject):
             self.settings_dialog.enable_mod_tags_checkbox.setChecked(
                 getattr(self.settings, "enable_mod_tags", False)
             )
+            self.settings_dialog.display_tags_in_mod_titles_checkbox.setChecked(
+                getattr(self.settings, "display_tags_in_mod_titles", True)
+            )
         except Exception:
             pass
         # Populate tag colors UI
@@ -1220,6 +1223,9 @@ class SettingsController(QObject):
             self.settings.enable_mod_tags = (
                 self.settings_dialog.enable_mod_tags_checkbox.isChecked()
             )
+            self.settings.display_tags_in_mod_titles = (
+                self.settings_dialog.display_tags_in_mod_titles_checkbox.isChecked()
+            )
         except Exception:
             pass
         # (moved) Tag color button connection now happens during initialization
@@ -1470,6 +1476,8 @@ class SettingsController(QObject):
         try:
             EventBus().filters_changed_in_active_modlist.emit()
             EventBus().filters_changed_in_inactive_modlist.emit()
+            # Emit settings changed signal to trigger mod list repainting
+            EventBus().settings_have_changed.emit()
         except Exception:
             pass
         self.theme_controller.set_font(

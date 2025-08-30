@@ -171,6 +171,8 @@ class Settings(QObject):
 
         # Feature toggles
         self.enable_mod_tags: bool = False
+        # Whether to display tags in mod titles
+        self.display_tags_in_mod_titles: bool = True
         # Tag colors: ordered list of (tag, color_hex) tuples for priority-based coloring
         # First item in list has highest priority
         self.tag_colors: list[tuple[str, str]] = []

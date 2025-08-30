@@ -717,7 +717,7 @@ class ModListItemInner(QWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         # Update label text to include tags, if enabled
         try:
-            if getattr(self.settings_controller.settings, "enable_mod_tags", False):
+            if getattr(self.settings_controller.settings, "enable_mod_tags", False) and getattr(self.settings_controller.settings, "display_tags_in_mod_titles", True):
                 tags: list[str] = getattr(item_data, "tags", []) if hasattr(item_data, "tags") else []
                 if tags:
                     tags_text = ", ".join(sorted({t for t in tags if isinstance(t, str) and t.strip()}))
@@ -728,6 +728,8 @@ class ModListItemInner(QWidget):
                     self.main_label.setText(f"{base} <{tags_text}>")
                 else:
                     self.main_label.setText(self.list_item_name)
+            else:
+                self.main_label.setText(self.list_item_name)
         except Exception:
             pass
         error_tooltip = item_data["errors"]

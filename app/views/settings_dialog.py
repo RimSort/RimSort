@@ -374,6 +374,14 @@ class SettingsDialog(QDialog):
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         tab_layout.addWidget(self.enable_mod_tags_checkbox)
 
+        self.display_tags_in_mod_titles_checkbox = QCheckBox(self.tr("Display tags in mod titles"))
+        self.display_tags_in_mod_titles_checkbox.setToolTip(
+            self.tr(
+                "If enabled, tags will be displayed in angle brackets after mod names in the mod list."
+            )
+        )
+        tab_layout.addWidget(self.display_tags_in_mod_titles_checkbox)
+
         # Tag Colors & Tags section
         self._do_tag_colors_group(tab_layout)
 
