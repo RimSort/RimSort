@@ -761,8 +761,11 @@ class ModListItemInner(QWidget):
         Handle mod color change (Background or Text).
 
         :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
+
         :param init: bool, if running inside __init__ method, uses class attribute.
+
         """
+        new_mod_color_name: Optional[str] = None
         if self.settings_controller.settings.color_background_instead_of_text_toggle:
             # Color background
             if init:
@@ -791,7 +794,7 @@ class ModListItemInner(QWidget):
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
         # Update Aux DB
-        if not init:
+        if not init and new_mod_color_name is not None:
             instance_path = Path(
                 self.settings_controller.settings.current_instance_path
             )
@@ -1828,6 +1831,8 @@ class ModListWidget(QListWidget):
                         )
                     return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
+                invalid_color = True
+                new_color = QColor()
                 if action == change_mod_color_action:
                     invalid_color = False
                     new_color = QColorDialog().getColor()
