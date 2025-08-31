@@ -1,4 +1,5 @@
 import gc
+import os
 import re
 from collections import deque
 from datetime import datetime
@@ -37,6 +38,8 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from app.controllers.settings_controller import SettingsController
+from app.utils.app_info import AppInfo
+from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
 
 
@@ -77,6 +80,17 @@ class LogPatternManager:
         r"\b(error|failed|fatal|critical)\b|\[E\]", re.IGNORECASE
     )
     EXCEPTION_FILTER_PATTERN = re.compile(r"exception", re.IGNORECASE)
+
+    PATHLIKE_PATTERN = re.compile(
+        r"""
+        (?:
+            [a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+    # Windows paths
+            |
+            /(?:[^/\s]+/)*[^/\s]+                                      # Unix/macOS paths
+        )
+        """,
+        re.VERBOSE,
+    )
 
     @classmethod
     def get_highlight_patterns(cls) -> List[Tuple[re.Pattern[str], str]]:
@@ -1284,7 +1298,28 @@ class PlayerLogTab(QWidget):
         )
         bookmark_action = menu.addAction(bookmark_action_text)
         bookmark_action.triggered.connect(lambda: self.toggle_bookmark(line_number))
+        pathmatch = LogPatternManager.PATHLIKE_PATTERN.findall(cursor.block().text())
+        if pathmatch:
+            for path in pathmatch:
+                for candidate in (
+                    path,
+                    path[:-1],
+                ):  # error messages frequently tag on a ] or other terminator character
+                    if os.path.exists(candidate):
+                        menu.addAction(
+                            f"Open '{candidate}'", lambda p=candidate: self.open_file(p)
+                        )
+                        break
         menu.exec(self.log_display.mapToGlobal(pos))
+
+    def open_file(self, file_path: str) -> None:
+        if self.settings_controller.settings.text_editor_location:
+            launch_process(
+                self.settings_controller.settings.text_editor_location,
+                self.settings_controller.settings.text_editor_file_arg.split(" ")
+                + [file_path],
+                str(AppInfo().application_folder),
+            )
 
     def toggle_bookmark(self, line_number: int) -> None:
         if line_number in self.bookmarked_lines:

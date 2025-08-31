@@ -10,7 +10,7 @@ from errno import EACCES
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Tuple
 
 import requests
 from loguru import logger
@@ -260,30 +260,11 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 + str(args)
                 + "`"
             )
-            # https://stackoverflow.com/a/21805723
-            if system_name == "Darwin":  # MacOS
-                popen_args = ["open", executable_path, "--args"]
-                popen_args.extend(args)
-                p = subprocess.Popen(popen_args)
-            else:
-                popen_args = [executable_path]
-                popen_args.extend(args)
-
-                if sys.platform == "win32":
-                    p = subprocess.Popen(
-                        popen_args,
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        shell=True,
-                        cwd=game_install_path,
-                    )
-                else:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    p = subprocess.Popen(
-                        popen_args, start_new_session=True, cwd=game_install_path
-                    )
-
+            pid, popen_args = launch_process(
+                executable_path, args, str(game_install_path)
+            )
             logger.info(
-                f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
+                f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
             )
         else:
             logger.debug("The game executable path does not exist")
@@ -313,6 +294,35 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 ).format(game_install_path=game_install_path)
             ),
         )
+
+
+def launch_process(
+    executable_path: str, args: list[str], cwd: str
+) -> Tuple[int, list[str]]:
+    pid = -1
+    # https://stackoverflow.com/a/21805723
+    if platform.system() == "Darwin":  # MacOS
+        popen_args = ["open", executable_path, "--args"]
+        popen_args.extend(args)
+        p = subprocess.Popen(popen_args)
+        pid = p.pid
+    else:
+        popen_args = [executable_path]
+        popen_args.extend(args)
+
+        if sys.platform == "win32":
+            p = subprocess.Popen(
+                popen_args,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                shell=True,
+                cwd=cwd,
+            )
+            pid = p.pid
+        else:
+            # not Windows, so assume POSIX; if not, we'll get a usable exception
+            p = subprocess.Popen(popen_args, start_new_session=True, cwd=cwd)
+            pid = p.pid
+    return pid, popen_args
 
 
 def open_url_browser(url: str) -> None:
