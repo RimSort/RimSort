@@ -61,6 +61,8 @@ class Settings(QObject):
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
+        # Default (-1) means do not delete data from Aux Metadata DB
+        self.aux_db_time_limit: int = -1
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
@@ -97,9 +99,11 @@ class Settings(QObject):
 
         # todds
         self.todds_preset: str = "optimized"
+        self.todds_custom_command: str = ""
         self.todds_active_mods_target: bool = True
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
+        self.auto_delete_orphaned_dds: bool = False
 
         # Theme
         self.enable_themes: bool = True
@@ -132,19 +136,45 @@ class Settings(QObject):
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
+        self.color_background_instead_of_text_toggle: bool = True
         self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
+        # UI: Save-comparison labels and icons
+        self.show_save_comparison_indicators: bool = True
+        # Clear button behavior
+        self.clear_moves_dlc: bool = False
+        # Dependencies: treat alternativePackageIds as satisfying dependencies
+        self.consider_alternative_package_ids: bool = False
+        # Advanced filtering options
+        self.enable_advanced_filtering: bool = True
 
+        # XML parsing behavior
+        # If enabled, About.xml *ByVersion tags take precedence over base tags
+        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
+        self.prefer_versioned_about_tags: bool = False
+
+        # Authentication
         self.rentry_auth_code: str = ""
-
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # Auxiliary Metadata DB
+        self.enable_aux_db_behavior_editing: bool = False
+
+        # Performance Settings
+        self.enable_aux_db_performance_mode: bool = False
+
+        # Player Log
+        self.auto_load_player_log_on_startup: bool = False
+
         # Instances
         self.current_instance: str = "Default"
+        self.current_instance_path: str = str(
+            Path(AppInfo().app_storage_folder) / "instances" / self.current_instance
+        )
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
     def __setattr__(self, key: str, value: Any) -> None:
@@ -266,6 +296,20 @@ class Settings(QObject):
                         "Current instance not found in settings.json. Performing mitigation."
                     )
                     data["current_instance"] = "Default"
+
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
+                elif not data.get("current_instance_path"):
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False

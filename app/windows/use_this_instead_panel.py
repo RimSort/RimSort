@@ -156,6 +156,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         self.deletion_tool_button = QToolButton()
         self.deletion_tool_button.setText(self.tr("Delete"))
         self.deletion_menu = ModDeletionMenu(
+            self.settings_controller,
             lambda: self._run_for_selected_rows(self._retrieve_metadata_from_row),
             None,
             self.tr("Delete Selected Original Mods..."),

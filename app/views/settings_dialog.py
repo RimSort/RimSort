@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QIntValidator, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -80,6 +80,7 @@ class SettingsDialog(QDialog):
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
+        self._do_aux_db_settings_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -286,6 +287,32 @@ class SettingsDialog(QDialog):
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
 
+    def _do_aux_db_settings_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Auxiliary DB"))
+
+        tab_layout = QVBoxLayout()
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab.setLayout(tab_layout)
+
+        self._do_aux_db_time_limit_group(tab_layout)
+        self._do_aux_db_performance_group(tab_layout)
+        # New section for save-comparison feature
+        self._do_recent_save_integration_group(tab_layout)
+
+    def _do_recent_save_integration_group(self, tab_layout: QBoxLayout) -> None:
+        section_label = QLabel(self.tr("Integration with recent save"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        section_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tab_layout.addWidget(section_label)
+
+        row_layout = QHBoxLayout()
+        self.show_save_comparison_indicators_checkbox = QCheckBox(
+            self.tr("Compare mod lists with the recent save file")
+        )
+        row_layout.addWidget(self.show_save_comparison_indicators_checkbox)
+        tab_layout.addLayout(row_layout)
+
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
     ) -> tuple[
@@ -478,6 +505,60 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
+        self.aux_db_time_limit_label = QLabel(
+            self.tr(
+                "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            )
+        )
+        aux_db_tooltip = self.tr("""To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)""")
+        self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
+        self.aux_db_time_limit_label.setFont(GUIInfo().emphasis_font)
+
+        self.aux_db_time_limit = QLineEdit()
+        int_validator = QIntValidator()
+        self.aux_db_time_limit.setValidator(int_validator)
+        self.aux_db_time_limit.setTextMargins(GUIInfo().text_field_margins)
+        self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+
+        self.enable_aux_db_behavior_editing = QCheckBox(self.tr("Enable editing"))
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
+        self.enable_aux_db_behavior_editing.setToolTip(
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
+        )
+
+        label_layout = QHBoxLayout()
+        label_layout.addWidget(self.aux_db_time_limit_label)
+        label_layout.addStretch()
+        label_layout.addWidget(self.enable_aux_db_behavior_editing)
+
+        tab_layout.addLayout(label_layout)
+        tab_layout.addWidget(self.aux_db_time_limit)
+
+    def _do_aux_db_performance_group(self, tab_layout: QBoxLayout) -> None:
+        self.aux_db_performance_mode = QCheckBox(
+            self.tr("Enable Auxiliary Metadata DB performance mode")
+        )
+        self.aux_db_performance_mode.setToolTip(
+            self.tr(
+                "This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes."
+                "\nImproves performance by ~50%."
+            )
+        )
+
+        aux_db_group = QHBoxLayout()
+        aux_db_group.addWidget(self.aux_db_performance_mode)
+
+        tab_layout.addLayout(aux_db_group)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
@@ -772,14 +853,34 @@ class SettingsDialog(QDialog):
         quality_preset_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(quality_preset_label)
 
-        self.todds_preset_combobox = QComboBox()
-        self.todds_preset_combobox.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
-        )
-        self.todds_preset_combobox.addItem(
+        self.todds_preset_optimized_radio = QRadioButton(
             self.tr("Optimized - Recommended for RimWorld")
         )
-        group_layout.addWidget(self.todds_preset_combobox)
+        group_layout.addWidget(self.todds_preset_optimized_radio)
+
+        self.todds_preset_custom_radio = QRadioButton(self.tr("Custom todds command"))
+        group_layout.addWidget(self.todds_preset_custom_radio)
+
+        custom_command_label = QLabel(
+            self.tr(
+                "If -p as in path is not specified, path from current active or all mods selection will be used."
+            )
+        )
+        custom_command_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(custom_command_label)
+
+        self.todds_custom_command_lineedit = QLineEdit()
+        todds_example = (
+            '-f BC1 -af BC7 -on -vf -fs -r Textures -t -p "D:\\Games\\RimWorld\\Mods"'
+        )
+        self.todds_custom_command_lineedit.setPlaceholderText(
+            self.tr("eg: {todds_example}").format(todds_example=todds_example)
+        )
+        self.todds_custom_command_lineedit.setTextMargins(GUIInfo().text_field_margins)
+        self.todds_custom_command_lineedit.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.todds_custom_command_lineedit)
 
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -812,6 +913,29 @@ class SettingsDialog(QDialog):
             self.tr("Overwrite existing optimized textures")
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
+
+        self.auto_delete_orphaned_dds_checkbox = QCheckBox(
+            self.tr(
+                "Automatically delete .dds files if no corresponding .png file exists"
+            )
+        )
+        self.auto_delete_orphaned_dds_checkbox.setToolTip(
+            self.tr(
+                "This will delete .dds files that are not paired with a .png file,\n\n"
+                "This checks may take few seconds depending on the number of .dds files present."
+            )
+        )
+        group_layout.addWidget(self.auto_delete_orphaned_dds_checkbox)
+
+        # Connect radio buttons to enable/disable custom command input
+        self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
+        self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
+
+    def _on_preset_radio_toggled(self, checked: bool) -> None:
+        if self.todds_preset_custom_radio.isChecked():
+            self.todds_custom_command_lineedit.setEnabled(True)
+        else:
+            self.todds_custom_command_lineedit.setEnabled(False)
 
     def _do_themes_tab(self) -> None:
         tab = QWidget()
@@ -958,8 +1082,8 @@ class SettingsDialog(QDialog):
 
         size_note = QLabel(
             self.tr(
-                f"Min is {Settings.MIN_SIZE} and Max is {Settings.MAX_SIZE}. Values outside this range will be reset to defaults."
-            )
+                "Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults."
+            ).format(MIN_SIZE=Settings.MIN_SIZE, MAX_SIZE=Settings.MAX_SIZE)
         )
         size_note.setFont(GUIInfo().emphasis_font)
         size_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1093,6 +1217,11 @@ class SettingsDialog(QDialog):
         self.font_family_combobox.setCurrentFont(default_font)
         self.font_size_spinbox.setValue(12)
 
+    def enable_aux_db_time_limit_line_edit(self) -> None:
+        """Enables/Disables aux DB time limit line edit based on the checkbox state."""
+        enable = self.enable_aux_db_behavior_editing.isChecked()
+        self.aux_db_time_limit.setEnabled(enable)
+
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
         from app.controllers.theme_controller import ThemeController
@@ -1204,10 +1333,16 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
+        # Moved to Performance tab under "Integration with recent save"
+
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             self.tr("Show duplicate mods warning")
         )
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
+
+        # Clear button behavior
+        self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
+        group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
         self.show_mod_updates_checkbox = QCheckBox(
             self.tr("Check for mod updates on refresh")
@@ -1227,12 +1362,38 @@ class SettingsDialog(QDialog):
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
             self.tr(
                 "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
             )
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
+
+        # Dependencies: alternativePackageIds support
+        self.consider_alternative_package_ids_checkbox = QCheckBox(
+            self.tr("Consider alternativePackageIds as satisfying dependencies")
+        )
+        self.consider_alternative_package_ids_checkbox.setToolTip(
+            self.tr(
+                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing."
+            )
+        )
+        group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
+
+        self.enable_advanced_filtering_checkbox = QCheckBox(
+            self.tr("Enable advanced filtering options")
+        )
+        self.enable_advanced_filtering_checkbox.setToolTip(
+            self.tr(
+                "If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. "
+                "Disabling this can improve performance by avoiding heavy calculations."
+            )
+        )
+        group_layout.addWidget(self.enable_advanced_filtering_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")
@@ -1244,6 +1405,19 @@ class SettingsDialog(QDialog):
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
+
+        # Prefer versioned About.xml tags over base tags
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
+        self.prefer_versioned_about_tags_checkbox.setToolTip(
+            self.tr(
+                "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
+                "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
+                "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
+            )
+        )
+        group_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

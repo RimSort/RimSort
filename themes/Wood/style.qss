@@ -511,6 +511,16 @@ QWidget#descriptionWidget {
     padding-right: 5px;
     color: #ffffff;
 }
+QTextEdit#userModNotes {
+    background-color: #3b2f2f;
+    border-style: solid;
+    border-color: #5a4a4a;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 2px; /* The sharp corner of the text box clips out */
+    padding-right: 5px;
+    color: #ffffff;
+}
 /* Text, minus scroll bar */
 QWidget#descriptionContent { 
     background-color: #3b2f2f;

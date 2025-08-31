@@ -21,6 +21,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
+from app.utils.app_info import AppInfo
 
 translate = QCoreApplication.translate
 
@@ -345,10 +346,31 @@ def platform_specific_open(path: str | Path) -> None:
             subprocess.Popen(["open", path])
     elif sys.platform == "win32":
         logger.info(f"Opening {path} with startfile on Windows")
-        os.startfile(path)
+        try:
+            os.startfile(path)
+        except OSError as e:
+            # Handle cases where no default application is associated
+            if e.winerror == -2147221003:  # Application not found
+                logger.warning(
+                    f"No default application found for {path}, trying notepad"
+                )
+                # Try to open with notepad as fallback
+                try:
+                    subprocess.Popen(["notepad.exe", path])
+                except Exception as notepad_error:
+                    logger.error(f"Failed to open with notepad: {notepad_error}")
+                    dialogue.show_warning(
+                        title="Failed to open file",
+                        text="Could not open the file",
+                        information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
+                        details=str(e),
+                    )
+            else:
+                # Re-raise other OSErrors
+                raise
     elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
-        subprocess.Popen(["xdg-open", path])
+        subprocess.Popen(["xdg-open", path], env=dict(os.environ, LD_LIBRARY_PATH=""))
     else:
         logger.error("Attempting to open directory on an unknown system")
 
@@ -378,6 +400,9 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
         return list(obj)
     elif isinstance(obj, list):
         return [flatten_to_list(e) for e in obj]
+    elif isinstance(obj, tuple):
+        # Convert tuples to lists and recurse into elements
+        return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
         return {k: flatten_to_list(v) for k, v in obj.items()}
     else:
@@ -386,18 +411,25 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
 
 def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
-    Function to upload data to http://0x0.st/
+    Function to upload data to https://0x0.st/
 
     :param path: a string path to a file containing data to upload
-    :return: a string that is the URL returned from http://0x0.st/
+    :return: a string that is the URL returned from https://0x0.st/
     """
-    logger.info(f"Uploading data to http://0x0.st/: {path}")
+    logger.info(f"Uploading data to https://0x0.st/: {path}")
     try:
-        request = requests.post(
-            url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
-        )
+        with open(path, "rb") as f:
+            headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
+            request = requests.post(
+                url="https://0x0.st/",
+                files={"file": (Path(path).name, f)},
+                headers=headers,
+            )
     except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error. Failed to upload data to http://0x0.st: {e}")
+        logger.error(f"Connection Error. Failed to upload data to https://0x0.st: {e}")
+        return False, str(e)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request Error. Failed to upload data to https://0x0.st: {e}")
         return False, str(e)
 
     if request.status_code == 200:
@@ -405,10 +437,11 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
         return True, url
     else:
+        body_snippet = request.text.strip()
         logger.warning(
-            f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
+            f"Failed to upload data to https://0x0.st. Status code: {request.status_code}; body: {body_snippet[:200]}"
         )
-        return False, f"Status code: {request.status_code}"
+        return False, f"Status code: {request.status_code}\n{body_snippet}"
 
 
 def extract_git_dir_name(url: str) -> str:

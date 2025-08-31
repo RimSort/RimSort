@@ -6,8 +6,10 @@ from pathlib import Path
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
+from sqlalchemy import text
 
 from app.controllers.language_controller import LanguageController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -64,6 +66,8 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
+        self.change_mod_coloring_mode = False
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -107,6 +111,14 @@ class SettingsController(QObject):
         # Settings Window (only custom option, spinboxes always enabled)
         self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
         self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
+
+        # Advanced: wiring for save-comparison indicator toggle
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
+                self._on_toggle_show_save_comparison_indicators
+            )
+        except Exception:
+            pass
 
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
@@ -291,6 +303,19 @@ class SettingsController(QObject):
             self._on_theme_location_open_button_clicked
         )
 
+        # Advanced tab
+        self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
+            self._on_use_background_coloring_checkbox_changed
+        )
+
+        # Performance tab
+        self._enable_aux_db_performance_mode()
+        self.settings_dialog.aux_db_performance_mode.stateChanged.connect(
+            self._enable_aux_db_performance_mode
+        )
+
+        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
+
         # Connect signals from dialogs
         EventBus().reset_settings_file.connect(self._do_reset_settings_file)
 
@@ -368,6 +393,12 @@ class SettingsController(QObject):
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
+
+    @Slot(bool)
+    def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:
+        # Update model immediately for live UI response
+        self.settings.show_save_comparison_indicators = checked
+        self.settings.save()
 
     def create_instance(
         self,
@@ -533,6 +564,12 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
+        self.settings_dialog.aux_db_time_limit.setText(
+            str(self.settings.aux_db_time_limit)
+        )
+        self.settings_dialog.aux_db_time_limit.setEnabled(
+            self.settings.enable_aux_db_behavior_editing
+        )
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -684,9 +721,14 @@ class SettingsController(QObject):
 
         # todds tab
         if self.settings.todds_preset == "optimized":
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
+        elif self.settings.todds_preset == "custom":
+            self.settings_dialog.todds_preset_custom_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(True)
         else:
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
         if self.settings.todds_active_mods_target:
             self.settings_dialog.todds_active_mods_only_radio.setChecked(True)
         else:
@@ -696,6 +738,12 @@ class SettingsController(QObject):
         )
         self.settings_dialog.todds_overwrite_checkbox.setChecked(
             self.settings.todds_overwrite
+        )
+        self.settings_dialog.todds_custom_command_lineedit.setText(
+            self.settings.todds_custom_command
+        )
+        self.settings_dialog.auto_delete_orphaned_dds_checkbox.setChecked(
+            self.settings.auto_delete_orphaned_dds
         )
 
         # Themes tab
@@ -713,6 +761,14 @@ class SettingsController(QObject):
         self.language_controller.setup_language_dialog(
             self.settings_dialog, self.settings
         )
+
+        # Advanced tab values
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
+                self.settings.show_save_comparison_indicators
+            )
+        except Exception:
+            pass
 
         # Windows launch state
         # Main Window
@@ -781,8 +837,15 @@ class SettingsController(QObject):
         self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering_toggle
         )
+        self.settings_dialog.color_background_instead_of_text_checkbox.setChecked(
+            self.settings.color_background_instead_of_text_toggle
+        )
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
+        )
+        # Clear button behavior
+        self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
+            self.settings.clear_moves_dlc
         )
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
@@ -800,6 +863,33 @@ class SettingsController(QObject):
         )
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
+        )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
+                self.settings.consider_alternative_package_ids
+            )
+        except Exception:
+            pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(
+                self.settings.prefer_versioned_about_tags
+            )
+        except Exception:
+            pass
+        # Advanced: enable advanced filtering toggle
+        try:
+            self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
+                self.settings.enable_advanced_filtering
+            )
+        except Exception:
+            pass
+        self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
+            self.settings.enable_aux_db_behavior_editing
+        )
+        self.settings_dialog.aux_db_performance_mode.setChecked(
+            self.settings.enable_aux_db_performance_mode
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -904,6 +994,13 @@ class SettingsController(QObject):
         self.settings.external_use_this_instead_repo_path = (
             self.settings_dialog.use_this_instead_db_github_url.text()
         )
+        try:
+            self.settings.aux_db_time_limit = int(
+                self.settings_dialog.aux_db_time_limit.text()
+            )
+        except Exception:
+            logger.warning("Failed setting Aux DB time limit, falling back to -1")
+            self.settings.aux_db_time_limit = -1
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
@@ -951,8 +1048,13 @@ class SettingsController(QObject):
         ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
-        if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
+        if self.settings_dialog.todds_preset_optimized_radio.isChecked():
             self.settings.todds_preset = "optimized"
+        if self.settings_dialog.todds_preset_custom_radio.isChecked():
+            self.settings.todds_preset = "custom"
+            self.settings.todds_custom_command = (
+                self.settings_dialog.todds_custom_command_lineedit.text()
+            )
         else:
             self.settings.todds_preset = "optimized"
         if self.settings_dialog.todds_active_mods_only_radio.isChecked():
@@ -964,6 +1066,9 @@ class SettingsController(QObject):
         )
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
+        )
+        self.settings.auto_delete_orphaned_dds = (
+            self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
         )
 
         # Themes tab
@@ -1031,8 +1136,15 @@ class SettingsController(QObject):
         self.settings.hide_invalid_mods_when_filtering_toggle = (
             self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
         )
+        self.settings.color_background_instead_of_text_toggle = (
+            self.settings_dialog.color_background_instead_of_text_checkbox.isChecked()
+        )
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
+        )
+        # Clear button behavior
+        self.settings.clear_moves_dlc = (
+            self.settings_dialog.clear_moves_dlc_checkbox.isChecked()
         )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
@@ -1050,6 +1162,31 @@ class SettingsController(QObject):
         )
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
+        # Advanced: alternativePackageIds toggle
+        try:
+            self.settings.consider_alternative_package_ids = self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
+        except Exception:
+            pass
+        # Advanced: enable advanced filtering toggle
+        try:
+            self.settings.enable_advanced_filtering = (
+                self.settings_dialog.enable_advanced_filtering_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        # Prefer versioned About.xml tags over base tags
+        try:
+            self.settings.prefer_versioned_about_tags = (
+                self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
+            )
+        except Exception:
+            pass
+        self.settings.enable_aux_db_behavior_editing = (
+            self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
+        )
+        self.settings.enable_aux_db_performance_mode = (
+            self.settings_dialog.aux_db_performance_mode.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
@@ -1857,3 +1994,37 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
+
+    @Slot()
+    def _on_use_background_coloring_checkbox_changed(self) -> None:
+        self.change_mod_coloring_mode = not self.change_mod_coloring_mode
+
+    @Slot()
+    def _enable_aux_db_performance_mode(self) -> None:
+        """
+        Enable/disable the auxiliary metadata database performance mode based on the checkbox state.
+        """
+        instance_path = Path(self.settings.current_instance_path)
+        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+            instance_path / "aux_metadata.db"
+        )
+        with aux_metadata_controller.Session() as session:
+            if self.settings_dialog.aux_db_performance_mode.isChecked():
+                session.execute(text("PRAGMA synchronous = OFF"))
+                session.execute(text("PRAGMA journal_mode = MEMORY"))
+            else:
+                session.execute(text("PRAGMA synchronous = FULL"))
+                session.execute(text("PRAGMA journal_mode = DELETE"))
+
+            session.commit()
+            session.close()
+
+    @Slot()
+    def _handle_mod_coloring_mode_changed(self) -> None:
+        """
+        If user changes coloring from text to background or vice versa,
+        update all mod items to use that coloring mode.
+        """
+        if self.change_mod_coloring_mode:
+            self.change_mod_coloring_mode = False
+            EventBus().do_change_mod_coloring_mode.emit()

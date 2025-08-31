@@ -2,6 +2,157 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU">
 <context>
+    <name>AcfLogReader</name>
+    <message>
+        <source>Ready</source>
+        <translation type="unfinished">Готово</translation>
+    </message>
+    <message>
+        <source>Search...</source>
+        <translation type="unfinished">Поиск...</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished">Обновить</translation>
+    </message>
+    <message>
+        <source>Import ACF Data</source>
+        <translation type="unfinished">Импортировать данные ACF</translation>
+    </message>
+    <message>
+        <source>Export ACF Data</source>
+        <translation type="unfinished">Экспортировать данные ACF</translation>
+    </message>
+    <message>
+        <source>Export to CSV</source>
+        <translation type="unfinished">Экспортировать в CSV</translation>
+    </message>
+    <message>
+        <source>Loaded {count} items | Last updated: {time}</source>
+        <translation type="unfinished">Загружено {count} элементов | Последнее обновление: {time}</translation>
+    </message>
+    <message>
+        <source>Export canceled by user.</source>
+        <translation type="unfinished">Экспорт отменен пользователем.</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation type="unfinished">Экспорт не удался: Доступ запрещен - проверьте права доступа к файлам</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation type="unfinished">Ошибка экспорта</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error - {e}</source>
+        <translation type="unfinished">Экспорт не удался: Ошибка файловой системы - {e}</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error</source>
+        <translation type="unfinished">Экспорт не удался: Ошибка файловой системы</translation>
+    </message>
+    <message>
+        <source>Exporting to CSV...</source>
+        <translation type="unfinished">Экспорт в CSV...</translation>
+    </message>
+    <message>
+        <source>Exporting rows...</source>
+        <translation type="unfinished">Экспорт строк...</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Отмена</translation>
+    </message>
+    <message>
+        <source>Export failed due to an unknown error</source>
+        <translation type="unfinished">Экспорт не удался из-за неизвестной ошибки</translation>
+    </message>
+    <message>
+        <source>View in Steam Workshop</source>
+        <translation type="unfinished">Просмотреть в Steam Workshop</translation>
+    </message>
+    <message>
+        <source>Open Mod Folder</source>
+        <translation type="unfinished">Открыть папку мода</translation>
+    </message>
+    <message>
+        <source>Published File ID</source>
+        <translation type="unfinished">ID опубликованного файла</translation>
+    </message>
+    <message>
+        <source>Mod downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">Тип</translation>
+    </message>
+    <message>
+        <source>Mod Name</source>
+        <translation type="unfinished">Имя мода</translation>
+    </message>
+    <message>
+        <source>Mod Path</source>
+        <translation type="unfinished">Путь к моду</translation>
+    </message>
+    <message>
+        <source>Conform acf import</source>
+        <translation type="unfinished">Соответствовать импорту acf</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation type="unfinished">Это заменит ваш текущий файл .acf steamcmd</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
+        <translation type="unfinished">Вы уверены, что хотите импортировать .acf? Это работает только для steamcmd</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished">Импортировать .acf</translation>
+    </message>
+    <message>
+        <source>SteamCMD interface not properly initialized</source>
+        <translation type="unfinished">Интерфейс SteamCMD не инициализирован должным образом</translation>
+    </message>
+    <message>
+        <source>ACF file not found: {acf_path}</source>
+        <translation type="unfinished">Файл ACF не найден: {acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation type="unfinished">Файл ACF не найден по адресу: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Invalid file path provided for export: {file_path}</source>
+        <translation type="unfinished">Предоставлен недопустимый путь к файлу для экспорта: {file_path}</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation type="unfinished">Успешно экспортирован ACF в {file_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation type="unfinished">Экспорт успешен</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation type="unfinished">Экспорт не удался: {e}</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation type="unfinished">Экспорт не удался</translation>
+    </message>
+    <message>
+        <source>Exportfailed unknown exception occurred</source>
+        <translation type="unfinished">Экспорт не удался: произошла неизвестная ошибка</translation>
+    </message>
+</context>
+<context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
@@ -318,10 +469,6 @@ When unchecked, search all file types with standard search.</source>
         <translation>Результаты поиска:</translation>
     </message>
     <message>
-        <source>Double-click a result to open the file</source>
-        <translation>Дважды щелкните результат, чтобы открыть файл</translation>
-    </message>
-    <message>
         <source>Mod Name</source>
         <translation>Имя мода</translation>
     </message>
@@ -374,10 +521,6 @@ When unchecked, search all file types with standard search.</source>
         <translation>Редактор по умолчанию</translation>
     </message>
     <message>
-        <source>Double-click to open file</source>
-        <translation>Дважды щелкните, чтобы открыть файл</translation>
-    </message>
-    <message>
         <source>Clear Recent Searches</source>
         <translation>Очистить недавние поиски</translation>
     </message>
@@ -388,6 +531,14 @@ When unchecked, search all file types with standard search.</source>
     <message>
         <source>Found {total_rows} results</source>
         <translation>Найдено {total_rows} результатов</translation>
+    </message>
+    <message>
+        <source>Right-click a result for actions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Right-click for actions</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -402,154 +553,22 @@ When unchecked, search all file types with standard search.</source>
     </message>
 </context>
 <context>
-    <name>LogReader</name>
+    <name>LanguageController</name>
     <message>
-        <source>Ready</source>
-        <translation>Готово</translation>
+        <source>Language Changed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Search...</source>
-        <translation>Поиск...</translation>
+        <source>The language has been updated.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh</source>
-        <translation>Обновить</translation>
+        <source>Restart the application to apply the change. Restart now?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Import ACF Data</source>
-        <translation>Импортировать данные ACF</translation>
-    </message>
-    <message>
-        <source>Export ACF Data</source>
-        <translation>Экспортировать данные ACF</translation>
-    </message>
-    <message>
-        <source>Export to CSV</source>
-        <translation>Экспортировать в CSV</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Загружено {count} элементов | Последнее обновление: {time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>Экспорт отменен пользователем.</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>Экспорт не удался: Доступ запрещен - проверьте права доступа к файлам</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>Ошибка экспорта</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>Экспорт не удался: Ошибка файловой системы - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>Экспорт не удался: Ошибка файловой системы</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>Экспорт в CSV...</translation>
-    </message>
-    <message>
-        <source>Exporting rows...</source>
-        <translation>Экспорт строк...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>Экспорт не удался из-за неизвестной ошибки</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Просмотреть в Steam Workshop</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>Открыть папку мода</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>ID опубликованного файла</translation>
-    </message>
-    <message>
-        <source>Last Updated</source>
-        <translation>Последнее обновление</translation>
-    </message>
-    <message>
-        <source>Relative Time</source>
-        <translation>Относительное время</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Тип</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Название мода</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>Путь к моду</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>Соответствовать импорту acf</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>Это заменит ваш текущий файл .acf steamcmd</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation>Вы уверены, что хотите импортировать .acf? Это работает только для steamcmd</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>Интерфейс SteamCMD не инициализирован должным образом</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>Файл ACF не найден: {acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>Файл ACF не найден по адресу: {acf_path}</translation>
-    </message>
-    <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Предоставлен недопустимый путь к файлу для экспорта: {file_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>Успешно экспортирован ACF в {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>Экспорт успешен</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>Экспорт не удался: {e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>Экспорт не удался</translation>
-    </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>Экспорт не удался: произошла неизвестная ошибка</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation type="unfinished">Импортировать .acf</translation>
+        <source>Restart</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -641,10 +660,6 @@ Do you want to update now?</source>
     <message>
         <source>Failed to download latest RimSort release!</source>
         <translation>Не удалось загрузить последнюю версию RimSort!</translation>
-    </message>
-    <message>
-        <source>RimSort is up to date!</source>
-        <translation>RimSort обновлен до последней версии!</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -769,10 +784,6 @@ Do you want to update now?</source>
     <message>
         <source>Uploaded file</source>
         <translation>Файл загружен</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to http://0x0.st/</source>
-        <translation>Загружен {path.name} на http://0x0.st/</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:
@@ -1151,10 +1162,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>Не удалось прочитать существующую базу данных!</translation>
     </message>
     <message>
-        <source>You are already running the latest release: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1197,6 +1204,18 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>Run Anyway</source>
         <translation>Всё равно запустить</translation>
+    </message>
+    <message>
+        <source>Import from RimWorld Save File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimWorld save (*.rws);;All files (*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uploaded {path.name} to https://0x0.st/</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1803,10 +1822,6 @@ Error: {error}</source>
         <translation>Основной контент</translation>
     </message>
     <message>
-        <source>Log Reader</source>
-        <translation>Читатель журналов</translation>
-    </message>
-    <message>
         <source>File Search</source>
         <translation>Поиск файлов</translation>
     </message>
@@ -2030,6 +2045,10 @@ RimSort может скопировать все ваши моды Workshop в �
         <source>Cancelled</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>ACF Log Reader</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2216,6 +2235,14 @@ RimSort может скопировать все ваши моды Workshop в �
     <message>
         <source>RimSort Wiki…</source>
         <translation>Вики RimSort…</translation>
+    </message>
+    <message>
+        <source>From Save file…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort GitHub…</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2489,20 +2516,6 @@ Do you want to proceed?</source>
 Вы уверены, что хотите продолжить?</translation>
     </message>
     <message>
-        <source>Steam {action.capitalize()}</source>
-        <translation>Steam {action.capitalize()}</translation>
-    </message>
-    <message>
-        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation>Успешно инициировано {action} из {len(publishedfileids)} модов Steam Workshop.
-Процесс может занять несколько минут.</translation>
-    </message>
-    <message>
-        <source>{action.capitalize()} Error</source>
-        <translation>{action.capitalize()} Ошибка</translation>
-    </message>
-    <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>Произошла ошибка при попытке {action} из модов Steam Workshop.</translation>
     </message>
@@ -2511,32 +2524,55 @@ The process may take a few moments to complete.</source>
         <translation>Пожалуйста, выберите хотя бы один мод для удаления и {action}.</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action.capitalize()}</source>
-        <translation>Подтвердите удаление и {action.capitalize()}</translation>
+        <source>Deletion options</source>
+        <translation>Опции удаления</translation>
     </message>
     <message>
-        <source>You have selected {len(selected_mods)} mod(s) for deletion.
-{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
-        <translation>Вы выбрали {len(selected_mods)} мод(ов) для удаления.
-{len(steam_mods)} из них являются модами Steam Workshop, которые также будут {action}d.</translation>
+        <source>Steam {action}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{action} Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>
 This operation will:
 • Delete the selected mod directories from your filesystem
-• {action.capitalize()} Steam Workshop mods from your Steam account
+• {action} Steam Workshop mods from your Steam account
 
 Do you want to proceed?</source>
-        <translation>
-Эта операция:
-• Удалит выбранные каталоги модов из вашей файловой системы
-• {action.capitalize()} моды Steam Workshop из вашей учетной записи Steam
-
-Вы хотите продолжить?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Deletion options</source>
-        <translation>Опции удаления</translation>
+        <source>unsubscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>resubscribe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unsubscribed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>resubscribed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2573,6 +2609,22 @@ Do you want to proceed?</source>
         <source>Welcome to RimSort!</source>
         <translation>Добро пожаловать в RimSort!</translation>
     </message>
+    <message>
+        <source>Folder Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Last Touched:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filesystem Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Times:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2603,6 +2655,14 @@ Do you want to proceed?</source>
     <message>
         <source>Subscribed via Steam</source>
         <translation>Подписано через Steam</translation>
+    </message>
+    <message>
+        <source>Not in latest save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In latest save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2808,6 +2868,25 @@ Should be Loaded Before:</source>
         <translation>
 Должен загружаться перед:</translation>
     </message>
+    <message>
+        <source>Change mod color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset mod color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+Mod and Game Version Mismatch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+An alternative updated mod is recommended:
+{alternative}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2875,6 +2954,38 @@ Should be Loaded Before:</source>
         <translation>Неактивные [0]</translation>
     </message>
     <message>
+        <source>Modified Time</source>
+        <translation>Время изменения</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Автор</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>Размер папки</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>Переключить порядок сортировки</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>По убыв.</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>По возр.</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>Вычисление размеров папок...</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>Обновление списка...</translation>
+    </message>
+    <message>
         <source>Search by...</source>
         <translation>Поиск по...</translation>
     </message>
@@ -2937,6 +3048,22 @@ Should be Loaded Before:</source>
     <message>
         <source>Inactive</source>
         <translation>Неактивный</translation>
+    </message>
+    <message>
+        <source>Sort inactive mods by</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>0 new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click to only show active mods not in latest save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3163,6 +3290,10 @@ Should be Loaded Before:</source>
         <source>User Rules (incompatibilitiesWith)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Force load at top of list</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RunnerPanel</name>
@@ -3318,10 +3449,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     <message>
         <source>Local mods location</source>
         <translation>Местоположение локальных модов</translation>
-    </message>
-    <message>
-        <source>Game location sets local mods location.</source>
-        <translation>Местоположение игры устанавливает местоположение локальных модов.</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3696,44 +3823,117 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Срок действия базы данных в секундах, например, 604800 для 7 дней и 0 для отсутствия срока действия.</translation>
     </message>
     <message>
-        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
-        <translation>Конфигурация размера окна обнаружила размер отображения окна: {max_width} x {max_height} пикселей</translation>
-    </message>
-    <message>
-        <source>Reset Window Size based on Screen Dimensions</source>
-        <translation>Сбросить размер окна на основе размеров экрана</translation>
-    </message>
-    <message>
-        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
-        <translation>Предупреждение: Окно может не поместиться на текущем экране! Пожалуйста, отрегулируйте значения.</translation>
-    </message>
-    <message>
         <source>Authentication</source>
         <translation>Аутентификация</translation>
     </message>
     <message>
-        <source>Window X Position (px): minimum: 100, maximum: {}</source>
-        <translation>Позиция окна X (пиксели): минимум: 100, максимум: {}</translation>
+        <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
-        <translation>Позиция окна Y (пиксели): минимум: 100, максимум: {}</translation>
+        <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Width (px): minimum: 600, maximum: {}</source>
-        <translation>Ширина окна (пиксели): минимум: 600, максимум: {}</translation>
+        <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Window Height (px): minimum: 400, maximum: {}</source>
-        <translation>Высота окна (пиксели): минимум: 400, максимум: {}</translation>
+        <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Panel Width (px): minimum: 600, maximum: {}</source>
-        <translation>Ширина панели (пиксели): минимум: 600, максимум: {}</translation>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Panel Height (px): minimum: 400, maximum: {}</source>
-        <translation>Высота панели (пиксели): минимум: 400, максимум: {}</translation>
+        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable editing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Auxiliary Metadata DB performance mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
+Improves performance by ~50%.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete before update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is useful if you want to ensure clean mod updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply mod coloring to background instead of text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auxiliary DB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compare mod lists with the recent save file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3916,6 +4116,14 @@ New symlink:
         <translation>Новая символическая ссылка:
 [{symlink_source_path}] -&gt; </translation>
     </message>
+    <message>
+        <source>&amp;Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Don&apos;t Ask Again</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ThemeController</name>
@@ -4047,10 +4255,6 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Location Error</source>
         <translation>Ошибка расположения</translation>
-    </message>
-    <message>
-        <source>Failed to get Location: {save_path}.</source>
-        <translation>Не удалось получить расположение: {save_path}.</translation>
     </message>
     <message>
         <source>Confirm Export</source>
@@ -4202,16 +4406,16 @@ Details: {e}</source>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
         <translation>Вы не являетесь пользователем Steam, или путь не установлен, пожалуйста, проверьте настройки и попробуйте снова.</translation>
     </message>
+    <message>
+        <source>Error: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
         <translation>Восстановление файлов игры</translation>
-    </message>
-    <message>
-        <source>⚠️ Warning: These operations will delete selected files permanently!</source>
-        <translation>⚠️ Внимание: Эти операции навсегда удалят выбранные файлы!</translation>
     </message>
     <message>
         <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
@@ -4258,16 +4462,8 @@ Details: {e}</source>
         <translation>Применить восстановление</translation>
     </message>
     <message>
-        <source>Apply the selected recovery options</source>
-        <translation>Применить выбранные варианты восстановления</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>Cancel and clear selections</source>
-        <translation>Отмена и очистка выборов</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
@@ -4302,32 +4498,12 @@ Details: {e}</source>
         <translation>Импортировать список модов из файла</translation>
     </message>
     <message>
-        <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation>⚠️ ВНИМАНИЕ: Это удалит все моды в вашей папке Mods и сбросит игру до состояния по умолчанию</translation>
-    </message>
-    <message>
-        <source>Clear Mods</source>
-        <translation>Очистить моды</translation>
-    </message>
-    <message>
         <source>Delete all mods and reset to vanilla state</source>
         <translation>Удалить все моды и сбросить до состояния по умолчанию</translation>
     </message>
     <message>
         <source>Steam Utilities</source>
         <translation>Утилиты Steam</translation>
-    </message>
-    <message>
-        <source>🔄 Clear Download Cache</source>
-        <translation>🔄 Очистить кэш загрузки</translation>
-    </message>
-    <message>
-        <source>✓ Verify Game Files</source>
-        <translation>✓ Проверить файлы игры</translation>
-    </message>
-    <message>
-        <source>🔧 Repair Steam library</source>
-        <translation>🔧 Восстановить библиотеку Steam</translation>
     </message>
     <message>
         <source>Delete Steam&apos;s downloading folder to fix download issues</source>
@@ -4340,6 +4516,46 @@ Details: {e}</source>
     <message>
         <source>Verify integrity of all installed Steam games</source>
         <translation>Проверить целостность всех установленных игр Steam</translation>
+    </message>
+    <message>
+        <source>Warning: These operations will delete selected files permanently!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset to Vanilla</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear All Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam-specific utilities to help resolve download and game file issues.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear Download Cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repair Steam Library</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4578,27 +4794,6 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_conditional</name>
-    <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_information</name>
-    <message>
-        <source>OK</source>
-        <translation>ОК</translation>
-    </message>
-</context>
-<context>
-    <name>show_warning</name>
-    <message>
-        <source>OK</source>
-        <translation>ОК</translation>
     </message>
 </context>
 <context>

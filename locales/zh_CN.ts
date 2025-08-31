@@ -2,6 +2,157 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN">
 <context>
+    <name>AcfLogReader</name>
+    <message>
+        <source>Ready</source>
+        <translation>准备</translation>
+    </message>
+    <message>
+        <source>Search...</source>
+        <translation>搜索...</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <source>Import ACF Data</source>
+        <translation>导入 ACF 数据</translation>
+    </message>
+    <message>
+        <source>Export ACF Data</source>
+        <translation>导出 ACF 数据</translation>
+    </message>
+    <message>
+        <source>Export to CSV</source>
+        <translation>导出为 CSV</translation>
+    </message>
+    <message>
+        <source>Loaded {count} items | Last updated: {time}</source>
+        <translation>加载 {count} 项，最后更新时间：{time}</translation>
+    </message>
+    <message>
+        <source>Export canceled by user.</source>
+        <translation>导出被用户取消。</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>导出失败：权限不足 - 请检查文件权限</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>导出错误</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error - {e}</source>
+        <translation>导出失败：文件系统错误 - {e}</translation>
+    </message>
+    <message>
+        <source>Export failed: File system error</source>
+        <translation>导出失败：文件系统错误</translation>
+    </message>
+    <message>
+        <source>Exporting to CSV...</source>
+        <translation>导出到 CSV...</translation>
+    </message>
+    <message>
+        <source>Exporting rows...</source>
+        <translation>导出行...</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Export failed due to an unknown error</source>
+        <translation>导出失败：未知错误</translation>
+    </message>
+    <message>
+        <source>View in Steam Workshop</source>
+        <translation>在 Steam 创意工坊中查看</translation>
+    </message>
+    <message>
+        <source>Open Mod Folder</source>
+        <translation>打开模组文件夹</translation>
+    </message>
+    <message>
+        <source>Published File ID</source>
+        <translation>发布文件 ID</translation>
+    </message>
+    <message>
+        <source>Mod downloaded</source>
+        <translation>模组下载时间</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>工坊更新时间</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>类型</translation>
+    </message>
+    <message>
+        <source>Mod Name</source>
+        <translation>模组名称</translation>
+    </message>
+    <message>
+        <source>Mod Path</source>
+        <translation>模组路径</translation>
+    </message>
+    <message>
+        <source>Conform acf import</source>
+        <translation>确认导入 acf</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>这将替换你当前的 steamcmd .acf 文件</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
+        <translation>你确定要导入 .acf 吗？这仅适用于 steamcmd</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>导入 .acf</translation>
+    </message>
+    <message>
+        <source>SteamCMD interface not properly initialized</source>
+        <translation>SteamCMD 接口未正确初始化</translation>
+    </message>
+    <message>
+        <source>ACF file not found: {acf_path}</source>
+        <translation>未找到 ACF 文件：{acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>ACF 文件在此路径未找到：{acf_path}</translation>
+    </message>
+    <message>
+        <source>Invalid file path provided for export: {file_path}</source>
+        <translation>提供的导出文件路径无效: {file_path}</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>成功导出 ACF 到 {file_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>导出成功</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>导出失败：{e}</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>导出失败</translation>
+    </message>
+    <message>
+        <source>Exportfailed unknown exception occurred</source>
+        <translation>导出失败，发生未知异常</translation>
+    </message>
+</context>
+<context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
@@ -318,10 +469,6 @@ When unchecked, search all file types with standard search.</source>
         <translation>搜索结果：</translation>
     </message>
     <message>
-        <source>Double-click a result to open the file</source>
-        <translation>双击结果以打开文件</translation>
-    </message>
-    <message>
         <source>Mod Name</source>
         <translation>模组名称</translation>
     </message>
@@ -374,10 +521,6 @@ When unchecked, search all file types with standard search.</source>
         <translation>默认编辑器</translation>
     </message>
     <message>
-        <source>Double-click to open file</source>
-        <translation>双击打开文件</translation>
-    </message>
-    <message>
         <source>Clear Recent Searches</source>
         <translation>清除历史记录</translation>
     </message>
@@ -388,6 +531,14 @@ When unchecked, search all file types with standard search.</source>
     <message>
         <source>Found {total_rows} results</source>
         <translation>共找到 {total_rows} 个结果</translation>
+    </message>
+    <message>
+        <source>Right-click a result for actions</source>
+        <translation>右键单击结果以进行操作</translation>
+    </message>
+    <message>
+        <source>Right-click for actions</source>
+        <translation>右键单击以进行操作</translation>
     </message>
 </context>
 <context>
@@ -402,154 +553,22 @@ When unchecked, search all file types with standard search.</source>
     </message>
 </context>
 <context>
-    <name>LogReader</name>
+    <name>LanguageController</name>
     <message>
-        <source>Search...</source>
-        <translation>搜索...</translation>
+        <source>Language Changed</source>
+        <translation>语言已更改</translation>
     </message>
     <message>
-        <source>Refresh</source>
-        <translation>刷新</translation>
+        <source>The language has been updated.</source>
+        <translation>语言已更新</translation>
     </message>
     <message>
-        <source>Import ACF Data</source>
-        <translation>导入 ACF 数据</translation>
+        <source>Restart the application to apply the change. Restart now?</source>
+        <translation>需要重启应用程序以应用更改。现在重启吗？</translation>
     </message>
     <message>
-        <source>Export ACF Data</source>
-        <translation>导出 ACF 数据</translation>
-    </message>
-    <message>
-        <source>Export to CSV</source>
-        <translation>导出为 CSV</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>导出错误</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>导出失败：权限不足 - 请检查文件权限</translation>
-    </message>
-    <message>
-        <source>Ready</source>
-        <translation>准备</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>加载 {count} 项，最后更新时间：{time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>导出被用户取消。</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>导出失败：文件系统错误 - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>导出失败：文件系统错误</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>导出到 CSV</translation>
-    </message>
-    <message>
-        <source>Exporting rows...</source>
-        <translation>导出行...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>导出失败：未知错误</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>在 Steam 创意工坊中查看</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>打开模组文件夹</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>发布文件 ID</translation>
-    </message>
-    <message>
-        <source>Last Updated</source>
-        <translation>最后更新时间</translation>
-    </message>
-    <message>
-        <source>Relative Time</source>
-        <translation>相对时间</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>类型</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>模组名称</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>模组路径</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>确认导入 acf</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>这将替换你当前的 steamcmd .acf 文件</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation>你确定要导入 .acf 吗？这仅适用于 steamcmd</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>SteamCMD 接口未正确初始化</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>未找到 ACF 文件：{acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>ACF 文件在此路径未找到：{acf_path}</translation>
-    </message>
-    <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>提供的导出文件路径无效: {file_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>成功导出 ACF 到 {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>导出成功</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>导出失败：{e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>导出失败</translation>
-    </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>导出失败，发生未知异常</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation type="unfinished">导入 .acf</translation>
+        <source>Restart</source>
+        <translation>重启</translation>
     </message>
 </context>
 <context>
@@ -587,14 +606,6 @@ Would you like to configure them now?</source>
     <message>
         <source>Could not find data for some mods!</source>
         <translation>无法找到某些模组的数据！</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>以下列表中的模组在你的模组列表中设置为启用，但在本地/创意工坊模组路径中找不到这些模组的数据。
-
-你的游戏配置路径是否正确？</translation>
     </message>
     <message>
         <source>Update skipped</source>
@@ -641,10 +652,6 @@ Do you want to update now?</source>
     <message>
         <source>Failed to download latest RimSort release!</source>
         <translation>下载最新的 RimSort 版本失败！</translation>
-    </message>
-    <message>
-        <source>RimSort is up to date!</source>
-        <translation>RimSort 已是最新版本！</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
@@ -769,10 +776,6 @@ Do you want to update now?</source>
     <message>
         <source>Uploaded file</source>
         <translation>上传文件</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to http://0x0.st/</source>
-        <translation>上传 {path.name} 到 http://0x0.st/</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:
@@ -1151,36 +1154,32 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>替代为此</translation>
     </message>
     <message>
-        <source>You are already running the latest release: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort 已发布更新：{latest_tag_name}</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation type="unfinished"></translation>
+        <translation>未找到适用于 {system_info} 的有效 RimSort 版本</translation>
     </message>
     <message>
         <source>Unable to retrieve release information</source>
-        <translation type="unfinished"></translation>
+        <translation>无法获取版本信息</translation>
     </message>
     <message>
         <source>Failed to connect to GitHub API: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>无法连接到 GitHub API：{error}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在下载 RimSort {tag_name} 版本...</translation>
     </message>
     <message>
         <source>Failed to launch update</source>
-        <translation type="unfinished"></translation>
+        <translation>无法启动更新</translation>
     </message>
     <message>
         <source>Could not start the update process.</source>
-        <translation type="unfinished"></translation>
+        <translation>无法启动更新过程。</translation>
     </message>
     <message>
         <source>Unsaved Changes</source>
@@ -1188,7 +1187,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>You have unsaved changes. What would you like to do?</source>
-        <translation>您有未保存的更改。您想怎么做？</translation>
+        <translation>你有未保存的更改。你想怎么做？</translation>
     </message>
     <message>
         <source>Save and Run</source>
@@ -1197,6 +1196,24 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>Run Anyway</source>
         <translation>仍然运行</translation>
+    </message>
+    <message>
+        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
+
+Are your game configuration paths correct?</source>
+        <translation>你的游戏配置路径正确吗？</translation>
+    </message>
+    <message>
+        <source>Import from RimWorld Save File</source>
+        <translation>从 RimWorld 存档文件导入</translation>
+    </message>
+    <message>
+        <source>RimWorld save (*.rws);;All files (*.*)</source>
+        <translation>RimWorld 存档 (*.rws);;所有文件 (*.*)</translation>
+    </message>
+    <message>
+        <source>Uploaded {path.name} to https://0x0.st/</source>
+        <translation>已将 {path.name} 上传到 https://0x0.st/</translation>
     </message>
 </context>
 <context>
@@ -1631,7 +1648,7 @@ Please wait a moment for GitHub to set up the fork.</source>
     </message>
     <message>
         <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
-        <translation>您的本地更改与远程更改发生冲突。仓库已重置为干净状态，并应用了最新的远程更改。您的原始更改已保存在数据库文件中，并将被提交。</translation>
+        <translation>你的本地更改与远程更改发生冲突。仓库已重置为干净状态，并应用了最新的远程更改。你的原始更改已保存在数据库文件中，并将被提交。</translation>
     </message>
     <message>
         <source>Stash restore warning</source>
@@ -1643,7 +1660,7 @@ Please wait a moment for GitHub to set up the fork.</source>
     </message>
     <message>
         <source>Continuing with current state. Your database changes should still be present.</source>
-        <translation>继续当前状态。您的数据库更改应该仍然存在。</translation>
+        <translation>继续当前状态。你的数据库更改应该仍然存在。</translation>
     </message>
     <message>
         <source>Branch creation failed</source>
@@ -1719,7 +1736,7 @@ Do you want to open it in your web browser?
 
 URL: {url}</source>
         <translation>拉取请求创建成功。
-您想在网页浏览器中打开它吗？
+你想在网页浏览器中打开它吗？
 
 URL: {url}</translation>
     </message>
@@ -1737,9 +1754,9 @@ URL: {url}</translation>
 You can manually create a pull request on GitHub.
 
 Error: {error}</source>
-        <translation>更改已成功推送到您的分支，但拉取请求创建失败。
+        <translation>更改已成功推送到你的分支，但拉取请求创建失败。
 
-您可以在 GitHub 上手动创建拉取请求。
+你可以在 GitHub 上手动创建拉取请求。
 
 错误：{error}</translation>
     </message>
@@ -1749,11 +1766,11 @@ Error: {error}</source>
     </message>
     <message>
         <source>Are you sure you want to upload the Steam Workshop database to GitHub?</source>
-        <translation>您确定要将 Steam Workshop 数据库上传到 GitHub 吗？</translation>
+        <translation>你确定要将 Steam Workshop 数据库上传到 GitHub 吗？</translation>
     </message>
     <message>
         <source>This will create a pull request with your local database changes.</source>
-        <translation>这将创建一个包含您本地数据库更改的拉取请求。</translation>
+        <translation>这将创建一个包含你本地数据库更改的拉取请求。</translation>
     </message>
     <message>
         <source>Upload</source>
@@ -1765,11 +1782,11 @@ Error: {error}</source>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
-        <translation>您确定要将社区规则数据库上传到 GitHub 吗？</translation>
+        <translation>你确定要将社区规则数据库上传到 GitHub 吗？</translation>
     </message>
     <message>
         <source>{count} repositories were updated with their latest commits:</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} 个仓库已更新到最新提交：</translation>
     </message>
 </context>
 <context>
@@ -1803,10 +1820,6 @@ Error: {error}</source>
         <translation>主界面</translation>
     </message>
     <message>
-        <source>Log Reader</source>
-        <translation>日志查看器</translation>
-    </message>
-    <message>
         <source>File Search</source>
         <translation>文件搜索</translation>
     </message>
@@ -1821,14 +1834,6 @@ Error: {error}</source>
     <message>
         <source>&lt;h3&gt;Would you like to enable Steam Client Integration for this instance?&lt;/h3&gt;</source>
         <translation>&lt;h3&gt;你是否希望为此实例启用 Steam 客户端集成？&lt;/h3&gt;</translation>
-    </message>
-    <message>
-        <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
-                &lt;br&gt;&lt;br&gt;
-                You can change this in the settings under the Advanced tab.</source>
-        <translation>这允许你使用需要 Steam 客户端的 RimSort 功能。这包括，除了其他事情，取消订阅 workshop 模组和通过 Steam 客户端打开 workshop 链接。
-                &lt;br&gt;&lt;br&gt;
-                你可以在设置的高级标签下更改此设置。</translation>
     </message>
     <message>
         <source>Create new instance</source>
@@ -2020,15 +2025,27 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
     </message>
     <message>
         <source>Convert to SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>转换为 SteamCMD</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>保留创意工坊文件夹</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>已取消</translation>
+    </message>
+    <message>
+        <source>ACF Log Reader</source>
+        <translation>更新日志</translation>
+    </message>
+    <message>
+        <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
+                &lt;br&gt;&lt;br&gt;
+                You can change this in the settings under the Advanced tab.</source>
+        <translation>这将允许你使用需要 Steam 客户端的 RimSort 功能。这包括但不限于通过 Steam 客户端取消订阅创意工坊模组和打开创意工坊链接。
+                &lt;br&gt;&lt;br&gt;
+                你可以在设置的高级选项卡中更改此设置。</translation>
     </message>
 </context>
 <context>
@@ -2217,6 +2234,14 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
         <source>Help</source>
         <translation>帮助</translation>
     </message>
+    <message>
+        <source>RimSort GitHub…</source>
+        <translation>RimSort GitHub</translation>
+    </message>
+    <message>
+        <source>From Save file…</source>
+        <translation>从 游戏存档导入</translation>
+    </message>
 </context>
 <context>
     <name>MenuBarController</name>
@@ -2262,7 +2287,7 @@ Please make sure your Database location settings are correct.</source>
 
 Falling back to cached, but EXPIRED Steam Database...</source>
         <translation>Steam 数据库最后更新时间：{last_updated}
-        
+
 正在使用缓存但已过期的 Steam 数据库。</translation>
     </message>
     <message>
@@ -2334,21 +2359,6 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation>启用模组列表中缺少一些模组</translation>
     </message>
     <message>
-        <source>
-User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
-
-Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
-
-Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
-        <translation>
-已查询用户配置的 SteamDB 数据库。下表显示了可以从 Steam 下载的模组。
-
-Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 &apos;变体&apos;。在下载之前，请注意这一点。
-
-请选择你在下表中偏好的 模组变体。你也可以在 Steam 或网页浏览器中打开每个变体进行验证。&quot;
-        </translation>
-    </message>
-    <message>
         <source>Name</source>
         <translation>名称</translation>
     </message>
@@ -2375,6 +2385,20 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 &apos
     <message>
         <source>Download with Steam client</source>
         <translation>使用 Steam 客户端下载</translation>
+    </message>
+    <message>
+        <source>
+User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
+
+Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
+
+Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
+        <translation>
+已查询用户配置的 SteamDB 数据库。下表显示了可以从 Steam 下载的模组。
+
+Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 &apos;变体&apos;。在下载之前，请注意这一点。
+
+请选择你在下表中偏好的 模组变体。你也可以在 Steam 或网页浏览器中打开每个变体进行验证。&quot;</translation>
     </message>
 </context>
 <context>
@@ -2437,7 +2461,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 &apos
     </message>
     <message>
         <source>You have selected {count} mod(s) for complete deletion.</source>
-        <translation>您已选择 {count} 个模组进行完全删除。</translation>
+        <translation>你已选择 {count} 个模组进行完全删除。</translation>
     </message>
     <message>
         <source>
@@ -2447,7 +2471,7 @@ Do you want to proceed?</source>
         <translation>
 此操作将从文件系统中永久删除所选模组目录。
 
-您想继续吗？</translation>
+你想继续吗？</translation>
     </message>
     <message>
         <source>Please select at least one mod to process.</source>
@@ -2459,7 +2483,7 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation>您已选择 {count} 个模组进行 DDS 纹理删除。</translation>
+        <translation>你已选择 {count} 个模组进行 DDS 纹理删除。</translation>
     </message>
     <message>
         <source>
@@ -2469,7 +2493,7 @@ Do you want to proceed?</source>
         <translation>
 此操作将仅删除所选模组中的优化纹理（.dds 文件）。
 
-您想继续吗？</translation>
+你想继续吗？</translation>
     </message>
     <message>
         <source>Confirm Selective Deletion</source>
@@ -2477,7 +2501,7 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>You have selected {count} mod(s) for selective deletion.</source>
-        <translation>您已选择 {count} 个模组进行选择删除。</translation>
+        <translation>你已选择 {count} 个模组进行选择删除。</translation>
     </message>
     <message>
         <source>
@@ -2489,21 +2513,7 @@ Do you want to proceed?</source>
 此操作将删除所有模组文件，除了 .dds 纹理文件。
 .dds 文件将被保留。
 
-您想继续吗？</translation>
-    </message>
-    <message>
-        <source>Steam {action.capitalize()}</source>
-        <translation>Steam {action.capitalize()}</translation>
-    </message>
-    <message>
-        <source>Successfully initiated {action} from {len(publishedfileids)} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation>成功为 {len(publishedfileids)} 个 Steam Workshop 模组中启动 {action}。
-该过程可能需要几分钟才能完成。</translation>
-    </message>
-    <message>
-        <source>{action.capitalize()} Error</source>
-        <translation>{action.capitalize()} 错误</translation>
+你想继续吗？</translation>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
@@ -2514,32 +2524,62 @@ The process may take a few moments to complete.</source>
         <translation>请至少选择一个模组进行删除和 {action}。</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action.capitalize()}</source>
-        <translation>确认删除和 {action.capitalize()}</translation>
+        <source>Deletion options</source>
+        <translation>删除选项</translation>
     </message>
     <message>
-        <source>You have selected {len(selected_mods)} mod(s) for deletion.
-{len(steam_mods)} of these are Steam Workshop mods that will also be {action}d.</source>
-        <translation>您已选择 {len(selected_mods)} 个模组进行删除。
-其中 {len(steam_mods)} 个是 Steam Workshop 模组，也将被 {action}。</translation>
+        <source>Steam {action}</source>
+        <translation>Steam {action}</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
+The process may take a few moments to complete.</source>
+        <translation>成功对 {len} 个 Steam Workshop 模组中进行 {action}。
+该过程可能需要几分钟才能完成。</translation>
+    </message>
+    <message>
+        <source>{action} Error</source>
+        <translation>{action} 错误</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action}</source>
+        <translation>确认删除并 {action}</translation>
+    </message>
+    <message>
+        <source>You have selected {count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
+        <translation>你已选择 {count} 个模组进行删除。
+其中 {steam_count} 个是 Steam Workshop 模组，将被 {action}。</translation>
     </message>
     <message>
         <source>
 This operation will:
 • Delete the selected mod directories from your filesystem
-• {action.capitalize()} Steam Workshop mods from your Steam account
+• {action} Steam Workshop mods from your Steam account
 
 Do you want to proceed?</source>
         <translation>
 此操作将：
-• 从你的文件系统中删除所选模组目录
-• 从你的 Steam 账户中 {action.capitalize()} Steam Workshop 模组
+• 从你的文件系统中删除所选的模组目录
+• 从你的 Steam 账户中{action} Steam 创意工坊模组
 
-您想继续吗？</translation>
+你想继续吗？</translation>
     </message>
     <message>
-        <source>Deletion options</source>
-        <translation>删除选项</translation>
+        <source>unsubscribe</source>
+        <translation>取消订阅</translation>
+    </message>
+    <message>
+        <source>resubscribe</source>
+        <translation>重新订阅</translation>
+    </message>
+    <message>
+        <source>unsubscribed</source>
+        <translation>已取消订阅</translation>
+    </message>
+    <message>
+        <source>resubscribed</source>
+        <translation>已重新订阅</translation>
     </message>
 </context>
 <context>
@@ -2576,6 +2616,22 @@ Do you want to proceed?</source>
         <source>Welcome to RimSort!</source>
         <translation>欢迎使用 RimSort!</translation>
     </message>
+    <message>
+        <source>Folder Size:</source>
+        <translation>文件夹大小：</translation>
+    </message>
+    <message>
+        <source>Last Touched:</source>
+        <translation>最后修改：</translation>
+    </message>
+    <message>
+        <source>Filesystem Modified:</source>
+        <translation>文件系统修改：</translation>
+    </message>
+    <message>
+        <source>Workshop Times:</source>
+        <translation>创意工坊时间：</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2585,7 +2641,7 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Contains custom content (textures / XML)</source>
-        <translation>包含自定义内容（textures / XML)</translation>
+        <translation>包含自定义内容（纹理 / XML）</translation>
     </message>
     <message>
         <source>Local mod that contains a git repository</source>
@@ -2606,6 +2662,14 @@ Do you want to proceed?</source>
     <message>
         <source>Subscribed via Steam</source>
         <translation>通过 Steam 订阅</translation>
+    </message>
+    <message>
+        <source>Not in latest save</source>
+        <translation>不在最新存档中</translation>
+    </message>
+    <message>
+        <source>In latest save</source>
+        <translation>在最新存档中</translation>
     </message>
 </context>
 <context>
@@ -2812,6 +2876,28 @@ Should be Loaded Before:</source>
         <translation>
 应在以下模组之前加载：</translation>
     </message>
+    <message>
+        <source>
+Mod and Game Version Mismatch</source>
+        <translation>
+模组和游戏版本不匹配</translation>
+    </message>
+    <message>
+        <source>
+An alternative updated mod is recommended:
+{alternative}</source>
+        <translation>
+推荐一个替代的更新模组：
+{alternative}</translation>
+    </message>
+    <message>
+        <source>Change mod color</source>
+        <translation>更改模组颜色</translation>
+    </message>
+    <message>
+        <source>Reset mod color</source>
+        <translation>重置模组颜色</translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2941,6 +3027,54 @@ Should be Loaded Before:</source>
     <message>
         <source>Version</source>
         <translation>版本</translation>
+    </message>
+    <message>
+        <source>Sort inactive mods by</source>
+        <translation>按以下方式排序未启用的模组</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <source>Modified Time</source>
+        <translation>修改时间</translation>
+    </message>
+    <message>
+        <source>Folder Size</source>
+        <translation>文件夹大小</translation>
+    </message>
+    <message>
+        <source>Toggle sort order</source>
+        <translation>切换排序顺序</translation>
+    </message>
+    <message>
+        <source>Desc</source>
+        <translation>降序</translation>
+    </message>
+    <message>
+        <source>Asc</source>
+        <translation>升序</translation>
+    </message>
+    <message>
+        <source>Rebuilding list...</source>
+        <translation>正在重建列表...</translation>
+    </message>
+    <message>
+        <source>Calculating folder sizes...</source>
+        <translation>正在计算文件夹大小...</translation>
+    </message>
+    <message>
+        <source>0 new</source>
+        <translation>0 新</translation>
+    </message>
+    <message>
+        <source>Click to only show active mods not in latest save</source>
+        <translation>点击仅显示未在最新存档中的活动模组</translation>
+    </message>
+    <message>
+        <source>{padding}{count} new</source>
+        <translation>{padding}{count} 新</translation>
     </message>
 </context>
 <context>
@@ -3157,15 +3291,19 @@ Should be Loaded Before:</source>
     </message>
     <message>
         <source>About.xml (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>About.xml (incompatibilitiesWith)</translation>
     </message>
     <message>
         <source>Community Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>社区规则 (incompatibilitiesWith)</translation>
     </message>
     <message>
         <source>User Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>用户规则 (incompatibilitiesWith)</translation>
+    </message>
+    <message>
+        <source>Force load at top of list</source>
+        <translation>在列表顶部加载</translation>
     </message>
 </context>
 <context>
@@ -3322,10 +3460,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     <message>
         <source>Local mods location</source>
         <translation>本地模组所在路径</translation>
-    </message>
-    <message>
-        <source>Game location sets local mods location.</source>
-        <translation>游戏路径设置本地模组路径</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3550,30 +3684,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>&quot;启用主题/样式表而非系统默认主题&quot;</translation>
     </message>
     <message>
-        <source>To add your own theme / stylesheet 
-
-1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
-2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
-3) Edit the copied &apos;style.qss&apos; as per your imagination 
-4) Start &apos;RimSort&apos; and select your theme from dropdown 
-5) Click &apos;ok&apos; to save settings and apply the selected theme 
-
-NOTE 
-Name of folder will be used as name of the theme and any invalid theme will be ignored 
-</source>
-        <translation>要添加自定义主题/样式表
-
-1) 在你的&apos;RimSort&apos;配置文件夹中的&apos;themes&apos;文件夹内新建一个文件夹
-2) 将默认的&apos;RimPy&apos;主题复制到你创建的文件夹中
-3) 根据你的创意编辑复制的&apos;style.qss&apos;文件
-4) 启动&apos;RimSort&apos;并从下拉菜单中选择你的主题
-5) 点击&apos;确定&apos;保存设置并应用所选主题 
-
-注意
-文件夹名称将用作主题名称，任何无效主题将被忽略
-</translation>
-    </message>
-    <message>
         <source>Open Theme Location</source>
         <translation>打开主题路径</translation>
     </message>
@@ -3607,7 +3717,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>RimSort restart required for some settings</source>
-        <translation>某些设置需要重新启动 RimSort</translation>
+        <translation>某些设置需要重启 RimSort</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -3674,6 +3784,132 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>GitHub 个人访问令牌</translation>
     </message>
     <message>
+        <source>Edit Game Run Arguments:</source>
+        <translation>编辑游戏启动参数：</translation>
+    </message>
+    <message>
+        <source>Additional Databases</source>
+        <translation>附加数据库</translation>
+    </message>
+    <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>数据库过期时间（秒），例如，604800 表示 7 天，0 表示不过期。</translation>
+    </message>
+    <message>
+        <source>Authentication</source>
+        <translation>认证</translation>
+    </message>
+    <message>
+        <source>Launch State</source>
+        <translation>启动状态</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>主窗口启动状态</translation>
+    </message>
+    <message>
+        <source>Maximized</source>
+        <translation>最大化</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>普通</translation>
+    </message>
+    <message>
+        <source>Custom size</source>
+        <translation>自定义大小</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>浏览器窗口启动状态</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>设置窗口启动状态</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>自定义宽度：</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>自定义高度：</translation>
+    </message>
+    <message>
+        <source>Delete before update</source>
+        <translation>更新前删除</translation>
+    </message>
+    <message>
+        <source>This is useful if you want to ensure clean mod updates.</source>
+        <translation>如果你想确保模组干净更新，请启用该选项。</translation>
+    </message>
+    <message>
+        <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
+        <translation>路径应类似于：C:\Program Files (x86)\Steam\steamapps\common\RimWorld</translation>
+    </message>
+    <message>
+        <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
+        <translation>路径应类似于：C:\Users\用户名\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</translation>
+    </message>
+    <message>
+        <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
+        <translation>仅在使用Steam时路径应类似于：C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</translation>
+    </message>
+    <message>
+        <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
+        <translation>路径应类似于：C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>辅助元数据数据库删除时间限制（秒）。 （立即删除 0，永不删除 -1）</translation>
+    </message>
+    <message>
+        <source>Enable editing</source>
+        <translation>启用编辑</translation>
+    </message>
+    <message>
+        <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
+        <translation>这将启用对辅助元数据数据库数据删除时间限制的编辑。</translation>
+    </message>
+    <message>
+        <source>Enable Auxiliary Metadata DB performance mode</source>
+        <translation>启用辅助元数据数据库性能模式</translation>
+    </message>
+    <message>
+        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
+Improves performance by ~50%.</source>
+        <translation>这在崩溃时增加了数据丢失/损坏的风险，从而提高了辅助数据库的性能。
+性能提高约 50%。</translation>
+    </message>
+    <message>
+        <source>To add your own theme / stylesheet 
+
+1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
+2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
+3) Edit the copied &apos;style.qss&apos; as per your imagination 
+4) Start &apos;RimSort&apos; and select your theme from dropdown 
+5) Click &apos;ok&apos; to save settings and apply the selected theme 
+
+NOTE 
+Name of folder will be used as name of the theme and any invalid theme will be ignored 
+</source>
+        <translation>要添加自定义主题/样式表
+
+1) 在你的&apos;RimSort&apos;配置文件夹中的&apos;themes&apos;文件夹内新建一个文件夹
+2) 将默认的&apos;RimPy&apos;主题复制到你创建的文件夹中
+3) 根据你的创意编辑复制的&apos;style.qss&apos;文件
+4) 启动&apos;RimSort&apos;并从下拉菜单中选择你的主题
+5) 点击&apos;确定&apos;保存设置并应用所选主题 
+
+注意
+文件夹名称将用作主题名称，任何无效主题将被忽略
+</translation>
+    </message>
+    <message>
+        <source>Apply mod coloring to background instead of text</source>
+        <translation>将模组着色应用于背景而不是文本</translation>
+    </message>
+    <message>
         <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
 
  Examples : 
@@ -3687,56 +3923,32 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 -logfile,path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow</translation>
     </message>
     <message>
-        <source>Edit Game Run Arguments:</source>
-        <translation>编辑游戏启动参数：</translation>
+        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>要启用此时间限制的编辑，请在高级设置中勾选相应的复选框。
+当模组被删除后，系统将在此时间段后从辅助元数据数据库中删除该模组项。
+该辅助数据库包含模组颜色、切换警告、用户备注等信息。
+此设置可在删除后保留模组的颜色、用户备注等信息指定的秒数。
+（此设置同样适用于RimSort外的删除操作）</translation>
     </message>
     <message>
-        <source>Additional Databases</source>
-        <translation>附加数据库</translation>
+        <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
+        <translation>最小值为 {MIN_SIZE}，最大值为 {MAX_SIZE}。超出此范围的值将重置为默认值。</translation>
     </message>
     <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>数据库过期时间（秒），例如，604800 表示 7 天，0 表示不过期。</translation>
+        <source>Auxiliary DB</source>
+        <translation>辅助数据库</translation>
     </message>
     <message>
-        <source>Window Size Configuration detected window display size: {max_width} x {max_height} pixels</source>
-        <translation>窗口大小配置检测到窗口显示大小：{max_width} x {max_height} 像素</translation>
+        <source>Integration with recent save</source>
+        <translation>与最近的存档集成</translation>
     </message>
     <message>
-        <source>Reset Window Size based on Screen Dimensions</source>
-        <translation>根据屏幕尺寸重置窗口大小</translation>
-    </message>
-    <message>
-        <source>Warning: Window may not fit on the current screen! Please adjust the values.</source>
-        <translation>警告：窗口可能无法适应当前屏幕！请调整数值。</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>认证</translation>
-    </message>
-    <message>
-        <source>Window X Position (px): minimum: 100, maximum: {}</source>
-        <translation>窗口 X 位置 (px): 最小: 100, 最大: {}</translation>
-    </message>
-    <message>
-        <source>Window Y Position (px): minimum: 100, maximum: {}</source>
-        <translation>窗口 Y 位置 (px): 最小: 100, 最大: {}</translation>
-    </message>
-    <message>
-        <source>Window Width (px): minimum: 600, maximum: {}</source>
-        <translation>窗口宽度 (px): 最小: 600, 最大: {}</translation>
-    </message>
-    <message>
-        <source>Window Height (px): minimum: 400, maximum: {}</source>
-        <translation>窗口高度 (px): 最小: 400, 最大: {}</translation>
-    </message>
-    <message>
-        <source>Panel Width (px): minimum: 600, maximum: {}</source>
-        <translation>面板宽度 (px): 最小: 600, 最大: {}</translation>
-    </message>
-    <message>
-        <source>Panel Height (px): minimum: 400, maximum: {}</source>
-        <translation>面板高度 (px): 最小: 400, 最大: {}</translation>
+        <source>Compare mod lists with the recent save file</source>
+        <translation>将模组列表与最近的存档文件进行比较</translation>
     </message>
 </context>
 <context>
@@ -3918,6 +4130,14 @@ New symlink:
         <translation>新符号链接：
 [{symlink_source_path}] -&gt; </translation>
     </message>
+    <message>
+        <source>&amp;Yes</source>
+        <translation>&amp;是</translation>
+    </message>
+    <message>
+        <source>&amp;Don&apos;t Ask Again</source>
+        <translation>&amp;不再询问</translation>
+    </message>
 </context>
 <context>
     <name>ThemeController</name>
@@ -4049,10 +4269,6 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Location Error</source>
         <translation>路径错误</translation>
-    </message>
-    <message>
-        <source>Failed to get Location: {save_path}.</source>
-        <translation>获取路径失败：{save_path}。</translation>
     </message>
     <message>
         <source>Confirm Export</source>
@@ -4204,16 +4420,16 @@ Details: {e}</source>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
         <translation>你不是 Steam 用户，或者路径未设置，请检查设置并重试。</translation>
     </message>
+    <message>
+        <source>Error: {e}</source>
+        <translation>错误：{e}</translation>
+    </message>
 </context>
 <context>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
         <translation>游戏文件恢复</translation>
-    </message>
-    <message>
-        <source>⚠️ Warning: These operations will delete selected files permanently!</source>
-        <translation>⚠️ 警告：这些操作将永久删除选定的文件！</translation>
     </message>
     <message>
         <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
@@ -4260,16 +4476,8 @@ Details: {e}</source>
         <translation>应用恢复选项</translation>
     </message>
     <message>
-        <source>Apply the selected recovery options</source>
-        <translation>应用选定的恢复选项</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>取消</translation>
-    </message>
-    <message>
-        <source>Cancel and clear selections</source>
-        <translation>取消并清除选择</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
@@ -4304,14 +4512,6 @@ Details: {e}</source>
         <translation>从文件导入模组列表</translation>
     </message>
     <message>
-        <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation>⚠️ 警告：此操作将删除你的Mods文件夹中的所有Mod，并重置为原版状态</translation>
-    </message>
-    <message>
-        <source>Clear Mods</source>
-        <translation>清除模组</translation>
-    </message>
-    <message>
         <source>Delete all mods and reset to vanilla state</source>
         <translation>删除所有模组并重置为原版状态</translation>
     </message>
@@ -4320,20 +4520,8 @@ Details: {e}</source>
         <translation>Steam 工具</translation>
     </message>
     <message>
-        <source>🔄 Clear Download Cache</source>
-        <translation>🔄 清除下载缓存</translation>
-    </message>
-    <message>
-        <source>✓ Verify Game Files</source>
-        <translation>✓ 验证游戏文件</translation>
-    </message>
-    <message>
-        <source>🔧 Repair Steam library</source>
-        <translation>🔧 修复Steam库</translation>
-    </message>
-    <message>
         <source>Delete Steam&apos;s downloading folder to fix download issues</source>
-        <translation>删除 Steam 下载缓存文件夹以解决下载问题</translation>
+        <translation>删除 Steam 下载文件夹以修复下载问题</translation>
     </message>
     <message>
         <source>Check and repair RimWorld game files</source>
@@ -4342,6 +4530,46 @@ Details: {e}</source>
     <message>
         <source>Verify integrity of all installed Steam games</source>
         <translation>验证所有已安装 Steam 游戏的完整性</translation>
+    </message>
+    <message>
+        <source>Warning: These operations will delete selected files permanently!</source>
+        <translation>警告：这些操作将永久删除所选文件！</translation>
+    </message>
+    <message>
+        <source>Export List</source>
+        <translation>导出列表</translation>
+    </message>
+    <message>
+        <source>Import List</source>
+        <translation>导入列表</translation>
+    </message>
+    <message>
+        <source>Reset to Vanilla</source>
+        <translation>重置为原版</translation>
+    </message>
+    <message>
+        <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
+        <translation>这将删除你的模组文件夹中的所有模组并重置为原版状态</translation>
+    </message>
+    <message>
+        <source>Clear All Mods</source>
+        <translation>清除所有模组</translation>
+    </message>
+    <message>
+        <source>Steam-specific utilities to help resolve download and game file issues.</source>
+        <translation>Steam 专用工具，帮助解决下载和游戏文件问题。</translation>
+    </message>
+    <message>
+        <source>Clear Download Cache</source>
+        <translation>清理下载缓存</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>验证游戏文件</translation>
+    </message>
+    <message>
+        <source>Repair Steam Library</source>
+        <translation>修复 Steam 库</translation>
     </message>
 </context>
 <context>
@@ -4495,11 +4723,11 @@ The following table displays Workshop mods with suggested replacements according
     <name>check_if_pfids_blacklisted</name>
     <message>
         <source>Download blacklisted mods</source>
-        <translation type="unfinished"></translation>
+        <translation>下载黑名单模组</translation>
     </message>
     <message>
         <source>Skip blacklisted mods</source>
-        <translation type="unfinished"></translation>
+        <translation>跳过黑名单模组</translation>
     </message>
 </context>
 <context>
@@ -4580,27 +4808,6 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} 在 {e.filename} 发生，错误代码 {error_code}。</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_conditional</name>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-</context>
-<context>
-    <name>show_dialogue_information</name>
-    <message>
-        <source>OK</source>
-        <translation>确认</translation>
-    </message>
-</context>
-<context>
-    <name>show_warning</name>
-    <message>
-        <source>OK</source>
-        <translation>确认</translation>
     </message>
 </context>
 <context>

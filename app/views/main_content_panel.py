@@ -2,6 +2,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -50,6 +51,7 @@ import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     check_internet_connection,
@@ -77,7 +79,11 @@ from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
+from app.views.mods_panel import (
+    ModListWidget,
+    ModsPanel,
+    ModsPanelSortKey,
+)
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
@@ -117,7 +123,6 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
-            self.main_window = None  # Will be set by set_main_window
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
@@ -129,6 +134,9 @@ class MainContent(QObject):
             )
             EventBus().do_import_mod_list_from_workshop_collection.connect(
                 self._do_import_list_workshop_collection
+            )
+            EventBus().do_import_mod_list_from_save_file.connect(
+                self._do_import_list_from_save_file
             )
             EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
             EventBus().do_export_mod_list_to_clipboard.connect(
@@ -247,7 +255,9 @@ class MainContent(QObject):
             self.main_layout_frame.setLayout(self.main_layout)
 
             # INSTANTIATE WIDGETS
-            self.mod_info_panel = ModInfo()
+            self.mod_info_panel = ModInfo(
+                settings_controller=self.settings_controller,
+            )
             self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )
@@ -425,9 +435,10 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            data = iml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
+            item = iml.selectedItems()[0]
+            data = item.data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
-            self.__mod_list_slot(uuid)
+            self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -478,9 +489,10 @@ class MainContent(QObject):
             aml.setFocus()
             if not aml.selectedIndexes():
                 aml.setCurrentRow(self.___get_relative_middle(aml))
-            data = aml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
+            item = aml.selectedItems()[0]
+            data = item.data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
-            self.__mod_list_slot(uuid)
+            self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -512,7 +524,7 @@ class MainContent(QObject):
                     count += 1
         # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
-    def __insert_data_into_lists(
+    def _insert_data_into_lists(
         self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
     ) -> None:
         """
@@ -530,7 +542,7 @@ class MainContent(QObject):
         self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
             list_type="inactive",
             uuids=inactive_mods_uuids,
-            key=ModsPanelSortKey.MODNAME,
+            key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
         )
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
@@ -587,19 +599,26 @@ class MainContent(QObject):
                 details=list_of_missing_mods,
             )
 
-    def __mod_list_slot(self, uuid: str) -> None:
+    def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
         """
         This slot method is triggered when the user clicks on an item
-        on a mod list. It takes the internal uuid and gets the
+        on a mod list.
+
+        It takes the internal uuid and gets the
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
+        It also takes the selected mod (CustomListWidgetItem) and passes
+        this to the mod info panel to display that mod's notes.
+
         :param uuid: uuid of mod
+        :param item: selected CustomListWidgetItem
         """
         self.mod_info_panel.display_mod_info(
             uuid=uuid,
             render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
         )
+        self.mod_info_panel.show_user_mod_notes(item)
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
@@ -633,7 +652,7 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state = active_mods_uuids
             self.inactive_mods_uuids_restore_state = inactive_mods_uuids
 
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
     #########
     # SLOTS # Can this be cleaned up & moved to own module...?
@@ -1083,39 +1102,71 @@ class MainContent(QObject):
         self.stop_watchdog_signal.emit()
 
         try:
+            # Ensure updater logs are captured to a persistent location
+            log_dir = AppInfo().user_log_folder
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "updater.log"
+
+            # Small prologue in the updater log to aid debugging
+            try:
+                from datetime import datetime
+
+                with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
+                    lf.write(
+                        f"\n===== RimSort updater launched: {datetime.now().isoformat()} ({system}) =====\n"
+                    )
+            except Exception:
+                # Non-fatal; continue without preface
+                pass
+
+            args_repr: str = ""
+
             if system == "Darwin":  # MacOS
                 current_dir = os.path.dirname(
                     os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
                 )
                 script_path = Path(current_dir) / "Contents" / "MacOS" / "update.sh"
                 popen_args = ["/bin/bash", str(script_path)]
-                p = subprocess.Popen(popen_args)
+                args_repr = " ".join(shlex.quote(a) for a in popen_args)
+                with open(log_path, "ab", buffering=0) as lf:
+                    p = subprocess.Popen(
+                        popen_args,
+                        stdout=lf,
+                        stderr=subprocess.STDOUT,
+                    )
 
             elif system == "Windows":
                 script_path = AppInfo().application_folder / "update.bat"
-                popen_args = ["start", "/wait", "cmd", "/c", str(script_path)]
+                # Redirect batch output into the updater log for diagnostics
+                # Using a single command string to support shell redirection
+                cmd_str = f'cmd /c ""{script_path}"" >> "{log_path}" 2>&1'
                 creationflags_value = (
                     subprocess.CREATE_NEW_PROCESS_GROUP
                     if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
                     else 0
                 )
                 p = subprocess.Popen(
-                    popen_args,
+                    cmd_str,
                     creationflags=creationflags_value,
                     shell=True,
                     cwd=str(AppInfo().application_folder),
                 )
+                args_repr = cmd_str
 
             else:  # Linux and other POSIX systems
                 script_path = AppInfo().application_folder / "update.sh"
                 popen_args = ["/bin/bash", str(script_path)]
-                p = subprocess.Popen(
-                    popen_args,
-                    start_new_session=True,
-                )
+                args_repr = " ".join(shlex.quote(a) for a in popen_args)
+                with open(log_path, "ab", buffering=0) as lf:
+                    p = subprocess.Popen(
+                        popen_args,
+                        start_new_session=True,
+                        stdout=lf,
+                        stderr=subprocess.STDOUT,
+                    )
 
             logger.debug(f"External updater script launched with PID: {p.pid}")
-            logger.debug(f"Arguments used: {popen_args}")
+            logger.debug(f"Arguments used: {args_repr}")
 
             # Exit the application to allow update
             sys.exit(0)
@@ -1216,13 +1267,13 @@ class MainContent(QObject):
                 self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_clear_search(
-                list_type="Active", recalculate_list_errors_warnings=False
+                list_type="Active",
             )
             self.mods_panel.inactive_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_clear_search(
-                list_type="Inactive", recalculate_list_errors_warnings=False
+                list_type="Inactive",
             )
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
@@ -1272,7 +1323,7 @@ class MainContent(QObject):
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
         else:
-            self.__insert_data_into_lists([], [])
+            self._insert_data_into_lists([], [])
             logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
@@ -1312,13 +1363,18 @@ class MainContent(QObject):
             app_constants.RIMWORLD_DLC_METADATA["2380740"]["packageid"],
             app_constants.RIMWORLD_DLC_METADATA["3022790"]["packageid"],
         ]
+        # If user wants Clear to also move DLC, only keep the base game in Active
+        if self.settings_controller.settings.clear_moves_dlc and package_id_order:
+            package_ids_to_keep_active = [package_id_order[0]]  # Base game only
+        else:
+            package_ids_to_keep_active = package_id_order
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
             mod_data["packageid"]
             for mod_data in self.metadata_manager.internal_local_metadata.values()
         )
-        # Iterate over the DLC package IDs in the correct order
-        for package_id in package_id_order:
+        # Iterate over the package IDs we want to keep active
+        for package_id in package_ids_to_keep_active:
             if package_id in package_ids_set:
                 # Append the UUIDs to active_mods_uuids if the package ID exists in mod_data
                 active_mods_uuids.extend(
@@ -1336,7 +1392,7 @@ class MainContent(QObject):
         # Disable widgets while inserting
         self.disable_enable_widgets_signal.emit(False)
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         # Re-enable widgets after inserting
         self.disable_enable_widgets_signal.emit(True)
 
@@ -1428,7 +1484,7 @@ class MainContent(QObject):
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
-            self.__insert_data_into_lists(
+            self._insert_data_into_lists(
                 new_order,
                 [
                     uuid
@@ -1480,7 +1536,7 @@ class MainContent(QObject):
                 self.missing_mods,
             ) = metadata.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
-            self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+            self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
             if (
                 self.settings_controller.settings.duplicate_mods_warning
@@ -1707,7 +1763,7 @@ class MainContent(QObject):
         ) = metadata.get_mods_from_list(mod_list=rentry_import.package_ids)
 
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Rentry.co")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user
@@ -1764,7 +1820,7 @@ class MainContent(QObject):
         ) = metadata.get_mods_from_list(mod_list=collection_import.package_ids)
 
         # Insert data into lists
-        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Workshop collection")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user
@@ -2000,6 +2056,72 @@ class MainContent(QObject):
                 text=self.tr("Failed to upload exported active mod list to Rentry.co"),
             )
 
+    def _do_import_list_from_save_file(self) -> None:
+        """
+        Import a mod list from a RimWorld save (.rws) file.
+
+        Opens a file dialog defaulting to the RimWorld Saves directory and
+        reuses the existing XML import flow to populate the lists.
+        """
+        logger.info("Opening file dialog to select RimWorld save (.rws)")
+        # Default to the instance's Saves directory (sibling of Config)
+        saves_dir = str(
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].config_folder
+            ).parent
+            / "Saves"
+        )
+        file_path = dialogue.show_dialogue_file(
+            mode="open",
+            caption=self.tr("Import from RimWorld Save File"),
+            _dir=saves_dir,
+            _filter=self.tr("RimWorld save (*.rws);;All files (*.*)"),
+        )
+        logger.info(f"Selected save path: {file_path}")
+        if not file_path:
+            logger.debug("USER ACTION: pressed cancel, passing")
+            return
+
+        # Clear searches and data source filters just like XML import
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        logger.info(f"Trying to import mods list from save file: {file_path}")
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = metadata.get_mods_from_list(mod_list=file_path)
+        logger.info("Got new mods according to imported save file")
+
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+
+        # If we have duplicate mods, prompt user
+        if (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            self.__duplicate_mods_prompt()
+        elif not self.settings_controller.settings.duplicate_mods_warning:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
+        # If we have missing mods, prompt user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt()
+
     def _do_open_app_directory(self) -> None:
         app_directory = os.getcwd()
         logger.info(f"Opening app directory: {app_directory}")
@@ -2117,7 +2239,7 @@ class MainContent(QObject):
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
                 title=self.tr("Uploaded file"),
-                text=self.tr("Uploaded {path.name} to http://0x0.st/").format(
+                text=self.tr("Uploaded {path.name} to https://0x0.st/").format(
                     path=path
                 ),
                 information=self.tr(
@@ -2219,7 +2341,7 @@ class MainContent(QObject):
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert items into lists
-            self.__insert_data_into_lists(
+            self._insert_data_into_lists(
                 self.active_mods_uuids_restore_state,
                 self.inactive_mods_uuids_restore_state,
             )
