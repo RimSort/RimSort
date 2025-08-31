@@ -2049,6 +2049,10 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
                 &lt;br&gt;&lt;br&gt;
                 你可以在设置的高级选项卡中更改此设置。</translation>
     </message>
+    <message>
+        <source>Player Log</source>
+        <translation>游戏日志</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -3093,6 +3097,313 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation>文件信息</translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation>路径：</translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation>大小：</translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation>修改时间：</translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation>统计信息</translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation>总行数: {total_lines}</translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation>信息: {infos}</translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation>按键绑定: {keybinds}</translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation>模组问题: {mod_issues}</translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation>警告: {warnings}</translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation>错误: {errors}</translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation>异常: {exceptions}</translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation>所有问题: {all_issues}</translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation>启动时自动加载游戏日志</translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation>如果选中，游戏日志将在启动时自动加载。</translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation>启用实时日志监控</translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation>启用对 Player.log 文件更改的实时监控。</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation>导出</translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation>清除日志显示</translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation>加载游戏日志</translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation>加载游戏的 Player.log 文件。</translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation>从文件加载日志</translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation>打开文件对话框以选择日志文件</translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation>从链接加载日志</translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation>从 URL 加载日志内容</translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation>搜索和过滤</translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation>搜索日志条目...</translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation>所有条目</translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation>仅信息</translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation>仅按键绑定</translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation>模组问题</translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation>仅警告</translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation>仅错误</translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation>仅异常</translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation>所有问题</translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation>按模组名称过滤...</translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation>高亮颜色</translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation>选择搜索和导航高亮的颜色</translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation>上一个</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>下一个</translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation>快速导航</translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation>滚动到末尾</translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation>滚动到日志显示的末尾</translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation>路径: 从 URL 加载: {url}</translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation>路径: 从 URL 加载</translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation>大小: {size:,} 字节</translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation>修改时间: 不适用</translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation>路径: 不适用</translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation>大小: 不适用</translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation>未找到玩家日志文件。</translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation>输入 URL：</translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation>日志已成功从 URL 加载</translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation>从 URL 加载日志失败</translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation>失败，错误信息: {error}</translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation>路径: {path_str}</translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation>大小: {size_str}</translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation>修改时间: {modified_str}</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation>按键绑定</translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation>模组问题</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation>异常</translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation>跳转到上一个 {lower} 条目</translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation>跳转到下一个 {lower} 条目</translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation>总行数: 0</translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation>信息: 0</translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation>按键绑定: 0</translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation>模组问题: 0</translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation>警告: 0</translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation>错误: 0</translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation>异常: 0</translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation>所有问题: 0</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>控制</translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
+        <translation>选择高亮颜色</translation>
+    </message>
+</context>
+<context>
     <name>Rentry Auth Code Not Found </name>
     <message>
         <source>RimSort can work without rentry auth code. But To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
@@ -3852,7 +4163,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Delete before update</source>
-        <translation>更新前删除</translation>
+        <translation>更新前删除模组</translation>
     </message>
     <message>
         <source>This is useful if you want to ensure clean mod updates.</source>

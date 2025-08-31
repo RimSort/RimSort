@@ -2019,6 +2019,10 @@ Alternativamente, puedes mantener tu antigua preferencia de carpeta del taller d
         <source>ACF Log Reader</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Player Log</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -3019,6 +3023,313 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation type="unfinished">Ruta:</translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished">Actualizar</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation type="unfinished">Exportar</translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
