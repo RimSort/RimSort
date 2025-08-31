@@ -751,13 +751,15 @@ class SettingsController(QObject):
             self.settings.auto_delete_orphaned_dds
         )
 
-        # Other External Tools Tab
+        # External Tools Tab
         self.settings_dialog.text_editor_location.setText(
-            str(
-                self.settings.instances[
-                    self.settings.current_instance
-                ].text_editor_location
-            )
+            self.settings.text_editor_location
+        )
+        self.settings_dialog.text_editor_folder_arg.setText(
+            self.settings.text_editor_folder_arg
+        )
+        self.settings_dialog.text_editor_file_arg.setText(
+            self.settings.text_editor_file_arg
         )
 
         # Themes tab
@@ -1086,9 +1088,15 @@ class SettingsController(QObject):
         )
 
         # Other External Tools Tab
-        self.settings.instances[
-            self.settings.current_instance
-        ].text_editor_location = self.settings_dialog.text_editor_location.text()
+        self.settings.text_editor_location = (
+            self.settings_dialog.text_editor_location.text()
+        )
+        self.settings.text_editor_folder_arg = (
+            self.settings_dialog.text_editor_folder_arg.text()
+        )
+        self.settings.text_editor_file_arg = (
+            self.settings_dialog.text_editor_file_arg.text()
+        )
 
         # Themes tab
         self.settings.enable_themes = (

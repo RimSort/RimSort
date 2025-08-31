@@ -55,7 +55,6 @@ class Instance(msgspec.Struct):
         Path(AppInfo().app_storage_folder / "instances" / "Default")
     )
     steamcmd_ignore: bool = False
-    text_editor_location: str = ""
     steam_client_integration: bool = False
 
     initial_setup: bool = True

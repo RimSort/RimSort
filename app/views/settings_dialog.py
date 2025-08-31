@@ -77,7 +77,7 @@ class SettingsDialog(QDialog):
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
-        self._do_other_external_tools_tab()
+        self._do_external_tools_tab()
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
@@ -932,9 +932,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
         self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
 
-    def _do_other_external_tools_tab(self) -> None:
+    def _do_external_tools_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Other External Tools"))
+        self.tab_widget.addTab(tab, self.tr("External Tools"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -960,6 +960,22 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.text_editor_location.setTextMargins(GUIInfo().text_field_margins)
         self.text_editor_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.text_editor_location)
+
+        folder_arg_label = QLabel(self.tr("Additional Arguments (Opening Folders)"))
+        group_layout.addWidget(folder_arg_label)
+        self.text_editor_folder_arg = QLineEdit()
+        self.text_editor_folder_arg.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_folder_arg.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.text_editor_folder_arg)
+
+        file_arg_label = QLabel(self.tr("Additional Arguments (Opening Single File)"))
+        group_layout.addWidget(file_arg_label)
+        self.text_editor_file_arg = QLineEdit()
+        self.text_editor_file_arg.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_file_arg.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        group_layout.addWidget(self.text_editor_file_arg)
 
     def _on_preset_radio_toggled(self, checked: bool) -> None:
         if self.todds_preset_custom_radio.isChecked():

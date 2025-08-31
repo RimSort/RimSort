@@ -105,6 +105,11 @@ class Settings(QObject):
         self.todds_overwrite: bool = False
         self.auto_delete_orphaned_dds: bool = False
 
+        # External Tools
+        self.text_editor_location: str = ""
+        self.text_editor_folder_arg: str = ""
+        self.text_editor_file_arg: str = ""
+
         # Theme
         self.enable_themes: bool = True
         self.theme_name: str = "RimPy"

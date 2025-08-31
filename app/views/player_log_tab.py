@@ -84,9 +84,9 @@ class LogPatternManager:
     PATHLIKE_PATTERN = re.compile(
         r"""
         (?:
-            [a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+\\?    # Windows paths
+            [a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+    # Windows paths
             |
-            /(?:[^/\s]+/)*[^/\s]+/?                                      # Unix/macOS paths
+            /(?:[^/\s]+/)*[^/\s]+                                      # Unix/macOS paths
         )
         """,
         re.VERBOSE,
@@ -1289,14 +1289,11 @@ class PlayerLogTab(QWidget):
         menu.exec(self.log_display.mapToGlobal(pos))
 
     def open_file(self, file_path: str) -> None:
-        if self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
-        ].text_editor_location:
+        if self.settings_controller.settings.text_editor_location:
             launch_process(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].text_editor_location,
-                [file_path],
+                self.settings_controller.settings.text_editor_location,
+                self.settings_controller.settings.text_editor_file_arg.split(" ")
+                + [file_path],
                 str(AppInfo().application_folder),
             )
 

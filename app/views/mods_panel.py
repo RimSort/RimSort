@@ -1210,9 +1210,7 @@ class ModListWidget(QListWidget):
                     open_folder_action = QAction()
                     open_folder_action.setText(self.tr("Open folder"))
                     # Open folder in text editor text
-                    if self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].text_editor_location:
+                    if self.settings_controller.settings.text_editor_location:
                         open_folder_text_editor_action = QAction()
                         open_folder_text_editor_action.setText(
                             self.tr("Open folder in text editor")
@@ -1358,9 +1356,7 @@ class ModListWidget(QListWidget):
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText(self.tr("Open folder(s)"))
-                        if self.settings_controller.settings.instances[
-                            self.settings_controller.settings.current_instance
-                        ].text_editor_location:
+                        if self.settings_controller.settings.text_editor_location:
                             open_folder_text_editor_action = QAction()
                             open_folder_text_editor_action.setText(
                                 self.tr("Open folder(s) in text editor")
@@ -1884,10 +1880,11 @@ class ModListWidget(QListWidget):
                                     f"Opening folder in text editor: {mod_path}"
                                 )
                                 launch_process(
-                                    self.settings_controller.settings.instances[
-                                        self.settings_controller.settings.current_instance
-                                    ].text_editor_location,
-                                    [mod_path],
+                                    self.settings_controller.settings.text_editor_location,
+                                    self.settings_controller.settings.text_editor_folder_arg.split(
+                                        " "
+                                    )
+                                    + [mod_path],
                                     str(AppInfo().application_folder),
                                 )
 
