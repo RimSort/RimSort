@@ -1201,7 +1201,9 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
 
 Are your game configuration paths correct?</source>
-        <translation>你的游戏配置路径正确吗？</translation>
+        <translation>以下模组已在你的模组列表中被设置为激活，但在本地或创意工坊模组路径中未找到相关数据。
+
+你的游戏配置路径正确吗？</translation>
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
@@ -2047,6 +2049,10 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
                 &lt;br&gt;&lt;br&gt;
                 你可以在设置的高级选项卡中更改此设置。</translation>
     </message>
+    <message>
+        <source>Player Log</source>
+        <translation>游戏日志</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2241,6 +2247,10 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
     <message>
         <source>From Save file…</source>
         <translation>从 游戏存档导入</translation>
+    </message>
+    <message>
+        <source>Reset Mod Colors</source>
+        <translation>重置模组颜色</translation>
     </message>
 </context>
 <context>
@@ -2632,6 +2642,10 @@ Do you want to proceed?</source>
         <source>Workshop Times:</source>
         <translation>创意工坊时间：</translation>
     </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
+        <translation>在这里放置你的模组备注！</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2898,6 +2912,11 @@ An alternative updated mod is recommended:
         <source>Reset mod color</source>
         <translation>重置模组颜色</translation>
     </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation>替代依赖：</translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -3075,6 +3094,313 @@ An alternative updated mod is recommended:
     <message>
         <source>{padding}{count} new</source>
         <translation>{padding}{count} 新</translation>
+    </message>
+</context>
+<context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation>文件信息</translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation>路径：</translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation>大小：</translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation>修改时间：</translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation>统计信息</translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation>总行数: {total_lines}</translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation>信息: {infos}</translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation>按键绑定: {keybinds}</translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation>模组问题: {mod_issues}</translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation>警告: {warnings}</translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation>错误: {errors}</translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation>异常: {exceptions}</translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation>所有问题: {all_issues}</translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation>启动时自动加载游戏日志</translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation>如果选中，游戏日志将在启动时自动加载。</translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation>启用实时日志监控</translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation>启用对 Player.log 文件更改的实时监控。</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation>导出</translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation>清除日志显示</translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation>加载游戏日志</translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation>加载游戏的 Player.log 文件。</translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation>从文件加载日志</translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation>打开文件对话框以选择日志文件</translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation>从链接加载日志</translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation>从 URL 加载日志内容</translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation>搜索和过滤</translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation>搜索日志条目...</translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation>所有条目</translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation>仅信息</translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation>仅按键绑定</translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation>模组问题</translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation>仅警告</translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation>仅错误</translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation>仅异常</translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation>所有问题</translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation>按模组名称过滤...</translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation>高亮颜色</translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation>选择搜索和导航高亮的颜色</translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation>上一个</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>下一个</translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation>快速导航</translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation>滚动到末尾</translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation>滚动到日志显示的末尾</translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation>路径: 从 URL 加载: {url}</translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation>路径: 从 URL 加载</translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation>大小: {size:,} 字节</translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation>修改时间: 不适用</translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation>路径: 不适用</translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation>大小: 不适用</translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation>未找到玩家日志文件。</translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation>输入 URL：</translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation>日志已成功从 URL 加载</translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation>从 URL 加载日志失败</translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation>失败，错误信息: {error}</translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation>路径: {path_str}</translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation>大小: {size_str}</translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation>修改时间: {modified_str}</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation>按键绑定</translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation>模组问题</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation>异常</translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation>跳转到上一个 {lower} 条目</translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation>跳转到下一个 {lower} 条目</translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation>总行数: 0</translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation>信息: 0</translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation>按键绑定: 0</translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation>模组问题: 0</translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation>警告: 0</translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation>错误: 0</translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation>异常: 0</translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation>所有问题: 0</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>控制</translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
+        <translation>选择高亮颜色</translation>
     </message>
 </context>
 <context>
@@ -3837,7 +4163,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Delete before update</source>
-        <translation>更新前删除</translation>
+        <translation>更新前删除模组</translation>
     </message>
     <message>
         <source>This is useful if you want to ensure clean mod updates.</source>
@@ -3949,6 +4275,58 @@ This basically preserves your mod coloring, user notes etc. for this many second
     <message>
         <source>Compare mod lists with the recent save file</source>
         <translation>将模组列表与最近的存档文件进行比较</translation>
+    </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation>清除也会移动DLC</translation>
+    </message>
+    <message>
+        <source>Consider alternativePackageIds as satisfying dependencies</source>
+        <translation>将alternativePackageIds视为满足依赖关系</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
+        <translation>如果启用，About.xml 中的 alternativePackageIds 条目可以满足模组的依赖关系，即使主要依赖项缺失。</translation>
+    </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation>自定义 todds 命令</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>如果未指定 -p（路径），则会选择使用当前启用的或所有模组的路径。</translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation>例如：{todds_example}</translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation>自动删除没有对应 .png 文件的 .dds 文件</translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation>删除没有对应 .png 文件的 .dds 文件。
+
+根据 .dds 文件数量，检查可能需要几秒钟。</translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation>启用高级筛选选项</translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation>启用后，模组面板将提供额外的筛选选项，例如文件夹大小、作者和修改日期。禁用此功能可以通过避免大量计算来提升性能。</translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation>优先使用带版本信息的 About.xml 标签，而不是基础标签。</translation>
+    </message>
+    <message>
+        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
+        <translation>启用后，*ByVersion 标签（例如 modDependenciesByVersion、loadAfterByVersion、loadBeforeByVersion、incompatibleWithByVersion、descriptionsByVersion）将优先于基础标签。如果存在匹配的版本标签但内容为空，则会忽略基础标签。</translation>
     </message>
 </context>
 <context>
@@ -4156,6 +4534,17 @@ New symlink:
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
         <translation>应用主题失败：{selected_theme_name}，重置为默认主题：{self.default_theme}</translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
+        <translation>错误：未找到 todds。如果你是从源码运行，请确保已按照 {development_guide_url} 中的正确步骤操作。
+
+如需帮助，请通过以下地址联系我们：{support_url}</translation>
     </message>
 </context>
 <context>
