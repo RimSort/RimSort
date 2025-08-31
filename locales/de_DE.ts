@@ -1971,6 +1971,10 @@ How would you like to proceed?</source>
         <source>ACF Log Reader</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Player Log</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2164,6 +2168,10 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>RimSort GitHub…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset Mod Colors</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2526,6 +2534,10 @@ Do you want to proceed?</source>
         <source>Workshop Times:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
@@ -2782,6 +2794,11 @@ An alternative updated mod is recommended:
 {alternative}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2958,6 +2975,313 @@ An alternative updated mod is recommended:
     </message>
     <message>
         <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3811,6 +4135,56 @@ Improves performance by ~50%.</source>
         <source>Compare mod lists with the recent save file</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Consider alternativePackageIds as satisfying dependencies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4007,6 +4381,15 @@ New symlink:
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
