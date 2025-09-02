@@ -235,17 +235,14 @@ QProgressBar::chunk {
 QProgressBar::chunk#runner {
     width: 10px;
 }
-QProgressBar::chunk#warn {
-    background-color: yellow;
+QProgressBar::chunk#success {
+    background-color: #008000;
 }
-QProgressBar::chunk#critical {
-    background-color: orange;
+QProgressBar::chunk#failure {
+    background-color: #ffa500;
 }
-QProgressBar::chunk#emergency {
-    background-color: red;
-}
-QProgressBar::chunk#warn {
-    background-color: green;
+QProgressBar::chunk#error {
+    background-color: #ff0000;
 }
 /* Styling for push buttons */
 QPushButton {
