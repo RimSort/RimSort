@@ -1,155 +1,155 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ja_JP">
 <context>
     <name>AcfLogReader</name>
     <message>
         <source>Ready</source>
-        <translation type="unfinished">準備完了</translation>
+        <translation>準備ができて</translation>
     </message>
     <message>
         <source>Search...</source>
-        <translation type="unfinished">検索...</translation>
+        <translation>検索...</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">更新</translation>
+        <translation>リフレッシュします</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
-        <translation type="unfinished">ACFデータをインポート</translation>
+        <translation>ACFデータをインポートします</translation>
     </message>
     <message>
         <source>Export ACF Data</source>
-        <translation type="unfinished">ACFデータをエクスポート</translation>
+        <translation>ACFデータをエクスポートします</translation>
     </message>
     <message>
         <source>Export to CSV</source>
-        <translation type="unfinished">CSVにエクスポート</translation>
+        <translation>CSVへのエクスポート</translation>
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished">ロードされた{count}のアイテム | 最終更新: {time}</translation>
+        <translation>ロード{count}アイテム|最終更新：{時間}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
-        <translation type="unfinished">ユーザーによってエクスポートがキャンセルされました。</translation>
+        <translation>ユーザーがキャンセルしたエクスポート。</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished">エクスポートに失敗しました: ファイルのパーミッションが拒否されました - ファイルのパーミッションを確認してください</translation>
+        <translation>エクスポートの失敗：許可拒否 - ファイル許可を確認します</translation>
     </message>
     <message>
         <source>Export Error</source>
-        <translation type="unfinished">エクスポートエラー</translation>
+        <translation>エクスポートエラー</translation>
     </message>
     <message>
         <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished">エクスポートに失敗しました: ファイルシステムエラー - {e}</translation>
+        <translation>エクスポート失敗：ファイルシステムエラー -  {e}</translation>
     </message>
     <message>
         <source>Export failed: File system error</source>
-        <translation type="unfinished">エクスポートに失敗しました: ファイルシステムエラー</translation>
+        <translation>エクスポートの失敗：ファイルシステムエラー</translation>
     </message>
     <message>
         <source>Exporting to CSV...</source>
-        <translation type="unfinished">CSVにエクスポート中...</translation>
+        <translation>CSVへのエクスポート...</translation>
     </message>
     <message>
         <source>Exporting rows...</source>
-        <translation type="unfinished">行をエクスポート中...</translation>
+        <translation>行のエクスポート...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <source>Export failed due to an unknown error</source>
-        <translation type="unfinished">不明なエラーによりエクスポートに失敗しました</translation>
+        <translation>エラーが不明のためにエクスポートが失敗しました</translation>
     </message>
     <message>
         <source>View in Steam Workshop</source>
-        <translation type="unfinished">Steamワークショップで表示</translation>
+        <translation>Steamワークショップで見る</translation>
     </message>
     <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished">モッドフォルダを開く</translation>
+        <translation>MODフォルダーを開きます</translation>
     </message>
     <message>
         <source>Published File ID</source>
-        <translation type="unfinished">公開されたファイルID</translation>
+        <translation>公開されたファイルID</translation>
     </message>
     <message>
         <source>Mod downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation>modダウンロード</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップで更新されました</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">タイプ</translation>
+        <translation>タイプ</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished">モッド名</translation>
+        <translation>mod名</translation>
     </message>
     <message>
         <source>Mod Path</source>
-        <translation type="unfinished">モッドパス</translation>
+        <translation>modパス</translation>
     </message>
     <message>
         <source>Conform acf import</source>
-        <translation type="unfinished">ACFインポートを確認</translation>
+        <translation>ACFインポートを適合させます</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished">これは現在のsteamcmd .acfファイルを置き換えます</translation>
+        <translation>これにより、現在のSteamCMD .ACFファイルが置き換えられます</translation>
     </message>
     <message>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished">本当に.acfをインポートしますか？これはsteamcmd専用です</translation>
+        <translation>.acfをインポートしたいですか？これはSteamcmdでのみ機能します</translation>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished">Import .acf</translation>
+        <translation>インポート.acf</translation>
     </message>
     <message>
         <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished">SteamCMDインターフェースが正しく初期化されていません</translation>
+        <translation>STEAMCMDインターフェイスは適切に初期化されていません</translation>
     </message>
     <message>
         <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished">ACFファイルが見つかりません: {acf_path}</translation>
+        <translation>ACFファイルが見つかりません：{acf_path}</translation>
     </message>
     <message>
         <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished">ACFファイルが見つかりません: {acf_path}</translation>
+        <translation>ACFファイルが見つかりません：{acf_path}</translation>
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished">エクスポート用に提供されたファイルパスが無効です: {file_path}</translation>
+        <translation>エクスポート用に提供される無効なファイルパス：{file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished">ACFを{file_path}にエクスポートしました</translation>
+        <translation>ACFを{file_path}に正常にエクスポートしました</translation>
     </message>
     <message>
         <source>Export Success</source>
-        <translation type="unfinished">エクスポート成功</translation>
+        <translation>エクスポートの成功</translation>
     </message>
     <message>
         <source>Export failed: {e}</source>
-        <translation type="unfinished">エクスポートに失敗しました: {e}</translation>
+        <translation>エクスポート失敗：{e}</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished">エクスポートに失敗しました</translation>
+        <translation>エクスポートは失敗しました</translation>
     </message>
     <message>
         <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished">エクスポートに失敗しました: 不明な例外が発生しました</translation>
+        <translation>ExportFailed未知の例外が発生しました</translation>
     </message>
 </context>
 <context>
@@ -272,7 +272,7 @@ Try simplifying your pattern or check for syntax errors.</source>
         <translation>ファイルアクセスエラー</translation>
     </message>
     <message>
-        <source>RimSort doesn&apos;t have permission to access some files.</source>
+        <source>RimSort doesn't have permission to access some files.</source>
         <translation>RimSortは一部のファイルにアクセスする権限がありません。</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@ RimSortを管理者権限で実行するか、フォルダのアクセス許可�
     <message>
         <source>{error_msg}
 
-Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
+Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
         <translation>{error_msg}
 
 小さなバッチで検索するか、非常に大きなファイルには「ストリーミング検索」メソッドを使用してください。</translation>
@@ -385,13 +385,13 @@ Please check your settings and try again.</source>
     <message>
         <source>Enable to use regular expressions in search
 Examples:
-- &apos;def.*\(&apos; to find function definitions
-- &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
-- &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
+- 'def.*\(' to find function definitions
+- '&lt;[^&gt;]+&gt;' to find XML tags
+- '\d+\.\d+(\.\d+)?' to find version numbers</source>
         <translation>正規表現を使用すると、次のような例が見つかります:
-- &apos;def.*\(&apos; to find function definitions
-- &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
-- &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</translation>
+- 'def.*\(' to find function definitions
+- '&lt;[^&gt;]+&gt;' to find XML tags
+- '\d+\.\d+(\.\d+)?' to find version numbers</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -533,11 +533,11 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Right-click a result for actions</source>
-        <translation type="unfinished"></translation>
+        <translation>アクションの結果を右クリックします</translation>
     </message>
     <message>
         <source>Right-click for actions</source>
-        <translation type="unfinished"></translation>
+        <translation>アクションを右クリックします</translation>
     </message>
 </context>
 <context>
@@ -555,19 +555,19 @@ When unchecked, search all file types with standard search.</source>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
-        <translation type="unfinished"></translation>
+        <translation>言語が変更されました</translation>
     </message>
     <message>
         <source>The language has been updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>言語が更新されました。</translation>
     </message>
     <message>
         <source>Restart the application to apply the change. Restart now?</source>
-        <translation type="unfinished"></translation>
+        <translation>アプリケーションを再起動して変更を適用します。今再起動しますか？</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished"></translation>
+        <translation>再起動</translation>
     </message>
 </context>
 <context>
@@ -598,7 +598,7 @@ Would you like to configure them now?</source>
         <translation>ModsConfig.xml（アクティブモッドリスト）にあるパッケージIDの重複モッドが見つかりました</translation>
     </message>
     <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
+        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first 'local mod' of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
         <translation>以下のモッドはModsConfig.xmlでアクティブに設定されており、モッドデータソースに重複するインスタンスが見つかりました。バニラゲームは、見つかった特定のパッケージIDの最初の「ローカルモッド」を使用します。したがって、RimSortもこのロジックに従います。</translation>
     </message>
     <message>
@@ -660,8 +660,8 @@ Do you want to update now?</source>
         <translation>最新のRimSortリリースのダウンロードに失敗しました！</translation>
     </message>
     <message>
-        <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
-        <translation>インターネット接続を確認して再試行してください。また、直接&apos;https://github.com/RimSort/RimSort/releases&apos; を確認することもできます。</translation>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>インターネット接続を確認して再試行してください。また、直接'https://github.com/RimSort/RimSort/releases' を確認することもできます。</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -692,7 +692,7 @@ Do you want to update now?</source>
         <translation>重要</translation>
     </message>
     <message>
-        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
+        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
         <translation>ダウンロードが完了したら、Rentryインポートを再度実行する必要があります。ダウンロードが完了した後に不足しているモッドがある場合、それらは不足しているモッドパネルに表示されます。RimSortが一部のモッドをダウンロードできない場合、それはRentryリンクとSteamデータベースの両方でモッドデータが利用できないためです。</translation>
     </message>
     <message>
@@ -724,7 +724,7 @@ Do you want to update now?</source>
         <translation>アクティブなモッドをファイルにエクスポートしました</translation>
     </message>
     <message>
-        <source>Click &quot;Show Details&quot; to see the full report!</source>
+        <source>Click "Show Details" to see the full report!</source>
         <translation>「詳細を表示」をクリックして、完全なレポートを表示してください！</translation>
     </message>
     <message>
@@ -870,8 +870,8 @@ Do you want to update now?</source>
         <translation>SteamCMDの実行可能ファイルが見つかりませんでした。</translation>
     </message>
     <message>
-        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
-        <translation>既存のSteamCMDプレフィックスを設定するか、&quot;Setup SteamCMD&quot;で新しいプレフィックスを設定してください。</translation>
+        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
+        <translation>既存のSteamCMDプレフィックスを設定するか、"Setup SteamCMD"で新しいプレフィックスを設定してください。</translation>
     </message>
     <message>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
@@ -1078,7 +1078,7 @@ A report of discrepancies is generated. You will be prompted for these paths in 
         <translation>Steam DB比較レポート: {len} 件見つかりました</translation>
     </message>
     <message>
-        <source>Click &apos;Show Details&apos; to see the full report!</source>
+        <source>Click 'Show Details' to see the full report!</source>
         <translation>「詳細を表示」をクリックして、完全なレポートを表示してください！</translation>
     </message>
     <message>
@@ -1086,8 +1086,8 @@ A report of discrepancies is generated. You will be prompted for these paths in 
         <translation>この操作は、例外を除いて、BでAを再帰的に更新することによって、2つのデータベースAとBをマージします。</translation>
     </message>
     <message>
-        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.
+        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.
+- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.
 - The following exceptions will be made:
 
 	{DB_BUILDER_RECURSE_EXCEPTIONS}
@@ -1150,7 +1150,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>これを代わりに使用</translation>
     </message>
     <message>
-        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>「これを代わりに使用」データベースに提案は見つかりませんでした。</translation>
     </message>
     <message>
@@ -1163,31 +1163,31 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
+        <translation>rimsortのアップデートがリリースされました：{rest_tag_name}</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation type="unfinished"></translation>
+        <translation>{system_info}の有効なrimsortリリースを見つけることができませんでした</translation>
     </message>
     <message>
         <source>Unable to retrieve release information</source>
-        <translation type="unfinished"></translation>
+        <translation>リリース情報を取得できません</translation>
     </message>
     <message>
         <source>Failed to connect to GitHub API: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>Github APIに接続できなかった：{エラー}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
-        <translation type="unfinished"></translation>
+        <translation>rimsort {tag_name}リリースのダウンロード...</translation>
     </message>
     <message>
         <source>Failed to launch update</source>
-        <translation type="unfinished"></translation>
+        <translation>更新の起動に失敗しました</translation>
     </message>
     <message>
         <source>Could not start the update process.</source>
-        <translation type="unfinished"></translation>
+        <translation>更新プロセスを開始できませんでした。</translation>
     </message>
     <message>
         <source>Unsaved Changes</source>
@@ -1207,15 +1207,15 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
-        <translation type="unfinished"></translation>
+        <translation>rimworld保存ファイルからインポートします</translation>
     </message>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
+        <translation>rimworld save（*.rws）;;すべてのファイル（*。*）</translation>
     </message>
     <message>
         <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation type="unfinished"></translation>
+        <translation>{path.name}をhttps://0x0.st/にアップロードしました</translation>
     </message>
 </context>
 <context>
@@ -1486,9 +1486,9 @@ Destination: {dest}</source>
     </message>
     <message>
         <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
+A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
         <translation>設定でリポジトリを再構成してください！
-有効なリポジトリは、空でなく、&quot;http://&quot;または&quot;https://&quot;で始まるリポジトリURLです。</translation>
+有効なリポジトリは、空でなく、"http://"または"https://"で始まるリポジトリURLです。</translation>
     </message>
     <message>
         <source>Invalid repository URL</source>
@@ -1788,7 +1788,7 @@ GitHubで手動でプルリクエストを作成できます。
     </message>
     <message>
         <source>{count} repositories were updated with their latest commits:</source>
-        <translation type="unfinished"></translation>
+        <translation>{count}リポジトリは、最新のコミットで更新されました。</translation>
     </message>
 </context>
 <context>
@@ -1858,8 +1858,8 @@ GitHubで手動でプルリクエストを作成できます。
         <translation>インスタンス名を提供</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not &quot;Default&quot;</source>
-        <translation>バックアップされたインスタンスの一意の名前を入力してください。これは &quot;Default&quot; ではありません:</translation>
+        <source>Input a unique name for the backed up instance that is not "Default"</source>
+        <translation>バックアップされたインスタンスの一意の名前を入力してください。これは "Default" ではありません:</translation>
     </message>
     <message>
         <source>Clone instance [{existing_instance_name}]</source>
@@ -1872,7 +1872,7 @@ GitHubで手動でプルリクエストを作成できます。
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
 
-RimSort can copy all of your Workshop mods to the new instance&apos;s local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
+RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
 
 Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
 
@@ -1946,7 +1946,7 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <translation>無効なパス: {path}</translation>
     </message>
     <message>
-        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
+        <source>Couldn't restore steamcmd symlink/junction</source>
         <translation>steamcmdのシンボリックリンク/ジャンクションを復元できませんでした</translation>
     </message>
     <message>
@@ -1978,7 +1978,7 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <translation>インスタンスをクローンできませんでした。</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be &apos;Default&apos; or empty.</source>
+        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
         <translation>有効で一意のインスタンス名を入力してください。「Default」または空にすることはできません。</translation>
     </message>
     <message>
@@ -2035,23 +2035,23 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     </message>
     <message>
         <source>Convert to SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamcmdに変換します</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップフォルダーを保持します</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <source>ACF Log Reader</source>
-        <translation type="unfinished"></translation>
+        <translation>ACFログリーダー</translation>
     </message>
     <message>
         <source>Player Log</source>
-        <translation type="unfinished"></translation>
+        <translation>プレーヤーログ</translation>
     </message>
 </context>
 <context>
@@ -2185,8 +2185,8 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <translation>インスタンス</translation>
     </message>
     <message>
-        <source>Current: &quot;Default&quot;</source>
-        <translation>現在: &quot;Default&quot;</translation>
+        <source>Current: "Default"</source>
+        <translation>現在: "Default"</translation>
     </message>
     <message>
         <source>Backup Instance…</source>
@@ -2242,15 +2242,15 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     </message>
     <message>
         <source>From Save file…</source>
-        <translation type="unfinished"></translation>
+        <translation>保存ファイルから…</translation>
     </message>
     <message>
         <source>RimSort GitHub…</source>
-        <translation type="unfinished"></translation>
+        <translation>rimsort github…</translation>
     </message>
     <message>
         <source>Reset Mod Colors</source>
-        <translation type="unfinished"></translation>
+        <translation>mod色をリセットします</translation>
     </message>
 </context>
 <context>
@@ -2296,7 +2296,9 @@ Please make sure your Database location settings are correct.</source>
         <source>Steam DB last updated: {last_updated}
 
 Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation></translation>
+        <translation>Steam DB最終更新：{last_updated}
+
+キャッシュされたが、期限切れの蒸気データベースに戻る...</translation>
     </message>
     <message>
         <source>Missing Version.txt</source>
@@ -2370,7 +2372,7 @@ Select which missing dependencies to add to your active mods list.</source>
         <source>
 User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
 
-Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
+Rimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
         <translation>
@@ -2537,25 +2539,27 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Steam {action}</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam {アクション}</translation>
     </message>
     <message>
         <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
 The process may take a few moments to complete.</source>
-        <translation type="unfinished"></translation>
+        <translation>{len} Steam Workshop mod（s）から{action}を正常に開始しました。
+プロセスは、完了するまでに少し時間がかかる場合があります。</translation>
     </message>
     <message>
         <source>{action} Error</source>
-        <translation type="unfinished"></translation>
+        <translation>{アクション}エラー</translation>
     </message>
     <message>
         <source>Confirm Deletion and {action}</source>
-        <translation type="unfinished"></translation>
+        <translation>削除を確認し、{アクション}</translation>
     </message>
     <message>
         <source>You have selected {count} mod(s) for deletion.
 {steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation type="unfinished"></translation>
+        <translation>削除のために{count} mod（s）を選択しました。
+これらの{Steam_Count}は、{アクション}でもあるSteam Workshop Modsです。</translation>
     </message>
     <message>
         <source>
@@ -2564,23 +2568,27 @@ This operation will:
 • {action} Steam Workshop mods from your Steam account
 
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>この操作は次のとおりです。
+•ファイルシステムから選択したMODディレクトリを削除します
+•{Action} Steam Workshop ModsからのSteam Workshop Mod
+
+先に進みたいですか？</translation>
     </message>
     <message>
         <source>unsubscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>登録解除</translation>
     </message>
     <message>
         <source>resubscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>再登録します</translation>
     </message>
     <message>
         <source>unsubscribed</source>
-        <translation type="unfinished"></translation>
+        <translation>登録解除</translation>
     </message>
     <message>
         <source>resubscribed</source>
-        <translation type="unfinished"></translation>
+        <translation>再サブスクライブ</translation>
     </message>
 </context>
 <context>
@@ -2619,23 +2627,23 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>フォルダーサイズ：</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation type="unfinished"></translation>
+        <translation>最後に触れた：</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイルシステムの変更：</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップタイム：</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation type="unfinished"></translation>
+        <translation>ここにあなたの個人的なmodノートを置いてください！</translation>
     </message>
 </context>
 <context>
@@ -2670,11 +2678,11 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Not in latest save</source>
-        <translation type="unfinished"></translation>
+        <translation>最新のセーブではありません</translation>
     </message>
     <message>
         <source>In latest save</source>
-        <translation type="unfinished"></translation>
+        <translation>最新の保存で</translation>
     </message>
 </context>
 <context>
@@ -2883,27 +2891,36 @@ Should be Loaded Before:</source>
     </message>
     <message>
         <source>Change mod color</source>
-        <translation type="unfinished"></translation>
+        <translation>mod色を変更します</translation>
     </message>
     <message>
         <source>Reset mod color</source>
-        <translation type="unfinished"></translation>
+        <translation>mod色をリセットします</translation>
     </message>
     <message>
         <source>
 Mod and Game Version Mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>MODおよびゲームバージョンの不一致</translation>
     </message>
     <message>
         <source>
 An alternative updated mod is recommended:
 {alternative}</source>
-        <translation type="unfinished"></translation>
+        <translation>別の更新されたmodが推奨されます：
+{代替}</translation>
     </message>
     <message>
         <source>
 Alternative Dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>代替依存関係：</translation>
+    </message>
+    <message>
+        <source>Open folder in text editor</source>
+        <translation>テキストエディターの開いたフォルダー</translation>
+    </message>
+    <message>
+        <source>Open folder(s) in text editor</source>
+        <translation>テキストエディターのオープンフォルダー</translation>
     </message>
 </context>
 <context>
@@ -3040,7 +3057,7 @@ Alternative Dependencies:</source>
         <translation>エラーを表示するモッドのみを表示</translation>
     </message>
     <message>
-        <source>Check &quot;Use This Instead&quot; Database</source>
+        <source>Check "Use This Instead" Database</source>
         <translation>このデータベースを使用</translation>
     </message>
     <message>
@@ -3069,326 +3086,326 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Sort inactive mods by</source>
-        <translation type="unfinished"></translation>
+        <translation>非アクティブなmodsを並べ替えます</translation>
     </message>
     <message>
         <source>0 new</source>
-        <translation type="unfinished"></translation>
+        <translation>0新しい</translation>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
-        <translation type="unfinished"></translation>
+        <translation>クリックして、最新の保存にないアクティブMODのみを表示する</translation>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation type="unfinished"></translation>
+        <translation>{パディング} {count} new</translation>
     </message>
 </context>
 <context>
     <name>PlayerLogTab</name>
     <message>
         <source>File Info</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイル情報</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation type="unfinished">パス:</translation>
+        <translation>パス：</translation>
     </message>
     <message>
         <source>Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>サイズ：</translation>
     </message>
     <message>
         <source>Modified:</source>
-        <translation type="unfinished"></translation>
+        <translation>修正：</translation>
     </message>
     <message>
         <source>Statistics</source>
-        <translation type="unfinished"></translation>
+        <translation>統計</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
-        <translation type="unfinished"></translation>
+        <translation>合計行：{total_lines}</translation>
     </message>
     <message>
         <source>Infos: {infos}</source>
-        <translation type="unfinished"></translation>
+        <translation>infos：{infos}</translation>
     </message>
     <message>
         <source>Keybinds: {keybinds}</source>
-        <translation type="unfinished"></translation>
+        <translation>keybinds：{keybinds}</translation>
     </message>
     <message>
         <source>Mod Issues: {mod_issues}</source>
-        <translation type="unfinished"></translation>
+        <translation>modの問題：{mod_issues}</translation>
     </message>
     <message>
         <source>Warnings: {warnings}</source>
-        <translation type="unfinished"></translation>
+        <translation>警告：{警告}</translation>
     </message>
     <message>
         <source>Errors: {errors}</source>
-        <translation type="unfinished"></translation>
+        <translation>エラー：{エラー}</translation>
     </message>
     <message>
         <source>Exceptions: {exceptions}</source>
-        <translation type="unfinished"></translation>
+        <translation>例外：{例外}</translation>
     </message>
     <message>
         <source>All Issues: {all_issues}</source>
-        <translation type="unfinished"></translation>
+        <translation>すべての問題：{all_issues}</translation>
     </message>
     <message>
         <source>Auto Load Game Log on Startup</source>
-        <translation type="unfinished"></translation>
+        <translation>起動の自動ロードゲームログ</translation>
     </message>
     <message>
         <source>If checked, the Game log will be loaded automatically on startup.</source>
-        <translation type="unfinished"></translation>
+        <translation>チェックした場合、ゲームログは起動時に自動的にロードされます。</translation>
     </message>
     <message>
         <source>Enable Real-Time Log Monitoring</source>
-        <translation type="unfinished"></translation>
+        <translation>リアルタイムログ監視を有効にします</translation>
     </message>
     <message>
         <source>Enable real-time monitoring of Player.log file changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>player.logファイルの変更のリアルタイム監視を有効にします。</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">更新</translation>
+        <translation>リフレッシュします</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation type="unfinished">エクスポート</translation>
+        <translation>輸出</translation>
     </message>
     <message>
         <source>Clear Log Display</source>
-        <translation type="unfinished"></translation>
+        <translation>ログ表示をクリアします</translation>
     </message>
     <message>
         <source>Load Game Log</source>
-        <translation type="unfinished"></translation>
+        <translation>ゲームログをロードします</translation>
     </message>
     <message>
-        <source>Loads the game&apos;s Player.log file.</source>
-        <translation type="unfinished"></translation>
+        <source>Loads the game's Player.log file.</source>
+        <translation>ゲームのplayer.logファイルをロードします。</translation>
     </message>
     <message>
         <source>Load Log from File</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイルからログを読み込みます</translation>
     </message>
     <message>
         <source>Open a file dialog to select a log file</source>
-        <translation type="unfinished"></translation>
+        <translation>[ファイル]ダイアログを開き、ログファイルを選択します</translation>
     </message>
     <message>
         <source>Load Log from Link</source>
-        <translation type="unfinished"></translation>
+        <translation>リンクからログをロードします</translation>
     </message>
     <message>
         <source>Load log content from a URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URLからログコンテンツをロードします</translation>
     </message>
     <message>
         <source>Search and Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>検索とフィルター</translation>
     </message>
     <message>
         <source>Search log entries...</source>
-        <translation type="unfinished"></translation>
+        <translation>ログエントリを検索...</translation>
     </message>
     <message>
         <source>All Entries</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのエントリ</translation>
     </message>
     <message>
         <source>Infos Only</source>
-        <translation type="unfinished"></translation>
+        <translation>Infosのみ</translation>
     </message>
     <message>
         <source>Keybinds Only</source>
-        <translation type="unfinished"></translation>
+        <translation>keybindsのみ</translation>
     </message>
     <message>
         <source>Mod Issues</source>
-        <translation type="unfinished"></translation>
+        <translation>modの問題</translation>
     </message>
     <message>
         <source>Warnings Only</source>
-        <translation type="unfinished"></translation>
+        <translation>警告のみ</translation>
     </message>
     <message>
         <source>Errors Only</source>
-        <translation type="unfinished"></translation>
+        <translation>エラーのみ</translation>
     </message>
     <message>
         <source>Exceptions Only</source>
-        <translation type="unfinished"></translation>
+        <translation>例外のみ</translation>
     </message>
     <message>
         <source>All Issues</source>
-        <translation type="unfinished"></translation>
+        <translation>すべての問題</translation>
     </message>
     <message>
         <source>Filter by mod name...</source>
-        <translation type="unfinished"></translation>
+        <translation>mod名でフィルター...</translation>
     </message>
     <message>
         <source>Highlight Color</source>
-        <translation type="unfinished"></translation>
+        <translation>色を強調表示します</translation>
     </message>
     <message>
         <source>Pick color for search and navigation highlighting</source>
-        <translation type="unfinished"></translation>
+        <translation>検索とナビゲーションの強調表示のために色を選択します</translation>
     </message>
     <message>
         <source>Previous</source>
-        <translation type="unfinished"></translation>
+        <translation>前の</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>次</translation>
     </message>
     <message>
         <source>Quick Navigation</source>
-        <translation type="unfinished"></translation>
+        <translation>クイックナビゲーション</translation>
     </message>
     <message>
         <source>Scroll to End</source>
-        <translation type="unfinished"></translation>
+        <translation>スクロールして終了します</translation>
     </message>
     <message>
         <source>Scroll to the end of the log display</source>
-        <translation type="unfinished"></translation>
+        <translation>ログディスプレイの端までスクロールします</translation>
     </message>
     <message>
         <source>Path: Loaded from URL: {url}</source>
-        <translation type="unfinished"></translation>
+        <translation>パス：urlからロード：{url}</translation>
     </message>
     <message>
         <source>Path: Loaded from URL</source>
-        <translation type="unfinished"></translation>
+        <translation>パス：URLからロード</translation>
     </message>
     <message>
         <source>Size: {size:,} bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>サイズ：{size：、}バイト</translation>
     </message>
     <message>
         <source>Modified: N/A</source>
-        <translation type="unfinished"></translation>
+        <translation>修正：n/a</translation>
     </message>
     <message>
         <source>Path: N/A</source>
-        <translation type="unfinished"></translation>
+        <translation>パス：n/a</translation>
     </message>
     <message>
         <source>Size: N/A</source>
-        <translation type="unfinished"></translation>
+        <translation>サイズ：n/a</translation>
     </message>
     <message>
         <source>Player log file not found.</source>
-        <translation type="unfinished"></translation>
+        <translation>プレーヤーログファイルが見つかりません。</translation>
     </message>
     <message>
         <source>Enter URL:</source>
-        <translation type="unfinished"></translation>
+        <translation>URLを入力してください：</translation>
     </message>
     <message>
         <source>Log loaded successfully from URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URLから正常にロードされたログ</translation>
     </message>
     <message>
         <source>Failed to load log from URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URLからログをロードできませんでした</translation>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>エラーのために失敗：{エラー}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
-        <translation type="unfinished"></translation>
+        <translation>パス：{path_str}</translation>
     </message>
     <message>
         <source>Size: {size_str}</source>
-        <translation type="unfinished"></translation>
+        <translation>サイズ：{size_str}</translation>
     </message>
     <message>
         <source>Modified: {modified_str}</source>
-        <translation type="unfinished"></translation>
+        <translation>修正：{modified_str}</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>情報</translation>
     </message>
     <message>
         <source>Keybind</source>
-        <translation type="unfinished"></translation>
+        <translation>keybind</translation>
     </message>
     <message>
         <source>Mod_issue</source>
-        <translation type="unfinished"></translation>
+        <translation>mod_issue</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"></translation>
+        <translation>警告</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">エラー</translation>
+        <translation>エラー</translation>
     </message>
     <message>
         <source>Exception</source>
-        <translation type="unfinished"></translation>
+        <translation>例外</translation>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation type="unfinished"></translation>
+        <translation>前の{下}エントリにジャンプします</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
-        <translation type="unfinished"></translation>
+        <translation>次の{lower}エントリにジャンプします</translation>
     </message>
     <message>
         <source>Total Lines: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>合計行：0</translation>
     </message>
     <message>
         <source>Infos: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>infos：0</translation>
     </message>
     <message>
         <source>Keybinds: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>keybinds：0</translation>
     </message>
     <message>
         <source>Mod Issues: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>MODの問題：0</translation>
     </message>
     <message>
         <source>Warnings: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>警告：0</translation>
     </message>
     <message>
         <source>Errors: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>エラー：0</translation>
     </message>
     <message>
         <source>Exceptions: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>例外：0</translation>
     </message>
     <message>
         <source>All Issues: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>すべての問題：0</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation type="unfinished"></translation>
+        <translation>コントロール</translation>
     </message>
     <message>
         <source>Pick Highlight Color</source>
-        <translation type="unfinished"></translation>
+        <translation>ハイライトの色を選択します</translation>
     </message>
 </context>
 <context>
@@ -3551,7 +3568,7 @@ Alternative Dependencies:</source>
         <translation>これは自分の記録に有用であり、他の人にも有用です。</translation>
     </message>
     <message>
-        <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
+        <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
         <translation>モッドのAbout.xmlからのルールは変更できません。「コミュニティルール」と「ユーザールール」のみが許可されています。</translation>
     </message>
     <message>
@@ -3604,19 +3621,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>About.xml (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>about.xml（非互換性）</translation>
     </message>
     <message>
         <source>Community Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>コミュニティルール（非互換性）</translation>
     </message>
     <message>
         <source>User Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished"></translation>
+        <translation>ユーザールール（非互換性）</translation>
     </message>
     <message>
         <source>Force load at top of list</source>
-        <translation type="unfinished"></translation>
+        <translation>リストの上部に強制荷重</translation>
     </message>
 </context>
 <context>
@@ -3652,10 +3669,10 @@ Alternative Dependencies:</source>
     <message>
         <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
 
-Click &apos;Show Details&apos; to see a list of mods that failed.</source>
+Click 'Show Details' to see a list of mods that failed.</source>
         <translation>SteamCMDがモッドのダウンロードに失敗しました！ダウンロードに失敗したモッドの再ダウンロードを行いますか？
 
-&apos;Show Details&apos;をクリックして、失敗したモッドのリストを確認してください。</translation>
+'Show Details'をクリックして、失敗したモッドのリストを確認してください。</translation>
     </message>
     <message>
         <source>Process Complete</source>
@@ -3672,6 +3689,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     <message>
         <source>Ok</source>
         <translation>OK</translation>
+    </message>
+    <message>
+        <source>SteamCMD Downloader Login error</source>
+        <translation>Steamcmdダウンローダーログインエラー</translation>
+    </message>
+    <message>
+        <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
+        <translation>SteamCMDはログインエラーを報告しました。インターネットに接続されていることを確認してください。SteamCMDがファイアウォールによってブロックされていないことを確認してください。</translation>
     </message>
 </context>
 <context>
@@ -3815,12 +3840,12 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>Steamワークショップデータベース</translation>
     </message>
     <message>
-        <source>&quot;No Version Warning&quot; Database</source>
-        <translation>&quot;バージョン警告なし&quot;データベース</translation>
+        <source>"No Version Warning" Database</source>
+        <translation>"バージョン警告なし"データベース</translation>
     </message>
     <message>
-        <source>&quot;Use This Instead&quot; Database</source>
-        <translation>&quot;これを使用してください&quot;データベース</translation>
+        <source>"Use This Instead" Database</source>
+        <translation>"これを使用してください"データベース</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -3867,7 +3892,7 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>ローカルにインストールされたモッドからPublishedFileIDsを取得します。</translation>
     </message>
     <message>
-        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
+        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods' About.xml files.</source>
         <translation>更新したいモッドはインストールされている必要があります。初期データベースはモッドのAbout.xmlファイルのデータを含めてビルドされます。</translation>
     </message>
     <message>
@@ -3875,7 +3900,7 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>SteamワークショップからPublishedFileIDsを取得します。</translation>
     </message>
     <message>
-        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
+        <source>Mods to be updated don't have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation>更新したいモッドはインストールされている必要がありません。初期データベースはSteamワークショップをスクレイピングしてビルドされます。</translation>
     </message>
     <message>
@@ -3998,16 +4023,25 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>To add your own theme / stylesheet 
 
-1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
-2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
-3) Edit the copied &apos;style.qss&apos; as per your imagination 
-4) Start &apos;RimSort&apos; and select your theme from dropdown 
-5) Click &apos;ok&apos; to save settings and apply the selected theme 
+1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
+2) Using the default 'RimPy' theme copy it to the folder you created 
+3) Edit the copied 'style.qss' as per your imagination 
+4) Start 'RimSort' and select your theme from dropdown 
+5) Click 'ok' to save settings and apply the selected theme 
 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
-        <translation></translation>
+        <translation>独自のテーマ /スタイルシートを追加するには
+
+1）「rimsort」構成フォルダーに「Themes」フォルダーに新しい倍率を作成する
+2）デフォルトの「rimpy」テーマを使用して作成したフォルダーにコピーします
+3）あなたの想像力に従って、コピーされた「style.qss」を編集します
+4）「rimsort」を開始し、ドロップダウンからテーマを選択します
+5）[OK]をクリックして設定を保存し、選択したテーマを適用します
+
+注記
+フォルダの名前はテーマの名前として使用され、無効なテーマは無視されます</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
@@ -4141,23 +4175,23 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>C：\ Program Files（x86）\ Steam \ SteamApps \ common \ rimworldのようなものです</translation>
     </message>
     <message>
         <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
-        <translation type="unfinished"></translation>
+        <translation>c：\ uses \ username \ appdata \ locallow \ ludeon studios \ rimworld by ludeon studios \ config</translation>
     </message>
     <message>
         <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamを使用する場合のみ：C：\ Program Files（x86）\ Steam \ SteamApps \ Workshop \ content \ 294100</translation>
     </message>
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>C：\ Program Files（x86）\ Steam \ SteamApps \ common \ rimworld \ modsのようなものです</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation type="unfinished"></translation>
+        <translation>補助メタデータDB削除時間制限秒で。（すぐに削除され、-1を削除しないでください）</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
@@ -4165,138 +4199,161 @@ After a mod is deleted, this is the time we wait until this mod item is deleted 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished"></translation>
+        <translation>この時間制限の編集を有効にするには、高度な設定で関連するチェックボックスを確認してください。
+modが削除された後、これはこのmodアイテムが補助メタデータdbから削除されるまで待つ時間です。
+この補助DBには、mod色の情報、切り替えの警告、ユーザーノートなどが含まれています。
+これにより、基本的には、削除後何秒後に、MODの着色、ユーザーノートなどが保存されます。
+（これはRimsort以外の削除にも適用されます）</translation>
     </message>
     <message>
         <source>Enable editing</source>
-        <translation type="unfinished"></translation>
+        <translation>編集を有効にします</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、AUXメタデータDBデータ削除の時間制限の編集が可能になります。</translation>
     </message>
     <message>
         <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation type="unfinished"></translation>
+        <translation>補助メタデータDBパフォーマンスモードを有効にします</translation>
     </message>
     <message>
         <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
 Improves performance by ~50%.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、クラッシュが発生した場合のデータ損失/腐敗のリスクの増加により、補助DBパフォーマンスが向上します。
+パフォーマンスが〜50％向上します。</translation>
     </message>
     <message>
         <source>Delete before update</source>
-        <translation type="unfinished"></translation>
+        <translation>更新する前に削除します</translation>
     </message>
     <message>
         <source>This is useful if you want to ensure clean mod updates.</source>
-        <translation type="unfinished"></translation>
+        <translation>これは、クリーンなmodの更新を確保する場合に便利です。</translation>
     </message>
     <message>
         <source>Launch State</source>
-        <translation type="unfinished"></translation>
+        <translation>起動状態</translation>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation type="unfinished"></translation>
+        <translation>minは{min_size}で、maxは{max_size}です。この範囲外の値はデフォルトにリセットされます。</translation>
     </message>
     <message>
         <source>Maximized</source>
-        <translation type="unfinished"></translation>
+        <translation>最大化</translation>
     </message>
     <message>
         <source>Normal</source>
-        <translation type="unfinished"></translation>
+        <translation>普通</translation>
     </message>
     <message>
         <source>Custom size</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムサイズ</translation>
     </message>
     <message>
         <source>Main Window Launch State</source>
-        <translation type="unfinished"></translation>
+        <translation>メインウィンドウの起動状態</translation>
     </message>
     <message>
         <source>Browser Window Launch State</source>
-        <translation type="unfinished"></translation>
+        <translation>ブラウザウィンドウの起動状態</translation>
     </message>
     <message>
         <source>Settings Window Launch State</source>
-        <translation type="unfinished"></translation>
+        <translation>設定ウィンドウの起動状態</translation>
     </message>
     <message>
         <source>Custom Width:</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタム幅：</translation>
     </message>
     <message>
         <source>Custom Height:</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムの高さ：</translation>
     </message>
     <message>
         <source>Apply mod coloring to background instead of text</source>
-        <translation type="unfinished"></translation>
+        <translation>テキストの代わりにMODの色を背景に適用します</translation>
     </message>
     <message>
         <source>Auxiliary DB</source>
-        <translation type="unfinished"></translation>
+        <translation>補助DB</translation>
     </message>
     <message>
         <source>Integration with recent save</source>
-        <translation type="unfinished"></translation>
+        <translation>最近の保存との統合</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
-        <translation type="unfinished"></translation>
+        <translation>modリストを最近の保存ファイルと比較します</translation>
     </message>
     <message>
         <source>Clear also moves DLC</source>
-        <translation type="unfinished"></translation>
+        <translation>クリアもDLCを移動します</translation>
     </message>
     <message>
         <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished"></translation>
+        <translation>AlternativePackageIdsは、満足のいく依存関係と考えてください</translation>
     </message>
     <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
-        <translation type="unfinished"></translation>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing.</source>
+        <translation>有効にすると、about.xmlの代替PackageIDSエントリは、主な依存関係が欠落しているときにMODの依存関係を満たすことができます。</translation>
     </message>
     <message>
         <source>Custom todds command</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムTODDSコマンド</translation>
     </message>
     <message>
         <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation type="unfinished"></translation>
+        <translation>パスのように-pが指定されていない場合、現在のアクティブまたはすべてのmod選択からのパスが使用されます。</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
-        <translation type="unfinished"></translation>
+        <translation>例：{todds_example}</translation>
     </message>
     <message>
         <source>Automatically delete .dds files if no corresponding .png file exists</source>
-        <translation type="unfinished"></translation>
+        <translation>対応する.pngファイルが存在しない場合、.ddsファイルを自動的に削除します</translation>
     </message>
     <message>
         <source>This will delete .dds files that are not paired with a .png file,
 
 This checks may take few seconds depending on the number of .dds files present.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、.pngファイルとペアリングされていない.ddsファイルが削除されます。
+
+このチェックには、存在する.DDSファイルの数に応じて数秒かかる場合があります。</translation>
     </message>
     <message>
         <source>Enable advanced filtering options</source>
-        <translation type="unfinished"></translation>
+        <translation>高度なフィルタリングオプションを有効にします</translation>
     </message>
     <message>
         <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効にすると、フォルダーサイズ、著者、変更された日付などの追加のフィルタリングオプションがMODSパネルで利用可能になります。これを無効にすると、重い計算を回避することでパフォーマンスを改善できます。</translation>
     </message>
     <message>
         <source>Prefer versioned About.xml tags over base tags</source>
-        <translation type="unfinished"></translation>
+        <translation>ベースタグよりもabout.xmlタグについてバージョンを好む</translation>
     </message>
     <message>
         <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効にすると、 *バージョンタグ（例：moddependenciesbyversion、loadafterbyversion、loadbeforebyversion、互換性のないbyversion、descriptionsbyversion）がベースタグよりも優先されます。一致するバージョンのタグが存在しているが空の場合、ベースタグは無視されます。</translation>
+    </message>
+    <message>
+        <source>External Tools</source>
+        <translation>外部ツール</translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation>テキストエディターコマンドの場所</translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Folders)</source>
+        <translation>追加の引数（フォルダーを開く）</translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Single File)</source>
+        <translation>追加の引数（単一のファイルを開く）</translation>
     </message>
 </context>
 <context>
@@ -4363,7 +4420,7 @@ Please choose one of the following options to proceed.</source>
         <translation>コレクションをどのように追加しますか？</translation>
     </message>
     <message>
-        <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
+        <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
         <translation>コレクションからすべてのMODを追加するか、インストールされていないMODのみを追加するかを選択できます。</translation>
     </message>
     <message>
@@ -4452,7 +4509,7 @@ New symlink:
 [{symlink_source_path}] -&gt; </translation>
     </message>
     <message>
-        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
+        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
         <translation>シンボリックリンクの宛先パスはすでに存在します。既存の宛先を削除して、その場所に新しいシンボリックリンクを作成しますか？</translation>
     </message>
     <message>
@@ -4481,11 +4538,11 @@ New symlink:
     </message>
     <message>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>＆はい</translation>
     </message>
     <message>
-        <source>&amp;Don&apos;t Ask Again</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Don't Ask Again</source>
+        <translation>二度と聞かないでください</translation>
     </message>
 </context>
 <context>
@@ -4495,8 +4552,8 @@ New symlink:
         <translation>テーマパスエラー</translation>
     </message>
     <message>
-        <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
-        <translation>テーマ&apos;{theme_name}&apos;のスタイルシートパスが存在しません。デフォルトテーマ&apos;{default_theme}&apos;にリセットします。</translation>
+        <source>Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.</source>
+        <translation>テーマ'{theme_name}'のスタイルシートパスが存在しません。デフォルトテーマ'{default_theme}'にリセットします。</translation>
     </message>
     <message>
         <source>Theme Error</source>
@@ -4504,7 +4561,7 @@ New symlink:
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
-        <translation>テーマ&apos;{selected_theme_name}&apos;の適用に失敗しました。デフォルトテーマ&apos;{self.default_theme}&apos;にリセットします。</translation>
+        <translation>テーマ'{selected_theme_name}'の適用に失敗しました。デフォルトテーマ'{self.default_theme}'にリセットします。</translation>
     </message>
 </context>
 <context>
@@ -4513,7 +4570,9 @@ New symlink:
         <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
 
 Please reach out to us for support at: {support_url}</source>
-        <translation type="unfinished"></translation>
+        <translation>エラー：Toddsは見つかりませんでした。ソースから実行している場合は、{development_guide_url}の正しい手順に従っていることを確認してください。
+
+{support_url}のサポートについては、私たちに連絡してください</translation>
     </message>
 </context>
 <context>
@@ -4553,7 +4612,7 @@ Steamを通じてゲームを手動で確認/インストールしてくださ�
     <message>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
 
-If mods don&apos;t download automatically, try:
+If mods don't download automatically, try:
 1. Restart Steam
 2. Verify game files in Steam
 3. Visit the Workshop page of each mod</source>
@@ -4679,7 +4738,7 @@ Details: {e}</source>
         <translation>キャッシュがクリアされました</translation>
     </message>
     <message>
-        <source>Successfully deleted Steam&apos;s downloading folder.
+        <source>Successfully deleted Steam's downloading folder.
 Restart Steam for the changes to take effect.</source>
         <translation>Steamのダウンロードフォルダが正常に削除されました。
 変更を有効にするにはSteamを再起動してください。</translation>
@@ -4689,7 +4748,7 @@ Restart Steam for the changes to take effect.</source>
         <translation>キャッシュをクリア</translation>
     </message>
     <message>
-        <source>Steam&apos;s downloading folder is already empty.</source>
+        <source>Steam's downloading folder is already empty.</source>
         <translation>Steamのダウンロードフォルダはすでに空です。</translation>
     </message>
     <message>
@@ -4697,7 +4756,7 @@ Restart Steam for the changes to take effect.</source>
         <translation>キャッシュのクリアに失敗しました</translation>
     </message>
     <message>
-        <source>Could not delete Steam&apos;s downloading folder.
+        <source>Could not delete Steam's downloading folder.
 Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
         <translation>Steamのダウンロードフォルダを削除できませんでした。
@@ -4710,7 +4769,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam&apos;s game properties.
+Please verify game files manually through Steam's game properties.
 Details: {e}</source>
         <translation>Steamのゲームファイルを確認できませんでした。
 手動でSteamのゲームファイルを確認してください。
@@ -4781,7 +4840,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>Error: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>エラー：{e}</translation>
     </message>
 </context>
 <context>
@@ -4791,7 +4850,7 @@ Details: {e}</source>
         <translation>ゲームファイルの復元</translation>
     </message>
     <message>
-        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
+        <source>If you're experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
         <translation>ゲームの問題が発生している場合、次の復元オプションを試してください。Steamは次回起動時に削除されたファイルを自動的に再ダウンロードします。</translation>
     </message>
     <message>
@@ -4879,7 +4938,7 @@ Details: {e}</source>
         <translation>Steamのユーティリティ</translation>
     </message>
     <message>
-        <source>Delete Steam&apos;s downloading folder to fix download issues</source>
+        <source>Delete Steam's downloading folder to fix download issues</source>
         <translation>ダウンロードの問題を修正するためにSteamのダウンロードフォルダを削除</translation>
     </message>
     <message>
@@ -4892,43 +4951,43 @@ Details: {e}</source>
     </message>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
-        <translation type="unfinished"></translation>
+        <translation>警告：これらの操作は、選択したファイルを永続的に削除します！</translation>
     </message>
     <message>
         <source>Export List</source>
-        <translation type="unfinished"></translation>
+        <translation>エクスポートリスト</translation>
     </message>
     <message>
         <source>Import List</source>
-        <translation type="unfinished"></translation>
+        <translation>インポートリスト</translation>
     </message>
     <message>
         <source>Reset to Vanilla</source>
-        <translation type="unfinished"></translation>
+        <translation>バニラにリセット</translation>
     </message>
     <message>
         <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、modsフォルダのすべてのmodが削除され、バニラステートにリセットされます</translation>
     </message>
     <message>
         <source>Clear All Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのmodをクリアします</translation>
     </message>
     <message>
         <source>Steam-specific utilities to help resolve download and game file issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>ダウンロードおよびゲームファイルの問題の解決を支援する蒸気固有のユーティリティ。</translation>
     </message>
     <message>
         <source>Clear Download Cache</source>
-        <translation type="unfinished"></translation>
+        <translation>クリアダウンロードキャッシュ</translation>
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished"></translation>
+        <translation>ゲームファイルを確認します</translation>
     </message>
     <message>
         <source>Repair Steam Library</source>
-        <translation type="unfinished"></translation>
+        <translation>蒸気ライブラリを修理します</translation>
     </message>
 </context>
 <context>
@@ -4943,7 +5002,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>
-The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database</source>
+The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
         <translation>
 以下の表は、「これを代わりに使用」データベースに従って、提案された置き換えを持つワークショップMODを表示します</translation>
     </message>
@@ -5082,11 +5141,11 @@ The following table displays Workshop mods with suggested replacements according
     <name>check_if_pfids_blacklisted</name>
     <message>
         <source>Download blacklisted mods</source>
-        <translation type="unfinished"></translation>
+        <translation>ブラックリストに登録されたMODをダウンロードします</translation>
     </message>
     <message>
         <source>Skip blacklisted mods</source>
-        <translation type="unfinished"></translation>
+        <translation>ブラックリストに登録されたMODをスキップします</translation>
     </message>
 </context>
 <context>
