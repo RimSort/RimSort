@@ -2799,6 +2799,14 @@ An alternative updated mod is recommended:
 Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Open folder in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open folder(s) in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -3565,6 +3573,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <source>Ok</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>SteamCMD Downloader Login error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SearchWorker</name>
@@ -4183,6 +4199,22 @@ This checks may take few seconds depending on the number of .dds files present.<
     </message>
     <message>
         <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External Tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Folders)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Single File)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
