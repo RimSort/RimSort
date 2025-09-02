@@ -552,6 +552,7 @@ class RunnerPanel(QWidget):
         if answer == QMessageBox.StandardButton.Yes:
             self.redownloading = True
             self.steamcmd_downloader_signal.emit(self.steamcmd_download_tracking)
+            self.close()
 
         else:
             self.redownloading = False
