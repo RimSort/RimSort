@@ -72,6 +72,7 @@ class RunnerPanel(QWidget):
         self.process_last_args: Sequence[str] = []
         self.steamcmd_current_pfid: Optional[str] = None
         self.login_error = False
+        self.redownloading = False
 
         # Set up UI components
         self._setup_text_display()
