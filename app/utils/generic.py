@@ -14,9 +14,6 @@ from typing import Any, Callable, Generator, Tuple
 
 import requests
 from loguru import logger
-from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
-    copy as copy_to_clipboard,
-)
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
@@ -44,7 +41,8 @@ def copy_to_clipboard_safely(text: str) -> None:
     :param text: text to copy to clipboard
     """
     try:
-        copy_to_clipboard(text)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
