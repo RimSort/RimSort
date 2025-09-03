@@ -820,6 +820,15 @@ class MainContent(QObject):
 
         logger.debug(f"Latest RimSort version: {latest_version}")
 
+        # Special handling for edge releases
+        current_version_str = str(current_version).lower()
+        latest_version_str = str(latest_version).lower()
+        if "edge" in current_version_str and "edge" in latest_version_str:
+            logger.warning(
+                "Both current and latest versions are edge releases. Skipping update prompt."
+            )
+            return
+
         # Compare versions
         try:
             current_version_parsed = version.parse(current_version)
@@ -871,7 +880,10 @@ class MainContent(QObject):
 
             # Parse version
             try:
-                latest_version = version.parse(normalized_tag)
+                if "edge" in normalized_tag.lower():
+                    latest_version = version.parse("999.999.999")
+                else:
+                    latest_version = version.parse(normalized_tag)
             except Exception as e:
                 logger.warning(f"Failed to parse version from tag {tag_name}: {e}")
                 self.show_update_error()
