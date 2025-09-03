@@ -2404,7 +2404,7 @@ class ModListWidget(QListWidget):
                 # Build missing dependencies set while honoring alternativePackageIds
                 missing_deps: set[str] = set()
                 alternative_deps: set[str] = set()
-                consider_alternatives = self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
+                consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
                 for dep_entry in mod_data.get("dependencies", []):
                     alt_ids: set[str] = set()
                     if isinstance(dep_entry, tuple):
@@ -2478,7 +2478,7 @@ class ModListWidget(QListWidget):
                 ("missing_dependencies", self.tr("\nMissing Dependencies:")),
                 ("conflicting_incompatibilities", self.tr("\nIncompatibilities:")),
             ]
-            if self.metadata_manager.settings_controller.settings.consider_alternative_package_ids:
+            if self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
                 tooltip_sections.insert(
                     1,
                     (

@@ -84,6 +84,8 @@ class Settings(QObject):
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
         # Whether to use moddependencies as loadTheseBefore rules
         self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies: bool = False
         # Whether to check for missing dependencies when sorting
         self.check_dependencies_on_sort: bool = True
 
@@ -156,8 +158,6 @@ class Settings(QObject):
         self.show_save_comparison_indicators: bool = True
         # Clear button behavior
         self.clear_moves_dlc: bool = False
-        # Dependencies: treat alternativePackageIds as satisfying dependencies
-        self.consider_alternative_package_ids: bool = False
         # Advanced filtering options
         self.enable_advanced_filtering: bool = True
 

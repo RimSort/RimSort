@@ -684,6 +684,12 @@ class SettingsController(QObject):
                 )
             )
 
+        # Use alternativePackageIds as satisfying dependencies
+        if self.settings.use_alternative_package_ids_as_satisfying_dependencies:
+            self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setChecked(
+                True
+            )
+
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(
             self.settings.check_dependencies_on_sort
@@ -884,13 +890,6 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
-        # Advanced: alternativePackageIds toggle
-        try:
-            self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
-                self.settings.consider_alternative_package_ids
-            )
-        except Exception:
-            pass
         # Advanced: enable advanced filtering toggle
         try:
             self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
@@ -1025,6 +1024,9 @@ class SettingsController(QObject):
         self.settings.use_moddependencies_as_loadTheseBefore = (
             self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
         )
+
+        # Use alternativePackageIds as satisfying dependencies
+        self.settings.use_alternative_package_ids_as_satisfying_dependencies = self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.isChecked()
 
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
@@ -1192,11 +1194,6 @@ class SettingsController(QObject):
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
-        # Advanced: alternativePackageIds toggle
-        try:
-            self.settings.consider_alternative_package_ids = self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
-        except Exception:
-            pass
         # Advanced: enable advanced filtering toggle
         try:
             self.settings.enable_advanced_filtering = (

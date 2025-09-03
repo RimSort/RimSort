@@ -607,6 +607,20 @@ This basically preserves your mod coloring, user notes etc. for this many second
         deps_label.setFont(GUIInfo().emphasis_font)
         deps_group_box_layout.addWidget(deps_label)
 
+        # Use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox = (
+            QCheckBox(self.tr("Use alternativePackageIds as satisfying dependencies"))
+        )
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setToolTip(
+            self.tr(
+                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. \n"
+                "E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'"
+            )
+        )
+        deps_group_box_layout.addWidget(
+            self.use_alternative_package_ids_as_satisfying_dependencies_checkbox
+        )
+
         self.check_deps_checkbox = QCheckBox(
             self.tr("Prompt user to download dependencies when click in Sort")
         )
@@ -1439,17 +1453,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
-
-        # Dependencies: alternativePackageIds support
-        self.consider_alternative_package_ids_checkbox = QCheckBox(
-            self.tr("Consider alternativePackageIds as satisfying dependencies")
-        )
-        self.consider_alternative_package_ids_checkbox.setToolTip(
-            self.tr(
-                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing."
-            )
-        )
-        group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
 
         self.enable_advanced_filtering_checkbox = QCheckBox(
             self.tr("Enable advanced filtering options")

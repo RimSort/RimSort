@@ -337,7 +337,7 @@ def gen_tier_two_deps_graph(
                             inferred_dependencies.add(dep_id)
                         else:
                             # Only use alternatives if allowed by settings
-                            if metadata_manager.settings_controller.settings.consider_alternative_package_ids:
+                            if metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
                                 for alt in alt_ids:
                                     if (
                                         alt in active_mod_ids
