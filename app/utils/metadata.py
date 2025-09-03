@@ -1685,7 +1685,7 @@ class MetadataManager(QObject):
                     else:
                         dep_id = dep_entry
 
-                    consider_alternatives = self.settings_controller.settings.consider_alternative_package_ids
+                    consider_alternatives = self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
                     satisfied = dep_id in active_mod_ids
                     if not satisfied and consider_alternatives:
                         satisfied = any(alt in active_mod_ids for alt in alt_ids)

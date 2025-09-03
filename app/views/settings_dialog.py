@@ -575,7 +575,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         sort_group_box_layout = QVBoxLayout()
         sort_group_box.setLayout(sort_group_box_layout)
 
-        sorting_label = QLabel(self.tr("Sort mods"))
+        sorting_label = QLabel(self.tr("Sorting Method"))
         sorting_label.setFont(GUIInfo().emphasis_font)
         sort_group_box_layout.addWidget(sorting_label)
 
@@ -584,6 +584,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
+
+        # Dependencies group
+        deps_group_box = QGroupBox()
+        tab_layout.addWidget(deps_group_box)
+
+        deps_group_box_layout = QVBoxLayout()
+        deps_group_box.setLayout(deps_group_box_layout)
+
+        deps_label = QLabel(self.tr("Dependencies Handling Behavior"))
+        deps_label.setFont(GUIInfo().emphasis_font)
+        deps_group_box_layout.addWidget(deps_label)
 
         # Use dependencies for sorting checkbox
         self.use_moddependencies_as_loadTheseBefore = QCheckBox(
@@ -594,30 +605,54 @@ This basically preserves your mod coloring, user notes etc. for this many second
                 "If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod."
             )
         )
-        sort_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
+        deps_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
 
-        # Dependencies group
-        deps_group_box = QGroupBox()
-        tab_layout.addWidget(deps_group_box)
-
-        deps_group_box_layout = QVBoxLayout()
-        deps_group_box.setLayout(deps_group_box_layout)
-
-        deps_label = QLabel(self.tr("Sort Dependencies"))
-        deps_label.setFont(GUIInfo().emphasis_font)
-        deps_group_box_layout.addWidget(deps_label)
+        # Use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox = (
+            QCheckBox(self.tr("Use alternativePackageIds as satisfying dependencies"))
+        )
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setToolTip(
+            self.tr(
+                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. \n"
+                "E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'"
+            )
+        )
+        deps_group_box_layout.addWidget(
+            self.use_alternative_package_ids_as_satisfying_dependencies_checkbox
+        )
 
         self.check_deps_checkbox = QCheckBox(
             self.tr("Prompt user to download dependencies when click in Sort")
         )
         deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
-        tab_layout.addStretch()
+        # XML parsing behavior group
+        xml_parsing_group_box = QGroupBox()
+        tab_layout.addWidget(xml_parsing_group_box)
 
-        explanatory_text = ""
-        explanatory_label = QLabel(explanatory_text)
-        explanatory_label.setWordWrap(True)
-        tab_layout.addWidget(explanatory_label)
+        xml_parsing_group_box_layout = QVBoxLayout()
+        xml_parsing_group_box.setLayout(xml_parsing_group_box_layout)
+
+        # Prefer versioned About.xml tags over base tags
+        xml_parsing_explanatory_text = (
+            "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
+            "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
+            "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
+        )
+        xml_parsing_explanatory_label = QLabel(self.tr("XML Parsing Behavior"))
+        xml_parsing_explanatory_label.setFont(GUIInfo().emphasis_font)
+        xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
+        self.prefer_versioned_about_tags_checkbox.setToolTip(
+            self.tr(xml_parsing_explanatory_text)
+        )
+        xml_parsing_group_box_layout.addWidget(
+            self.prefer_versioned_about_tags_checkbox
+        )
+
+        tab_layout.addStretch()
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
@@ -1419,17 +1454,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
-        # Dependencies: alternativePackageIds support
-        self.consider_alternative_package_ids_checkbox = QCheckBox(
-            self.tr("Consider alternativePackageIds as satisfying dependencies")
-        )
-        self.consider_alternative_package_ids_checkbox.setToolTip(
-            self.tr(
-                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing."
-            )
-        )
-        group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
-
         self.enable_advanced_filtering_checkbox = QCheckBox(
             self.tr("Enable advanced filtering options")
         )
@@ -1451,19 +1475,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
-
-        # Prefer versioned About.xml tags over base tags
-        self.prefer_versioned_about_tags_checkbox = QCheckBox(
-            self.tr("Prefer versioned About.xml tags over base tags")
-        )
-        self.prefer_versioned_about_tags_checkbox.setToolTip(
-            self.tr(
-                "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
-                "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
-                "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
-            )
-        )
-        group_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

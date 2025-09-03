@@ -84,8 +84,15 @@ class Settings(QObject):
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
         # Whether to use moddependencies as loadTheseBefore rules
         self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies: bool = True
         # Whether to check for missing dependencies when sorting
         self.check_dependencies_on_sort: bool = True
+
+        # XML parsing behavior
+        # If enabled, About.xml *ByVersion tags take precedence over base tags
+        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
+        self.prefer_versioned_about_tags: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -151,15 +158,8 @@ class Settings(QObject):
         self.show_save_comparison_indicators: bool = True
         # Clear button behavior
         self.clear_moves_dlc: bool = False
-        # Dependencies: treat alternativePackageIds as satisfying dependencies
-        self.consider_alternative_package_ids: bool = False
         # Advanced filtering options
         self.enable_advanced_filtering: bool = True
-
-        # XML parsing behavior
-        # If enabled, About.xml *ByVersion tags take precedence over base tags
-        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
-        self.prefer_versioned_about_tags: bool = False
 
         # Authentication
         self.rentry_auth_code: str = ""

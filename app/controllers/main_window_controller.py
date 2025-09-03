@@ -128,7 +128,7 @@ class MainWindowController(QObject):
             # Check each dependency, honoring alternativePackageIds
             # E.g. [], ['brrainz.harmony'], [('oels.vehiclemapframework', {'alternatives': {'oels.vehiclemapframework.dev'}})]
             missing = set()
-            consider_alternatives = self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
+            consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
             for dep in dependencies:
                 if isinstance(dep, tuple):
                     dep_id = dep[0]
