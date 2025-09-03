@@ -575,7 +575,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         sort_group_box_layout = QVBoxLayout()
         sort_group_box.setLayout(sort_group_box_layout)
 
-        sorting_label = QLabel(self.tr("Sort mods"))
+        sorting_label = QLabel(self.tr("Sorting Method"))
         sorting_label.setFont(GUIInfo().emphasis_font)
         sort_group_box_layout.addWidget(sorting_label)
 
@@ -592,7 +592,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         deps_group_box_layout = QVBoxLayout()
         deps_group_box.setLayout(deps_group_box_layout)
 
-        deps_label = QLabel(self.tr("Sort Dependencies"))
+        deps_label = QLabel(self.tr("Dependencies Handling Behavior"))
         deps_label.setFont(GUIInfo().emphasis_font)
         deps_group_box_layout.addWidget(deps_label)
 
