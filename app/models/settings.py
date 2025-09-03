@@ -87,6 +87,11 @@ class Settings(QObject):
         # Whether to check for missing dependencies when sorting
         self.check_dependencies_on_sort: bool = True
 
+        # XML parsing behavior
+        # If enabled, About.xml *ByVersion tags take precedence over base tags
+        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
+        self.prefer_versioned_about_tags: bool = False
+
         # DB Builder
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True
@@ -155,11 +160,6 @@ class Settings(QObject):
         self.consider_alternative_package_ids: bool = False
         # Advanced filtering options
         self.enable_advanced_filtering: bool = True
-
-        # XML parsing behavior
-        # If enabled, About.xml *ByVersion tags take precedence over base tags
-        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
-        self.prefer_versioned_about_tags: bool = False
 
         # Authentication
         self.rentry_auth_code: str = ""

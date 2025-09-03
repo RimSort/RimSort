@@ -612,12 +612,33 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
-        tab_layout.addStretch()
+        # XML parsing behavior group
+        xml_parsing_group_box = QGroupBox()
+        tab_layout.addWidget(xml_parsing_group_box)
 
-        explanatory_text = ""
-        explanatory_label = QLabel(explanatory_text)
-        explanatory_label.setWordWrap(True)
-        tab_layout.addWidget(explanatory_label)
+        xml_parsing_group_box_layout = QVBoxLayout()
+        xml_parsing_group_box.setLayout(xml_parsing_group_box_layout)
+
+        # Prefer versioned About.xml tags over base tags
+        xml_parsing_explanatory_text = (
+            "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
+            "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
+            "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
+        )
+        xml_parsing_explanatory_label = QLabel(self.tr("XML Parsing Behavior"))
+        xml_parsing_explanatory_label.setFont(GUIInfo().emphasis_font)
+        xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
+        self.prefer_versioned_about_tags_checkbox.setToolTip(
+            self.tr(xml_parsing_explanatory_text)
+        )
+        xml_parsing_group_box_layout.addWidget(
+            self.prefer_versioned_about_tags_checkbox
+        )
+
+        tab_layout.addStretch()
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
@@ -1451,19 +1472,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
-
-        # Prefer versioned About.xml tags over base tags
-        self.prefer_versioned_about_tags_checkbox = QCheckBox(
-            self.tr("Prefer versioned About.xml tags over base tags")
-        )
-        self.prefer_versioned_about_tags_checkbox.setToolTip(
-            self.tr(
-                "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
-                "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
-                "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
-            )
-        )
-        group_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

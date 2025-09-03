@@ -689,6 +689,10 @@ class SettingsController(QObject):
             self.settings.check_dependencies_on_sort
         )
 
+        # Prefer versioned About.xml tags over base tags
+        if self.settings.prefer_versioned_about_tags:
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(True)
+
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
             self.settings_dialog.db_builder_include_all_radio.setChecked(True)
@@ -887,13 +891,6 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
-        # Prefer versioned About.xml tags over base tags
-        try:
-            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(
-                self.settings.prefer_versioned_about_tags
-            )
-        except Exception:
-            pass
         # Advanced: enable advanced filtering toggle
         try:
             self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
@@ -1032,6 +1029,11 @@ class SettingsController(QObject):
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
             self.settings_dialog.check_deps_checkbox.isChecked()
+        )
+
+        # Prefer versioned About.xml tags over base tags
+        self.settings.prefer_versioned_about_tags = (
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
         )
 
         # Database Builder tab
@@ -1199,13 +1201,6 @@ class SettingsController(QObject):
         try:
             self.settings.enable_advanced_filtering = (
                 self.settings_dialog.enable_advanced_filtering_checkbox.isChecked()
-            )
-        except Exception:
-            pass
-        # Prefer versioned About.xml tags over base tags
-        try:
-            self.settings.prefer_versioned_about_tags = (
-                self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
             )
         except Exception:
             pass
