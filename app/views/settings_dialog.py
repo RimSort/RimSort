@@ -82,6 +82,7 @@ class SettingsDialog(QDialog):
         self._do_launch_state_tab()
         self._do_authentication_tab()
         self._do_aux_db_settings_tab()
+        self._do_tags_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -313,6 +314,77 @@ class SettingsDialog(QDialog):
         )
         row_layout.addWidget(self.show_save_comparison_indicators_checkbox)
         tab_layout.addLayout(row_layout)
+
+    def _do_tag_colors_group(self, tab_layout: QBoxLayout) -> None:
+        section_label = QLabel(self.tr("Tag colors"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(section_label)
+
+        # Priority description
+        priority_desc = QLabel(self.tr("Tag color priority: Colors are applied based on the order below. The topmost tag has highest priority and will be used if a mod has multiple tags."))
+        priority_desc.setWordWrap(True)
+        priority_desc.setStyleSheet("color: #888888; font-style: italic;")
+        tab_layout.addWidget(priority_desc)
+
+        # Simple controls: input + choose color + add/update
+        row = QHBoxLayout()
+        self.tag_color_select = QComboBox()
+        self.tag_color_select.setEditable(True)
+        self.tag_color_select.setPlaceholderText(self.tr("Tag name"))
+        self.tag_color_name = self.tag_color_select.lineEdit()  # for controller access
+        self.tag_color_pick = QToolButton()
+        self.tag_color_pick.setText(self.tr("Pick"))
+        self.tag_color_preview = QLabel("#000000")
+        self.tag_color_preview.setFixedWidth(70)
+        self.tag_color_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.tag_color_add_btn = QToolButton()
+        self.tag_color_add_btn.setText(self.tr("Save"))
+
+        def _pick_color() -> None:
+            from PySide6.QtWidgets import QColorDialog
+            col = QColorDialog.getColor()
+            if col.isValid():
+                self.tag_color_preview.setText(col.name())
+                self.tag_color_preview.setStyleSheet(f"background: {col.name()}; color: white;")
+
+        self.tag_color_pick.clicked.connect(_pick_color)
+
+        row.addWidget(self.tag_color_select)
+        row.addWidget(self.tag_color_pick)
+        row.addWidget(self.tag_color_preview)
+        row.addWidget(self.tag_color_add_btn)
+        tab_layout.addLayout(row)
+
+        self.tag_colors_list_container = QWidget()
+        self.tag_colors_list_layout = QVBoxLayout(self.tag_colors_list_container)
+        self.tag_colors_list_layout.setContentsMargins(0, 0, 0, 0)
+        self.tag_colors_list_layout.setSpacing(6)
+        tab_layout.addWidget(self.tag_colors_list_container)
+
+    def _do_tags_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Tags"))
+        self.enable_mod_tags_checkbox = QCheckBox(self.tr("Enable mod tags (require restart)"))
+        self.enable_mod_tags_checkbox.setToolTip(
+            self.tr(
+                "If enabled, you can assign tags to mods, display them in the list, and filter by them."
+            )
+        )
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab_layout.addWidget(self.enable_mod_tags_checkbox)
+
+        self.display_tags_in_mod_titles_checkbox = QCheckBox(self.tr("Display tags in mod titles"))
+        self.display_tags_in_mod_titles_checkbox.setToolTip(
+            self.tr(
+                "If enabled, tags will be displayed in angle brackets after mod names in the mod list."
+            )
+        )
+        tab_layout.addWidget(self.display_tags_in_mod_titles_checkbox)
+
+        # Tag Colors & Tags section
+        self._do_tag_colors_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -1395,6 +1467,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
+        # Dependent checkbox: silently auto-download all updated mods when updates are found
+        self.silent_auto_download_updates_checkbox = QCheckBox(
+            self.tr("Auto-download updated mods silently")
+        )
+        # Enabled only if update-on-refresh is enabled
+        self.silent_auto_download_updates_checkbox.setEnabled(
+            self.show_mod_updates_checkbox.isChecked()
+        )
+        self.show_mod_updates_checkbox.toggled.connect(
+            self.silent_auto_download_updates_checkbox.setEnabled
+        )
+        group_layout.addWidget(self.silent_auto_download_updates_checkbox)
+
         self.steam_client_integration_checkbox = QCheckBox(
             self.tr("Enable Steam client integration")
         )
@@ -1429,6 +1514,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
+
 
         self.enable_advanced_filtering_checkbox = QCheckBox(
             self.tr("Enable advanced filtering options")
