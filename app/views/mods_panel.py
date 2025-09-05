@@ -2535,6 +2535,7 @@ class ModListWidget(QListWidget):
                 current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
+                mod_errors["use_this_instead"] = True
                 tool_tip_text += self.tr(
                     "\nAn alternative updated mod is recommended:\n{alternative}"
                 ).format(alternative=current_item_data["alternative"])
