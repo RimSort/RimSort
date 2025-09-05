@@ -37,20 +37,30 @@ if not exist "%update_source_folder%\RimSort.exe" (
     exit /b 1
 )
 
-REM Show confirmation before proceeding with update
+REM Check if running from Program Files and relaunch as admin if needed
+echo %current_dir_no_slash% | findstr /i "Program Files" >nul
+if %errorlevel% equ 0 (
+    echo Running from Program Files detected. Relaunching update as administrator...
+    powershell -Command "Start-Process cmd -ArgumentList '/c \"%~f0\"' -Verb RunAs"
+    exit /b 0
+)
+
+REM Prompt user for backup option
 echo.
 echo ========================================================================
 echo RimSort Update Ready
 echo Source: %update_source_folder%
 echo Target: %current_dir%
 echo.
-echo The update will start in 5 seconds. Press any key to cancel.
+echo Do you want to create a backup before updating?
+echo [Y]es - Create backup
+echo [N]o  - Continue without backup
 echo ========================================================================
-choice /c YN /d Y /t 5 /n >nul
+choice /c YN /n >nul
 if errorlevel 2 (
-    echo Update cancelled by user.
-    pause
-    exit /b 1
+    set "skip_backup=1"
+) else (
+    set "skip_backup=0"
 )
 
 REM Get parent directory and generate backup folder name
@@ -70,14 +80,19 @@ set "minute=%dt:~10,2%"
 REM Compose full backup folder path
 set "backup_folder=%parent_dir%\%backup_folder_name%_%year%%month%%day%_%hour%%minute%"
 
-REM Create backup of the current installation
-echo.
-echo Creating backup: %backup_folder%
-robocopy "%current_dir_no_slash%\." "%backup_folder%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
-if errorlevel 8 (
-    echo ERROR: Backup failed.
-    pause
-    exit /b 1
+REM Create backup of the current installation if not skipped
+if "%skip_backup%"=="0" (
+    echo.
+    echo Creating backup: %backup_folder%
+    robocopy "%current_dir_no_slash%\." "%backup_folder%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
+    if errorlevel 8 (
+        echo ERROR: Backup failed.
+        pause
+        exit /b 1
+    )
+) else (
+    echo.
+    echo Skipping backup as per user choice.
 )
 
 REM Begin update by mirroring files from temp update folder to app folder
