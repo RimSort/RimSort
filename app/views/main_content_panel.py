@@ -970,7 +970,7 @@ class MainContent(QObject):
         try:
             # Use releases API for better asset information
             releases_url = (
-                "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+                "https://api.github.com/repos/LionelColaso/RimSort/releases/latest"
             )
             response = requests.get(releases_url, timeout=15)
             response.raise_for_status()
