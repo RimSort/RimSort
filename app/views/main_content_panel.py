@@ -1,3 +1,4 @@
+import ctypes
 import json
 import os
 import platform
@@ -11,8 +12,8 @@ import time
 import traceback
 import webbrowser
 import zipfile
+from datetime import datetime
 from functools import partial
-from io import BytesIO
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
@@ -770,6 +771,90 @@ class MainContent(QObject):
 
     # GAME CONFIGURATION PANEL
 
+    def _check_writability(self, path: str) -> bool:
+        """
+        Check if the given path is writable.
+
+        :param path: Path to check for writability
+        :return: True if writable, False otherwise
+        """
+        try:
+            test_file = os.path.join(path, ".write_test")
+            with open(test_file, "w", encoding="utf-8") as f:
+                f.write("test")
+            with open(test_file, "r", encoding="utf-8") as f:
+                _ = f.read()
+            os.remove(test_file)
+            return True
+        except (OSError, PermissionError):
+            return False
+
+    def _create_backup(self, source_path: str) -> str | None:
+        """
+        Create a compressed backup of the installation in the backup folder.
+
+        :param source_path: Path to the installation to backup
+        :return: The path to the created backup zip file, or None if failure
+        """
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_folder = AppInfo().backup_folder
+            zip_path = backup_folder / f"RimSort_Backup_{timestamp}.zip"
+
+            logger.info(f"Creating compressed backup: {zip_path}")
+
+            # Create zip file
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+                for root, dirs, files in os.walk(source_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        # Get relative path for zip
+                        rel_path = os.path.relpath(file_path, source_path)
+                        zipf.write(file_path, rel_path)
+
+            logger.info("Backup created successfully")
+            # Manage backup retention
+            self._manage_backup_retention(str(backup_folder))
+            return str(zip_path)
+        except Exception as e:
+            logger.error(f"Failed to create backup: {e}")
+            return None
+
+    def _manage_backup_retention(self, backup_dir: str, max_backups: int = 2) -> None:
+        """
+        Manage backup retention by keeping only the most recent backups.
+
+        :param backup_dir: Directory containing backups
+        :param max_backups: Maximum number of backups to keep
+        """
+        if not os.path.exists(str(backup_dir)):
+            return
+
+        try:
+            backups: list[tuple[str, float]] = []
+            for item in os.listdir(str(backup_dir)):
+                item_path = os.path.join(str(backup_dir), item)
+                if (
+                    os.path.isfile(item_path)
+                    and item.startswith("RimSort_Backup_")
+                    and item.endswith(".zip")
+                ):
+                    backups.append((item_path, os.path.getmtime(item_path)))
+
+            # Sort by modified time (newest first)
+            backups.sort(key=lambda x: x[1], reverse=True)
+
+            # Remove old backups
+            for backup_path, _ in backups[max_backups:]:
+                try:
+                    logger.info(f"Removing old backup: {backup_path}")
+                    os.remove(backup_path)
+                except Exception as ex:
+                    logger.warning(f"Failed to remove old backup {backup_path}: {ex}")
+
+        except Exception as e:
+            logger.warning(f"Failed to manage backup retention: {e}")
+
     def _do_check_for_update(self) -> None:
         """
         Check for RimSort updates and handle the update process.
@@ -845,6 +930,32 @@ class MainContent(QObject):
 
         if answer != QMessageBox.StandardButton.Yes:
             return
+
+        # Ask if the user wants to create a backup before updating
+        backup_prompt = dialogue.show_dialogue_conditional(
+            title=self.tr("Create backup"),
+            text=self.tr(
+                "Do you want to create a backup of the current installation before updating?"
+            ),
+            information=str(AppInfo().backup_folder),
+        )
+        if backup_prompt == QMessageBox.StandardButton.Yes:
+            backup_result = self._create_backup(str(AppInfo().application_folder))
+            if backup_result:
+                self._manage_backup_retention(str(AppInfo().backup_folder))
+                dialogue.show_information(
+                    title=self.tr("Backup created"),
+                    text=self.tr("Backup created successfully."),
+                    information=f"{backup_result}",
+                )
+            else:
+                cont = dialogue.show_dialogue_conditional(
+                    title=self.tr("Backup failed"),
+                    text=self.tr("Failed to create backup."),
+                    information=self.tr("Do you want to continue with the update?"),
+                )
+                if cont != QMessageBox.StandardButton.Yes:
+                    return
 
         # Perform update
         self._perform_update(download_url, latest_tag_name)
@@ -1046,6 +1157,20 @@ class MainContent(QObject):
             temp_dir = "RimSort.app" if system == "Darwin" else "RimSort"
             temp_path = os.path.join(gettempdir(), temp_dir)
 
+            # Validate extracted update contents for current platform
+            if not self._validate_extracted_update(temp_path):
+                dialogue.show_warning(
+                    title=self.tr("Invalid update package"),
+                    text=self.tr(
+                        "The downloaded update does not contain expected files for your platform."
+                    ),
+                    information=temp_path,
+                )
+                return
+
+            # Copy latest update scripts into the app folder before running the updater
+            self._copy_update_scripts(temp_path)
+
             # Confirm installation
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Update downloaded"),
@@ -1076,20 +1201,95 @@ class MainContent(QObject):
             url: URL to download from
         """
         try:
-            # Download with better error handling and progress
-            response = requests.get(url, timeout=30, stream=True)
-            response.raise_for_status()
+            # Stream download to a temp file to avoid loading entire archive into memory
+            temp_zip_path = os.path.join(gettempdir(), "RimSort_Update.zip")
+            with requests.get(url, timeout=60, stream=True) as response:
+                response.raise_for_status()
+                with open(temp_zip_path, "wb") as f:
+                    for chunk in response.iter_content(
+                        chunk_size=1024 * 1024
+                    ):  # 1MB chunks
+                        if chunk:
+                            f.write(chunk)
 
             # Extract to temp directory
-            with ZipFile(BytesIO(response.content)) as zipobj:
+            with ZipFile(temp_zip_path) as zipobj:
                 zipobj.extractall(gettempdir())
-
         except requests.RequestException as e:
             raise Exception(f"Failed to download update: {e}")
         except zipfile.BadZipFile as e:
             raise Exception(f"Downloaded file is not a valid ZIP archive: {e}")
         except Exception as e:
             raise Exception(f"Failed to extract update: {e}")
+        finally:
+            # Best-effort cleanup of the downloaded archive
+            try:
+                temp_zip_path = os.path.join(gettempdir(), "RimSort_Update.zip")
+                if os.path.exists(temp_zip_path):
+                    os.remove(temp_zip_path)
+            except Exception:
+                pass
+
+    def _validate_extracted_update(self, temp_dir: str) -> bool:
+        """
+        Validate that the extracted update contains expected files for the platform.
+
+        Returns True if valid, else False.
+        """
+        try:
+            system = platform.system()
+            if system == "Windows":
+                return os.path.isfile(os.path.join(temp_dir, "RimSort.exe"))
+            elif system == "Darwin":
+                return os.path.isdir(os.path.join(temp_dir, "Contents", "MacOS"))
+            else:
+                # Linux
+                return os.path.isfile(os.path.join(temp_dir, "RimSort"))
+        except Exception as e:
+            logger.warning(f"Update validation failed: {e}")
+            return False
+
+    def _copy_update_scripts(self, temp_dir: str) -> None:
+        """
+        Copy update scripts from the extracted update folder to the application folder.
+
+        Args:
+            temp_dir: Path to the temporary directory containing extracted update files
+        """
+        system = platform.system()
+        temp_path = Path(temp_dir)
+
+        try:
+            if system == "Windows":
+                src_script = temp_path / "update.bat"
+                dst_script = AppInfo().application_folder / "update.bat"
+                if src_script.exists():
+                    shutil.copy2(str(src_script), str(dst_script))
+                    logger.info("Copied update.bat from update folder")
+            elif system == "Darwin":
+                # Inside the macOS app bundle. Copy into current app bundle's MacOS dir
+                src_script = temp_path / "Contents" / "MacOS" / "update.sh"
+                # Resolve current bundle MacOS dir from the running binary
+                bundle_root = Path(
+                    os.path.dirname(
+                        os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
+                    )
+                )
+                dst_macos_dir = bundle_root / "Contents" / "MacOS"
+                dst_script = dst_macos_dir / "update.sh"
+                if src_script.exists() and dst_macos_dir.exists():
+                    shutil.copy2(str(src_script), str(dst_script))
+                    os.chmod(str(dst_script), 0o755)
+                    logger.info("Copied update.sh into current app bundle")
+            else:  # Linux
+                src_script = temp_path / "update.sh"
+                dst_script = AppInfo().application_folder / "update.sh"
+                if src_script.exists():
+                    shutil.copy2(str(src_script), str(dst_script))
+                    os.chmod(str(dst_script), 0o755)
+                    logger.info("Copied update.sh from update folder")
+        except Exception as e:
+            logger.warning(f"Failed to copy update script: {e}")
 
     def _launch_update_script(self) -> None:
         """
@@ -1109,8 +1309,6 @@ class MainContent(QObject):
 
             # Small prologue in the updater log to aid debugging
             try:
-                from datetime import datetime
-
                 with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
                     lf.write(
                         f"\n===== RimSort updater launched: {datetime.now().isoformat()} ({system}) =====\n"
@@ -1134,28 +1332,94 @@ class MainContent(QObject):
                         stdout=lf,
                         stderr=subprocess.STDOUT,
                     )
+                    logger.debug(f"External updater script launched with PID: {p.pid}")
 
             elif system == "Windows":
                 script_path = AppInfo().application_folder / "update.bat"
-                # Redirect batch output into the updater log for diagnostics
-                # Using a single command string to support shell redirection
-                cmd_str = f'cmd /c ""{script_path}"" >> "{log_path}" 2>&1'
-                creationflags_value = (
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
-                    else 0
+                temp_update_dir = Path(gettempdir()) / "RimSort"
+                # Check if we need admin privileges
+                need_admin = not self._check_writability(
+                    str(AppInfo().application_folder)
                 )
-                p = subprocess.Popen(
-                    cmd_str,
-                    creationflags=creationflags_value,
-                    shell=True,
-                    cwd=str(AppInfo().application_folder),
-                )
-                args_repr = cmd_str
+                if not script_path.exists():
+                    logger.info(
+                        "update.bat missing in app folder; will copy from temp before running"
+                    )
+                if need_admin:
+                    logger.info(
+                        "Installation path requires admin privileges, launching update with elevation"
+                    )
+                    try:
+                        if not script_path.exists():
+                            # Elevate to copy then run
+                            copy_and_run = f'copy /Y "{temp_update_dir / "update.bat"}" "{script_path}" && "{script_path}" >> "{log_path}" 2>&1'
+                            ctypes.windll.shell32.ShellExecuteW(
+                                None,
+                                "runas",
+                                "cmd",
+                                f"/c {copy_and_run}",
+                                str(AppInfo().application_folder),
+                                0,
+                            )
+                            args_repr = f"ShellExecute runas cmd /c {copy_and_run}"
+                        else:
+                            ctypes.windll.shell32.ShellExecuteW(
+                                None,
+                                "runas",
+                                "cmd",
+                                f'/c "{script_path}" >> "{log_path}" 2>&1',
+                                str(AppInfo().application_folder),
+                                0,
+                            )
+                            args_repr = f'ShellExecute runas cmd /c "{script_path}"'
+                    except Exception as e:
+                        logger.error(f"Failed to launch update.bat as admin: {e}")
+                        dialogue.show_warning(
+                            title=self.tr("Failed to launch update"),
+                            text=self.tr(
+                                "Could not start the update process with admin privileges."
+                            ),
+                            information=f"Error: {str(e)}",
+                        )
+                        return
+                else:
+                    # Redirect batch output into the updater log for diagnostics
+                    # Using a single command string to support shell redirection
+                    if not script_path.exists():
+                        cmd_str = f'cmd /c copy /Y "{temp_update_dir / "update.bat"}" "{script_path}" && "{script_path}" >> "{log_path}" 2>&1'
+                    else:
+                        cmd_str = f'cmd /c ""{script_path}"" >> "{log_path}" 2>&1'
+                    creationflags_value = (
+                        subprocess.CREATE_NEW_PROCESS_GROUP
+                        if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
+                        else 0
+                    )
+                    p = subprocess.Popen(
+                        cmd_str,
+                        creationflags=creationflags_value,
+                        shell=True,
+                        cwd=str(AppInfo().application_folder),
+                    )
+                    logger.debug(f"External updater script launched with PID: {p.pid}")
+                    args_repr = cmd_str
 
             else:  # Linux and other POSIX systems
                 script_path = AppInfo().application_folder / "update.sh"
-                popen_args = ["/bin/bash", str(script_path)]
+                temp_update_dir = Path("/tmp") / "RimSort"
+                need_sudo = not self._check_writability(
+                    str(AppInfo().application_folder)
+                )
+                # If script missing, build a shell command to copy it into place before running
+                if not script_path.exists():
+                    cmd = f'cp -f "{temp_update_dir / "update.sh"}" "{script_path}" && chmod +x "{script_path}" && /bin/bash "{script_path}"'
+                else:
+                    cmd = f'/bin/bash "{script_path}"'
+                popen_args = ["/bin/bash", "-lc", cmd]
+                if need_sudo:
+                    logger.info(
+                        "Installation path requires sudo, launching update with sudo"
+                    )
+                    popen_args = ["sudo"] + popen_args
                 args_repr = " ".join(shlex.quote(a) for a in popen_args)
                 with open(log_path, "ab", buffering=0) as lf:
                     p = subprocess.Popen(
@@ -1164,8 +1428,8 @@ class MainContent(QObject):
                         stdout=lf,
                         stderr=subprocess.STDOUT,
                     )
+                    logger.debug(f"External updater script launched with PID: {p.pid}")
 
-            logger.debug(f"External updater script launched with PID: {p.pid}")
             logger.debug(f"Arguments used: {args_repr}")
 
             # Exit the application to allow update

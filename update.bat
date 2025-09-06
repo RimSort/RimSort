@@ -53,33 +53,6 @@ if errorlevel 2 (
     exit /b 1
 )
 
-REM Get parent directory and generate backup folder name
-for %%a in ("%current_dir_no_slash%\..") do set "parent_dir=%%~fa"
-for %%b in ("%current_dir_no_slash%") do set "current_folder_name=%%~nxb"
-set "current_folder_name=%current_folder_name: =0%"
-set "backup_folder_name=%current_folder_name%_Backup"
-
-REM Use WMIC to get system-local datetime in a consistent format
-for /f %%a in ('PowerShell.exe -Version 5.1 -NoProfile -ExecutionPolicy Bypass -Command  "Write-Output 'LocalDateTime'; (Get-WmiObject Win32_OperatingSystem).LocalDateTime; Write-Output ''" ^| find "."') do set dt=%%a
-set "year=%dt:~0,4%"
-set "month=%dt:~4,2%"
-set "day=%dt:~6,2%"
-set "hour=%dt:~8,2%"
-set "minute=%dt:~10,2%"
-
-REM Compose full backup folder path
-set "backup_folder=%parent_dir%\%backup_folder_name%_%year%%month%%day%_%hour%%minute%"
-
-REM Create backup of the current installation
-echo.
-echo Creating backup: %backup_folder%
-robocopy "%current_dir_no_slash%\." "%backup_folder%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
-if errorlevel 8 (
-    echo ERROR: Backup failed.
-    pause
-    exit /b 1
-)
-
 REM Begin update by mirroring files from temp update folder to app folder
 echo.
 echo Updating RimSort files...
