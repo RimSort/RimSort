@@ -26,14 +26,12 @@ call :KillRimSort
 REM Check if update folder exists
 if not exist "%update_source_folder%" (
     echo ERROR: Update source folder does not exist: %update_source_folder%
-    pause
     exit /b 1
 )
 
 REM Check if RimSort.exe exists in the update folder
 if not exist "%update_source_folder%\RimSort.exe" (
     echo ERROR: RimSort.exe not found in update source folder.
-    pause
     exit /b 1
 )
 
@@ -61,7 +59,6 @@ set "robocopy_exit=!errorlevel!"
 
 if !robocopy_exit! GEQ 8 (
     echo ERROR: Update failed with critical errors.
-    pause
     exit /b 1
 ) else if !robocopy_exit! GEQ 4 (
     echo WARNING: Some files may not have copied properly.
@@ -77,7 +74,6 @@ if exist "%executable_path%" (
     echo RimSort.exe verified.
 ) else (
     echo ERROR: RimSort.exe not found after update.
-    pause
     exit /b 1
 )
 
@@ -86,17 +82,8 @@ echo.
 echo Cleaning up temporary files...
 rd /s /q "%update_source_folder%" 2>nul
 
-REM Launch updated RimSort
-echo.
-echo Launching RimSort in 5 seconds. Press any key to cancel.
-choice /c YN /d Y /t 5 /n >nul
-if errorlevel 2 (
-    echo Launch cancelled by user.
-    pause
-    exit /b 1
-)
-
-REM Start RimSort
+REM Launch updated RimSort (non-interactive) with pre-launch delay to ensure copy completion
+timeout /t 5 /nobreak >nul
 start "" "%executable_path%"
 timeout /t 2 /nobreak >nul
 
@@ -105,7 +92,6 @@ tasklist /fi "imagename eq RimSort.exe" /fo csv | find /i "RimSort.exe" >nul
 if errorlevel 1 (
     echo WARNING: RimSort may not have started.
     echo You can start it manually from: %executable_path%
-    pause
 ) else (
     echo RimSort update completed and launched successfully!
 )
