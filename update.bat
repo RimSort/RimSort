@@ -3,7 +3,8 @@ setlocal enabledelayedexpansion
 
 REM ========================================================================
 REM RimSort Updater Script (Windows 10 & 11 Compatible)
-REM Safely backs up and updates RimSort from %TEMP%\RimSort
+REM This script only copies/moves update files from source folder to destination folder
+REM and relaunches RimSort.exe. All user prompts and admin checks are handled by Python code.
 REM ========================================================================
 
 echo Starting RimSort update process...
@@ -37,53 +38,10 @@ if not exist "%update_source_folder%\RimSort.exe" (
     exit /b 1
 )
 
-REM Show confirmation before proceeding with update
-echo.
-echo ========================================================================
-echo RimSort Update Ready
-echo Source: %update_source_folder%
-echo Target: %current_dir%
-echo.
-echo The update will start in 5 seconds. Press any key to cancel.
-echo ========================================================================
-choice /c YN /d Y /t 5 /n >nul
-if errorlevel 2 (
-    echo Update cancelled by user.
-    pause
-    exit /b 1
-)
-
-REM Get parent directory and generate backup folder name
-for %%a in ("%current_dir_no_slash%\..") do set "parent_dir=%%~fa"
-for %%b in ("%current_dir_no_slash%") do set "current_folder_name=%%~nxb"
-set "current_folder_name=%current_folder_name: =0%"
-set "backup_folder_name=%current_folder_name%_Backup"
-
-REM Use WMIC to get system-local datetime in a consistent format
-for /f %%a in ('PowerShell.exe -Version 5.1 -NoProfile -ExecutionPolicy Bypass -Command  "Write-Output 'LocalDateTime'; (Get-WmiObject Win32_OperatingSystem).LocalDateTime; Write-Output ''" ^| find "."') do set dt=%%a
-set "year=%dt:~0,4%"
-set "month=%dt:~4,2%"
-set "day=%dt:~6,2%"
-set "hour=%dt:~8,2%"
-set "minute=%dt:~10,2%"
-
-REM Compose full backup folder path
-set "backup_folder=%parent_dir%\%backup_folder_name%_%year%%month%%day%_%hour%%minute%"
-
-REM Create backup of the current installation
-echo.
-echo Creating backup: %backup_folder%
-robocopy "%current_dir_no_slash%\." "%backup_folder%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
-if errorlevel 8 (
-    echo ERROR: Backup failed.
-    pause
-    exit /b 1
-)
-
 REM Begin update by mirroring files from temp update folder to app folder
 echo.
 echo Updating RimSort files...
-robocopy "%update_source_folder%" "%current_dir_no_slash%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1
+robocopy "%update_source_folder%" "%current_dir_no_slash%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1 /B
 set "robocopy_exit=!errorlevel!"
 
 if !robocopy_exit! GEQ 8 (
@@ -115,15 +73,7 @@ rd /s /q "%update_source_folder%" 2>nul
 
 REM Launch updated RimSort
 echo.
-echo Launching RimSort in 5 seconds. Press any key to cancel.
-choice /c YN /d Y /t 5 /n >nul
-if errorlevel 2 (
-    echo Launch cancelled by user.
-    pause
-    exit /b 1
-)
-
-REM Start RimSort
+echo Launching RimSort...
 start "" "%executable_path%"
 timeout /t 2 /nobreak >nul
 

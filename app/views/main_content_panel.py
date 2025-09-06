@@ -2,7 +2,6 @@ import json
 import os
 import platform
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -11,6 +10,7 @@ import time
 import traceback
 import webbrowser
 import zipfile
+from datetime import datetime
 from functools import partial
 from io import BytesIO
 from math import ceil
@@ -1093,7 +1093,9 @@ class MainContent(QObject):
 
     def _launch_update_script(self) -> None:
         """
-        Launch the appropriate update script for the current platform.
+        Prepare update and launch the appropriate update script.
+        Python handles: download, extraction, backup, admin detection
+        Update script handles: file replacement with proper privileges
         """
         system = platform.system()
 
@@ -1102,80 +1104,179 @@ class MainContent(QObject):
         self.stop_watchdog_signal.emit()
 
         try:
-            # Ensure updater logs are captured to a persistent location
-            log_dir = AppInfo().user_log_folder
-            log_dir.mkdir(parents=True, exist_ok=True)
-            log_path = log_dir / "updater.log"
+            # Get paths
+            current_dir = AppInfo().application_folder
+            current_dir_no_slash = str(current_dir).rstrip(os.sep)
 
-            # Small prologue in the updater log to aid debugging
-            try:
-                from datetime import datetime
+            # Path to the update files
+            update_source_folder = Path(gettempdir()) / "RimSort"
 
-                with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
-                    lf.write(
-                        f"\n===== RimSort updater launched: {datetime.now().isoformat()} ({system}) =====\n"
-                    )
-            except Exception:
-                # Non-fatal; continue without preface
-                pass
-
-            args_repr: str = ""
-
-            if system == "Darwin":  # MacOS
-                current_dir = os.path.dirname(
-                    os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
+            # Check if update folder exists
+            if not update_source_folder.exists():
+                dialogue.show_warning(
+                    title=self.tr("Update failed"),
+                    text=self.tr("Update source folder does not exist."),
+                    information=str(update_source_folder),
                 )
-                script_path = Path(current_dir) / "Contents" / "MacOS" / "update.sh"
-                popen_args = ["/bin/bash", str(script_path)]
-                args_repr = " ".join(shlex.quote(a) for a in popen_args)
-                with open(log_path, "ab", buffering=0) as lf:
-                    p = subprocess.Popen(
-                        popen_args,
-                        stdout=lf,
-                        stderr=subprocess.STDOUT,
-                    )
+                return
 
-            elif system == "Windows":
-                script_path = AppInfo().application_folder / "update.bat"
-                # Redirect batch output into the updater log for diagnostics
-                # Using a single command string to support shell redirection
-                cmd_str = f'cmd /c ""{script_path}"" >> "{log_path}" 2>&1'
-                creationflags_value = (
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
-                    else 0
+            # Check if RimSort.exe exists in the update folder
+            update_exe = update_source_folder / "RimSort.exe"
+            if not update_exe.exists():
+                dialogue.show_warning(
+                    title=self.tr("Update failed"),
+                    text=self.tr("RimSort.exe not found in update source folder."),
                 )
-                p = subprocess.Popen(
-                    cmd_str,
-                    creationflags=creationflags_value,
-                    shell=True,
-                    cwd=str(AppInfo().application_folder),
-                )
-                args_repr = cmd_str
+                return
 
-            else:  # Linux and other POSIX systems
-                script_path = AppInfo().application_folder / "update.sh"
-                popen_args = ["/bin/bash", str(script_path)]
-                args_repr = " ".join(shlex.quote(a) for a in popen_args)
-                with open(log_path, "ab", buffering=0) as lf:
-                    p = subprocess.Popen(
-                        popen_args,
-                        start_new_session=True,
-                        stdout=lf,
-                        stderr=subprocess.STDOUT,
+            # Check if running from Program Files
+            pf = os.environ.get("ProgramFiles", "")
+            pf86 = os.environ.get("ProgramFiles(x86)", "")
+            admin_needed = False
+            if pf and pf.lower() in current_dir_no_slash.lower():
+                admin_needed = True
+            if pf86 and pf86.lower() in current_dir_no_slash.lower():
+                admin_needed = True
+
+            # Show confirmation
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("RimSort update ready"),
+                text=self.tr("Do you want to proceed with the update?"),
+                information=f"Source: {update_source_folder}\nTarget: {current_dir}",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
+            # Prompt for backup
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Create backup"),
+                text=self.tr("Do you want to create a backup before updating?"),
+            )
+            skip_backup = answer != QMessageBox.StandardButton.Yes
+
+            # Create backup if requested
+            if not skip_backup:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+
+                # Use default backup folder
+                default_backup_folder = AppInfo().backup_folder
+                backup_folder = default_backup_folder / f"RimSort_Backup_{timestamp}"
+
+                try:
+                    backup_zip_path = backup_folder.with_suffix(".zip")
+                    with zipfile.ZipFile(
+                        backup_zip_path, "w", zipfile.ZIP_DEFLATED
+                    ) as backup_zip:
+                        for root, dirs, files in os.walk(current_dir):
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                arcname = os.path.relpath(file_path, current_dir)
+                                backup_zip.write(file_path, arcname)
+                except Exception as e:
+                    dialogue.show_warning(
+                        title=self.tr("Backup failed"),
+                        text=self.tr("Failed to create backup."),
+                        information=str(e),
                     )
+                    return
 
-            logger.debug(f"External updater script launched with PID: {p.pid}")
-            logger.debug(f"Arguments used: {args_repr}")
-
-            # Exit the application to allow update
-            sys.exit(0)
+            # Launch appropriate update script
+            if system == "Windows":
+                self._launch_windows_update_script(admin_needed, skip_backup)
+            else:
+                self._launch_unix_update_script(skip_backup)
 
         except Exception as e:
-            logger.error(f"Failed to launch update script: {e}")
+            logger.error(f"Failed to launch update: {e}")
             dialogue.show_warning(
-                title=self.tr("Failed to launch update"),
-                text=self.tr("Could not start the update process."),
+                title=self.tr("Failed to update"),
+                text=self.tr("Could not complete the update process."),
+                information=f"Error: {str(e)}",
+            )
+
+    def _launch_windows_update_script(
+        self, admin_needed: bool, skip_backup: bool
+    ) -> None:
+        """Launch Windows update script with appropriate privileges."""
+        update_script = AppInfo().application_folder / "update.bat"
+
+        if not update_script.exists():
+            dialogue.show_warning(
+                title=self.tr("Update failed"),
+                text=self.tr("Update script not found."),
+                information=str(update_script),
+            )
+            return
+
+        # Prepare environment variables for the batch script
+        env = os.environ.copy()
+        env["SKIP_BACKUP"] = "1" if skip_backup else "0"
+
+        try:
+            if admin_needed:
+                # Use PowerShell to run as admin
+                ps_command = (
+                    f'Start-Process "{update_script}" -Verb RunAs -ArgumentList "/C"'
+                )
+                subprocess.run(
+                    ["powershell", "-Command", ps_command],
+                    cwd=str(AppInfo().application_folder),
+                    env=env,
+                    check=True,
+                )
+            else:
+                # Run normally
+                subprocess.run(
+                    [str(update_script)],
+                    cwd=str(AppInfo().application_folder),
+                    env=env,
+                    check=True,
+                )
+
+            # Exit the application after successful update launch
+            sys.exit(0)
+
+        except subprocess.CalledProcessError as e:
+            dialogue.show_warning(
+                title=self.tr("Update failed"),
+                text=self.tr("Failed to launch update script."),
+                information=f"Error: {str(e)}",
+            )
+
+    def _launch_unix_update_script(self, skip_backup: bool) -> None:
+        """Launch Unix update script."""
+        update_script = AppInfo().application_folder / "update.sh"
+
+        if not update_script.exists():
+            dialogue.show_warning(
+                title=self.tr("Update failed"),
+                text=self.tr("Update script not found."),
+                information=str(update_script),
+            )
+            return
+
+        # Make script executable
+        update_script.chmod(0o755)
+
+        # Prepare environment variables
+        env = os.environ.copy()
+        env["SKIP_BACKUP"] = "1" if skip_backup else "0"
+
+        try:
+            subprocess.run(
+                [str(update_script)],
+                cwd=str(AppInfo().application_folder),
+                env=env,
+                check=True,
+            )
+
+            # Exit the application after successful update launch
+            sys.exit(0)
+
+        except subprocess.CalledProcessError as e:
+            dialogue.show_warning(
+                title=self.tr("Update failed"),
+                text=self.tr("Failed to launch update script."),
                 information=f"Error: {str(e)}",
             )
 

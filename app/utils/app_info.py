@@ -52,52 +52,68 @@ class AppInfo:
             else Path(main_file).resolve().parent.parent
         )
 
-        # Application metadata
-
         self._app_name = "RimSort"
-        self._app_copyright = ""
-
         self._app_version = "Unknown version"
-        version_file = str(self._application_folder / "version.xml")
-        if os.path.exists(version_file):
-            root = objectify.parse(version_file, parser=etree.XMLParser(recover=True))
-            ver = root.find("version")
-            if ver is not None and ver.text is not None:
-                self._app_version = ver.text
 
-            # If edge in version_string, append short sha
-            if "edge" in self._app_version.lower():
-                commit = root.find("commit")
-                if commit is not None and commit.text is not None:
-                    self._app_version += f"+{commit[:7]}"
-
-        # Define important directories using platformdirs
+        self._load_version()
 
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
         self._app_storage_folder: Path = Path(platform_dirs.user_data_dir)
         self._user_log_folder: Path = Path(platform_dirs.user_log_dir)
 
-        # Derive some secondary directory paths
+        self._language_data_folder: Path = self._application_folder / "locales"
+        self._theme_data_folder: Path = self._application_folder / "themes"
 
+        self._backup_folder: Path = self._app_storage_folder / "backups"
+        self._browser_profile_folder: Path = self._app_storage_folder / "browser"
         self._databases_folder: Path = self._app_storage_folder / "dbs"
         self._saved_modlists_folder: Path = self._app_storage_folder / "modlists"
-        self._theme_storage_folder: Path = self._app_storage_folder / "themes"
-        self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
+        self._theme_storage_folder: Path = self._app_storage_folder / "themes"
+
         self._user_rules_file = self.databases_folder / "userRules.json"
-        self._language_data_folder: Path = self._application_folder / "locales"
-        self._browser_profile_folder: Path = self._app_storage_folder / "browser"
 
-        # Make sure important directories exist
-
-        self._app_storage_folder.mkdir(parents=True, exist_ok=True)
-        self._user_log_folder.mkdir(parents=True, exist_ok=True)
-        self._saved_modlists_folder.mkdir(parents=True, exist_ok=True)
-
-        self._databases_folder.mkdir(parents=True, exist_ok=True)
-        self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
+        self._setup_directories()
 
         self._is_initialized: bool = True
+
+    def _load_version(self) -> None:
+        """
+        Load the application version from the version.xml file.
+
+        If the version contains 'edge', append the short commit SHA.
+
+        Handles XML parsing errors gracefully.
+        """
+        version_file = str(self._application_folder / "version.xml")
+        if os.path.exists(version_file):
+            try:
+                root = objectify.parse(
+                    version_file, parser=etree.XMLParser(recover=True)
+                )
+                ver = root.find("version")
+                if ver is not None and ver.text is not None:
+                    self._app_version = ver.text
+
+                if "edge" in self._app_version.lower():
+                    commit = root.find("commit")
+                    if commit is not None and commit.text is not None:
+                        self._app_version += f"+{commit.text[:7]}"
+            except Exception:
+                # Keep default version if parsing fails
+                pass
+
+    def _setup_directories(self) -> None:
+        """
+        Ensure that all important directories exist, creating them if necessary.
+        """
+        self._app_storage_folder.mkdir(parents=True, exist_ok=True)
+        self._backup_folder.mkdir(parents=True, exist_ok=True)
+        self._browser_profile_folder.mkdir(parents=True, exist_ok=True)
+        self._databases_folder.mkdir(parents=True, exist_ok=True)
+        self._saved_modlists_folder.mkdir(parents=True, exist_ok=True)
+        self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
+        self._user_log_folder.mkdir(parents=True, exist_ok=True)
 
     @property
     def app_name(self) -> str:
@@ -118,16 +134,6 @@ class AppInfo:
             str: The version of the application.
         """
         return self._app_version
-
-    @property
-    def app_copyright(self) -> str:
-        """
-        Get the copyright information for the application.
-
-        Returns:
-            str: The copyright information for the application.
-        """
-        return self._app_copyright
 
     @property
     def application_folder(self) -> Path:
@@ -156,8 +162,6 @@ class AppInfo:
         """
         Get the path to the folder where user modlists are saved.
 
-        This directory is determined using platform-specific conventions.
-
         Returns:
             Path: The path to the saved modlists folder.
         """
@@ -167,8 +171,6 @@ class AppInfo:
     def app_settings_file(self) -> Path:
         """
         Get the path to the file where user-specific data for the application is stored.
-
-        This directory is determined using platform-specific conventions.
 
         Returns:
             Path: The path to the user-specific data file.
@@ -181,6 +183,9 @@ class AppInfo:
         Get the path to the user-specific rules file.
 
         May or may not exist.
+
+        Returns:
+            Path: The path to the user rules file.
         """
         return self._user_rules_file
 
@@ -188,8 +193,6 @@ class AppInfo:
     def user_log_folder(self) -> Path:
         """
         Get the path to the folder where application logs are stored for the user.
-
-        This directory is determined using platform-specific conventions.
 
         Returns:
             Path: The path to the user-specific log folder.
@@ -200,6 +203,9 @@ class AppInfo:
     def theme_data_folder(self) -> Path:
         """
         Get the path to the folder where application Themes / Stylesheets are stored.
+
+        Returns:
+            Path: The path to the theme data folder.
         """
         return self._theme_data_folder
 
@@ -207,6 +213,9 @@ class AppInfo:
     def theme_storage_folder(self) -> Path:
         """
         Get the path to the user folder where Themes / Stylesheets are stored.
+
+        Returns:
+            Path: The path to the theme storage folder.
         """
         return self._theme_storage_folder
 
@@ -214,5 +223,18 @@ class AppInfo:
     def databases_folder(self) -> Path:
         """
         Get the path to the folder where application databases are stored.
+
+        Returns:
+            Path: The path to the databases folder.
         """
         return self._databases_folder
+
+    @property
+    def backup_folder(self) -> Path:
+        """
+        Get the path to the folder where application backups are stored.
+
+        Returns:
+            Path: The path to the backups folder.
+        """
+        return self._backup_folder
