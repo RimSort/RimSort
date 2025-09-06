@@ -7,6 +7,9 @@ REM Non-interactive updater with colorized console logging and persistent logs
 REM Logs are saved to: %LOCALAPPDATA%\RimSort\Logs\updater.log
 REM ========================================================================
 
+REM Give time for app to exit
+timeout /t 5 /nobreak >nul
+
 REM Enable ANSI escape sequence support (Windows 10+ terminals support VT by default)
 for /F "delims=" %%A in ('echo prompt $E^| cmd') do set "ESC=%%A"
 set "C_INFO=%ESC%[34m"
