@@ -1353,7 +1353,8 @@ class MainContent(QObject):
                         if not script_path.exists():
                             # Elevate to copy then run
                             copy_and_run = f'copy /Y "{temp_update_dir / "update.bat"}" "{script_path}" && "{script_path}" >> "{log_path}" 2>&1'
-                            ctypes.windll.shell32.ShellExecuteW(
+                            windll = cast(Any, ctypes).windll
+                            windll.shell32.ShellExecuteW(
                                 None,
                                 "runas",
                                 "cmd",
@@ -1363,7 +1364,8 @@ class MainContent(QObject):
                             )
                             args_repr = f"ShellExecute runas cmd /c {copy_and_run}"
                         else:
-                            ctypes.windll.shell32.ShellExecuteW(
+                            windll = cast(Any, ctypes).windll
+                            windll.shell32.ShellExecuteW(
                                 None,
                                 "runas",
                                 "cmd",
