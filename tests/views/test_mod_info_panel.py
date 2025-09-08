@@ -10,10 +10,10 @@ from app.views.mod_info_panel import ClickablePathLabel
 @pytest.fixture
 def label(qtbot: Any) -> ClickablePathLabel:
     """Create a ClickablePathLabel instance for testing.
-    
+
     Args:
         qtbot: Pytest-Qt bot for widget testing.
-        
+
     Returns:
         ClickablePathLabel: A configured label instance for testing.
     """
@@ -24,7 +24,7 @@ def label(qtbot: Any) -> ClickablePathLabel:
 
 def test_initialization(label: ClickablePathLabel) -> None:
     """Test that ClickablePathLabel initializes with correct default values.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
     """
@@ -38,7 +38,7 @@ def test_initialization(label: ClickablePathLabel) -> None:
 
 def test_set_path(label: ClickablePathLabel) -> None:
     """Test setting and clearing the path property.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
     """
@@ -61,7 +61,7 @@ def test_set_path(label: ClickablePathLabel) -> None:
 
 def test_set_clickable(label: ClickablePathLabel) -> None:
     """Test enabling and disabling clickable behavior.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
     """
@@ -77,10 +77,10 @@ def test_set_clickable(label: ClickablePathLabel) -> None:
 @pytest.fixture
 def mocked_env(monkeypatch: Any) -> Tuple[MagicMock, MagicMock, MagicMock]:
     """Create mocked environment for path-related tests.
-    
+
     Args:
         monkeypatch: Pytest monkeypatch fixture.
-        
+
     Returns:
         Tuple containing mocked Path, platform_specific_open, and logger objects.
     """
@@ -99,8 +99,15 @@ def mocked_env(monkeypatch: Any) -> Tuple[MagicMock, MagicMock, MagicMock]:
         (True, True, None, "/test/path", "info", "Opening mod folder: /test/path"),
         (False, None, None, None, "warning", "Mod folder does not exist: /test/path"),
         (True, False, None, None, "warning", "Path is not a directory: /test/path"),
-        (None, None, Exception("Test exception"), None, "error", "Failed to open mod folder /test/path: Test exception"),
-    ]
+        (
+            None,
+            None,
+            Exception("Test exception"),
+            None,
+            "error",
+            "Failed to open mod folder /test/path: Test exception",
+        ),
+    ],
 )
 def test_mouse_press_path_scenarios(
     label: ClickablePathLabel,
@@ -114,13 +121,13 @@ def test_mouse_press_path_scenarios(
     expected_log_msg: Any,
 ) -> None:
     """Test various path scenarios when clicking the label.
-    
+
     This test covers different path validation scenarios:
     - Valid directory path (should open folder)
     - Non-existent path (should log warning)
     - File path instead of directory (should log warning)
     - Exception during path validation (should log error)
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
         mocked_env: Tuple of mocked objects (path, open, logger).
@@ -135,7 +142,7 @@ def test_mouse_press_path_scenarios(
     mock_path, mock_open, mock_logger = mocked_env
     test_path = "/test/path"
     label.setPath(test_path)
-    
+
     # Configure mock behavior based on test parameters
     if exists_return is not None:
         mock_path.exists.return_value = exists_return
@@ -143,22 +150,28 @@ def test_mouse_press_path_scenarios(
         mock_path.is_dir.return_value = is_dir_return
     if exists_side_effect is not None:
         mock_path.exists.side_effect = exists_side_effect
-    
+
     # Simulate left mouse click
     qtbot.mouseClick(label, Qt.MouseButton.LeftButton)
-    
+
     # Verify expected behavior
     if expected_open:
         mock_open.assert_called_once_with(expected_open)
     else:
         mock_open.assert_not_called()
     if expected_log_level:
-        getattr(mock_logger, expected_log_level).assert_called_once_with(expected_log_msg)
+        getattr(mock_logger, expected_log_level).assert_called_once_with(
+            expected_log_msg
+        )
 
 
-def test_mouse_press_event_not_left_button(label: ClickablePathLabel, mocked_env: Tuple[MagicMock, MagicMock, MagicMock], qtbot: Any) -> None:
+def test_mouse_press_event_not_left_button(
+    label: ClickablePathLabel,
+    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    qtbot: Any,
+) -> None:
     """Test that right mouse button clicks are ignored.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
         mocked_env: Tuple of mocked objects (path, open, logger).
@@ -171,9 +184,13 @@ def test_mouse_press_event_not_left_button(label: ClickablePathLabel, mocked_env
     mock_open.assert_not_called()
 
 
-def test_mouse_press_event_not_clickable(label: ClickablePathLabel, mocked_env: Tuple[MagicMock, MagicMock, MagicMock], qtbot: Any) -> None:
+def test_mouse_press_event_not_clickable(
+    label: ClickablePathLabel,
+    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    qtbot: Any,
+) -> None:
     """Test that clicks are ignored when label is not clickable.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
         mocked_env: Tuple of mocked objects (path, open, logger).
@@ -187,9 +204,13 @@ def test_mouse_press_event_not_clickable(label: ClickablePathLabel, mocked_env: 
     mock_open.assert_not_called()
 
 
-def test_mouse_press_event_no_path(label: ClickablePathLabel, mocked_env: Tuple[MagicMock, MagicMock, MagicMock], qtbot: Any) -> None:
+def test_mouse_press_event_no_path(
+    label: ClickablePathLabel,
+    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    qtbot: Any,
+) -> None:
     """Test that clicks are ignored when no path is set.
-    
+
     Args:
         label: The ClickablePathLabel instance to test.
         mocked_env: Tuple of mocked objects (path, open, logger).
@@ -198,4 +219,4 @@ def test_mouse_press_event_no_path(label: ClickablePathLabel, mocked_env: Tuple[
     _, mock_open, _ = mocked_env
     label.setPath("")
     qtbot.mouseClick(label, Qt.MouseButton.LeftButton)
-    mock_open.assert_not_called() 
+    mock_open.assert_not_called()
