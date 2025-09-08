@@ -111,49 +111,42 @@ def main_content(
     mc.deleteLater()
 
 
-def test_cancel_on_unsaved(
-    patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
+@pytest.fixture
+def unsaved_main_content(
     main_content: Tuple[MainContent, List[bool]],
-) -> None:
+) -> Tuple[MainContent, List[bool]]:
     mc, save_calls = main_content
     # Set unsaved changes
     mc.mods_panel.active_mods_list.uuids = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a"]
-    # Simulate Cancel
-    patch_dialogue.return_value = QMessageBox.StandardButton.Cancel
-    mc._do_run_game()
-    assert save_calls == []
-    assert patch_launch == []
+    return mc, save_calls
 
 
-def test_run_anyway_on_unsaved(
+@pytest.mark.parametrize(
+    "dialogue_return, expected_save_calls, expected_launch",
+    [
+        (QMessageBox.StandardButton.Cancel, [], []),
+        ("Run Anyway", [], [(Path("/fake/path"), ["--test"])]),
+        ("Save and Run", [True], [(Path("/fake/path"), ["--test"])]),
+    ],
+)
+def test_run_game_with_unsaved_changes(
     patch_dialogue: Mock,
     patch_launch: List[Tuple[Path, List[str]]],
-    main_content: Tuple[MainContent, List[bool]],
+    unsaved_main_content: Tuple[MainContent, List[bool]],
+    dialogue_return: QMessageBox.StandardButton | str,
+    expected_save_calls: List[bool],
+    expected_launch: List[Tuple[Path, List[str]]],
 ) -> None:
-    mc, save_calls = main_content
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
-    mc.active_mods_uuids_last_save = ["a"]
-    patch_dialogue.return_value = mc.tr("Run Anyway")
+    mc, save_calls = unsaved_main_content
+    patch_dialogue.return_value = (
+        dialogue_return
+        if isinstance(dialogue_return, QMessageBox.StandardButton)
+        else mc.tr(dialogue_return)
+    )
     mc._do_run_game()
-    assert save_calls == []
-    # launch_game_process with dummy args
-    assert patch_launch == [(Path("/fake/path"), ["--test"])]
-
-
-def test_save_and_run_on_unsaved(
-    patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
-    main_content: Tuple[MainContent, List[bool]],
-) -> None:
-    mc, save_calls = main_content
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
-    mc.active_mods_uuids_last_save = ["a"]
-    patch_dialogue.return_value = mc.tr("Save and Run")
-    mc._do_run_game()
-    assert save_calls == [True]
-    assert patch_launch == [(Path("/fake/path"), ["--test"])]
+    assert save_calls == expected_save_calls
+    assert patch_launch == expected_launch
 
 
 def test_run_without_unsaved(
