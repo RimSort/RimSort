@@ -11,8 +11,7 @@ def do_topo_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
 ) -> list[str]:
     """
-    Sort mods using the topological sort algorithm. For each
-    topological level, sort the mods alphabetically.
+    Sort mods using the topological sort algorithm in pure toposort order.
     """
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
@@ -31,28 +30,15 @@ def do_topo_sort(
         for uuid in active_mods_uuids
     )
     for level in sorted_dependencies:
-        temp_mod_set = set()
+        # Preserve order from toposort - use list instead of set
+        temp_mod_list = []
         for package_id in level:
             if package_id in active_mods_packageid_to_uuid:
                 mod_uuid = active_mods_packageid_to_uuid[package_id]
-                temp_mod_set.add(mod_uuid)
+                temp_mod_list.append(mod_uuid)
 
-        # Sort packages in this topological level by name
-        def safe_name(uuid: str) -> str:
-            name = metadata_manager.internal_local_metadata[uuid].get("name")
-            if isinstance(name, str):
-                return name.lower()
-            else:
-                return "name error in mod about.xml"
-
-        sorted_temp_mod_set = sorted(
-            temp_mod_set,
-            key=safe_name,
-            reverse=False,
-        )
-        # Add into reordered set
-        for sorted_mod_uuid in sorted_temp_mod_set:
-            reordered.append(sorted_mod_uuid)
+        # Add into reordered list (pure toposort order)
+        reordered.extend(temp_mod_list)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered
 
