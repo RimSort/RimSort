@@ -1,6 +1,10 @@
 from loguru import logger
 
-from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
+from app.utils.constants import (
+    KNOWN_MOD_REPLACEMENTS,
+    KNOWN_TIER_ONE_MODS,
+    KNOWN_TIER_ZERO_MODS,
+)
 from app.utils.metadata import MetadataManager
 
 
@@ -390,3 +394,100 @@ def gen_tier_two_deps_graph(
         "Generated tier two dependency graph with conflict resolution, returning"
     )
     return tier_two_dependency_graph
+
+
+def apply_replacements_to_dependency_graph(
+    dependency_graph: dict[str, set[str]], active_mod_ids: list[str]
+) -> dict[str, set[str]]:
+    """
+    Apply mod replacements to the dependency graph. When a mod has a dependency that can be
+    replaced by another mod that's present in the active mods list, update the dependency
+    to point to the replacement instead.
+
+    This ensures that the topological sort considers replacement relationships when
+    determining load order.
+
+    Args:
+        dependency_graph: The dependency graph to modify
+        active_mod_ids: List of active mod package IDs
+
+    Returns:
+        Modified dependency graph with replacements applied
+    """
+    logger.debug("Applying replacements to dependency graph")
+    modified_graph = {}
+
+    for mod_id, dependencies in dependency_graph.items():
+        modified_dependencies = set()
+
+        for dep in dependencies:
+            # Check if this dependency has replacements
+            replacements = KNOWN_MOD_REPLACEMENTS.get(dep, set())
+
+            # Find the first replacement that's active
+            replacement_found = None
+            for replacement in replacements:
+                if replacement in active_mod_ids:
+                    replacement_found = replacement
+                    break
+
+            if replacement_found:
+                logger.debug(
+                    f"Replacing dependency {dep} with {replacement_found} for mod {mod_id}"
+                )
+                modified_dependencies.add(replacement_found)
+            else:
+                # Keep original dependency if no replacement is active
+                modified_dependencies.add(dep)
+
+        modified_graph[mod_id] = modified_dependencies
+
+    logger.debug("Finished applying replacements to dependency graph")
+    return modified_graph
+
+
+def apply_replacements_to_reverse_dependency_graph(
+    reverse_dependency_graph: dict[str, set[str]], active_mod_ids: list[str]
+) -> dict[str, set[str]]:
+    """
+    Apply mod replacements to the reverse dependency graph. When a mod in the reverse graph
+    can be replaced by another mod that's present in the active mods list, update the key
+    to point to the replacement instead.
+
+    This ensures consistency between dependency and reverse dependency graphs.
+
+    Args:
+        reverse_dependency_graph: The reverse dependency graph to modify
+        active_mod_ids: List of active mod package IDs
+
+    Returns:
+        Modified reverse dependency graph with replacements applied
+    """
+    logger.debug("Applying replacements to reverse dependency graph")
+    modified_reverse: dict[str, set[str]] = {}
+
+    for mod_id, dependents in reverse_dependency_graph.items():
+        # Check if this mod has replacements
+        replacements = KNOWN_MOD_REPLACEMENTS.get(mod_id, set())
+
+        # Find the first replacement that's active
+        replacement_found = None
+        for replacement in replacements:
+            if replacement in active_mod_ids:
+                replacement_found = replacement
+                break
+
+        if replacement_found:
+            logger.debug(
+                f"Replacing mod {mod_id} with {replacement_found} in reverse dependency graph"
+            )
+            # Move dependents to the replacement
+            if replacement_found not in modified_reverse:
+                modified_reverse[replacement_found] = set()
+            modified_reverse[replacement_found].update(dependents)
+        else:
+            # Keep original
+            modified_reverse[mod_id] = dependents
+
+    logger.debug("Finished applying replacements to reverse dependency graph")
+    return modified_reverse

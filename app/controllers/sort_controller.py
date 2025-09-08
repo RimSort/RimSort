@@ -4,6 +4,7 @@ from loguru import logger
 
 import app.sort.dependencies as sort_deps
 from app.sort.alphabetical_sort import do_alphabetical_sort
+from app.sort.dependencies import apply_replacements_to_reverse_dependency_graph
 from app.sort.topo_sort import CircularDependencyError, do_topo_sort
 from app.utils.constants import SortMethod
 
@@ -51,6 +52,11 @@ class Sorter:
             self.active_uuids, list(self.active_package_ids)
         )
 
+        # Apply replacements to reverse dependencies graph for consistency
+        reverse_dependencies_graph = apply_replacements_to_reverse_dependency_graph(
+            reverse_dependencies_graph, list(self.active_package_ids)
+        )
+
         tier_zero_graph, tier_zero_mods = sort_deps.gen_tier_zero_deps_graph(
             dependencies_graph
         )
@@ -88,9 +94,17 @@ class Sorter:
         if dependency_graphs is None:
             dependency_graphs = self.generate_dependency_graphs()
 
+        # Apply replacements to dependency graphs before sorting
+        modified_graphs = []
+        for graph in dependency_graphs:
+            modified_graph = sort_deps.apply_replacements_to_dependency_graph(
+                graph, list(self.active_package_ids)
+            )
+            modified_graphs.append(modified_graph)
+
         sorted_uuids = []
         try:
-            for i, graph in enumerate(dependency_graphs):
+            for i, graph in enumerate(modified_graphs):
                 logger.info(f"Sorting tier {i + 1}")
                 sorted_mods = self.sort_method(graph, self.active_uuids)
                 logger.info(f"Tier {i + 1} sorted: {len(sorted_mods)}")
