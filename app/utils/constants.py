@@ -77,6 +77,7 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "xml",
 ]
 KNOWN_MOD_REPLACEMENTS = {
+    "zetrith.prepatcher": {"jikulopo.prepatcher"},
     "brrainz.harmony": {"zetrith.prepatcher", "jikulopo.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
 }
