@@ -307,7 +307,7 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.save()
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
-            self.main_content_panel.actions_slot("check_for_update")
+            EventBus().do_check_for_application_update.emit()
         # Delete outdated entries in aux DB
         EventBus().do_delete_outdated_entries_in_aux_db.emit()
 
