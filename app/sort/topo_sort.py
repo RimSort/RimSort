@@ -11,7 +11,8 @@ def do_topo_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
 ) -> list[str]:
     """
-    Sort mods using the topological sort algorithm in pure toposort order.
+    Sort mods using the topological sort algorithm. For each
+    topological level, sort the mods by packageid for consistency.
     """
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
@@ -25,20 +26,32 @@ def do_topo_sort(
         raise e
 
     reordered = list()
-    active_mods_packageid_to_uuid = dict(
-        (metadata_manager.internal_local_metadata[uuid]["packageid"], uuid)
-        for uuid in active_mods_uuids
-    )
-    for level in sorted_dependencies:
-        # Preserve order from toposort - use list instead of set
-        temp_mod_list = []
-        for package_id in level:
-            if package_id in active_mods_packageid_to_uuid:
-                mod_uuid = active_mods_packageid_to_uuid[package_id]
-                temp_mod_list.append(mod_uuid)
+    active_mods_uuid_to_packageid = {}
+    active_mods_packageid_to_uuid = {}
+    for uuid in active_mods_uuids:
+        try:
+            packageid = metadata_manager.internal_local_metadata[uuid]["packageid"]
+            active_mods_uuid_to_packageid[uuid] = packageid
+            active_mods_packageid_to_uuid[packageid] = uuid
+        except KeyError:
+            logger.warning(f"Missing packageid for mod UUID {uuid}, skipping")
+            continue
 
-        # Add into reordered list (pure toposort order)
-        reordered.extend(temp_mod_list)
+    for level in sorted_dependencies:
+        temp_mod_list = [
+            active_mods_packageid_to_uuid[package_id]
+            for package_id in level
+            if package_id in active_mods_packageid_to_uuid
+        ]
+
+        # Sort packages in this topological level by packageid for consistency
+        sorted_temp_mod_list = sorted(
+            temp_mod_list,
+            key=lambda u: active_mods_uuid_to_packageid[u].lower(),
+            reverse=False,
+        )
+        # Add into reordered list
+        reordered.extend(sorted_temp_mod_list)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered
 
