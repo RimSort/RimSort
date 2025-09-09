@@ -3,6 +3,7 @@ from typing import Any, Iterable
 
 from loguru import logger
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
@@ -122,6 +123,17 @@ class AuxMetadataController(MetadataDbController):
                 with session.begin_nested():
                     session.add(entry)
                     session.flush()
+            except IntegrityError:
+                session.rollback()
+                # Query again to get the existing entry
+                entry = AuxMetadataController.get(session, item_path)
+                if entry is None:
+                    logger.error(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
+                    raise RuntimeError(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
             except Exception as e:
                 session.rollback()
                 logger.exception(f"Failed to create new aux metadata entry: {e}")
