@@ -1,4 +1,5 @@
 import gzip
+import zstandard as zstd
 import os
 from typing import Any
 
@@ -177,16 +178,33 @@ def using_gzip(fp: str) -> bool:
         return False
 
 
+def using_zstd(fp: str) -> bool:
+    """
+    Save File Compression compatibility. Check if dealing with zstd save file
+
+    :param fp: File path to check.
+    :return: True if the file is ZStandard zipped, False otherwise.
+    """
+    try:
+        with open(fp, "rb") as f:
+            return f.read(4) == b"\x28\xb5\x2f\xfd"
+    except Exception as e:
+        logger.error(f"Failed checking if save file is using zstd: {e}")
+        return False
+
+
 def __open_save_file(path: str) -> Any:
     """
     Open a save file.
 
-    Compatible with gzip. (RimKeeper)
+    Compatible with gzip and zstd. (RimKeeper and Save File Compression)
 
     :param path: Path to the save file.
     :return: File object for the opened save file.
     """
     if using_gzip(path):
         return gzip.open(path, "rb")
+    elif using_zstd(path):
+        return zstd.open(path, "rb")
     else:
         return open(path, "rb")
