@@ -25,7 +25,7 @@ jobs:
           # list of files that changed across commits
           fetch-depth: 0
           submodules: recursive
-          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@main
@@ -46,7 +46,9 @@ jobs:
         run: uv run pre-commit run --all-files --show-diff-on-failure
 
       - name: Commit formatting fixes
+        if: github.event_name == 'pull_request'
         run: |
+          git checkout ${{ github.head_ref }}
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
