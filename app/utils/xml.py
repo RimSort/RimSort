@@ -1,9 +1,9 @@
 import gzip
-import zstandard as zstd
 import os
 from typing import Any
 
 import xmltodict
+import zstandard as zstd
 from bs4 import BeautifulSoup
 from loguru import logger
 from lxml import etree
