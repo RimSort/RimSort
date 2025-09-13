@@ -7,17 +7,14 @@ on:
   pull_request: null
   merge_group:
 
-permissions: {}
-
 jobs:
   build:
     name: Lint
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       packages: read
-      # To report GitHub Actions status checks
       statuses: write
 
     steps:
@@ -46,6 +43,15 @@ jobs:
 
       - name: Run pre-commit
         run: uv run pre-commit run --all-files --show-diff-on-failure
+
+      - name: Commit formatting fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet || git commit -m "chore: apply formatting fixes"
+          git push
+        continue-on-error: true
 
       - name: Move the dependencies # Needed to deal with weirdness with super-linter's internal MyPy.
         run: mv .venv /home/runner/work/_temp/_github_workflow
