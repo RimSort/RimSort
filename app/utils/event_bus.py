@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Self
 
 from PySide6.QtCore import QObject, Signal
@@ -78,9 +79,8 @@ class EventBus(QObject):
     do_download_no_version_warning_db_from_github = Signal()
     do_upload_use_this_instead_db_to_github = Signal()
     do_download_use_this_instead_db_from_github = Signal()
-    do_upload_rimsort_log = Signal()
-    do_upload_rimsort_old_log = Signal()
-    do_upload_rimworld_log = Signal()
+    do_upload_log = Signal(Path)
+    do_open_default_editor = Signal(Path)
     do_download_all_mods_via_steamcmd = Signal()
     do_download_all_mods_via_steam = Signal()
     do_compare_steam_workshop_databases = Signal()

@@ -58,6 +58,7 @@ from app.utils.generic import (
     chunks,
     copy_to_clipboard_safely,
     launch_game_process,
+    launch_process,
     open_url_browser,
     platform_specific_open,
     upload_data_to_0x0_st,
@@ -143,11 +144,8 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
-            EventBus().do_upload_rimsort_old_log.connect(
-                self._on_do_upload_rimsort_old_log
-            )
-            EventBus().do_upload_rimworld_log.connect(self._on_do_upload_rimworld_log)
+            EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_open_default_editor.connect(self._open_in_default_editor)
             EventBus().do_download_all_mods_via_steamcmd.connect(
                 self._on_do_download_all_mods_via_steamcmd
             )
@@ -2098,6 +2096,7 @@ class MainContent(QObject):
 
         self._upload_log(player_log_path)
 
+    @Slot()
     def _upload_log(self, path: Path) -> None:
         if not os.path.exists(path):
             dialogue.show_warning(
@@ -2130,6 +2129,17 @@ class MainContent(QObject):
                 title=self.tr("Failed to upload file."),
                 text=self.tr("Failed to upload the file to 0x0.st"),
                 information=ret,
+            )
+
+    @Slot()
+    def _open_in_default_editor(self, path: Path) -> None:
+        if path.exists():
+            logger.info(f"Opening file in default editor: {path}")
+            launch_process(
+                self.settings_controller.settings.text_editor_location,
+                self.settings_controller.settings.text_editor_folder_arg.split(" ")
+                + [str(path)],
+                str(AppInfo().application_folder),
             )
 
     def _do_save(self) -> None:
