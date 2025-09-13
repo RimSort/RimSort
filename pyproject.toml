@@ -28,6 +28,7 @@ dependencies = [
     "toposort==1.10",
     "watchdog==6.0.0",
     "xmltodict==0.15.1",
+    "zstandard==0.23.0",
 ]
 
 [tool.uv.sources]
@@ -80,7 +81,7 @@ warn_unused_ignores = true
 exclude = ['venv', '.venv', 'submodules']
 
 [[tool.mypy.overrides]]
-module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot']
+module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot', 'zstandard']
 ignore_missing_imports = true
 
 [tool.ruff]
