@@ -44,6 +44,9 @@ jobs:
         shell: bash
         run: uv sync --locked --dev
 
+      - name: Run pre-commit
+        run: uv run pre-commit run --all-files --show-diff-on-failure
+
       - name: Move the dependencies # Needed to deal with weirdness with super-linter's internal MyPy.
         run: mv .venv /home/runner/work/_temp/_github_workflow
 
