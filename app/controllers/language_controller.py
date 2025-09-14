@@ -22,18 +22,16 @@ class LanguageController:
         self.app_instance = QApplication.instance()
         logger.info("Initializing LanguageController")
         self.default_language = default_language
+        self._language_data_folder = self.app_info.language_data_folder
         self.languages = self._get_supported_languages()
         logger.info(f"Supported languages: {self.languages}")
-        self._language_data_folder = self.app_info._language_data_folder
 
     def _get_supported_languages(self) -> set[str]:
         language_names = self._get_language_names_from_folder(
-            self.app_info._language_data_folder
+            self._language_data_folder
         )
         logger.info(f"Supported languages retrieved: {language_names}")
-        logger.debug(
-            f"Checking language folders: {[self.app_info._language_data_folder]}"
-        )
+        logger.debug(f"Checking language folders: {[self._language_data_folder]}")
 
         return language_names
 
