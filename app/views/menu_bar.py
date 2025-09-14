@@ -244,12 +244,7 @@ class MenuBar(QObject):
 
         upload_rimworld_log_prev_action = create_entry(
             "RimWorld Player-prev.log",
-            lambda: Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            ).parent
-            / "Player-prev.log",
+            partial(rimworld_log_path, "Player-prev.log"),
         )
         action_list.append(upload_rimworld_log_prev_action)
 
