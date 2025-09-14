@@ -94,7 +94,7 @@ class AppController(QObject):
 
     def initialize_translator(self, language: str) -> None:
         """Initializes the translator with the specified language."""
-        path = AppInfo()._language_data_folder / f"{language}.qm"
+        path = AppInfo().language_data_folder / f"{language}.qm"
         if app_translator.load(str(path)):
             QCoreApplication.installTranslator(app_translator)
         else:
