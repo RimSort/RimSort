@@ -2076,29 +2076,9 @@ class MainContent(QObject):
             self.settings_controller.show_settings_dialog()
 
     @Slot()
-    def _on_do_upload_rimsort_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / "RimSort.log")
-
-    @Slot()
-    def _on_do_upload_rimsort_old_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / "RimSort.old.log")
-
-    @Slot()
-    def _on_do_upload_rimworld_log(self) -> None:
-        player_log_path = (
-            Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            ).parent
-            / "Player.log"
-        )
-
-        self._upload_log(player_log_path)
-
-    @Slot()
-    def _upload_log(self, path: Path) -> None:
-        if not os.path.exists(path):
+    def _upload_log(self, path: Path | None) -> None:
+        logger.warning(f"log TEMP path: {path}")
+        if not path or not os.path.exists(path):
             dialogue.show_warning(
                 title=self.tr("File not found"),
                 text=self.tr("The file you are trying to upload does not exist."),
@@ -2132,14 +2112,20 @@ class MainContent(QObject):
             )
 
     @Slot()
-    def _open_in_default_editor(self, path: Path) -> None:
-        if path.exists():
+    def _open_in_default_editor(self, path: Path | None) -> None:
+        logger.warning(f"ed TEMP path: {path}")
+        if path and path.exists():
             logger.info(f"Opening file in default editor: {path}")
             launch_process(
                 self.settings_controller.settings.text_editor_location,
                 self.settings_controller.settings.text_editor_folder_arg.split(" ")
                 + [str(path)],
                 str(AppInfo().application_folder),
+            )
+        else:
+            dialogue.show_warning(
+                title=self.tr("Failed to open file."),
+                text=self.tr("Failed to open the file with default text editor"),
             )
 
     def _do_save(self) -> None:

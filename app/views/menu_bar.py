@@ -1,4 +1,6 @@
+from functools import partial
 from pathlib import Path
+from typing import Callable
 
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
@@ -207,42 +209,47 @@ class MenuBar(QObject):
         menu_name: str,
         action_list: list[QAction],
     ) -> QMenu:
+        def create_entry(
+            name: str, path_accessor: Callable[[], Path | None]
+        ) -> QAction:
+            action = self._add_action(logfile_submenu, name)
+            action.setData(path_accessor)
+            action_list.append(action)
+            return action
+
+        def rimworld_log_path(suffix: str) -> Path | None:
+            config_str = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].config_folder
+            if config_str:
+                return Path(config_str).parent / suffix
+            return None
+
         logfile_submenu = QMenu(self.tr(menu_name))
-        upload_rimsort_log_action = self._add_action(logfile_submenu, "RimSort.log")
-        upload_rimsort_log_action.setData(AppInfo().user_log_folder / "RimSort.log")
+        upload_rimsort_log_action = create_entry(
+            "RimSort.log", lambda: AppInfo().user_log_folder / "RimSort.log"
+        )
         action_list.append(upload_rimsort_log_action)
 
-        upload_rimsort_old_log_action = self._add_action(
-            logfile_submenu, "RimSort.old.log"
-        )
-        upload_rimsort_old_log_action.setData(
-            AppInfo().user_log_folder / "RimSort.old.log"
+        upload_rimsort_old_log_action = create_entry(
+            "RimSort.old.log", lambda: AppInfo().user_log_folder / "RimSort.old.log"
         )
         action_list.append(upload_rimsort_old_log_action)
 
-        upload_rimworld_log_action = self._add_action(
-            logfile_submenu, "RimWorld Player.log"
-        )
-        upload_rimworld_log_action.setData(
-            Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            ).parent
-            / "Player.log"
+        upload_rimworld_log_action = create_entry(
+            "RimWorld Player.log",
+            partial(rimworld_log_path, "Player.log"),
         )
         action_list.append(upload_rimworld_log_action)
 
-        upload_rimworld_log_prev_action = self._add_action(
-            logfile_submenu, "RimWorld Player-prev.log"
-        )
-        upload_rimworld_log_prev_action.setData(
-            Path(
+        upload_rimworld_log_prev_action = create_entry(
+            "RimWorld Player-prev.log",
+            lambda: Path(
                 self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
                 ].config_folder
             ).parent
-            / "Player-prev.log"
+            / "Player-prev.log",
         )
         action_list.append(upload_rimworld_log_prev_action)
 

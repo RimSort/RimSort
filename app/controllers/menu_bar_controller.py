@@ -69,7 +69,7 @@ class MenuBarController(QObject):
         for action in self.menu_bar.upload_log_actions:
             action.triggered.connect(
                 partial(
-                    lambda a: EventBus().do_upload_log.emit(a.data()),
+                    lambda a: EventBus().do_upload_log.emit(a.data()()),
                     a=action,
                 )
             )
@@ -77,7 +77,7 @@ class MenuBarController(QObject):
         for action in self.menu_bar.default_open_log_actions:
             action.triggered.connect(
                 partial(
-                    lambda a: EventBus().do_open_default_editor.emit(a.data()),
+                    lambda a: EventBus().do_open_default_editor.emit(a.data()()),
                     a=action,
                 )
             )
