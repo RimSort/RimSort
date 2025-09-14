@@ -216,3 +216,10 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
+
+    @property
+    def language_data_folder(self) -> Path:
+        """
+        Get the path to the folder where application language data is stored.
+        """
+        return self._language_data_folder
