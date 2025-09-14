@@ -90,7 +90,6 @@ line-length = 88
 indent-width = 4
 lint.extend-select = ["I"]
 exclude = ["submodules"]
-include = ["distribute.py"]
 
 [tool.ruff.format]
 quote-style = "double"
