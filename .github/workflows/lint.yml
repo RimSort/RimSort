@@ -28,7 +28,7 @@ jobs:
           # list of files that changed across commits
           fetch-depth: 0
           submodules: recursive
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@main
@@ -71,7 +71,7 @@ jobs:
             -ignore 'unknown permission scope "attestations"'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
-          FILTER_REGEX_EXCLUDE: "LICENSE.md"
+          FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/"
           IGNORE_GITIGNORED_FILES: true
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
@@ -83,8 +83,9 @@ jobs:
           github.event_name == 'pull_request' &&
           github.ref_name != github.event.repository.default_branch &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
+          add_options: "-- . :!super-linter-output/"
           branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
           commit_message: "chore: fix linting issues"
           commit_user_name: super-linter
