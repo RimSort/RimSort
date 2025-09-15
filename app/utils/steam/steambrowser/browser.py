@@ -77,8 +77,16 @@ class SteamBrowser(QWidget):
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
         if platform.system() != "Windows":
-            logger.info("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
+            logger.warning(
+                "Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform"
+            )
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
+        if platform.system() == "Linux":
+            # Disable GPU acceleration on Linux to avoid rendering issues with Mesa 25.2 (QTBUG-139424)
+            logger.warning(
+                "Disabling GPU acceleration for Linux to work around Qt WebEngine Mesa 25.2 issue"
+            )
+            os.environ["QT_WEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
 
         # VARIABLES
         profile_dir = Path(AppInfo()._browser_profile_folder)
