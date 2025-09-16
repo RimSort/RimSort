@@ -40,7 +40,6 @@ _NUITKA_CMD = [
     "-m",
     "nuitka",
     "app/__main__.py",
-    "--include-data-dir=.venv/Lib/site-packages/PySide6/translations/qtwebengine_locales=qtwebengine_locales",
 ]
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
