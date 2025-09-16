@@ -28,7 +28,7 @@ dependencies = [
     "toposort==1.10",
     "watchdog==6.0.0",
     "xmltodict==1.0.0",
-    "zstandard==0.23.0",
+    "zstandard==0.25.0",
 ]
 
 [tool.uv.sources]
