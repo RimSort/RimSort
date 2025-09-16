@@ -10,6 +10,7 @@ Not meant to be imported as a module.
 """
 
 import argparse
+import glob
 import os
 import platform
 import shutil
@@ -40,6 +41,7 @@ _NUITKA_CMD = [
     "-m",
     "nuitka",
     "app/__main__.py",
+    f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
