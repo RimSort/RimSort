@@ -2075,9 +2075,7 @@ class MainContent(QObject):
         if download_text in answer_str:
             self.settings_controller.show_settings_dialog()
 
-    @Slot()
     def _upload_log(self, path: Path | None) -> None:
-        logger.warning(f"log TEMP path: {path}")
         if not path or not os.path.exists(path):
             dialogue.show_warning(
                 title=self.tr("File not found"),
@@ -2111,9 +2109,7 @@ class MainContent(QObject):
                 information=ret,
             )
 
-    @Slot()
     def _open_in_default_editor(self, path: Path | None) -> None:
-        logger.warning(f"ed TEMP path: {path}")
         if path and path.exists():
             logger.info(f"Opening file in default editor: {path}")
             launch_process(
@@ -2125,7 +2121,9 @@ class MainContent(QObject):
         else:
             dialogue.show_warning(
                 title=self.tr("Failed to open file."),
-                text=self.tr("Failed to open the file with default text editor"),
+                text=self.tr(
+                    "Failed to open the file with default text editor. It may not exist."
+                ),
             )
 
     def _do_save(self) -> None:

@@ -226,27 +226,18 @@ class MenuBar(QObject):
             return None
 
         logfile_submenu = QMenu(self.tr(menu_name))
-        upload_rimsort_log_action = create_entry(
-            "RimSort.log", lambda: AppInfo().user_log_folder / "RimSort.log"
-        )
-        action_list.append(upload_rimsort_log_action)
-
-        upload_rimsort_old_log_action = create_entry(
+        create_entry("RimSort.log", lambda: AppInfo().user_log_folder / "RimSort.log")
+        create_entry(
             "RimSort.old.log", lambda: AppInfo().user_log_folder / "RimSort.old.log"
         )
-        action_list.append(upload_rimsort_old_log_action)
-
-        upload_rimworld_log_action = create_entry(
+        create_entry(
             "RimWorld Player.log",
             partial(rimworld_log_path, "Player.log"),
         )
-        action_list.append(upload_rimworld_log_action)
-
-        upload_rimworld_log_prev_action = create_entry(
+        create_entry(
             "RimWorld Player-prev.log",
             partial(rimworld_log_path, "Player-prev.log"),
         )
-        action_list.append(upload_rimworld_log_prev_action)
 
         return logfile_submenu
 
