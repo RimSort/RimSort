@@ -1217,6 +1217,34 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation>{path.name}をhttps://0x0.st/にアップロードしました</translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation>STEAMCMD ACFデータファイルをリセットします</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation>SteamCMD ACFデータファイルをリセットする必要がありますか？</translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation>このファイルは作成され、STEAMCMDによってMOD Informatonを追跡するために使用されますが、このアクションを元に戻すことはできません。</translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation>Steamcmd ACFデータファイルを正常に削除しました：{Steamcmd_appworkshop_acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation>ACFデータファイルは、次回STEAMCMDを使用してMODをダウンロードすると再現されます。</translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation>SteamCMD ACFデータファイルは存在しません</translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation>ACFファイルは存在しません。SteamCMDを使用してMODをダウンロードすると作成されます。</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -2446,32 +2474,16 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>MODを削除し、Steamを使用して再購読します</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation>選択した{count}のMODを正常に削除しました。</translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
         <translation>MODを削除中にOSエラーが発生しました。</translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
-        <translation>{error_msg}が{filename}でエラーコード{error_code}で発生しました。</translation>
     </message>
     <message>
         <source>No mods selected</source>
         <translation>MODが選択されていません</translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation>削除するMODを少なくとも1つ選択してください。</translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
         <translation>完全削除の確認</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
-        <translation>完全削除のために{count}のMODが選択されました。</translation>
     </message>
     <message>
         <source>
@@ -2492,10 +2504,6 @@ Do you want to proceed?</source>
         <translation>DDS削除の確認</translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation>選択した{count}のMODのDDSテクスチャ削除が選択されました。</translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2508,10 +2516,6 @@ Do you want to proceed?</source>
     <message>
         <source>Confirm Selective Deletion</source>
         <translation>選択的削除の確認</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
-        <translation>選択した{count}のMODの選択的削除が選択されました。</translation>
     </message>
     <message>
         <source>
@@ -2528,10 +2532,6 @@ Do you want to proceed?</source>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>SteamワークショップMODからの{action}中にエラーが発生しました。</translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
-        <translation>削除して{action}するMODを少なくとも1つ選択してください。</translation>
     </message>
     <message>
         <source>Deletion options</source>
@@ -2552,29 +2552,6 @@ The process may take a few moments to complete.</source>
         <translation>{アクション}エラー</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation>削除を確認し、{アクション}</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation>削除のために{count} mod（s）を選択しました。
-これらの{Steam_Count}は、{アクション}でもあるSteam Workshop Modsです。</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>この操作は次のとおりです。
-•ファイルシステムから選択したMODディレクトリを削除します
-•{Action} Steam Workshop ModsからのSteam Workshop Mod
-
-先に進みたいですか？</translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation>登録解除</translation>
     </message>
@@ -2589,6 +2566,57 @@ Do you want to proceed?</source>
     <message>
         <source>resubscribed</source>
         <translation>再サブスクライブ</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation>正常に削除された{result.success_count}選択されたmod。</translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation>削除不完全</translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation>{result.failed_count} mod（s）を削除できませんでした。詳細については、ログを確認してください。</translation>
+    </message>
+    <message>
+        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>{e.strerrorまたは「不明なエラー」}は、{e.filenameまたはmod_path}でエラーコード{error_code}で発生しました。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation>完全な削除のために{selected_count} mod（s）を選択しました。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation>DDSテクスチャ削除のために{selected_count} mod（s）を選択しました。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation>選択的削除のために{selected_count} mod（s）を選択しました。</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation>削除を確認し、{action_capitalized}</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>削除のために{selected_count} mod（s）を選択しました。
+これらの{Steam_Count}は、{Action_Past}にもなるSteam Workshop Modsです。</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>この操作は次のとおりです。
+•ファイルシステムから選択したMODディレクトリを削除します
+•{action_capitalized} Steam Workshop ModsからのSteam Workshop Mod
+
+先に進みたいですか？</translation>
     </message>
 </context>
 <context>
@@ -3852,10 +3880,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>ソート</translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation>モッドをソート</translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation>アルファベット順</translation>
     </message>
@@ -3870,10 +3894,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
         <translation>有効にすると、moddependenciesをloadTheseBeforeとして使用し、依存関係が依存モッドの前に読み込まれるようにモッドがソートされます。</translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
-        <translation>依存関係をソート</translation>
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
@@ -4292,14 +4312,6 @@ Improves performance by ~50%.</source>
         <translation>クリアもDLCを移動します</translation>
     </message>
     <message>
-        <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation>AlternativePackageIdsは、満足のいく依存関係と考えてください</translation>
-    </message>
-    <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing.</source>
-        <translation>有効にすると、about.xmlの代替PackageIDSエントリは、主な依存関係が欠落しているときにMODの依存関係を満たすことができます。</translation>
-    </message>
-    <message>
         <source>Custom todds command</source>
         <translation>カスタムTODDSコマンド</translation>
     </message>
@@ -4336,10 +4348,6 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>ベースタグよりもabout.xmlタグについてバージョンを好む</translation>
     </message>
     <message>
-        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation>有効にすると、 *バージョンタグ（例：moddependenciesbyversion、loadafterbyversion、loadbeforebyversion、互換性のないbyversion、descriptionsbyversion）がベースタグよりも優先されます。一致するバージョンのタグが存在しているが空の場合、ベースタグは無視されます。</translation>
-    </message>
-    <message>
         <source>External Tools</source>
         <translation>外部ツール</translation>
     </message>
@@ -4354,6 +4362,28 @@ This checks may take few seconds depending on the number of .dds files present.<
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>追加の引数（単一のファイルを開く）</translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation>ソートメソッド</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>依存関係の処理動作</translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation>代替PackageIdsを満足のいく依存関係として使用します</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
+E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <translation>有効にすると、about.xmlの代替PackageIDSエントリは、主な依存関係が欠落しているときにMODの依存関係を満たすことができます。
+例えば、「oels.vehiclemapframework」、代替： 'oels.vehiclemapframework.dev'</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML解析動作</translation>
     </message>
 </context>
 <context>
