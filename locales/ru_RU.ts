@@ -1217,6 +1217,34 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation>Загружено {path.name} на https://0x0.st/</translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation>Сбросить файл данных ACF SteamCmd</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation>Вы уверены, что хотите сбросить файл данных ACF STARCMD?</translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation>Этот файл создается и используется SteamCMD для отслеживания Mod Informaton, это действие не может быть отменено.</translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation>Успешно удалил файл данных acf acf: {steamcmd_appworkshop_acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation>Файл данных ACF будет воссоздан при загрузке модов с использованием SteamCMD в следующий раз.</translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation>File Data Data File STARCMD</translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation>Файл ACF не существует.Он будет создан при загрузке модов с помощью SteamCmd.</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -2444,32 +2472,16 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>Удалить мод и повторно подписаться через Steam</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation>Успешно удалено {count} выбранных модов.</translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
         <translation>Произошла ошибка ОС при удалении мода.</translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
-        <translation>{error_msg} произошла в {filename} с кодом ошибки {error_code}.</translation>
     </message>
     <message>
         <source>No mods selected</source>
         <translation>Не выбрано ни одного мода</translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation>Пожалуйста, выберите хотя бы один мод для удаления.</translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
         <translation>Подтвердите полное удаление</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
-        <translation>Вы выбрали {count} мод(ов) для полного удаления.</translation>
     </message>
     <message>
         <source>
@@ -2490,10 +2502,6 @@ Do you want to proceed?</translation>
         <translation>Подтвердите удаление DDS</translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation>Вы выбрали {count} мод(ов) для удаления текстур DDS.</translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2506,10 +2514,6 @@ Do you want to proceed?</translation>
     <message>
         <source>Confirm Selective Deletion</source>
         <translation>Подтвердите выборочное удаление</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
-        <translation>Вы выбрали {count} мод(ов) для выборочного удаления.</translation>
     </message>
     <message>
         <source>
@@ -2526,10 +2530,6 @@ Do you want to proceed?</source>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>Произошла ошибка при попытке {action} из модов Steam Workshop.</translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
-        <translation>Пожалуйста, выберите хотя бы один мод для удаления и {action}.</translation>
     </message>
     <message>
         <source>Deletion options</source>
@@ -2550,29 +2550,6 @@ The process may take a few moments to complete.</source>
         <translation>{action} ошибка</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation>Подтвердите удаление и {действие}</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation>Вы выбрали {count} mod (s) для удаления.
-{steam_count} из них - это моды Steam Workshop, которые также будут {action}.</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>Эта операция будет:
-• Удалить выбранные каталоги мод из вашей файловой системы
-• {Action} Моды Weam Workshop из вашей учетной записи Steam
-
-Вы хотите продолжить?</translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation>Отписаться</translation>
     </message>
@@ -2587,6 +2564,57 @@ Do you want to proceed?</source>
     <message>
         <source>resubscribed</source>
         <translation>повторно подписывается</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation>Успешно удалил {result.success_count} Выбранные моды.</translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation>Удаление неполно</translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation>Не удалось удалить {result.failed_count} mod (s).Проверьте журналы для деталей.</translation>
+    </message>
+    <message>
+        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>{e.strerror или 'неизвестная ошибка'} произошла в {e.filename или mod_path} с кодом ошибки {error_code}.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation>Вы выбрали {selected_count} mod (ы) для полного удаления.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation>Вы выбрали {selected_count} mod (s) для удаления текстуры DDS.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation>Вы выбрали {selected_count} mod (ы) для селективного удаления.</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation>Подтвердите удаление и {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>Вы выбрали {selected_count} mod (s) для удаления.
+{steam_count} из них - это моды Workshop Steam, которые также будут {action_past}.</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>Эта операция будет:
+• Удалить выбранные каталоги мод из вашей файловой системы
+• {action_capitalized} Моды семинара Steam из вашей учетной записи Steam
+
+Вы хотите продолжить?</translation>
     </message>
 </context>
 <context>
@@ -3290,119 +3318,119 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Modified: N/A</source>
-        <translation type="unfinished" />
+        <translation>Модифицирован: N/A.</translation>
     </message>
     <message>
         <source>Path: N/A</source>
-        <translation type="unfinished" />
+        <translation>Путь: n/a</translation>
     </message>
     <message>
         <source>Size: N/A</source>
-        <translation type="unfinished" />
+        <translation>Размер: n/a</translation>
     </message>
     <message>
         <source>Player log file not found.</source>
-        <translation type="unfinished" />
+        <translation>Файл журнала игрока не найден.</translation>
     </message>
     <message>
         <source>Enter URL:</source>
-        <translation type="unfinished" />
+        <translation>Введите URL:</translation>
     </message>
     <message>
         <source>Log loaded successfully from URL</source>
-        <translation type="unfinished" />
+        <translation>Журнал успешно загружен с URL</translation>
     </message>
     <message>
         <source>Failed to load log from URL</source>
-        <translation type="unfinished" />
+        <translation>Не удалось загрузить журнал с URL</translation>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation type="unfinished" />
+        <translation>Не удалось из -за ошибки: {ошибка}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
-        <translation type="unfinished" />
+        <translation>Путь: {path_str}</translation>
     </message>
     <message>
         <source>Size: {size_str}</source>
-        <translation type="unfinished" />
+        <translation>Размер: {size_str}</translation>
     </message>
     <message>
         <source>Modified: {modified_str}</source>
-        <translation type="unfinished" />
+        <translation>Modified: {modified_str}</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished" />
+        <translation>Информация</translation>
     </message>
     <message>
         <source>Keybind</source>
-        <translation type="unfinished" />
+        <translation>Ключевой связки</translation>
     </message>
     <message>
         <source>Mod_issue</source>
-        <translation type="unfinished" />
+        <translation>Mod_issue</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished" />
+        <translation>Предупреждение</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Ошибка</translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <source>Exception</source>
-        <translation type="unfinished" />
+        <translation>Исключение</translation>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Прыгайте к предыдущему {Lower} запись</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Прыгайте в следующую {Lower} запись</translation>
     </message>
     <message>
         <source>Total Lines: 0</source>
-        <translation type="unfinished" />
+        <translation>Общие строки: 0</translation>
     </message>
     <message>
         <source>Infos: 0</source>
-        <translation type="unfinished" />
+        <translation>Infos: 0</translation>
     </message>
     <message>
         <source>Keybinds: 0</source>
-        <translation type="unfinished" />
+        <translation>Ключевые связки: 0</translation>
     </message>
     <message>
         <source>Mod Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>Проблемы с модом: 0</translation>
     </message>
     <message>
         <source>Warnings: 0</source>
-        <translation type="unfinished" />
+        <translation>Предупреждения: 0</translation>
     </message>
     <message>
         <source>Errors: 0</source>
-        <translation type="unfinished" />
+        <translation>Ошибки: 0</translation>
     </message>
     <message>
         <source>Exceptions: 0</source>
-        <translation type="unfinished" />
+        <translation>Исключения: 0</translation>
     </message>
     <message>
         <source>All Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>Все проблемы: 0</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation type="unfinished" />
+        <translation>Управление</translation>
     </message>
     <message>
         <source>Pick Highlight Color</source>
-        <translation type="unfinished" />
+        <translation>Выберите выделение цвета</translation>
     </message>
 </context>
 <context>
@@ -3619,19 +3647,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>About.xml (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>О.xml (несовместимости в сфере)</translation>
     </message>
     <message>
         <source>Community Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>Правила сообщества (несовместимость с)</translation>
     </message>
     <message>
         <source>User Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>Пользовательские правила (несовместимости с)</translation>
     </message>
     <message>
         <source>Force load at top of list</source>
-        <translation type="unfinished" />
+        <translation>Принудительная загрузка в верхней части списка</translation>
     </message>
 </context>
 <context>
@@ -3690,11 +3718,11 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>SteamCMD Downloader Login error</source>
-        <translation type="unfinished" />
+        <translation>Ошибка входа в систему загрузки SteamCmd</translation>
     </message>
     <message>
         <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
-        <translation type="unfinished" />
+        <translation>SteamCmd сообщил об ошибке входа в систему.Пожалуйста, убедитесь, что вы подключены к Интернету, а SteamCMD не заблокирован вашим брандмауэром.</translation>
     </message>
 </context>
 <context>
@@ -3850,10 +3878,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Сортировка</translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation>Сортировать моды</translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation>По алфавиту</translation>
     </message>
@@ -3868,10 +3892,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
         <translation>Если включено, также использует moddependencies как loadTheseBefore, и моды будут отсортированы так, чтобы зависимости загружались перед зависимым модом.</translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
-        <translation>Сортировать зависимости</translation>
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
@@ -4175,23 +4195,23 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
-        <translation type="unfinished" />
+        <translation>Должно быть похоже на: C: \ Program Files (x86) \ Steam \ Steamapps \ common \ rimworld</translation>
     </message>
     <message>
         <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
-        <translation type="unfinished" />
+        <translation>Должно быть похоже на: c: \ users \ username \ appdata \ locallow \ ludeon studios \ rimworld от Ludeon Studios \ config</translation>
     </message>
     <message>
         <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
-        <translation type="unfinished" />
+        <translation>Только если вы используете Steam, должны быть похожи на: C: \ Program Files (x86) \ Steam \ SteamApps \ Workshop \ Content \ 294100</translation>
     </message>
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
-        <translation type="unfinished" />
+        <translation>должно быть похоже на: C: \ Program Files (x86) \ Steam \ Steamapps \ common \ rimworld \ mods</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation type="unfinished" />
+        <translation>Ограничение по времени удаления вспомогательных метаданных.(Удалить мгновенно 0, никогда не удаляйте -1)</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
@@ -4199,154 +4219,171 @@ After a mod is deleted, this is the time we wait until this mod item is deleted 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished" />
+        <translation>Чтобы включить редактирование этого ограничения, проверьте соответствующий флажок в расширенных настройках.
+После того, как мод будет удален, это время, когда мы ждем, пока этот элемент мода не будет удален из вспомогательной метаданной.
+Этот вспомогательный DB содержит информацию о цветах модов, переключении предупреждения, пользовательских примечаниях и т. Д.
+Это в основном сохраняет ваш мод раскраски, пользовательские примечания и т. Д. В течение столько секунд после удаления.
+(Это относится и к удалению за пределами rimsort)</translation>
     </message>
     <message>
         <source>Enable editing</source>
-        <translation type="unfinished" />
+        <translation>Включить редактирование</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
-        <translation type="unfinished" />
+        <translation>Это обеспечивает редактирование временного ограничения для удаления данных DB AUX.</translation>
     </message>
     <message>
         <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation type="unfinished" />
+        <translation>Включить вспомогательные метаданные режим производительности</translation>
     </message>
     <message>
         <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
 Improves performance by ~50%.</source>
-        <translation type="unfinished" />
+        <translation>Это улучшает вспомогательную производительность БД при повышенном риске потери/коррупции данных в случае сбоев.
+Повышает производительность на ~ 50%.</translation>
     </message>
     <message>
         <source>Delete before update</source>
-        <translation type="unfinished" />
+        <translation>Удалить перед обновлением</translation>
     </message>
     <message>
         <source>This is useful if you want to ensure clean mod updates.</source>
-        <translation type="unfinished" />
+        <translation>Это полезно, если вы хотите обеспечить обновления чистых модов.</translation>
     </message>
     <message>
         <source>Launch State</source>
-        <translation type="unfinished" />
+        <translation>Государство запуска</translation>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation type="unfinished" />
+        <translation>Min IS {min_size} и max is {max_size}.Значения за пределами этого диапазона будут сброшены к по умолчанию.</translation>
     </message>
     <message>
         <source>Maximized</source>
-        <translation type="unfinished" />
+        <translation>Максимизированный</translation>
     </message>
     <message>
         <source>Normal</source>
-        <translation type="unfinished" />
+        <translation>Нормальный</translation>
     </message>
     <message>
         <source>Custom size</source>
-        <translation type="unfinished" />
+        <translation>Пользовательский размер</translation>
     </message>
     <message>
         <source>Main Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Состояние запуска главного окна</translation>
     </message>
     <message>
         <source>Browser Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Состояние запуска окна браузера</translation>
     </message>
     <message>
         <source>Settings Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Настройки окна</translation>
     </message>
     <message>
         <source>Custom Width:</source>
-        <translation type="unfinished" />
+        <translation>Пользовательская ширина:</translation>
     </message>
     <message>
         <source>Custom Height:</source>
-        <translation type="unfinished" />
+        <translation>Пользовательская высота:</translation>
     </message>
     <message>
         <source>Apply mod coloring to background instead of text</source>
-        <translation type="unfinished" />
+        <translation>Применить раскраску мода на фон вместо текста</translation>
     </message>
     <message>
         <source>Auxiliary DB</source>
-        <translation type="unfinished" />
+        <translation>Вспомогательный дБ</translation>
     </message>
     <message>
         <source>Integration with recent save</source>
-        <translation type="unfinished" />
+        <translation>Интеграция с недавним спасением</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
-        <translation type="unfinished" />
+        <translation>Сравните списки мод с недавним файлом сохранения</translation>
     </message>
     <message>
         <source>Clear also moves DLC</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing.</source>
-        <translation type="unfinished" />
+        <translation>Ясно также перемещает DLC</translation>
     </message>
     <message>
         <source>Custom todds command</source>
-        <translation type="unfinished" />
+        <translation>Пользовательская команда TODDS</translation>
     </message>
     <message>
         <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation type="unfinished" />
+        <translation>Если -p, как в пути, не указан, будет использоваться путь от активного тока или все моды.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
-        <translation type="unfinished" />
+        <translation>Например: {todds_example}</translation>
     </message>
     <message>
         <source>Automatically delete .dds files if no corresponding .png file exists</source>
-        <translation type="unfinished" />
+        <translation>Автоматически удалить файлы .dds, если нет соответствующего файла .png</translation>
     </message>
     <message>
         <source>This will delete .dds files that are not paired with a .png file,
 
 This checks may take few seconds depending on the number of .dds files present.</source>
-        <translation type="unfinished" />
+        <translation>Это удалит файлы .dds, которые не связаны с файлом .png,
+
+Эти проверки могут занять несколько секунд в зависимости от количества присутствующих файлов .DDS.</translation>
     </message>
     <message>
         <source>Enable advanced filtering options</source>
-        <translation type="unfinished" />
+        <translation>Включить расширенные параметры фильтрации</translation>
     </message>
     <message>
         <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation type="unfinished" />
+        <translation>В случае включения, дополнительные параметры фильтрации, такие как размер папки, автор и модифицированная дата, будут доступны на панели модов.Отключение этого может улучшить производительность, избегая тяжелых расчетов.</translation>
     </message>
     <message>
         <source>Prefer versioned About.xml tags over base tags</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation type="unfinished" />
+        <translation>Предпочитаю версию о тегах.</translation>
     </message>
     <message>
         <source>External Tools</source>
-        <translation type="unfinished" />
+        <translation>Внешние инструменты</translation>
     </message>
     <message>
         <source>Text Editor command location</source>
-        <translation type="unfinished" />
+        <translation>Место команды текстового редактора</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Folders)</source>
-        <translation type="unfinished" />
+        <translation>Дополнительные аргументы (открывающие папки)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
-        <translation type="unfinished" />
+        <translation>Дополнительные аргументы (открытие одного файла)</translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation>Метод сортировки</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>Зависимости обрабатывают поведение</translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation>Используйте AlternativePackageIds в качестве удовлетворяющих зависимостей</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
+E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <translation>Если включено, вход AlternativePackageids in About.xml может удовлетворить зависимость мода, когда основная зависимость отсутствует.
+Например, 'oels.vehiclemapframework', альтернативы: 'oels.vehiclemapframework.dev'</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML -диапазон поведения</translation>
     </message>
 </context>
 <context>
@@ -4531,11 +4568,11 @@ New symlink:
     </message>
     <message>
         <source>&amp;Yes</source>
-        <translation type="unfinished" />
+        <translation>&amp;Да</translation>
     </message>
     <message>
         <source>&amp;Don't Ask Again</source>
-        <translation type="unfinished" />
+        <translation>Не спрашивай снова</translation>
     </message>
 </context>
 <context>
@@ -4563,7 +4600,9 @@ New symlink:
         <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
 
 Please reach out to us for support at: {support_url}</source>
-        <translation type="unfinished" />
+        <translation>Ошибка: Тоддс не был найден.Если вы работаете из источника, убедитесь, что вы выполнили правильные шаги в {development_guide_url}
+
+Пожалуйста, обратитесь к нам за поддержкой по адресу: {support_url}</translation>
     </message>
 </context>
 <context>
@@ -4830,7 +4869,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>Error: {e}</source>
-        <translation type="unfinished" />
+        <translation>Ошибка: {e}</translation>
     </message>
 </context>
 <context>
@@ -4941,43 +4980,43 @@ Details: {e}</source>
     </message>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
-        <translation type="unfinished" />
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Эти операции будут удалять выбранные файлы навсегда!</translation>
     </message>
     <message>
         <source>Export List</source>
-        <translation type="unfinished" />
+        <translation>Экспортный список</translation>
     </message>
     <message>
         <source>Import List</source>
-        <translation type="unfinished" />
+        <translation>Список импорта</translation>
     </message>
     <message>
         <source>Reset to Vanilla</source>
-        <translation type="unfinished" />
+        <translation>Сбросить в ваниль</translation>
     </message>
     <message>
         <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation type="unfinished" />
+        <translation>Это удалит все моды в папке ваших модов и сброс в ванильное состояние</translation>
     </message>
     <message>
         <source>Clear All Mods</source>
-        <translation type="unfinished" />
+        <translation>Очистить все моды</translation>
     </message>
     <message>
         <source>Steam-specific utilities to help resolve download and game file issues.</source>
-        <translation type="unfinished" />
+        <translation>Steam-специфичные утилиты, чтобы помочь решить проблемы загрузки и файла игры.</translation>
     </message>
     <message>
         <source>Clear Download Cache</source>
-        <translation type="unfinished" />
+        <translation>Очистить кеш -скачать</translation>
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished" />
+        <translation>Проверьте файлы игры</translation>
     </message>
     <message>
         <source>Repair Steam Library</source>
-        <translation type="unfinished" />
+        <translation>Ремонтировать Steam Library</translation>
     </message>
 </context>
 <context>
@@ -5131,11 +5170,11 @@ The following table displays Workshop mods with suggested replacements according
     <name>check_if_pfids_blacklisted</name>
     <message>
         <source>Download blacklisted mods</source>
-        <translation type="unfinished" />
+        <translation>Скачать моды с черным списком</translation>
     </message>
     <message>
         <source>Skip blacklisted mods</source>
-        <translation type="unfinished" />
+        <translation>Пропустить моды с черным списком</translation>
     </message>
 </context>
 <context>
