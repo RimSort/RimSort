@@ -17,7 +17,7 @@ dependencies = [
     "networkx==3.5",
     "packaging==25.0",
     "platformdirs==4.4.0",
-    "psutil==7.0.0",
+    "psutil==7.1.0",
     "pygit2==1.18.2",
     "pygithub==2.8.1",
     "pyside6==6.9.2",
@@ -27,7 +27,7 @@ dependencies = [
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-    "xmltodict==1.0.0",
+    "xmltodict==1.0.2",
     "zstandard==0.25.0",
 ]
 
