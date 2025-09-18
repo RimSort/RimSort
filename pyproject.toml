@@ -27,7 +27,7 @@ dependencies = [
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-    "xmltodict==1.0.0",
+    "xmltodict==1.0.2",
     "zstandard==0.25.0",
 ]
 

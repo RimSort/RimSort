@@ -806,7 +806,7 @@ requires-dist = [
     { name = "steamfiles", git = "https://github.com/RimSort/steamfiles" },
     { name = "toposort", specifier = "==1.10" },
     { name = "watchdog", specifier = "==6.0.0" },
-    { name = "xmltodict", specifier = "==1.0.0" },
+    { name = "xmltodict", specifier = "==1.0.2" },
     { name = "zstandard", specifier = "==0.25.0" },
 ]
 
@@ -1160,11 +1160,11 @@ wheels = [
 
 [[package]]
 name = "xmltodict"
-version = "1.0.0"
+version = "1.0.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8b/79/1b8215b967eb66b92ba323a2d70ff820188b5dd18c8975326fa06e7d50ef/xmltodict-1.0.0.tar.gz", hash = "sha256:f50eb9020d28c673b40bbe3f43458ee165f0267c67f8ad8df0d70d9a4f3ac824", size = 71681, upload-time = "2025-09-12T18:48:45.93Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/aa/917ceeed4dbb80d2f04dbd0c784b7ee7bba8ae5a54837ef0e5e062cd3cfb/xmltodict-1.0.2.tar.gz", hash = "sha256:54306780b7c2175a3967cad1db92f218207e5bc1aba697d887807c0fb68b7649", size = 25725, upload-time = "2025-09-17T21:59:26.459Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/e1/719fc59777227614641f3103964c58c6c10203c72633ef0d5cdcb2d7f676/xmltodict-1.0.0-py3-none-any.whl", hash = "sha256:64316adb5e30ca21ad5cf391f4f0f6b34f673d96b79574f1db1e32b13b43ee34", size = 13292, upload-time = "2025-09-12T18:48:44.544Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/20/69a0e6058bc5ea74892d089d64dfc3a62ba78917ec5e2cfa70f7c92ba3a5/xmltodict-1.0.2-py3-none-any.whl", hash = "sha256:62d0fddb0dcbc9f642745d8bbf4d81fd17d6dfaec5a15b5c1876300aad92af0d", size = 13893, upload-time = "2025-09-17T21:59:24.859Z" },
 ]
 
 [[package]]
