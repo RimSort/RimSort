@@ -1164,6 +1164,34 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -2355,15 +2383,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2371,15 +2391,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2398,10 +2410,6 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2410,10 +2418,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Confirm Selective Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2426,10 +2430,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2450,24 +2450,6 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2481,6 +2463,52 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>resubscribed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3735,10 +3763,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3752,10 +3776,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4156,14 +4176,6 @@ Improves performance by ~50%.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Custom todds command</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4198,10 +4210,6 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>External Tools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4215,6 +4223,27 @@ This checks may take few seconds depending on the number of .dds files present.<
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

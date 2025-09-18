@@ -27,7 +27,8 @@ dependencies = [
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-    "xmltodict==0.15.1",
+    "xmltodict==1.0.0",
+    "zstandard==0.25.0",
 ]
 
 [tool.uv.sources]
@@ -80,7 +81,7 @@ warn_unused_ignores = true
 exclude = ['venv', '.venv', 'submodules']
 
 [[tool.mypy.overrides]]
-module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot']
+module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot', 'zstandard']
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -88,6 +89,10 @@ ignore_missing_imports = true
 line-length = 88
 indent-width = 4
 lint.extend-select = ["I"]
+exclude = ["submodules"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.pytest.ini_options]
 addopts = [

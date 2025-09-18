@@ -10,6 +10,7 @@ Not meant to be imported as a module.
 """
 
 import argparse
+import glob
 import os
 import platform
 import shutil
@@ -40,6 +41,7 @@ _NUITKA_CMD = [
     "-m",
     "nuitka",
     "app/__main__.py",
+    f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
@@ -54,9 +56,11 @@ else:
 
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
+
 def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
+
 
 def setup_uv() -> None:
     if shutil.which("uv"):
@@ -65,6 +69,7 @@ def setup_uv() -> None:
     else:
         print("Installing uv to pip...")
         _execute([PY_CMD, "-m", "pip", "install", "uv"])
+
 
 def build_steamworkspy() -> None:
     # Setup environment
@@ -326,8 +331,6 @@ def copy_swp_libs() -> None:
         shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
 
 
-
-
 def get_latest_todds_release() -> None:
     # Parse latest release
     headers = None
@@ -557,7 +560,9 @@ def main() -> None:
 
     if args.build_steamworkspy:
         print("Building SteamworksPy library. Skipping copy...")
-        print("Warning: Building the SteamworksPy library requires Python 11, and may need to be done in a separate environment.")
+        print(
+            "Warning: Building the SteamworksPy library requires Python 11, and may need to be done in a separate environment."
+        )
         setup_uv()
         build_steamworkspy()
     elif not args.skip_steamworkspy:

@@ -1217,6 +1217,34 @@ Are your game configuration paths correct?</source>
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation>已将 {path.name} 上传到 https://0x0.st/</translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation>重置SteamCMD ACF数据文件</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation>您确定要重置SteamCMD ACF数据文件吗？</translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation>该文件是由SteamCMD创建和使用的，用于跟踪Mod Informaton，无法撤消此操作。</translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation>成功删除Steamcmd ACF数据文件：{Steamcmd_appworkshop_acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation>下次使用SteamCMD下载MOD时，将重新创建ACF数据文件。</translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation>SteamCMD ACF数据文件不存在</translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation>ACF文件不存在。当您使用SteamCMD下载mod时，它将创建。</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -2446,32 +2474,16 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
         <translation>删除模组并使用 Steam 重新订阅</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation>成功删除 {count} 个选定的模组。</translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
         <translation>删除模组时发生操作系统错误。</translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
-        <translation>{error_msg} 在 {filename} 处发生，错误代码 {error_code}。</translation>
     </message>
     <message>
         <source>No mods selected</source>
         <translation>未选择任何模组</translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation>请至少选择一个模组进行删除。</translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
         <translation>确认完全删除</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
-        <translation>你已选择 {count} 个模组进行完全删除。</translation>
     </message>
     <message>
         <source>
@@ -2492,10 +2504,6 @@ Do you want to proceed?</source>
         <translation>确认删除 DDS 纹理</translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation>你已选择 {count} 个模组进行 DDS 纹理删除。</translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2508,10 +2516,6 @@ Do you want to proceed?</source>
     <message>
         <source>Confirm Selective Deletion</source>
         <translation>确认选择删除</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
-        <translation>你已选择 {count} 个模组进行选择删除。</translation>
     </message>
     <message>
         <source>
@@ -2528,10 +2532,6 @@ Do you want to proceed?</source>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>尝试从 Steam Workshop 模组中 {action} 时发生错误。</translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
-        <translation>请至少选择一个模组进行删除和 {action}。</translation>
     </message>
     <message>
         <source>Deletion options</source>
@@ -2552,30 +2552,6 @@ The process may take a few moments to complete.</source>
         <translation>{action} 错误</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation>确认删除并 {action}</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation>你已选择 {count} 个模组进行删除。
-其中 {steam_count} 个是 Steam Workshop 模组，将被 {action}。</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>
-此操作将：
-• 从你的文件系统中删除所选的模组目录
-• 从你的 Steam 账户中{action} Steam 创意工坊模组
-
-你想继续吗？</translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation>取消订阅</translation>
     </message>
@@ -2590,6 +2566,57 @@ Do you want to proceed?</source>
     <message>
         <source>resubscribed</source>
         <translation>已重新订阅</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation>成功删除{result.success_count}选定的mod。</translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation>删除不完整</translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation>无法删除{result.failed_count} mod（s）。检查日志以获取详细信息。</translation>
+    </message>
+    <message>
+        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>{e.strerror或'未知错误'}发生在{e.filename或mod_path}带有错误代码{error_code}的{e.filename或mod_path}。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation>您已经选择了{selected_count} mod（s）以进行完整的删除。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation>您已经选择了DDS纹理删除的{selected_count} mod（s）。</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation>您已经选择了{selected_count} mod（s）作为选择性删除。</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation>确认删除和{action_capitalized}</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>您已选择{selected_count} mod（s）用于删除。
+{steam_count}这些是Steam Workshop Mods，也将是{action_past}。</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>此操作将：
+•从您的文件系统中删除所选的mod目录
+•{Action_capitalized}蒸汽车间Mods来自您的Steam帐户
+
+你想继续吗？</translation>
     </message>
 </context>
 <context>
@@ -3856,10 +3883,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>排序</translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation>排序模组</translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation>按字母排序</translation>
     </message>
@@ -3874,10 +3897,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
         <translation>如果启用，也会使用moddependencies作为loadTheseBefore，模组会按依赖关系排序，确保依赖项在依赖的模组之前加载。</translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
-        <translation>排序依赖项</translation>
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
@@ -4297,14 +4316,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         <translation>清除也会移动DLC</translation>
     </message>
     <message>
-        <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation>将alternativePackageIds视为满足依赖关系</translation>
-    </message>
-    <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing.</source>
-        <translation>如果启用，About.xml 中的 alternativePackageIds 条目可以满足模组的依赖关系，即使主要依赖项缺失。</translation>
-    </message>
-    <message>
         <source>Custom todds command</source>
         <translation>自定义 todds 命令</translation>
     </message>
@@ -4341,10 +4352,6 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>优先使用带版本信息的 About.xml 标签，而不是基础标签。</translation>
     </message>
     <message>
-        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation>启用后，*ByVersion 标签（例如 modDependenciesByVersion、loadAfterByVersion、loadBeforeByVersion、incompatibleWithByVersion、descriptionsByVersion）将优先于基础标签。如果存在匹配的版本标签但内容为空，则会忽略基础标签。</translation>
-    </message>
-    <message>
         <source>External Tools</source>
         <translation>外部工具</translation>
     </message>
@@ -4359,6 +4366,28 @@ This checks may take few seconds depending on the number of .dds files present.<
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>其他参数（打开单个文件）</translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation>排序方法</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>依赖性处理行为</translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation>使用替代packageids作为令人满意的依赖性</translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
+E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <translation>如果启用了，则在about.xml中的替代packageIdS条目可以满足MOD的依赖性时，当丢失主要依赖关系时。
+例如，'oels。</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML解析行为</translation>
     </message>
 </context>
 <context>

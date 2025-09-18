@@ -1215,6 +1215,34 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation>Hochgeladen {path.name} zu https://0x0.st/</translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation>Setzen Sie SteamCMD ACF -Datendatei zurück</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation>Sind Sie sicher, dass Sie die SteamCMD -ACF -Datendatei zurücksetzen möchten?</translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation>Diese Datei wird von SteamCMD erstellt und verwendet, um Mod -Informaton zu verfolgen. Diese Aktion kann nicht rückgängig gemacht werden.</translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation>Erfolgreich gelöschtes SteamCMD -ACF -Datendatei: {Steamcmd_Appworkshop_acf_path}</translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation>Die ACF -Datendatei wird neu erstellt, wenn Sie beim nächsten Mal Mods mit SteamCMD herunterladen.</translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation>SteamCMD ACF -Datendatei gibt es nicht</translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation>ACF -Datei existiert nicht.Es wird erstellt, wenn Sie Mods mit SteamCMD herunterladen.</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -2439,32 +2467,16 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
         <translation>MODE löschen und mit Steam erneut abschreiben</translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation>Erfolgreich gelöscht {count} Ausgewählte Mods.</translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
         <translation>Beim Löschen des Mods trat ein Betriebssystemfehler auf.</translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
-        <translation>{error_msg} trat bei {Dateiname} mit dem Fehlercode {error_code} auf.</translation>
     </message>
     <message>
         <source>No mods selected</source>
         <translation>Keine Mods ausgewählt</translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation>Bitte wählen Sie mindestens einen Mod für das Löschen.</translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
         <translation>Bestätigen Sie die vollständige Löschung</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
-        <translation>Sie haben {count} mod (s) für die vollständige Löschung ausgewählt.</translation>
     </message>
     <message>
         <source>
@@ -2484,10 +2496,6 @@ Möchten Sie fortfahren?</translation>
         <translation>Bestätigen Sie die DDS -Löschung</translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation>Sie haben {count} mod (s) für die DDS -Textur -Löschung ausgewählt.</translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2499,10 +2507,6 @@ Möchten Sie fortfahren?</translation>
     <message>
         <source>Confirm Selective Deletion</source>
         <translation>Bestätigen Sie die selektive Löschung</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
-        <translation>Sie haben {count} mod (s) für die selektive Löschung ausgewählt.</translation>
     </message>
     <message>
         <source>
@@ -2518,10 +2522,6 @@ Möchten Sie fortfahren?</translation>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
         <translation>Bei dem Versuch, {action} aus Steam Workshop -Mods zu {action}, ist ein Fehler aufgetreten.</translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
-        <translation>Bitte wählen Sie mindestens einen Mod, um zu löschen und {action}.</translation>
     </message>
     <message>
         <source>Deletion options</source>
@@ -2542,29 +2542,6 @@ Der Vorgang kann einige Momente dauern, bis der Vorgang abgeschlossen ist.</tran
         <translation>{Aktion} Fehler</translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation>Bestätigen Sie die Löschung und {Aktion}</translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation>Sie haben {count} mod (s) zum Löschen ausgewählt.
-{Steam_Count} davon sind Steam Workshop -Mods, die auch {action} sind.</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>Diese Operation wird:
-• Löschen Sie die ausgewählten Mod -Verzeichnisse aus Ihrem Dateisystem
-• {Aktion} Steam Workshop -Mods aus Ihrem Steam -Konto
-
-Möchten Sie fortfahren?</translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation>abbestellen</translation>
     </message>
@@ -2579,6 +2556,57 @@ Möchten Sie fortfahren?</translation>
     <message>
         <source>resubscribed</source>
         <translation>erneut beschrieben</translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation>Erfolgreich gelöscht {result.success_count} Ausgewählte Mods.</translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation>Löschen unvollständig</translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation>Nicht löschen {result.failed_count} mod (s).Überprüfen Sie die Protokolle für Details.</translation>
+    </message>
+    <message>
+        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>{e.Strerror oder 'unbekannter Fehler'} trat bei {E.filename oder mod_path} mit dem Fehlercode {error_code} auf.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation>Sie haben ausgewählt {Selected_count} Mod (s) für die vollständige Löschung.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation>Sie haben {selected_count} mod (s) für die DDS -Textur -Löschung.</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation>Sie haben {selected_count} mod (s) für die selektive Löschung ausgewählt.</translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation>Bestätigen Sie die Löschung und {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>Sie haben {selected_count} mod (s) für das Löschen ausgewählt.
+{Steam_count} davon sind Steam Workshop -Mods, die auch {action_past} sind.</translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
+        <translation>Diese Operation wird:
+• Löschen Sie die ausgewählten Mod -Verzeichnisse aus Ihrem Dateisystem
+• {action_capitalized} Steam Workshop -Mods aus Ihrem Steam -Konto
+
+Möchten Sie fortfahren?</translation>
     </message>
 </context>
 <context>
@@ -3832,10 +3860,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation type="unfinished" />
     </message>
@@ -3849,10 +3873,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -4253,14 +4273,6 @@ Improves performance by ~50%.</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Consider alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Custom todds command</source>
         <translation type="unfinished" />
     </message>
@@ -4295,10 +4307,6 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation type="unfinished" />
     </message>
     <message>
-        <source>When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence over the base tags. If a matching version tag exists but is empty, the base tag is ignored.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>External Tools</source>
         <translation type="unfinished" />
     </message>
@@ -4312,6 +4320,27 @@ This checks may take few seconds depending on the number of .dds files present.<
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
+E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
         <translation type="unfinished" />
     </message>
 </context>

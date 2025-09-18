@@ -17,7 +17,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self, cast
+from typing import Any, Callable, Optional, cast
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -102,7 +102,7 @@ class MainContent(QObject):
     and their dependencies.
     """
 
-    _instance: Self | None = None
+    _instance: Optional["MainContent"] = None
 
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
