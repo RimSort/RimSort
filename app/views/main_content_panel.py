@@ -144,7 +144,7 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_upload_log.connect(self._upload_file)
             EventBus().do_open_default_editor.connect(self._open_in_default_editor)
             EventBus().do_download_all_mods_via_steamcmd.connect(
                 self._on_do_download_all_mods_via_steamcmd
@@ -2075,7 +2075,7 @@ class MainContent(QObject):
         if download_text in answer_str:
             self.settings_controller.show_settings_dialog()
 
-    def _upload_log(self, path: Path | None) -> None:
+    def _upload_file(self, path: Path | None) -> None:
         if not path or not os.path.exists(path):
             dialogue.show_warning(
                 title=self.tr("File not found"),
@@ -3449,10 +3449,6 @@ class MainContent(QObject):
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
-
-    @Slot()
-    def _on_do_upload_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
