@@ -65,15 +65,22 @@ class MenuBarController(QObject):
         self.menu_bar.export_to_rentry_action.triggered.connect(
             EventBus().do_export_mod_list_to_rentry
         )
-        self.menu_bar.upload_rimsort_log_action.triggered.connect(
-            EventBus().do_upload_rimsort_log
-        )
-        self.menu_bar.upload_rimsort_old_log_action.triggered.connect(
-            EventBus().do_upload_rimsort_old_log
-        )
-        self.menu_bar.upload_rimworld_log_action.triggered.connect(
-            EventBus().do_upload_rimworld_log
-        )
+
+        for action in self.menu_bar.upload_log_actions:
+            action.triggered.connect(
+                partial(
+                    lambda a: EventBus().do_upload_log.emit(a.data()()),
+                    a=action,
+                )
+            )
+
+        for action in self.menu_bar.default_open_log_actions:
+            action.triggered.connect(
+                partial(
+                    lambda a: EventBus().do_open_default_editor.emit(a.data()()),
+                    a=action,
+                )
+            )
 
         # Shortcuts SubMenu
         self.menu_bar.open_app_directory_action.triggered.connect(

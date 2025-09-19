@@ -58,6 +58,7 @@ from app.utils.generic import (
     chunks,
     copy_to_clipboard_safely,
     launch_game_process,
+    launch_process,
     open_url_browser,
     platform_specific_open,
     upload_data_to_0x0_st,
@@ -143,11 +144,8 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
-            EventBus().do_upload_rimsort_old_log.connect(
-                self._on_do_upload_rimsort_old_log
-            )
-            EventBus().do_upload_rimworld_log.connect(self._on_do_upload_rimworld_log)
+            EventBus().do_upload_log.connect(self._upload_file)
+            EventBus().do_open_default_editor.connect(self._open_in_default_editor)
             EventBus().do_download_all_mods_via_steamcmd.connect(
                 self._on_do_download_all_mods_via_steamcmd
             )
@@ -2077,29 +2075,8 @@ class MainContent(QObject):
         if download_text in answer_str:
             self.settings_controller.show_settings_dialog()
 
-    @Slot()
-    def _on_do_upload_rimsort_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / "RimSort.log")
-
-    @Slot()
-    def _on_do_upload_rimsort_old_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / "RimSort.old.log")
-
-    @Slot()
-    def _on_do_upload_rimworld_log(self) -> None:
-        player_log_path = (
-            Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            ).parent
-            / "Player.log"
-        )
-
-        self._upload_log(player_log_path)
-
-    def _upload_log(self, path: Path) -> None:
-        if not os.path.exists(path):
+    def _upload_file(self, path: Path | None) -> None:
+        if not path or not os.path.exists(path):
             dialogue.show_warning(
                 title=self.tr("File not found"),
                 text=self.tr("The file you are trying to upload does not exist."),
@@ -2130,6 +2107,23 @@ class MainContent(QObject):
                 title=self.tr("Failed to upload file."),
                 text=self.tr("Failed to upload the file to 0x0.st"),
                 information=ret,
+            )
+
+    def _open_in_default_editor(self, path: Path | None) -> None:
+        if path and path.exists():
+            logger.info(f"Opening file in default editor: {path}")
+            launch_process(
+                self.settings_controller.settings.text_editor_location,
+                self.settings_controller.settings.text_editor_folder_arg.split(" ")
+                + [str(path)],
+                str(AppInfo().application_folder),
+            )
+        else:
+            dialogue.show_warning(
+                title=self.tr("Failed to open file."),
+                text=self.tr(
+                    "Failed to open the file with default text editor. It may not exist."
+                ),
             )
 
     def _do_save(self) -> None:
@@ -3455,10 +3449,6 @@ class MainContent(QObject):
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
-
-    @Slot()
-    def _on_do_upload_log(self) -> None:
-        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
