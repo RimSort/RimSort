@@ -11,6 +11,7 @@ from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -40,6 +41,8 @@ class AppController(QObject):
         self.set_theme()
         # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
+        # Perform cleanup of orphaned DDS files if the setting is enabled
+        self.do_dds_cleanup()
         # Initialize the metadata manager
         self.initialize_metadata_manager()
         # Initialize the main window controller
@@ -91,7 +94,7 @@ class AppController(QObject):
 
     def initialize_translator(self, language: str) -> None:
         """Initializes the translator with the specified language."""
-        path = AppInfo()._language_data_folder / f"{language}.qm"
+        path = AppInfo().language_data_folder / f"{language}.qm"
         if app_translator.load(str(path)):
             QCoreApplication.installTranslator(app_translator)
         else:
@@ -115,6 +118,12 @@ class AppController(QObject):
             ].steamcmd_install_path,
             self.settings_controller.settings.steamcmd_validate_downloads,
         )
+
+    def do_dds_cleanup(self) -> None:
+        """Performs cleanup of orphaned DDS files if the setting is enabled."""
+        if self.settings.auto_delete_orphaned_dds:
+            dds_utility = DDSUtility(self.settings_controller)
+            dds_utility.delete_dds_files_without_png()
 
     def initialize_metadata_manager(self) -> None:
         """Initializes the MetadataManager."""

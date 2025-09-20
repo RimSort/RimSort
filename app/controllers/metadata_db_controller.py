@@ -3,6 +3,7 @@ from typing import Any, Iterable
 
 from loguru import logger
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
@@ -27,7 +28,9 @@ class MetadataDbController:
 
 
 class AuxMetadataController(MetadataDbController):
-    _instances: dict[Path, "AuxMetadataController"] = {}  # db_path : AuxMetadataController
+    _instances: dict[
+        Path, "AuxMetadataController"
+    ] = {}  # db_path : AuxMetadataController
 
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
@@ -44,7 +47,9 @@ class AuxMetadataController(MetadataDbController):
         return cls._instances[db_path]
 
     @staticmethod
-    def update(session: Session, item_path: Path | str, **kwargs: Any) -> AuxMetadataEntry | None:
+    def update(
+        session: Session, item_path: Path | str, **kwargs: Any
+    ) -> AuxMetadataEntry | None:
         """
         Update an aux metadata entry by the mod path.
 
@@ -118,6 +123,17 @@ class AuxMetadataController(MetadataDbController):
                 with session.begin_nested():
                     session.add(entry)
                     session.flush()
+            except IntegrityError:
+                session.rollback()
+                # Query again to get the existing entry
+                entry = AuxMetadataController.get(session, item_path)
+                if entry is None:
+                    logger.error(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
+                    raise RuntimeError(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
             except Exception as e:
                 session.rollback()
                 logger.exception(f"Failed to create new aux metadata entry: {e}")

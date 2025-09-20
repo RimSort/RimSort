@@ -33,6 +33,8 @@ def get_aux_db_entry(
         )
 
     return entry
+
+
 def get_mod_color(
     settings_controller: SettingsController,
     uuid: str,
@@ -47,9 +49,7 @@ def get_mod_color(
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :return: QColor | None, Color of the mod, or None if no color
     """
-    entry = get_aux_db_entry(
-        settings_controller, uuid, aux_db_controller, session
-    )
+    entry = get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
     mod_color = None
     if entry:
         color_text = entry.color_hex
@@ -73,9 +73,7 @@ def get_mod_user_notes(
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :return: str, User notes for the mod, or empty string if no notes
     """
-    entry = get_aux_db_entry(
-        settings_controller, uuid, aux_db_controller, session
-    )
+    entry = get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
     user_notes = ""
     if entry:
         user_notes = entry.user_notes
@@ -97,9 +95,7 @@ def get_mod_warning_toggled(
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :return: bool, Warning toggled status for the mod
     """
-    entry = get_aux_db_entry(
-        settings_controller, uuid, aux_db_controller, session
-    )
+    entry = get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
     warning_toggled = False
     if entry:
         warning_toggled = entry.ignore_warnings

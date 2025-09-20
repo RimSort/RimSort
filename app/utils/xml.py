@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 import xmltodict
+import zstandard as zstd
 from bs4 import BeautifulSoup
 from loguru import logger
 from lxml import etree
@@ -137,7 +138,6 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
     stack = []
 
     try:
-
         with __open_save_file(path) as file:
             context = etree.iterparse(file, events=("start", "end"))
             for event, elem in context:
@@ -148,13 +148,13 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
 
                 if stack == ["savegame", "meta", "modIds", "li"]:
                     return True
-                
-                if event == "end" and (elem.tag == "modIds" \
-                    or elem.tag == "meta" \
-                    or elem.tag == "savegame"):
+
+                if event == "end" and (
+                    elem.tag == "modIds" or elem.tag == "meta" or elem.tag == "savegame"
+                ):
                     # No package ids or save file format is not right
                     return False
-                
+
                 elem.clear()
     except Exception as e:
         logger.error(f"Error running RimWorld XML save validation: {e}")
@@ -172,21 +172,39 @@ def using_gzip(fp: str) -> bool:
     """
     try:
         with open(fp, "rb") as f:
-            return f.read(2) == b'\x1f\x8b'
+            return f.read(2) == b"\x1f\x8b"
     except Exception as e:
         logger.error(f"Failed checking if save file is using gzip: {e}")
         return False
-    
+
+
+def using_zstd(fp: str) -> bool:
+    """
+    Save File Compression compatibility. Check if dealing with zstd save file
+
+    :param fp: File path to check.
+    :return: True if the file is ZStandard zipped, False otherwise.
+    """
+    try:
+        with open(fp, "rb") as f:
+            return f.read(4) == b"\x28\xb5\x2f\xfd"
+    except Exception as e:
+        logger.error(f"Failed checking if save file is using zstd: {e}")
+        return False
+
+
 def __open_save_file(path: str) -> Any:
     """
     Open a save file.
 
-    Compatible with gzip. (RimKeeper)
+    Compatible with gzip and zstd. (RimKeeper and Save File Compression)
 
     :param path: Path to the save file.
     :return: File object for the opened save file.
     """
     if using_gzip(path):
         return gzip.open(path, "rb")
+    elif using_zstd(path):
+        return zstd.open(path, "rb")
     else:
         return open(path, "rb")

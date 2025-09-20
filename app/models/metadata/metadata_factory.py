@@ -420,7 +420,11 @@ def create_base_rules(
                         for v in alt_li:
                             if isinstance(v, str):
                                 alt_list.append(v)
-                            elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
+                            elif (
+                                isinstance(v, dict)
+                                and "#text" in v
+                                and isinstance(v["#text"], str)
+                            ):
                                 alt_list.append(v["#text"])  # MayRequire-like form
                     elif isinstance(alt_li, str):
                         alt_list.append(alt_li)

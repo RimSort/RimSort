@@ -1164,6 +1164,34 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -1971,6 +1999,10 @@ How would you like to proceed?</source>
         <source>ACF Log Reader</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Player Log</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2166,6 +2198,10 @@ How would you like to proceed?</source>
         <source>RimSort GitHub…</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reset Mod Colors</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBarController</name>
@@ -2347,15 +2383,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2363,15 +2391,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2390,10 +2410,6 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2402,10 +2418,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Confirm Selective Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2418,10 +2430,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2442,24 +2450,6 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2473,6 +2463,52 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>resubscribed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2524,6 +2560,10 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Workshop Times:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2782,6 +2822,19 @@ An alternative updated mod is recommended:
 {alternative}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open folder in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open folder(s) in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2958,6 +3011,313 @@ An alternative updated mod is recommended:
     </message>
     <message>
         <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3241,6 +3601,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <source>Ok</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>SteamCMD Downloader Login error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SearchWorker</name>
@@ -3395,10 +3763,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3412,10 +3776,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3811,6 +4171,81 @@ Improves performance by ~50%.</source>
         <source>Compare mod lists with the recent save file</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External Tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Folders)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Single File)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4007,6 +4442,15 @@ New symlink:
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

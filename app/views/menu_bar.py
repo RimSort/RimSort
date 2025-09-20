@@ -207,7 +207,7 @@ class MenuBar(QObject):
             edit_menu, self.tr("Reset Warning Toggles")
         )
         self.reset_all_mod_colors_action = self._add_action(
-            edit_menu, "Reset Mod Colors"
+            edit_menu, self.tr("Reset Mod Colors")
         )
         return edit_menu
 

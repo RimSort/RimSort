@@ -6,29 +6,29 @@ description = "An open source mod manager for RimWorld."
 version = "0.0.0" # Fake version, version is set in version.xml file # TODO: Switch to tracking version dynamically
 requires-python = "==3.12.*"
 dependencies = [
-    "beautifulsoup4==4.13.4",
+    "beautifulsoup4==4.13.5",
     "certifi==2025.8.3",
     "chardet==5.2.0",
     "imageio==2.37.0",
     "loguru==0.7.3",
-    "lxml==6.0.0",
+    "lxml==6.0.1",
     "msgspec==0.19.0",
     "natsort==8.4.0",
     "networkx==3.5",
     "packaging==25.0",
-    "platformdirs==4.3.8",
-    "psutil==7.0.0",
-    "pygit2==1.18.1",
-    "pygithub==2.7.0",
-    "pyperclip==1.9.0",
-    "pyside6==6.9.1",
-    "requests==2.32.4",
+    "platformdirs==4.4.0",
+    "psutil==7.1.0",
+    "pygit2==1.18.2",
+    "pygithub==2.8.1",
+    "pyside6==6.9.2",
+    "requests==2.32.5",
     "sqlalchemy==2.0.43",
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-    "xmltodict==0.14.2",
+    "xmltodict==1.0.2",
+    "zstandard==0.25.0",
 ]
 
 [tool.uv.sources]
@@ -58,7 +58,7 @@ dev = [
 ]
 
 build = [
-    "nuitka==2.7.12",
+    "nuitka==2.7.14",
 ]
 
 [tool.uv]
@@ -81,7 +81,7 @@ warn_unused_ignores = true
 exclude = ['venv', '.venv', 'submodules']
 
 [[tool.mypy.overrides]]
-module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot']
+module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot', 'zstandard']
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -89,6 +89,10 @@ ignore_missing_imports = true
 line-length = 88
 indent-width = 4
 lint.extend-select = ["I"]
+exclude = ["submodules"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.pytest.ini_options]
 addopts = [

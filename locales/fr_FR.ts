@@ -5,151 +5,151 @@
     <name>AcfLogReader</name>
     <message>
         <source>Ready</source>
-        <translation type="unfinished">Prêt</translation>
+        <translation>Prêt</translation>
     </message>
     <message>
         <source>Search...</source>
-        <translation type="unfinished">Recherche...</translation>
+        <translation>Recherche...</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Actualiser</translation>
+        <translation>Rafraîchir</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
-        <translation type="unfinished">Importer les données ACF</translation>
+        <translation>Importer des données ACF</translation>
     </message>
     <message>
         <source>Export ACF Data</source>
-        <translation type="unfinished">Exporter les données ACF</translation>
+        <translation>Exporter des données ACF</translation>
     </message>
     <message>
         <source>Export to CSV</source>
-        <translation type="unfinished">Exporter vers CSV</translation>
+        <translation>Exporter vers CSV</translation>
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished">Chargé {count} éléments | Dernière mise à jour : {time}</translation>
+        <translation>Éléments chargés {count} |Dernière mise à jour: {temps}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
-        <translation type="unfinished">Exportation annulée par l&apos;utilisateur.</translation>
+        <translation>Exportation annulée par l&apos;utilisateur.</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Permission refusée - vérifiez les autorisations de fichier</translation>
+        <translation>Échec de l&apos;exportation: autorisation refusée - Vérifiez les autorisations de fichiers</translation>
     </message>
     <message>
         <source>Export Error</source>
-        <translation type="unfinished">Erreur d&apos;exportation</translation>
+        <translation>Erreur d&apos;exportation</translation>
     </message>
     <message>
         <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Erreur du système de fichiers - {e}</translation>
+        <translation>Échec de l&apos;exportation: Erreur du système de fichiers - {e}</translation>
     </message>
     <message>
         <source>Export failed: File system error</source>
-        <translation type="unfinished">Échec de l&apos;exportation : Erreur du système de fichiers</translation>
+        <translation>Échec de l&apos;exportation: erreur du système de fichiers</translation>
     </message>
     <message>
         <source>Exporting to CSV...</source>
-        <translation type="unfinished">Exportation vers CSV...</translation>
+        <translation>Exportation vers CSV ...</translation>
     </message>
     <message>
         <source>Exporting rows...</source>
-        <translation type="unfinished">Exportation des lignes...</translation>
+        <translation>Lignes d&apos;exportation ...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Annuler</translation>
+        <translation>Annuler</translation>
     </message>
     <message>
         <source>Export failed due to an unknown error</source>
-        <translation type="unfinished">Échec de l&apos;exportation en raison d&apos;une erreur inconnue</translation>
+        <translation>L&apos;exportation a échoué en raison d&apos;une erreur inconnue</translation>
     </message>
     <message>
         <source>View in Steam Workshop</source>
-        <translation type="unfinished">Voir dans le Steam Workshop</translation>
+        <translation>Voir dans Steam Workshop</translation>
     </message>
     <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished">Ouvrir le dossier du mod</translation>
+        <translation>Dossier mod ouvert</translation>
     </message>
     <message>
         <source>Published File ID</source>
-        <translation type="unfinished">ID de fichier publié</translation>
+        <translation>ID de fichier publié</translation>
     </message>
     <message>
         <source>Mod downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Mod Download</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise à jour de l&apos;atelier</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Type</translation>
+        <translation>Taper</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished">Nom du mod</translation>
+        <translation>Nom de mod</translation>
     </message>
     <message>
         <source>Mod Path</source>
-        <translation type="unfinished">Chemin du mod</translation>
+        <translation>Chemin de mod</translation>
     </message>
     <message>
         <source>Conform acf import</source>
-        <translation type="unfinished">Conformer l&apos;importation ACF</translation>
+        <translation>Conforme à l&apos;importation ACF</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished">Cela remplacera votre fichier .acf steamcmd actuel</translation>
+        <translation>Cela remplacera votre fichier Steamcmd .ACF actuel</translation>
     </message>
     <message>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
+        <translation>Êtes-vous sûr d&apos;importer .acf?Cela ne fonctionne que pour Steamcmd</translation>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished"></translation>
+        <translation>Importer .ACF</translation>
     </message>
     <message>
         <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished">Interface SteamCMD mal initialisée</translation>
+        <translation>Interface Steamcmd non correctement initialisée</translation>
     </message>
     <message>
         <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished">Fichier ACF non trouvé : {acf_path}</translation>
+        <translation>Fichier ACF introuvable: {acf_path}</translation>
     </message>
     <message>
         <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished">Fichier ACF non trouvé à : {acf_path}</translation>
+        <translation>Fichier ACF introuvable à: {acf_path}</translation>
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished">Chemin de fichier invalide fourni pour l&apos;exportation : {file_path}</translation>
+        <translation>Chemin de fichier non valide prévu pour l&apos;exportation: {file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished">ACF exporté avec succès vers {file_path}</translation>
+        <translation>ACF exporté avec succès vers {file_path}</translation>
     </message>
     <message>
         <source>Export Success</source>
-        <translation type="unfinished">Exportation réussie</translation>
+        <translation>Succès de l&apos;exportation</translation>
     </message>
     <message>
         <source>Export failed: {e}</source>
-        <translation type="unfinished">Échec de l&apos;exportation : {e}</translation>
+        <translation>Échec de l&apos;exportation: {e}</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished">Échec de l&apos;exportation</translation>
+        <translation>Échec de l&apos;exportation</translation>
     </message>
     <message>
         <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished">Échec de l&apos;exportation : une exception inconnue s&apos;est produite</translation>
+        <translation>Exportfailed Exception inconnue s&apos;est produite</translation>
     </message>
 </context>
 <context>
@@ -171,212 +171,220 @@
     <name>CollectionImport</name>
     <message>
         <source>Add Workshop collection link</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajouter un lien de collection d&apos;atelier</translation>
     </message>
     <message>
         <source>Invalid Link</source>
-        <translation type="unfinished"></translation>
+        <translation>Lien non valide</translation>
     </message>
     <message>
         <source>Invalid Workshop collection link. Please enter a valid Workshop collection link.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lien de collection d&apos;ateliers non valide.Veuillez saisir un lien de collecte d&apos;ateliers valide.</translation>
     </message>
     <message>
         <source>Invalid Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Base de données non valide</translation>
     </message>
     <message>
         <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ne peut pas importer la collecte sans SteamDB fourni!Veuillez configurer la base de données Steam Workshop dans les paramètres.</translation>
     </message>
 </context>
 <context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Montrer les détails</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Fermer</translation>
     </message>
     <message>
         <source>Open Log Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire de journal ouvert</translation>
     </message>
     <message>
         <source>Upload Log</source>
-        <translation type="unfinished">Télécharger le journal</translation>
+        <translation>Télécharger le journal</translation>
     </message>
     <message>
         <source>Upload the log file to 0x0.st</source>
-        <translation type="unfinished"></translation>
+        <translation>Téléchargez le fichier journal sur 0x0.st</translation>
     </message>
     <message>
         <source>Hide Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Masquer les détails</translation>
     </message>
 </context>
 <context>
     <name>FileSearchController</name>
     <message>
         <source>Preparing search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Préparer la recherche ...</translation>
     </message>
     <message>
         <source>Starting new search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Commencer une nouvelle recherche ...</translation>
     </message>
     <message>
         <source>Active Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur des mods actifs</translation>
     </message>
     <message>
         <source>No active mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun mods actif trouvé</translation>
     </message>
     <message>
         <source>Inactive Mods Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur des mods inactifs</translation>
     </message>
     <message>
         <source>No inactive mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun mods inactif trouvé</translation>
     </message>
     <message>
         <source>Stopping search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Arrêt de la recherche ...</translation>
     </message>
     <message>
         <source>Search stopped by user</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherche arrêtée par l&apos;utilisateur</translation>
     </message>
     <message>
         <source>Regular Expression Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur d&apos;expression régulière</translation>
     </message>
     <message>
         <source>There was an error with your regular expression pattern.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il y a eu une erreur avec votre modèle d&apos;expression régulière.</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try simplifying your pattern or check for syntax errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Essayez de simplifier votre modèle ou de vérifier les erreurs de syntaxe.</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Essayez d&apos;exécuter Rimsort avec les privilèges de l&apos;administrateur ou vérifiez les autorisations du dossier.</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Essayez de rechercher dans des lots plus petits ou utilisez la méthode «Streaming Search» pour des fichiers très volumineux.</translation>
     </message>
     <message>
         <source>{error_msg}
 
 Please check your settings and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>{error_msg}
+
+Veuillez vérifier vos paramètres et réessayer.</translation>
     </message>
     <message>
         <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun emplacement de recherche valide n&apos;est disponible pour la portée sélectionnée.Veuillez configurer vos dossiers de jeu dans les paramètres.</translation>
     </message>
     <message>
         <source>File Access Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur d&apos;accès au fichier</translation>
     </message>
     <message>
         <source>RimSort doesn&apos;t have permission to access some files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimsort n&apos;a pas la permission d&apos;accéder à certains fichiers.</translation>
     </message>
     <message>
         <source>Memory Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de mémoire</translation>
     </message>
     <message>
         <source>RimSort ran out of memory while searching.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimsort a manqué de mémoire lors de la recherche.</translation>
     </message>
     <message>
         <source>Search Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de recherche</translation>
     </message>
     <message>
         <source>An error occurred during the search.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur s&apos;est produite lors de la recherche.</translation>
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la recherche: {error_msg [: 100]} ...</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtre: {visible_rows} de {RowCount} Résultats visibles</translation>
     </message>
     <message>
         <source>Location Not Set</source>
-        <translation type="unfinished"></translation>
+        <translation>Emplacement non réglé</translation>
     </message>
 </context>
 <context>
     <name>FileSearchDialog</name>
     <message>
         <source>Search for:</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher:</translation>
     </message>
     <message>
         <source>Enter text to search for in files</source>
-        <translation type="unfinished"></translation>
+        <translation>Entrez du texte pour rechercher dans des fichiers</translation>
     </message>
     <message>
         <source>Recent Searches</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherches récentes</translation>
     </message>
     <message>
         <source>Search in:</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher dans:</translation>
     </message>
     <message>
         <source>active mods</source>
-        <translation type="unfinished"></translation>
+        <translation>mods actifs</translation>
     </message>
     <message>
         <source>inactive mods</source>
-        <translation type="unfinished"></translation>
+        <translation>mods inactifs</translation>
     </message>
     <message>
         <source>all mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Tous les mods</translation>
     </message>
     <message>
         <source>configs folder</source>
-        <translation type="unfinished"></translation>
+        <translation>dossier de configuration</translation>
     </message>
     <message>
         <source>Search Options:</source>
-        <translation type="unfinished"></translation>
+        <translation>Options de recherche:</translation>
     </message>
     <message>
         <source>Case sensitive</source>
-        <translation type="unfinished"></translation>
+        <translation>Sensible aux majuscules et minuscules</translation>
     </message>
     <message>
         <source>Match exact case when searching</source>
-        <translation type="unfinished"></translation>
+        <translation>Faites correspondre le cas exact lors de la recherche</translation>
     </message>
     <message>
         <source>Use regex (pattern search)</source>
-        <translation type="unfinished"></translation>
+        <translation>Utiliser Regex (recherche de motifs)</translation>
     </message>
     <message>
         <source>XML files only</source>
-        <translation type="unfinished"></translation>
+        <translation>Fichiers XML uniquement</translation>
     </message>
     <message>
         <source>Enable to use regular expressions in search
@@ -384,253 +392,258 @@ Examples:
 - &apos;def.*\(&apos; to find function definitions
 - &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
 - &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
-        <translation type="unfinished"></translation>
+        <translation>Activer d&apos;utiliser des expressions régulières dans la recherche
+Exemples:
+- &apos;def. * \ (&apos; pour trouver des définitions de fonction
+- &apos;&lt;[^&gt;] +&gt;&apos; pour trouver des balises XML
+- &apos;\ d + \. \ d + (\. \ d +)?&apos;Pour trouver les numéros de version</translation>
     </message>
     <message>
         <source>When checked, search only XML files and use optimized XML search.
 When unchecked, search all file types with standard search.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lors de la vérification, recherchez uniquement les fichiers XML et utilisez une recherche XML optimisée.
+Une fois non contrôlé, recherchez tous les types de fichiers avec une recherche standard.</translation>
     </message>
     <message>
         <source>Exclude from Search:</source>
-        <translation type="unfinished"></translation>
+        <translation>Exclure de la recherche:</translation>
     </message>
     <message>
         <source>Skip translations</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter les traductions</translation>
     </message>
     <message>
         <source>Skip translation files to improve search speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter les fichiers de traduction pour améliorer la vitesse de recherche</translation>
     </message>
     <message>
         <source>Skip .git folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Skip .git dossier</translation>
     </message>
     <message>
         <source>Skip Git repository folders</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter les dossiers du référentiel</translation>
     </message>
     <message>
         <source>Skip Source folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter le dossier source</translation>
     </message>
     <message>
         <source>Skip Source folders containing C# code</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter les dossiers source contenant du code C #</translation>
     </message>
     <message>
         <source>Skip Textures folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter le dossier des textures</translation>
     </message>
     <message>
         <source>Skip Textures folders containing images</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter les dossiers de textures contenant des images</translation>
     </message>
     <message>
         <source>Search method is automatically selected based on options</source>
-        <translation type="unfinished"></translation>
+        <translation>La méthode de recherche est automatiquement sélectionnée en fonction des options</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherche</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Arrêt</translation>
     </message>
     <message>
         <source>Ready to search</source>
-        <translation type="unfinished"></translation>
+        <translation>Prêt à rechercher</translation>
     </message>
     <message>
         <source>Filter results:</source>
-        <translation type="unfinished"></translation>
+        <translation>Résultats du filtre:</translation>
     </message>
     <message>
         <source>Filter results by mod name, file name, or path</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtre Résultats par nom de mod, nom de fichier ou chemin</translation>
     </message>
     <message>
         <source>Search Results:</source>
-        <translation type="unfinished"></translation>
+        <translation>Résultats de la recherche:</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished">Nom du mod</translation>
+        <translation>Nom de mod</translation>
     </message>
     <message>
         <source>File Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom de fichier</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Chemin</translation>
     </message>
     <message>
         <source>Preview</source>
-        <translation type="unfinished"></translation>
+        <translation>Prévisualisation</translation>
     </message>
     <message>
         <source>Found {result_count} results</source>
-        <translation type="unfinished"></translation>
+        <translation>Résultats trouvé {result_count}</translation>
     </message>
     <message>
         <source>No results found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun résultat trouvé</translation>
     </message>
     <message>
         <source>Open File (Enter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrir le fichier (Entrée)</translation>
     </message>
     <message>
         <source>Open Containing Folder (Ctrl+O)</source>
-        <translation type="unfinished"></translation>
+        <translation>Open contenant du dossier (Ctrl + O)</translation>
     </message>
     <message>
         <source>Copy Path (Ctrl+C)</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier le chemin (Ctrl + C)</translation>
     </message>
     <message>
         <source>Open With...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvert avec ...</translation>
     </message>
     <message>
         <source>Notepad</source>
-        <translation type="unfinished"></translation>
+        <translation>Bloc-notes</translation>
     </message>
     <message>
         <source>VS Code</source>
-        <translation type="unfinished"></translation>
+        <translation>VS Code</translation>
     </message>
     <message>
         <source>Default Editor</source>
-        <translation type="unfinished"></translation>
+        <translation>Éditeur par défaut</translation>
     </message>
     <message>
         <source>Clear Recent Searches</source>
-        <translation type="unfinished"></translation>
+        <translation>Effacer les recherches récentes</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {total_rows} results visible</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtre: {visible_rows} de {total_rows} Résultats visibles</translation>
     </message>
     <message>
         <source>Found {total_rows} results</source>
-        <translation type="unfinished"></translation>
+        <translation>Résultats trouvé {total_rows}</translation>
     </message>
     <message>
         <source>Right-click a result for actions</source>
-        <translation type="unfinished"></translation>
+        <translation>Cliquez avec le bouton droit sur un résultat pour les actions</translation>
     </message>
     <message>
         <source>Right-click for actions</source>
-        <translation type="unfinished"></translation>
+        <translation>Cliquez avec le bouton droit pour les actions</translation>
     </message>
 </context>
 <context>
     <name>InstanceController</name>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Instance de restauration d&apos;erreur</translation>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur s&apos;est produite lors de la lecture d&apos;archive d&apos;instance: {e}</translation>
     </message>
 </context>
 <context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
-        <translation type="unfinished"></translation>
+        <translation>La langue a changé</translation>
     </message>
     <message>
         <source>The language has been updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>La langue a été mise à jour.</translation>
     </message>
     <message>
         <source>Restart the application to apply the change. Restart now?</source>
-        <translation type="unfinished"></translation>
+        <translation>Redémarrez la demande pour appliquer le changement.Redémarrer maintenant?</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished"></translation>
+        <translation>Redémarrage</translation>
     </message>
 </context>
 <context>
     <name>MainContent</name>
     <message>
         <source>Essential path(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Chemin essentiel (s)</translation>
     </message>
     <message>
         <source>Duplicate mod(s) found</source>
-        <translation type="unfinished"></translation>
+        <translation>Duplicate Mod (s) trouvé</translation>
     </message>
     <message>
         <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation type="unfinished"></translation>
+        <translation>Mods (s) en double trouvé pour les ID de package dans votre modsconfig.xml (Liste des mods actifs)</translation>
     </message>
     <message>
         <source>Could not find data for some mods!</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de trouver des données pour certains mods!</translation>
     </message>
     <message>
         <source>Update skipped</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise à jour ignorée</translation>
     </message>
     <message>
         <source>You are running from Python interpreter.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous courez à partir de l&apos;interprète Python.</translation>
     </message>
     <message>
         <source>Skipping update check...</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauter la mise à jour Vérifier ...</translation>
     </message>
     <message>
         <source>Unable to retrieve latest release information</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de récupérer les dernières informations de version</translation>
     </message>
     <message>
         <source>RimSort update found</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise à jour Rimsort trouvée</translation>
     </message>
     <message>
         <source>Unable to complete update</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de terminer la mise à jour</translation>
     </message>
     <message>
         <source>Update downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise à jour téléchargée</translation>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
-        <translation type="unfinished"></translation>
+        <translation>Voulez-vous procéder à la mise à jour?</translation>
     </message>
     <message>
         <source>Failed to download update</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la mise à jour</translation>
     </message>
     <message>
         <source>Failed to download latest RimSort release!</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de télécharger la dernière version de Rimsort!</translation>
     </message>
     <message>
         <source>Sorting algorithm not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>Algorithme de tri non implémenté</translation>
     </message>
     <message>
         <source>The selected sorting algorithm is not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;algorithme de tri sélectionné n&apos;est pas implémenté</translation>
     </message>
     <message>
         <source>Failed to export to file</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation vers le fichier</translation>
     </message>
     <message>
         <source>Failed to export active mods to file:</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation des mods actifs vers le fichier:</translation>
     </message>
     <message>
         <source>Important</source>
@@ -1162,6 +1175,34 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Uploaded {path.name} to https://0x0.st/</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset SteamCMD ACF data file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset SteamCMD ACF data file?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This file is created and used by steamcmd to track mod informaton, This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD ACF data file does not exist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1825,7 +1866,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Instance de restauration d&apos;erreur</translation>
     </message>
     <message>
         <source>Archive not found at path: {input_path}</source>
@@ -1833,7 +1874,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Une erreur s&apos;est produite lors de la lecture d&apos;archive d&apos;instance: {e}</translation>
     </message>
     <message>
         <source>Instance folder exists</source>
@@ -1969,6 +2010,10 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>ACF Log Reader</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Player Log</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2166,6 +2211,10 @@ How would you like to proceed?</source>
         <source>RimSort GitHub…</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reset Mod Colors</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBarController</name>
@@ -2347,15 +2396,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successfully deleted {count} selected mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>An OS error occurred while deleting the mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{error_msg} occurred at {filename} with error code {error_code}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2363,15 +2404,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please select at least one mod to delete.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm Complete Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for complete deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2390,10 +2423,6 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {count} mod(s) for DDS texture deletion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>
 This operation will only delete optimized textures (.dds files) from the selected mods.
 
@@ -2402,10 +2431,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Confirm Selective Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for selective deletion.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2418,10 +2443,6 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please select at least one mod to delete and {action}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2442,24 +2463,6 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm Deletion and {action}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>unsubscribe</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2473,6 +2476,52 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>resubscribed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted {result.success_count} selected mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deletion Incomplete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for complete deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for selective deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Deletion and {action_capitalized}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.
+{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+This operation will:
+• Delete the selected mod directories from your filesystem
+• {action_capitalized} Steam Workshop mods from your Steam account
+
+Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2524,6 +2573,10 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Workshop Times:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Put your personal mod notes here!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2782,6 +2835,19 @@ An alternative updated mod is recommended:
 {alternative}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>
+Alternative Dependencies:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open folder in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open folder(s) in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
@@ -2958,6 +3024,313 @@ An alternative updated mod is recommended:
     </message>
     <message>
         <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PlayerLogTab</name>
+    <message>
+        <source>File Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: {total_lines}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: {infos}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: {keybinds}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: {mod_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: {warnings}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: {errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: {exceptions}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: {all_issues}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Load Game Log on Startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If checked, the Game log will be loaded automatically on startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Real-Time Log Monitoring</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable real-time monitoring of Player.log file changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished">Actualiser</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation type="unfinished">Exporter</translation>
+    </message>
+    <message>
+        <source>Clear Log Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Game Log</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loads the game&apos;s Player.log file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a file dialog to select a log file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load Log from Link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load log content from a URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search and Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search log entries...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter by mod name...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highlight Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick color for search and navigation highlighting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quick Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to the end of the log display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: Loaded from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size:,} bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: N/A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Player log file not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log loaded successfully from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load log from URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed due to error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path: {path_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Size: {size_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified: {modified_str}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybind</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod_issue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exception</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to previous {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to next {lower} entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total Lines: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infos: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keybinds: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warnings: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceptions: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All Issues: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pick Highlight Color</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3241,6 +3614,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <source>Ok</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>SteamCMD Downloader Login error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SearchWorker</name>
@@ -3439,10 +3820,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sort mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Alphabetically</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3456,10 +3833,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sort Dependencies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3536,7 +3909,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Importer .ACF</translation>
     </message>
     <message>
         <source>Delete .acf</source>
@@ -3811,6 +4184,81 @@ Improves performance by ~50%.</source>
         <source>Compare mod lists with the recent save file</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Clear also moves DLC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom todds command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>eg: {todds_example}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatically delete .dds files if no corresponding .png file exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will delete .dds files that are not paired with a .png file,
+
+This checks may take few seconds depending on the number of .dds files present.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable advanced filtering options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prefer versioned About.xml tags over base tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External Tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Folders)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Additional Arguments (Opening Single File)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use alternativePackageIds as satisfying dependencies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4007,6 +4455,15 @@ New symlink:
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ToddsInterface</name>
+    <message>
+        <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
+
+Please reach out to us for support at: {support_url}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

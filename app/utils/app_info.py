@@ -86,6 +86,7 @@ class AppInfo:
         self._settings_file: Path = self._app_storage_folder / "settings.json"
         self._user_rules_file = self.databases_folder / "userRules.json"
         self._language_data_folder: Path = self._application_folder / "locales"
+        self._browser_profile_folder: Path = self._app_storage_folder / "browser"
 
         # Make sure important directories exist
 
@@ -215,3 +216,10 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
+
+    @property
+    def language_data_folder(self) -> Path:
+        """
+        Get the path to the folder where application language data is stored.
+        """
+        return self._language_data_folder

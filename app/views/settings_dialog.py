@@ -77,6 +77,7 @@ class SettingsDialog(QDialog):
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
+        self._do_external_tools_tab()
         self._do_themes_tab()
         self._do_launch_state_tab()
         self._do_authentication_tab()
@@ -574,7 +575,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         sort_group_box_layout = QVBoxLayout()
         sort_group_box.setLayout(sort_group_box_layout)
 
-        sorting_label = QLabel(self.tr("Sort mods"))
+        sorting_label = QLabel(self.tr("Sorting Method"))
         sorting_label.setFont(GUIInfo().emphasis_font)
         sort_group_box_layout.addWidget(sorting_label)
 
@@ -583,6 +584,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
+
+        # Dependencies group
+        deps_group_box = QGroupBox()
+        tab_layout.addWidget(deps_group_box)
+
+        deps_group_box_layout = QVBoxLayout()
+        deps_group_box.setLayout(deps_group_box_layout)
+
+        deps_label = QLabel(self.tr("Dependencies Handling Behavior"))
+        deps_label.setFont(GUIInfo().emphasis_font)
+        deps_group_box_layout.addWidget(deps_label)
 
         # Use dependencies for sorting checkbox
         self.use_moddependencies_as_loadTheseBefore = QCheckBox(
@@ -593,30 +605,54 @@ This basically preserves your mod coloring, user notes etc. for this many second
                 "If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod."
             )
         )
-        sort_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
+        deps_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
 
-        # Dependencies group
-        deps_group_box = QGroupBox()
-        tab_layout.addWidget(deps_group_box)
-
-        deps_group_box_layout = QVBoxLayout()
-        deps_group_box.setLayout(deps_group_box_layout)
-
-        deps_label = QLabel(self.tr("Sort Dependencies"))
-        deps_label.setFont(GUIInfo().emphasis_font)
-        deps_group_box_layout.addWidget(deps_label)
+        # Use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox = (
+            QCheckBox(self.tr("Use alternativePackageIds as satisfying dependencies"))
+        )
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setToolTip(
+            self.tr(
+                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. \n"
+                "E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'"
+            )
+        )
+        deps_group_box_layout.addWidget(
+            self.use_alternative_package_ids_as_satisfying_dependencies_checkbox
+        )
 
         self.check_deps_checkbox = QCheckBox(
             self.tr("Prompt user to download dependencies when click in Sort")
         )
         deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
-        tab_layout.addStretch()
+        # XML parsing behavior group
+        xml_parsing_group_box = QGroupBox()
+        tab_layout.addWidget(xml_parsing_group_box)
 
-        explanatory_text = ""
-        explanatory_label = QLabel(explanatory_text)
-        explanatory_label.setWordWrap(True)
-        tab_layout.addWidget(explanatory_label)
+        xml_parsing_group_box_layout = QVBoxLayout()
+        xml_parsing_group_box.setLayout(xml_parsing_group_box_layout)
+
+        # Prefer versioned About.xml tags over base tags
+        xml_parsing_explanatory_text = (
+            "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
+            "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
+            "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
+        )
+        xml_parsing_explanatory_label = QLabel(self.tr("XML Parsing Behavior"))
+        xml_parsing_explanatory_label.setFont(GUIInfo().emphasis_font)
+        xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
+        self.prefer_versioned_about_tags_checkbox.setToolTip(
+            self.tr(xml_parsing_explanatory_text)
+        )
+        xml_parsing_group_box_layout.addWidget(
+            self.prefer_versioned_about_tags_checkbox
+        )
+
+        tab_layout.addStretch()
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
@@ -853,14 +889,34 @@ This basically preserves your mod coloring, user notes etc. for this many second
         quality_preset_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(quality_preset_label)
 
-        self.todds_preset_combobox = QComboBox()
-        self.todds_preset_combobox.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
-        )
-        self.todds_preset_combobox.addItem(
+        self.todds_preset_optimized_radio = QRadioButton(
             self.tr("Optimized - Recommended for RimWorld")
         )
-        group_layout.addWidget(self.todds_preset_combobox)
+        group_layout.addWidget(self.todds_preset_optimized_radio)
+
+        self.todds_preset_custom_radio = QRadioButton(self.tr("Custom todds command"))
+        group_layout.addWidget(self.todds_preset_custom_radio)
+
+        custom_command_label = QLabel(
+            self.tr(
+                "If -p as in path is not specified, path from current active or all mods selection will be used."
+            )
+        )
+        custom_command_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(custom_command_label)
+
+        self.todds_custom_command_lineedit = QLineEdit()
+        todds_example = (
+            '-f BC1 -af BC7 -on -vf -fs -r Textures -t -p "D:\\Games\\RimWorld\\Mods"'
+        )
+        self.todds_custom_command_lineedit.setPlaceholderText(
+            self.tr("eg: {todds_example}").format(todds_example=todds_example)
+        )
+        self.todds_custom_command_lineedit.setTextMargins(GUIInfo().text_field_margins)
+        self.todds_custom_command_lineedit.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.todds_custom_command_lineedit)
 
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -893,6 +949,74 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Overwrite existing optimized textures")
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
+
+        self.auto_delete_orphaned_dds_checkbox = QCheckBox(
+            self.tr(
+                "Automatically delete .dds files if no corresponding .png file exists"
+            )
+        )
+        self.auto_delete_orphaned_dds_checkbox.setToolTip(
+            self.tr(
+                "This will delete .dds files that are not paired with a .png file,\n\n"
+                "This checks may take few seconds depending on the number of .dds files present."
+            )
+        )
+        group_layout.addWidget(self.auto_delete_orphaned_dds_checkbox)
+
+        # Connect radio buttons to enable/disable custom command input
+        self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
+        self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
+
+    def _do_external_tools_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("External Tools"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        header_layout = QHBoxLayout()
+        group_layout.addLayout(header_layout)
+
+        section_label = QLabel(self.tr("Text Editor command location"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        header_layout.addWidget(section_label)
+
+        self.text_editor_location_choose_button = QToolButton()
+        self.text_editor_location_choose_button.setText(self.tr("Choose…"))
+        header_layout.addWidget(self.text_editor_location_choose_button)
+
+        self.text_editor_location = QLineEdit()
+        self.text_editor_location.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        group_layout.addWidget(self.text_editor_location)
+
+        folder_arg_label = QLabel(self.tr("Additional Arguments (Opening Folders)"))
+        group_layout.addWidget(folder_arg_label)
+        self.text_editor_folder_arg = QLineEdit()
+        self.text_editor_folder_arg.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_folder_arg.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.text_editor_folder_arg)
+
+        file_arg_label = QLabel(self.tr("Additional Arguments (Opening Single File)"))
+        group_layout.addWidget(file_arg_label)
+        self.text_editor_file_arg = QLineEdit()
+        self.text_editor_file_arg.setTextMargins(GUIInfo().text_field_margins)
+        self.text_editor_file_arg.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        group_layout.addWidget(self.text_editor_file_arg)
+
+    def _on_preset_radio_toggled(self, checked: bool) -> None:
+        if self.todds_preset_custom_radio.isChecked():
+            self.todds_custom_command_lineedit.setEnabled(True)
+        else:
+            self.todds_custom_command_lineedit.setEnabled(False)
 
     def _do_themes_tab(self) -> None:
         tab = QWidget()
@@ -1040,10 +1164,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         size_note = QLabel(
             self.tr(
                 "Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults."
-            ).format(
-                MIN_SIZE=Settings.MIN_SIZE,
-                MAX_SIZE=Settings.MAX_SIZE
-            )
+            ).format(MIN_SIZE=Settings.MIN_SIZE, MAX_SIZE=Settings.MAX_SIZE)
         )
         size_note.setFont(GUIInfo().emphasis_font)
         size_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1301,9 +1422,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
         # Clear button behavior
-        self.clear_moves_dlc_checkbox = QCheckBox(
-            self.tr("Clear also moves DLC")
-        )
+        self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
         self.show_mod_updates_checkbox = QCheckBox(
@@ -1335,16 +1454,16 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
-        # Dependencies: alternativePackageIds support
-        self.consider_alternative_package_ids_checkbox = QCheckBox(
-            self.tr("Consider alternativePackageIds as satisfying dependencies")
+        self.enable_advanced_filtering_checkbox = QCheckBox(
+            self.tr("Enable advanced filtering options")
         )
-        self.consider_alternative_package_ids_checkbox.setToolTip(
+        self.enable_advanced_filtering_checkbox.setToolTip(
             self.tr(
-                "If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing."
+                "If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. "
+                "Disabling this can improve performance by avoiding heavy calculations."
             )
         )
-        group_layout.addWidget(self.consider_alternative_package_ids_checkbox)
+        group_layout.addWidget(self.enable_advanced_filtering_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")
@@ -1356,19 +1475,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
-
-        # Prefer versioned About.xml tags over base tags
-        self.prefer_versioned_about_tags_checkbox = QCheckBox(
-            self.tr("Prefer versioned About.xml tags over base tags")
-        )
-        self.prefer_versioned_about_tags_checkbox.setToolTip(
-            self.tr(
-                "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
-                "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
-                "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
-            )
-        )
-        group_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)

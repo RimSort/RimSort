@@ -81,6 +81,8 @@ class GoogleTranslateService(TranslationService):
                 "de_DE": "de",
                 "es_ES": "es",
                 "ru_RU": "ru",
+                "tr_TR": "tr",
+                "pt_BR": "pt",
             }
 
             target = lang_map.get(target_lang, target_lang.lower().replace("_", "-"))

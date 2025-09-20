@@ -25,6 +25,7 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
     show_dialogue_file,
+    show_warning,
 )
 
 
@@ -70,6 +71,8 @@ class RunnerPanel(QWidget):
         self.process_last_command = ""
         self.process_last_args: Sequence[str] = []
         self.steamcmd_current_pfid: Optional[str] = None
+        self.login_error = False
+        self.redownloading = False
 
         # Set up UI components
         self._setup_text_display()
@@ -430,11 +433,15 @@ class RunnerPanel(QWidget):
             self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
             self.progress_bar.setValue(self.progress_bar.value() + 1)
         elif "ERROR! Download item " in line:
-            self.change_progress_bar_color("warn")
-            self.progress_bar.setValue(self.progress_bar.value() + 1)
+            # Track failed downloads
+            match = search(r"ERROR! Download item (\d+)", line)
+            if match:
+                pfid = match.group(1)
+                if pfid not in self.steamcmd_download_tracking:
+                    self.steamcmd_download_tracking.append(pfid)
         elif "ERROR! Not logged on." in line:
-            self.change_progress_bar_color("critical")
-            self.progress_bar.setValue(self.progress_bar.value() + 1)
+            # Handle login error specifically
+            self.login_error = True
 
         return overwrite
 
@@ -495,51 +502,60 @@ class RunnerPanel(QWidget):
             self.process_killed = False  # Reset the kill flag
 
             # Handle process-specific completion tasks
-            if self._is_process_running("steamcmd"):
+            if "SteamCMD" in self.windowTitle():
                 self._handle_steamcmd_completion()
-            elif self._is_process_running("todds"):
+            elif "todds" in self.windowTitle():
                 self._handle_todds_completion()
 
         # Always clean up the process
-        self.process.terminate()
-        self.process_complete()
+        if not self.redownloading:
+            self.process.terminate()
+            self.process_complete()
 
     def _handle_steamcmd_completion(self) -> None:
         """Handle SteamCMD-specific completion tasks."""
-        # Check if there are failed downloads
-        if (
-            not self.steamcmd_download_tracking
-            or len(self.steamcmd_download_tracking) == 0
-        ):
+        # Check if there are any failed downloads to report
+        if len(self.steamcmd_download_tracking) == 0:
             self.change_progress_bar_color("success")
             return
 
+        # Check and Handle login error
+        if self.login_error:
+            self.change_progress_bar_color("error")
+            show_warning(
+                title=self.tr("SteamCMD Downloader Login error"),
+                text=self.tr(
+                    "SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall."
+                ),
+            )
+
         # Handle failed downloads
-        self.change_progress_bar_color("emergency")
+        self.change_progress_bar_color("failure")
 
         # Resolve mod names for failed downloads
         pfids_to_name = self._resolve_mod_names()
 
         # Compile details of failed mods for the report
         details = "\n".join(
-            f"{pfids_to_name.get(pfid, '*Mod name not found!*')} - {pfid}"
+            f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
             for pfid in self.steamcmd_download_tracking
         )
-
         # Prompt user for action on failed mods
-        if (
-            show_dialogue_conditional(
-                title=self.tr("SteamCMD downloader"),
-                text=self.tr(
-                    "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\n"
-                    "Click 'Show Details' to see a list of mods that failed."
-                ),
-                details=details,
-            )
-            == QMessageBox.StandardButton.Yes
-        ):
+        answer = show_dialogue_conditional(
+            title=self.tr("SteamCMD downloader"),
+            text=self.tr(
+                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\n"
+                "Click 'Show Details' to see a list of mods that failed."
+            ),
+            details=details,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            self.redownloading = True
             self.steamcmd_downloader_signal.emit(self.steamcmd_download_tracking)
+            self.close()
+
         else:
+            self.redownloading = False
             logger.debug("User declined re-download of failed mods.")
 
     def _resolve_mod_names(self) -> dict[str, str]:

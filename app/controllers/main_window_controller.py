@@ -128,9 +128,7 @@ class MainWindowController(QObject):
             # Check each dependency, honoring alternativePackageIds
             # E.g. [], ['brrainz.harmony'], [('oels.vehiclemapframework', {'alternatives': {'oels.vehiclemapframework.dev'}})]
             missing = set()
-            consider_alternatives = (
-                self.metadata_manager.settings_controller.settings.consider_alternative_package_ids
-            )
+            consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
             for dep in dependencies:
                 if isinstance(dep, tuple):
                     dep_id = dep[0]
@@ -220,9 +218,7 @@ class MainWindowController(QObject):
 
                                         prefer_versioned = False
                                         try:
-                                            prefer_versioned = (
-                                                self.metadata_manager.settings_controller.settings.prefer_versioned_about_tags
-                                            )
+                                            prefer_versioned = self.metadata_manager.settings_controller.settings.prefer_versioned_about_tags
                                         except Exception:
                                             prefer_versioned = False
 
@@ -237,14 +233,24 @@ class MainWindowController(QObject):
                                         if prefer_versioned:
                                             try:
                                                 major, minor = (
-                                                    self.metadata_manager.game_version.split(".")[:2]
+                                                    self.metadata_manager.game_version.split(
+                                                        "."
+                                                    )[:2]
                                                 )
-                                                target_keys = [f"v{major}.{minor}", f"{major}.{minor}"]
+                                                target_keys = [
+                                                    f"v{major}.{minor}",
+                                                    f"{major}.{minor}",
+                                                ]
                                             except Exception:
                                                 target_keys = []
 
-                                            deps_by_version = root.find("modDependenciesByVersion")
-                                            if deps_by_version is not None and target_keys:
+                                            deps_by_version = root.find(
+                                                "modDependenciesByVersion"
+                                            )
+                                            if (
+                                                deps_by_version is not None
+                                                and target_keys
+                                            ):
                                                 # Try exact matches, then prefix matches
                                                 candidate = None
                                                 for child in list(deps_by_version):
@@ -253,7 +259,11 @@ class MainWindowController(QObject):
                                                         break
                                                 if candidate is None:
                                                     for child in list(deps_by_version):
-                                                        if any(child.tag.startswith(k) for k in target_keys if k):
+                                                        if any(
+                                                            child.tag.startswith(k)
+                                                            for k in target_keys
+                                                            if k
+                                                        ):
                                                             candidate = child
                                                             break
 
@@ -272,7 +282,9 @@ class MainWindowController(QObject):
                                                             candidate, dep_id
                                                         )
                                                         if workshop_id:
-                                                            mods_to_download.append(workshop_id)
+                                                            mods_to_download.append(
+                                                                workshop_id
+                                                            )
                                                             break
 
                                         if used_versioned:
@@ -284,8 +296,10 @@ class MainWindowController(QObject):
                                             if deps is None:
                                                 continue
 
-                                            workshop_id = self._find_workshop_id_in_deps(
-                                                deps, dep_id
+                                            workshop_id = (
+                                                self._find_workshop_id_in_deps(
+                                                    deps, dep_id
+                                                )
                                             )
                                             if workshop_id:
                                                 mods_to_download.append(workshop_id)

@@ -17,7 +17,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self, cast
+from typing import Any, Callable, Optional, cast
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -101,7 +101,7 @@ class MainContent(QObject):
     and their dependencies.
     """
 
-    _instance: Self | None = None
+    _instance: Optional["MainContent"] = None
 
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
@@ -163,12 +163,8 @@ class MainContent(QObject):
             EventBus().do_build_steam_workshop_database.connect(
                 self._on_do_build_steam_workshop_database
             )
-            EventBus().do_import_acf.connect(
-                lambda: self.actions_slot("import_steamcmd_acf_data")
-            )
-            EventBus().do_delete_acf.connect(
-                lambda: self.actions_slot("reset_steamcmd_acf_data")
-            )
+            EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
+            EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
             EventBus().do_refresh_mods_lists.connect(self._do_refresh)
@@ -212,7 +208,9 @@ class MainContent(QObject):
 
             # Edit Menu bar Eventbus
             EventBus().do_rule_editor.connect(
-                lambda: self.actions_slot("open_community_rules_with_rule_editor")
+                lambda: self._do_open_rule_editor(
+                    compact=False, initial_mode="community_rules"
+                )
             )
 
             # Download Menu bar Eventbus
@@ -223,12 +221,8 @@ class MainContent(QObject):
             )
 
             # Textures Menu bar Eventbus
-            EventBus().do_optimize_textures.connect(
-                lambda: self.actions_slot("optimize_textures")
-            )
-            EventBus().do_delete_dds_textures.connect(
-                lambda: self.actions_slot("delete_textures")
-            )
+            EventBus().do_optimize_textures.connect(self._do_optimize_textures)
+            EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integrations
@@ -603,16 +597,16 @@ class MainContent(QObject):
         """
         This slot method is triggered when the user clicks on an item
         on a mod list.
-        
+
         It takes the internal uuid and gets the
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
-        It also takes the selected mod (CustomListWidgetItem) and passes 
+        It also takes the selected mod (CustomListWidgetItem) and passes
         this to the mod info panel to display that mod's notes.
 
         :param uuid: uuid of mod
-        :param item: selected CustomListWidgetItem 
+        :param item: selected CustomListWidgetItem
         """
         self.mod_info_panel.display_mod_info(
             uuid=uuid,
@@ -653,122 +647,6 @@ class MainContent(QObject):
             self.inactive_mods_uuids_restore_state = inactive_mods_uuids
 
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
-
-    #########
-    # SLOTS # Can this be cleaned up & moved to own module...?
-    #########
-
-    # ACTIONS PANEL ACTIONS
-
-    def actions_slot(self, action: str) -> None:
-        """
-        Slot for the `actions_signal` signals
-
-        :param action: string indicating action
-        """
-        logger.info(f"USER ACTION: received action {action}")
-        # game configuration panel actions
-        if action == "check_for_update":
-            self._do_check_for_update()
-        # actions panel actions
-        if action == "refresh":
-            self._do_refresh()
-        if action == "clear":
-            self._do_clear()
-        if action == "restore":
-            self._do_restore()
-        if action == "sort":
-            self._do_sort()
-        if "textures" in action:
-            logger.debug("Initiating new todds operation...")
-            # Setup Environment
-            todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
-            if os.path.exists(todds_txt_path):
-                os.remove(todds_txt_path)
-            if not self.settings_controller.settings.todds_active_mods_target:
-                local_mods_target = self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].local_folder
-                if local_mods_target and local_mods_target != "":
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
-                workshop_mods_target = self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].workshop_folder
-                if workshop_mods_target and workshop_mods_target != "":
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(
-                            os.path.abspath(workshop_mods_target) + "\n"
-                        )
-            else:
-                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                    for uuid in self.mods_panel.active_mods_list.uuids:
-                        todds_txt_file.write(
-                            os.path.abspath(
-                                self.metadata_manager.internal_local_metadata[uuid][
-                                    "path"
-                                ]
-                            )
-                            + "\n"
-                        )
-            if action == "optimize_textures":
-                self._do_optimize_textures(todds_txt_path)
-            if action == "delete_textures":
-                self._do_delete_dds_textures(todds_txt_path)
-        if action == "browse_workshop":
-            self._do_browse_workshop()
-        if action == "import_steamcmd_acf_data":
-            metadata.import_steamcmd_acf_data(
-                rimsort_storage_path=str(AppInfo().app_storage_folder),
-                steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
-            )
-        if action == "reset_steamcmd_acf_data":
-            if os.path.exists(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path):
-                logger.debug(
-                    f"Deleting SteamCMD ACF data: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
-                )
-                os.remove(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
-            else:
-                logger.debug("SteamCMD ACF data does not exist. Skipping action.")
-        if action == "update_workshop_mods":
-            self._do_check_for_workshop_updates()
-        if action == "import_list_file_xml":
-            self._do_import_list_file_xml()
-        if action == "import_list_rentry":
-            self._do_import_list_rentry()
-        if action == "export_list_file_xml":
-            self._do_export_list_file_xml()
-        if action == "export_list_clipboard":
-            self._do_export_list_clipboard()
-        if action == "upload_list_rentry":
-            self._do_upload_list_rentry()
-        if action == "save":
-            self._do_save()
-        # settings panel actions
-        if action == "configure_steam_database_path":
-            self._do_configure_steam_db_file_path()
-        if action == "configure_steam_database_repo":
-            self._do_configure_steam_database_repo()
-        if action == "configure_community_rules_db_path":
-            self._do_configure_community_rules_db_file_path()
-        if action == "configure_community_rules_db_repo":
-            self._do_configure_community_rules_db_repo()
-        if action == "open_community_rules_with_rule_editor":
-            self._do_open_rule_editor(compact=False, initial_mode="community_rules")
-        if action == "build_steam_database_thread":
-            self._do_build_database_thread()
-        if "download_entire_workshop" in action:
-            self._do_download_entire_workshop(action)
-        if action == "merge_databases":
-            self._do_merge_databases()
-        if action == "set_database_expiry":
-            self._do_set_database_expiry()
-        if action == "edit_steam_webapi_key":
-            self._do_edit_steam_webapi_key()
-        if action == "comparison_report":
-            self._do_generate_metadata_comparison_report()
-
-    # GAME CONFIGURATION PANEL
 
     def _do_check_for_update(self) -> None:
         """
@@ -2353,8 +2231,41 @@ class MainContent(QObject):
             )
 
     # TODDS ACTIONS
-    def _do_optimize_textures(self, todds_txt_path: str) -> None:
-        # Setup environment
+    def _do_generate_todds_txt(self) -> str:
+        logger.info("Generating todds.txt...")
+        # Create or overwrite todds.txt in temp directory
+        todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
+        if os.path.exists(todds_txt_path):
+            os.remove(todds_txt_path)
+        if not self.settings_controller.settings.todds_active_mods_target:
+            local_mods_target = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].local_folder
+            if local_mods_target and local_mods_target != "":
+                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
+                    todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+            workshop_mods_target = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].workshop_folder
+            if workshop_mods_target and workshop_mods_target != "":
+                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
+                    todds_txt_file.write(os.path.abspath(workshop_mods_target) + "\n")
+        else:
+            with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
+                for uuid in self.mods_panel.active_mods_list.uuids:
+                    todds_txt_file.write(
+                        os.path.abspath(
+                            self.metadata_manager.internal_local_metadata[uuid]["path"]
+                        )
+                        + "\n"
+                    )
+        logger.info(f"Generated todds.txt at: {todds_txt_path}")
+        return todds_txt_path
+
+    def _do_optimize_textures(self) -> None:
+        logger.info("Optimizing textures with todds...")
+        todds_txt_path = self._do_generate_todds_txt()
+        # Initialize todds interface
         todds_interface = ToddsInterface(
             preset=self.settings_controller.settings.todds_preset,
             dry_run=self.settings_controller.settings.todds_dry_run,
@@ -2370,7 +2281,10 @@ class MainContent(QObject):
 
         todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
-    def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
+    def _do_delete_dds_textures(self) -> None:
+        logger.info("Deleting .dds textures with todds...")
+        todds_txt_path = self._do_generate_todds_txt()
+        # Initialize todds interface
         todds_interface = ToddsInterface(
             preset="clean",
             dry_run=self.settings_controller.settings.todds_dry_run,
@@ -2387,6 +2301,53 @@ class MainContent(QObject):
         todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
     # STEAM{CMD, WORKS} ACTIONS
+    def _do_import_steamcmd_acf_data(self) -> None:
+        logger.info("Importing SteamCMD ACF data...")
+        metadata.import_steamcmd_acf_data(
+            rimsort_storage_path=str(AppInfo().app_storage_folder),
+            steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
+        )
+
+    def _do_reset_steamcmd_acf_data(self) -> None:
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Reset SteamCMD ACF data file"),
+            text=self.tr("Are you sure you want to reset SteamCMD ACF data file?"),
+            information=self.tr(
+                "This file is created and used by steamcmd to track mod informaton, This action cannot be undone."
+            ),
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            logger.info("Resetting SteamCMD ACF data file")
+            steamcmd_appworkshop_acf_path = (
+                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+            )
+            if os.path.exists(steamcmd_appworkshop_acf_path):
+                logger.debug(
+                    f"Deleting SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}"
+                )
+                os.remove(steamcmd_appworkshop_acf_path)
+                dialogue.show_information(
+                    title=self.tr("Reset SteamCMD ACF data file"),
+                    text=self.tr(
+                        f"Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}"
+                    ),
+                    information=self.tr(
+                        "ACF data file will be recreated when you download mods using steamcmd next time."
+                    ),
+                )
+                # Do a full refresh of metadata and UI
+                self._do_refresh()
+            else:
+                logger.debug("SteamCMD ACF data does not exist. Skipping deletion.")
+                dialogue.show_warning(
+                    title=self.tr("SteamCMD ACF data file does not exist"),
+                    text=self.tr(
+                        "ACf file does not exist. It will be created when you download mods using steamcmd."
+                    ),
+                )
+        else:
+            logger.debug("user cancelled reset of SteamCMD ACF data file")
+            return
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(

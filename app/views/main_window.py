@@ -49,6 +49,7 @@ from app.views.dialogue import (
 from app.views.file_search_dialog import FileSearchDialog
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
+from app.views.player_log_tab import PlayerLogTab
 from app.views.status_panel import Status
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
@@ -155,6 +156,10 @@ class MainWindow(QMainWindow):
         self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
         self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
+
+        # Create and add the Player Log tab
+        self.player_log_widget = PlayerLogTab(self.settings_controller)
+        self.tab_widget.addTab(self.player_log_widget, self.tr("Player Log"))
 
         # Create and add the Search tab
         self.file_search_tab = QWidget()
@@ -302,7 +307,7 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.save()
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
-            self.main_content_panel.actions_slot("check_for_update")
+            EventBus().do_check_for_application_update.emit()
         # Delete outdated entries in aux DB
         EventBus().do_delete_outdated_entries_in_aux_db.emit()
 
@@ -1025,9 +1030,13 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
-                instance_path = Path(self.settings_controller.settings.current_instance_path)
-                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-                    instance_path / "aux_metadata.db"
+                instance_path = Path(
+                    self.settings_controller.settings.current_instance_path
+                )
+                aux_metadata_controller = (
+                    AuxMetadataController.get_or_create_cached_instance(
+                        instance_path / "aux_metadata.db"
+                    )
                 )
                 aux_metadata_controller.engine.dispose()
                 try:

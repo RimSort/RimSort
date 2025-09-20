@@ -11,14 +11,11 @@ from io import TextIOWrapper
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Tuple
 
 import requests
 import vdf  # type: ignore
 from loguru import logger
-from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
-    copy as copy_to_clipboard,
-)
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
@@ -46,7 +43,8 @@ def copy_to_clipboard_safely(text: str) -> None:
     :param text: text to copy to clipboard
     """
     try:
-        copy_to_clipboard(text)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
@@ -262,30 +260,11 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 + str(args)
                 + "`"
             )
-            # https://stackoverflow.com/a/21805723
-            if system_name == "Darwin":  # MacOS
-                popen_args = ["open", executable_path, "--args"]
-                popen_args.extend(args)
-                p = subprocess.Popen(popen_args)
-            else:
-                popen_args = [executable_path]
-                popen_args.extend(args)
-
-                if sys.platform == "win32":
-                    p = subprocess.Popen(
-                        popen_args,
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        shell=True,
-                        cwd=game_install_path,
-                    )
-                else:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    p = subprocess.Popen(
-                        popen_args, start_new_session=True, cwd=game_install_path
-                    )
-
+            pid, popen_args = launch_process(
+                executable_path, args, str(game_install_path)
+            )
             logger.info(
-                f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
+                f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
             )
         else:
             logger.debug("The game executable path does not exist")
@@ -315,6 +294,35 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 ).format(game_install_path=game_install_path)
             ),
         )
+
+
+def launch_process(
+    executable_path: str, args: list[str], cwd: str
+) -> Tuple[int, list[str]]:
+    pid = -1
+    # https://stackoverflow.com/a/21805723
+    if platform.system() == "Darwin":  # MacOS
+        popen_args = ["open", executable_path, "--args"]
+        popen_args.extend(args)
+        p = subprocess.Popen(popen_args)
+        pid = p.pid
+    else:
+        popen_args = [executable_path]
+        popen_args.extend(args)
+
+        if sys.platform == "win32":
+            p = subprocess.Popen(
+                popen_args,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                shell=True,
+                cwd=cwd,
+            )
+            pid = p.pid
+        else:
+            # not Windows, so assume POSIX; if not, we'll get a usable exception
+            p = subprocess.Popen(popen_args, start_new_session=True, cwd=cwd)
+            pid = p.pid
+    return pid, popen_args
 
 
 def open_url_browser(url: str) -> None:
@@ -353,7 +361,9 @@ def platform_specific_open(path: str | Path) -> None:
         except OSError as e:
             # Handle cases where no default application is associated
             if e.winerror == -2147221003:  # Application not found
-                logger.warning(f"No default application found for {path}, trying notepad")
+                logger.warning(
+                    f"No default application found for {path}, trying notepad"
+                )
                 # Try to open with notepad as fallback
                 try:
                     subprocess.Popen(["notepad.exe", path])
@@ -363,14 +373,14 @@ def platform_specific_open(path: str | Path) -> None:
                         title="Failed to open file",
                         text="Could not open the file",
                         information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
-                        details=str(e)
+                        details=str(e),
                     )
             else:
                 # Re-raise other OSErrors
                 raise
     elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
-        subprocess.Popen(["xdg-open", path])
+        subprocess.Popen(["xdg-open", path], env=dict(os.environ, LD_LIBRARY_PATH=""))
     else:
         logger.error("Attempting to open directory on an unknown system")
 

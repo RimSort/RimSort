@@ -302,6 +302,11 @@ class SettingsController(QObject):
             self._on_steamcmd_install_button_clicked
         )
 
+        # Other External Tools Tab
+        self.settings_dialog.text_editor_location_choose_button.clicked.connect(
+            self._on_text_editor_location_choose_button_clicked
+        )
+
         # Theme tab
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
@@ -568,8 +573,12 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
-        self.settings_dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
-        self.settings_dialog.aux_db_time_limit.setEnabled(self.settings.enable_aux_db_behavior_editing)
+        self.settings_dialog.aux_db_time_limit.setText(
+            str(self.settings.aux_db_time_limit)
+        )
+        self.settings_dialog.aux_db_time_limit.setEnabled(
+            self.settings.enable_aux_db_behavior_editing
+        )
 
         # Cross Version DB Tab
         if self.settings.external_no_version_warning_metadata_source == "None":
@@ -679,10 +688,20 @@ class SettingsController(QObject):
                 )
             )
 
+        # Use alternativePackageIds as satisfying dependencies
+        if self.settings.use_alternative_package_ids_as_satisfying_dependencies:
+            self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setChecked(
+                True
+            )
+
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(
             self.settings.check_dependencies_on_sort
         )
+
+        # Prefer versioned About.xml tags over base tags
+        if self.settings.prefer_versioned_about_tags:
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(True)
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -721,9 +740,14 @@ class SettingsController(QObject):
 
         # todds tab
         if self.settings.todds_preset == "optimized":
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
+        elif self.settings.todds_preset == "custom":
+            self.settings_dialog.todds_preset_custom_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(True)
         else:
-            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
+            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
         if self.settings.todds_active_mods_target:
             self.settings_dialog.todds_active_mods_only_radio.setChecked(True)
         else:
@@ -733,6 +757,23 @@ class SettingsController(QObject):
         )
         self.settings_dialog.todds_overwrite_checkbox.setChecked(
             self.settings.todds_overwrite
+        )
+        self.settings_dialog.todds_custom_command_lineedit.setText(
+            self.settings.todds_custom_command
+        )
+        self.settings_dialog.auto_delete_orphaned_dds_checkbox.setChecked(
+            self.settings.auto_delete_orphaned_dds
+        )
+
+        # External Tools Tab
+        self.settings_dialog.text_editor_location.setText(
+            self.settings.text_editor_location
+        )
+        self.settings_dialog.text_editor_folder_arg.setText(
+            self.settings.text_editor_folder_arg
+        )
+        self.settings_dialog.text_editor_file_arg.setText(
+            self.settings.text_editor_file_arg
         )
 
         # Themes tab
@@ -853,17 +894,10 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
-        # Advanced: alternativePackageIds toggle
+        # Advanced: enable advanced filtering toggle
         try:
-            self.settings_dialog.consider_alternative_package_ids_checkbox.setChecked(
-                self.settings.consider_alternative_package_ids
-            )
-        except Exception:
-            pass
-        # Prefer versioned About.xml tags over base tags
-        try:
-            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(
-                self.settings.prefer_versioned_about_tags
+            self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
+                self.settings.enable_advanced_filtering
             )
         except Exception:
             pass
@@ -977,7 +1011,9 @@ class SettingsController(QObject):
             self.settings_dialog.use_this_instead_db_github_url.text()
         )
         try:
-            self.settings.aux_db_time_limit = int(self.settings_dialog.aux_db_time_limit.text())
+            self.settings.aux_db_time_limit = int(
+                self.settings_dialog.aux_db_time_limit.text()
+            )
         except Exception:
             logger.warning("Failed setting Aux DB time limit, falling back to -1")
             self.settings.aux_db_time_limit = -1
@@ -993,9 +1029,17 @@ class SettingsController(QObject):
             self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
         )
 
+        # Use alternativePackageIds as satisfying dependencies
+        self.settings.use_alternative_package_ids_as_satisfying_dependencies = self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.isChecked()
+
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
             self.settings_dialog.check_deps_checkbox.isChecked()
+        )
+
+        # Prefer versioned About.xml tags over base tags
+        self.settings.prefer_versioned_about_tags = (
+            self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
         )
 
         # Database Builder tab
@@ -1028,8 +1072,13 @@ class SettingsController(QObject):
         ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
-        if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
+        if self.settings_dialog.todds_preset_optimized_radio.isChecked():
             self.settings.todds_preset = "optimized"
+        if self.settings_dialog.todds_preset_custom_radio.isChecked():
+            self.settings.todds_preset = "custom"
+            self.settings.todds_custom_command = (
+                self.settings_dialog.todds_custom_command_lineedit.text()
+            )
         else:
             self.settings.todds_preset = "optimized"
         if self.settings_dialog.todds_active_mods_only_radio.isChecked():
@@ -1041,6 +1090,20 @@ class SettingsController(QObject):
         )
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
+        )
+        self.settings.auto_delete_orphaned_dds = (
+            self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
+        )
+
+        # Other External Tools Tab
+        self.settings.text_editor_location = (
+            self.settings_dialog.text_editor_location.text()
+        )
+        self.settings.text_editor_folder_arg = (
+            self.settings_dialog.text_editor_folder_arg.text()
+        )
+        self.settings.text_editor_file_arg = (
+            self.settings_dialog.text_editor_file_arg.text()
         )
 
         # Themes tab
@@ -1135,17 +1198,10 @@ class SettingsController(QObject):
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
-        # Advanced: alternativePackageIds toggle
+        # Advanced: enable advanced filtering toggle
         try:
-            self.settings.consider_alternative_package_ids = (
-                self.settings_dialog.consider_alternative_package_ids_checkbox.isChecked()
-            )
-        except Exception:
-            pass
-        # Prefer versioned About.xml tags over base tags
-        try:
-            self.settings.prefer_versioned_about_tags = (
-                self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
+            self.settings.enable_advanced_filtering = (
+                self.settings_dialog.enable_advanced_filtering_checkbox.isChecked()
             )
         except Exception:
             pass
@@ -1859,6 +1915,22 @@ class SettingsController(QObject):
         EventBus().do_install_steamcmd.emit()
 
     @Slot()
+    def _on_text_editor_location_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the Steamcmd install location and handle the result.
+        """
+        text_editor_location = show_dialogue_file(
+            mode="open",
+            caption="Select Text Editor Command",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not text_editor_location:
+            return
+
+        self.settings_dialog.text_editor_location.setText(text_editor_location)
+        self._last_file_dialog_path = str(Path(text_editor_location).parent)
+
+    @Slot()
     def _on_db_builder_download_all_mods_via_steamcmd_button_clicked(self) -> None:
         """
         Build the Steam Workshop database of all mods using steamcmd.
@@ -2006,4 +2078,3 @@ class SettingsController(QObject):
         if self.change_mod_coloring_mode:
             self.change_mod_coloring_mode = False
             EventBus().do_change_mod_coloring_mode.emit()
-

@@ -34,7 +34,9 @@ class AuxMetadataEntry(Base):
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 
     user_notes: Mapped[str] = mapped_column(String, default="")
-    color_hex: Mapped[str] = mapped_column(String, default=None, nullable=True) # None/NULL means use theme default
+    color_hex: Mapped[str] = mapped_column(
+        String, default=None, nullable=True
+    )  # None/NULL means use theme default
     ignore_warnings: Mapped[bool] = mapped_column(Boolean, default=False)
 
     outdated: Mapped[bool] = mapped_column(Boolean, default=False)
