@@ -14,7 +14,11 @@ from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
-from app.utils.generic import platform_specific_open
+from app.utils.generic import (
+    find_steam_rimworld,
+    get_path_up_to_string,
+    platform_specific_open,
+)
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -1540,7 +1544,6 @@ class SettingsController(QObject):
         """
         if sys.platform == "win32":
             user_home = Path.home()
-            steam_folder = "C:/Program Files (x86)/Steam"
             from app.utils.win_find_steam import find_steam_folder
 
             steam_folder, found = find_steam_folder()
@@ -1551,13 +1554,25 @@ class SettingsController(QObject):
                 )
                 steam_folder = "C:/Program Files (x86)/Steam"
 
-            game_folder = Path(f"{steam_folder}/steamapps/common/Rimworld")
+            game_folder: str | Path = find_steam_rimworld(steam_folder)
+
+            # Fallback game folder
+            if game_folder == "":
+                game_folder = f"{steam_folder}/steamapps/common/RimWorld"
+            game_folder = Path(game_folder)
+
             config_folder = Path(
                 f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
             )
-            steam_mods_folder = Path(
-                f"{steam_folder}/steamapps/workshop/content/294100"
-            )
+
+            steam_mods_folder = get_path_up_to_string(game_folder, "common", exclude=True)
+            if steam_mods_folder == "":
+                # Fallback steam mods path
+                steam_mods_folder = Path(
+                    f"{steam_folder}/steamapps/workshop/content/294100"
+                )
+            else:
+                steam_mods_folder = Path(steam_mods_folder) / "workshop/content/294100"
 
             return game_folder, config_folder, steam_mods_folder
         else:
