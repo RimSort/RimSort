@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Загружен {count} элементы |Последнее обновление: {время}</translation>
+        <translation>Загружен {count} элементы |Последнее обновление:  {time}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
@@ -1163,11 +1163,11 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>Было выпущено обновление для Rimsort: {ald_tag_name}</translation>
+        <translation>Было выпущено обновление для Rimsort:  {latest_tag_name}</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Не удалось найти действительный выпуск Rimsort для {System_info}</translation>
+        <translation>Не удалось найти действительный выпуск Rimsort для  {system_info}</translation>
     </message>
     <message>
         <source>Unable to retrieve release information</source>
@@ -1175,11 +1175,11 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Не удалось подключиться к API GitHub: {ошибка}</translation>
+        <translation>Не удалось подключиться к API GitHub:  {error}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
-        <translation>Загрузка rimsort {Tag_name} релиз ...</translation>
+        <translation>Загрузка rimsort  релиз ... {tag_name}</translation>
     </message>
     <message>
         <source>Failed to launch update</source>
@@ -2308,7 +2308,7 @@ Please make sure your Database location settings are correct.</source>
     </message>
     <message>
         <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>Настроенный путь к БД {db_type} не является директорией! Ожидался путь {file_dir}.</translation>
+        <translation>Настроенный путь к БД {db_type} не является директорией! Ожидался путь {file_dir}. {not_dir}</translation>
     </message>
     <message>
         <source>Steam DB metadata expired</source>
@@ -2579,7 +2579,7 @@ The process may take a few moments to complete.</source>
     </message>
     <message>
         <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.strerror или 'неизвестная ошибка'} произошла в {e.filename или mod_path} с кодом ошибки {error_code}.</translation>
+        <translation>произошла в  с кодом ошибки {error_code}. {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -2932,7 +2932,7 @@ Mod and Game Version Mismatch</source>
 An alternative updated mod is recommended:
 {alternative}</source>
         <translation>Рекомендуется альтернативный обновленный мод:
-{альтернатива}</translation>
+ {alternative}</translation>
     </message>
     <message>
         <source>
@@ -3154,11 +3154,11 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Infos: {infos}</source>
-        <translation>Infos: {Infos}</translation>
+        <translation>Infos:  {infos}</translation>
     </message>
     <message>
         <source>Keybinds: {keybinds}</source>
-        <translation>Keybinds: {Keybinds}</translation>
+        <translation>Keybinds:  {keybinds}</translation>
     </message>
     <message>
         <source>Mod Issues: {mod_issues}</source>
@@ -3166,15 +3166,15 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Warnings: {warnings}</source>
-        <translation>Предупреждения: {предупреждения}</translation>
+        <translation>Предупреждения:  {warnings}</translation>
     </message>
     <message>
         <source>Errors: {errors}</source>
-        <translation>Ошибки: {ошибки}</translation>
+        <translation>Ошибки:  {errors}</translation>
     </message>
     <message>
         <source>Exceptions: {exceptions}</source>
-        <translation>Исключения: {исключения}</translation>
+        <translation>Исключения:  {exceptions}</translation>
     </message>
     <message>
         <source>All Issues: {all_issues}</source>
@@ -3314,7 +3314,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Size: {size:,} bytes</source>
-        <translation>Размер: {размер:,} байты</translation>
+        <translation>Размер:  байты {size:,}</translation>
     </message>
     <message>
         <source>Modified: N/A</source>
@@ -3346,7 +3346,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation>Не удалось из -за ошибки: {ошибка}</translation>
+        <translation>Не удалось из -за ошибки:  {error}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
@@ -3386,11 +3386,11 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation>Прыгайте к предыдущему {Lower} запись</translation>
+        <translation>Прыгайте к предыдущему  запись {lower}</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
-        <translation>Прыгайте в следующую {Lower} запись</translation>
+        <translation>Прыгайте в следующую  запись {lower}</translation>
     </message>
     <message>
         <source>Total Lines: 0</source>
@@ -4257,7 +4257,7 @@ Improves performance by ~50%.</source>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation>Min IS {min_size} и max is {max_size}.Значения за пределами этого диапазона будут сброшены к по умолчанию.</translation>
+        <translation>Min IS  и max is .Значения за пределами этого диапазона будут сброшены к по умолчанию. {MIN_SIZE} {MAX_SIZE}</translation>
     </message>
     <message>
         <source>Maximized</source>

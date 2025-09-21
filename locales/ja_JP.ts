@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>ロード{count}アイテム|最終更新：{時間}</translation>
+        <translation>ロード{count}アイテム|最終更新： {time}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
@@ -1163,7 +1163,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>rimsortのアップデートがリリースされました：{rest_tag_name}</translation>
+        <translation>rimsortのアップデートがリリースされました： {latest_tag_name}</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {system_info}</source>
@@ -1175,7 +1175,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Github APIに接続できなかった：{エラー}</translation>
+        <translation>Github APIに接続できなかった： {error}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
@@ -1231,7 +1231,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
-        <translation>Steamcmd ACFデータファイルを正常に削除しました：{Steamcmd_appworkshop_acf_path}</translation>
+        <translation>Steamcmd ACFデータファイルを正常に削除しました： {steamcmd_appworkshop_acf_path}</translation>
     </message>
     <message>
         <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
@@ -2539,7 +2539,7 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Steam {action}</source>
-        <translation>Steam {アクション}</translation>
+        <translation>Steam  {action}</translation>
     </message>
     <message>
         <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
@@ -2549,7 +2549,7 @@ The process may take a few moments to complete.</source>
     </message>
     <message>
         <source>{action} Error</source>
-        <translation>{アクション}エラー</translation>
+        <translation>エラー {action}</translation>
     </message>
     <message>
         <source>unsubscribe</source>
@@ -2581,7 +2581,7 @@ The process may take a few moments to complete.</source>
     </message>
     <message>
         <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.strerrorまたは「不明なエラー」}は、{e.filenameまたはmod_path}でエラーコード{error_code}で発生しました。</translation>
+        <translation>は、でエラーコード{error_code}で発生しました。 {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -2603,7 +2603,7 @@ The process may take a few moments to complete.</source>
         <source>You have selected {selected_count} mod(s) for deletion.
 {steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
         <translation>削除のために{selected_count} mod（s）を選択しました。
-これらの{Steam_Count}は、{Action_Past}にもなるSteam Workshop Modsです。</translation>
+これらのは、にもなるSteam Workshop Modsです。 {action_past} {steam_count}</translation>
     </message>
     <message>
         <source>
@@ -2935,7 +2935,7 @@ Mod and Game Version Mismatch</source>
 An alternative updated mod is recommended:
 {alternative}</source>
         <translation>別の更新されたmodが推奨されます：
-{代替}</translation>
+ {alternative}</translation>
     </message>
     <message>
         <source>
@@ -3126,7 +3126,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation>{パディング} {count} new</translation>
+        <translation>{count} new {padding}</translation>
     </message>
 </context>
 <context>
@@ -3169,15 +3169,15 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Warnings: {warnings}</source>
-        <translation>警告：{警告}</translation>
+        <translation>警告： {warnings}</translation>
     </message>
     <message>
         <source>Errors: {errors}</source>
-        <translation>エラー：{エラー}</translation>
+        <translation>エラー： {errors}</translation>
     </message>
     <message>
         <source>Exceptions: {exceptions}</source>
-        <translation>例外：{例外}</translation>
+        <translation>例外： {exceptions}</translation>
     </message>
     <message>
         <source>All Issues: {all_issues}</source>
@@ -3317,7 +3317,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Size: {size:,} bytes</source>
-        <translation>サイズ：{size：、}バイト</translation>
+        <translation>サイズ：バイト {size:,}</translation>
     </message>
     <message>
         <source>Modified: N/A</source>
@@ -3349,7 +3349,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation>エラーのために失敗：{エラー}</translation>
+        <translation>エラーのために失敗： {error}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
@@ -3389,7 +3389,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation>前の{下}エントリにジャンプします</translation>
+        <translation>前のエントリにジャンプします {lower}</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
@@ -4257,7 +4257,7 @@ Improves performance by ~50%.</source>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation>minは{min_size}で、maxは{max_size}です。この範囲外の値はデフォルトにリセットされます。</translation>
+        <translation>minはで、maxはです。この範囲外の値はデフォルトにリセットされます。 {MIN_SIZE} {MAX_SIZE}</translation>
     </message>
     <message>
         <source>Maximized</source>
