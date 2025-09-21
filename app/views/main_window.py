@@ -210,7 +210,9 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
         )
 
-        self.menu_bar = MenuBar(menu_bar=self.menuBar())
+        self.menu_bar = MenuBar(
+            menu_bar=self.menuBar(), settings_controller=self.settings_controller
+        )
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings_controller=self.settings_controller,

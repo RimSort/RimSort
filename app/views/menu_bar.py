@@ -1,12 +1,20 @@
+from functools import partial
+from pathlib import Path
+from typing import Callable
+
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QMenuBar
 
+from app.controllers.settings_controller import SettingsController
+from app.utils.app_info import AppInfo
 from app.utils.system_info import SystemInfo
 
 
 class MenuBar(QObject):
-    def __init__(self, menu_bar: QMenuBar) -> None:
+    def __init__(
+        self, menu_bar: QMenuBar, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the MenuBar object.
 
@@ -16,6 +24,7 @@ class MenuBar(QObject):
         super().__init__()
 
         self.menu_bar: QMenuBar = menu_bar
+        self.settings_controller: SettingsController = settings_controller
 
         # Declare actions and submenus as class variables
         # to be used by menu_bar_controller
@@ -28,6 +37,8 @@ class MenuBar(QObject):
         self.import_from_save_file_action: QAction
         self.export_to_clipboard_action: QAction
         self.export_to_rentry_action: QAction
+        self.upload_log_actions: list[QAction] = []
+        self.default_open_log_actions: list[QAction] = []
         self.upload_rimsort_log_action: QAction
         self.upload_rimsort_old_log_action: QAction
         self.upload_rimworld_log_action: QAction
@@ -64,6 +75,7 @@ class MenuBar(QObject):
         self.import_submenu: QMenu
         self.export_submenu: QMenu
         self.upload_submenu: QMenu
+        self.default_open_logs_submenu: QMenu
         self.shortcuts_submenu: QMenu
         self.instances_submenu: QMenu
 
@@ -135,17 +147,19 @@ class MenuBar(QObject):
             self.export_submenu, self.tr("To Rentry.co…")
         )
         file_menu.addSeparator()
-        self.upload_submenu = QMenu(self.tr("Upload Log"))
+
+        self.upload_submenu = self._create_logfile_submenu(
+            "Upload Log", self.upload_log_actions
+        )
         file_menu.addMenu(self.upload_submenu)
-        self.upload_rimsort_log_action = self._add_action(
-            self.upload_submenu, "RimSort.log"
-        )
-        self.upload_rimsort_old_log_action = self._add_action(
-            self.upload_submenu, "RimSort.old.log"
-        )
-        self.upload_rimworld_log_action = self._add_action(
-            self.upload_submenu, "RimWorld Player.log"
-        )
+
+        if self.settings_controller.settings.text_editor_location:
+            file_menu.addSeparator()
+
+            self.default_open_logs_submenu = self._create_logfile_submenu(
+                "Open Log in Default Editor", self.default_open_log_actions
+            )
+            file_menu.addMenu(self.default_open_logs_submenu)
         file_menu.addSeparator()
         self.shortcuts_submenu = QMenu(self.tr("Open..."))
         file_menu.addMenu(self.shortcuts_submenu)
@@ -189,6 +203,43 @@ class MenuBar(QObject):
             file_menu.addSeparator()
             self.quit_action = self._add_action(file_menu, self.tr("Exit"), "Ctrl+Q")
         return file_menu
+
+    def _create_logfile_submenu(
+        self,
+        menu_name: str,
+        action_list: list[QAction],
+    ) -> QMenu:
+        def create_entry(
+            name: str, path_accessor: Callable[[], Path | None]
+        ) -> QAction:
+            action = self._add_action(logfile_submenu, name)
+            action.setData(path_accessor)
+            action_list.append(action)
+            return action
+
+        def rimworld_log_path(suffix: str) -> Path | None:
+            config_str = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].config_folder
+            if config_str:
+                return Path(config_str).parent / suffix
+            return None
+
+        logfile_submenu = QMenu(self.tr(menu_name))
+        create_entry("RimSort.log", lambda: AppInfo().user_log_folder / "RimSort.log")
+        create_entry(
+            "RimSort.old.log", lambda: AppInfo().user_log_folder / "RimSort.old.log"
+        )
+        create_entry(
+            "RimWorld Player.log",
+            partial(rimworld_log_path, "Player.log"),
+        )
+        create_entry(
+            "RimWorld Player-prev.log",
+            partial(rimworld_log_path, "Player-prev.log"),
+        )
+
+        return logfile_submenu
 
     def _create_edit_menu(self) -> QMenu:
         """
