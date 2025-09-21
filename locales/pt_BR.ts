@@ -1231,7 +1231,7 @@ O banco de dados resultante, C, será salvo em um caminho definido pelo usuário
     </message>
     <message>
         <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
-        <translation>Excluído com sucesso o arquivo de dados do Steamcmd ACF: {Steamcmd_appworkshop_acf_path}</translation>
+        <translation>Excluído com sucesso o arquivo de dados do Steamcmd ACF:  {steamcmd_appworkshop_acf_path}</translation>
     </message>
     <message>
         <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
@@ -2577,11 +2577,11 @@ O processo pode levar alguns momentos para ser concluído.</translation>
     </message>
     <message>
         <source>Failed to delete {result.failed_count} mod(s). Check logs for details.</source>
-        <translation>Falha ao excluir {resultado.Failed_Count} mod (s).Verifique os logs para obter detalhes.</translation>
+        <translation>Falha ao excluir  mod (s).Verifique os logs para obter detalhes. {result.failed_count}</translation>
     </message>
     <message>
         <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{E.Strerror ou 'Erro desconhecido'} ocorreu em {e.filename ou mod_path} com o código de erro {error_code}.</translation>
+        <translation>ocorreu em  com o código de erro {error_code}. {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -2597,13 +2597,13 @@ O processo pode levar alguns momentos para ser concluído.</translation>
     </message>
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
-        <translation>Confirme a deleção e {Action_capitalized}</translation>
+        <translation>Confirme a deleção e  {action_capitalized}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for deletion.
 {steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
         <translation>Você selecionou {selected_count} mod (s) para exclusão.
-{Steam_Count} destes são mods de workshop a vapor que também serão {Action_Past}.</translation>
+ destes são mods de workshop a vapor que também serão . {action_past} {steam_count}</translation>
     </message>
     <message>
         <source>
@@ -2614,9 +2614,9 @@ This operation will:
 Do you want to proceed?</source>
         <translation>Esta operação irá:
 • Exclua os diretórios de modos selecionados do seu sistema de arquivos
-• {Action_capitalized} Mods de workshop a vapor da sua conta Steam
+•  Mods de workshop a vapor da sua conta Steam
 
-Você quer prosseguir?</translation>
+Você quer prosseguir? {action_capitalized}</translation>
     </message>
 </context>
 <context>
@@ -3148,295 +3148,295 @@ Um mod alternativo atualizado é recomendado:
     </message>
     <message>
         <source>Modified:</source>
-        <translation type="unfinished" />
+        <translation>Modificado:</translation>
     </message>
     <message>
         <source>Statistics</source>
-        <translation type="unfinished" />
+        <translation>Estatística</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
-        <translation type="unfinished" />
+        <translation>Total de linhas: {total_lines}</translation>
     </message>
     <message>
         <source>Infos: {infos}</source>
-        <translation type="unfinished" />
+        <translation>Infos:  {infos}</translation>
     </message>
     <message>
         <source>Keybinds: {keybinds}</source>
-        <translation type="unfinished" />
+        <translation>Keybinds:  {keybinds}</translation>
     </message>
     <message>
         <source>Mod Issues: {mod_issues}</source>
-        <translation type="unfinished" />
+        <translation>Questões de mod: {mod_issues}</translation>
     </message>
     <message>
         <source>Warnings: {warnings}</source>
-        <translation type="unfinished" />
+        <translation>Avisos:  {warnings}</translation>
     </message>
     <message>
         <source>Errors: {errors}</source>
-        <translation type="unfinished" />
+        <translation>Erros:  {errors}</translation>
     </message>
     <message>
         <source>Exceptions: {exceptions}</source>
-        <translation type="unfinished" />
+        <translation>Exceções:  {exceptions}</translation>
     </message>
     <message>
         <source>All Issues: {all_issues}</source>
-        <translation type="unfinished" />
+        <translation>Todas as questões: {all_issues}</translation>
     </message>
     <message>
         <source>Auto Load Game Log on Startup</source>
-        <translation type="unfinished" />
+        <translation>Auto Load Game Log On Startup</translation>
     </message>
     <message>
         <source>If checked, the Game log will be loaded automatically on startup.</source>
-        <translation type="unfinished" />
+        <translation>Se verificado, o log do jogo será carregado automaticamente na inicialização.</translation>
     </message>
     <message>
         <source>Enable Real-Time Log Monitoring</source>
-        <translation type="unfinished" />
+        <translation>Ativar monitoramento de log em tempo real</translation>
     </message>
     <message>
         <source>Enable real-time monitoring of Player.log file changes.</source>
-        <translation type="unfinished" />
+        <translation>Ative o monitoramento em tempo real das alterações do arquivo player.log.</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Atualizar</translation>
+        <translation>Atualizar</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation type="unfinished">Exportar</translation>
+        <translation>Exportar</translation>
     </message>
     <message>
         <source>Clear Log Display</source>
-        <translation type="unfinished" />
+        <translation>Exibição clara de log</translation>
     </message>
     <message>
         <source>Load Game Log</source>
-        <translation type="unfinished" />
+        <translation>Log de jogos de carga</translation>
     </message>
     <message>
         <source>Loads the game's Player.log file.</source>
-        <translation type="unfinished" />
+        <translation>Carrega o arquivo Player.log do jogo.</translation>
     </message>
     <message>
         <source>Load Log from File</source>
-        <translation type="unfinished" />
+        <translation>Carregar log do arquivo</translation>
     </message>
     <message>
         <source>Open a file dialog to select a log file</source>
-        <translation type="unfinished" />
+        <translation>Abra uma caixa de diálogo de arquivo para selecionar um arquivo de log</translation>
     </message>
     <message>
         <source>Load Log from Link</source>
-        <translation type="unfinished" />
+        <translation>Log de carga do link</translation>
     </message>
     <message>
         <source>Load log content from a URL</source>
-        <translation type="unfinished" />
+        <translation>Carregar o conteúdo do log de um URL</translation>
     </message>
     <message>
         <source>Search and Filter</source>
-        <translation type="unfinished" />
+        <translation>Pesquisar e filtrar</translation>
     </message>
     <message>
         <source>Search log entries...</source>
-        <translation type="unfinished" />
+        <translation>Entradas de log de pesquisa ...</translation>
     </message>
     <message>
         <source>All Entries</source>
-        <translation type="unfinished" />
+        <translation>Todas as entradas</translation>
     </message>
     <message>
         <source>Infos Only</source>
-        <translation type="unfinished" />
+        <translation>Apenas infos</translation>
     </message>
     <message>
         <source>Keybinds Only</source>
-        <translation type="unfinished" />
+        <translation>Somente Keybinds</translation>
     </message>
     <message>
         <source>Mod Issues</source>
-        <translation type="unfinished" />
+        <translation>Questões de mod</translation>
     </message>
     <message>
         <source>Warnings Only</source>
-        <translation type="unfinished" />
+        <translation>Somente avisos</translation>
     </message>
     <message>
         <source>Errors Only</source>
-        <translation type="unfinished" />
+        <translation>Somente erros</translation>
     </message>
     <message>
         <source>Exceptions Only</source>
-        <translation type="unfinished" />
+        <translation>Somente exceções</translation>
     </message>
     <message>
         <source>All Issues</source>
-        <translation type="unfinished" />
+        <translation>Todos os problemas</translation>
     </message>
     <message>
         <source>Filter by mod name...</source>
-        <translation type="unfinished" />
+        <translation>Filtro por nome de mod ...</translation>
     </message>
     <message>
         <source>Highlight Color</source>
-        <translation type="unfinished" />
+        <translation>Destaque a cor</translation>
     </message>
     <message>
         <source>Pick color for search and navigation highlighting</source>
-        <translation type="unfinished" />
+        <translation>Escolha cor para pesquisa e destaque de navegação</translation>
     </message>
     <message>
         <source>Previous</source>
-        <translation type="unfinished" />
+        <translation>Anterior</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished" />
+        <translation>Próximo</translation>
     </message>
     <message>
         <source>Quick Navigation</source>
-        <translation type="unfinished" />
+        <translation>Navegação rápida</translation>
     </message>
     <message>
         <source>Scroll to End</source>
-        <translation type="unfinished" />
+        <translation>Role para terminar</translation>
     </message>
     <message>
         <source>Scroll to the end of the log display</source>
-        <translation type="unfinished" />
+        <translation>Role até o final da tela do log</translation>
     </message>
     <message>
         <source>Path: Loaded from URL: {url}</source>
-        <translation type="unfinished" />
+        <translation>Caminho: Carregado de URL: {url}</translation>
     </message>
     <message>
         <source>Path: Loaded from URL</source>
-        <translation type="unfinished" />
+        <translation>Caminho: Carregado de URL</translation>
     </message>
     <message>
         <source>Size: {size:,} bytes</source>
-        <translation type="unfinished" />
+        <translation>Tamanho:  bytes {size:,}</translation>
     </message>
     <message>
         <source>Modified: N/A</source>
-        <translation type="unfinished" />
+        <translation>Modificado: n/a</translation>
     </message>
     <message>
         <source>Path: N/A</source>
-        <translation type="unfinished" />
+        <translation>Caminho: n/a</translation>
     </message>
     <message>
         <source>Size: N/A</source>
-        <translation type="unfinished" />
+        <translation>Tamanho: n/a</translation>
     </message>
     <message>
         <source>Player log file not found.</source>
-        <translation type="unfinished" />
+        <translation>Arquivo de log do jogador não encontrado.</translation>
     </message>
     <message>
         <source>Enter URL:</source>
-        <translation type="unfinished" />
+        <translation>Digite URL:</translation>
     </message>
     <message>
         <source>Log loaded successfully from URL</source>
-        <translation type="unfinished" />
+        <translation>Log carregado com sucesso do URL</translation>
     </message>
     <message>
         <source>Failed to load log from URL</source>
-        <translation type="unfinished" />
+        <translation>Falha ao carregar log do URL</translation>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation type="unfinished" />
+        <translation>Falhou devido ao erro:  {error}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
-        <translation type="unfinished" />
+        <translation>Caminho: {path_str}</translation>
     </message>
     <message>
         <source>Size: {size_str}</source>
-        <translation type="unfinished" />
+        <translation>Tamanho: {size_str}</translation>
     </message>
     <message>
         <source>Modified: {modified_str}</source>
-        <translation type="unfinished" />
+        <translation>Modificado:  {modified_str}</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished" />
+        <translation>Informações</translation>
     </message>
     <message>
         <source>Keybind</source>
-        <translation type="unfinished" />
+        <translation>Keybind</translation>
     </message>
     <message>
         <source>Mod_issue</source>
-        <translation type="unfinished" />
+        <translation>Mod_issue</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished" />
+        <translation>Aviso</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Erro</translation>
+        <translation>Erro</translation>
     </message>
     <message>
         <source>Exception</source>
-        <translation type="unfinished" />
+        <translation>Exceção</translation>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Salte para a entrada anterior  {lower}</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Salte para o próximo  entrada {lower}</translation>
     </message>
     <message>
         <source>Total Lines: 0</source>
-        <translation type="unfinished" />
+        <translation>Total de linhas: 0</translation>
     </message>
     <message>
         <source>Infos: 0</source>
-        <translation type="unfinished" />
+        <translation>Infos: 0</translation>
     </message>
     <message>
         <source>Keybinds: 0</source>
-        <translation type="unfinished" />
+        <translation>Keybinds: 0</translation>
     </message>
     <message>
         <source>Mod Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>Questões de mod: 0</translation>
     </message>
     <message>
         <source>Warnings: 0</source>
-        <translation type="unfinished" />
+        <translation>Avisos: 0</translation>
     </message>
     <message>
         <source>Errors: 0</source>
-        <translation type="unfinished" />
+        <translation>Erros: 0</translation>
     </message>
     <message>
         <source>Exceptions: 0</source>
-        <translation type="unfinished" />
+        <translation>Exceções: 0</translation>
     </message>
     <message>
         <source>All Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>Todos os problemas: 0</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation type="unfinished" />
+        <translation>Controles</translation>
     </message>
     <message>
         <source>Pick Highlight Color</source>
-        <translation type="unfinished" />
+        <translation>Escolha a cor de destaque</translation>
     </message>
 </context>
 <context>
@@ -3724,11 +3724,11 @@ Clique em “Mostrar Detalhes” para ver a lista de mods que falharam.</transla
     </message>
     <message>
         <source>SteamCMD Downloader Login error</source>
-        <translation type="unfinished" />
+        <translation>Erro de login do download do Steamcmd</translation>
     </message>
     <message>
         <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
-        <translation type="unfinished" />
+        <translation>O SteamCMD relatou um erro de login. Certifique -se de estar conectado à Internet e o SteamCMD não está bloqueado pelo seu firewall.</translation>
     </message>
 </context>
 <context>
@@ -4318,74 +4318,77 @@ Melhora o desempenho em cerca de 50%.</translation>
     </message>
     <message>
         <source>Custom todds command</source>
-        <translation type="unfinished" />
+        <translation>Comando Todds personalizados</translation>
     </message>
     <message>
         <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation type="unfinished" />
+        <translation>Se -p como no caminho não for especificado, o caminho da seleção atual ativo ou de todos os mods será usado.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
-        <translation type="unfinished" />
+        <translation>por exemplo:  {todds_example}</translation>
     </message>
     <message>
         <source>Automatically delete .dds files if no corresponding .png file exists</source>
-        <translation type="unfinished" />
+        <translation>Excluir arquivos .dds automaticamente se não houver arquivo .png correspondente existir</translation>
     </message>
     <message>
         <source>This will delete .dds files that are not paired with a .png file,
 
 This checks may take few seconds depending on the number of .dds files present.</source>
-        <translation type="unfinished" />
+        <translation>Isso excluirá arquivos .dds que não estão emparelhados com um arquivo .png,
+
+Isso pode levar alguns segundos, dependendo do número de arquivos .dds presentes.</translation>
     </message>
     <message>
         <source>Enable advanced filtering options</source>
-        <translation type="unfinished" />
+        <translation>Ativar opções de filtragem avançada</translation>
     </message>
     <message>
         <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation type="unfinished" />
+        <translation>Se ativado, opções de filtragem adicionais, como tamanho da pasta, autor e data modificada, estarão disponíveis no painel MODS. Desativar isso pode melhorar o desempenho, evitando cálculos pesados.</translation>
     </message>
     <message>
         <source>Prefer versioned About.xml tags over base tags</source>
-        <translation type="unfinished" />
+        <translation>Prefere versão em versão sobre.xml sobre tags básicas</translation>
     </message>
     <message>
         <source>External Tools</source>
-        <translation type="unfinished" />
+        <translation>Ferramentas externas</translation>
     </message>
     <message>
         <source>Text Editor command location</source>
-        <translation type="unfinished" />
+        <translation>Localização do comando do editor de texto</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Folders)</source>
-        <translation type="unfinished" />
+        <translation>Argumentos adicionais (pastas de abertura)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
-        <translation type="unfinished" />
+        <translation>Argumentos adicionais (abrindo um único arquivo)</translation>
     </message>
     <message>
         <source>Sorting Method</source>
-        <translation type="unfinished" />
+        <translation>Método de classificação</translation>
     </message>
     <message>
         <source>Dependencies Handling Behavior</source>
-        <translation type="unfinished" />
+        <translation>Comportamento de manuseio de dependências</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished" />
+        <translation>Use AlternativePackageIds como dependências satisfatórias</translation>
     </message>
     <message>
         <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
-        <translation type="unfinished" />
+        <translation>Se ativado, uma entrada AlternativePackageIds em About.xml pode satisfazer a dependência de um mod quando a principal dependência está ausente. 
+Por exemplo, 'Oels.VehicleMapFramework', Alternativas: 'Oels.vehicleMapframework.dev'</translation>
     </message>
     <message>
         <source>XML Parsing Behavior</source>
-        <translation type="unfinished" />
+        <translation>XML Comportamento de análise</translation>
     </message>
 </context>
 <context>
@@ -4602,7 +4605,9 @@ Novo link simbólico:
         <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
 
 Please reach out to us for support at: {support_url}</source>
-        <translation type="unfinished" />
+        <translation>Erro: Todds não foi encontrado. Se você estiver fugindo da fonte, verifique se você seguiu as etapas corretas no  
+
+Entre em contato conosco para obter suporte em: {support_url} {development_guide_url}</translation>
     </message>
 </context>
 <context>
