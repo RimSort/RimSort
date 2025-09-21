@@ -1231,7 +1231,7 @@ Are your game configuration paths correct?</source>
     </message>
     <message>
         <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
-        <translation>成功删除Steamcmd ACF数据文件：{Steamcmd_appworkshop_acf_path}</translation>
+        <translation>成功删除Steamcmd ACF数据文件： {steamcmd_appworkshop_acf_path}</translation>
     </message>
     <message>
         <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
@@ -2581,7 +2581,7 @@ The process may take a few moments to complete.</source>
     </message>
     <message>
         <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.strerror或'未知错误'}发生在{e.filename或mod_path}带有错误代码{error_code}的{e.filename或mod_path}。</translation>
+        <translation>发生在带有错误代码{error_code}的。 {e.strerror or 'Unknown error'} {e.filename or mod_path}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -2614,9 +2614,9 @@ This operation will:
 Do you want to proceed?</source>
         <translation>此操作将：
 •从您的文件系统中删除所选的mod目录
-•{Action_capitalized}蒸汽车间Mods来自您的Steam帐户
+•蒸汽车间Mods来自您的Steam帐户
 
-你想继续吗？</translation>
+你想继续吗？ {action_capitalized}</translation>
     </message>
 </context>
 <context>

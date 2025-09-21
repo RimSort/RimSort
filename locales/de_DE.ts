@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Geladen {count} Elemente |Zuletzt aktualisiert: {Zeit}</translation>
+        <translation>Geladen {count} Elemente |Zuletzt aktualisiert:  {time}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
@@ -129,11 +129,11 @@
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Ungültiger Dateipfad für den Export: {Datei_Path}</translation>
+        <translation>Ungültiger Dateipfad für den Export:  {file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation>Erfolgreich exportiert ACF in {Datei_Path}</translation>
+        <translation>Erfolgreich exportiert ACF in  {file_path}</translation>
     </message>
     <message>
         <source>Export Success</source>
@@ -317,11 +317,11 @@ Bitte überprüfen Sie Ihre Einstellungen und versuchen Sie es erneut.</translat
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
-        <translation>Suche fehlgeschlagen: {error_msg [: 100]} ...</translation>
+        <translation>Suche fehlgeschlagen:  ... {error_msg[:100]}</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {rowCount} results visible</source>
-        <translation>Filter: {Visible_rows} von {rowCount} -Ergebnis sichtbar</translation>
+        <translation>Filter:  von {rowCount} -Ergebnis sichtbar {visible_rows}</translation>
     </message>
     <message>
         <source>Location Not Set</source>
@@ -526,11 +526,11 @@ Suchen Sie beim Deaktivieren alle Dateitypen mit Standardsuche.</translation>
     </message>
     <message>
         <source>Filter: {visible_rows} of {total_rows} results visible</source>
-        <translation>Filter: {Visible_rows} von {Total_rows} Ergebnis sichtbar</translation>
+        <translation>Filter:  von  Ergebnis sichtbar {total_rows} {visible_rows}</translation>
     </message>
     <message>
         <source>Found {total_rows} results</source>
-        <translation>Gefunden {Total_rows} Ergebnisse</translation>
+        <translation>Gefunden  Ergebnisse {total_rows}</translation>
     </message>
     <message>
         <source>Right-click a result for actions</source>
@@ -738,7 +738,7 @@ Möchten Sie jetzt aktualisieren?</translation>
 {rentry_uploader.url}</source>
         <translation>Hochgeladene Aktive Mod List Report an Rentry.co!Die URL wurde in Ihre Zwischenablage kopiert:
 
-{Rentry_Uploader.url}</translation>
+ {rentry_uploader.url}</translation>
     </message>
     <message>
         <source>Failed to upload</source>
@@ -754,7 +754,7 @@ Möchten Sie jetzt aktualisieren?</translation>
     </message>
     <message>
         <source>{directory_name} path does not exist or is not set.</source>
-        <translation>{Directory_Name} Pfad existiert nicht oder ist nicht festgelegt.</translation>
+        <translation>Pfad existiert nicht oder ist nicht festgelegt. {directory_name}</translation>
     </message>
     <message>
         <source>Would you like to set the path now?</source>
@@ -774,7 +774,7 @@ Möchten Sie jetzt aktualisieren?</translation>
     </message>
     <message>
         <source>File: {path}</source>
-        <translation>Datei: {Path}</translation>
+        <translation>Datei:  {path}</translation>
     </message>
     <message>
         <source>Uploading {path.name} to 0x0.st...</source>
@@ -908,8 +908,8 @@ Möchten Sie jetzt aktualisieren?</translation>
     <message>
         <source>File: {file_path}
 Error: {e}</source>
-        <translation>Datei: {Datei_Path}
-Fehler: {e}</translation>
+        <translation>Datei: 
+Fehler: {e} {file_path}</translation>
     </message>
     <message>
         <source>The selected file does not exist.</source>
@@ -917,7 +917,7 @@ Fehler: {e}</translation>
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation>Datei: {Datei_Path}</translation>
+        <translation>Datei:  {file_path}</translation>
     </message>
     <message>
         <source>Unsupported Compression Method</source>
@@ -965,13 +965,11 @@ How would you like to proceed?
 1) Overwrite All — Replace all existing files and directories.
 2) Skip Existing — Extract only new files and leave existing ones untouched.
 3) Cancel — Abort the extraction.</source>
-        <translation>{constricts_list}
-
-Wie möchten Sie fortfahren?
+        <translation>Wie möchten Sie fortfahren?
 
 1) Alle überschreiben - ersetzen Sie alle vorhandenen Dateien und Verzeichnisse.
 2) Überspringen - extrahieren Sie nur neue Dateien und lassen Sie vorhandene unberührt.
-3) Stornieren - die Extraktion abbrechen.</translation>
+3) Stornieren - die Extraktion abbrechen. {conflicts_list}</translation>
     </message>
     <message>
         <source>Extraction completed</source>
@@ -1099,13 +1097,13 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
 - Ausnahmen werden nicht rekursiv aktualisiert.Stattdessen werden sie mit Bs Schlüssel vollständig überschrieben.
 - Die folgenden Ausnahmen werden gemacht:
 
-{Db_builder_recurse_exceptions}
+
 
 Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert.Sie werden für diese Pfade in Ordnung aufgefordert:
 
 1) Wählen Sie Eingabe A (DB-zu-updatiert) auswählen
 2) Eingabe B (Quelle aktualisieren) auswählen
-3) Ausgang C (resultierende DB) Wählen Sie</translation>
+3) Ausgang C (resultierende DB) Wählen Sie {DB_BUILDER_RECURSE_EXCEPTIONS}</translation>
     </message>
     <message>
         <source>Failed to read existing database</source>
@@ -1117,7 +1115,7 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
     </message>
     <message>
         <source>Path: {path}</source>
-        <translation>Pfad: {Path}</translation>
+        <translation>Pfad:  {path}</translation>
     </message>
     <message>
         <source>RimSort - DB Builder</source>
@@ -1131,9 +1129,9 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
         <source>This operation will overwrite the {rules_source} database located at the following path:
 
 {path}</source>
-        <translation>Diese Operation überschreibt die Datenbank {Rules_Source}, die sich am folgenden Pfad befindet:
+        <translation>Diese Operation überschreibt die Datenbank , die sich am folgenden Pfad befindet:
 
-{Weg}</translation>
+ {rules_source} {path}</translation>
     </message>
     <message>
         <source>Edit SteamDB expiry:</source>
@@ -1161,11 +1159,11 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
     </message>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>Ein Update auf RIMSORT wurde veröffentlicht: {neuest_tag_name}</translation>
+        <translation>Ein Update auf RIMSORT wurde veröffentlicht:  {latest_tag_name}</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Es gab keine gültige RIMSORT -Version für {System_info} zu finden</translation>
+        <translation>Es gab keine gültige RIMSORT -Version für  zu finden {system_info}</translation>
     </message>
     <message>
         <source>Unable to retrieve release information</source>
@@ -1173,11 +1171,11 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
     </message>
     <message>
         <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Es gab keine Verbindung zu Github API: {Fehler}</translation>
+        <translation>Es gab keine Verbindung zu Github API:  {error}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
-        <translation>Herunterladen rimsort {Tag_Name} Release ...</translation>
+        <translation>Herunterladen rimsort  Release ... {tag_name}</translation>
     </message>
     <message>
         <source>Failed to launch update</source>
@@ -1229,7 +1227,7 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
     </message>
     <message>
         <source>Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}</source>
-        <translation>Erfolgreich gelöschtes SteamCMD -ACF -Datendatei: {Steamcmd_Appworkshop_acf_path}</translation>
+        <translation>Erfolgreich gelöschtes SteamCMD -ACF -Datendatei:  {steamcmd_appworkshop_acf_path}</translation>
     </message>
     <message>
         <source>ACF data file will be recreated when you download mods using steamcmd next time.</source>
@@ -1278,7 +1276,7 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
         <source>Errors occurred while checking for updates:
 {errors}</source>
         <translation>Bei der Überprüfung von Updates traten Fehler auf:
-{Fehler}</translation>
+ {errors}</translation>
     </message>
     <message>
         <source>No updates found</source>
@@ -1347,7 +1345,7 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
     </message>
     <message>
         <source>{success} succeeded, {failed} failed out of {total}.</source>
-        <translation>{Erfolg} erfolgreich, {fehlgeschlagen} scheiterte aus {Total}.</translation>
+        <translation>erfolgreich,  scheiterte aus . {total} {success} {failed}</translation>
     </message>
     <message>
         <source>No repositories provided for push operation.</source>
@@ -1454,7 +1452,7 @@ Ziel: {dest}</translation>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
-        <translation>{repo_Folder} &lt;br/&gt; Wie möchten Sie damit umgehen?Wählen Sie Option: &lt;br/&gt; &lt;br/&gt; 1) Klon neues Repository (löscht vorhanden und ersetzt) ​​&lt;br/&gt; 2) Aktualisieren Sie das vorhandene Repository (In-Place-Force-Update).</translation>
+        <translation>&lt;br/&gt; Wie möchten Sie damit umgehen?Wählen Sie Option: &lt;br/&gt; &lt;br/&gt; 1) Klon neues Repository (löscht vorhanden und ersetzt) ​​&lt;br/&gt; 2) Aktualisieren Sie das vorhandene Repository (In-Place-Force-Update). {repo_folder}</translation>
     </message>
     <message>
         <source>Clone new</source>
@@ -1526,7 +1524,7 @@ Ein gültiges Repository ist eine Repository -URL, die nicht leer ist und mit "h
         <source>URL: {repo_url}
 Error: {error}</source>
         <translation>URL: {repo_url}
-Fehler: {Fehler}</translation>
+Fehler:  {error}</translation>
     </message>
     <message>
         <source>GitHub credentials missing</source>
@@ -1566,9 +1564,9 @@ Fehler: {Fehler}</translation>
 Repository:
 {repo_url}</source>
         <translation>Datei nicht gefunden:
-{File_full_path}
+
 Repository:
-{repo_url}</translation>
+{repo_url} {file_full_path}</translation>
     </message>
     <message>
         <source>Invalid database</source>
@@ -1580,7 +1578,7 @@ Repository:
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation>Datei: {Datei_Path}</translation>
+        <translation>Datei:  {file_path}</translation>
     </message>
     <message>
         <source>Database parse error</source>
@@ -1784,7 +1782,7 @@ Error: {error}</source>
 
 Sie können manuell eine Pull -Anfrage auf GitHub erstellen.
 
-Fehler: {Fehler}</translation>
+Fehler:  {error}</translation>
     </message>
     <message>
         <source>Upload Steam Workshop Database</source>
@@ -1887,7 +1885,7 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
     </message>
     <message>
         <source>Clone instance [{existing_instance_name}]</source>
-        <translation>Clone Instance [{vorhandene_instance_name}]</translation>
+        <translation>Clone Instance [] {existing_instance_name}</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
@@ -1901,17 +1899,17 @@ RimSort can copy all of your Workshop mods to the new instance's local mods fold
 Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
 
 How would you like to proceed?</source>
-        <translation>Workshop -Ordner: {vorhanden_instance_workshop_Folder}}
+        <translation>Workshop -Ordner: }
 
 RIMSORT kann alle Ihre Workshop -Mods in den lokalen Mods -Ordner der neuen Instanz kopieren.Dadurch werden vorhandene Steam -Client -Mods effektiv in SteamCMD -Mods umgewandelt, die Sie dann in der neuen Instanz verwalten können.
 
 Alternativ können Sie Ihre alte Dampf -Workshop -Ordnerpräferenz beibehalten.Sie können dies immer später in den Einstellungen ändern.
 
-Wie möchten Sie fortfahren?</translation>
+Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>Compressing [{Instance_name}] Instanzordner zum Archivieren ...</translation>
+        <translation>Compressing [] Instanzordner zum Archivieren ... {instance_name}</translation>
     </message>
     <message>
         <source>Error compressing instance</source>
@@ -1943,7 +1941,7 @@ Wie möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>Instanzordner existiert bereits: {Instance_foler_path}</translation>
+        <translation>Instanzordner existiert bereits:  {instance_folder_path}</translation>
     </message>
     <message>
         <source>Do you want to continue and replace the existing instance folder?</source>
@@ -1955,7 +1953,7 @@ Wie möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Restoring instance [{name}] from archive...</source>
-        <translation>Wiederherstellung Instanz [{Name}] aus Archiv ...</translation>
+        <translation>Wiederherstellung Instanz [] aus Archiv ... {name}</translation>
     </message>
     <message>
         <source>Invalid instance folder paths</source>
@@ -1967,7 +1965,7 @@ Wie möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Invalid paths: {path}</source>
-        <translation>Ungültige Pfade: {Path}</translation>
+        <translation>Ungültige Pfade:  {path}</translation>
     </message>
     <message>
         <source>Couldn't restore steamcmd symlink/junction</source>
@@ -1979,7 +1977,7 @@ Wie möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>Bei der Wiederherstellung von Instanz [{Instance_Controller.instance.Name}] trat ein Fehler auf.</translation>
+        <translation>Bei der Wiederherstellung von Instanz [] trat ein Fehler auf. {instance_controller.instance.name}</translation>
     </message>
     <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
@@ -1991,7 +1989,7 @@ Wie möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>Workshop -Mods Ordner unter [{vorhanden_instance_workshop_Folder}] nicht gefunden.</translation>
+        <translation>Workshop -Mods Ordner unter [] nicht gefunden. {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Error cloning instance</source>
@@ -2329,12 +2327,12 @@ Zurück auf zwischengespeicherte, aber abgelaufene Steam -Datenbank ...</transla
     </message>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation>Rimsort kann die Spielversion nicht auf dem erwarteten Pfad erhalten: [{Version_File_Path}].</translation>
+        <translation>Rimsort kann die Spielversion nicht auf dem erwarteten Pfad erhalten: []. {version_file_path}</translation>
     </message>
     <message>
         <source>
 Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation>Ist Ihr Spielpfad {Ordner} richtig eingestellt?Im Spiel Install -Verzeichnis sollte es eine Version.txt -Datei geben.</translation>
+        <translation>Ist Ihr Spielpfad  richtig eingestellt?Im Spiel Install -Verzeichnis sollte es eine Version.txt -Datei geben. {folder}</translation>
     </message>
 </context>
 <context>
@@ -2529,7 +2527,7 @@ Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Steam {action}</source>
-        <translation>Steam {Aktion}</translation>
+        <translation>Steam  {action}</translation>
     </message>
     <message>
         <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
@@ -2539,7 +2537,7 @@ Der Vorgang kann einige Momente dauern, bis der Vorgang abgeschlossen ist.</tran
     </message>
     <message>
         <source>{action} Error</source>
-        <translation>{Aktion} Fehler</translation>
+        <translation>Fehler {action}</translation>
     </message>
     <message>
         <source>unsubscribe</source>
@@ -2571,11 +2569,11 @@ Der Vorgang kann einige Momente dauern, bis der Vorgang abgeschlossen ist.</tran
     </message>
     <message>
         <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.Strerror oder 'unbekannter Fehler'} trat bei {E.filename oder mod_path} mit dem Fehlercode {error_code} auf.</translation>
+        <translation>trat bei  mit dem Fehlercode {error_code} auf. {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
-        <translation>Sie haben ausgewählt {Selected_count} Mod (s) für die vollständige Löschung.</translation>
+        <translation>Sie haben ausgewählt  Mod (s) für die vollständige Löschung. {selected_count}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
@@ -2593,7 +2591,7 @@ Der Vorgang kann einige Momente dauern, bis der Vorgang abgeschlossen ist.</tran
         <source>You have selected {selected_count} mod(s) for deletion.
 {steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
         <translation>Sie haben {selected_count} mod (s) für das Löschen ausgewählt.
-{Steam_count} davon sind Steam Workshop -Mods, die auch {action_past} sind.</translation>
+ davon sind Steam Workshop -Mods, die auch {action_past} sind. {steam_count}</translation>
     </message>
     <message>
         <source>
@@ -2625,378 +2623,379 @@ Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation type="unfinished" />
+        <translation>Autoren:</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation type="unfinished" />
+        <translation>Modversion:</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation type="unfinished" />
+        <translation>Unterstützte Version:</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation type="unfinished" />
+        <translation>Weg:</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation type="unfinished" />
+        <translation>Willkommen bei Rimsort!</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation type="unfinished" />
+        <translation>Ordnergröße:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation type="unfinished" />
+        <translation>Zuletzt berührt:</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation type="unfinished" />
+        <translation>Dateisystem geändert:</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation type="unfinished" />
+        <translation>Workshop -Zeiten:</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation type="unfinished" />
+        <translation>Setzen Sie hier Ihre persönlichen Mod -Notizen!</translation>
     </message>
 </context>
 <context>
     <name>ModListItemInner</name>
     <message>
         <source>Contains custom C# assemblies (custom code)</source>
-        <translation type="unfinished" />
+        <translation>Enthält benutzerdefinierte C# -Anbaugruppen (benutzerdefinierter Code)</translation>
     </message>
     <message>
         <source>Contains custom content (textures / XML)</source>
-        <translation type="unfinished" />
+        <translation>Enthält benutzerdefinierte Inhalte (Texturen / XML)</translation>
     </message>
     <message>
         <source>Local mod that contains a git repository</source>
-        <translation type="unfinished" />
+        <translation>Lokaler Mod, das ein Git -Repository enthält</translation>
     </message>
     <message>
         <source>Local mod that can be used with SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Lokaler Mod, der mit SteamCMD verwendet werden kann</translation>
     </message>
     <message>
         <source>Official RimWorld content by Ludeon Studios</source>
-        <translation type="unfinished" />
+        <translation>Offizielle Rimworld -Inhalte von Ludon Studios</translation>
     </message>
     <message>
         <source>Installed locally</source>
-        <translation type="unfinished" />
+        <translation>Lokal installiert</translation>
     </message>
     <message>
         <source>Subscribed via Steam</source>
-        <translation type="unfinished" />
+        <translation>Über Dampf abonniert</translation>
     </message>
     <message>
         <source>Not in latest save</source>
-        <translation type="unfinished" />
+        <translation>Nicht im letzten Speichern</translation>
     </message>
     <message>
         <source>In latest save</source>
-        <translation type="unfinished" />
+        <translation>Im letzten Speicher</translation>
     </message>
 </context>
 <context>
     <name>ModListWidget</name>
     <message>
         <source>Open folder</source>
-        <translation type="unfinished" />
+        <translation>Ordner öffnen</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
-        <translation type="unfinished" />
+        <translation>Offene URL im Browser</translation>
     </message>
     <message>
         <source>Copy URL to clipboard</source>
-        <translation type="unfinished" />
+        <translation>Kopieren Sie die URL in die Zwischenablage</translation>
     </message>
     <message>
         <source>Open mod in Steam</source>
-        <translation type="unfinished" />
+        <translation>MOD in Dampf öffnen</translation>
     </message>
     <message>
         <source>Convert local mod to SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Konvertieren Sie den lokalen Mod in SteamCMD</translation>
     </message>
     <message>
         <source>Convert SteamCMD mod to local</source>
-        <translation type="unfinished" />
+        <translation>Konvertieren Sie SteamCMD MOD in Lokal</translation>
     </message>
     <message>
         <source>Re-download mod with SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Mod mit SteamCMD neu herunter</translation>
     </message>
     <message>
         <source>Update mod with git</source>
-        <translation type="unfinished" />
+        <translation>Modod mit Git aktualisieren</translation>
     </message>
     <message>
         <source>Convert Steam mod to local</source>
-        <translation type="unfinished" />
+        <translation>Dampfmod in lokale Konvertierung konvertieren</translation>
     </message>
     <message>
         <source>Re-subscribe mod with Steam</source>
-        <translation type="unfinished" />
+        <translation>Verschreiben Sie Mod mit Dampf erneut</translation>
     </message>
     <message>
         <source>Unsubscribe mod with Steam</source>
-        <translation type="unfinished" />
+        <translation>MOD mit Dampf abmelden</translation>
     </message>
     <message>
         <source>Remove mod from SteamDB blacklist</source>
-        <translation type="unfinished" />
+        <translation>Entfernen Sie den Mod von SteamDB Blacklist</translation>
     </message>
     <message>
         <source>Add mod to SteamDB blacklist</source>
-        <translation type="unfinished" />
+        <translation>Fügen Sie Mod in SteamDB Blacklist hinzu</translation>
     </message>
     <message>
         <source>Copy packageId to clipboard</source>
-        <translation type="unfinished" />
+        <translation>Kopieren Sie PackageID in Zwischenablage</translation>
     </message>
     <message>
         <source>Edit mod with Rule Editor</source>
-        <translation type="unfinished" />
+        <translation>MOD mit Regel Editor bearbeiten</translation>
     </message>
     <message>
         <source>Toggle warning</source>
-        <translation type="unfinished" />
+        <translation>Warnung umschalten</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie die Ordner (en)</translation>
     </message>
     <message>
         <source>Open URL(s) in browser</source>
-        <translation type="unfinished" />
+        <translation>Offene URL (en) im Browser</translation>
     </message>
     <message>
         <source>Convert local mod(s) to SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Konvertieren Sie lokale Mods in SteamCMD</translation>
     </message>
     <message>
         <source>Convert SteamCMD mod(s) to local</source>
-        <translation type="unfinished" />
+        <translation>Konvertieren Sie SteamCMD -Mods in lokal</translation>
     </message>
     <message>
         <source>Re-download mod(s) with SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Mods mit SteamCMD neu herunter</translation>
     </message>
     <message>
         <source>Update mod(s) with git</source>
-        <translation type="unfinished" />
+        <translation>Aktualisieren Sie Mods mit Git</translation>
     </message>
     <message>
         <source>Toggle warning(s)</source>
-        <translation type="unfinished" />
+        <translation>WARNUNG (S) umschalten</translation>
     </message>
     <message>
         <source>Convert Steam mod(s) to local</source>
-        <translation type="unfinished" />
+        <translation>Dampfmods in lokal umwandeln</translation>
     </message>
     <message>
         <source>Re-subscribe mod(s) with Steam</source>
-        <translation type="unfinished" />
+        <translation>Verschreiben Sie Mods mit Dampf erneut</translation>
     </message>
     <message>
         <source>Unsubscribe mod(s) with Steam</source>
-        <translation type="unfinished" />
+        <translation>Mod (s) mit Dampf abbestellen</translation>
     </message>
     <message>
         <source>Miscellaneous options</source>
-        <translation type="unfinished" />
+        <translation>Verschiedene Optionen</translation>
     </message>
     <message>
         <source>Clipboard options</source>
-        <translation type="unfinished" />
+        <translation>Zwischenablageoptionen</translation>
     </message>
     <message>
         <source>Workshop mods options</source>
-        <translation type="unfinished" />
+        <translation>Workshop -Mods Optionen</translation>
     </message>
     <message>
         <source>Are you sure?</source>
-        <translation type="unfinished">Bist du sicher?</translation>
+        <translation>Bist du sicher?</translation>
     </message>
     <message>
         <source>You have selected {len} git mods to be updated.</source>
-        <translation type="unfinished" />
+        <translation>Sie haben {len} git mods ausgewählt, um aktualisiert zu werden.</translation>
     </message>
     <message>
         <source>Do you want to proceed?</source>
-        <translation type="unfinished" />
+        <translation>Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for deletion + re-download.</source>
-        <translation type="unfinished" />
+        <translation>Sie haben {len} -Mods für das Löschen + Wiederbelastung ausgewählt.</translation>
     </message>
     <message>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
-        <translation type="unfinished" />
+        <translation>Dieser Vorgang löscht rekursiv alle Mod-Dateien, mit Ausnahme der gefundenen .dds-Texturen und versuchen, die Mods über SteamCMD neu herunterzuladen. Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation type="unfinished" />
+        <translation>Sie haben {len} mods für Abmeldung + erneut abgeschrieben.</translation>
     </message>
     <message>
         <source>You have selected {len} mods for unsubscribe.</source>
-        <translation type="unfinished" />
+        <translation>Sie haben {len} Mods für Abmeldung ausgewählt.</translation>
     </message>
     <message>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
-        <translation type="unfinished" />
+        <translation>Dieser Vorgang löscht möglicherweise .DDS -Texturen übrig. Dampf ist dafür unzuverlässig. Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>
 Do you want to proceed?</source>
-        <translation type="unfinished" />
+        <translation>Möchten Sie fortfahren?</translation>
     </message>
     <message>
         <source>Add comment</source>
-        <translation type="unfinished" />
+        <translation>Kommentar hinzufügen</translation>
     </message>
     <message>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
-        <translation type="unfinished" />
+        <translation>Geben Sie einen Kommentar ein, das Ihre Argumentation für die schwarze Liste dieses Mods enthält:</translation>
     </message>
     <message>
         <source>Unable to add to blacklist</source>
-        <translation type="unfinished" />
+        <translation>Die schwarze Liste nicht hinzufügen</translation>
     </message>
     <message>
         <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
-        <translation type="unfinished" />
+        <translation>Der Kommentar wurde nicht abgeliefert oder der Eintrag wurde abgesagt. Für diese Aktion sind Kommentare erforderlich!</translation>
     </message>
     <message>
         <source>This will remove the selected mod, </source>
-        <translation type="unfinished" />
+        <translation>Dadurch wird der ausgewählte Mod entfernt,</translation>
     </message>
     <message>
         <source>
 Missing Dependencies:</source>
-        <translation type="unfinished" />
+        <translation>Fehlende Abhängigkeiten:</translation>
     </message>
     <message>
         <source>
 Incompatibilities:</source>
-        <translation type="unfinished" />
+        <translation>Inkompatibilitäten:</translation>
     </message>
     <message>
         <source>
 Should be Loaded After:</source>
-        <translation type="unfinished" />
+        <translation>Sollte nach:</translation>
     </message>
     <message>
         <source>
 Should be Loaded Before:</source>
-        <translation type="unfinished" />
+        <translation>Sollte vorher geladen werden:</translation>
     </message>
     <message>
         <source>Change mod color</source>
-        <translation type="unfinished" />
+        <translation>MOD -Farbe ändern</translation>
     </message>
     <message>
         <source>Reset mod color</source>
-        <translation type="unfinished" />
+        <translation>MOD -Farbe zurücksetzen</translation>
     </message>
     <message>
         <source>
 Mod and Game Version Mismatch</source>
-        <translation type="unfinished" />
+        <translation>MOD- und Spielversionsfehlanpassung</translation>
     </message>
     <message>
         <source>
 An alternative updated mod is recommended:
 {alternative}</source>
-        <translation type="unfinished" />
+        <translation>Ein alternativ aktualisierter Mod wird empfohlen:
+ {alternative}</translation>
     </message>
     <message>
         <source>
 Alternative Dependencies:</source>
-        <translation type="unfinished" />
+        <translation>Alternative Abhängigkeiten:</translation>
     </message>
     <message>
         <source>Open folder in text editor</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie den Ordner im Texteditor</translation>
     </message>
     <message>
         <source>Open folder(s) in text editor</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie die Ordner (en) im Texteditor</translation>
     </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
     <message>
         <source>Update mods</source>
-        <translation type="unfinished" />
+        <translation>Mods aktualisieren</translation>
     </message>
     <message>
         <source>Update all</source>
-        <translation type="unfinished" />
+        <translation>Alle aktualisieren</translation>
     </message>
 </context>
 <context>
     <name>ModsPanel</name>
     <message>
         <source>Showing All Mods</source>
-        <translation type="unfinished" />
+        <translation>Alle Mods zeigen</translation>
     </message>
     <message>
         <source>Showing Core and DLC</source>
-        <translation type="unfinished" />
+        <translation>Core und DLC zeigen</translation>
     </message>
     <message>
         <source>Showing Local Mods</source>
-        <translation type="unfinished" />
+        <translation>Lokale Mods zeigen</translation>
     </message>
     <message>
         <source>Showing Git Mods</source>
-        <translation type="unfinished" />
+        <translation>Git -Mods zeigen</translation>
     </message>
     <message>
         <source>Showing SteamCMD Mods</source>
-        <translation type="unfinished" />
+        <translation>Anzeigen von SteamCMD -Mods</translation>
     </message>
     <message>
         <source>Showing Steam Mods</source>
-        <translation type="unfinished" />
+        <translation>Dampfmods zeigen</translation>
     </message>
     <message>
         <source>Showing All Mod Types</source>
-        <translation type="unfinished" />
+        <translation>Alle Mod -Typen anzeigen</translation>
     </message>
     <message>
         <source>Showing C# Mods</source>
-        <translation type="unfinished" />
+        <translation>C# mods zeigen</translation>
     </message>
     <message>
         <source>Showing XML Mods</source>
-        <translation type="unfinished" />
+        <translation>XML -Mods zeigen</translation>
     </message>
     <message>
         <source>Hide Filter Disabled</source>
-        <translation type="unfinished" />
+        <translation>Filter ausblenden deaktiviert</translation>
     </message>
     <message>
         <source>Active [0]</source>
-        <translation type="unfinished" />
+        <translation>Aktiv [0]</translation>
     </message>
     <message>
         <source>Hide Filter Enabled</source>
-        <translation type="unfinished" />
+        <translation>Filter ausblenden aktiviert</translation>
     </message>
     <message>
         <source>Inactive [0]</source>
-        <translation type="unfinished" />
+        <translation>Inaktiv [0]</translation>
     </message>
     <message>
         <source>Modified Time</source>
@@ -3032,993 +3031,997 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Search by...</source>
-        <translation type="unfinished" />
+        <translation>Suche nach ...</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Name</translation>
+        <translation>Name</translation>
     </message>
     <message>
         <source>PackageId</source>
-        <translation type="unfinished">PackageId</translation>
+        <translation>PackageId</translation>
     </message>
     <message>
         <source>Author(s)</source>
-        <translation type="unfinished" />
+        <translation>Autor (en)</translation>
     </message>
     <message>
         <source>PublishedFileId</source>
-        <translation type="unfinished" />
+        <translation>PublishedFileId</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished" />
+        <translation>Version</translation>
     </message>
     <message>
         <source>0 warnings</source>
-        <translation type="unfinished" />
+        <translation>0 Warnungen</translation>
     </message>
     <message>
         <source>Click to only show mods with warnings</source>
-        <translation type="unfinished" />
+        <translation>Klicken Sie hier, um nur Mods mit Warnungen anzuzeigen</translation>
     </message>
     <message>
         <source>Click to only show mods with errors</source>
-        <translation type="unfinished" />
+        <translation>Klicken Sie hier, um nur Mods mit Fehlern anzuzeigen</translation>
     </message>
     <message>
         <source>Check "Use This Instead" Database</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen Sie die Datenbank "Verwenden Sie diese stattdessen"</translation>
     </message>
     <message>
         <source>Check Dependencies</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen Sie die Abhängigkeiten</translation>
     </message>
     <message>
         <source>{padding}{num_warnings} warning(s)</source>
-        <translation type="unfinished" />
+        <translation>{padding} {num_warnings} Warnung (s)</translation>
     </message>
     <message>
         <source>{padding}{num_errors} error(s)</source>
-        <translation type="unfinished" />
+        <translation>{padding} {num_errors} fehler (s)</translation>
     </message>
     <message>
         <source>0 errors</source>
-        <translation type="unfinished" />
+        <translation>0 Fehler</translation>
     </message>
     <message>
         <source>Active</source>
-        <translation type="unfinished" />
+        <translation>Aktiv</translation>
     </message>
     <message>
         <source>Inactive</source>
-        <translation type="unfinished" />
+        <translation>Inaktiv</translation>
     </message>
     <message>
         <source>Sort inactive mods by</source>
-        <translation type="unfinished" />
+        <translation>Inaktive Mods sortieren nach</translation>
     </message>
     <message>
         <source>0 new</source>
-        <translation type="unfinished" />
+        <translation>0 Neu</translation>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
-        <translation type="unfinished" />
+        <translation>Klicken Sie hier, um nur aktive Mods nicht in der neuesten Speicherung anzeigen</translation>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation type="unfinished" />
+        <translation>{padding} {count} neu</translation>
     </message>
 </context>
 <context>
     <name>PlayerLogTab</name>
     <message>
         <source>File Info</source>
-        <translation type="unfinished" />
+        <translation>Dateiinformationen</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation type="unfinished" />
+        <translation>Weg:</translation>
     </message>
     <message>
         <source>Size:</source>
-        <translation type="unfinished" />
+        <translation>Größe:</translation>
     </message>
     <message>
         <source>Modified:</source>
-        <translation type="unfinished" />
+        <translation>Modifiziert:</translation>
     </message>
     <message>
         <source>Statistics</source>
-        <translation type="unfinished" />
+        <translation>Statistiken</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
-        <translation type="unfinished" />
+        <translation>Gesamtlinien:  {total_lines}</translation>
     </message>
     <message>
         <source>Infos: {infos}</source>
-        <translation type="unfinished" />
+        <translation>Infos:  {infos}</translation>
     </message>
     <message>
         <source>Keybinds: {keybinds}</source>
-        <translation type="unfinished" />
+        <translation>Schlüsselbindungen:  {keybinds}</translation>
     </message>
     <message>
         <source>Mod Issues: {mod_issues}</source>
-        <translation type="unfinished" />
+        <translation>MOD -Ausgaben: {mod_issues}</translation>
     </message>
     <message>
         <source>Warnings: {warnings}</source>
-        <translation type="unfinished" />
+        <translation>Warnungen:  {warnings}</translation>
     </message>
     <message>
         <source>Errors: {errors}</source>
-        <translation type="unfinished" />
+        <translation>Fehler:  {errors}</translation>
     </message>
     <message>
         <source>Exceptions: {exceptions}</source>
-        <translation type="unfinished" />
+        <translation>Ausnahmen:  {exceptions}</translation>
     </message>
     <message>
         <source>All Issues: {all_issues}</source>
-        <translation type="unfinished" />
+        <translation>Alle Ausgaben:  {all_issues}</translation>
     </message>
     <message>
         <source>Auto Load Game Log on Startup</source>
-        <translation type="unfinished" />
+        <translation>Auto -Load -Spiele -Protokoll beim Start</translation>
     </message>
     <message>
         <source>If checked, the Game log will be loaded automatically on startup.</source>
-        <translation type="unfinished" />
+        <translation>Wenn es überprüft wird, wird das Spielprotokoll automatisch beim Start geladen.</translation>
     </message>
     <message>
         <source>Enable Real-Time Log Monitoring</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie die Echtzeit-Protokollüberwachung</translation>
     </message>
     <message>
         <source>Enable real-time monitoring of Player.log file changes.</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie die Echtzeitüberwachung der Änderungen von Player.log-Dateien.</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Aktualisieren</translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation type="unfinished">Export</translation>
+        <translation>Export</translation>
     </message>
     <message>
         <source>Clear Log Display</source>
-        <translation type="unfinished" />
+        <translation>Protokollanzeige löschen</translation>
     </message>
     <message>
         <source>Load Game Log</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie das Spielprotokoll</translation>
     </message>
     <message>
         <source>Loads the game's Player.log file.</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie die Player.log -Datei des Spiels.</translation>
     </message>
     <message>
         <source>Load Log from File</source>
-        <translation type="unfinished" />
+        <translation>Protokoll aus der Datei laden</translation>
     </message>
     <message>
         <source>Open a file dialog to select a log file</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie ein Dateidialog, um eine Protokolldatei auszuwählen</translation>
     </message>
     <message>
         <source>Load Log from Link</source>
-        <translation type="unfinished" />
+        <translation>Lastprotokoll aus Link laden</translation>
     </message>
     <message>
         <source>Load log content from a URL</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Protokollinhalte aus einer URL</translation>
     </message>
     <message>
         <source>Search and Filter</source>
-        <translation type="unfinished" />
+        <translation>Suche und Filter</translation>
     </message>
     <message>
         <source>Search log entries...</source>
-        <translation type="unfinished" />
+        <translation>Suchprotokolleinträge ...</translation>
     </message>
     <message>
         <source>All Entries</source>
-        <translation type="unfinished" />
+        <translation>Alle Einträge</translation>
     </message>
     <message>
         <source>Infos Only</source>
-        <translation type="unfinished" />
+        <translation>Nur Infos</translation>
     </message>
     <message>
         <source>Keybinds Only</source>
-        <translation type="unfinished" />
+        <translation>Nur Schlüsselbindungen</translation>
     </message>
     <message>
         <source>Mod Issues</source>
-        <translation type="unfinished" />
+        <translation>MOD -Probleme</translation>
     </message>
     <message>
         <source>Warnings Only</source>
-        <translation type="unfinished" />
+        <translation>Nur Warnungen</translation>
     </message>
     <message>
         <source>Errors Only</source>
-        <translation type="unfinished" />
+        <translation>Nur Fehler</translation>
     </message>
     <message>
         <source>Exceptions Only</source>
-        <translation type="unfinished" />
+        <translation>Nur Ausnahmen</translation>
     </message>
     <message>
         <source>All Issues</source>
-        <translation type="unfinished" />
+        <translation>Alle Probleme</translation>
     </message>
     <message>
         <source>Filter by mod name...</source>
-        <translation type="unfinished" />
+        <translation>Filter mit Modname ...</translation>
     </message>
     <message>
         <source>Highlight Color</source>
-        <translation type="unfinished" />
+        <translation>Farbe hervorheben</translation>
     </message>
     <message>
         <source>Pick color for search and navigation highlighting</source>
-        <translation type="unfinished" />
+        <translation>Wählen Sie Farbe für Such- und Navigation hervorgehoben</translation>
     </message>
     <message>
         <source>Previous</source>
-        <translation type="unfinished" />
+        <translation>Vorherige</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished" />
+        <translation>Nächste</translation>
     </message>
     <message>
         <source>Quick Navigation</source>
-        <translation type="unfinished" />
+        <translation>Schnelle Navigation</translation>
     </message>
     <message>
         <source>Scroll to End</source>
-        <translation type="unfinished" />
+        <translation>Scrollen, um zu enden</translation>
     </message>
     <message>
         <source>Scroll to the end of the log display</source>
-        <translation type="unfinished" />
+        <translation>Scrollen Sie bis zum Ende der Protokollanzeige</translation>
     </message>
     <message>
         <source>Path: Loaded from URL: {url}</source>
-        <translation type="unfinished" />
+        <translation>Pfad: geladen aus der URL: {url}</translation>
     </message>
     <message>
         <source>Path: Loaded from URL</source>
-        <translation type="unfinished" />
+        <translation>Pfad: Von der URL geladen</translation>
     </message>
     <message>
         <source>Size: {size:,} bytes</source>
-        <translation type="unfinished" />
+        <translation>Größe:  Bytes {size:,}</translation>
     </message>
     <message>
         <source>Modified: N/A</source>
-        <translation type="unfinished" />
+        <translation>Modifiziert: n/a</translation>
     </message>
     <message>
         <source>Path: N/A</source>
-        <translation type="unfinished" />
+        <translation>Pfad: n/a</translation>
     </message>
     <message>
         <source>Size: N/A</source>
-        <translation type="unfinished" />
+        <translation>Größe: n/a</translation>
     </message>
     <message>
         <source>Player log file not found.</source>
-        <translation type="unfinished" />
+        <translation>Spielerprotokolldatei nicht gefunden.</translation>
     </message>
     <message>
         <source>Enter URL:</source>
-        <translation type="unfinished" />
+        <translation>URL eingeben:</translation>
     </message>
     <message>
         <source>Log loaded successfully from URL</source>
-        <translation type="unfinished" />
+        <translation>Protokoll erfolgreich aus der URL geladen</translation>
     </message>
     <message>
         <source>Failed to load log from URL</source>
-        <translation type="unfinished" />
+        <translation>Das laden Protokoll aus der URL nicht geladen</translation>
     </message>
     <message>
         <source>Failed due to error: {error}</source>
-        <translation type="unfinished" />
+        <translation>Fehler aufgrund von Fehler:  {error}</translation>
     </message>
     <message>
         <source>Path: {path_str}</source>
-        <translation type="unfinished" />
+        <translation>Pfad: {path_str}</translation>
     </message>
     <message>
         <source>Size: {size_str}</source>
-        <translation type="unfinished" />
+        <translation>Größe: {size_str}</translation>
     </message>
     <message>
         <source>Modified: {modified_str}</source>
-        <translation type="unfinished" />
+        <translation>Modifiziert:  {modified_str}</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished" />
+        <translation>Info</translation>
     </message>
     <message>
         <source>Keybind</source>
-        <translation type="unfinished" />
+        <translation>Schlüsselbind</translation>
     </message>
     <message>
         <source>Mod_issue</source>
-        <translation type="unfinished" />
+        <translation>Mod_issue</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished" />
+        <translation>Warnung</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished" />
+        <translation>Fehler</translation>
     </message>
     <message>
         <source>Exception</source>
-        <translation type="unfinished" />
+        <translation>Ausnahme</translation>
     </message>
     <message>
         <source>Jump to previous {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Springen Sie zum vorherigen  Eintrag {lower}</translation>
     </message>
     <message>
         <source>Jump to next {lower} entry</source>
-        <translation type="unfinished" />
+        <translation>Springen Sie zum nächsten  Eintrag {lower}</translation>
     </message>
     <message>
         <source>Total Lines: 0</source>
-        <translation type="unfinished" />
+        <translation>Gesamtlinien: 0</translation>
     </message>
     <message>
         <source>Infos: 0</source>
-        <translation type="unfinished" />
+        <translation>Infos: 0</translation>
     </message>
     <message>
         <source>Keybinds: 0</source>
-        <translation type="unfinished" />
+        <translation>Schlüsselbindungen: 0</translation>
     </message>
     <message>
         <source>Mod Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>MOD -Probleme: 0</translation>
     </message>
     <message>
         <source>Warnings: 0</source>
-        <translation type="unfinished" />
+        <translation>Warnungen: 0</translation>
     </message>
     <message>
         <source>Errors: 0</source>
-        <translation type="unfinished" />
+        <translation>Fehler: 0</translation>
     </message>
     <message>
         <source>Exceptions: 0</source>
-        <translation type="unfinished" />
+        <translation>Ausnahmen: 0</translation>
     </message>
     <message>
         <source>All Issues: 0</source>
-        <translation type="unfinished" />
+        <translation>Alle Ausgaben: 0</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation type="unfinished" />
+        <translation>Kontrollen</translation>
     </message>
     <message>
         <source>Pick Highlight Color</source>
-        <translation type="unfinished" />
+        <translation>Highlight Color</translation>
     </message>
 </context>
 <context>
     <name>Rentry Auth Code Not Found </name>
     <message>
         <source>RimSort can work without rentry auth code. But To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT kann ohne Rentry -Auth -Code arbeiten. Um jedoch die volle Funktionalität von Renry.co zu aktivieren, müssen Sie eine E -Mail an support@rentry.co senden und einen Auth -Code anfordern. Fügen Sie es dann in Einstellungen ein -&gt; Erweitert -&gt; Rentry Auth.</translation>
     </message>
 </context>
 <context>
     <name>RentryError</name>
     <message>
         <source>Failed to fetch Rentry Content</source>
-        <translation type="unfinished" />
+        <translation>Versäumt, Rentry -Inhalte zu holen</translation>
     </message>
     <message>
         <source>Rentry returned status code: {code}</source>
-        <translation type="unfinished" />
+        <translation>Rentry zurückgegebener Statuscode:  {code}</translation>
     </message>
     <message>
         <source>RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT konnte den Inhalt nicht aus dem bereitgestellten Rentry -Link abrufen. Dies kann auf einen ungültigen Link, Ihre Internetverbindung oder Rentry.co zurückzuführen sein. Es kann auch das Ergebnis einer Captcha sein. Bitte versuchen Sie es später erneut.</translation>
     </message>
     <message>
         <source>Network Error</source>
-        <translation type="unfinished" />
+        <translation>Netzwerkfehler</translation>
     </message>
     <message>
         <source>Network error occurred while processing Rentry, Please check your internet connection.</source>
-        <translation type="unfinished" />
+        <translation>Der Netzwerkfehler ist bei der Bearbeitung von Rentry aufgetreten. Bitte überprüfen Sie Ihre Internetverbindung.</translation>
     </message>
     <message>
         <source>Rentry Auth Code Not Found</source>
-        <translation type="unfinished" />
+        <translation>Rentry -Authodcode nicht gefunden</translation>
     </message>
 </context>
 <context>
     <name>RentryImport</name>
     <message>
         <source>Enter Rentry.co link</source>
-        <translation type="unfinished" />
+        <translation>Geben Sie Rentry.co Link ein</translation>
     </message>
     <message>
         <source>Enter the Rentry.co link:</source>
-        <translation type="unfinished" />
+        <translation>Geben Sie den Link Rentry.co ein:</translation>
     </message>
     <message>
         <source>Invalid Rentry Link</source>
-        <translation type="unfinished" />
+        <translation>Ungültiger Rentry -Link</translation>
     </message>
     <message>
         <source>Invalid Rentry link, Please enter a valid Rentry link.</source>
-        <translation type="unfinished" />
+        <translation>Ungültiger Rentry -Link, bitte geben Sie einen gültigen Rentry -Link ein.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished" />
+        <translation>Fehler</translation>
     </message>
     <message>
         <source>An error occurred: {e}</source>
-        <translation type="unfinished" />
+        <translation>Es ist ein Fehler aufgetreten: {e}</translation>
     </message>
 </context>
 <context>
     <name>RentryUpload</name>
     <message>
         <source>Error</source>
-        <translation type="unfinished" />
+        <translation>Fehler</translation>
     </message>
     <message>
         <source>An error occurred: {e}</source>
-        <translation type="unfinished" />
+        <translation>Es ist ein Fehler aufgetreten: {e}</translation>
     </message>
 </context>
 <context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
-        <translation type="unfinished" />
+        <translation>Derzeit wird kein Mod bearbeitet</translation>
     </message>
     <message>
         <source>About.xml (loadAfter)</source>
-        <translation type="unfinished" />
+        <translation>Über.xml (LoadAfter)</translation>
     </message>
     <message>
         <source>About.xml (loadBefore)</source>
-        <translation type="unfinished" />
+        <translation>Über.xml (loadBefore)</translation>
     </message>
     <message>
         <source>Community Rules (loadAfter)</source>
-        <translation type="unfinished" />
+        <translation>Community -Regeln (Loadafter)</translation>
     </message>
     <message>
         <source>Community Rules (loadBefore)</source>
-        <translation type="unfinished" />
+        <translation>Community -Regeln (loadBefore)</translation>
     </message>
     <message>
         <source>Force load at bottom of list</source>
-        <translation type="unfinished" />
+        <translation>Erzwingen Sie die Last am Ende der Liste</translation>
     </message>
     <message>
         <source>User Rules (loadAfter)</source>
-        <translation type="unfinished" />
+        <translation>Benutzerregeln (LoadAfter)</translation>
     </message>
     <message>
         <source>User Rules (loadBefore)</source>
-        <translation type="unfinished" />
+        <translation>Benutzerregeln (loadBefore)</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Name</translation>
+        <translation>Name</translation>
     </message>
     <message>
         <source>PackageId</source>
-        <translation type="unfinished">PackageId</translation>
+        <translation>PackageId</translation>
     </message>
     <message>
         <source>Rule source</source>
-        <translation type="unfinished" />
+        <translation>Regelquelle</translation>
     </message>
     <message>
         <source>Rule type</source>
-        <translation type="unfinished" />
+        <translation>Regeltyp</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished" />
+        <translation>Kommentar</translation>
     </message>
     <message>
         <source>Save rules to communityRules.json</source>
-        <translation type="unfinished" />
+        <translation>Sparen Sie Regeln für CommunityRules.json</translation>
     </message>
     <message>
         <source>Save rules to userRules.json</source>
-        <translation type="unfinished" />
+        <translation>Speichern Sie Regeln für userrules.json</translation>
     </message>
     <message>
         <source>Search mods by name</source>
-        <translation type="unfinished" />
+        <translation>Suchen Sie Mods nach Namen</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
-        <translation type="unfinished" />
+        <translation>Doppelte Regel</translation>
     </message>
     <message>
         <source>Tried to add duplicate rule.</source>
-        <translation type="unfinished" />
+        <translation>Versuchte, doppelte Regel hinzuzufügen.</translation>
     </message>
     <message>
         <source>Skipping creation of duplicate rule!</source>
-        <translation type="unfinished" />
+        <translation>Überspringen Sie die Erstellung einer doppelten Regel!</translation>
     </message>
     <message>
         <source>Enter comment</source>
-        <translation type="unfinished" />
+        <translation>Kommentar eingeben</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists.
                       This is useful for your own records, as well as others.</source>
-        <translation type="unfinished" />
+        <translation>Geben Sie einen Kommentar ein, um zu kommentieren, warum diese Regel existiert.
+                      Dies ist sowohl für Ihre eigenen und anderen Aufzeichnungen als auch für andere nützlich.</translation>
     </message>
     <message>
         <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
-        <translation type="unfinished" />
+        <translation>Regeln von Mods über.xml können nicht geändert werden. Nur "Community -Regeln" und "Benutzerregeln" sind zulässig.</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
-        <translation type="unfinished" />
+        <translation>Regeln können geändert werden.</translation>
     </message>
     <message>
         <source>Editing rules for: {name}</source>
-        <translation type="unfinished" />
+        <translation>Bearbeitungsregeln für:  {name}</translation>
     </message>
     <message>
         <source>Show About.xml rules</source>
-        <translation type="unfinished" />
+        <translation>Zeigen Sie über.xml Regeln</translation>
     </message>
     <message>
         <source>Edit Community Rules</source>
-        <translation type="unfinished" />
+        <translation>Bearbeiten von Community -Regeln</translation>
     </message>
     <message>
         <source>Edit User Rules</source>
-        <translation type="unfinished" />
+        <translation>Benutzerregeln bearbeiten</translation>
     </message>
     <message>
         <source>Hide About.xml rules</source>
-        <translation type="unfinished" />
+        <translation>Verstecken Sie sich über.xml Regeln</translation>
     </message>
     <message>
         <source>Lock Community Rules</source>
-        <translation type="unfinished" />
+        <translation>Regeln der Gemeinschaft sperren</translation>
     </message>
     <message>
         <source>Lock User Rules</source>
-        <translation type="unfinished" />
+        <translation>Benutzerregeln sperren</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
-        <translation type="unfinished" />
+        <translation>Geben Sie einen Kommentar ein, um zu kommentieren, warum diese Regel existiert. Dies ist sowohl für Ihre eigenen und anderen Aufzeichnungen nützlich.</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.</source>
-        <translation type="unfinished" />
+        <translation>Geben Sie einen Kommentar ein, um zu kommentieren, warum diese Regel existiert. Dies ist sowohl für Ihre eigenen und anderen Aufzeichnungen als auch für andere nützlich.</translation>
     </message>
     <message>
         <source>Open this mod in the editor</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie diesen Mod im Herausgeber</translation>
     </message>
     <message>
         <source>Remove this rule</source>
-        <translation type="unfinished" />
+        <translation>Entfernen Sie diese Regel</translation>
     </message>
     <message>
         <source>About.xml (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>Über.xml (Inkompatibilitäten mit)</translation>
     </message>
     <message>
         <source>Community Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>Community -Regeln (Inkompatibilitäten mit)</translation>
     </message>
     <message>
         <source>User Rules (incompatibilitiesWith)</source>
-        <translation type="unfinished" />
+        <translation>Benutzerregeln (Inkompatibilitäten mit)</translation>
     </message>
     <message>
         <source>Force load at top of list</source>
-        <translation type="unfinished" />
+        <translation>Erzwingen Sie die Last auf der Liste</translation>
     </message>
 </context>
 <context>
     <name>RunnerPanel</name>
     <message>
         <source>Clear the text currently displayed by the runner</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie den aktuell vom Läufer angezeigten Text</translation>
     </message>
     <message>
         <source>Re-run the process last used by the runner</source>
-        <translation type="unfinished" />
+        <translation>Führen Sie den zuletzt vom Läufer verwendeten Prozess erneut aus</translation>
     </message>
     <message>
         <source>Kill a process currently being executed by the runner</source>
-        <translation type="unfinished" />
+        <translation>Töte einen Prozess, der derzeit vom Läufer ausgeführt wird</translation>
     </message>
     <message>
         <source>Save the current output to a file</source>
-        <translation type="unfinished" />
+        <translation>Speichern Sie die aktuelle Ausgabe in einer Datei</translation>
     </message>
     <message>
         <source>Save Runner Output</source>
-        <translation type="unfinished" />
+        <translation>Speichern Sie die Läuferausgabe</translation>
     </message>
     <message>
         <source>Text files (*.txt)</source>
-        <translation type="unfinished" />
+        <translation>Textdateien (*.txt)</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD Downloader</translation>
     </message>
     <message>
         <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
 
 Click 'Show Details' to see a list of mods that failed.</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD konnte MOD (s) nicht herunterladen! Möchten Sie den Download der fehlgeschlagenen Mods wiederholen?
+
+Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlgeschlagen sind.</translation>
     </message>
     <message>
         <source>Process Complete</source>
-        <translation type="unfinished" />
+        <translation>Prozess vollständig</translation>
     </message>
     <message>
         <source>Process complete, you can close the window.</source>
-        <translation type="unfinished" />
+        <translation>Vervollständigen Sie vollständig, Sie können das Fenster schließen.</translation>
     </message>
     <message>
         <source>Close Window</source>
-        <translation type="unfinished" />
+        <translation>Fenster schließen</translation>
     </message>
     <message>
         <source>Ok</source>
-        <translation type="unfinished" />
+        <translation>OK</translation>
     </message>
     <message>
         <source>SteamCMD Downloader Login error</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD Downloader Anmeldefehler</translation>
     </message>
     <message>
         <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD meldete einen Anmeldefehler. Bitte stellen Sie sicher, dass Sie mit dem Internet verbunden sind und SteamCMD wird nicht von Ihrer Firewall blockiert.</translation>
     </message>
 </context>
 <context>
     <name>SearchWorker</name>
     <message>
         <source>Searching in: {root_path}</source>
-        <translation type="unfinished" />
+        <translation>Suche nach: {root_path}</translation>
     </message>
     <message>
         <source>Search complete</source>
-        <translation type="unfinished" />
+        <translation>Suche vollständig</translation>
     </message>
 </context>
 <context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
-        <translation type="unfinished" />
+        <translation>Auf Standards zurücksetzen</translation>
     </message>
     <message>
         <source>Are you sure you want to reset all settings to their default values?</source>
-        <translation type="unfinished" />
+        <translation>Sind Sie sicher, dass Sie alle Einstellungen auf ihre Standardwerte zurücksetzen möchten?</translation>
     </message>
     <message>
         <source>Clear all locations</source>
-        <translation type="unfinished" />
+        <translation>Alle Standorte löschen</translation>
     </message>
     <message>
         <source>Are you sure you want to clear all locations?</source>
-        <translation type="unfinished" />
+        <translation>Sind Sie sicher, dass Sie alle Standorte löschen möchten?</translation>
     </message>
     <message>
         <source>Confirm Build Database</source>
-        <translation type="unfinished" />
+        <translation>Bestätigen Sie die Build -Datenbank</translation>
     </message>
     <message>
         <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation type="unfinished" />
+        <translation>Sind Sie sicher, dass Sie die Steam Workshop -Datenbank erstellen möchten?</translation>
     </message>
     <message>
         <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation type="unfinished" />
+        <translation>Für die meisten Benutzer ist dies nicht erforderlich, da der GitHub SteamDB angemessen ist. Das Erstellen der Datenbank kann lange dauern. Abhängig von Ihren Einstellungen kann es auch durch das Webapi durch den gesamten Steam -Workshop kriechen. Dies kann eine große Datenmenge sein und lange dauern. Bist du sicher, dass du weitermachen willst?</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Settings</source>
-        <translation type="unfinished" />
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <source>Reset to Defaults</source>
-        <translation type="unfinished" />
+        <translation>Auf Standards zurücksetzen</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Stornieren</translation>
+        <translation>Stornieren</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation type="unfinished" />
+        <translation>OK</translation>
     </message>
     <message>
         <source>Locations</source>
-        <translation type="unfinished" />
+        <translation>Standorte</translation>
     </message>
     <message>
         <source>Clear All Locations</source>
-        <translation type="unfinished" />
+        <translation>Alle Standorte löschen</translation>
     </message>
     <message>
         <source>Autodetect</source>
-        <translation type="unfinished" />
+        <translation>Autodetekt</translation>
     </message>
     <message>
         <source>Game location</source>
-        <translation type="unfinished" />
+        <translation>Spielort</translation>
     </message>
     <message>
         <source>Open…</source>
-        <translation type="unfinished" />
+        <translation>Offen…</translation>
     </message>
     <message>
         <source>Choose…</source>
-        <translation type="unfinished" />
+        <translation>Wählen…</translation>
     </message>
     <message>
         <source>Clear…</source>
-        <translation type="unfinished" />
+        <translation>Klar…</translation>
     </message>
     <message>
         <source>Config location</source>
-        <translation type="unfinished" />
+        <translation>Konfigurationsort</translation>
     </message>
     <message>
         <source>Steam mods location</source>
-        <translation type="unfinished" />
+        <translation>Dampfmods Ort</translation>
     </message>
     <message>
         <source>Local mods location</source>
-        <translation type="unfinished" />
+        <translation>Lokale Mods Standort</translation>
     </message>
     <message>
         <source>Databases</source>
-        <translation type="unfinished" />
+        <translation>Datenbanken</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished" />
+        <translation>Keiner</translation>
     </message>
     <message>
         <source>No {none_lbl} will be used.</source>
-        <translation type="unfinished" />
+        <translation>NEIN  wird verwendet. {none_lbl}</translation>
     </message>
     <message>
         <source>GitHub</source>
-        <translation type="unfinished" />
+        <translation>Github</translation>
     </message>
     <message>
         <source>Upload…</source>
-        <translation type="unfinished" />
+        <translation>Hochladen…</translation>
     </message>
     <message>
         <source>Download…</source>
-        <translation type="unfinished" />
+        <translation>Herunterladen…</translation>
     </message>
     <message>
         <source>Local File</source>
-        <translation type="unfinished" />
+        <translation>Lokale Datei</translation>
     </message>
     <message>
         <source>Community Rules database</source>
-        <translation type="unfinished" />
+        <translation>Community Rules -Datenbank</translation>
     </message>
     <message>
         <source>community rules database</source>
-        <translation type="unfinished" />
+        <translation>Community Rules -Datenbank</translation>
     </message>
     <message>
         <source>Steam Workshop database</source>
-        <translation type="unfinished" />
+        <translation>Steam Workshop -Datenbank</translation>
     </message>
     <message>
         <source>"No Version Warning" Database</source>
-        <translation type="unfinished" />
+        <translation>Datenbank "Keine Versionswarnung"</translation>
     </message>
     <message>
         <source>"Use This Instead" Database</source>
-        <translation type="unfinished" />
+        <translation>"Verwenden Sie diese stattdessen" Datenbank</translation>
     </message>
     <message>
         <source>Sorting</source>
-        <translation type="unfinished" />
+        <translation>Sortierung</translation>
     </message>
     <message>
         <source>Alphabetically</source>
-        <translation type="unfinished" />
+        <translation>Alphabetisch</translation>
     </message>
     <message>
         <source>Topologically</source>
-        <translation type="unfinished" />
+        <translation>Topologisch</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
-        <translation type="unfinished" />
+        <translation>Verwenden Sie Abhängigkeitsregeln für die Sortierung.</translation>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished" />
+        <translation>Wenn es aktiviert ist, verwendet auch ModDependenzen als loadthesepefore, und Mods werden so sortiert, dass Abhängigkeiten vor dem abhängigen Mod geladen werden.</translation>
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
-        <translation type="unfinished" />
+        <translation>Fordern Sie den Benutzer zum Herunterladen von Abhängigkeiten beim Klicken in Sortier</translation>
     </message>
     <message>
         <source>DB Builder</source>
-        <translation type="unfinished" />
+        <translation>DB Builder</translation>
     </message>
     <message>
         <source>When building the database:</source>
-        <translation type="unfinished" />
+        <translation>Beim Erstellen der Datenbank:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
-        <translation type="unfinished" />
+        <translation>Holen Sie sich veröffentlichte Dateien von lokal installierten Mods.</translation>
     </message>
     <message>
         <source>Mods you wish to update must be installed, as the initial DB is built including data from mods' About.xml files.</source>
-        <translation type="unfinished" />
+        <translation>Mods, die Sie aktualisieren möchten, müssen installiert werden, da die anfängliche DB erstellt wird, einschließlich Daten von Mods über.xml -Dateien.</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from the Steam Workshop.</source>
-        <translation type="unfinished" />
+        <translation>Holen Sie sich PublishdFileids aus dem Steam Workshop.</translation>
     </message>
     <message>
         <source>Mods to be updated don't have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
-        <translation type="unfinished" />
+        <translation>Die zu aktualisierten Mods müssen nicht installiert werden, da die anfängliche DB durch Scraping des Steam Workshops erstellt wird.</translation>
     </message>
     <message>
         <source>Query DLC dependency data with Steamworks API</source>
-        <translation type="unfinished" />
+        <translation>Abfragen Sie DLC -Abhängigkeitsdaten mit Steamworks API ab</translation>
     </message>
     <message>
         <source>Update database instead of overwriting</source>
-        <translation type="unfinished" />
+        <translation>Aktualisieren Sie die Datenbank anstatt zu überschreiben</translation>
     </message>
     <message>
         <source>Steam API key:</source>
-        <translation type="unfinished" />
+        <translation>Dampf -API -Schlüssel:</translation>
     </message>
     <message>
         <source>Download all published Workshop mods via:</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie alle veröffentlichten Workshop -Mods herunter über:</translation>
     </message>
     <message>
         <source>SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>Steamcmd</translation>
     </message>
     <message>
         <source>Steam</source>
-        <translation type="unfinished" />
+        <translation>Dampf</translation>
     </message>
     <message>
         <source>Compare Databases</source>
-        <translation type="unfinished" />
+        <translation>Vergleichen Sie Datenbanken</translation>
     </message>
     <message>
         <source>Merge Databases</source>
-        <translation type="unfinished" />
+        <translation>Datenbanken zusammenführen</translation>
     </message>
     <message>
         <source>Build Database</source>
-        <translation type="unfinished" />
+        <translation>Datenbank erstellen</translation>
     </message>
     <message>
         <source>Validate downloaded mods</source>
-        <translation type="unfinished" />
+        <translation>Validieren Sie heruntergeladene Mods</translation>
     </message>
     <message>
         <source>Automatically clear depot cache</source>
-        <translation type="unfinished" />
+        <translation>Automatisch Depot -Cache löschen</translation>
     </message>
     <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie den Depot -Cache automatisch, bevor Sie Mods über SteamCMD herunterladen.
+Dies kann möglicherweise einige Probleme beim Herunterladen von Mods wie Download -Fehlern und löschten Mods verhindern.</translation>
     </message>
     <message>
         <source>SteamCMD installation location</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD -Installationsort</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
-        <translation type="unfinished" />
+        <translation>Depot -Cache löschen</translation>
     </message>
     <message>
         <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie den Depot -Cache manuell. Dies kann nützlich sein, wenn Sie Probleme beim Herunterladen von Mods über SteamCMD stoßen.</translation>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished">Import .ACF</translation>
+        <translation>Import .ACF</translation>
     </message>
     <message>
         <source>Delete .acf</source>
-        <translation type="unfinished" />
+        <translation>.ACF löschen</translation>
     </message>
     <message>
         <source>Install SteamCMD</source>
-        <translation type="unfinished" />
+        <translation>DAWTCMD einbauen</translation>
     </message>
     <message>
         <source>todds</source>
-        <translation type="unfinished" />
+        <translation>Todds</translation>
     </message>
     <message>
         <source>Quality preset</source>
-        <translation type="unfinished" />
+        <translation>Qualitätsvoreinstellung</translation>
     </message>
     <message>
         <source>Optimized - Recommended for RimWorld</source>
-        <translation type="unfinished" />
+        <translation>Optimiert - für Rimworld empfohlen</translation>
     </message>
     <message>
         <source>When optimizing textures</source>
-        <translation type="unfinished" />
+        <translation>Bei der Optimierung von Texturen</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
-        <translation type="unfinished" />
+        <translation>Nur aktive Mods optimieren</translation>
     </message>
     <message>
         <source>Optimize all mods</source>
-        <translation type="unfinished" />
+        <translation>Optimieren Sie alle Mods</translation>
     </message>
     <message>
         <source>Enable dry-run mode</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie den Trockenrunmodus</translation>
     </message>
     <message>
         <source>Overwrite existing optimized textures</source>
-        <translation type="unfinished" />
+        <translation>Überschreiben Sie vorhandene optimierte Texturen</translation>
     </message>
     <message>
         <source>Theme</source>
-        <translation type="unfinished" />
+        <translation>Thema</translation>
     </message>
     <message>
         <source>Theme Settings</source>
-        <translation type="unfinished" />
+        <translation>Themeneinstellungen</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie die Verwendung von Themen / Stylesheet anstelle von Systemsthema</translation>
     </message>
     <message>
         <source>To add your own theme / stylesheet 
@@ -4032,107 +4035,116 @@ This may potentially prevent some issues with downloading mods such as download 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
-        <translation type="unfinished" />
+        <translation>Fügen Sie Ihr eigenes Thema / Stylesheet hinzu 
+
+1) Erstellen Sie einen Neulingsordner in "Themen" in Ihrem "RIMSORT" -Konfigurationsordner 
+2) Kopieren Sie es mit dem Standard -Thema "Rimpy" in den Ordner, den Sie erstellt haben 
+3) Bearbeiten Sie den kopierten "style.qss" gemäß Ihrer Fantasie 
+4) Starten Sie 'RIMSORT' und wählen Sie Ihr Thema aus Dropdown aus 
+5) Klicken Sie auf "OK", um Einstellungen zu speichern und das ausgewählte Thema anzuwenden 
+
+NOTIZ 
+Der Name des Ordners wird als Name des Themas verwendet und jedes ungültige Thema wird ignoriert</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
-        <translation type="unfinished" />
+        <translation>Offene Themenort</translation>
     </message>
     <message>
         <source>Font Settings</source>
-        <translation type="unfinished" />
+        <translation>Schriftarteinstellungen</translation>
     </message>
     <message>
         <source>Font Family</source>
-        <translation type="unfinished" />
+        <translation>Schriftfamilie</translation>
     </message>
     <message>
         <source>Font Size</source>
-        <translation type="unfinished" />
+        <translation>Schriftgröße</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished" />
+        <translation>Zurücksetzen</translation>
     </message>
     <message>
         <source>Language Setting</source>
-        <translation type="unfinished" />
+        <translation>Spracheinstellung</translation>
     </message>
     <message>
         <source>Select Language (Restart required to apply changes)</source>
-        <translation type="unfinished" />
+        <translation>Sprache auswählen (starten Sie erneut, um Änderungen anzuwenden).</translation>
     </message>
     <message>
         <source>Advanced</source>
-        <translation type="unfinished" />
+        <translation>Fortschrittlich</translation>
     </message>
     <message>
         <source>RimSort restart required for some settings</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT -Neustart für einige Einstellungen erforderlich</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie die Debug -Protokollierung</translation>
     </message>
     <message>
         <source>Enable watchdog file monitor daemon</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie den Watchdog -Datei Monitor Dämon</translation>
     </message>
     <message>
         <source>Enable mod type filter</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie den Mod -Typ -Filter</translation>
     </message>
     <message>
         <source>Hide invalid mods when filtering</source>
-        <translation type="unfinished" />
+        <translation>Buchen Sie ungültige Mods beim Filtern</translation>
     </message>
     <message>
         <source>Show duplicate mods warning</source>
-        <translation type="unfinished" />
+        <translation>Zeigen Sie doppelte Mods Warnung</translation>
     </message>
     <message>
         <source>Check for mod updates on refresh</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen Sie die Mod -Updates zur Aktualisierung</translation>
     </message>
     <message>
         <source>Enable Steam client integration</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie die Integration der Steam -Client -Integration</translation>
     </message>
     <message>
         <source>Download missing mods automatically</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie fehlende Mods automatisch herunter</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
-        <translation type="unfinished" />
+        <translation>Rendern Sie die Einheit in Mod -Beschreibungen einreicher Text</translation>
     </message>
     <message>
         <source>Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie diese Option, um den Einheits -Text in Mod -Beschreibungen einen reichen Text zu rendern. Bilder werden nicht angezeigt.</translation>
     </message>
     <message>
         <source>Update databases on startup</source>
-        <translation type="unfinished" />
+        <translation>Aktualisieren Sie Datenbanken beim Startup</translation>
     </message>
     <message>
         <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie diese Option, um aktivierte Datenbanken automatisch zu aktualisieren, wenn RIMSORT gestartet wird. Dies wird nach Updates suchen und sie herunterladen, sofern verfügbar.</translation>
     </message>
     <message>
         <source>Rentry Auth:</source>
-        <translation type="unfinished" />
+        <translation>Rentry Auth:</translation>
     </message>
     <message>
         <source>Obtain rentry auth code by emailing: support@rentry.co</source>
-        <translation type="unfinished" />
+        <translation>Erhalten Sie den Rentry -Auth -Code per E -Mail: support@rentry.co</translation>
     </message>
     <message>
         <source>GitHub username:</source>
-        <translation type="unfinished" />
+        <translation>Github Benutzername:</translation>
     </message>
     <message>
         <source>GitHub personal access token:</source>
-        <translation type="unfinished" />
+        <translation>Github Personal Access Token:</translation>
     </message>
     <message>
         <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
@@ -4141,43 +4153,47 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
 </source>
-        <translation type="unfinished" />
+        <translation>Geben Sie eine von Kommas getrennte Liste von Argumenten ein, die an die ausführbare Rimworld weitergeleitet werden können 
+
+ Beispiele: 
+
+ -logfile,/path/to/file.log, -Savedatafolder =/path/to/savedata, -popupWindow</translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
-        <translation type="unfinished" />
+        <translation>Bearbeiten Sie das Spiel mit Run -Argumenten:</translation>
     </message>
     <message>
         <source>Additional Databases</source>
-        <translation type="unfinished" />
+        <translation>Zusätzliche Datenbanken</translation>
     </message>
     <message>
         <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation type="unfinished" />
+        <translation>Datenbank -Ablauf in Sekunden beispielsweise 604800 für 7 Tage. und 0 für keine Ablauf.</translation>
     </message>
     <message>
         <source>Authentication</source>
-        <translation type="unfinished" />
+        <translation>Authentifizierung</translation>
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
-        <translation type="unfinished" />
+        <translation>Sollte wie: C: \ Programme (x86) \ Steam \ Steamapps \ Common \ rimworld</translation>
     </message>
     <message>
         <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
-        <translation type="unfinished" />
+        <translation>Sollte wie: C: \ Benutzer \ Benutzername \ appdata \ loclow \ ludon Studios \ rimworld von ludeon studios \ config</translation>
     </message>
     <message>
         <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
-        <translation type="unfinished" />
+        <translation>Nur wenn Sie Steam verwenden, sollte er wie: C: \ Programme (x86) \ Steam \ Steamapps \ Workshop \ Inhalt \ 294100</translation>
     </message>
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
-        <translation type="unfinished" />
+        <translation>Sollte wie: C: \ Programme (x86) \ Steam \ Steamapps \ Common \ rimworld \ Mods</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation type="unfinished" />
+        <translation>Auxiliary Metadata DB -Löschzeitbeschränkung in Sekunden. (Sofort löschen 0, niemals -1 löschen)</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
@@ -4185,163 +4201,171 @@ After a mod is deleted, this is the time we wait until this mod item is deleted 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
 (This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie das relevante Kontrollkästchen in erweiterten Einstellungen, um die Bearbeitung dieses Zeitlimits zu aktivieren.
+Nachdem ein Mod gelöscht wurde, ist dies die Zeit, die wir warten, bis dieser Modelement aus dem Hilfsmetadaten dB gelöscht wird. 
+Diese Auxiliary DB enthält Informationen für Mod -Farben, WARNUNG, User Notes usw. 
+Dies bewahrt im Grunde genommen Ihre Mod -Färbung, Benutzernotizen usw. für so viele Sekunden nach dem Löschen bei. 
+(Dies gilt auch für die Löschung außerhalb von Rimsort)</translation>
     </message>
     <message>
         <source>Enable editing</source>
-        <translation type="unfinished" />
+        <translation>Bearbeiten aktivieren</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
-        <translation type="unfinished" />
+        <translation>Dies ermöglicht die Bearbeitung des Zeitlimits für die DB -Datenlöschung von Aux -Metadaten.</translation>
     </message>
     <message>
         <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren</translation>
     </message>
     <message>
         <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
 Improves performance by ~50%.</source>
-        <translation type="unfinished" />
+        <translation>Dies verbessert die DB -Leistung der Hilfsdauer mit dem erhöhten Risiko eines Datenverlusts/der Korruption bei Abstürzen.
+Verbessert die Leistung um ~ 50%.</translation>
     </message>
     <message>
         <source>Delete before update</source>
-        <translation type="unfinished" />
+        <translation>Vor dem Update löschen</translation>
     </message>
     <message>
         <source>This is useful if you want to ensure clean mod updates.</source>
-        <translation type="unfinished" />
+        <translation>Dies ist nützlich, wenn Sie saubere Mod -Updates sicherstellen möchten.</translation>
     </message>
     <message>
         <source>Launch State</source>
-        <translation type="unfinished" />
+        <translation>Startstaat</translation>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation type="unfinished" />
+        <translation>Min ist  und max ist . Werte außerhalb dieses Bereichs werden auf Standards zurückgesetzt. {MAX_SIZE} {MIN_SIZE}</translation>
     </message>
     <message>
         <source>Maximized</source>
-        <translation type="unfinished" />
+        <translation>Maximiert</translation>
     </message>
     <message>
         <source>Normal</source>
-        <translation type="unfinished" />
+        <translation>Normal</translation>
     </message>
     <message>
         <source>Custom size</source>
-        <translation type="unfinished" />
+        <translation>Benutzerdefinierte Größe</translation>
     </message>
     <message>
         <source>Main Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Hauptfensterstartstatus</translation>
     </message>
     <message>
         <source>Browser Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Browser -Fensterstartstatus</translation>
     </message>
     <message>
         <source>Settings Window Launch State</source>
-        <translation type="unfinished" />
+        <translation>Einstellungsfenster Startzustand</translation>
     </message>
     <message>
         <source>Custom Width:</source>
-        <translation type="unfinished" />
+        <translation>Benutzerdefinierte Breite:</translation>
     </message>
     <message>
         <source>Custom Height:</source>
-        <translation type="unfinished" />
+        <translation>Benutzerdefinierte Höhe:</translation>
     </message>
     <message>
         <source>Apply mod coloring to background instead of text</source>
-        <translation type="unfinished" />
+        <translation>Wenden Sie die modfarbene Färbung auf den Hintergrund anstelle von Text an</translation>
     </message>
     <message>
         <source>Auxiliary DB</source>
-        <translation type="unfinished" />
+        <translation>Auxiliary DB</translation>
     </message>
     <message>
         <source>Integration with recent save</source>
-        <translation type="unfinished" />
+        <translation>Integration mit neuerer Save</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
-        <translation type="unfinished" />
+        <translation>Vergleichen Sie Mod -Listen mit der aktuellen Speicherndatei</translation>
     </message>
     <message>
         <source>Clear also moves DLC</source>
-        <translation type="unfinished" />
+        <translation>Klar bewegt auch DLC</translation>
     </message>
     <message>
         <source>Custom todds command</source>
-        <translation type="unfinished" />
+        <translation>Befehl benutzerdefinierter Todds</translation>
     </message>
     <message>
         <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation type="unfinished" />
+        <translation>Wenn -P wie im Pfad nicht angegeben ist, wird der Pfad von der Stromwirtschaft oder aller Mods -Auswahl verwendet.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
-        <translation type="unfinished" />
+        <translation>EG: {todds_example}</translation>
     </message>
     <message>
         <source>Automatically delete .dds files if no corresponding .png file exists</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie automatisch .dds -Dateien, wenn keine entsprechende .png -Datei vorliegt</translation>
     </message>
     <message>
         <source>This will delete .dds files that are not paired with a .png file,
 
 This checks may take few seconds depending on the number of .dds files present.</source>
-        <translation type="unfinished" />
+        <translation>Dadurch werden .DDS -Dateien gelöscht, die nicht mit einer .png -Datei gepaart werden.
+
+Diese Überprüfungen können abhängig von der Anzahl der vorhandenen .dds -Dateien einige Sekunden dauern.</translation>
     </message>
     <message>
         <source>Enable advanced filtering options</source>
-        <translation type="unfinished" />
+        <translation>Aktivieren Sie erweiterte Filteroptionen</translation>
     </message>
     <message>
         <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation type="unfinished" />
+        <translation>Wenn dies aktiviert ist, sind zusätzliche Filteroptionen wie Ordnergröße, Autor und geändertes Datum im Mods -Feld verfügbar. Wenn Sie dies deaktivieren, können Sie die Leistung verbessern, indem starke Berechnungen vermieden werden.</translation>
     </message>
     <message>
         <source>Prefer versioned About.xml tags over base tags</source>
-        <translation type="unfinished" />
+        <translation>Bevorzugen</translation>
     </message>
     <message>
         <source>External Tools</source>
-        <translation type="unfinished" />
+        <translation>Externe Werkzeuge</translation>
     </message>
     <message>
         <source>Text Editor command location</source>
-        <translation type="unfinished" />
+        <translation>Befehlsort des Texteditors</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Folders)</source>
-        <translation type="unfinished" />
+        <translation>Zusätzliche Argumente (Öffnungsordner)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
-        <translation type="unfinished" />
+        <translation>Zusätzliche Argumente (Öffnen einer einzelnen Datei)</translation>
     </message>
     <message>
         <source>Sorting Method</source>
-        <translation type="unfinished" />
+        <translation>Sortiermethode</translation>
     </message>
     <message>
         <source>Dependencies Handling Behavior</source>
-        <translation type="unfinished" />
+        <translation>Abhängigkeitsverhalten</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
-        <translation type="unfinished" />
+        <translation>Verwenden Sie alternative PackageIds als zufriedenstellende Abhängigkeiten</translation>
     </message>
     <message>
         <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
-        <translation type="unfinished" />
+        <translation>Wenn es aktiviert ist, kann ein alternative PackageIds -Eintrag in ungefähr.xml die Abhängigkeit eines Mods erfüllen, wenn die Hauptabhängigkeit fehlt. 
+Z. B. 'oels.vehiclemapframework', Alternativen: 'oels.vehiclemapframework.dev' '</translation>
     </message>
     <message>
         <source>XML Parsing Behavior</source>
-        <translation type="unfinished" />
+        <translation>XML Parsing -Verhalten</translation>
     </message>
 </context>
 <context>
@@ -4349,197 +4373,206 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
-        <translation type="unfinished" />
+        <translation>Ihre RIMSORT -Einstellungsdatei ist beschädigt.
+Bitte wählen Sie eine der folgenden Optionen, um fortzufahren.</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished" />
+        <translation>Einstellungen geöffnet</translation>
     </message>
     <message>
         <source>Open Settings Folder</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie Einstellungsordner</translation>
     </message>
     <message>
         <source>Reset Settings</source>
-        <translation type="unfinished" />
+        <translation>Einstellungen zurücksetzen</translation>
     </message>
     <message>
         <source>Exit RimSort</source>
-        <translation type="unfinished" />
+        <translation>Rimsort beenden</translation>
     </message>
 </context>
 <context>
     <name>SteamBrowser</name>
     <message>
         <source>Mod Downloader</source>
-        <translation type="unfinished" />
+        <translation>Mod Downloader</translation>
     </message>
     <message>
         <source>Clear List</source>
-        <translation type="unfinished" />
+        <translation>Klare Liste</translation>
     </message>
     <message>
         <source>Download mod(s) (SteamCMD)</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Mods (s) (SteamCMD) herunter</translation>
     </message>
     <message>
         <source>Download mod(s) (Steam app)</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Mods (s) (Steam App) herunter</translation>
     </message>
     <message>
         <source>Add to list</source>
-        <translation type="unfinished" />
+        <translation>Zur Liste hinzufügen</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
-        <translation type="unfinished" />
+        <translation>Keine veröffentlichte Datei gefunden</translation>
     </message>
     <message>
         <source>Unable to parse publishedfileid from url, Please check if url is in the correct format</source>
-        <translation type="unfinished" />
+        <translation>Bitte prüfen Sie, ob die URL im richtigen Format vorhanden ist</translation>
     </message>
     <message>
         <source>Add Collection</source>
-        <translation type="unfinished" />
+        <translation>Sammlung hinzufügen</translation>
     </message>
     <message>
         <source>How would you like to add the collection?</source>
-        <translation type="unfinished" />
+        <translation>Wie möchten Sie die Sammlung hinzufügen?</translation>
     </message>
     <message>
         <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
-        <translation type="unfinished" />
+        <translation>Sie können alle Mods aus der Sammlung hinzufügen oder nur diejenigen, die Sie nicht installiert haben.</translation>
     </message>
     <message>
         <source>Add All Mods</source>
-        <translation type="unfinished" />
+        <translation>Fügen Sie alle Mods hinzu</translation>
     </message>
     <message>
         <source>Add Missing Mods</source>
-        <translation type="unfinished" />
+        <translation>Fügen Sie fehlende Mods hinzu</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD Downloader</translation>
     </message>
     <message>
         <source>Empty list of mods returned, unable to add collection to list!</source>
-        <translation type="unfinished" />
+        <translation>Leere Liste der zurückgegebenen Mods, die eine Sammlung nicht zur Liste hinzufügen können!</translation>
     </message>
     <message>
         <source>Please reach out to us on Github Issues page or
 #rimsort-testing on the Rocketman/CAI discord</source>
-        <translation type="unfinished" />
+        <translation>Bitte wenden Sie sich an uns auf der Seite GitHub -Ausgaben oder
+#RIMSORT-Tests auf dem Raketman/Cai-Zwietracht</translation>
     </message>
     <message>
         <source>You already have these mods in your download list!</source>
-        <translation type="unfinished" />
+        <translation>Sie haben diese Mods bereits in Ihrer Download -Liste!</translation>
     </message>
     <message>
         <source>Skipping the following mods which are already present in your download list!</source>
-        <translation type="unfinished" />
+        <translation>Überspringen Sie die folgenden Mods, die bereits in Ihrer Download -Liste vorhanden sind!</translation>
     </message>
     <message>
         <source>Remove mod from list</source>
-        <translation type="unfinished" />
+        <translation>MOD aus der Liste entfernen</translation>
     </message>
 </context>
 <context>
     <name>SteamcmdInterface</name>
     <message>
         <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished">RIMSORT - SteamCMD -Setup</translation>
+        <translation>RIMSORT - SteamCMD -Setup</translation>
     </message>
     <message>
         <source>RimSort was unable to find SteamCMD installed in the configured prefix:
 </source>
-        <translation type="unfinished" />
+        <translation>RIMSORT war nicht in der Lage, SteamCMD im konfigurierten Präfix installiert zu finden:</translation>
     </message>
     <message>
         <source>Do you want to setup SteamCMD?</source>
-        <translation type="unfinished" />
+        <translation>Möchten Sie SteamCMD einrichten?</translation>
     </message>
     <message>
         <source>Depot Cache Cleared</source>
-        <translation type="unfinished" />
+        <translation>Depot -Cache gelöscht</translation>
     </message>
     <message>
         <source>SteamCMD depot cache was already cleared.</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD Depot -Cache wurde bereits gelöscht.</translation>
     </message>
     <message>
         <source>SteamCMD depot cache has been cleared.</source>
-        <translation type="unfinished" />
+        <translation>SteamCMD Depot -Cache wurde gelöscht.</translation>
     </message>
     <message>
         <source>Re-create Symlink?</source>
-        <translation type="unfinished" />
+        <translation>Symlink neu erstellen?</translation>
     </message>
     <message>
         <source>An existing symlink already exists. Would you like to delete and re-create the symlink?</source>
-        <translation type="unfinished" />
+        <translation>Ein vorhandener Symlink gibt es bereits. Möchten Sie den Symlink löschen und neu erstellen?</translation>
     </message>
     <message>
         <source>The symlink makes SteamCMD download mods to the local mods folder and is required for SteamCMD mod downloads to work correctly.</source>
-        <translation type="unfinished" />
+        <translation>Der Symlink führt SteamCMD -Mods in den lokalen Mods -Ordner herunter und ist erforderlich, damit SteamCMD -Mod -Downloads korrekt funktionieren.</translation>
     </message>
     <message>
         <source>Existing symlink: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished" />
+        <translation>Vorhandener Symlink: {symlink_destination_path}
+
+Neuer Symlink:
+[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
-        <translation type="unfinished" />
+        <translation>Der Symlink -Zielweg existiert bereits. Möchten Sie das vorhandene Ziel entfernen und an seinem Ort einen neuen Symlink erstellen?</translation>
     </message>
     <message>
         <source>Existing destination: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished" />
+        <translation>Bestehendes Ziel: {symlink_destination_path}
+
+Neuer Symlink:
+[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
         <source>Create Symlink?</source>
-        <translation type="unfinished" />
+        <translation>Symlink erstellen?</translation>
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
-        <translation type="unfinished" />
+        <translation>Möchten Sie einen Symlink erstellen?</translation>
     </message>
     <message>
         <source>New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished" />
+        <translation>Neuer Symlink:
+[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
         <source>&amp;Yes</source>
-        <translation type="unfinished" />
+        <translation>&amp;Ja</translation>
     </message>
     <message>
         <source>&amp;Don't Ask Again</source>
-        <translation type="unfinished" />
+        <translation>Fragen Sie nicht noch einmal</translation>
     </message>
 </context>
 <context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
-        <translation type="unfinished" />
+        <translation>Themenpfad -Fehler</translation>
     </message>
     <message>
         <source>Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.</source>
-        <translation type="unfinished" />
+        <translation>Stylesheet -Pfad existiert nicht für das Thema '' auf das Standardthema '{default_theme}' zurückgesetzt. {theme_name}</translation>
     </message>
     <message>
         <source>Theme Error</source>
-        <translation type="unfinished" />
+        <translation>Themenfehler</translation>
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
-        <translation type="unfinished" />
+        <translation>Nicht anwenden Sie das Thema an: {selected_theme_name}, das Standardthema zurücksetzen: {self.default_theme}</translation>
     </message>
 </context>
 <context>
@@ -4548,38 +4581,44 @@ New symlink:
         <source>ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the {development_guide_url} 
 
 Please reach out to us for support at: {support_url}</source>
-        <translation type="unfinished" />
+        <translation>Fehler: TODDS wurde nicht gefunden. Wenn Sie von der Quelle ausgehen, stellen Sie bitte sicher, dass Sie die richtigen Schritte in der  befolgt haben 
+
+Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_guide_url} {support_url}</translation>
     </message>
 </context>
 <context>
     <name>TroubleshootingController</name>
     <message>
         <source>Process complete</source>
-        <translation type="unfinished" />
+        <translation>Prozess vollständig</translation>
     </message>
     <message>
         <source>Process complete, wait for steam to complete further process.</source>
-        <translation type="unfinished" />
+        <translation>Vervollständigen Sie vollständig, warten Sie, bis der Dampf einen weiteren Prozess abschließt.</translation>
     </message>
     <message>
         <source>Steam Launch Failed</source>
-        <translation type="unfinished" />
+        <translation>Dampfstart ist fehlgeschlagen</translation>
     </message>
     <message>
         <source>Could not automatically start game installation through Steam.
 
 Please manually verify/install the game through Steam.</source>
-        <translation type="unfinished" />
+        <translation>Konnte die Spielinstallation nicht automatisch mit Steam starten.
+
+Bitte überprüfen Sie das Spiel manuell über Steam.</translation>
     </message>
     <message>
         <source>Deleted all files in the Steam mods directory.
 
  Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation type="unfinished" />
+        <translation>Löschte alle Dateien im Dampfmods -Verzeichnis.
+
+ Der Versuch, Steam neu zu starten, um eine automatische Wiederbelastung von abonnierten Mods auszulösen.</translation>
     </message>
     <message>
         <source>Steam Workshop Redownload</source>
-        <translation type="unfinished" />
+        <translation>Dampfworkshop wiedergeladen</translation>
     </message>
     <message>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
@@ -4588,615 +4627,633 @@ If mods don't download automatically, try:
 1. Restart Steam
 2. Verify game files in Steam
 3. Visit the Workshop page of each mod</source>
-        <translation type="unfinished" />
+        <translation>Mods wurden gelöscht. Bitte starten Sie Steam neu, um die automatische Wiederbelastung von abonnierten Mods auszulösen.
+
+Wenn Mods nicht automatisch heruntergeladen werden, versuchen Sie es mit:
+1. Starten Sie Dampf neu
+2. Überprüfen Sie die Spieldateien in Steam
+3. Besuchen Sie die Workshop -Seite jedes Mods</translation>
     </message>
     <message>
         <source>Deleted all files in the {config_dir} successfully.</source>
-        <translation type="unfinished" />
+        <translation>Alle Dateien in {config_dir} erfolgreich gelöscht.</translation>
     </message>
     <message>
         <source>No files found in {config_dir} for deletion.</source>
-        <translation type="unfinished" />
+        <translation>Keine Dateien in {config_dir} zum Löschen gefunden.</translation>
     </message>
     <message>
         <source>Deleted {item} successfully.</source>
-        <translation type="unfinished" />
+        <translation>Gelöscht {item} erfolgreich.</translation>
     </message>
     <message>
         <source>Confirm Changes</source>
-        <translation type="unfinished" />
+        <translation>Änderungen bestätigen</translation>
     </message>
     <message>
         <source>Are you sure you want to apply these changes? This cannot be undone.</source>
-        <translation type="unfinished" />
+        <translation>Sind Sie sicher, dass Sie diese Änderungen anwenden möchten? Dies kann nicht rückgängig gemacht werden.</translation>
     </message>
     <message>
         <source>This will delete the selected files. Make sure you have backups if needed.</source>
-        <translation type="unfinished" />
+        <translation>Dadurch wird die ausgewählten Dateien gelöscht. Stellen Sie sicher, dass Sie bei Bedarf Sicherungen haben.</translation>
     </message>
     <message>
         <source>Confirm Clear</source>
-        <translation type="unfinished" />
+        <translation>Bestätigen Sie klar</translation>
     </message>
     <message>
         <source>Are you sure you want to delete all mods?
 
 WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
-        <translation type="unfinished" />
+        <translation>Sind Sie sicher, dass Sie alle Mods löschen möchten?
+
+WARNUNG: Dies löscht alle Mods in Ihrem Mods -Ordner dauerhaft und set in den Vanillezustand zurück.</translation>
     </message>
     <message>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
-        <translation type="unfinished" />
+        <translation>Erfolgreich alle Mods gelöscht und modsconfig.xml in den Vanillezustand zurücksetzen.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished" />
+        <translation>Fehler</translation>
     </message>
     <message>
         <source>Failed to reset ModsConfig.xml.</source>
-        <translation type="unfinished" />
+        <translation>Modsconfig.xml nicht zurücksetzen.</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished">Export fehlgeschlagen</translation>
+        <translation>Export fehlgeschlagen</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod export.</source>
-        <translation type="unfinished" />
+        <translation>{mods_config} existiert nicht und überspringen mod -Export.</translation>
     </message>
     <message>
         <source>Export Mod List</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste exportieren</translation>
     </message>
     <message>
         <source>Location Error</source>
-        <translation type="unfinished" />
+        <translation>Standortfehler</translation>
     </message>
     <message>
         <source>Confirm Export</source>
-        <translation type="unfinished" />
+        <translation>Export bestätigen</translation>
     </message>
     <message>
         <source>Export current mod list to file?</source>
-        <translation type="unfinished" />
+        <translation>Aktuelle Mod -Liste in Datei exportieren?</translation>
     </message>
     <message>
         <source>Failed to export mod list.</source>
-        <translation type="unfinished" />
+        <translation>Die MOD -Liste nicht exportieren.</translation>
     </message>
     <message>
         <source>Import failed</source>
-        <translation type="unfinished" />
+        <translation>Import fehlgeschlagen</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod import.</source>
-        <translation type="unfinished" />
+        <translation>{mods_config} existiert nicht und überspringen den Modimport.</translation>
     </message>
     <message>
         <source>Import Mod List</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste importieren</translation>
     </message>
     <message>
         <source>Confirm Import</source>
-        <translation type="unfinished" />
+        <translation>Import bestätigen</translation>
     </message>
     <message>
         <source>Import mod list from file?</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste aus der Datei importieren?</translation>
     </message>
     <message>
         <source>This will overwrite your current mod list.</source>
-        <translation type="unfinished" />
+        <translation>Dadurch überschreiben Sie Ihre aktuelle Mod -Liste.</translation>
     </message>
     <message>
         <source>Failed to import mod list</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste nicht importieren</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.
 Details: {e}</source>
-        <translation type="unfinished" />
+        <translation>Die ausgewählte Datei ist keine gültige Mod -List -Datei.
+Details: {e}</translation>
     </message>
     <message>
         <source>Cache Cleared</source>
-        <translation type="unfinished" />
+        <translation>Cache gelöscht</translation>
     </message>
     <message>
         <source>Successfully deleted Steam's downloading folder.
 Restart Steam for the changes to take effect.</source>
-        <translation type="unfinished" />
+        <translation>Erfolgreich gelöschtes Download -Ordner von Steam.
+Starten Sie Dampf neu, damit die Änderungen wirksam werden.</translation>
     </message>
     <message>
         <source>Cache Clear</source>
-        <translation type="unfinished" />
+        <translation>Cache klar</translation>
     </message>
     <message>
         <source>Steam's downloading folder is already empty.</source>
-        <translation type="unfinished" />
+        <translation>Der Dampf -Download -Ordner ist bereits leer.</translation>
     </message>
     <message>
         <source>Cache Clear Failed</source>
-        <translation type="unfinished" />
+        <translation>Cache Clear fehlgeschlagen</translation>
     </message>
     <message>
         <source>Could not delete Steam's downloading folder.
 Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
-        <translation type="unfinished" />
+        <translation>Dabei konnte Steams Download -Ordner nicht löschen.
+Bitte löschen Sie es manuell: Steam/Steamapps/Herunterladen
+Details: {e}</translation>
     </message>
     <message>
         <source>Steam Action Failed</source>
-        <translation type="unfinished" />
+        <translation>Dampfaktion ist fehlgeschlagen</translation>
     </message>
     <message>
         <source>Could not open Steam to verify game files.
 Please verify game files manually through Steam's game properties.
 Details: {e}</source>
-        <translation type="unfinished" />
+        <translation>Konnte Steam nicht öffnen, um Spieldateien zu überprüfen.
+Bitte überprüfen Sie die Spieldateien manuell über Steams Spieleigenschaften.
+Details: {e}</translation>
     </message>
     <message>
         <source>No Games Found</source>
-        <translation type="unfinished" />
+        <translation>Keine Spiele gefunden</translation>
     </message>
     <message>
         <source>No installed games found in this Steam library folder.
 You may have games installed in a different Steam library folder or drive.</source>
-        <translation type="unfinished" />
+        <translation>Keine installierten Spiele in diesem Ordner der Steam Library gefunden.
+Möglicherweise haben Spiele in einem anderen Dampfbibliotheksordner oder -Fottrieb installiert.</translation>
     </message>
     <message>
         <source>Confirm Library Repair</source>
-        <translation type="unfinished" />
+        <translation>Bestätigen Sie die Reparatur der Bibliothek</translation>
     </message>
     <message>
         <source>This will verify all {len} games in your Steam library.
 This may take a while. Continue?</source>
-        <translation type="unfinished" />
+        <translation>Dadurch werden alle  -Plänen in Ihrer Steam -Bibliothek überprüft.
+Dies kann eine Weile dauern. Weitermachen? {len}</translation>
     </message>
     <message>
         <source>Library Repair Started</source>
-        <translation type="unfinished" />
+        <translation>Die Reparatur der Bibliothek begann</translation>
     </message>
     <message>
         <source>Steam will now verify {len} games.
 You can monitor progress in the Steam client.</source>
-        <translation type="unfinished" />
+        <translation>Steam überprüft nun  -Spiele.
+Sie können den Fortschritt im Steam -Client überwachen. {len}</translation>
     </message>
     <message>
         <source>Could not repair Steam library.
 Please verify your games manually through Steam.
 Details: {e}</source>
-        <translation type="unfinished" />
+        <translation>Konnte die Dampfbibliothek nicht reparieren.
+Bitte überprüfen Sie Ihre Spiele manuell über Steam.
+Details: {e}</translation>
     </message>
     <message>
         <source>Path not set, Please check your settings and Try again.</source>
-        <translation type="unfinished" />
+        <translation>Pfad nicht gesetzt, bitte überprüfen Sie Ihre Einstellungen und versuchen Sie es erneut.</translation>
     </message>
     <message>
         <source>Process failed</source>
-        <translation type="unfinished" />
+        <translation>Prozess fehlgeschlagen</translation>
     </message>
     <message>
         <source>Could not process: {item}</source>
-        <translation type="unfinished" />
+        <translation>Konnte nicht verarbeiten: {item}</translation>
     </message>
     <message>
         <source>Failed to process item: {item} due to the following error: {e}</source>
-        <translation type="unfinished" />
+        <translation>Nicht verarbeiten Element:  aufgrund des folgenden Fehlers: {e} {item}</translation>
     </message>
     <message>
         <source>Steam user Check failed</source>
-        <translation type="unfinished" />
+        <translation>Dampfbenutzerprüfung fehlgeschlagen</translation>
     </message>
     <message>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
-        <translation type="unfinished" />
+        <translation>Sie sind kein Dampfbenutzer oder nicht eingestellt, prüfen Sie die Einstellungen und versuchen Sie es erneut.</translation>
     </message>
     <message>
         <source>Error: {e}</source>
-        <translation type="unfinished" />
+        <translation>Fehler: {e}</translation>
     </message>
 </context>
 <context>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
-        <translation type="unfinished" />
+        <translation>Spieldateien Wiederherstellung</translation>
     </message>
     <message>
         <source>If you're experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
-        <translation type="unfinished" />
+        <translation>Wenn Sie Probleme mit Ihrem Spiel haben, können Sie die folgenden Wiederherstellungsoptionen ausprobieren. Steam lädt beim nächsten Start automatisch alle gelöschten Dateien zurück.</translation>
     </message>
     <message>
         <source>Reset game files (Preserves local mods, deletes and redownloads game files)</source>
-        <translation type="unfinished" />
+        <translation>Spielendateien zurücksetzen (lokale Mods, löscht und lädt Spieldateien auf.)</translation>
     </message>
     <message>
         <source>Deletes and redownloads game files but keeps your local mods intact.</source>
-        <translation type="unfinished" />
+        <translation>Löschen und Herunterladen von Spieldateien, hält aber Ihre lokalen Mods intakt.</translation>
     </message>
     <message>
         <source>Reset Steam Workshop mods (Deletes and redownloads all Steam mods)</source>
-        <translation type="unfinished" />
+        <translation>Dampfwerkshop -Mods zurücksetzen (alle Steam -Mods löschen und wiederladen).</translation>
     </message>
     <message>
         <source>Deletes all Steam Workshop mods and triggers redownload.</source>
-        <translation type="unfinished" />
+        <translation>Löscht alle Dampf -Workshop -Mods und -Leunderladungen.</translation>
     </message>
     <message>
         <source>Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)</source>
-        <translation type="unfinished" />
+        <translation>MOD -Konfigurationen zurücksetzen (konserviert modsconfig.xml und prefs.xml)</translation>
     </message>
     <message>
         <source>Deletes mod configuration files except ModsConfig.xml and Prefs.xml.</source>
-        <translation type="unfinished" />
+        <translation>Löscht Mod -Konfigurationsdateien mit Ausnahme von modsconfig.xml und prefs.xml.</translation>
     </message>
     <message>
         <source>Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*</source>
-        <translation type="unfinished" />
+        <translation>Spielkonfigurationen zurücksetzen (modsconfig.xml, prefs.xml, keyprefs.xml)*</translation>
     </message>
     <message>
         <source>Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml.</source>
-        <translation type="unfinished" />
+        <translation>Löscht Spielkonfigurationsdateien wie modsconfig.xml, prefs.xml und keyprefs.xml.</translation>
     </message>
     <message>
         <source>After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort.</source>
-        <translation type="unfinished" />
+        <translation>Starten Sie nach dem Zurücksetzen der Spielkonfigurationen das Spiel direkt über Steam, um modsconfig.xml zu regenerieren und dann RIMSORT neu zu starten.</translation>
     </message>
     <message>
         <source>Apply Recovery</source>
-        <translation type="unfinished" />
+        <translation>Wiederherstellung anwenden</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Stornieren</translation>
+        <translation>Stornieren</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
-        <translation type="unfinished" />
+        <translation>MOD -Konfigurationsoptionen</translation>
     </message>
     <message>
         <source>Manage your mod configurations and load order. These options help you organize and share your mod setup.</source>
-        <translation type="unfinished" />
+        <translation>Verwalten Sie Ihre Mod -Konfigurationen und laden Sie die Reihenfolge. Diese Optionen helfen Ihnen dabei, Ihr Mod -Setup zu organisieren und zu teilen.</translation>
     </message>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
-        <translation type="unfinished" />
+        <translation>Speichern Sie Ihre aktuelle Mod -Liste in einer .xml -Datei, um sie mit anderen freizugeben.</translation>
     </message>
     <message>
         <source>Export Mod List</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste exportieren</translation>
     </message>
     <message>
         <source>Export your current mod list to a file</source>
-        <translation type="unfinished" />
+        <translation>Exportieren Sie Ihre aktuelle Mod -Liste in eine Datei</translation>
     </message>
     <message>
         <source>Import a mod list in .xml format from another player</source>
-        <translation type="unfinished" />
+        <translation>Importieren Sie eine Mod -Liste in .xml -Format aus einem anderen Spieler</translation>
     </message>
     <message>
         <source>Import Mod List</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste importieren</translation>
     </message>
     <message>
         <source>Import a mod list from a file</source>
-        <translation type="unfinished" />
+        <translation>Importieren Sie eine Mod -Liste aus einer Datei</translation>
     </message>
     <message>
         <source>Delete all mods and reset to vanilla state</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie alle Mods und setzen Sie auf den Vanillezustand zurück</translation>
     </message>
     <message>
         <source>Steam Utilities</source>
-        <translation type="unfinished" />
+        <translation>Dampfversorgungsunternehmen</translation>
     </message>
     <message>
         <source>Delete Steam's downloading folder to fix download issues</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie den Dampf -Download -Ordner zum Behebung von Download -Problemen</translation>
     </message>
     <message>
         <source>Check and repair RimWorld game files</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen und reparieren Sie Rimworld -Spieldateien</translation>
     </message>
     <message>
         <source>Verify integrity of all installed Steam games</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen Sie die Integrität aller installierten Steam -Spiele</translation>
     </message>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
-        <translation type="unfinished" />
+        <translation>WARNUNG: Diese Operationen löschen ausgewählte Dateien dauerhaft!</translation>
     </message>
     <message>
         <source>Export List</source>
-        <translation type="unfinished" />
+        <translation>Exportliste</translation>
     </message>
     <message>
         <source>Import List</source>
-        <translation type="unfinished" />
+        <translation>Importliste</translation>
     </message>
     <message>
         <source>Reset to Vanilla</source>
-        <translation type="unfinished" />
+        <translation>Auf Vanille zurücksetzen</translation>
     </message>
     <message>
         <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation type="unfinished" />
+        <translation>Dadurch wird alle Mods in Ihrem Mods -Ordner gelöscht und auf den Vanillezustand zurückgesetzt</translation>
     </message>
     <message>
         <source>Clear All Mods</source>
-        <translation type="unfinished" />
+        <translation>Alle Mods löschen</translation>
     </message>
     <message>
         <source>Steam-specific utilities to help resolve download and game file issues.</source>
-        <translation type="unfinished" />
+        <translation>Dampfspezifische Dienstprogramme zur Lösung von Download- und Spieldateiproblemen.</translation>
     </message>
     <message>
         <source>Clear Download Cache</source>
-        <translation type="unfinished" />
+        <translation>Download Cache löschen</translation>
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished" />
+        <translation>Überprüfen Sie die Spieldateien</translation>
     </message>
     <message>
         <source>Repair Steam Library</source>
-        <translation type="unfinished" />
+        <translation>Dampfbibliothek reparieren</translation>
     </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>
     <message>
         <source>RimSort - Replacements found for Workshop mods</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT - Ersatz für Workshop -Mods gefunden</translation>
     </message>
     <message>
         <source>There are replacements available for Workshop mods!</source>
-        <translation type="unfinished" />
+        <translation>Es gibt Ersatz für Workshop -Mods!</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
-        <translation type="unfinished" />
+        <translation>In der folgenden Tabelle werden Workshop -Mods mit vorgeschlagenen Ersatzteilen gemäß der Datenbank "diese stattdessen verwenden" angezeigt</translation>
     </message>
     <message>
         <source>Original Mod Name</source>
-        <translation type="unfinished" />
+        <translation>Originalmod -Name</translation>
     </message>
     <message>
         <source>Original Author</source>
-        <translation type="unfinished" />
+        <translation>Originalautor</translation>
     </message>
     <message>
         <source>Original Workshop Page</source>
-        <translation type="unfinished" />
+        <translation>Original Workshop -Seite</translation>
     </message>
     <message>
         <source>Replacement Mod Name</source>
-        <translation type="unfinished" />
+        <translation>Ersatzmod Name</translation>
     </message>
     <message>
         <source>Replacement Author</source>
-        <translation type="unfinished" />
+        <translation>Ersatzautor</translation>
     </message>
     <message>
         <source>Replacement Workshop Page</source>
-        <translation type="unfinished" />
+        <translation>Austausch Workshop Seite</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
-        <translation type="unfinished">Download mit SteamCMD</translation>
+        <translation>Download mit SteamCMD</translation>
     </message>
     <message>
         <source>Subscribe</source>
-        <translation type="unfinished" />
+        <translation>Abonnieren</translation>
     </message>
     <message>
         <source>Unsubscribe</source>
-        <translation type="unfinished" />
+        <translation>Abbestellen</translation>
     </message>
     <message>
         <source>Unsubscribe outdated</source>
-        <translation type="unfinished" />
+        <translation>Abbestellen veraltet</translation>
     </message>
     <message>
         <source>Unsubscribe all outdated</source>
-        <translation type="unfinished" />
+        <translation>Abbestellen alle veraltet</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Aktualisieren</translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <source>Refresh Mod List</source>
-        <translation type="unfinished" />
+        <translation>MOD -Liste aktualisieren</translation>
     </message>
     <message>
         <source>Refresh Table</source>
-        <translation type="unfinished" />
+        <translation>Tisch aktualisieren</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished" />
+        <translation>Löschen</translation>
     </message>
     <message>
         <source>Delete Selected Original Mods...</source>
-        <translation type="unfinished" />
+        <translation>Löschen Sie ausgewählte Originalmods ...</translation>
     </message>
     <message>
         <source>Use This Instead</source>
-        <translation type="unfinished">Verwenden Sie dies stattdessen</translation>
+        <translation>Verwenden Sie dies stattdessen</translation>
     </message>
     <message>
         <source>Successfully subscribed to replacement mods</source>
-        <translation type="unfinished" />
+        <translation>Erfolgreich abonniert Ersatzmods</translation>
     </message>
     <message>
         <source>Successfully unsubscribed to original mods</source>
-        <translation type="unfinished" />
+        <translation>Erfolgreich abgemeldete Originalmods</translation>
     </message>
     <message>
         <source>Subscribe replacements</source>
-        <translation type="unfinished" />
+        <translation>Ersatz abonnieren</translation>
     </message>
     <message>
         <source>Subscribe all replacements</source>
-        <translation type="unfinished" />
+        <translation>Abonnieren Sie alle Ersetzungen</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
-        <translation type="unfinished" />
+        <translation>Öffnen Sie die Workshop -Seite</translation>
     </message>
 </context>
 <context>
     <name>_UploadLogDialog</name>
     <message>
         <source>Uploading Log...</source>
-        <translation type="unfinished" />
+        <translation>Hochladen von Protokoll ...</translation>
     </message>
     <message>
         <source>Log Upload Successful</source>
-        <translation type="unfinished" />
+        <translation>Aktualisieren Sie erfolgreich hoch</translation>
     </message>
     <message>
         <source>Log file uploaded successfully! Copied URL to clipboard.</source>
-        <translation type="unfinished" />
+        <translation>Protokolldatei erfolgreich hochgeladen! Kopierte URL in Zwischenablage.</translation>
     </message>
     <message>
         <source>Log Upload Failed</source>
-        <translation type="unfinished" />
+        <translation>Protokoll -Upload fehlgeschlagen</translation>
     </message>
     <message>
         <source>Log file upload failed!</source>
-        <translation type="unfinished" />
+        <translation>Protokolldatei -Upload fehlgeschlagen!</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again.</source>
-        <translation type="unfinished" />
+        <translation>Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</translation>
     </message>
 </context>
 <context>
     <name>__new__</name>
     <message>
         <source>Invalid archive path</source>
-        <translation type="unfinished" />
+        <translation>Ungültiger Archivpfad</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation type="unfinished" />
+        <translation>Der bereitgestellte Archivpfad ist ungültig.</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation type="unfinished" />
+        <translation>Bitte geben Sie einen gültigen Archivpfad an.</translation>
     </message>
 </context>
 <context>
     <name>check_if_pfids_blacklisted</name>
     <message>
         <source>Download blacklisted mods</source>
-        <translation type="unfinished" />
+        <translation>Laden Sie Blacklisted Mods herunter</translation>
     </message>
     <message>
         <source>Skip blacklisted mods</source>
-        <translation type="unfinished" />
+        <translation>Überspringen Sie die schwarzen Liste</translation>
     </message>
 </context>
 <context>
     <name>copy_to_clipboard_safely</name>
     <message>
         <source>Failed to copy to clipboard.</source>
-        <translation type="unfinished" />
+        <translation>Versäumt, in die Zwischenablage zu kopieren.</translation>
     </message>
     <message>
         <source>RimSort failed to copy the text to your clipboard. Please copy it manually.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT konnte den Text nicht in Ihre Zwischenablage kopieren. Bitte kopieren Sie es manuell.</translation>
     </message>
 </context>
 <context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
-        <translation type="unfinished" />
+        <translation>Nicht sortieren</translation>
     </message>
     <message>
         <source>RimSort found circular dependencies in your mods list. Please see the details for dependency loops.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT hat kreisförmige Abhängigkeiten in Ihrer Mods -Liste gefunden. Bitte beachten Sie die Details für Abhängigkeitsschleifen.</translation>
     </message>
 </context>
 <context>
     <name>launch_game_process</name>
     <message>
         <source>File not found</source>
-        <translation type="unfinished">Datei nicht gefunden</translation>
+        <translation>Datei nicht gefunden</translation>
     </message>
     <message>
         <source>Unable to launch game process</source>
-        <translation type="unfinished" />
+        <translation>Spielprozess kann nicht starten</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation type="unfinished" />
+        <translation>Rimsort konnte Rimworld nicht starten, da das ausführbare Spiel auf dem angegebenen Pfad nicht vorhanden ist: . Bitte überprüfen Sie, ob dieses Verzeichnis korrekt ist und das Rimworld -Spiel ausführbar ist. {executable_path}</translation>
     </message>
     <message>
         <source>Game launch failed</source>
-        <translation type="unfinished" />
+        <translation>Spielstart fehlgeschlagen</translation>
     </message>
     <message>
         <source>Unable to launch RimWorld</source>
-        <translation type="unfinished" />
+        <translation>Rimworld kann nicht starten</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
-        <translation type="unfinished" />
+        <translation>Rimsort konnte Rimworld nicht starten, da der Spielordner leer oder ungültig ist: [] Bitte überprüfen Sie, ob der Spielordner ordnungsgemäß eingestellt ist und dass die ausführbare Rimworld -Datei darin besteht. {game_install_path}</translation>
     </message>
 </context>
 <context>
     <name>rmtree</name>
     <message>
         <source>Failed to remove directory</source>
-        <translation type="unfinished" />
+        <translation>Verzeichnis nicht entfernen</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that does not exist.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT versuchte, ein Verzeichnis zu entfernen, das nicht existiert.</translation>
     </message>
     <message>
         <source>Directory does not exist: {path}</source>
-        <translation type="unfinished" />
+        <translation>Verzeichnis existiert nicht:  {path}</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that is not a directory.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT versuchte, ein Verzeichnis zu entfernen, das kein Verzeichnis ist.</translation>
     </message>
     <message>
         <source>Path is not a directory: {path}</source>
-        <translation type="unfinished" />
+        <translation>Pfad ist kein Verzeichnis:  {path}</translation>
     </message>
     <message>
         <source>An OSError occurred while trying to remove a directory.</source>
-        <translation type="unfinished" />
+        <translation>Beim Versuch, ein Verzeichnis zu entfernen, trat ein Oserror auf.</translation>
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation type="unfinished" />
+        <translation>ist bei  mit dem Fehlercode {error_code} aufgetreten. {e.strerror} {e.filename}</translation>
     </message>
 </context>
 <context>
     <name>validate_rimworld_mods_list</name>
     <message>
         <source>Unable to read data</source>
-        <translation type="unfinished" />
+        <translation>Daten nicht lesen können</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT konnte die gelieferte Mods -Liste nicht lesen.</translation>
     </message>
     <message>
         <source>The supplied mods list may be missing or invalid. If you just (re)installed RimWorld, you may need to run it once to generate the mods list.</source>
-        <translation type="unfinished" />
+        <translation>Die gelieferte Mods -Liste fehlt möglicherweise oder ungültig. Wenn Sie Rimworld (neu) nur installiert haben, müssen Sie es möglicherweise einmal ausführen, um die Mods -Liste zu generieren.</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list because it may be invalid or missing.</source>
-        <translation type="unfinished" />
+        <translation>RIMSORT konnte die gelieferte Mods -Liste nicht lesen, da sie möglicherweise ungültig oder fehlt.</translation>
     </message>
 </context>
 </TS>
