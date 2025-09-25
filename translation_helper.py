@@ -3,36 +3,72 @@ Enhanced Translation Helper Script for RimSort
 
 This script helps translators by:
 1. Checking translation completeness against source language
-2. Validating translation files
+2. Validating translation files and fixing common issues
 3. Generating translation statistics
-4. Running PySide6 translation tools
-5. Auto-translating unfinished strings using various services
+4. Running PySide6 translation tools (lupdate, lrelease)
+5. Auto-translating unfinished strings using various services (Google, DeepL, OpenAI)
 
 Usage:
-    python translation_helper.py check zh_CN
+    python translation_helper.py check [language]
     python translation_helper.py stats
-    python translation_helper.py validate fr_FR
-    python translation_helper.py update-ts zh_CN
-    python translation_helper.py compile zh_CN
-    python translation_helper.py compile-all
-    python translation_helper.py auto-translate zh_CN --service google
-    python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR_KEY
+    python translation_helper.py validate [language]
+    python translation_helper.py update-ts [language]
+    python translation_helper.py compile [language]
+    python translation_helper.py auto-translate [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME]
+    python translation_helper.py process [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME]
+
+Note:
+- [language] is optional; if omitted, the command applies to all languages except en_US.
+- The check command verifies that all strings are present in the specified language's translation file.
+- The validate command checks for common issues like empty translations and obsolete entries and fixes them automatically.
+- The stats command generates a summary of translation status across all languages.
+- The update-ts command updates the .ts files with new strings from the source language.
+- The compile command compiles .ts files into binary format (.qm).
+- The auto-translate command uses selected translation services to fill in missing translations.
+- The process command runs update-ts, auto-translate, and compile in sequence for a language.
 """
 
 import argparse
+import asyncio
 import importlib
+import logging
 import re
 import shutil
+import ssl
 import subprocess
 import sys
-import time
 import types
-import xml.etree.ElementTree as ET
+
+# Try to use lxml for better performance, fallback to standard ET
+import xml.etree.ElementTree
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, Dict, List, Optional, Set, TypedDict
 
 import requests
+
+ET: types.ModuleType = xml.etree.ElementTree
+USE_LXML = False
+try:
+    import lxml.etree
+
+    ET = lxml.etree
+    USE_LXML = True
+except ImportError:
+    pass
+
+# Global variables for caching and configuration
+TRANSLATION_CACHE: Dict[str, str] = {}
+CONFIG: Dict[str, Any] = {}
+LOGGER = logging.getLogger(__name__)
+
+try:
+    import aiohttp  # type: ignore
+except ImportError:
+    aiohttp = None
+
+
+ssl._create_default_https_context = ssl._create_unverified_context  # type: ignore
 
 # Translation service imports with fallbacks
 try:
@@ -40,7 +76,7 @@ try:
 except ImportError:
     GoogleTranslator = None
 
-openai: Optional[types.ModuleType]
+openai: Optional[types.ModuleType] = None
 
 try:
     openai = importlib.import_module("openai")
@@ -48,14 +84,34 @@ except ImportError:
     openai = None
 
 
+class LangMapEntry(TypedDict, total=False):
+    google: Optional[str]
+    deepl: Optional[str]
+    openai: Optional[str]
+
+
+# Global language map for all supported languages
+LANG_MAP: Dict[str, LangMapEntry] = {
+    "zh_CN": {"google": "zh-cn", "deepl": "ZH", "openai": "Simplified Chinese"},
+    "zh_TW": {"google": "zh-tw", "deepl": "ZH", "openai": "Traditional Chinese"},
+    "en_US": {"google": "en", "deepl": "EN", "openai": "English"},
+    "ja_JP": {"google": "ja", "deepl": "JA", "openai": "Japanese"},
+    "ko_KR": {"google": "ko", "deepl": "KO", "openai": "Korean"},
+    "fr_FR": {"google": "fr", "deepl": "FR", "openai": "French"},
+    "de_DE": {"google": "de", "deepl": "DE", "openai": "German"},
+    "es_ES": {"google": "es", "deepl": "ES", "openai": "Spanish"},
+    "ru_RU": {"google": "ru", "deepl": None, "openai": None},
+    "tr_TR": {"google": "tr", "deepl": None, "openai": None},
+    "pt_BR": {"google": "pt", "deepl": None, "openai": None},
+}
+
+
 # === Translation Services ===
-
-
 class TranslationService:
     """translation service interface"""
 
-    def translate(
-        self, text: str, target_lang: str, source_lang: str = "en"
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
     ) -> Optional[str]:
         raise NotImplementedError
 
@@ -66,30 +122,89 @@ class GoogleTranslateService(TranslationService):
     def __init__(self) -> None:
         if GoogleTranslator is None:
             raise ImportError("googletrans library not available")
+        assert GoogleTranslator is not None
         self.translator = GoogleTranslator()
-
-    def translate(
-        self, text: str, target_lang: str, source_lang: str = "en"
-    ) -> Optional[str]:
+        # Disable SSL verification for the internal session to fix TLS issues
         try:
-            # Google language code mapping
-            lang_map = {
-                "zh_CN": "zh-cn",
-                "en_US": "en",
-                "ja_JP": "ja",
-                "fr_FR": "fr",
-                "de_DE": "de",
-                "es_ES": "es",
-                "ru_RU": "ru",
-                "tr_TR": "tr",
-                "pt_BR": "pt",
-            }
+            session = getattr(self.translator, "_session", None)
+            if session:
+                session.verify = False
+        except AttributeError:
+            pass
 
-            target = lang_map.get(target_lang, target_lang.lower().replace("_", "-"))
-            source = lang_map.get(source_lang, source_lang.lower().replace("_", "-"))
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
+        loop = asyncio.get_event_loop()
+        try:
+            target_entry = LANG_MAP.get(target_lang)
+            target: Optional[str] = None
+            if target_entry is not None and isinstance(target_entry, dict):
+                target = target_entry.get("google")
+            if not target:
+                target = target_lang.lower().replace("_", "-")
 
-            result = self.translator.translate(text, dest=target, src=source)
-            return result.text
+            source_entry = LANG_MAP.get(source_lang)
+            source: Optional[str] = None
+            if source_entry is not None and isinstance(source_entry, dict):
+                source = source_entry.get("google")
+            if not source:
+                source = source_lang.lower().replace("_", "-")
+
+            def do_translate() -> Any:
+                max_retries = 3
+                error_str = ""
+                for attempt in range(max_retries):
+                    try:
+                        return self.translator.translate(text, dest=target, src=source)
+                    except Exception as e:
+                        error_str = str(e)
+                        if (
+                            "SSL" in error_str
+                            or "TLS" in error_str
+                            or "sslv3" in error_str.lower()
+                        ):
+                            if attempt < max_retries - 1:
+                                # Re-instantiate translator on SSL errors
+                                assert GoogleTranslator is not None
+                                self.translator = GoogleTranslator()
+                                try:
+                                    session = getattr(self.translator, "_session", None)
+                                    if session:
+                                        session.verify = False
+                                except AttributeError:
+                                    pass
+                                print(
+                                    f"🔄 Retrying translation due to SSL error (attempt {attempt + 2}/{max_retries})"
+                                )
+                                continue
+                        # For other AttributeErrors, retry once
+                        elif (
+                            "AttributeError" in error_str
+                            and "'NoneType' object has no attribute 'send'" in error_str
+                        ):
+                            if attempt < max_retries - 1:
+                                assert GoogleTranslator is not None
+                                self.translator = GoogleTranslator()
+                                try:
+                                    session = getattr(self.translator, "_session", None)
+                                    if session:
+                                        session.verify = False
+                                except AttributeError:
+                                    pass
+                                continue
+                        else:
+                            raise
+                raise Exception(
+                    f"Translation failed after {max_retries} retries: {error_str}"
+                )
+
+            result = await loop.run_in_executor(None, do_translate)
+
+            if hasattr(result, "text"):
+                return result.text
+            else:
+                return str(result)
         except Exception as e:
             print(f"❌ Google translate failed: {e}")
             return None
@@ -102,24 +217,30 @@ class DeepLService(TranslationService):
         self.api_key = api_key
         self.base_url = "https://api-free.deepl.com/v2/translate"
 
-    def translate(
-        self, text: str, target_lang: str, source_lang: str = "en"
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
     ) -> Optional[str]:
-        try:
-            # DeepL language code mapping
-            lang_map = {
-                "zh_CN": "ZH",
-                "zh_TW": "ZH",
-                "en_US": "EN",
-                "ja_JP": "JA",
-                "ko_KR": "KO",
-                "fr_FR": "FR",
-                "de_DE": "DE",
-                "es_ES": "ES",
-            }
+        if aiohttp is None:
+            # Fallback to sync if aiohttp not available
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(
+                None, self._sync_translate, text, target_lang, source_lang
+            )
 
-            target = lang_map.get(target_lang, target_lang.upper())
-            source = lang_map.get(source_lang, source_lang.upper())
+        try:
+            target_entry = LANG_MAP.get(target_lang)
+            target: Optional[str] = None
+            if target_entry is not None:
+                target = target_entry.get("deepl")
+            if not target:
+                target = target_lang.upper()
+
+            source_entry = LANG_MAP.get(source_lang)
+            source: Optional[str] = None
+            if source_entry is not None:
+                source = source_entry.get("deepl")
+            if not source:
+                source = source_lang.upper()
 
             data = {
                 "auth_key": self.api_key,
@@ -128,10 +249,47 @@ class DeepLService(TranslationService):
                 "source_lang": source,
             }
 
-            # Added timeout to the requests.post call
-            response = requests.post(
-                self.base_url, data=data, timeout=10
-            )  # 10-second timeout
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.base_url, data=data, timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
+                    response.raise_for_status()
+                    result = await response.json()
+                    return result["translations"][0]["text"]
+
+        except asyncio.TimeoutError:
+            print(f"❌ DeepL translation timed out: Request {text[:50]}...")
+            return None
+        except Exception as e:
+            print(f"❌ DeepL translation failed: {e}")
+            return None
+
+    def _sync_translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
+        try:
+            target_entry = LANG_MAP.get(target_lang)
+            target: Optional[str] = None
+            if target_entry is not None:
+                target = target_entry.get("deepl")
+            if not target:
+                target = target_lang.upper()
+
+            source_entry = LANG_MAP.get(source_lang)
+            source: Optional[str] = None
+            if source_entry is not None:
+                source = source_entry.get("deepl")
+            if not source:
+                source = source_lang.upper()
+
+            data = {
+                "auth_key": self.api_key,
+                "text": text,
+                "target_lang": target,
+                "source_lang": source,
+            }
+
+            response = requests.post(self.base_url, data=data, timeout=10)
             response.raise_for_status()
 
             result = response.json()
@@ -154,59 +312,58 @@ class OpenAIService(TranslationService):
         self.client = openai.OpenAI(api_key=api_key)
         self.model = model
 
-    def translate(
-        self, text: str, target_lang: str, source_lang: str = "en"
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
     ) -> Optional[str]:
         assert openai is not None
         try:
-            # language name mapping
-            lang_names = {
-                "zh_CN": "Simplified Chinese",
-                "zh_TW": "Traditional Chinese",
-                "en_US": "English",
-                "ja_JP": "Japanese",
-                "ko_KR": "Korean",
-                "fr_FR": "French",
-                "de_DE": "German",
-                "es_ES": "Spanish",
-            }
+            target_entry = LANG_MAP.get(target_lang)
+            target_name: Optional[str] = None
+            if target_entry is not None:
+                target_name = target_entry.get("openai")
+            if not target_name:
+                target_name = target_lang
 
-            target_name = lang_names.get(target_lang, target_lang)
-            source_name = lang_names.get(source_lang, source_lang)
+            source_entry = LANG_MAP.get(source_lang)
+            source_name: Optional[str] = None
+            if source_entry is not None:
+                source_name = source_entry.get("openai")
+            if not source_name:
+                source_name = source_lang
 
-            prompt = f"""Translate the following {source_name} text to {target_name}. 
+            prompt = """Translate the following {} text to {}.
 This is UI text from a software application. Keep it concise and user-friendly.
 Only return the translation, no explanation:
 
-{text}"""
+{}""".format(source_name, target_name, text)
 
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=200,
                 temperature=0.1,
-                # OpenAI client has its own timeout mechanism
-                timeout=10.0,  # Added timeout
+                timeout=10.0,
             )
 
             return response.choices[0].message.content.strip()
 
-        except openai.TimeoutError:
-            print(f"❌ OpenAI translation timed out: Request {text[:50]}...")
-            return None
         except Exception as e:
-            print(f"❌ OpenAI translation failed: {e}")
+            if "timeout" in str(e).lower():
+                print(f"❌ OpenAI translation timed out: Request {text[:50]}...")
+            else:
+                print(f"❌ OpenAI translation failed: {e}")
             return None
 
 
 # === Existing Helper Functions ===
-
-
 def get_source_keys(source_file: Path) -> Set[str]:
     """Extract all translation keys from source language file."""
     try:
         tree = ET.parse(source_file)
         root = tree.getroot()
+
+        if root is None:
+            return set()
 
         keys = set()
         for context in root.findall("context"):
@@ -232,6 +389,9 @@ def parse_ts_file(
     try:
         tree = ET.parse(file_path)
         root = tree.getroot()
+
+        if root is None:
+            return {"error": "Root element is None"}
 
         stats = {
             "total": 0,
@@ -304,17 +464,15 @@ def parse_ts_file(
 
 
 # === New Auto-Translation Functions ===
-
-
 @dataclass
 class UnfinishedItem:
     context: str
     source: str
-    element: ET.Element
+    element: Any
 
 
 def find_unfinished_translations(
-    tree: ET.ElementTree,
+    tree: Any,
 ) -> List[UnfinishedItem]:
     """Search for unfinished translations in a .ts file."""
     unfinished: list[UnfinishedItem] = []
@@ -387,117 +545,146 @@ def create_translation_service(service_name: str, **kwargs: Any) -> TranslationS
         raise ValueError(f"Unsupported translation service: {service_name}")
 
 
-def auto_translate_file(
-    language: str, service_name: str = "google", **service_kwargs: Any
+async def auto_translate_file(
+    language: Optional[str],
+    service_name: str = "google",
+    continue_on_failure: bool = False,
+    **service_kwargs: Any,
 ) -> bool:
-    """auto-translate unfinished strings in a .ts file"""
+    """Auto-translate unfinished strings in a .ts file or all if language is None."""
     locales_dir = Path("locales")
-    ts_file = locales_dir / f"{language}.ts"
 
-    if not ts_file.exists():
-        print(f"❌ Translation file not found: {ts_file}")
-        return False
+    languages: List[str] = []
+    if language:
+        languages = [language]
+    else:
+        languages = [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
 
-    # Create a backup copy
-    backup_file = ts_file.with_suffix(".ts.backup")
-    shutil.copy2(ts_file, backup_file)
-    print(f"📁 Backup created: {backup_file}")
+    all_success = True
 
-    translation_failed_midway = False
-    tree: ET.ElementTree = ET.ElementTree()
-    successful = 0
-    failed = 0
+    for lang in languages:
+        ts_file = locales_dir / f"{lang}.ts"
 
-    try:
-        # Create translation service
-        service = create_translation_service(service_name, **service_kwargs)
+        if not ts_file.exists():
+            print(f"❌ Translation file not found: {ts_file}")
+            all_success = False
+            continue
 
-        # Parse file
-        tree = cast(Any, ET).parse(ts_file)
-        unfinished = find_unfinished_translations(tree)
+        # Create a backup copy
+        backup_file = ts_file.with_suffix(".ts.backup")
+        shutil.copy2(ts_file, backup_file)
+        print(f"📁 Backup created: {backup_file}")
 
-        if not unfinished:
-            print("✅ No unfinished translations found!")
-            return True
+        translation_failed_midway = False
+        tree = None
+        successful = 0
+        failed = 0
 
-        print(f"🔍 Found {len(unfinished)} unfinished translations")
+        try:
+            # Create translation service
+            service = create_translation_service(service_name, **service_kwargs)
 
-        for i, item in enumerate(unfinished, 1):
-            source_text = item.source
+            # Parse file
+            tree = ET.parse(ts_file)
+            unfinished = find_unfinished_translations(tree)
 
-            if should_skip_translation(source_text):
-                print(f"⏭️  Skipping [{i}/{len(unfinished)}]: {source_text}")
+            if not unfinished:
+                print(f"✅ No unfinished translations found for {lang}!")
                 continue
 
-            print(f"🔄 Translating [{i}/{len(unfinished)}]: {source_text[:50]}...")
+            print(f"🔍 Found {len(unfinished)} unfinished translations for {lang}")
 
-            # Attempt translation
-            translated = service.translate(source_text, language, "en_US")
+            # Semaphore to limit concurrent requests
+            semaphore = asyncio.Semaphore(5)
 
-            if translated and translated.strip():
-                # Update XML element
-                item.element.text = translated
-                if item.element.get("type") == "unfinished":
-                    del item.element.attrib["type"]
+            async def translate_item(
+                i: int, item: UnfinishedItem
+            ) -> tuple[int, UnfinishedItem, Optional[str]]:
+                source_text = item.source
+                if should_skip_translation(source_text):
+                    print(f"⏭️  Skipping [{i}/{len(unfinished)}]: {source_text}")
+                    return i, item, None
 
-                print(f"✅ Success: {translated[:50]}...")
-                successful += 1
+                async with semaphore:
+                    print(
+                        f"🔄 Translating [{i}/{len(unfinished)}]: {source_text[:50]}..."
+                    )
+                    translated = await service.translate(source_text, lang, "en_US")
+                    return i, item, translated
+
+            # Create tasks
+            tasks = [translate_item(i, item) for i, item in enumerate(unfinished, 1)]
+            results = await asyncio.gather(*tasks)
+
+            for i, item, translated in results:
+                if translated is None:
+                    continue  # Skipped
+
+                if translated and translated.strip():
+                    # Update XML element
+                    item.element.text = translated
+                    if item.element.get("type") == "unfinished":
+                        del item.element.attrib["type"]
+
+                    print(f"✅ Success [{i}]: {translated[:50]}...")
+                    successful += 1
+                else:
+                    print(f"❌ Failed to translate [{i}]: {item.source[:50]}...")
+                    failed += 1
+                    if not continue_on_failure:
+                        translation_failed_midway = True
+                        break
+
+        except Exception as e:
+            print(f"⚠️  An unexpected error occurred during auto-translation: {e}")
+            translation_failed_midway = True  # Mark as failed if an exception occurs
+
+        finally:
+            # Only save if no translation failed midway, or if you want to explicitly save partial results
+            # we will save only if NO failures occurred during the loop.
+            if tree is not None and not translation_failed_midway and failed == 0:
+                try:
+                    # Save file
+                    tree.write(ts_file, encoding="utf-8", xml_declaration=True)
+
+                    # Fix DOCTYPE
+                    with open(ts_file, "r", encoding="utf-8") as f:
+                        content = f.read()
+
+                    if "<!DOCTYPE TS>" not in content:
+                        lines = content.split("\n")
+                        lines.insert(1, "<!DOCTYPE TS>")
+                        content = "\n".join(lines)
+
+                    with open(ts_file, "w", encoding="utf-8") as f:
+                        f.write(content)
+
+                    print("\n📊 Auto-translation completed:")
+                    print(f"   ✅ Successful: {successful}")
+                    print(
+                        f"   ❌ Failed: {failed}"
+                    )  # This will be 0 if saving happened
+                    print(f"   📁 File updated: {ts_file}")
+                    # Remove backup if successful save
+                    if backup_file.exists():
+                        backup_file.unlink()
+                        print(f"🗑️  Backup removed: {backup_file}")
+                except Exception as save_e:
+                    print(f"❌ Error saving the file: {save_e}")
+                    print(f"🔄 Restoring from backup: {backup_file}")
+                    if backup_file.exists():
+                        shutil.copy2(backup_file, ts_file)
+                    all_success = False
             else:
-                print(f"❌ Failed to translate: {source_text[:50]}...")
-                failed += 1
-                break  # Exit the loop immediately on first failure
-
-            # Add delay to avoid API limits
-            time.sleep(0.5)
-
-    except Exception as e:
-        print(f"⚠️  An unexpected error occurred during auto-translation: {e}")
-        translation_failed_midway = True  # Mark as failed if an exception occurs
-
-    finally:
-        # Only save if no translation failed midway, or if you want to explicitly save partial results
-        # we will save only if NO failures occurred during the loop.
-        if not translation_failed_midway:
-            try:
-                # Save file
-                ET.register_namespace("", "")
-                tree.write(ts_file, encoding="utf-8", xml_declaration=True)
-
-                # Fix DOCTYPE
-                with open(ts_file, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                if "<!DOCTYPE TS>" not in content:
-                    lines = content.split("\n")
-                    lines.insert(1, "<!DOCTYPE TS>")
-                    content = "\n".join(lines)
-
-                with open(ts_file, "w", encoding="utf-8") as f:
-                    f.write(content)
-
-                print("\n📊 Auto-translation completed:")
-                print(f"   ✅ Successful: {successful}")
-                print(f"   ❌ Failed: {failed}")  # This will be 0 if saving happened
-                print(f"   📁 File updated: {ts_file}")
-                # Remove backup if successful save
-                if backup_file.exists():
-                    backup_file.unlink()
-                    print(f"🗑️  Backup removed: {backup_file}")
-                return True
-            except Exception as save_e:
-                print(f"❌ Error saving the file: {save_e}")
-                print(f"🔄 Restoring from backup: {backup_file}")
+                print(
+                    "\n❌ Auto-translation aborted due to failure. Restoring from backup."
+                )
                 if backup_file.exists():
                     shutil.copy2(backup_file, ts_file)
-                return False
-        else:
-            print(
-                "\n❌ Auto-translation aborted due to failure. Restoring from backup."
-            )
-            if backup_file.exists():
-                shutil.copy2(backup_file, ts_file)
-                # No need to unlink backup here, it's the working copy now
-            return False
+                    # No need to unlink backup here, it's the working copy now
+                all_success = False
+
+    return all_success
 
 
 def run_lupdate(language: Optional[str] = None) -> bool:
@@ -602,64 +789,71 @@ def run_lrelease(language: Optional[str] = None) -> bool:
         return False
 
 
-def check_translation(language: str) -> None:
-    """Check translation completeness for a specific language."""
+def check_translation(language: Optional[str] = None) -> None:
+    """Check translation completeness for a specific language or all languages."""
     locales_dir = Path("locales")
-    ts_file = locales_dir / f"{language}.ts"
+
+    languages = []
+    if language:
+        languages = [language]
+    else:
+        # All languages except en_US
+        languages = [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
+
     source_file = locales_dir / "en_US.ts"  # Assume en_US is source
-
-    if not ts_file.exists():
-        print(f"❌ Translation file not found: {ts_file}")
-        return
-
-    print(f"🔍 Checking translation for {language}...")
-
-    # Get source keys for comparison
     source_keys = set()
     if source_file.exists():
         source_keys = get_source_keys(source_file)
         print(f"📚 Found {len(source_keys)} keys in source language")
 
-    result = parse_ts_file(ts_file, source_keys)
+    for lang in languages:
+        ts_file = locales_dir / f"{lang}.ts"
+        if not ts_file.exists():
+            print(f"❌ Translation file not found: {ts_file}")
+            continue
 
-    if "error" in result:
-        print(f"❌ Error parsing file: {result['error']}")
-        return
+        print(f"🔍 Checking translation for {lang}...")
 
-    stats = result["stats"]
-    issues = result["issues"]
+        result = parse_ts_file(ts_file, source_keys)
 
-    print("\n📊 Translation Statistics:")
-    print(f"   Total strings: {stats['total']}")
-    print(
-        f"   Translated: {stats['translated']} ({stats['translated'] / stats['total'] * 100:.1f}%)"
-    )
-    print(f"   Unfinished: {stats['unfinished']}")
-    print(f"   Missing: {stats['missing']}")
-    print(f"   Obsolete: {stats['obsolete']}")
+        if "error" in result:
+            print(f"❌ Error parsing file: {result['error']}")
+            continue
 
-    if source_keys and "missing_from_source" in stats:
-        print(f"   Missing from source: {stats['missing_from_source']}")
+        stats = result["stats"]
+        issues = result["issues"]
 
-    completion = (
-        (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
-    )
+        print("\n📊 Translation Statistics:")
+        print(f"   Total strings: {stats['total']}")
+        print(
+            f"   Translated: {stats['translated']} ({stats['translated'] / stats['total'] * 100:.1f}%)"
+        )
+        print(f"   Unfinished: {stats['unfinished']}")
+        print(f"   Missing: {stats['missing']}")
+        print(f"   Obsolete: {stats['obsolete']}")
 
-    if completion >= 95:
-        print("✅ Translation is nearly complete!")
-    elif completion >= 80:
-        print("🟡 Translation is mostly complete")
-    elif completion >= 50:
-        print("🟠 Translation is partially complete")
-    else:
-        print("🔴 Translation needs significant work")
+        if source_keys and "missing_from_source" in stats:
+            print(f"   Missing from source: {stats['missing_from_source']}")
 
-    if issues and len(issues) <= 10:
-        print("\n⚠️  Issues found:")
-        for issue in issues[:10]:
-            print(f"   • {issue}")
-        if len(issues) > 10:
-            print(f"   ... and {len(issues) - 10} more issues")
+        completion = (
+            (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+        )
+
+        if completion >= 95:
+            print("✅ Translation is nearly complete!")
+        elif completion >= 80:
+            print("🟡 Translation is mostly complete")
+        elif completion >= 50:
+            print("🟠 Translation is partially complete")
+        else:
+            print("🔴 Translation needs significant work")
+
+        if issues and len(issues) <= 10:
+            print("\n⚠️  Issues found:")
+            for issue in issues[:10]:
+                print(f"   • {issue}")
+            if len(issues) > 10:
+                print(f"   ... and {len(issues) - 10} more issues")
 
 
 def show_all_stats() -> None:
@@ -718,72 +912,108 @@ def show_all_stats() -> None:
         )
 
 
-def validate_translation(language: str) -> None:
-    """Validate a translation file for common issues."""
+def validate_translation(language: Optional[str] = None) -> None:
+    """Validate a translation file for common issues, optionally for all languages."""
     locales_dir = Path("locales")
-    ts_file = locales_dir / f"{language}.ts"
 
-    if not ts_file.exists():
-        print(f"❌ Translation file not found: {ts_file}")
-        return
+    languages = []
+    if language:
+        languages = [language]
+    else:
+        languages = [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
 
-    print(f"🔍 Validating translation for {language}...")
+    for lang in languages:
+        ts_file = locales_dir / f"{lang}.ts"
+        if not ts_file.exists():
+            print(f"❌ Translation file not found: {ts_file}")
+            continue
 
-    try:
-        tree = ET.parse(ts_file)
-        root = tree.getroot()
+        print(f"🔍 Validating translation for {lang}...")
 
-        issues = []
+        try:
+            tree = ET.parse(ts_file)
+            root = tree.getroot()
 
-        # Check XML structure
-        if root.tag != "TS":
-            issues.append("❌ Root element should be 'TS'")
+            issues = []
 
-        if not root.get("language"):
-            issues.append("❌ Missing language attribute")
+            # Check XML structure
+            if root.tag != "TS":
+                issues.append("❌ Root element should be 'TS'")
 
-        # Check for common translation issues
-        for context in root.findall("context"):
-            for message in context.findall("message"):
-                source = message.find("source")
-                translation = message.find("translation")
+            if not root.get("language"):
+                issues.append("❌ Missing language attribute")
 
-                if source is not None and translation is not None:
-                    source_text = source.text or ""
-                    trans_text = translation.text or ""
+            # Fix missing language attribute
+            if not root.get("language"):
+                root.set("language", lang)
+                print(f"🔧 Fixed missing language attribute for {lang}")
 
-                    # Check for placeholder mismatches
-                    source_placeholders = set(re.findall(r"\{[^}]+\}", source_text))
-                    trans_placeholders = set(re.findall(r"\{[^}]+\}", trans_text))
+            # Check for common translation issues and fix placeholders and tags
+            for context in root.findall("context"):
+                for message in context.findall("message"):
+                    source = message.find("source")
+                    translation = message.find("translation")
 
-                    if source_placeholders != trans_placeholders and trans_text:
-                        issues.append(
-                            f"⚠️  Placeholder mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
-                        )
+                    if source is not None and translation is not None:
+                        source_text = source.text or ""
+                        trans_text = translation.text or ""
 
-                    # Check for HTML tag mismatches
-                    source_tags = set(re.findall(r"<[^>]+>", source_text))
-                    trans_tags = set(re.findall(r"<[^>]+>", trans_text))
+                        # Check for placeholder mismatches
+                        source_placeholders = set(re.findall(r"\{[^}]+\}", source_text))
+                        trans_placeholders = set(re.findall(r"\{[^}]+\}", trans_text))
 
-                    if source_tags != trans_tags and trans_text:
-                        issues.append(
-                            f"⚠️  HTML tag mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
-                        )
+                        if source_placeholders != trans_placeholders and trans_text:
+                            issues.append(
+                                f"⚠️  Placeholder mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
+                            )
+                            # Attempt to fix by aligning placeholders
+                            # Remove placeholders not in source from translation
+                            for ph in list(re.findall(r"\{[^}]+\}", trans_text)):
+                                if ph not in source_placeholders:
+                                    trans_text = trans_text.replace(ph, "")
+                            # Add missing placeholders from source to translation if not present
+                            for ph in source_placeholders:
+                                if ph not in trans_text:
+                                    trans_text += f" {ph}"
+                            translation.text = trans_text.strip()
+                            print(
+                                f"🔧 Fixed placeholder mismatch in message: {source_text[:30]}..."
+                            )
 
-        if not issues:
-            print("✅ Translation file is valid!")
-        else:
-            print(f"⚠️  Found {len(issues)} validation issues:")
-            for issue in issues[:10]:
-                print(f"   {issue}")
-            if len(issues) > 10:
-                print(f"   ... and {len(issues) - 10} more issues")
+                        # Check for HTML tag mismatches
+                        source_tags = set(re.findall(r"<[^>]+>", source_text))
+                        trans_tags = set(re.findall(r"<[^>]+>", trans_text))
 
-    except Exception as e:
-        print(f"❌ Error validating file: {e}")
+                        if source_tags != trans_tags and trans_text:
+                            issues.append(
+                                f"⚠️  HTML tag mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
+                            )
+                            # Attempt to fix by adding missing tags
+                            for tag in source_tags:
+                                if tag not in trans_tags:
+                                    trans_text += f" {tag}"
+                            translation.text = trans_text.strip()
+                            print(
+                                f"🔧 Fixed HTML tag mismatch in message: {source_text[:30]}..."
+                            )
+
+            if not issues:
+                print("✅ Translation file is valid!")
+            else:
+                print(f"⚠️  Found {len(issues)} validation issues (some fixed):")
+                for issue in issues[:10]:
+                    print(f"   {issue}")
+                if len(issues) > 10:
+                    print(f"   ... and {len(issues) - 10} more issues")
+
+            # Save fixed file
+            tree.write(ts_file, encoding="utf-8", xml_declaration=True)
+
+        except Exception as e:
+            print(f"❌ Error validating file: {e}")
 
 
-def process_language(language: str, service: str, **service_kwargs: Any) -> None:
+async def process_language(language: str, service: str, **service_kwargs: Any) -> None:
     """Run the full pipeline for a single language."""
     print(f"🚀 Starting one-click process for {language} ...")
 
@@ -791,7 +1021,7 @@ def process_language(language: str, service: str, **service_kwargs: Any) -> None
         print("❌ Aborting: lupdate failed.")
         sys.exit(1)
 
-    if not auto_translate_file(language, service, **service_kwargs):
+    if not await auto_translate_file(language, service, **service_kwargs):
         print("❌ Aborting: auto-translation failed.")
         sys.exit(1)
 
@@ -808,7 +1038,9 @@ def main() -> None:
 
     # Check command
     check_parser = subparsers.add_parser("check", help="Check translation completeness")
-    check_parser.add_argument("language", help="Language code (e.g., zh_CN)")
+    check_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
 
     # Stats command
     subparsers.add_parser("stats", help="Show statistics for all translations")
@@ -817,7 +1049,9 @@ def main() -> None:
     validate_parser = subparsers.add_parser(
         "validate", help="Validate translation file"
     )
-    validate_parser.add_argument("language", help="Language code (e.g., zh_CN)")
+    validate_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
 
     # Update command
     update_parser = subparsers.add_parser(
@@ -833,19 +1067,21 @@ def main() -> None:
     compile_parser = subparsers.add_parser(
         "compile", help="Compile translation file using lrelease"
     )
-    compile_parser.add_argument("language", help="Language code (e.g., zh_CN)")
-
-    # Compile all command
-    subparsers.add_parser("compile-all", help="Compile all translation files")
+    compile_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
 
     # Auto-translate command
     auto_parser = subparsers.add_parser(
         "auto-translate", help="Auto-translate unfinished strings"
     )
-    auto_parser.add_argument("language", help="Language code (e.g., zh_CN)")
+    auto_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
+    service_choices = ["google", "deepl", "openai"]
     auto_parser.add_argument(
         "--service",
-        choices=["google", "deepl", "openai"],
+        choices=service_choices,
         default="google",
         help="Translation service",
     )
@@ -853,15 +1089,22 @@ def main() -> None:
     auto_parser.add_argument(
         "--model", default="gpt-3.5-turbo", help="OpenAI model to use"
     )
+    auto_parser.add_argument(
+        "--continue-on-failure",
+        action="store_true",
+        help="Continue translating even if some fail",
+    )
 
     process_parser = subparsers.add_parser(
         "process",
         help="One-click workflow: update .ts → auto-translate missing strings → compile .qm",
     )
-    process_parser.add_argument("language", help="Language code, e.g. zh_CN")
+    process_parser.add_argument(
+        "language", nargs="?", help="Language code, e.g. zh_CN, optional"
+    )
     process_parser.add_argument(
         "--service",
-        choices=["google", "deepl", "openai"],
+        choices=service_choices,
         default="google",
         help="Translation service to use for auto-translation",
     )
@@ -882,8 +1125,6 @@ def main() -> None:
         run_lupdate(args.language)
     elif args.command == "compile":
         run_lrelease(args.language)
-    elif args.command == "compile-all":
-        run_lrelease()
     elif args.command == "auto-translate":
         service_kwargs = {}
         if args.api_key:
@@ -891,7 +1132,11 @@ def main() -> None:
         if args.model:
             service_kwargs["model"] = args.model
 
-        success = auto_translate_file(args.language, args.service, **service_kwargs)
+        success = asyncio.run(
+            auto_translate_file(
+                args.language, args.service, args.continue_on_failure, **service_kwargs
+            )
+        )
         if not success:
             sys.exit(1)
     elif args.command == "process":
@@ -900,7 +1145,7 @@ def main() -> None:
             service_kwargs["api_key"] = args.api_key
         if args.model:
             service_kwargs["model"] = args.model
-        process_language(args.language, args.service, **service_kwargs)
+        asyncio.run(process_language(args.language, args.service, **service_kwargs))
     else:
         parser.print_help()
 
