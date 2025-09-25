@@ -35,7 +35,10 @@ RimSort/
 │   ├── fr_FR.ts      # 法语
 │   ├── de_DE.ts      # 德语
 │   ├── es_ES.ts      # 西班牙语
-│   └── ja_JP.ts      # 日语
+│   ├── ja_JP.ts      # 日语
+│   ├── pt_BR.ts      # 巴西葡萄牙语
+│   ├── ru_RU.ts      # 俄语
+│   └── tr_TR.ts      # 土耳其语
 └── app/
     └── controllers/
         └── language_controller.py  # 语言管理
@@ -46,24 +49,81 @@ RimSort/
 | 语言代码 | 语言名称 | 状态 |
 |----------|----------|------|
 | `en_US` | English | 完整（源语言） |
-| `zh_CN` | 简体中文 | 部分完成 |
-| `fr_FR` | Français（法语） | 需要翻译 |
-| `de_DE` | Deutsch（德语） | 需要翻译 |
-| `es_ES` | Español（西班牙语） | 需要翻译 |
-| `ja_JP` | 日本語（日语） | 需要翻译 |
+| `zh_CN` | 简体中文 | 完整 |
+| `fr_FR` | Français（法语） | 完整 |
+| `de_DE` | Deutsch（德语） | 完整 |
+| `es_ES` | Español（西班牙语） | 完整 |
+| `ja_JP` | 日本語（日语） | 完整 |
+| `pt_BR` | Português（巴西葡萄牙语） | 完整 |
+| `ru_RU` | Русский（俄语） | 完整 |
+| `tr_TR` | Türkçe（土耳其语） | 完整 |
 
 ## 翻译助手工具
 
-项目提供了 `translation_helper.py` 脚本来帮助翻译工作。
+项目提供了全面的 `translation_helper.py` 脚本来帮助翻译工作。
 
 **重要提示**：该工具基于 PySide6 的命令实现，需要先设置好项目的开发环境。请参考 [开发环境设置指南](development-setup.zh-cn.md) 完成环境配置后再使用此工具。
 
-主要功能包括：
-- 检查翻译完整性
-- 显示翻译统计信息
-- 验证翻译文件格式
-- 更新翻译文件
-- 编译翻译文件
+### 可用命令
+
+翻译助手工具提供以下命令：
+
+#### 基本命令
+- **`check [language]`**：检查特定语言或所有语言（如果未指定语言）的翻译完整性
+- **`stats`**：显示所有语言的翻译统计信息
+- **`validate [language]`**：验证翻译文件格式和内容，自动修复占位符不匹配等常见问题
+- **`update-ts [language]`**：使用源语言的新字符串更新 .ts 文件
+- **`compile [language]`**：将 .ts 文件编译为二进制 .qm 格式
+
+#### 高级命令
+- **`auto-translate [language] --service [google|deepl|openai]`**：使用各种翻译服务自动翻译未完成的字符串
+  - 支持 Google Translate、DeepL 和 OpenAI GPT 模型
+  - 选项：`--api-key` 用于服务认证，`--model` 用于 OpenAI 模型选择，`--continue-on-failure` 用于跳过失败的翻译
+- **`process [language] --service [google|deepl|openai]`**：一键工作流程，按顺序运行 update-ts → auto-translate → compile
+
+### 命令示例
+
+```bash
+# 检查所有语言的完整性
+python translation_helper.py check
+
+# 检查特定语言
+python translation_helper.py check zh_CN
+
+# 查看所有语言的统计信息
+python translation_helper.py stats
+
+# 验证并自动修复所有语言
+python translation_helper.py validate
+
+# 更新所有语言的翻译文件
+python translation_helper.py update-ts
+
+# 使用 Google 自动翻译（免费，无需 API 密钥）
+python translation_helper.py auto-translate zh_CN --service google
+
+# 使用 DeepL 自动翻译（需要 API 密钥）
+python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR_DEEPL_KEY
+
+# 使用 OpenAI 自动翻译（需要 API 密钥）
+python translation_helper.py auto-translate zh_CN --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
+
+# 一键完整工作流程
+python translation_helper.py process zh_CN --service google
+
+# 编译所有语言
+python translation_helper.py compile
+```
+
+### 功能特性
+
+- **批量操作**：大多数命令在未指定特定语言时支持对所有语言进行操作
+- **自动修复验证**：validate 命令自动修复占位符和 HTML 标签不匹配问题
+- **多种翻译服务**：支持 Google Translate（免费）、DeepL 和 OpenAI，可配置模型
+- **错误处理**：强大的错误处理，包括重试逻辑和 Google Translate 的 SSL 修复
+- **进度跟踪**：实时进度条和详细统计信息
+- **缓存**：翻译缓存以避免重复的 API 调用
+- **并发**：优化的并行处理以加快批量操作速度
 
 具体使用方法请参见"[测试翻译](#步骤-5测试翻译)"部分。
 
@@ -75,8 +135,9 @@ RimSort/
 2. **设置开发环境**（按照[开发环境设置指南](development-setup.zh-cn.md)）
 3. **选择语言文件**：打开 `locales/YOUR_LANGUAGE.ts`
 4. **编辑翻译**：找到 `type="unfinished"` 的条目进行翻译
-5. **编译测试**：运行 `python translation_helper.py compile YOUR_LANGUAGE`
-6. **提交代码**：提交 `.ts` 和 `.qm` 文件
+5. **自动翻译剩余字符串**（可选）：运行 `python translation_helper.py auto-translate YOUR_LANGUAGE --service google`
+6. **编译测试**：运行 `python translation_helper.py compile YOUR_LANGUAGE`
+7. **提交代码**：提交 `.ts` 和 `.qm` 文件
 
 详细步骤请参考下面的完整指南。
 

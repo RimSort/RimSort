@@ -34,7 +34,10 @@ RimSort/
 │   ├── fr_FR.ts      # French
 │   ├── de_DE.ts      # German
 │   ├── es_ES.ts      # Spanish
-│   └── ja_JP.ts      # Japanese
+│   ├── ja_JP.ts      # Japanese
+│   ├── pt_BR.ts      # Portuguese (Brazil)
+│   ├── ru_RU.ts      # Russian
+│   └── tr_TR.ts      # Turkish
 └── app/
     └── controllers/
         └── language_controller.py  # Language management
@@ -45,24 +48,81 @@ RimSort/
 | Language Code | Language Name | Status |
 |---------------|---------------|--------|
 | `en_US` | English | Complete (source) |
-| `zh_CN` | 简体中文 (Simplified Chinese) | Partial |
-| `fr_FR` | Français (French) | Needs translation |
-| `de_DE` | Deutsch (German) | Needs translation |
-| `es_ES` | Español (Spanish) | Needs translation |
-| `ja_JP` | 日本語 (Japanese) | Needs translation |
+| `zh_CN` | 简体中文 (Simplified Chinese) | Complete |
+| `fr_FR` | Français (French) | Complete |
+| `de_DE` | Deutsch (German) | Complete |
+| `es_ES` | Español (Spanish) | Complete |
+| `ja_JP` | 日本語 (Japanese) | Complete |
+| `pt_BR` | Português (Brasil) | Complete |
+| `ru_RU` | Русский (Russian) | Complete |
+| `tr_TR` | Türkçe (Turkish) | Complete |
 
 ## Translation Helper Tool
 
-The project provides a `translation_helper.py` script to assist with translation work.
+The project provides a comprehensive `translation_helper.py` script to assist with translation work.
 
 **Important Note**: This tool is implemented using PySide6 commands and requires a properly configured development environment. Please refer to the [Development Setup Guide](development-setup.md) to set up your environment before using this tool.
 
-Main features include:
-- Check translation completeness
-- Show translation statistics
-- Validate translation file format
-- Update translation files
-- Compile translation files
+### Available Commands
+
+The translation helper tool provides the following commands:
+
+#### Basic Commands
+- **`check [language]`**: Check translation completeness for a specific language or all languages (if no language specified)
+- **`stats`**: Show translation statistics for all languages
+- **`validate [language]`**: Validate translation file format and content, automatically fixing common issues like placeholder mismatches
+- **`update-ts [language]`**: Update .ts files with new strings from the source language
+- **`compile [language]`**: Compile .ts files into binary .qm format
+
+#### Advanced Commands
+- **`auto-translate [language] --service [google|deepl|openai]`**: Auto-translate unfinished strings using various translation services
+  - Supports Google Translate, DeepL, and OpenAI GPT models
+  - Options: `--api-key` for service authentication, `--model` for OpenAI model selection, `--continue-on-failure` to skip failed translations
+- **`process [language] --service [google|deepl|openai]`**: One-click workflow that runs update-ts → auto-translate → compile in sequence
+
+### Command Examples
+
+```bash
+# Check completeness for all languages
+python translation_helper.py check
+
+# Check specific language
+python translation_helper.py check zh_CN
+
+# View statistics for all languages
+python translation_helper.py stats
+
+# Validate and auto-fix all languages
+python translation_helper.py validate
+
+# Update translation files for all languages
+python translation_helper.py update-ts
+
+# Auto-translate using Google (free, no API key needed)
+python translation_helper.py auto-translate zh_CN --service google
+
+# Auto-translate using DeepL (requires API key)
+python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR_DEEPL_KEY
+
+# Auto-translate using OpenAI (requires API key)
+python translation_helper.py auto-translate zh_CN --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
+
+# One-click complete workflow
+python translation_helper.py process zh_CN --service google
+
+# Compile all languages
+python translation_helper.py compile
+```
+
+### Features
+
+- **Batch Operations**: Most commands support operating on all languages when no specific language is provided
+- **Auto-Fixing Validation**: The validate command automatically fixes placeholder and HTML tag mismatches
+- **Multiple Translation Services**: Support for Google Translate (free), DeepL, and OpenAI with configurable models
+- **Error Handling**: Robust error handling with retry logic and SSL fixes for Google Translate
+- **Progress Tracking**: Real-time progress bars and detailed statistics
+- **Caching**: Translation caching to avoid redundant API calls
+- **Concurrency**: Optimized parallel processing for faster bulk operations
 
 For specific usage methods, please refer to the "[Testing Your Translation](#step-5-testing-your-translation)" section.
 
@@ -74,8 +134,9 @@ If you want to get started quickly with translation work, you can follow this si
 2. **Set up development environment** (following the [Development Setup Guide](development-setup.md))
 3. **Choose language file**: Open `locales/YOUR_LANGUAGE.ts`
 4. **Edit translations**: Find entries marked as `type="unfinished"` and translate them
-5. **Compile and test**: Run `python translation_helper.py compile YOUR_LANGUAGE`
-6. **Submit code**: Commit both `.ts` and `.qm` files
+5. **Auto-translate remaining strings** (optional): Run `python translation_helper.py auto-translate YOUR_LANGUAGE --service google`
+6. **Compile and test**: Run `python translation_helper.py compile YOUR_LANGUAGE`
+7. **Submit code**: Commit both `.ts` and `.qm` files
 
 For detailed steps, please refer to the complete guide below.
 
