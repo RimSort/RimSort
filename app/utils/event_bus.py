@@ -127,6 +127,9 @@ class EventBus(QObject):
     # Performance settings signals
     enable_aux_db_performance_mode = Signal()
 
+    # Loading animation signals
+    do_threaded_loading_animation = Signal(str, object, str)
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
