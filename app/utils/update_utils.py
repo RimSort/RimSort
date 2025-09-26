@@ -202,6 +202,48 @@ class UpdateManager(QObject):
             self.show_update_error()
             return None
 
+    def _asset_matches(
+        self,
+        asset: dict[str, Any],
+        patterns: List[str],
+        extension: str,
+        require_arch: bool = False,
+        arch_patterns: List[str] | None = None,
+    ) -> bool:
+        """
+        Check if an asset matches the given patterns and extension.
+
+        Args:
+            asset: Asset dictionary from GitHub API
+            patterns: List of patterns to match
+            extension: File extension to check
+            require_arch: Whether to require architecture match
+            arch_patterns: Architecture patterns if require_arch is True
+
+        Returns:
+            True if asset matches, False otherwise
+        """
+        asset_name = asset.get("name", "")
+        if isinstance(asset_name, list):
+            asset_name = " ".join(asset_name)
+        asset_name_lower = asset_name.lower()
+
+        if not asset_name_lower.endswith(extension):
+            return False
+
+        system_match = any(pattern.lower() in asset_name_lower for pattern in patterns)
+
+        if not system_match:
+            return False
+
+        if require_arch and arch_patterns:
+            arch_match = any(
+                pattern.lower() in asset_name_lower for pattern in arch_patterns
+            )
+            return arch_match
+
+        return True
+
     def _get_platform_download_url(self, assets: list[dict[str, Any]]) -> str | None:
         """
         Get the appropriate download URL for the current platform.
@@ -229,46 +271,24 @@ class UpdateManager(QObject):
             f"Looking for asset matching system={system}, arch={arch}, patterns={system_patterns + arch_patterns}"
         )
 
-        # Search for matching asset
+        # Search for matching asset (primary with arch if applicable)
         for asset in assets:
-            asset_name = asset.get("name", "")
-            if isinstance(asset_name, list):
-                # If asset_name is a list, join to string for checking
-                asset_name = " ".join(asset_name)
-            asset_name_lower = asset_name.lower()
-
-            # Check if asset has the correct extension
-            if not asset_name_lower.endswith(extension):
-                continue
-
-            # Check if asset matches platform
-            system_match = any(
-                pattern.lower() in asset_name_lower for pattern in system_patterns
-            )
-
-            # Check if asset matches architecture (if arch_patterns is not empty)
-            arch_match = True
-            if arch_patterns:
-                arch_match = any(
-                    pattern.lower() in asset_name_lower for pattern in arch_patterns
-                )
-
-            if system_match and arch_match:
+            if self._asset_matches(
+                asset,
+                system_patterns,
+                extension,
+                require_arch=bool(arch_patterns),
+                arch_patterns=arch_patterns,
+            ):
                 download_url = asset.get("browser_download_url")
                 logger.debug(
                     f"Found matching asset: {asset.get('name')} -> {download_url}"
                 )
                 return download_url
 
-        # Fallback: try to find any asset that contains the system name and has correct extension
+        # Fallback: system match only
         for asset in assets:
-            asset_name = asset.get("name", "").lower()
-
-            # Check if asset has the correct extension
-            if not asset_name.endswith(extension):
-                continue
-
-            if any(pattern.lower() in asset_name for pattern in system_patterns):
+            if self._asset_matches(asset, system_patterns, extension):
                 download_url = asset.get("browser_download_url")
                 logger.debug(
                     f"Found fallback asset: {asset.get('name')} -> {download_url}"
