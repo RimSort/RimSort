@@ -1565,7 +1565,9 @@ class SettingsController(QObject):
                 f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
             )
 
-            steam_mods_folder = get_path_up_to_string(game_folder, "common", exclude=True)
+            steam_mods_folder = get_path_up_to_string(
+                game_folder, "common", exclude=True
+            )
             if steam_mods_folder == "":
                 # Fallback steam mods path
                 steam_mods_folder = Path(

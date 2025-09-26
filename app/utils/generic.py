@@ -497,7 +497,9 @@ def check_valid_http_git_url(url: str) -> bool:
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
 
 
-def get_path_up_to_string(path: Path, stop_string: str, exclude: bool = False) -> Path | str:
+def get_path_up_to_string(
+    path: Path, stop_string: str, exclude: bool = False
+) -> Path | str:
     """
     Returns a Path up to the stop_string.
 
@@ -513,7 +515,7 @@ def get_path_up_to_string(path: Path, stop_string: str, exclude: bool = False) -
         if exclude:
             return Path(*parts[:stop_idx])
         else:
-            return Path(*parts[:stop_idx + 1])
+            return Path(*parts[: stop_idx + 1])
     except ValueError:
         # Stop string is not present
         return ""
@@ -529,6 +531,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     :param steam_folder: Path to steam installation
     :return: Rimworld Path if found, blank str otherwise
     """
+
     def __load_data(f: TextIOWrapper) -> str:
         """
         Helper function that returns RimWorld path from libraryfolders.vdf
@@ -567,6 +570,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     full_rimworld_path = Path(rimworld_path) / "steamapps/common/RimWorld"
 
     return str(full_rimworld_path) if rimworld_path else rimworld_path
+
 
 def check_internet_connection(
     primary_host: str = "8.8.8.8",
