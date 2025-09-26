@@ -408,21 +408,15 @@ class UpdateManager(QObject):
                 pass
 
             args_repr: str = ""
+            p: subprocess.Popen[bytes] | None = None
+            start_new_session = True  # Default for POSIX systems
 
             if system == "Darwin":  # MacOS
                 current_dir = os.path.dirname(
                     os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
                 )
                 script_path = Path(current_dir) / "Contents" / "MacOS" / "update.sh"
-                popen_args = ["/bin/bash", str(script_path)]
-                args_repr = " ".join(shlex.quote(a) for a in popen_args)
-                with open(log_path, "ab", buffering=0) as lf:
-                    p = subprocess.Popen(
-                        popen_args,
-                        stdout=lf,
-                        stderr=subprocess.STDOUT,
-                    )
-
+                start_new_session = False
             elif system == "Windows":
                 script_path = AppInfo().application_folder / "update.bat"
                 # Redirect batch output into the updater log for diagnostics
@@ -440,19 +434,21 @@ class UpdateManager(QObject):
                     cwd=str(AppInfo().application_folder),
                 )
                 args_repr = cmd_str
-
             else:  # Linux and other POSIX systems
                 script_path = AppInfo().application_folder / "update.sh"
+
+            if system != "Windows":
                 popen_args = ["/bin/bash", str(script_path)]
                 args_repr = " ".join(shlex.quote(a) for a in popen_args)
                 with open(log_path, "ab", buffering=0) as lf:
                     p = subprocess.Popen(
                         popen_args,
-                        start_new_session=True,
+                        start_new_session=start_new_session,
                         stdout=lf,
                         stderr=subprocess.STDOUT,
                     )
 
+            assert p is not None
             logger.debug(f"External updater script launched with PID: {p.pid}")
             logger.debug(f"Arguments used: {args_repr}")
 
