@@ -271,23 +271,31 @@ class UpdateManager(QObject):
             f"Looking for asset matching system={system}, arch={arch}, patterns={system_patterns + arch_patterns}"
         )
 
-        # Search for matching asset (primary with arch if applicable)
+        # Single loop: prefer arch match, fallback to system match
         for asset in assets:
-            if self._asset_matches(
-                asset,
-                system_patterns,
-                extension,
-                require_arch=bool(arch_patterns),
-                arch_patterns=arch_patterns,
-            ):
-                download_url = asset.get("browser_download_url")
-                logger.debug(
-                    f"Found matching asset: {asset.get('name')} -> {download_url}"
-                )
-                return download_url
+            if arch_patterns:
+                if self._asset_matches(
+                    asset,
+                    system_patterns,
+                    extension,
+                    require_arch=True,
+                    arch_patterns=arch_patterns,
+                ):
+                    download_url = asset.get("browser_download_url")
+                    logger.debug(
+                        f"Found matching asset: {asset.get('name')} -> {download_url}"
+                    )
+                    return download_url
+            else:
+                # No arch patterns, direct system match
+                if self._asset_matches(asset, system_patterns, extension):
+                    download_url = asset.get("browser_download_url")
+                    logger.debug(
+                        f"Found matching asset: {asset.get('name')} -> {download_url}"
+                    )
+                    return download_url
 
-        # Fallback: system match only
-        for asset in assets:
+            # Fallback to system-only match if arch failed or not required
             if self._asset_matches(asset, system_patterns, extension):
                 download_url = asset.get("browser_download_url")
                 logger.debug(
