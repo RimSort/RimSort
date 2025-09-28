@@ -861,6 +861,15 @@ class SettingsController(QObject):
             self.settings.debug_logging_enabled
         )
         self.settings_dialog.watchdog_checkbox.setChecked(self.settings.watchdog_toggle)
+        self.settings_dialog.backup_saves_on_launch_checkbox.setChecked(
+            self.settings.backup_saves_on_launch
+        )
+        self.settings_dialog.auto_backup_retention_count_spinbox.setValue(
+            self.settings.auto_backup_retention_count
+        )
+        self.settings_dialog.auto_backup_compression_count_spinbox.setValue(
+            self.settings.auto_backup_compression_count
+        )
         self.settings_dialog.mod_type_filter_checkbox.setChecked(
             self.settings.mod_type_filter_toggle
         )
@@ -1164,6 +1173,15 @@ class SettingsController(QObject):
         )
         self.settings.watchdog_toggle = (
             self.settings_dialog.watchdog_checkbox.isChecked()
+        )
+        self.settings.backup_saves_on_launch = (
+            self.settings_dialog.backup_saves_on_launch_checkbox.isChecked()
+        )
+        self.settings.auto_backup_retention_count = (
+            self.settings_dialog.auto_backup_retention_count_spinbox.value()
+        )
+        self.settings.auto_backup_compression_count = (
+            self.settings_dialog.auto_backup_compression_count_spinbox.value()
         )
         self.settings.mod_type_filter_toggle = (
             self.settings_dialog.mod_type_filter_checkbox.isChecked()

@@ -146,6 +146,13 @@ class Settings(QObject):
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
+
+        # Backups
+        self.backup_saves_on_launch: bool = False
+        self.last_backup_date: str = ""
+        self.auto_backup_retention_count: int = 10
+        self.auto_backup_compression_count: int = 10
+
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
         self.color_background_instead_of_text_toggle: bool = True
