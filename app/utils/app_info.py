@@ -87,6 +87,7 @@ class AppInfo:
         self._user_rules_file = self.databases_folder / "userRules.json"
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
+        self._backup_folder: Path = self._app_storage_folder / "backup"
 
         # Make sure important directories exist
 
@@ -96,6 +97,7 @@ class AppInfo:
 
         self._databases_folder.mkdir(parents=True, exist_ok=True)
         self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
+        self._backup_folder.mkdir(parents=True, exist_ok=True)
 
         self._is_initialized: bool = True
 
@@ -223,3 +225,10 @@ class AppInfo:
         Get the path to the folder where application language data is stored.
         """
         return self._language_data_folder
+
+    @property
+    def backup_folder(self) -> Path:
+        """
+        Get the path to the folder where application backups are stored.
+        """
+        return self._backup_folder
