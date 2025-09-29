@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ja_JP">
 <context>
@@ -614,56 +614,6 @@ Are your game configuration paths correct?</source>
 ゲームの設定パスは正しいですか？</translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation>アップデートがスキップされました</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Pythonインタープリターから実行しています。</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>アップデートチェックをスキップしています...</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>最新のリリース情報を取得できませんでした</translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation>RimSortのアップデートが見つかりました</translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>現在のRimSortのバージョンは{current_version}です。
-今すぐアップデートしますか？</translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation>アップデートを完了できませんでした</translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation>アップデートがダウンロードされました</translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation>アップデートを続行しますか？</translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation>アップデートのダウンロードに失敗しました</translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation>最新のRimSortリリースのダウンロードに失敗しました！</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>インターネット接続を確認して再試行してください。また、直接'https://github.com/RimSort/RimSort/releases' を確認することもできます。</translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>モッドソースをスキャンしてメタデータを追加しています...</translation>
     </message>
@@ -1162,34 +1112,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>既存のデータベースの読み込みに失敗しました！</translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>rimsortのアップデートがリリースされました： {latest_tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>{system_info}の有効なrimsortリリースを見つけることができませんでした</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>リリース情報を取得できません</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Github APIに接続できなかった： {error}</translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation>rimsort {tag_name}リリースのダウンロード...</translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation>更新の起動に失敗しました</translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation>更新プロセスを開始できませんでした。</translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation>未保存の変更</translation>
     </message>
@@ -1244,6 +1166,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation>ACFファイルは存在しません。SteamCMDを使用してMODをダウンロードすると作成されます。</translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation>ファイルを開くことができませんでした。</translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
+        <translation>デフォルトのテキストエディターでファイルを開くことに失敗しました。存在しない可能性があります。</translation>
     </message>
 </context>
 <context>
@@ -1982,10 +1912,6 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <translation>steamcmdのシンボリックリンク/ジャンクションは、ローカルフォルダが設定されていないか無効であるため、復元できませんでした。シンボリックリンク/ジャンクションは手動で再作成する必要があります。</translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>インスタンス [{instance_controller.instance.name}] の復元中にエラーが発生しました。</translation>
-    </message>
-    <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation>アーカイブを展開した後、インスタンスフォルダが見つかりませんでした。アーカイブが破損しているか、インスタンス名が無効である可能性があります。</translation>
     </message>
@@ -2081,6 +2007,10 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <source>Player Log</source>
         <translation>プレーヤーログ</translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>インスタンス[{name}]の復元中にエラーが発生しました。</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2119,10 +2049,6 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     <message>
         <source>To Rentry.co…</source>
         <translation>Rentry.coにエクスポート…</translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
-        <translation>ログをアップロード</translation>
     </message>
     <message>
         <source>Open...</source>
@@ -4385,6 +4311,18 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
         <source>XML Parsing Behavior</source>
         <translation>XML解析動作</translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation>RIMSORTアップデートの前にバックアップを作成します</translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation>RIMSORTを更新する前にバックアップを作成するため、これを有効にすることをお勧めします。これにより、不要な変更やデータが削除されるのを防ぐのに役立ちます。</translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation>保持するバックアップの最大数：</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -5018,6 +4956,111 @@ Details: {e}</source>
     <message>
         <source>Repair Steam Library</source>
         <translation>蒸気ライブラリを修理します</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation>更新がスキップされました</translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation>Pythonインタープリターから走っています。</translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation>更新チェックをスキップ...</translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation>RIMSORTアップデートが見つかりました</translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation>rimsortのアップデートがリリースされました： {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>rimsort {current_version}を実行しています
+今すぐ更新しますか？</translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation>更新を完了できません</translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation>{system_info}の有効なrimsortリリースを見つけることができませんでした</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation>リリース情報を取得できません</translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation>Github APIに接続できなかった： {error}</translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation>rimsort {tag_name}リリースのダウンロード...</translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation>更新ファイルの抽出...</translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation>ダウンロードされた更新</translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation>アップデートを進めたいですか？</translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation>バックアップの作成...</translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation>ダウンロードが失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation>更新をダウンロードできませんでした。</translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation>抽出に失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation>ダウンロードされた更新を抽出できませんでした。</translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation>起動に失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation>更新スクリプトの起動に失敗しました。</translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation>更新に失敗しました</translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation>更新プロセス中に予期しないエラーが発生しました。</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation>最新リリース情報を取得できません</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>インターネット接続を確認して再試行してください。「https://github.com/rimsort/rimsort/releases」を直接確認することもできます。</translation>
     </message>
 </context>
 <context>

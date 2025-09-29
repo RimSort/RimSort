@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU">
 <context>
@@ -616,56 +616,6 @@ Are your game configuration paths correct?</source>
 Правильны ли ваши пути конфигурации игры?</translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation>Обновление пропущено</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Вы работаете из интерпретатора Python.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Проверка обновлений пропущена...</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Не удалось получить информацию о последнем релизе</translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation>Обнаружено обновление RimSort</translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>Вы используете RimSort {current_version}
-Хотите обновить сейчас?</translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation>Не удалось завершить обновление</translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation>Обновление загружено</translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation>Хотите продолжить обновление?</translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation>Не удалось загрузить обновление</translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation>Не удалось загрузить последнюю версию RimSort!</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова. Вы также можете проверить 'https://github.com/RimSort/RimSort/releases' напрямую.</translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>Сканирование источников модов и заполнение метаданных...</translation>
     </message>
@@ -1162,34 +1112,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>Не удалось прочитать существующую базу данных!</translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>Было выпущено обновление для Rimsort:  {latest_tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Не удалось найти действительный выпуск Rimsort для  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Невозможно получить информацию о выпуске</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Не удалось подключиться к API GitHub:  {error}</translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation>Загрузка rimsort  релиз ... {tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation>Не удалось запустить обновление</translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation>Не мог начать процесс обновления.</translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation>Несохраненные изменения</translation>
     </message>
@@ -1244,6 +1166,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation>Файл ACF не существует.Он будет создан при загрузке модов с помощью SteamCmd.</translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation>Не удалось открыть файл.</translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
+        <translation>Не удалось открыть файл с помощью текстового редактора по умолчанию.Это может не существовать.</translation>
     </message>
 </context>
 <context>
@@ -1982,10 +1912,6 @@ RimSort может скопировать все ваши моды Workshop в �
         <translation>Символическая ссылка/связь steamcmd не может быть восстановлена, так как локальная папка не установлена или недействительна. Символическая ссылка/связь должна быть воссоздана вручную.</translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>Произошла ошибка при восстановлении инстанса [{instance_controller.instance.name}].</translation>
-    </message>
-    <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation>Папка инстанса не была найдена после извлечения архива. Возможно, архив поврежден или имя инстанса недействительно.</translation>
     </message>
@@ -2081,6 +2007,10 @@ RimSort может скопировать все ваши моды Workshop в �
         <source>Player Log</source>
         <translation>Журнал журнал</translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>Произошла ошибка при восстановлении экземпляра [{name}].</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2119,10 +2049,6 @@ RimSort может скопировать все ваши моды Workshop в �
     <message>
         <source>To Rentry.co…</source>
         <translation>В Rentry.co…</translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
-        <translation>Загрузить журнал</translation>
     </message>
     <message>
         <source>Open...</source>
@@ -4385,6 +4311,18 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
         <source>XML Parsing Behavior</source>
         <translation>XML -диапазон поведения</translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation>Создать резервную копию перед обновлением Rimsort</translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation>Рекомендовано, чтобы это было включено, поскольку он создает резервную копию перед обновлением Rimsort, это помогает предотвратить любые нежелательные изменения или данные, которые будут удалены.</translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation>Максимальное количество резервных копий, чтобы сохранить:</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -5017,6 +4955,111 @@ Details: {e}</source>
     <message>
         <source>Repair Steam Library</source>
         <translation>Ремонтировать Steam Library</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation>Обновление пропущено</translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation>Вы бежите от интерпретатора Python.</translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation>Пропустить проверку обновления ...</translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation>Обновление Rimsort найдено</translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation>Было выпущено обновление для Rimsort:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>Вы используете rimsort {current_version}
+Вы хотите обновить сейчас?</translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation>Невозможно завершить обновление</translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation>Не удалось найти действительный выпуск Rimsort для  {system_info}</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation>Невозможно получить информацию о выпуске</translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation>Не удалось подключиться к API GitHub:  {error}</translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation>Загрузка rimsort  релиз ... {tag_name}</translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation>Извлечение файлов обновления ...</translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation>Обновление скачано</translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation>Вы хотите продолжить обновление?</translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation>Создание резервной копии ...</translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation>Скачать не удалась</translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation>Не удалось скачать обновление.</translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation>Извлечение не удалось</translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation>Не удалось извлечь загруженное обновление.</translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation>Запуск не удался</translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation>Не удалось запустить сценарий обновления.</translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation>Обновление не удалось</translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation>Неожиданная ошибка произошла во время процесса обновления.</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation>Невозможно получить информацию о последнем выпуске</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>Пожалуйста, проверьте подключение к Интернету и попробуйте еще раз, вы также можете проверить «https://github.com/rimsort/rimsort/releases» напрямую.</translation>
     </message>
 </context>
 <context>
