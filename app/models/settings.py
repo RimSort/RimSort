@@ -161,6 +161,10 @@ class Settings(QObject):
         # Advanced filtering options
         self.enable_advanced_filtering: bool = True
 
+        # Update backup settings
+        self.enable_backup_before_update: bool = True
+        self.max_backups: int = 3
+
         # Authentication
         self.rentry_auth_code: str = ""
         self.github_username: str = ""

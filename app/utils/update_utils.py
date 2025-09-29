@@ -139,7 +139,7 @@ class UpdateManager(QObject):
     update_progress = Signal(int, str)  # percent, message
 
     # Class-level constants
-    GITHUB_API_URL = "https://api.github.com/repos/LionelColaso/RimSort/releases/latest"
+    GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
     API_TIMEOUT = 15
     DOWNLOAD_TIMEOUT = 30
     ZIP_EXTENSION = ".zip"
@@ -567,22 +567,16 @@ class UpdateManager(QObject):
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
-            # Ask user if they want to create a backup
-            backup_answer = dialogue.show_dialogue_conditional(
-                title=self.tr("Create Backup?"),
-                text=self.tr("Would you like to create a backup before updating?"),
-                information=self.tr(
-                    "Creating a backup is recommended to preserve your current installation."
-                ),
-            )
-
-            if backup_answer == QMessageBox.StandardButton.Yes:
+            # Check if backup is enabled in settings
+            if self.settings_controller.settings.enable_backup_before_update:
                 # Create backup of current installation with progress animation
                 EventBus().do_threaded_loading_animation.emit(
                     str(AppInfo().theme_data_folder / "default-icons" / "refresh.gif"),
                     partial(self._create_backup),
                     self.tr("Creating backup..."),
                 )
+                # Clean up old backups after creating new one
+                self._cleanup_old_backups()
 
             # Prepare for launch
             log_path = self._prepare_update_log(self._system)
@@ -1134,6 +1128,43 @@ class UpdateManager(QObject):
         except Exception as e:
             logger.warning(f"Failed to create backup: {e}")
             # Continue with update even if backup fails
+
+    def _cleanup_old_backups(self) -> None:
+        """
+        Clean up old backups, keeping only the most recent ones based on max_backups setting.
+        """
+        backup_folder = AppInfo().backup_folder
+        max_backups = self.settings_controller.settings.max_backups
+
+        try:
+            # Get all backup files
+            backup_files = list(backup_folder.glob("RimSort_Backup_*.zip"))
+            if len(backup_files) <= max_backups:
+                logger.debug(
+                    f"Backup count ({len(backup_files)}) is within limit ({max_backups})"
+                )
+                return
+
+            # Sort by modification time (newest first)
+            backup_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+
+            # Remove old backups
+            backups_to_remove = backup_files[max_backups:]
+            for backup_file in backups_to_remove:
+                try:
+                    backup_file.unlink()
+                    logger.info(f"Removed old backup: {backup_file.name}")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to remove old backup {backup_file.name}: {e}"
+                    )
+
+            logger.info(
+                f"Cleaned up {len(backups_to_remove)} old backups, keeping {max_backups} most recent"
+            )
+
+        except Exception as e:
+            logger.warning(f"Failed to cleanup old backups: {e}")
 
     def show_update_error(self) -> None:
         dialogue.show_warning(

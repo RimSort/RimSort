@@ -894,6 +894,11 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+
+        self.settings_dialog.enable_backup_before_update_checkbox.setChecked(
+            self.settings.enable_backup_before_update
+        )
+        self.settings_dialog.max_backups_spinbox.setValue(self.settings.max_backups)
         # Advanced: enable advanced filtering toggle
         try:
             self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
@@ -1198,6 +1203,11 @@ class SettingsController(QObject):
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
+
+        self.settings.enable_backup_before_update = (
+            self.settings_dialog.enable_backup_before_update_checkbox.isChecked()
+        )
+        self.settings.max_backups = self.settings_dialog.max_backups_spinbox.value()
         # Advanced: enable advanced filtering toggle
         try:
             self.settings.enable_advanced_filtering = (
