@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
 <context>
@@ -590,46 +590,6 @@ Une fois non contrôlé, recherchez tous les types de fichiers avec une recherch
         <translation>Impossible de trouver des données pour certains mods!</translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation>Mise à jour ignorée</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Vous courez à partir de l'interprète Python.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Sauter la mise à jour Vérifier ...</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Impossible de récupérer les dernières informations de version</translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation>Mise à jour Rimsort trouvée</translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation>Impossible de terminer la mise à jour</translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation>Mise à jour téléchargée</translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation>Voulez-vous procéder à la mise à jour?</translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation>Échec de la mise à jour</translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation>Impossible de télécharger la dernière version de Rimsort!</translation>
-    </message>
-    <message>
         <source>Sorting algorithm not implemented</source>
         <translation>Algorithme de tri non implémenté</translation>
     </message>
@@ -823,16 +783,6 @@ Are your game configuration paths correct?</source>
         <translation>La liste suivante des mods a été définie active dans votre liste de mods, mais aucune donnée n'a pu être trouvée pour ces mods dans les chemins de mod locaux / ateliers. 
 
 Vos chemins de configuration de jeu sont-ils corrects?</translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>Vous exécutez Rimsort {current_version}
-Voulez-vous mettre à jour maintenant?</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Veuillez vérifier votre connexion Internet et réessayer, vous pouvez également vérifier directement 'https://github.com/rimsort/rimsort/releases.</translation>
     </message>
     <message>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
@@ -1158,34 +1108,6 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
         <translation>Aucune suggestion n'a été trouvée dans la base de données "Utilisez ceci à la place".</translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>Une mise à jour de Rimsort a été publiée:  {latest_tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Échec pour trouver une version de rimsort valide pour  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Impossible de récupérer les informations de version</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Échec de la connexion à l'API GitHub: {error}</translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation>Téléchargement de la version Rimsort  ... {tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation>Échec de la mise à jour</translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation>Impossible de démarrer le processus de mise à jour.</translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation>Modifications non enregistrées</translation>
     </message>
@@ -1240,6 +1162,14 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation>Le fichier ACF n'existe pas. Il sera créé lorsque vous téléchargez des mods à l'aide de SteamCMD.</translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation>Impossible d'ouvrir le fichier.</translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
+        <translation>Impossible d'ouvrir le fichier avec l'éditeur de texte par défaut.Il peut ne pas exister.</translation>
     </message>
 </context>
 <context>
@@ -1984,10 +1914,6 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
         <translation>Impossible de restaurer Steamcmd Symlink / Junction</translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>Une erreur s'est produite lors de la restauration de l'instance [{instance_controller.instance.name}].</translation>
-    </message>
-    <message>
         <source>Workshop mods not found</source>
         <translation>Mods d'atelier introuvables</translation>
     </message>
@@ -2075,6 +2001,10 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
         <source>Player Log</source>
         <translation>Journal des joueurs</translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>Une erreur s'est produite lors de la restauration de l'instance []. {name}</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2113,10 +2043,6 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
     <message>
         <source>To Rentry.co…</source>
         <translation>Vers Rentry.co…</translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
-        <translation>Télécharger le journal</translation>
     </message>
     <message>
         <source>Open...</source>
@@ -4367,6 +4293,18 @@ Par exemple, «Oels.VehiclemapFramework», alternatives: «oels.vehiclemapframew
         <source>XML Parsing Behavior</source>
         <translation>Comportement d'analyse XML</translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation>Créer une sauvegarde avant la mise à jour de Rimsort</translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation>Recommandé pour que cela soit activé car il crée une sauvegarde avant de mettre à jour Rimsort, cela aide à prévenir les modifications ou les données indésirables supprimées.</translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation>Nombre maximum de sauvegardes à conserver:</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4998,6 +4936,111 @@ Détails: {e}</translation>
     <message>
         <source>Repair Steam Library</source>
         <translation>Bibliothèque de vapeur de réparation</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation>Mise à jour ignorée</translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation>Vous courez à partir de l'interprète Python.</translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation>Sauter la mise à jour Vérifier ...</translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation>Mise à jour Rimsort trouvée</translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation>Une mise à jour de Rimsort a été publiée:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>Vous exécutez Rimsort {current_version}
+Voulez-vous mettre à jour maintenant?</translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation>Impossible de terminer la mise à jour</translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation>Échec pour trouver une version de rimsort valide pour  {system_info}</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation>Impossible de récupérer les informations de version</translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation>Échec de la connexion à l'API GitHub: {error}</translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation>Téléchargement de la version Rimsort  ... {tag_name}</translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation>Extraction de fichiers de mise à jour ...</translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation>Mise à jour téléchargée</translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation>Voulez-vous procéder à la mise à jour?</translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation>Création de sauvegarde ...</translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation>Échec du téléchargement</translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation>Échec de la mise à jour.</translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation>Extraction a échoué</translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation>Échec de l'extraction de la mise à jour téléchargée.</translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation>Le lancement a échoué</translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation>Échec du lancement du script de mise à jour.</translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation>La mise à jour a échoué</translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation>Une erreur inattendue s'est produite pendant le processus de mise à jour.</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation>Impossible de récupérer les dernières informations de version</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>Veuillez vérifier votre connexion Internet et réessayer, vous pouvez également vérifier directement 'https://github.com/rimsort/rimsort/releases.</translation>
     </message>
 </context>
 <context>

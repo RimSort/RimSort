@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN">
 <context>
@@ -608,56 +608,6 @@ Would you like to configure them now?</source>
         <translation>无法找到某些模组的数据！</translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation>跳过更新</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>你正在从 Python 解释器运行</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>跳过更新检查...</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>无法获取最新的版本信息</translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation>RimSort 有可用更新</translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>你正在运行 RimSort {current_version}
-是否要现在更新？</translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation>无法完成更新</translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation>更新已下载</translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation>你是否要继续进行更新？</translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation>下载更新失败</translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation>下载最新的 RimSort 版本失败！</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>请检查你的互联网连接并重试，你也可以直接检查 'https://github.com/RimSort/RimSort/releases'。</translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>正在扫描模组来源，加载数据中...</translation>
     </message>
@@ -1154,34 +1104,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>替代为此</translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>RimSort 已发布更新：{latest_tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>未找到适用于 {system_info} 的有效 RimSort 版本</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>无法获取版本信息</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>无法连接到 GitHub API：{error}</translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation>正在下载 RimSort {tag_name} 版本...</translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation>无法启动更新</translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation>无法启动更新过程。</translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation>未保存的更改</translation>
     </message>
@@ -1244,6 +1166,14 @@ Are your game configuration paths correct?</source>
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation>ACF文件不存在。当您使用SteamCMD下载mod时，它将创建。</translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation>无法打开文件。</translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
+        <translation>无法使用默认文本编辑器打开文件。它可能不存在。</translation>
     </message>
 </context>
 <context>
@@ -1974,10 +1904,6 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
         <translation>无法恢复 steamcmd 符号链接/联接点，因为本地文件夹未设置或无效。符号链接/联接点需要手动重新创建。</translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>还原实例 [{instance_controller.instance.name}] 时发生错误。</translation>
-    </message>
-    <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation>解压存档后，实例文件夹未找到。可能是存档损坏或实例名称无效。</translation>
     </message>
@@ -2081,6 +2007,10 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
         <source>Player Log</source>
         <translation>游戏日志</translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>还原实例[{name}]时发生错误。</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2103,10 +2033,6 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
     <message>
         <source>To Rentry.co…</source>
         <translation>导出到 Rentry.co</translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
-        <translation>上传日志</translation>
     </message>
     <message>
         <source>RimSort</source>
@@ -4389,6 +4315,18 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
         <source>XML Parsing Behavior</source>
         <translation>XML解析行为</translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation>在Rimsort更新之前创建备份</translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation>建议在更新Rimsort之前创建备份时保持启用，这有助于防止任何不必要的更改或数据被删除。</translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation>保留最大备份数：</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -5020,6 +4958,111 @@ Details: {e}</source>
     <message>
         <source>Repair Steam Library</source>
         <translation>修复 Steam 库</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation>更新跳过</translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation>您正在从Python解释器中运行。</translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation>跳过更新检查...</translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation>Rimsort更新发现</translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation>对Rimsort的更新已发布： {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>您正在运行Rimsort 
+您现在要更新吗？ {current_version}</translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation>无法完成更新</translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation>无法找到的有效Rimsort版本 {system_info}</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation>无法检索发布信息</translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation>无法连接到github api：{error}</translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation>下载Rimsort {tag_name}版本...</translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation>提取更新文件...</translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation>更新下载</translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation>您想继续更新吗？</translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation>创建备份...</translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation>下载失败</translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation>无法下载更新。</translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation>提取失败</translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation>未能提取下载的更新。</translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation>发射失败</translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation>无法启动更新脚本。</translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation>更新失败</translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation>更新过程中发生了意外错误。</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation>无法检索最新版本的信息</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>请检查您的Internet连接并重试，您还可以直接检查'https://github.com/rimsort/rimsort/releases'。</translation>
     </message>
 </context>
 <context>

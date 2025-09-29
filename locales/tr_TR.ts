@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE TS>
 <TS version="2.1" language="tr_TR">
 <context>
@@ -593,46 +593,6 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Bazı modlar için veri bulunamadı!</translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation>Güncelleme atlandı</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Python yorumlayıcısı üzerinden çalıştırıyorsunuz.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Güncelleme kontrolü atlanıyor...</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Güncel sürüm bilgisi alınamadı</translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation>RimSort güncellemesi bulundu</translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation>Güncelleme tamamlanılamadı</translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation>Güncelleme indirildi</translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation>Güncellemeye devam etmek istermisiniz?</translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation>Güncelleme indirilemedi</translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation>RimSort'un son sürümü indirilemedi!</translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>Mod kaynakları kontrol ediliyor ve metaveriler güncelleniyor...</translation>
     </message>
@@ -991,34 +951,6 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Bunun yerine bunu kullan</translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation>Rimsort için bir güncelleme yayınlandı:  {latest_tag_name}</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>için geçerli rimsort sürümü bulamadı {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Sürüm bilgilerini alamıyor</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>GitHub API'sına bağlanılamadı:  {error}</translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation>Rimsort {tag_name} sürümünü indirme ...</translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation>Güncelleme başlatılamadı</translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation>Güncelleme işlemini başlatamadı.</translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation>Kaydetilmemiş değişiklikler</translation>
     </message>
@@ -1058,16 +990,6 @@ Are your game configuration paths correct?</source>
         <translation>Aşağıdaki mod listesi MODS listenizde aktif olarak ayarlandı, ancak yerel/atölye mod yollarında bu modlar için veri bulunamadı.
 
 Oyun yapılandırma yollarınız doğru mu?</translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>Rimsort'u çalıştırıyorsunuz {current_version}
-Şimdi güncellemek istiyor musunuz?</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin, 'https://github.com/rimsort/rimsort/releases'i doğrudan kontrol edebilirsiniz.</translation>
     </message>
     <message>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
@@ -1245,6 +1167,14 @@ Ortaya çıkan veritabanı, C, kullanıcı tarafından belirlenen bir yola kayde
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
         <translation>ACF dosyası yok. Steamcmd kullanarak modları indirdiğinizde oluşturulacaktır.</translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation>Dosyayı açılamadı.</translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
+        <translation>Dosyayı varsayılan metin düzenleyicisiyle açılamadı.Var olmayabilir.</translation>
     </message>
 </context>
 <context>
@@ -1949,10 +1879,6 @@ Hata:  {error}</translation>
         <translation>Steamcmd SymLink/Junction'ı geri yükleyemedi</translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation>[] örneği geri yüklenirken bir hata oluştu. {instance_controller.instance.name}</translation>
-    </message>
-    <message>
         <source>Workshop mods not found</source>
         <translation>Atölye modları bulunamadı</translation>
     </message>
@@ -2080,6 +2006,10 @@ Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
         <source>Player Log</source>
         <translation>Oyuncu günlüğü</translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>[] örneği geri yüklenirken bir hata oluştu. {name}</translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2118,10 +2048,6 @@ Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
     <message>
         <source>To Rentry.co…</source>
         <translation>Rentry.co'ya</translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
-        <translation>Log yükle</translation>
     </message>
     <message>
         <source>Open...</source>
@@ -4372,6 +4298,18 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
         <source>XML Parsing Behavior</source>
         <translation>XML ayrıştırma davranışı</translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation>Rimsort güncellemesinden önce yedekleme oluştur</translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation>Rimsort'u güncellemeden önce bir yedek oluşturduğu için bunu etkin tutmanız önerilir, bu da istenmeyen değişikliklerin veya verilerin silinmesini önlemeye yardımcı olur.</translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation>Tutulması gereken maksimum yedekleme sayısı:</translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -5004,6 +4942,111 @@ Ayrıntılar: {e}</translation>
     <message>
         <source>Manage your mod configurations and load order. These options help you organize and share your mod setup.</source>
         <translation>MOD yapılandırmalarınızı ve yük siparişinizi yönetin. Bu seçenekler, mod kurulumunuzu düzenlemenize ve paylaşmanıza yardımcı olur.</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation>Güncelleme atlandı</translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation>Python tercümanından kaçıyorsunuz.</translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation>Güncelleme kontrolünü atlama ...</translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation>Rimsort güncellemesi bulundu</translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation>Rimsort için bir güncelleme yayınlandı:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation>Rimsort'u çalıştırıyorsunuz {current_version}
+Şimdi güncellemek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation>Güncellemeyi tamamlayamıyor</translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation>için geçerli rimsort sürümü bulamadı {system_info}</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation>Sürüm bilgilerini alamıyor</translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation>GitHub API'sına bağlanılamadı:  {error}</translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation>Rimsort {tag_name} sürümünü indirme ...</translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation>Güncelleme dosyalarını çıkarma ...</translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation>Güncelleme İndirildi</translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation>Güncellemeye devam etmek ister misiniz?</translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation>Yedekleme Oluşturun ...</translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation>İndir başarısız</translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation>Güncellemeyi indiremedi.</translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation>Çıkarma başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation>İndirilen güncellemeyi çıkaramadı.</translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation>Lansman başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation>Güncelleme komut dosyasını başlatılamadı.</translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation>Güncelleme başarısız oldu</translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation>Güncelleme işlemi sırasında beklenmedik bir hata oluştu.</translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation>En son sürüm bilgilerini alamıyor</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
+        <translation>Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin, 'https://github.com/rimsort/rimsort/releases'i doğrudan kontrol edebilirsiniz.</translation>
     </message>
 </context>
 <context>
