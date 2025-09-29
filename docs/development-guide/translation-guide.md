@@ -79,6 +79,7 @@ The translation helper tool provides the following commands:
   - Supports Google Translate, DeepL, and OpenAI GPT models
   - Options: `--api-key` for service authentication, `--model` for OpenAI model selection, `--continue-on-failure` to skip failed translations
 - **`process [language] --service [google|deepl|openai]`**: One-click workflow that runs update-ts → auto-translate → compile in sequence
+  - Same options as auto-translate: `--api-key`, `--model`, `--continue-on-failure`
 
 ### Command Examples
 
