@@ -14,8 +14,8 @@ Usage:
     python translation_helper.py validate [language]
     python translation_helper.py update-ts [language]
     python translation_helper.py compile [language]
-    python translation_helper.py auto-translate [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME]
-    python translation_helper.py process [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME]
+    python translation_helper.py auto-translate [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME] [--continue-on-failure]
+    python translation_helper.py process [language] --service [google|deepl|openai] [--api-key YOUR_KEY] [--model MODEL_NAME] [--continue-on-failure]
 
 Note:
 - [language] is optional; if omitted, the command applies to all languages except en_US.
@@ -24,17 +24,15 @@ Note:
 - The stats command generates a summary of translation status across all languages.
 - The update-ts command updates the .ts files with new strings from the source language.
 - The compile command compiles .ts files into binary format (.qm).
-- The auto-translate command uses selected translation services to fill in missing translations.
-- The process command runs update-ts, auto-translate, and compile in sequence for a language.
+- The auto-translate command uses selected translation services to fill in missing translations. By default, it continues translating even if some translations fail.
+- The process command runs update-ts, auto-translate, and compile in sequence for a language. By default, it continues translating even if some translations fail.
 """
 
 import argparse
 import asyncio
 import importlib
-import logging
 import re
 import shutil
-import ssl
 import subprocess
 import sys
 import types
@@ -58,17 +56,12 @@ except ImportError:
     pass
 
 # Global variables for caching and configuration
-TRANSLATION_CACHE: Dict[str, str] = {}
-CONFIG: Dict[str, Any] = {}
-LOGGER = logging.getLogger(__name__)
+# Note: Cache and config currently unused but kept for future extensibility
 
 try:
     import aiohttp  # type: ignore
 except ImportError:
     aiohttp = None
-
-
-ssl._create_default_https_context = ssl._create_unverified_context  # type: ignore
 
 # Translation service imports with fallbacks
 try:
@@ -104,6 +97,23 @@ LANG_MAP: Dict[str, LangMapEntry] = {
     "tr_TR": {"google": "tr", "deepl": None, "openai": None},
     "pt_BR": {"google": "pt", "deepl": None, "openai": None},
 }
+
+
+def get_language_code(lang_code: str, service: str) -> str:
+    """Get the appropriate language code for a specific translation service."""
+    entry = LANG_MAP.get(lang_code)
+    if entry and isinstance(entry, dict):
+        code = entry.get(service)
+        if isinstance(code, str):
+            return code
+
+    # Fallback: convert underscores to hyphens for Google, uppercase for DeepL, or use as-is
+    if service == "google":
+        return lang_code.lower().replace("_", "-")
+    elif service == "deepl":
+        return lang_code.upper()
+    else:
+        return lang_code
 
 
 # === Translation Services ===
@@ -548,7 +558,7 @@ def create_translation_service(service_name: str, **kwargs: Any) -> TranslationS
 async def auto_translate_file(
     language: Optional[str],
     service_name: str = "google",
-    continue_on_failure: bool = False,
+    continue_on_failure: bool = True,
     **service_kwargs: Any,
 ) -> bool:
     """Auto-translate unfinished strings in a .ts file or all if language is None."""
@@ -609,7 +619,16 @@ async def auto_translate_file(
                     print(
                         f"🔄 Translating [{i}/{len(unfinished)}]: {source_text[:50]}..."
                     )
-                    translated = await service.translate(source_text, lang, "en_US")
+                    try:
+                        translated = await asyncio.wait_for(
+                            service.translate(source_text, lang, "en_US"), timeout=10.0
+                        )
+                    except asyncio.TimeoutError:
+                        print(f"❌ Translation timeout for [{i}]")
+                        translated = None
+                    except Exception as e:
+                        print(f"❌ Translation error for [{i}]: {e}")
+                        translated = None
                     return i, item, translated
 
             # Create tasks
@@ -1013,23 +1032,62 @@ def validate_translation(language: Optional[str] = None) -> None:
             print(f"❌ Error validating file: {e}")
 
 
-async def process_language(language: str, service: str, **service_kwargs: Any) -> None:
-    """Run the full pipeline for a single language."""
-    print(f"🚀 Starting one-click process for {language} ...")
+async def process_language(
+    language: Optional[str],
+    service: str,
+    continue_on_failure: bool = True,
+    **service_kwargs: Any,
+) -> None:
+    """Run the full pipeline for a language or all languages if None."""
+    if language:
+        print(f"🚀 Starting one-click process for {language} ...")
 
-    if not run_lupdate(language):
-        print("❌ Aborting: lupdate failed.")
-        sys.exit(1)
+        if not run_lupdate(language):
+            print("❌ Aborting: lupdate failed.")
+            sys.exit(1)
 
-    if not await auto_translate_file(language, service, **service_kwargs):
-        print("❌ Aborting: auto-translation failed.")
-        sys.exit(1)
+        if not await auto_translate_file(
+            language, service, continue_on_failure, **service_kwargs
+        ):
+            print("❌ Aborting: auto-translation failed.")
+            sys.exit(1)
 
-    if not run_lrelease(language):
-        print("❌ Aborting: lrelease failed.")
-        sys.exit(1)
+        if not run_lrelease(language):
+            print("❌ Aborting: lrelease failed.")
+            sys.exit(1)
 
-    print("✅ One-click process completed successfully!")
+        print("✅ One-click process completed successfully!")
+    else:
+        print("🚀 Starting one-click process for all languages ...")
+        locales_dir = Path("locales")
+        languages = [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
+
+        for lang in languages:
+            print(f"🚀 Processing {lang} ...")
+
+            if not run_lupdate(lang):
+                print(f"❌ Aborting {lang}: lupdate failed.")
+                if not continue_on_failure:
+                    sys.exit(1)
+                continue
+
+            if not await auto_translate_file(
+                lang, service, continue_on_failure, **service_kwargs
+            ):
+                print(f"❌ Aborting {lang}: auto-translation failed.")
+                if not continue_on_failure:
+                    sys.exit(1)
+                continue
+
+            if not run_lrelease(lang):
+                print(f"❌ Aborting {lang}: lrelease failed.")
+                if not continue_on_failure:
+                    sys.exit(1)
+                continue
+
+            print(f"✅ {lang} process completed successfully!")
+
+        print("✅ All languages processed!")
 
 
 def main() -> None:
@@ -1092,7 +1150,8 @@ def main() -> None:
     auto_parser.add_argument(
         "--continue-on-failure",
         action="store_true",
-        help="Continue translating even if some fail",
+        default=True,
+        help="Continue translating even if some fail (enabled by default)",
     )
 
     process_parser = subparsers.add_parser(
@@ -1111,6 +1170,12 @@ def main() -> None:
     process_parser.add_argument("--api-key", help="API key for DeepL/OpenAI")
     process_parser.add_argument(
         "--model", default="gpt-3.5-turbo", help="OpenAI model name"
+    )
+    process_parser.add_argument(
+        "--continue-on-failure",
+        action="store_true",
+        default=True,
+        help="Continue translating even if some fail (enabled by default)",
     )
 
     args = parser.parse_args()
@@ -1145,7 +1210,12 @@ def main() -> None:
             service_kwargs["api_key"] = args.api_key
         if args.model:
             service_kwargs["model"] = args.model
-        asyncio.run(process_language(args.language, args.service, **service_kwargs))
+        asyncio.run(
+            process_language(
+                args.language, args.service, args.continue_on_failure, **service_kwargs
+            )
+        )
+        sys.exit(0)
     else:
         parser.print_help()
 
