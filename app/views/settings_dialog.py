@@ -1528,6 +1528,29 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
 
+        # Put checkbox, label and spinbox on the same horizontal line
+        backup_layout = QHBoxLayout()
+        self.enable_backup_before_update_checkbox = QCheckBox(
+            self.tr("Create backup before RimSort update")
+        )
+        self.enable_backup_before_update_checkbox.setToolTip(
+            self.tr(
+                "Recommended to keep this enabled as it creates a backup before updating RimSort, "
+                "This helps prevent any unwanted changes or data getting deleted."
+            )
+        )
+        backup_layout.addWidget(self.enable_backup_before_update_checkbox)
+
+        max_backups_label = QLabel(self.tr("Maximum number of backups to keep:"))
+        backup_layout.addWidget(max_backups_label)
+
+        self.max_backups_spinbox = QSpinBox()
+        self.max_backups_spinbox.setRange(1, 10)
+        self.max_backups_spinbox.setValue(3)
+        backup_layout.addWidget(self.max_backups_spinbox)
+
+        group_layout.addLayout(backup_layout)
+
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)
 

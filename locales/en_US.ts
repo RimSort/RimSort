@@ -598,55 +598,6 @@ Are your game configuration paths correct?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Update skipped</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort update found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to complete update</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update downloaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do you want to proceed with the update?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to download update</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to download latest RimSort release!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1109,34 +1060,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>An update to RimSort has been released: {latest_tag_name}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Downloading RimSort {tag_name} release...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to launch update</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not start the update process.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unsaved Changes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1190,6 +1113,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>ACf file does not exist. It will be created when you download mods using steamcmd.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to open file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to open the file with default text editor. It may not exist.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1904,10 +1835,6 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2003,6 +1930,10 @@ How would you like to proceed?</source>
         <source>Player Log</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -2040,10 +1971,6 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>To Rentry.co…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Upload Log</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4246,6 +4173,18 @@ E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapf
         <source>XML Parsing Behavior</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Create backup before RimSort update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximum number of backups to keep:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsFailureDialog</name>
@@ -4843,6 +4782,110 @@ Details: {e}</source>
     </message>
     <message>
         <source>Repair Steam Library</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>UpdateManager</name>
+    <message>
+        <source>Update skipped</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are running from Python interpreter.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skipping update check...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort update found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An update to RimSort has been released: {latest_tag_name}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are running RimSort {current_version}
+Do you want to update now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to complete update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find valid RimSort release for {system_info}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to connect to GitHub API: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading RimSort {tag_name} release...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extracting update files...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to proceed with the update?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Creating backup...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to download the update.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extraction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to extract the downloaded update.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Launch failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to launch the update script.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An unexpected error occurred during the update process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to retrieve latest release information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

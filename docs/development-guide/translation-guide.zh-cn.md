@@ -80,6 +80,7 @@ RimSort/
   - 支持 Google Translate、DeepL 和 OpenAI GPT 模型
   - 选项：`--api-key` 用于服务认证，`--model` 用于 OpenAI 模型选择，`--continue-on-failure` 用于跳过失败的翻译
 - **`process [language] --service [google|deepl|openai]`**：一键工作流程，按顺序运行 update-ts → auto-translate → compile
+  - 与 auto-translate 相同的选项：`--api-key`、`--model`、`--continue-on-failure`
 
 ### 命令示例
 
