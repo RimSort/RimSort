@@ -47,6 +47,7 @@ from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
+from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
     check_internet_connection,
     chunks,
@@ -3054,6 +3055,8 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        create_backup_in_thread(self.settings_controller.settings)
+
         if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Unsaved Changes"),

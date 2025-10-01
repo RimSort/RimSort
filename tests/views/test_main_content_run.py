@@ -20,6 +20,7 @@ class DummySettings:
         # Toggle filter for mod type filtering
         self.mod_type_filter_toggle = False
         self.enable_advanced_filtering = True
+        self.backup_saves_on_launch = False
         # Instance data with dummy game_folder and run_args
         self.instances = {
             "inst1": SimpleNamespace(

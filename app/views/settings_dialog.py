@@ -300,6 +300,58 @@ class SettingsDialog(QDialog):
         self._do_aux_db_performance_group(tab_layout)
         # New section for save-comparison feature
         self._do_recent_save_integration_group(tab_layout)
+        self._do_backup_settings_group(tab_layout)
+
+    def _do_backup_settings_group(self, tab_layout: QBoxLayout) -> None:
+        backup_group_label = QLabel(self.tr("Backup Settings"))
+        backup_group_label.setFont(GUIInfo().emphasis_font)
+        backup_group_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tab_layout.addWidget(backup_group_label)
+
+        self.backup_saves_on_launch_checkbox = QCheckBox(
+            self.tr("Automatically backup saves on first daily launch")
+        )
+        self.backup_saves_on_launch_checkbox.setToolTip(
+            self.tr(
+                "If enabled, RimSort will automatically backup saves on the first daily launch."
+            )
+        )
+        tab_layout.addWidget(self.backup_saves_on_launch_checkbox)
+
+        # Retention count
+        retention_layout = QHBoxLayout()
+        retention_label = QLabel(self.tr("Number of backups to keep:"))
+        retention_label.setToolTip(
+            self.tr(
+                "The number of backups to keep. Set to -1 to keep all backups, 0 to delete all."
+            )
+        )
+        retention_layout.addWidget(retention_label)
+
+        self.auto_backup_retention_count_spinbox = QSpinBox()
+        self.auto_backup_retention_count_spinbox.setRange(-1, 999)
+        self.auto_backup_retention_count_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        retention_layout.addWidget(self.auto_backup_retention_count_spinbox)
+        tab_layout.addLayout(retention_layout)
+
+        # Compression count
+        compression_layout = QHBoxLayout()
+        compression_label = QLabel(self.tr("Number of saves to compress:"))
+        compression_layout.addWidget(compression_label)
+        compression_label.setToolTip(
+            self.tr(
+                "The number of recent saves to include in the backup. Set to -1 to compress all saves, 0 to compress none."
+            )
+        )
+        self.auto_backup_compression_count_spinbox = QSpinBox()
+        self.auto_backup_compression_count_spinbox.setRange(-1, 999)
+        self.auto_backup_compression_count_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        compression_layout.addWidget(self.auto_backup_compression_count_spinbox)
+        tab_layout.addLayout(compression_layout)
 
     def _do_recent_save_integration_group(self, tab_layout: QBoxLayout) -> None:
         section_label = QLabel(self.tr("Integration with recent save"))
