@@ -74,7 +74,7 @@ def cleanup_old_backups(backup_dir: Path, keep: int) -> None:
         backups = sorted(
             [p for p in backup_dir.glob("Saves_*.zip")],
             key=lambda p: p.stat().st_mtime,
-            reverse=True
+            reverse=True,
         )
 
         if keep == 0:

@@ -6,9 +6,10 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from loguru import logger
+from platformdirs import PlatformDirs
 from PySide6.QtCore import (
     QEvent,
     QItemSelection,
@@ -106,7 +107,8 @@ def uuid_to_mod_name(uuid: str) -> str:
     Returns:
         str: If mod name not None and is a string, returns mod name in lowercase. Otherwise, returns "name error in mod about.xml".
     """
-    name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
+    metadata = get_mod_metadata(uuid)
+    name = metadata.get("name") if metadata else None
     if isinstance(name, str):
         return name.lower()
     else:
@@ -121,13 +123,11 @@ def uuid_to_filesystem_modified_time(uuid: str) -> int:
     Returns:
         int: The filesystem modification time, or 0 if not available.
     """
-    import os
-
-    metadata = MetadataManager.instance().internal_local_metadata[uuid]
-    mod_path = metadata.get("path")
+    metadata = get_mod_metadata(uuid)
+    mod_path = metadata.get("path") if metadata else None
     if mod_path and os.path.exists(mod_path):
         fs_time = int(os.path.getmtime(mod_path))
-        mod_name = metadata.get("name", "Unknown")
+        mod_name = metadata.get("name") if metadata else None
         logger.debug(f"Mod: {mod_name}, Filesystem time: {fs_time}")
         return fs_time
     return 0
@@ -138,8 +138,8 @@ def uuid_to_author(uuid: str) -> str:
     Converts a UUID to the corresponding author's name used for sorting.
     Returns the first author in lowercase if available; otherwise an empty string.
     """
-    metadata = MetadataManager.instance().internal_local_metadata[uuid]
-    authors = metadata.get("authors")
+    metadata = get_mod_metadata(uuid)
+    authors = metadata.get("authors") if metadata else None
     author: Optional[str] = None
     if isinstance(authors, dict):
         # Possible formats: {"li": ["a", "b"]} or {"li": "a"}
@@ -162,8 +162,8 @@ def uuid_to_folder_size(uuid: str) -> int:
     Calculate the total size in bytes of the mod folder for the given UUID.
     Returns 0 if the path is missing.
     """
-    metadata = MetadataManager.instance().internal_local_metadata[uuid]
-    mod_path = metadata.get("path")
+    metadata = get_mod_metadata(uuid)
+    mod_path = metadata.get("path") if metadata else None
     if not mod_path or not os.path.isdir(mod_path):
         return 0
     try:
@@ -183,15 +183,31 @@ def uuid_to_folder_size(uuid: str) -> int:
 
 def get_dir_size(path: str) -> int:
     total = 0
-    for entry in os.scandir(path):
+    stack = [path]
+    while stack:
+        current = stack.pop()
         try:
-            if entry.is_file():
-                total += entry.stat().st_size
-            elif entry.is_dir():
-                total += get_dir_size(entry.path)
+            for entry in os.scandir(current):
+                if entry.is_file():
+                    total += entry.stat().st_size
+                elif entry.is_dir():
+                    stack.append(entry.path)
         except OSError:
             pass  # Skip file
     return total
+
+
+def get_mod_metadata(uuid: str) -> Optional[ModMetadata]:
+    """
+    Safely retrieve metadata for a mod by UUID.
+
+    Args:
+        uuid (str): The UUID of the mod.
+
+    Returns:
+        Optional[ModMetadata]: The metadata dict if found, None otherwise.
+    """
+    return MetadataManager.instance().internal_local_metadata.get(uuid)
 
 
 def format_file_size(size_in_bytes: int) -> str:
@@ -641,7 +657,7 @@ class ModListItemInner(QWidget):
             ]
         )
 
-    def get_icon(self) -> QIcon:  # type: ignore
+    def get_icon(self) -> QIcon:
         """
         Check custom tags added to mod metadata upon initialization, and return the corresponding
         QIcon for the mod's source type (expansion, workshop, or local mod?)
@@ -667,6 +683,7 @@ class ModListItemInner(QWidget):
             logger.error(
                 f"No type found for ModListItemInner with package id {self.metadata_manager.internal_local_metadata[self.uuid].get('packageid')}"
             )
+            return ModListIcons.local_icon()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         """
@@ -1975,16 +1992,22 @@ class ModListWidget(QListWidget):
         This event occurs when the user presses a key while the mod
         list is in focus.
         """
-        key_pressed = QKeySequence(event.key()).toString()
         if (
-            key_pressed == "Left"
-            or key_pressed == "Right"
-            or key_pressed == "Return"
-            or key_pressed == "Space"
+            event.modifiers() & Qt.KeyboardModifier.ControlModifier
+            and event.key() == Qt.Key.Key_Return
         ):
-            self.key_press_signal.emit(key_pressed)
+            self.key_press_signal.emit("Ctrl+Return")
         else:
-            return super().keyPressEvent(event)
+            key_pressed = QKeySequence(event.key()).toString()
+            if (
+                key_pressed == "Left"
+                or key_pressed == "Right"
+                or key_pressed == "Return"
+                or key_pressed == "Space"
+            ):
+                self.key_press_signal.emit(key_pressed)
+            else:
+                return super().keyPressEvent(event)
 
     def resizeEvent(self, e: QResizeEvent) -> None:
         """
@@ -2292,6 +2315,88 @@ class ModListWidget(QListWidget):
         if self.currentItem() == item:
             self.mod_info_signal.emit(uuid, item)
 
+    def _check_missing_dependencies(
+        self, mod_data: ModMetadata, package_ids_set: set[str]
+    ) -> tuple[set[str], set[str]]:
+        """Check for missing dependencies and alternative dependencies."""
+        missing_deps: set[str] = set()
+        alternative_deps: set[str] = set()
+        consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
+        for dep_entry in mod_data.get("dependencies", []):
+            alt_ids: set[str] = set()
+            if isinstance(dep_entry, tuple):
+                dep_id = dep_entry[0]
+                if (
+                    len(dep_entry) > 1
+                    and isinstance(dep_entry[1], dict)
+                    and isinstance(dep_entry[1].get("alternatives"), set)
+                ):
+                    alt_ids = dep_entry[1]["alternatives"]
+            else:
+                dep_id = dep_entry
+
+            satisfied = dep_id in package_ids_set
+            if not satisfied and consider_alternatives:
+                satisfied = any(alt in package_ids_set for alt in alt_ids)
+            if not satisfied and self._has_replacement(
+                mod_data["packageid"], dep_id, package_ids_set
+            ):
+                satisfied = True
+
+            if not satisfied:
+                missing_deps.add(dep_id)
+                if consider_alternatives:
+                    alt_candidates = {a for a in alt_ids if a not in package_ids_set}
+                    alternative_deps.update(
+                        alt_candidates if alt_candidates else alt_ids
+                    )
+        return missing_deps, alternative_deps
+
+    def _check_incompatibilities(
+        self, mod_data: ModMetadata, package_ids_set: set[str]
+    ) -> set[str]:
+        """Check for conflicting incompatibilities."""
+        return {
+            incomp
+            for incomp in mod_data.get("incompatibilities", [])
+            if incomp in package_ids_set
+        }
+
+    def _check_load_order_violations(
+        self,
+        mod_data: ModMetadata,
+        packageid_to_uuid: dict[str, str],
+        current_mod_index: int,
+    ) -> tuple[set[str], set[str]]:
+        """Check for load order violations."""
+        load_before_violations: set[str] = set()
+        load_after_violations: set[str] = set()
+        for load_this_before in mod_data.get("loadTheseBefore", []):
+            if (
+                load_this_before[1]
+                and load_this_before[0] in packageid_to_uuid
+                and current_mod_index
+                <= self.uuids.index(packageid_to_uuid[load_this_before[0]])
+            ):
+                load_before_violations.add(load_this_before[0])
+        for load_this_after in mod_data.get("loadTheseAfter", []):
+            if (
+                load_this_after[1]
+                and load_this_after[0] in packageid_to_uuid
+                and current_mod_index
+                >= self.uuids.index(packageid_to_uuid[load_this_after[0]])
+            ):
+                load_after_violations.add(load_this_after[0])
+        return load_before_violations, load_after_violations
+
+    def _check_version_mismatch(self, uuid: str) -> bool:
+        """Check if mod has version mismatch."""
+        return self.metadata_manager.is_version_mismatch(uuid)
+
+    def _check_use_this_instead(self, current_item_data: dict[str, Any]) -> bool:
+        """Check if use_this_instead is applicable."""
+        return bool(current_item_data["alternative"])
+
     def recalculate_internal_errors_warnings(self) -> tuple[str, str, int, int]:
         """
         Whenever the respective mod list has items added to it, or has
@@ -2373,9 +2478,7 @@ class ModListWidget(QListWidget):
                 current_item_data.__dict__["in_save"] = False
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
-            mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
-                uuid
-            )
+            mod_errors["version_mismatch"] = self._check_version_mismatch(uuid)
             # Set an item's validity dynamically based on the version mismatch value
             if (
                 mod_data["packageid"] not in self.ignore_warning_list
@@ -2398,79 +2501,20 @@ class ModListWidget(QListWidget):
                 and mod_data.get("packageid")
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                # Check dependencies (and replacements for dependencies)
-                # Note: dependency replacements are NOT assumed to be subject
-                # to the same load order rules as the orignal mods!
-                # Build missing dependencies set while honoring alternativePackageIds
-                missing_deps: set[str] = set()
-                alternative_deps: set[str] = set()
-                consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
-                for dep_entry in mod_data.get("dependencies", []):
-                    alt_ids: set[str] = set()
-                    if isinstance(dep_entry, tuple):
-                        dep_id = dep_entry[0]
-                        if (
-                            len(dep_entry) > 1
-                            and isinstance(dep_entry[1], dict)
-                            and isinstance(dep_entry[1].get("alternatives"), set)
-                        ):
-                            alt_ids = dep_entry[1]["alternatives"]
-                    else:
-                        dep_id = dep_entry
-
-                    # Consider satisfied if main dep is present; optionally consider alternatives
-                    satisfied = dep_id in package_ids_set
-                    if not satisfied and consider_alternatives:
-                        satisfied = any(alt in package_ids_set for alt in alt_ids)
-                    # If not satisfied, also consider external replacement mapping
-                    if not satisfied and self._has_replacement(
-                        mod_data["packageid"], dep_id, package_ids_set
-                    ):
-                        satisfied = True
-
-                    if not satisfied:
-                        missing_deps.add(dep_id)
-                        # Only record alternatives if the advanced option is enabled
-                        if consider_alternatives:
-                            # Prefer to show only alternatives not already installed
-                            alt_candidates = {
-                                a for a in alt_ids if a not in package_ids_set
-                            }
-                            alternative_deps.update(
-                                alt_candidates if alt_candidates else alt_ids
-                            )
-
-                mod_errors["missing_dependencies"] = missing_deps
-                mod_errors["alternative_dependencies"] = alternative_deps
-
-                # Check incompatibilities
-                mod_errors["conflicting_incompatibilities"] = {
-                    incomp
-                    for incomp in mod_data.get("incompatibilities", [])
-                    if incomp in package_ids_set
-                }
-
-                # Check loadTheseBefore
-                for load_this_before in mod_data.get("loadTheseBefore", []):
-                    if (
-                        load_this_before[1]
-                        and load_this_before[0] in packageid_to_uuid
-                        and current_mod_index
-                        <= self.uuids.index(packageid_to_uuid[load_this_before[0]])
-                    ):
-                        assert isinstance(mod_errors["load_before_violations"], set)
-                        mod_errors["load_before_violations"].add(load_this_before[0])
-
-                # Check loadTheseAfter
-                for load_this_after in mod_data.get("loadTheseAfter", []):
-                    if (
-                        load_this_after[1]
-                        and load_this_after[0] in packageid_to_uuid
-                        and current_mod_index
-                        >= self.uuids.index(packageid_to_uuid[load_this_after[0]])
-                    ):
-                        assert isinstance(mod_errors["load_after_violations"], set)
-                        mod_errors["load_after_violations"].add(load_this_after[0])
+                # Use helper functions
+                (
+                    mod_errors["missing_dependencies"],
+                    mod_errors["alternative_dependencies"],
+                ) = self._check_missing_dependencies(mod_data, package_ids_set)
+                mod_errors["conflicting_incompatibilities"] = (
+                    self._check_incompatibilities(mod_data, package_ids_set)
+                )
+                (
+                    mod_errors["load_before_violations"],
+                    mod_errors["load_after_violations"],
+                ) = self._check_load_order_violations(
+                    mod_data, packageid_to_uuid, current_mod_index
+                )
             # Calculate any needed string for errors
             tool_tip_text = ""
             # Build tooltip sections, conditionally include alternatives
@@ -2532,7 +2576,7 @@ class ModListWidget(QListWidget):
                 tool_tip_text += self.tr("\nMod and Game Version Mismatch")
             # Handle "use this instead" behavior
             if (
-                current_item_data["alternative"]
+                self._check_use_this_instead(current_item_data)
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 mod_errors["use_this_instead"] = True
@@ -2607,8 +2651,6 @@ class ModListWidget(QListWidget):
             saves_dir = Path(cfg_path).parent / "Saves"
             if not saves_dir.exists():
                 # Try common default path
-                from platformdirs import PlatformDirs
-
                 pd = PlatformDirs(appname="RimWorld by Ludeon Studios", appauthor=False)
                 candidate = Path(pd.user_data_dir).parent / "Saves"
                 saves_dir = candidate if candidate.exists() else saves_dir

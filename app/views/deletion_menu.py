@@ -1,4 +1,5 @@
 import errno
+import os
 from pathlib import Path
 from shutil import rmtree
 from typing import Callable
@@ -154,6 +155,28 @@ class ModDeletionMenu(QMenu):
                 )
             )
 
+    def _has_steam_mods(self) -> bool:
+        """Check if any selected mods are Steam Workshop mods."""
+        selected_mods = self.get_selected_mod_metadata()
+        return any(mod.get("publishedfileid") for mod in selected_mods)
+
+    def _has_dds_files(self) -> bool:
+        """Check if any selected mods contain .dds files."""
+        selected_mods = self.get_selected_mod_metadata()
+        for mod in selected_mods:
+            mod_path = mod.get("path")
+            if mod_path:
+                try:
+                    for root, dirs, files in os.walk(mod_path):
+                        if any(file.endswith(self.DDS_EXTENSION) for file in files):
+                            return True
+                        # Limit depth to avoid performance issues
+                        if root != mod_path:
+                            break
+                except (OSError, PermissionError):
+                    continue
+        return False
+
     def _refresh_actions(self) -> None:
         """Refresh menu actions, optimized to avoid unnecessary reconnections."""
         if not self._actions_initialized:
@@ -162,6 +185,18 @@ class ModDeletionMenu(QMenu):
                 q_action.triggered.connect(fn)
                 self.addAction(q_action)
             self._actions_initialized = True
+
+        # Conditionally enable actions based on selected mods
+        for q_action, fn in self.delete_actions:
+            if fn == self.delete_dds_files_only:
+                q_action.setEnabled(self._has_dds_files())
+            elif fn in (
+                self.delete_mod_and_unsubscribe,
+                self.delete_mod_and_resubscribe,
+            ):
+                q_action.setEnabled(self._has_steam_mods())
+            else:
+                q_action.setEnabled(True)
 
     def _confirm_deletion(self, title: str, text: str, information: str) -> bool:
         """Helper method to show deletion confirmation dialog."""
