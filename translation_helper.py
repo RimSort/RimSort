@@ -36,24 +36,12 @@ import shutil
 import subprocess
 import sys
 import types
-
-# Try to use lxml for better performance, fallback to standard ET
-import xml.etree.ElementTree
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, TypedDict
 
+import lxml.etree as ET
 import requests
-
-ET: types.ModuleType = xml.etree.ElementTree
-USE_LXML = False
-try:
-    import lxml.etree
-
-    ET = lxml.etree
-    USE_LXML = True
-except ImportError:
-    pass
 
 # Global variables for caching and configuration
 # Note: Cache and config currently unused but kept for future extensibility
