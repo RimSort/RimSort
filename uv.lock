@@ -754,7 +754,6 @@ dependencies = [
     { name = "steamfiles", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "toposort", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "watchdog", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
-    { name = "xmltodict", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "zstandard", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
@@ -781,7 +780,6 @@ dev = [
     { name = "types-pygments", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "types-toposort", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
-    { name = "types-xmltodict", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
 [package.metadata]
@@ -807,7 +805,6 @@ requires-dist = [
     { name = "steamfiles", git = "https://github.com/RimSort/steamfiles" },
     { name = "toposort", specifier = "==1.10" },
     { name = "watchdog", specifier = "==6.0.0" },
-    { name = "xmltodict", specifier = "==1.0.2" },
     { name = "zstandard", specifier = "==0.25.0" },
 ]
 
@@ -832,7 +829,6 @@ dev = [
     { name = "types-pygments", specifier = ">=2.19.0.20250715" },
     { name = "types-requests", specifier = ">=2.32.4.20250611" },
     { name = "types-toposort", specifier = ">=1.10.0.20250401" },
-    { name = "types-xmltodict", specifier = ">=0.14.0.20241009" },
 ]
 
 [[package]]
@@ -1094,15 +1090,6 @@ wheels = [
 ]
 
 [[package]]
-name = "types-xmltodict"
-version = "1.0.1.20250920"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f0/a7/a3bd65abc7ca906c4d658140c63ce1def95dcd25497726d0eed05c45d245/types_xmltodict-1.0.1.20250920.tar.gz", hash = "sha256:3a2a97b7c3247251d715452e7bd86b9f0567fb91e407164344c93390d9bbbe88", size = 8705, upload-time = "2025-09-20T02:45:14.34Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/de/fd8b3ad5ef409bdb796b70e66d46a795785ece05823a2fffc916d8e166ba/types_xmltodict-1.0.1.20250920-py3-none-any.whl", hash = "sha256:2acd1bd50e226f4939507165e5bbbd3a3f69718439ba31c142755ce353343ff3", size = 8380, upload-time = "2025-09-20T02:45:13.629Z" },
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.14.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1157,15 +1144,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b3/8f/705086c9d734d3b663af0e9bb3d4de6578d08f46b1b101c2442fd9aecaa2/win32_setctime-1.2.0.tar.gz", hash = "sha256:ae1fdf948f5640aae05c511ade119313fb6a30d7eabe25fef9764dca5873c4c0", size = 4867, upload-time = "2024-12-07T15:28:28.314Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/07/c6fe3ad3e685340704d314d765b7912993bcb8dc198f0e7a89382d37974b/win32_setctime-1.2.0-py3-none-any.whl", hash = "sha256:95d644c4e708aba81dc3704a116d8cbc974d70b3bdb8be1d150e36be6e9d1390", size = 4083, upload-time = "2024-12-07T15:28:26.465Z" },
-]
-
-[[package]]
-name = "xmltodict"
-version = "1.0.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6a/aa/917ceeed4dbb80d2f04dbd0c784b7ee7bba8ae5a54837ef0e5e062cd3cfb/xmltodict-1.0.2.tar.gz", hash = "sha256:54306780b7c2175a3967cad1db92f218207e5bc1aba697d887807c0fb68b7649", size = 25725, upload-time = "2025-09-17T21:59:26.459Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/20/69a0e6058bc5ea74892d089d64dfc3a62ba78917ec5e2cfa70f7c92ba3a5/xmltodict-1.0.2-py3-none-any.whl", hash = "sha256:62d0fddb0dcbc9f642745d8bbf4d81fd17d6dfaec5a15b5c1876300aad92af0d", size = 13893, upload-time = "2025-09-17T21:59:24.859Z" },
 ]
 
 [[package]]
