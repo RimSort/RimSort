@@ -1,35 +1,111 @@
 import gzip
 import os
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
 from typing import Any
 
-import xmltodict
 import zstandard as zstd
 from bs4 import BeautifulSoup
 from loguru import logger
-from lxml import etree
+
+
+def etree_to_dict(t: Any) -> dict[str, Any]:
+    """
+    Convert xml.etree.ElementTree element to a dictionary.
+    """
+    d: dict[str, Any] = {str(t.tag): {}}
+    children = list(t)
+    if children:
+        dd: dict[str, Any] = {}
+        for dc in map(etree_to_dict, children):
+            for k, v in dc.items():
+                if k in dd:
+                    if not isinstance(dd[k], list):
+                        dd[k] = [dd[k]]
+                    dd[k].append(v)
+                else:
+                    dd[k] = v
+        d[str(t.tag)] = dd
+    if t.attrib:
+        d[str(t.tag)].update(("@" + str(k), str(v)) for k, v in t.attrib.items())
+    if t.text:
+        text = str(t.text or "").strip()
+        if children or t.attrib:
+            if text:
+                d[str(t.tag)]["#text"] = text
+        else:
+            d[str(t.tag)] = text
+    return d
+
+
+def bs4_to_dict(soup: Any) -> Any:
+    """
+    Convert BeautifulSoup object to dictionary.
+    """
+    if soup.name is None:
+        return str(soup.string or "")
+    if soup.name == "[document]":
+        result = {}
+        for child in soup.children:
+            if child.name is not None:
+                result.update(bs4_to_dict(child))
+        return result
+    result = {}
+    for child in soup.children:
+        if child.name is not None:
+            result[str(child.name)] = bs4_to_dict(child)
+    return {str(soup.name): result} if result else str(soup.string or "")
+
+
+def dict_to_etree(d: dict[str, Any]) -> Any:
+    """
+    Convert dictionary to xml.etree.ElementTree element.
+    """
+
+    def _to_etree(d: Any, root: Any) -> None:
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if k.startswith("@"):
+                    root.set(k[1:], v)
+                elif k == "#text":
+                    root.text = v
+                elif isinstance(v, list):
+                    for e in v:
+                        _to_etree(e, ET.SubElement(root, k))
+                else:
+                    _to_etree(v, ET.SubElement(root, k))
+        else:
+            root.text = str(d)
+
+    assert isinstance(d, dict) and len(d) == 1
+    tag, body = next(iter(d.items()))
+    node = ET.Element(tag)
+    _to_etree(body, node)
+    return node
 
 
 def xml_path_to_json(path: str) -> dict[str, Any]:
     """
-    Return the contents of an XML file as JSON.
+    Return the contents of an XML file as a dictionary.
     If the file does not exist, return an empty dict.
 
     :param path: Path to the XML file.
-    :return: JSON dict of XML file contents.
+    :return: Dictionary of XML file contents.
     """
     data: dict[str, Any] = {}
     if not os.path.exists(path):
         logger.error(f"XML file does not exist at: {path}")
         return data
     try:
+        # Parse XML file using xml.etree.ElementTree for standard library parsing
+        tree = ET.parse(path)
+        root = tree.getroot()
+        data = etree_to_dict(root)
+    except Exception as e:
+        # If ET parsing fails, attempt parsing with BeautifulSoup
+        logger.debug(f"Error parsing XML file with xml.etree.ElementTree: {e}")
+        logger.debug("Trying to parse with BeautifulSoup as a fallback")
         try:
-            # Try parsing the XML file using xmltodict
-            with open(path, "rb") as file:
-                data = xmltodict.parse(file.read(), dict_constructor=dict)
-        except Exception as e:
-            # If xmltodict parsing fails, attempt parsing with BeautifulSoup
-            logger.debug(f"Error parsing XML file with xmltodict: {e}")
-            logger.debug("Trying to parse with BeautifulSoup as a fallback")
             with open(path, "rb") as f:
                 soup = BeautifulSoup(f.read(), "lxml-xml")
                 # Find and remove empty tags
@@ -38,39 +114,43 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
                 )
                 for empty_tag in empty_tags:
                     empty_tag.extract()
-                # Convert the BeautifulSoup object to a dictionary using xmltodict
-                data = xmltodict.parse(str(soup), dict_constructor=dict)
-        # Return the parsed data
-        return data
-    except Exception as e:
-        logger.debug(f"Error parsing XML file with BeautifulSoup: {e}")
-        logger.error(f"Error parsing XML file: {path}")
-        return data
+                # Convert the BeautifulSoup object to a dictionary
+                data = bs4_to_dict(soup)
+        except Exception as e2:
+            logger.debug(f"Error parsing XML file with BeautifulSoup: {e2}")
+            logger.error(f"Error parsing XML file: {path}")
+            return data
+    if isinstance(data, dict) and "[document]" in data:
+        data = data["[document]"]
+    # Return the parsed data
+    return data
 
 
 def json_to_xml_write(
     data: dict[str, Any], path: str, raise_errs: bool = False
 ) -> None:
     """
-    Write JSON data to an XML file.
+    Write dictionary data to an XML file.
 
-    :param data: JSON data to write.
+    :param data: Dictionary data to write.
     :param path: Path to write the XML file to.
     """
-    logger.debug("Started writing JSON to XML")
+    logger.debug("Started writing dictionary to XML")
     try:
-        # Convert JSON data to XML format using xmltodict
-        xml_data = xmltodict.unparse(data, pretty=True)
-        # Write the XML data to the specified file path
-        with open(path, "w", encoding="utf-8") as file:
-            file.write(xml_data)
+        # Convert dictionary data to XML format using xml.etree.ElementTree
+        root = dict_to_etree(data)
+        rough_string = ET.tostring(root, encoding="utf-8")
+        # Use minidom for pretty printing since ET doesn't have pretty_print
+        reparsed = minidom.parseString(rough_string)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(reparsed.toprettyxml(indent="  ", encoding=None))
     except Exception as e:
         if raise_errs:
             raise e
         logger.error(f"Error writing XML file: {e}")
         return
 
-    logger.debug("Finished writing JSON to XML")
+    logger.debug("Finished writing dictionary to XML")
 
 
 def extract_xml_package_ids(path: str) -> set[str]:
@@ -91,7 +171,7 @@ def extract_xml_package_ids(path: str) -> set[str]:
 
     try:
         with __open_save_file(path) as file:
-            context = etree.iterparse(file, events=("start", "end"))
+            context = ET.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if not found_modIds and event == "start" and elem.tag == "modIds":
                     found_modIds = True
@@ -139,7 +219,7 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
 
     try:
         with __open_save_file(path) as file:
-            context = etree.iterparse(file, events=("start", "end"))
+            context = ET.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if event == "start":
                     stack.append(elem.tag)

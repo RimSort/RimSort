@@ -27,7 +27,7 @@ dependencies = [
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-    "xmltodict==1.0.2",
+
     "zstandard==0.25.0",
 ]
 
@@ -54,7 +54,7 @@ dev = [
     "types-pygments>=2.19.0.20250715",
     "types-requests>=2.32.4.20250611",
     "types-toposort>=1.10.0.20250401",
-    "types-xmltodict>=0.14.0.20241009",
+
 ]
 
 build = [
