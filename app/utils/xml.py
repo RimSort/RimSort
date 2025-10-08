@@ -86,7 +86,7 @@ def dict_to_etree(d: dict[str, Any]) -> Any:
 
 def xml_path_to_json(path: str) -> dict[str, Any]:
     """
-    Return the contents of an XML file as a dictionary.
+    Return the contents of an XML file as a dictionary. The XML file can be a compressed file supported by __open_file_maybe_compressed.
     If the file does not exist, return an empty dict.
 
     :param path: Path to the XML file.
@@ -98,15 +98,16 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
         return data
     try:
         # Parse XML file using xml.etree.ElementTree for standard library parsing
-        tree = ET.parse(path)
-        root = tree.getroot()
-        data = etree_to_dict(root)
+        with __open_file_maybe_compressed(path) as f:
+            tree = ET.parse(f)
+            root = tree.getroot()
+            data = etree_to_dict(root)
     except Exception as e:
         # If ET parsing fails, attempt parsing with BeautifulSoup
         logger.debug(f"Error parsing XML file with xml.etree.ElementTree: {e}")
         logger.debug("Trying to parse with BeautifulSoup as a fallback")
         try:
-            with open(path, "rb") as f:
+            with __open_file_maybe_compressed(path) as f:
                 soup = BeautifulSoup(f.read(), "lxml-xml")
                 # Find and remove empty tags
                 empty_tags = soup.find_all(
@@ -170,7 +171,7 @@ def extract_xml_package_ids(path: str) -> set[str]:
     found_modIds = False
 
     try:
-        with __open_save_file(path) as file:
+        with __open_file_maybe_compressed(path) as file:
             context = ET.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if not found_modIds and event == "start" and elem.tag == "modIds":
@@ -218,7 +219,7 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
     stack = []
 
     try:
-        with __open_save_file(path) as file:
+        with __open_file_maybe_compressed(path) as file:
             context = ET.iterparse(file, events=("start", "end"))
             for event, elem in context:
                 if event == "start":
@@ -273,9 +274,10 @@ def using_zstd(fp: str) -> bool:
         return False
 
 
-def __open_save_file(path: str) -> Any:
+def __open_file_maybe_compressed(path: str) -> Any:
     """
-    Open a save file.
+    Open a file which may be comprssed.
+    Mostly intended for savefiles but can be other compressed text files too.
 
     Compatible with gzip and zstd. (RimKeeper and Save File Compression)
 
