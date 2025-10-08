@@ -1,5 +1,6 @@
 from loguru import logger
 
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.metadata import MetadataManager
 
 
@@ -70,27 +71,69 @@ def gen_rev_deps_graph(
     return reverse_dependencies_graph
 
 
+def gen_tier_zero_deps_graph(
+    dependencies_graph: dict[str, set[str]],
+) -> tuple[dict[str, set[str]], set[str]]:
+    """
+    Generate the dependency graph for tier zero mods, which are mods that should be loaded before any other mod.
+    This includes mods that are required for the game to function properly,
+    These are Core abd DLC's, which are essential.
+    Mods in this list is limited, so we do not need to add any other mods to this list unless DLC's.
+    Mods in list are only added to the list of known tier zero mods, using the loadBefore Core flag in the database,
+    Or have the loadBefore Core flag set in their About.xml.
+    This will only happens when the mod author specifically states that it is a tier zero mod.
+    eg : Harmony, PrePatcher, Fishery, FasterGameLoading, LoadingProgress, VisualExceptions, etc.
+    These mods are mostly well known and this only happens when the mod author specifically states that it is a tier zero mod.
+    """
+    logger.info("Generating dependencies graph for tier zero mods")
+    known_tier_zero_mods = KNOWN_TIER_ZERO_MODS
+    # Bug fix: if there are circular dependencies in tier zero mods
+    # then an infinite loop happens here unless we keep track of what has
+    # already been processed.
+    processed_ids: set[str] = set()
+    tier_zero_mods: set[str] = set()
+    for known_tier_zero_mod in known_tier_zero_mods:
+        if known_tier_zero_mod in dependencies_graph:
+            # Some known tier zero mods might not actually be active
+            tier_zero_mods.add(known_tier_zero_mod)
+            dependencies_set = get_dependencies_recursive(
+                known_tier_zero_mod, dependencies_graph, processed_ids
+            )
+            tier_zero_mods.update(dependencies_set)
+    logger.info(
+        f"Recursively generated the following set of tier one mods: {tier_zero_mods}"
+    )
+    tier_zero_dependency_graph = {}
+    for tier_zero_mod in tier_zero_mods:
+        # Tier zero mods will only ever reference other tier zero mods in their dependencies graph
+        if tier_zero_mod in dependencies_graph:
+            tier_zero_dependency_graph[tier_zero_mod] = dependencies_graph[
+                tier_zero_mod
+            ]
+    logger.info("Attached corresponding dependencies to every tier zero mod, returning")
+    return tier_zero_dependency_graph, tier_zero_mods
+
+
 def gen_tier_one_deps_graph(
     dependencies_graph: dict[str, set[str]],
 ) -> tuple[dict[str, set[str]], set[str]]:
-    # Below is a list of mods determined to be "tier one", in the sense that they
-    # should be loaded first before any other regular mod. Tier one mods will have specific
-    # load order needs within themselves, e.g. Harmony before core. There is no guarantee that
-    # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
-    # into this list as well.
-    # TODO: pull from a config
-
+    """
+    Generate the dependency graph for "tier one" mods, which are mods that are required by other mods to function properly,
+    These are mods such as Framework mods.
+    Tier one mods will have specific load order needs within themselves,
+    This list of mods is exhaustive, so we need to add any other mod that these mods
+    e.g. "Vanilla Backgrounds Expanded" before "Vaniila Expanded Framework".
+    These can also be added to the list of known tier one mods, using the "loadTop" flag, in the database.
+    """
     logger.info("Generating dependencies graph for tier one mods")
-    known_tier_one_mods = {
-        "zetrith.prepatcher",
-        "brrainz.harmony",
-        "ludeon.rimworld",
-        "ludeon.rimworld.royalty",
-        "ludeon.rimworld.ideology",
-        "ludeon.rimworld.biotech",
-        "ludeon.rimworld.anomaly",
-        "unlimitedhugs.hugslib",
-    }
+    metadata_manager = MetadataManager.instance()
+    known_tier_one_mods = KNOWN_TIER_ONE_MODS
+    # Add mods with loadTop set to True to known_tier_one_mods
+    for uuid in metadata_manager.internal_local_metadata:
+        if metadata_manager.internal_local_metadata[uuid].get("loadTop"):
+            known_tier_one_mods.add(
+                metadata_manager.internal_local_metadata[uuid]["packageid"]
+            )
     # Bug fix: if there are circular dependencies in tier one mods
     # then an infinite loop happens here unless we keep track of what has
     # already been processed.
@@ -142,13 +185,14 @@ def gen_tier_three_deps_graph(
     reverse_dependencies_graph: dict[str, set[str]],
     active_mods_uuids: set[str],
 ) -> tuple[dict[str, set[str]], set[str]]:
-    # Below is a list of mods determined to be "tier three", in the sense that they
-    # should be loaded after any other regular mod, potentially at the very end of the load order.
-    # Tier three mods will have specific load order needs within themselves. There is no guarantee that
-    # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
-    # into this list as well.
-    # TODO: pull from a config
-    # Cache MetadataManager instance
+    """
+    Below is a list of mods determined to be "tier three",
+    These should be loaded after any other regular mod, potentially at the very end of the load order.
+    Tier three mods will have specific load order needs within themselves. There is no guarantee that his list of mods is exhaustive,
+    So we need to add any other mod that these mods depend on into this list as well.
+    eg. "RocketMan".
+    These can also be added to the list of known tier one mods, using the "loadBottom" flag, in the database.
+    """
     metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier three mods")
     known_tier_three_mods = {
@@ -206,38 +250,143 @@ def gen_tier_two_deps_graph(
     active_mod_ids: list[str],
     tier_one_mods: set[str],
     tier_three_mods: set[str],
+    use_moddependencies_as_loadTheseBefore: bool = False,
 ) -> dict[str, set[str]]:
-    # Now, sort the rest of the mods while removing references to mods in tier one and tier three
-    # First, get the dependency graph for tier two mods, minus all references to tier one
-    # and tier three mods
+    """
+    Generate the dependency graph for tier two mods, optionally treating About.xml dependencies as loadTheseBefore rules.
+    When conflicts exist, explicit loadTheseBefore rules take precedence over inferred dependencies.
+
+    Args:
+        active_mods_uuids: Set of UUIDs for active mods.
+        active_mod_ids: List of package IDs for active mods.
+        tier_one_mods: Set of package IDs for tier one mods.
+        tier_three_mods: Set of package IDs for tier three mods.
+        use_moddependencies_as_loadTheseBefore: If True, treat About.xml dependencies as loadTheseBefore rules.
+
+    Returns:
+        Dependency graph for tier two mods.
+    """
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier two mods")
     logger.info(
         "Stripping all references to tier one and tier three mods and their dependencies"
     )
-    tier_two_dependency_graph = {}
+
+    # First pass: collect explicit loadTheseBefore rules (highest priority)
+    explicit_rules = {}  # mod_id -> set of dependencies from loadTheseBefore
+
+    # Second pass: collect inferred rules from dependencies (lower priority)
+    inferred_rules = {}  # mod_id -> set of dependencies from About.xml dependencies
+
     for uuid in active_mods_uuids:
         package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = metadata_manager.internal_local_metadata[uuid].get(
+            # Always collect explicit loadTheseBefore rules
+            explicit_dependencies = set()
+            loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
                 "loadTheseBefore"
             )
-            stripped_dependencies = set()
-            if dependencies:
-                for dependency_id in dependencies:
-                    # Remember, dependencies from all_mods can reference non-active mods
-                    # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
-                    if not isinstance(dependency_id, tuple):
-                        logger.error(
-                            f"Expected load order rule to be a tuple: [{dependency_id}]"
-                        )
-                    if (
-                        dependency_id[0] not in tier_one_mods
-                        and dependency_id[0] not in tier_three_mods
-                        and dependency_id[0] in active_mod_ids
-                    ):
-                        stripped_dependencies.add(dependency_id[0])
-            tier_two_dependency_graph[package_id] = stripped_dependencies
-    logger.info("Generated tier two dependency graph, returning")
+            if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
+                for dep in loadTheseBefore:
+                    if isinstance(dep, tuple):
+                        if (
+                            dep[0] not in tier_one_mods
+                            and dep[0] not in tier_three_mods
+                            and dep[0] in active_mod_ids
+                        ):
+                            explicit_dependencies.add(dep[0])
+                    else:
+                        logger.error(f"loadTheseBefore entry is not a tuple: [{dep}]")
+
+            explicit_rules[package_id] = explicit_dependencies
+
+            # Collect inferred rules from dependencies if enabled
+            inferred_dependencies = set()
+            if use_moddependencies_as_loadTheseBefore:
+                about_dependencies = metadata_manager.internal_local_metadata[uuid].get(
+                    "dependencies"
+                )
+                if about_dependencies and isinstance(about_dependencies, (set, list)):
+                    for dep in about_dependencies:
+                        # Accept both str and tuple for about_dependencies
+                        dep_id = None
+                        alt_ids: set[str] = set()
+                        if isinstance(dep, str):
+                            dep_id = dep
+                        elif isinstance(dep, tuple):
+                            dep_id = dep[0]
+                            if (
+                                len(dep) > 1
+                                and isinstance(dep[1], dict)
+                                and isinstance(dep[1].get("alternatives"), set)
+                            ):
+                                alt_ids = dep[1]["alternatives"]
+                        else:
+                            logger.error(
+                                f"About.xml dependency is not a string or tuple: [{dep}]"
+                            )
+                            continue
+
+                        # Prefer primary dep when present; optionally use alternatives
+                        if (
+                            dep_id in active_mod_ids
+                            and dep_id not in tier_one_mods
+                            and dep_id not in tier_three_mods
+                        ):
+                            inferred_dependencies.add(dep_id)
+                        else:
+                            # Only use alternatives if allowed by settings
+                            if metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
+                                for alt in alt_ids:
+                                    if (
+                                        alt in active_mod_ids
+                                        and alt not in tier_one_mods
+                                        and alt not in tier_three_mods
+                                    ):
+                                        inferred_dependencies.add(alt)
+                                        break
+
+            inferred_rules[package_id] = inferred_dependencies
+
+    # Resolve conflicts: explicit rules take precedence over inferred rules
+    tier_two_dependency_graph = {}
+    conflicts_ignored = 0
+
+    for package_id in explicit_rules:
+        final_dependencies = set()
+
+        # Start with explicit dependencies (always included)
+        final_dependencies.update(explicit_rules[package_id])
+
+        # Add inferred dependencies only if they don't conflict with explicit rules
+        for inferred_dep in inferred_rules.get(package_id, set()):
+            # Check for conflict: does any explicit rule say inferred_dep should load before package_id?
+            has_conflict = False
+
+            # Check if inferred_dep has an explicit rule that conflicts
+            if inferred_dep in explicit_rules:
+                if package_id in explicit_rules[inferred_dep]:
+                    # Conflict: explicit rule says inferred_dep -> package_id,
+                    # but we're trying to add package_id -> inferred_dep
+                    logger.warning(
+                        f"Ignoring inferred dependency {package_id} -> {inferred_dep} "
+                        f"due to explicit rule {inferred_dep} -> {package_id}"
+                    )
+                    has_conflict = True
+                    conflicts_ignored += 1
+
+            if not has_conflict:
+                final_dependencies.add(inferred_dep)
+
+        tier_two_dependency_graph[package_id] = final_dependencies
+
+    if conflicts_ignored > 0:
+        logger.info(
+            f"Resolved {conflicts_ignored} conflicts by prioritizing explicit loadTheseBefore rules"
+        )
+
+    logger.info(
+        "Generated tier two dependency graph with conflict resolution, returning"
+    )
     return tier_two_dependency_graph

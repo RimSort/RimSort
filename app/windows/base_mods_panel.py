@@ -1,7 +1,9 @@
+import os
+import shutil
 from functools import partial
-from typing import Callable, Self, TypeVar
+from typing import Callable, Self, TypeVar, Union
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -19,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
+from app.utils.mod_utils import get_mod_path_from_pfid
 
 # By default, we assume Stretch for all columns.
 # Tuples should be used if this should be overridden
@@ -46,11 +49,11 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: list[HeaderColumn],
-        minimum_size: QSize = QSize(800, 600),
     ):
         super().__init__()
         # Utility and Setup
         self.metadata_manager = MetadataManager.instance()
+        self.settings_controller = self.metadata_manager.settings_controller
 
         # Start of UI
         self.installEventFilter(self)
@@ -114,19 +117,19 @@ class BaseModsPanel(QWidget):
                 else QHeaderView.ResizeMode.Stretch,
             )
 
-        self.editor_deselect_all_button = QPushButton("Deselect all")
+        self.editor_deselect_all_button = QPushButton(self.tr("Deselect all"))
         self.editor_deselect_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, False)
         )
         self.editor_checkbox_actions_layout.addWidget(self.editor_deselect_all_button)
 
-        self.editor_select_all_button = QPushButton("Select all")
+        self.editor_select_all_button = QPushButton(self.tr("Select all"))
         self.editor_select_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, True)
         )
         self.editor_checkbox_actions_layout.addWidget(self.editor_select_all_button)
 
-        self.editor_cancel_button = QPushButton("Do nothing and exit")
+        self.editor_cancel_button = QPushButton(self.tr("Do nothing and exit"))
         self.editor_cancel_button.clicked.connect(self.close)
         self.editor_exit_actions_layout.addWidget(self.editor_cancel_button)
 
@@ -149,7 +152,9 @@ class BaseModsPanel(QWidget):
         # Put it all together
         self.setWindowTitle(window_title)
         self.setLayout(layout)
-        self.setMinimumSize(minimum_size)
+
+        # Set the window size
+        self.resize(900, 600)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
@@ -191,7 +196,7 @@ class BaseModsPanel(QWidget):
     def _update_mods_from_table(
         self,
         pfid_column: int,
-        mode: str | int,
+        mode: Union[str, int],
         steamworks_cmd: str = "resubscribe",
         completed: Callable[[Self], None] = lambda self: (self.close(), None)[1],
     ) -> None:
@@ -210,6 +215,8 @@ class BaseModsPanel(QWidget):
         for publishedfileid, mode in pfids:
             if mode == "SteamCMD":
                 steamcmd_publishedfileids.append(publishedfileid)
+                # Call to delete selected mods before update
+                self._delete_selected_mods(pfid_column, mode)
             elif mode == "Steam":
                 steam_publishedfileids.append(publishedfileid)
 
@@ -267,3 +274,26 @@ class BaseModsPanel(QWidget):
                 return combo_box.currentText()
 
         return __selected_text_by_column
+
+    def _delete_selected_mods(self, pfid_column: int, mode: str | int) -> None:
+        delete_before_update_state = (
+            self.settings_controller.settings.steamcmd_delete_before_update
+        )
+        if delete_before_update_state:
+            pfid_fn = self._get_selected_text_by_column(pfid_column)
+            mode_fn = (
+                self._get_selected_text_by_column(mode)
+                if isinstance(mode, int)
+                else lambda _: mode
+            )
+            pfid_mode_pairs = self._run_for_selected_rows(
+                lambda row: (pfid_fn(row), mode_fn(row))
+            )
+            for pfid, mod_mode in pfid_mode_pairs:
+                if mod_mode == "SteamCMD":
+                    mod_path = get_mod_path_from_pfid(pfid)
+                    if mod_path and os.path.exists(mod_path):
+                        try:
+                            shutil.rmtree(mod_path)
+                        except Exception as e:
+                            print(f"Error deleting mod directory {mod_path}: {e}")

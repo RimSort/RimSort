@@ -1,23 +1,28 @@
+import http.client
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import sys
 import webbrowser
 from errno import EACCES
+from io import TextIOWrapper
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Tuple
 
 import requests
+import vdf  # type: ignore
 from loguru import logger
-from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
-    copy as copy_to_clipboard,
-)
-from requests import post as requests_post
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
+from app.utils.app_info import AppInfo
+
+translate = QCoreApplication.translate
 
 
 def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:
@@ -38,12 +43,16 @@ def copy_to_clipboard_safely(text: str) -> None:
     :param text: text to copy to clipboard
     """
     try:
-        copy_to_clipboard(text)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
-            title="Failed to copy to clipboard.",
-            text="RimSort failed to copy the text to your clipboard. Please copy it manually.",
+            title=translate("copy_to_clipboard_safely", "Failed to copy to clipboard."),
+            text=translate(
+                "copy_to_clipboard_safely",
+                "RimSort failed to copy the text to your clipboard. Please copy it manually.",
+            ),
             details=str(e),
         )
 
@@ -64,18 +73,26 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
     if not path.exists():
         logger.error(f"Tried to delete directory that does not exist: {path}")
         dialogue.show_warning(
-            title="Failed to remove directory",
-            text="RimSort tried to remove a directory that does not exist.",
-            details=f"Directory does not exist: {path}",
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "RimSort tried to remove a directory that does not exist."
+            ),
+            details=translate("rmtree", "Directory does not exist: {path}").format(
+                path=path
+            ),
         )
         return False
 
     if not path.is_dir():
         logger.error(f"rmtree path is not a directory: {path}")
         dialogue.show_warning(
-            title="Failed to remove directory",
-            text="RimSort tried to remove a directory that is not a directory.",
-            details=f"Path is not a directory: {path}",
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "RimSort tried to remove a directory that is not a directory."
+            ),
+            details=translate("rmtree", "Path is not a directory: {path}").format(
+                path=path
+            ),
         )
         return False
 
@@ -88,9 +105,17 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
             error_code = e.errno
         logger.error(f"Failed to remove directory: {e}")
         dialogue.show_warning(
-            title="Failed to remove directory",
-            text="An OSError occurred while trying to remove a directory.",
-            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "An OSError occurred while trying to remove a directory."
+            ),
+            information=translate(
+                "rmtree",
+                "{e.strerror} occurred at {e.filename} with error code {error_code}.",
+            ).format(
+                e=e,
+                error_code=error_code,
+            ),
             details=str(e),
         )
         return False
@@ -213,11 +238,19 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             executable_path = str((game_install_path / "RimWorldLinux"))
         elif system_name == "Windows":
             # Windows
-            executable_path = str((game_install_path / "RimWorldWin64.exe"))
+            path64 = game_install_path / "RimWorldWin64.exe"
+            path32 = game_install_path / "RimWorldWin.exe"
+
+            executable_path = str(path64)  # default to 64-bit executable
+            if (
+                not path64.exists() and path32.exists()
+            ):  # look for and set path to 86x executable only if default doesn't exist
+                executable_path = str(path32)
+
         else:
             logger.error("Unable to launch the game on an unknown system")
             return
-        
+
         logger.info(f"Path to game executable generated: {executable_path}")
         if os.path.exists(executable_path):
             logger.info(
@@ -227,53 +260,69 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 + str(args)
                 + "`"
             )
-            # https://stackoverflow.com/a/21805723
-            if system_name == "Darwin":  # MacOS
-                popen_args = ["open", executable_path, "--args"]
-                popen_args.extend(args)
-                p = subprocess.Popen(popen_args)
-            else:
-                popen_args = [executable_path]
-                popen_args.extend(args)
-
-                if sys.platform == "win32":
-                    p = subprocess.Popen(
-                        popen_args,
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        shell=True,
-                        cwd=game_install_path,
-                    )
-                else:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    p = subprocess.Popen(
-                        popen_args, start_new_session=True, cwd=game_install_path
-                    )
-
+            pid, popen_args = launch_process(
+                executable_path, args, str(game_install_path)
+            )
             logger.info(
-                f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
+                f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
             )
         else:
             logger.debug("The game executable path does not exist")
             dialogue.show_warning(
-                title="File not found",
-                text="Unable to launch game process",
+                title=translate("launch_game_process", "File not found"),
+                text=translate("launch_game_process", "Unable to launch game process"),
                 information=(
-                    "RimSort could not start RimWorld as the game executable does "
-                    f"not exist at the specified path: {executable_path}. Please check "
-                    "that this directory is correct and the RimWorld game executable "
-                    "exists in it."
+                    translate(
+                        "launch_game_process",
+                        "RimSort could not start RimWorld as the game executable does "
+                        "not exist at the specified path: {executable_path}. Please check "
+                        "that this directory is correct and the RimWorld game executable "
+                        "exists in it.",
+                    ).format(executable_path=executable_path)
                 ),
             )
     else:
         logger.error("The path to the game folder is empty")
         dialogue.show_warning(
-            title="Game launch failed",
-            text="Unable to launch RimWorld",
+            title=translate("launch_game_process", "Game launch failed"),
+            text=translate("launch_game_process", "Unable to launch RimWorld"),
             information=(
-                f"RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] "
-                "Please check that the game folder is properly set and that the RimWorld executable exists in it."
+                translate(
+                    "launch_game_process",
+                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] "
+                    "Please check that the game folder is properly set and that the RimWorld executable exists in it.",
+                ).format(game_install_path=game_install_path)
             ),
         )
+
+
+def launch_process(
+    executable_path: str, args: list[str], cwd: str
+) -> Tuple[int, list[str]]:
+    pid = -1
+    # https://stackoverflow.com/a/21805723
+    if platform.system() == "Darwin":  # MacOS
+        popen_args = ["open", executable_path, "--args"]
+        popen_args.extend(args)
+        p = subprocess.Popen(popen_args)
+        pid = p.pid
+    else:
+        popen_args = [executable_path]
+        popen_args.extend(args)
+
+        if sys.platform == "win32":
+            p = subprocess.Popen(
+                popen_args,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                shell=True,
+                cwd=cwd,
+            )
+            pid = p.pid
+        else:
+            # not Windows, so assume POSIX; if not, we'll get a usable exception
+            p = subprocess.Popen(popen_args, start_new_session=True, cwd=cwd)
+            pid = p.pid
+    return pid, popen_args
 
 
 def open_url_browser(url: str) -> None:
@@ -307,10 +356,31 @@ def platform_specific_open(path: str | Path) -> None:
             subprocess.Popen(["open", path])
     elif sys.platform == "win32":
         logger.info(f"Opening {path} with startfile on Windows")
-        os.startfile(path)
+        try:
+            os.startfile(path)
+        except OSError as e:
+            # Handle cases where no default application is associated
+            if e.winerror == -2147221003:  # Application not found
+                logger.warning(
+                    f"No default application found for {path}, trying notepad"
+                )
+                # Try to open with notepad as fallback
+                try:
+                    subprocess.Popen(["notepad.exe", path])
+                except Exception as notepad_error:
+                    logger.error(f"Failed to open with notepad: {notepad_error}")
+                    dialogue.show_warning(
+                        title="Failed to open file",
+                        text="Could not open the file",
+                        information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
+                        details=str(e),
+                    )
+            else:
+                # Re-raise other OSErrors
+                raise
     elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
-        subprocess.Popen(["xdg-open", path])
+        subprocess.Popen(["xdg-open", path], env=dict(os.environ, LD_LIBRARY_PATH=""))
     else:
         logger.error("Attempting to open directory on an unknown system")
 
@@ -340,6 +410,9 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
         return list(obj)
     elif isinstance(obj, list):
         return [flatten_to_list(e) for e in obj]
+    elif isinstance(obj, tuple):
+        # Convert tuples to lists and recurse into elements
+        return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
         return {k: flatten_to_list(v) for k, v in obj.items()}
     else:
@@ -348,18 +421,25 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
 
 def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
-    Function to upload data to http://0x0.st/
+    Function to upload data to https://0x0.st/
 
     :param path: a string path to a file containing data to upload
-    :return: a string that is the URL returned from http://0x0.st/
+    :return: a string that is the URL returned from https://0x0.st/
     """
-    logger.info(f"Uploading data to http://0x0.st/: {path}")
+    logger.info(f"Uploading data to https://0x0.st/: {path}")
     try:
-        request = requests_post(
-            url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
-        )
+        with open(path, "rb") as f:
+            headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
+            request = requests.post(
+                url="https://0x0.st/",
+                files={"file": (Path(path).name, f)},
+                headers=headers,
+            )
     except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error. Failed to upload data to http://0x0.st: {e}")
+        logger.error(f"Connection Error. Failed to upload data to https://0x0.st: {e}")
+        return False, str(e)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request Error. Failed to upload data to https://0x0.st: {e}")
         return False, str(e)
 
     if request.status_code == 200:
@@ -367,10 +447,11 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
         return True, url
     else:
+        body_snippet = request.text.strip()
         logger.warning(
-            f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
+            f"Failed to upload data to https://0x0.st. Status code: {request.status_code}; body: {body_snippet[:200]}"
         )
-        return False, f"Status code: {request.status_code}"
+        return False, f"Status code: {request.status_code}\n{body_snippet}"
 
 
 def extract_git_dir_name(url: str) -> str:
@@ -414,3 +495,193 @@ def check_valid_http_git_url(url: str) -> bool:
     :return: a boolean indicating whether the url is a valid git url
     """
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
+
+
+def get_path_up_to_string(
+    path: Path, stop_string: str, exclude: bool = False
+) -> Path | str:
+    """
+    Returns a Path up to the stop_string.
+
+    :param path: Path to search
+    :param stop_string: str that path is returned up to.
+    :param exclude: bool, decides if stop_string is excluded from returned path
+    :return: Path up to stop_string or empty str if stop_string is not present
+    """
+    parts = path.parts
+
+    try:
+        stop_idx = parts.index(stop_string)
+        if exclude:
+            return Path(*parts[:stop_idx])
+        else:
+            return Path(*parts[: stop_idx + 1])
+    except ValueError:
+        # Stop string is not present
+        return ""
+
+
+def find_steam_rimworld(steam_folder: Path | str) -> str:
+    """
+    This should be compatible cross-platform.
+
+    Given a steam installation path, find and read the libraryfolders.vdf
+    and from this file retrieve the RimWorld steam isntallation path.
+
+    :param steam_folder: Path to steam installation
+    :return: Rimworld Path if found, blank str otherwise
+    """
+
+    def __load_data(f: TextIOWrapper) -> str:
+        """
+        Helper function that returns RimWorld path from libraryfolders.vdf
+        if found inside, empty string otherwise.
+        """
+        rimworld_path = ""
+        data = vdf.load(f)
+        library_folders = data.get("libraryfolders", None)
+        if not library_folders:
+            return ""
+        # Find 294100 (RimWorld)
+        for _, folder in library_folders.items():
+            if "294100" in folder.get("apps", {}):
+                rimworld_path = folder.get("path", "")
+                break
+        return rimworld_path
+
+    rimworld_path = ""
+    steam_folder = Path(steam_folder)
+
+    primary_library = "config/libraryfolders.vdf"
+    backup_library = "steamapps/libraryfolders.vdf"
+
+    if os.path.exists(steam_folder / primary_library):
+        logger.debug(f"Attempting to get RimWorld path from {primary_library}")
+        with open(steam_folder / primary_library, "r") as f:
+            rimworld_path = __load_data(f)
+    elif os.path.exists(steam_folder / backup_library):
+        logger.debug(f"Attempting to get RimWorld path from {backup_library}")
+        with open(steam_folder / backup_library, "r") as f:
+            rimworld_path = __load_data(f)
+    else:
+        logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
+        return rimworld_path
+
+    full_rimworld_path = Path(rimworld_path) / "steamapps/common/RimWorld"
+
+    return str(full_rimworld_path) if rimworld_path else rimworld_path
+
+
+def check_internet_connection(
+    primary_host: str = "8.8.8.8",
+    fallback_host: str = "1.1.1.1",
+    port: int = 53,
+    fallback_port: int = 443,
+    timeout: float = 10,
+) -> bool:
+    """
+    Check if there is an active internet connection by attempting to connect to a known host (DNS),
+    As a fallback, try an HTTP request to a well-known google website.
+    """
+    socket.setdefaulttimeout(timeout)
+
+    def try_connect(host: str, port_to_try: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((host, port_to_try))
+            return True
+        except OSError as e:
+            logger.warning(f"Socket connection to {host}:{port_to_try} failed: {e}")
+            return False
+
+    # Try connecting to the primary host on both ports
+    if try_connect(primary_host, port) or try_connect(primary_host, fallback_port):
+        return True
+
+    # Try connecting to the fallback host on both ports
+    if try_connect(fallback_host, port) or try_connect(fallback_host, fallback_port):
+        return True
+
+    # Fallback: try HTTP request to a well-known site
+    try:  # Try google.com first
+        conn = http.client.HTTPSConnection("www.google.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.google.com failed: {e}")
+
+    try:  # Try cloudflare fallback site
+        conn = http.client.HTTPSConnection("www.cloudflare.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.cloudflare.com failed: {e}")
+
+    try:  # Try microsoft.com as another fallback site
+        conn = http.client.HTTPSConnection("www.microsoft.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.microsoft.com failed: {e}")
+
+    logger.error("No internet connection detected.")
+
+    try:  # Try additional fallback: try curl command to google.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.google.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.google.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to cloudflare.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.cloudflare.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.cloudflare.com failed: {e}")
+
+    try:  # Try additional fallback: try curl command to microsoft.com
+        result = subprocess.run(
+            ["curl", "-Is", "https://www.microsoft.com"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+        if result.returncode == 0 and b"HTTP" in result.stdout:
+            return True
+    except Exception as e:
+        logger.warning(f"Curl command to www.microsoft.com failed: {e}")
+
+    return False
+
+
+def restart_application() -> None:
+    if getattr(sys, "frozen", False):
+        cmd = [sys.executable] + sys.argv[1:]
+    else:
+        cmd = [sys.executable] + sys.argv
+
+    subprocess.Popen(cmd)
+
+    instance = QApplication.instance()
+    if instance:
+        logger.info("Restarting the application")
+        instance.quit()
+    else:
+        logger.warning("No QApplication instance found, cannot restart the application")

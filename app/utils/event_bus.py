@@ -1,4 +1,5 @@
-from typing import Self
+from pathlib import Path
+from typing import Union
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QPushButton
@@ -21,15 +22,15 @@ class EventBus(QObject):
         Since this is a singleton class, multiple instantiations will return the same object.
     """
 
-    _instance: None | Self = None
+    _instance: Union[None, "EventBus"] = None
 
     # Menu bar signals
     do_check_for_application_update = Signal()
-    do_validate_steam_client = Signal()
     do_open_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
     do_import_mod_list_from_workshop_collection = Signal()
+    do_import_mod_list_from_save_file = Signal()
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
 
@@ -45,9 +46,12 @@ class EventBus(QObject):
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
+    reset_warnings_signal = Signal()
+    reset_mod_colors_signal = Signal()
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
+    do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
     do_check_for_workshop_updates = Signal()
 
@@ -75,9 +79,8 @@ class EventBus(QObject):
     do_download_no_version_warning_db_from_github = Signal()
     do_upload_use_this_instead_db_to_github = Signal()
     do_download_use_this_instead_db_from_github = Signal()
-    do_upload_rimsort_log = Signal()
-    do_upload_rimsort_old_log = Signal()
-    do_upload_rimworld_log = Signal()
+    do_upload_log = Signal(Path)
+    do_open_default_editor = Signal(Path)
     do_download_all_mods_via_steamcmd = Signal()
     do_download_all_mods_via_steam = Signal()
     do_compare_steam_workshop_databases = Signal()
@@ -87,6 +90,7 @@ class EventBus(QObject):
     do_import_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
+    do_change_mod_coloring_mode = Signal()
 
     # MainWindow signals
     do_button_animation = Signal(QPushButton)
@@ -100,6 +104,8 @@ class EventBus(QObject):
     do_run_game = Signal()
     do_steamworks_api_call = Signal(list)
     do_steamcmd_download = Signal(list)
+    do_delete_outdated_entries_in_aux_db = Signal()
+    do_set_all_entries_in_aux_db_as_outdated = Signal()
 
     refresh_started = Signal()
     refresh_finished = Signal()
@@ -113,6 +119,16 @@ class EventBus(QObject):
     filters_changed_in_inactive_modlist = Signal()
     use_this_instead_clicked = Signal()
     reset_use_this_instead_cache = Signal()
+
+    # Help Menu bar signals
+    do_check_for_application_update = Signal()
+    do_check_for_update_startup = Signal()
+
+    # Performance settings signals
+    enable_aux_db_performance_mode = Signal()
+
+    # Loading animation signals
+    do_threaded_loading_animation = Signal(str, object, str)
 
     def __new__(cls) -> "EventBus":
         """

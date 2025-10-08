@@ -1,19 +1,22 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll site to Pages
+# Workflow for building and deploying a Jekyll site to GitHub Pages
+name: Build (and deploy to Pages) documentation Jekyll site
 
 on:
   push:
     branches: ["main"]
     paths:
       - "docs/**"
-
-  # Allows you to run this workflow manually from the Actions tab
+  pull_request:
+    paths:
+      - "docs/**"
+  # checkov:skip=CKV_GHA_7
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy to GitHub Pages"
+        type: boolean
+        default: false
+  merge_group:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -35,7 +38,7 @@ jobs:
         working-directory: docs
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -53,12 +56,13 @@ jobs:
           JEKYLL_ENV: production
       - name: Upload artifact
         # Automatically uploads an artifact from the './_site' directory by default
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: "docs/_site/"
 
   # Deployment job
-  deploy:
+  deploy: # Only run on push to main or when manually triggered with deploy input set to true
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

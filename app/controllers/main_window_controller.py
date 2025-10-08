@@ -1,8 +1,9 @@
 import os
+from xml.etree.ElementTree import Element
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QDialog, QPushButton
+from PySide6.QtWidgets import QPushButton
 
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
@@ -64,6 +65,39 @@ class MainWindowController(QObject):
             self.on_reset_use_this_instead_cache
         )
 
+    def _parse_workshop_id(self, url: str) -> str | None:
+        """Extract a Steam Workshop ID from a dependency URL."""
+        workshop_id: str | None = None
+        if "?id=" in url:
+            workshop_id = url.split("?id=")[1]
+        elif "CommunityFilePage/" in url:
+            workshop_id = url.split("CommunityFilePage/")[1]
+        else:
+            return None
+        # Clean up trailing query or path
+        if "?" in workshop_id:
+            workshop_id = workshop_id.split("?")[0]
+        if "/" in workshop_id:
+            workshop_id = workshop_id.split("/")[0]
+        return workshop_id
+
+    def _find_workshop_id_in_deps(
+        self, deps_node: Element, target_pkg_id: str
+    ) -> str | None:
+        """Search a <modDependencies> or versioned child node for a matching packageId and return its Workshop ID."""
+        target = target_pkg_id.lower()
+        for dep in deps_node.findall("li"):
+            package_id = dep.find("packageId")
+            if (
+                package_id is not None
+                and package_id.text is not None
+                and package_id.text.lower() == target
+            ):
+                workshop_url = dep.find("steamWorkshopUrl")
+                if workshop_url is not None and workshop_url.text is not None:
+                    return self._parse_workshop_id(workshop_url.text)
+        return None
+
     def check_dependencies(self) -> None:
         # Get the active mods list
         active_mods = set(
@@ -72,6 +106,12 @@ class MainWindowController(QObject):
 
         # Create a dictionary to store missing dependencies
         missing_deps: dict[str, set[str]] = {}
+
+        # Precompute active package IDs for quick lookup
+        active_ids = {
+            self.metadata_manager.internal_local_metadata[u].get("packageid")
+            for u in active_mods
+        }
 
         # Check each active mod's dependencies
         for uuid in active_mods:
@@ -85,20 +125,30 @@ class MainWindowController(QObject):
             if not dependencies:
                 continue
 
-            # Check each dependency
+            # Check each dependency, honoring alternativePackageIds
+            # E.g. [], ['brrainz.harmony'], [('oels.vehiclemapframework', {'alternatives': {'oels.vehiclemapframework.dev'}})]
             missing = set()
+            consider_alternatives = self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
             for dep in dependencies:
-                # Check if the dependency is in the active mods list
-                found = False
-                for active_uuid in active_mods:
-                    active_mod_data = self.metadata_manager.internal_local_metadata[
-                        active_uuid
-                    ]
-                    if active_mod_data.get("packageid") == dep:
-                        found = True
-                        break
-                if not found:
-                    missing.add(dep)
+                if isinstance(dep, tuple):
+                    dep_id = dep[0]
+                    alt_ids = set()
+                    if (
+                        len(dep) > 1
+                        and isinstance(dep[1], dict)
+                        and isinstance(dep[1].get("alternatives"), set)
+                    ):
+                        alt_ids = dep[1]["alternatives"]
+                else:
+                    dep_id = dep
+                    alt_ids = set()
+
+                # Check if the dependency is in the active mods list; optionally consider alternatives
+                satisfied = dep_id in active_ids
+                if not satisfied and consider_alternatives:
+                    satisfied = any(alt in active_ids for alt in alt_ids)
+                if not satisfied:
+                    missing.add(dep_id)
 
             if missing:
                 missing_deps[mod_id] = missing
@@ -106,177 +156,209 @@ class MainWindowController(QObject):
         if missing_deps:
             # Show the missing dependencies dialog
             dialog = MissingDependenciesDialog(self.main_window)
-            dialog.show_missing_dependencies(missing_deps)
+            selected_deps = dialog.show_dialog(missing_deps)
 
-            if dialog.exec() == QDialog.DialogCode.Accepted:
-                # User clicked "Add Selected & Sort"
-                selected_deps = dialog.get_selected_mods()
-                if selected_deps:
-                    # Create lists to track local mods and mods that need to be downloaded
-                    local_mods = []
-                    mods_to_download = []
+            if selected_deps:
+                # Create lists to track local mods and mods that need to be downloaded
+                local_mods = []
+                mods_to_download = []
 
-                    # Check each selected dependency
-                    for dep_id in selected_deps:
-                        # First check if it exists locally
-                        found_locally = False
-                        for (
-                            mod_data
-                        ) in self.metadata_manager.internal_local_metadata.values():
-                            if mod_data.get("packageid") == dep_id:
-                                local_mods.append(dep_id)
-                                found_locally = True
-                                break
+                # Check each selected dependency
+                for dep_id in selected_deps:
+                    # First check if it exists locally
+                    found_locally = False
+                    for (
+                        mod_data
+                    ) in self.metadata_manager.internal_local_metadata.values():
+                        if mod_data.get("packageid") == dep_id:
+                            local_mods.append(dep_id)
+                            found_locally = True
+                            break
 
-                        if not found_locally:
-                            # If not found locally, we need to find its Workshop ID
-                            # First check if we have it in our Steam metadata
-                            workshop_id = None
-                            if self.metadata_manager.external_steam_metadata:
-                                for (
-                                    pfid,
-                                    metadata,
-                                ) in self.metadata_manager.external_steam_metadata.items():
-                                    if (
-                                        metadata.get("packageId", "").lower()
-                                        == dep_id.lower()
-                                    ):
-                                        workshop_id = pfid
-                                        break
+                    if not found_locally:
+                        # If not found locally, we need to find its Workshop ID
+                        # First check if we have it in our Steam metadata
+                        workshop_id = None
+                        if self.metadata_manager.external_steam_metadata:
+                            for (
+                                pfid,
+                                metadata,
+                            ) in self.metadata_manager.external_steam_metadata.items():
+                                if (
+                                    metadata.get("packageId", "").lower()
+                                    == dep_id.lower()
+                                ):
+                                    workshop_id = pfid
+                                    break
 
-                            if workshop_id:
-                                mods_to_download.append(workshop_id)
-                            else:
-                                # If not in Steam metadata, try to find it in the mod's About.xml
-                                # search through all active mods' About.xml files
-                                for active_uuid in active_mods:
-                                    active_mod_data = (
-                                        self.metadata_manager.internal_local_metadata[
-                                            active_uuid
-                                        ]
-                                    )
-                                    mod_path = active_mod_data.get("path")
-                                    if not mod_path:
-                                        continue
+                        if workshop_id:
+                            mods_to_download.append(workshop_id)
+                        else:
+                            # If not in Steam metadata, try to find it in the mod's About.xml
+                            # search through all active mods' About.xml files
+                            for active_uuid in active_mods:
+                                active_mod_data = (
+                                    self.metadata_manager.internal_local_metadata[
+                                        active_uuid
+                                    ]
+                                )
+                                mod_path = active_mod_data.get("path")
+                                if not mod_path:
+                                    continue
 
-                                    about_path = os.path.join(
-                                        mod_path, "About", "About.xml"
-                                    )
-                                    if os.path.exists(about_path):
+                                about_path = os.path.join(
+                                    mod_path, "About", "About.xml"
+                                )
+                                if os.path.exists(about_path):
+                                    try:
+                                        import xml.etree.ElementTree as ET
+
+                                        tree = ET.parse(about_path)
+                                        root = tree.getroot()
+
+                                        prefer_versioned = False
                                         try:
-                                            import xml.etree.ElementTree as ET
+                                            prefer_versioned = self.metadata_manager.settings_controller.settings.prefer_versioned_about_tags
+                                        except Exception:
+                                            prefer_versioned = False
 
-                                            tree = ET.parse(about_path)
-                                            root = tree.getroot()
+                                        # First check versioned deps if preference enabled
+                                        # ByVersion precedence here mirrors MetadataManager.compile_metadata:
+                                        # - If ON and matching version key exists:
+                                        #   * empty → suppress base (no fallback)
+                                        #   * non-empty → use versioned only (no additive merge)
+                                        # - If ON and no matching key → fall back to base
+                                        # - If OFF → skip ByVersion entirely and use base only
+                                        used_versioned = False
+                                        if prefer_versioned:
+                                            try:
+                                                major, minor = (
+                                                    self.metadata_manager.game_version.split(
+                                                        "."
+                                                    )[:2]
+                                                )
+                                                target_keys = [
+                                                    f"v{major}.{minor}",
+                                                    f"{major}.{minor}",
+                                                ]
+                                            except Exception:
+                                                target_keys = []
 
-                                            # Look for modDependencies
+                                            deps_by_version = root.find(
+                                                "modDependenciesByVersion"
+                                            )
+                                            if (
+                                                deps_by_version is not None
+                                                and target_keys
+                                            ):
+                                                # Try exact matches, then prefix matches
+                                                candidate = None
+                                                for child in list(deps_by_version):
+                                                    if child.tag in target_keys:
+                                                        candidate = child
+                                                        break
+                                                if candidate is None:
+                                                    for child in list(deps_by_version):
+                                                        if any(
+                                                            child.tag.startswith(k)
+                                                            for k in target_keys
+                                                            if k
+                                                        ):
+                                                            candidate = child
+                                                            break
+
+                                                if candidate is not None:
+                                                    used_versioned = True
+                                                    lis = candidate.findall("li")
+                                                    if not lis:
+                                                        logger.debug(
+                                                            f"Prefer versioned tags: {candidate.tag} is present but empty; suppressing base modDependencies for {about_path}"
+                                                        )
+                                                    else:
+                                                        logger.debug(
+                                                            f"Prefer versioned tags: using dependencies from {candidate.tag} in {about_path}"
+                                                        )
+                                                        workshop_id = self._find_workshop_id_in_deps(
+                                                            candidate, dep_id
+                                                        )
+                                                        if workshop_id:
+                                                            mods_to_download.append(
+                                                                workshop_id
+                                                            )
+                                                            break
+
+                                        if used_versioned:
+                                            # If versioned key existed (even if empty), don't fall back to base
+                                            pass
+                                        else:
+                                            # Fall back to base modDependencies
                                             deps = root.find("modDependencies")
                                             if deps is None:
                                                 continue
 
-                                            for dep in deps.findall("li"):
-                                                package_id = dep.find("packageId")
-                                                if package_id is not None:
-                                                    if (
-                                                        package_id is not None
-                                                        and package_id.text is not None
-                                                        and package_id.text.lower()
-                                                        == dep_id.lower()
-                                                    ):
-                                                        workshop_url = dep.find(
-                                                            "steamWorkshopUrl"
-                                                        )
-                                                        if (
-                                                            workshop_url is not None
-                                                            and workshop_url.text
-                                                            is not None
-                                                        ):
-                                                            url = workshop_url.text
-                                                            # Extract workshop ID from URL
-                                                            if "?id=" in url:
-                                                                workshop_id = url.split(
-                                                                    "?id="
-                                                                )[1]
-                                                            elif (
-                                                                "CommunityFilePage/"
-                                                                in url
-                                                            ):
-                                                                workshop_id = url.split(
-                                                                    "CommunityFilePage/"
-                                                                )[1]
-
-                                                            if workshop_id:
-                                                                # Clean up workshop ID
-                                                                if "?" in workshop_id:
-                                                                    workshop_id = workshop_id.split(
-                                                                        "?"
-                                                                    )[0]
-                                                                if "/" in workshop_id:
-                                                                    workshop_id = workshop_id.split(
-                                                                        "/"
-                                                                    )[0]
-                                                                mods_to_download.append(
-                                                                    workshop_id
-                                                                )
-                                                                break
+                                            workshop_id = (
+                                                self._find_workshop_id_in_deps(
+                                                    deps, dep_id
+                                                )
+                                            )
                                             if workshop_id:
-                                                break  # Found the workshop ID, no need to check other mods
-                                        except Exception:
-                                            continue
+                                                mods_to_download.append(workshop_id)
+                                                break
+                                        if workshop_id:
+                                            break  # Found the workshop ID, no need to check other mods
+                                    except Exception:
+                                        continue
 
-                    # First add any local mods to the active list
-                    if local_mods:
-                        for mod_id in local_mods:
-                            # Find the UUID for this package ID
-                            for (
-                                uuid,
-                                mod_data,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if mod_data.get("packageid") == mod_id:
-                                    active_mods.add(uuid)
-                                    break
+                # First add any local mods to the active list
+                if local_mods:
+                    for mod_id in local_mods:
+                        # Find the UUID for this package ID
+                        for (
+                            uuid,
+                            mod_data,
+                        ) in self.metadata_manager.internal_local_metadata.items():
+                            if mod_data.get("packageid") == mod_id:
+                                active_mods.add(uuid)
+                                break
 
-                        # Update the active mods list with local mods
-                        self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(
-                            active_mods
-                        )
-                        # Trigger list updated signal to refresh UI
-                        self.main_window.main_content_panel.mods_panel.list_updated_signal.emit()
+                    # Update the active mods list with local mods
+                    self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(
+                        active_mods
+                    )
+                    # Trigger list updated signal to refresh UI
+                    self.main_window.main_content_panel.mods_panel.list_updated_signal.emit()
 
-                    # If there are mods to download, check SteamCMD setup first
-                    if mods_to_download:
-                        # Check if SteamCMD is set up
-                        steamcmd_wrapper = (
-                            self.main_window.main_content_panel.steamcmd_wrapper
-                        )
+                # If there are mods to download, check SteamCMD setup first
+                if mods_to_download:
+                    # Check if SteamCMD is set up
+                    steamcmd_wrapper = (
+                        self.main_window.main_content_panel.steamcmd_wrapper
+                    )
 
-                        if not steamcmd_wrapper.setup:
-                            # Set up SteamCMD first
-                            self.main_window.main_content_panel._do_setup_steamcmd()
-                            # After setup, try downloading again if setup was successful
-                            if steamcmd_wrapper.setup:
-                                self.main_window.main_content_panel._do_download_mods_with_steamcmd(
-                                    mods_to_download
-                                )
-                                # Don't sort yet - let the download completion handler do it
-                                return
-                            else:
-                                # Sort what we have so far
-                                self.main_window.main_content_panel._do_sort(
-                                    check_deps=False
-                                )
-                        else:
-                            # SteamCMD is already set up, proceed with download
+                    if not steamcmd_wrapper.setup:
+                        # Set up SteamCMD first
+                        self.main_window.main_content_panel._do_setup_steamcmd()
+                        # After setup, try downloading again if setup was successful
+                        if steamcmd_wrapper.setup:
                             self.main_window.main_content_panel._do_download_mods_with_steamcmd(
                                 mods_to_download
                             )
                             # Don't sort yet - let the download completion handler do it
                             return
+                        else:
+                            # Sort what we have so far
+                            self.main_window.main_content_panel._do_sort(
+                                check_deps=False
+                            )
                     else:
-                        # Only local mods were selected, sort them now
-                        self.main_window.main_content_panel._do_sort(check_deps=False)
+                        # SteamCMD is already set up, proceed with download
+                        self.main_window.main_content_panel._do_download_mods_with_steamcmd(
+                            mods_to_download
+                        )
+                        # Don't sort yet - let the download completion handler do it
+                        return
                 else:
-                    # User clicked "Sort Without Adding", sort without checking dependencies again
+                    # Only local mods were selected, sort them now
                     self.main_window.main_content_panel._do_sort(check_deps=False)
             else:
                 # User clicked "Sort Without Adding", sort without checking dependencies again

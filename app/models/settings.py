@@ -9,9 +9,9 @@ from typing import Any, Dict
 import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
 
 from app.models.instance import Instance
-from app.utils import rimsort_boot_config
 from app.utils.app_info import AppInfo
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -19,14 +19,28 @@ from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
+    MIN_SIZE = 400
+    MAX_SIZE = 1600
+    DEFAULT_WIDTH = 900
+    DEFAULT_HEIGHT = 600
+
+    @staticmethod
+    def validate_window_custom_size(width: int, height: int) -> tuple[int, int]:
+        """Validate custom width and height, resetting to defaults if out of range."""
+        if not (Settings.MIN_SIZE <= width <= Settings.MAX_SIZE):
+            width = Settings.DEFAULT_WIDTH
+        if not (Settings.MIN_SIZE <= height <= Settings.MAX_SIZE):
+            height = Settings.DEFAULT_HEIGHT
+        return width, height
+
     def __init__(self) -> None:
         super().__init__()
 
         self._settings_file = AppInfo().app_settings_file
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
-        # Other
-        self.check_for_update_startup: bool = False
+        # RimSort Update check
+        self.check_for_update_startup: bool = True
 
         # Databases
         self.external_steam_metadata_source: str = "None"
@@ -45,7 +59,10 @@ class Settings(QObject):
             "https://github.com/RimSort/Community-Rules-Database"
         )
 
-        self.database_expiry: int = 604800  # 7 days
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
+        # Default (-1) means do not delete data from Aux Metadata DB
+        self.aux_db_time_limit: int = -1
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
@@ -56,8 +73,8 @@ class Settings(QObject):
         )
 
         self.external_use_this_instead_metadata_source: str = "None"
-        self.external_use_this_instead_file_path: str = str(
-            AppInfo().app_storage_folder / "UseThisInstead"
+        self.external_use_this_instead_folder_path: str = str(
+            AppInfo().app_storage_folder / "UseThisInstead" / "Replacements"
         )
         self.external_use_this_instead_repo_path: str = (
             "https://github.com/emipa606/UseThisInstead"
@@ -65,9 +82,17 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
-        self.check_dependencies_on_sort: bool = (
-            True  # Whether to check for missing dependencies when sorting
-        )
+        # Whether to use moddependencies as loadTheseBefore rules
+        self.use_moddependencies_as_loadTheseBefore: bool = False
+        # Whether to use alternativePackageIds as satisfying dependencies
+        self.use_alternative_package_ids_as_satisfying_dependencies: bool = True
+        # Whether to check for missing dependencies when sorting
+        self.check_dependencies_on_sort: bool = True
+
+        # XML parsing behavior
+        # If enabled, About.xml *ByVersion tags take precedence over base tags
+        # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
+        self.prefer_versioned_about_tags: bool = True
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
@@ -77,43 +102,96 @@ class Settings(QObject):
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
+        self.steamcmd_delete_before_update: bool = False
 
         # todds
         self.todds_preset: str = "optimized"
+        self.todds_custom_command: str = ""
         self.todds_active_mods_target: bool = True
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
+        self.auto_delete_orphaned_dds: bool = False
+
+        # External Tools
+        self.text_editor_location: str = ""
+        self.text_editor_folder_arg: str = ""
+        self.text_editor_file_arg: str = ""
 
         # Theme
         self.enable_themes: bool = True
         self.theme_name: str = "RimPy"
 
+        self.font_family: str = QApplication.font().family()
+        self.font_size: int = 12
+
+        # Language
+        self.language = "en_US"
+
+        # Launch state setting: "maximized", "normal", or "custom"
+        # Main Window
+        self.main_window_launch_state: str = "maximized"
+        self.main_window_custom_width: int = 900
+        self.main_window_custom_height: int = 600
+
+        # Browser Window
+        self.browser_window_launch_state: str = "maximized"
+        self.browser_window_custom_width: int = 900
+        self.browser_window_custom_height: int = 600
+
+        # Settings Window
+        self.settings_window_launch_state: str = "custom"
+        self.settings_window_custom_width: int = 900
+        self.settings_window_custom_height: int = 600
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
+
+        # Backups
+        self.backup_saves_on_launch: bool = False
+        self.last_backup_date: str = ""
+        self.auto_backup_retention_count: int = 10
+        self.auto_backup_compression_count: int = 10
+
         self.mod_type_filter_toggle: bool = True
         self.hide_invalid_mods_when_filtering_toggle: bool = False
-        self.duplicate_mods_warning: bool = False
+        self.color_background_instead_of_text_toggle: bool = True
+        self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
-        self.try_download_missing_mods: bool = False
+        self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
+        self.update_databases_on_startup: bool = True
+        # UI: Save-comparison labels and icons
+        self.show_save_comparison_indicators: bool = True
+        # Clear button behavior
+        self.clear_moves_dlc: bool = False
+        # Advanced filtering options
+        self.enable_advanced_filtering: bool = True
 
+        # Update backup settings
+        self.enable_backup_before_update: bool = True
+        self.max_backups: int = 3
+
+        # Authentication
         self.rentry_auth_code: str = ""
-
         self.github_username: str = ""
         self.github_token: str = ""
 
-        # Accessibility
-        self.global_font_size: float = (
-            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
-        )
+        # Auxiliary Metadata DB
+        self.enable_aux_db_behavior_editing: bool = False
+
+        # Performance Settings
+        self.enable_aux_db_performance_mode: bool = False
+
+        # Player Log
+        self.auto_load_player_log_on_startup: bool = False
 
         # Instances
         self.current_instance: str = "Default"
+        self.current_instance_path: str = str(
+            Path(AppInfo().app_storage_folder) / "instances" / self.current_instance
+        )
         self.instances: dict[str, Instance] = {"Default": Instance()}
-
-        # Load critical settings needed at app boot
-        self.load_critical_settings()
 
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
@@ -126,26 +204,6 @@ class Settings(QObject):
         super().__setattr__(key, value)
         EventBus().settings_have_changed.emit()
 
-    def load_critical_settings(self) -> None:
-        """
-        Used to only load critical data required at app boot.
-        """
-        try:
-            with open(str(self._settings_file), "r") as file:
-                data = json.load(file)
-                self.global_font_size = data["global_font_size"]
-        except FileNotFoundError:
-            logger.error(
-                "Failed to load critical settings, settings file not found.\nUsing default values for critical settings."
-            )
-        except JSONDecodeError:
-            raise
-        except KeyError:
-            # Probably users first time/after update booting, and they don't have certain settings in settings.json yet
-            logger.warning(
-                "Failed to load critical settings, KeyError.\nUsing default values for critical settings."
-            )
-
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
             self.debug_logging_enabled = True
@@ -155,9 +213,8 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
-                mitigations = (
-                    True  # Assume there are mitigations unless we reach else block
-                )
+                # Assume there are mitigations unless we reach else block
+                mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(
@@ -255,6 +312,20 @@ class Settings(QObject):
                         "Current instance not found in settings.json. Performing mitigation."
                     )
                     data["current_instance"] = "Default"
+
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
+                elif not data.get("current_instance_path"):
+                    new_path = str(
+                        Path(AppInfo().app_storage_folder)
+                        / "instances"
+                        / data.get("current_instance")
+                    )
+                    data["current_instance_path"] = new_path
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False

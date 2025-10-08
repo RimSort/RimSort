@@ -4,7 +4,6 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
-from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
 from app.utils.generic import open_url_browser
@@ -16,13 +15,11 @@ class MenuBarController(QObject):
         self,
         view: MenuBar,
         settings_controller: SettingsController,
-        mods_panel_controller: ModsPanelController,
     ) -> None:
         super().__init__()
 
         self.menu_bar = view
         self.settings_controller = settings_controller
-        self.mods_panel_controller = mods_panel_controller
 
         # Application menu
         instance = QApplication.instance()
@@ -30,19 +27,18 @@ class MenuBarController(QObject):
             raise RuntimeError("QApplication instance not found")
         self.menu_bar.quit_action.triggered.connect(instance.quit)
 
-        # TODO: updates not implemented yet
-        # self.menu_bar.check_for_updates_action.triggered.connect(
-        #     EventBus().do_check_for_application_update.emit
-        # )
+        # Update menu
+        self.menu_bar.check_for_updates_action.triggered.connect(
+            EventBus().do_check_for_application_update.emit
+        )
+        self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
+            self._on_menu_bar_check_for_updates_on_startup_triggered
+        )
+        self.menu_bar.check_for_updates_on_startup_action.setChecked(
+            self.settings_controller.settings.check_for_update_startup
+        )
 
-        # self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
-        #     self._on_menu_bar_check_for_updates_on_startup_triggered
-        # )
-
-        # self.menu_bar.check_for_updates_on_startup_action.setChecked(
-        #     self.settings_controller.settings.check_for_update_startup
-        # )
-
+        # Settings menu
         self.menu_bar.settings_action.triggered.connect(
             self.settings_controller.show_settings_dialog
         )
@@ -60,21 +56,31 @@ class MenuBarController(QObject):
         self.menu_bar.import_from_workshop_collection_action.triggered.connect(
             EventBus().do_import_mod_list_from_workshop_collection
         )
+        self.menu_bar.import_from_save_file_action.triggered.connect(
+            EventBus().do_import_mod_list_from_save_file
+        )
         self.menu_bar.export_to_clipboard_action.triggered.connect(
             EventBus().do_export_mod_list_to_clipboard
         )
         self.menu_bar.export_to_rentry_action.triggered.connect(
             EventBus().do_export_mod_list_to_rentry
         )
-        self.menu_bar.upload_rimsort_log_action.triggered.connect(
-            EventBus().do_upload_rimsort_log
-        )
-        self.menu_bar.upload_rimsort_old_log_action.triggered.connect(
-            EventBus().do_upload_rimsort_old_log
-        )
-        self.menu_bar.upload_rimworld_log_action.triggered.connect(
-            EventBus().do_upload_rimworld_log
-        )
+
+        for action in self.menu_bar.upload_log_actions:
+            action.triggered.connect(
+                partial(
+                    lambda a: EventBus().do_upload_log.emit(a.data()()),
+                    a=action,
+                )
+            )
+
+        for action in self.menu_bar.default_open_log_actions:
+            action.triggered.connect(
+                partial(
+                    lambda a: EventBus().do_open_default_editor.emit(a.data()()),
+                    a=action,
+                )
+            )
 
         # Shortcuts SubMenu
         self.menu_bar.open_app_directory_action.triggered.connect(
@@ -108,12 +114,18 @@ class MenuBarController(QObject):
         self.menu_bar.paste_action.triggered.connect(self._on_menu_bar_paste_triggered)
         self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
         self.menu_bar.reset_all_warnings_action.triggered.connect(
-            self._on_reset_warnings_triggered
+            self._on_menu_bar_reset_warnings_triggered
+        )
+        self.menu_bar.reset_all_mod_colors_action.triggered.connect(
+            self._on_menu_bar_reset_all_mod_colors_triggered
         )
 
         # Download menu
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
+        )
+        self.menu_bar.add_zip_mod_action.triggered.connect(
+            EventBus().do_add_zip_mod.emit
         )
         self.menu_bar.browse_workshop_action.triggered.connect(
             EventBus().do_browse_workshop
@@ -148,8 +160,8 @@ class MenuBarController(QObject):
         )
         # Help menu
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.validate_steam_client_action.triggered.connect(
-            EventBus().do_validate_steam_client
+        self.menu_bar.github_action.triggered.connect(
+            self._on_menu_bar_github_triggered
         )
 
         # External signals
@@ -182,7 +194,11 @@ class MenuBarController(QObject):
     def _on_set_current_instance(
         self, current_instance: str, initialize: bool = False
     ) -> None:
-        self.menu_bar.instances_submenu.setTitle(f"Current: {current_instance}")
+        self.menu_bar.instances_submenu.setTitle(
+            self.tr("Current: {current_instance}").format(
+                current_instance=current_instance
+            )
+        )
         self.menu_bar.instances_submenu.setActiveAction(
             next(
                 (
@@ -195,8 +211,11 @@ class MenuBarController(QObject):
         if initialize:
             EventBus().do_activate_current_instance.emit(current_instance)
 
-    def _on_reset_warnings_triggered(self) -> None:
-        self.mods_panel_controller.reset_warnings_signal.emit()
+    def _on_menu_bar_reset_warnings_triggered(self) -> None:
+        EventBus().reset_warnings_signal.emit()
+
+    def _on_menu_bar_reset_all_mod_colors_triggered(self) -> None:
+        EventBus().reset_mod_colors_signal.emit()
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
@@ -231,6 +250,10 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
         open_url_browser("https://rimsort.github.io/RimSort/")
+
+    @Slot()
+    def _on_menu_bar_github_triggered(self) -> None:
+        open_url_browser("https://github.com/RimSort/RimSort")
 
     @Slot()
     def _on_refresh_started(self) -> None:

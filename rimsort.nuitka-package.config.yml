@@ -5,8 +5,13 @@
 ---
 - module-name: "app"
   data-files:
-    dirs:
-      - "../themes"
+    - dirs:
+        - "../themes"
+        - "../locales"
+    - patterns:
+        - "../update.sh"
+        - "../update.bat"
+        - "../app/utils/steam/steambrowser/setup_web_channel_script.js"
 
   dlls:
     - from_filenames:

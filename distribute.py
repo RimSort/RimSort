@@ -10,6 +10,7 @@ Not meant to be imported as a module.
 """
 
 import argparse
+import glob
 import os
 import platform
 import shutil
@@ -40,6 +41,7 @@ _NUITKA_CMD = [
     "-m",
     "nuitka",
     "app/__main__.py",
+    f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
@@ -52,34 +54,21 @@ else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
 
-GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
-
-REQUIREMENTS_FILES = {
-    "main": "requirements.txt",
-    "build": "requirements_build.txt",
-    "dev": "requirements_develop.txt",
-}
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
-
-
-def get_rimsort_pip(build: bool = False, dev: bool = False) -> None:
-    print("Will install core RimSort requirements")
-    command = [PY_CMD, "-m", "pip", "install", "-r", REQUIREMENTS_FILES["main"]]
-
-    if build:
-        print("Will install RimSort build requirements")
-        command.extend(["-r", REQUIREMENTS_FILES["build"]])
-
-    if dev:
-        print("Will install RimSort development requirements")
-        command.extend(["-r", REQUIREMENTS_FILES["dev"]])
-
-    _execute(command)
 
 
 def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
+
+
+def setup_uv() -> None:
+    if shutil.which("uv"):
+        print("uv already installed")
+        return
+    else:
+        print("Installing uv to pip...")
+        _execute([PY_CMD, "-m", "pip", "install", "uv"])
 
 
 def build_steamworkspy() -> None:
@@ -263,7 +252,7 @@ def build_steamworkspy() -> None:
     print("Getting SteamworksPy requirements...")
     print(f"Entering directory {os.path.split(STEAMWORKS_PY_PATH)[0]}")
     os.chdir(os.path.split(STEAMWORKS_PY_PATH)[0])
-    _execute(GET_REQ_CMD)
+    _execute(["uv", "pip", "install", "-r", "requirements.txt"])
     print(f"Returning to cwd... {_CWD}")
     os.chdir(_CWD)
 
@@ -324,6 +313,8 @@ def build_steamworkspy() -> None:
 
 
 def copy_swp_libs() -> None:
+    STEAMWORKSPY_BUILT_LIB = ""
+    STEAMWORKSPY_LIB_FIN = ""
     # Copy libs
     if _SYSTEM != "Windows":
         if _SYSTEM == "Darwin":
@@ -343,6 +334,8 @@ def copy_swp_libs() -> None:
 def get_latest_todds_release() -> None:
     # Parse latest release
     headers = None
+    browser_download_url = ""
+    # If GITHUB_TOKEN is set, use it to authenticate the request
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
     raw = handle_request(
@@ -410,6 +403,66 @@ def freeze_application() -> None:
     _execute(_NUITKA_CMD, env=os.environ)
 
 
+def _find_macos_bundles(cwd: str) -> list[str]:
+    bundles: list[str] = []
+    for root, dirs, _ in os.walk(cwd):
+        for d in dirs:
+            if d.endswith(".app"):
+                bundles.append(os.path.join(root, d))
+    return bundles
+
+
+def post_build_fixup_macos_steamworks() -> None:
+    """Ensure SteamworksPy.dylib exists inside .app after build on macOS."""
+    if _SYSTEM != "Darwin":
+        return
+    try:
+        bundles = _find_macos_bundles(_CWD)
+        if not bundles:
+            print("No .app bundle found — skipping Steamworks fixup")
+            return
+        for bundle in bundles:
+            macos_dir = os.path.join(bundle, "Contents", "MacOS")
+            if not os.path.isdir(macos_dir):
+                continue
+            generic = os.path.join(macos_dir, "SteamworksPy.dylib")
+            if os.path.exists(generic):
+                continue
+            # Prefer a suffixed dylib inside the bundle
+            candidates = [
+                os.path.join(macos_dir, f)
+                for f in os.listdir(macos_dir)
+                if f.startswith("SteamworksPy_") and f.endswith(".dylib")
+            ]
+            if not candidates:
+                # Fall back to libs directory
+                libs_dir = os.path.join(_CWD, "libs")
+                if os.path.isdir(libs_dir):
+                    candidates = [
+                        os.path.join(libs_dir, f)
+                        for f in os.listdir(libs_dir)
+                        if f.startswith("SteamworksPy_") and f.endswith(".dylib")
+                    ]
+            if candidates:
+                # Choose best candidate by host processor
+                m = (_PROCESSOR or "").lower()
+                preferred = None
+                for c in candidates:
+                    name = os.path.basename(c).lower()
+                    if "arm" in m and "arm" in name:
+                        preferred = c
+                        break
+                    if ("x86" in m or "i386" in m or "amd64" in m) and "i386" in name:
+                        preferred = c
+                        break
+                if preferred is None:
+                    preferred = candidates[0]
+                shutil.copyfile(preferred, generic)
+                print(f"Added SteamworksPy.dylib to bundle: {bundle}")
+    except Exception as e:
+        print(f"Warning: post_build_fixup_macos_steamworks failed: {e}")
+
+
 def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
@@ -425,7 +478,7 @@ def handle_request(
     raw = requests.get(url, headers=headers)
     if raw.status_code != 200:
         raise Exception(
-            f"Failed to get latest release: {raw.status_code}" f"\nResponse: {raw.text}"
+            f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}"
         )
     return raw
 
@@ -453,13 +506,6 @@ def make_args() -> argparse.ArgumentParser:
         "--skip-submodules",
         action="store_true",
         help="skip installing RimSort submodules using git",
-    )
-
-    # Skip dependencies
-    parser.add_argument(
-        "--skip-pip",
-        action="store_true",
-        help="skip installing RimSort pip requirements",
     )
 
     # Skip SteamworksPy Copy
@@ -504,7 +550,6 @@ def main() -> None:
     # Parse arguments
     parser = make_args()
     args = parser.parse_args()
-    build = not args.skip_build
 
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
     if not args.skip_submodules:
@@ -513,15 +558,12 @@ def main() -> None:
     else:
         print("Skipped getting submodules")
 
-    # RimSort dependencies
-    if not args.skip_pip:
-        print("Getting RimSort python requirements...")
-        get_rimsort_pip(build=build, dev=args.dev)
-    else:
-        print("Skipped getting python pip requirements")
-
     if args.build_steamworkspy:
         print("Building SteamworksPy library. Skipping copy...")
+        print(
+            "Warning: Building the SteamworksPy library requires Python 11, and may need to be done in a separate environment."
+        )
+        setup_uv()
         build_steamworkspy()
     elif not args.skip_steamworkspy:
         print("Copying SteamworksPy library")
@@ -550,6 +592,8 @@ def main() -> None:
 
         print("Building RimSort application with Nuitka...")
         freeze_application()
+        # After build, ensure the app bundle contains the generic Steamworks dylib
+        post_build_fixup_macos_steamworks()
     else:
         print("Skipped distribute.py build")
 

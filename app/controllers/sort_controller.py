@@ -16,9 +16,13 @@ class Sorter:
         sort_method: SortMethod | Callable[[dict[str, set[str]], set[str]], list[str]],
         active_package_ids: set[str],
         active_uuids: set[str],
+        use_moddependencies_as_loadTheseBefore: bool = False,
     ):
         self.active_package_ids = active_package_ids.copy()
         self.active_uuids = active_uuids.copy()
+        self.use_moddependencies_as_loadTheseBefore = (
+            use_moddependencies_as_loadTheseBefore
+        )
 
         if isinstance(sort_method, SortMethod) or isinstance(sort_method, str):
             logger.info(f"Created sorter instance with {sort_method} sort method")
@@ -47,6 +51,10 @@ class Sorter:
             self.active_uuids, list(self.active_package_ids)
         )
 
+        tier_zero_graph, tier_zero_mods = sort_deps.gen_tier_zero_deps_graph(
+            dependencies_graph
+        )
+
         tier_one_graph, tier_one_mods = sort_deps.gen_tier_one_deps_graph(
             dependencies_graph
         )
@@ -62,9 +70,10 @@ class Sorter:
             list(self.active_package_ids),
             tier_one_mods,
             tier_three_mods,
+            self.use_moddependencies_as_loadTheseBefore,
         )
 
-        return [tier_one_graph, tier_two_graph, tier_three_graph]
+        return [tier_zero_graph, tier_one_graph, tier_two_graph, tier_three_graph]
 
     def sort(
         self, dependency_graphs: list[dict[str, set[str]]] | None = None

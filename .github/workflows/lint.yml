@@ -5,6 +5,7 @@ on:
       - main
       - master
   pull_request: null
+  merge_group:
 
 permissions: {}
 
@@ -14,44 +15,41 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       packages: read
       # To report GitHub Actions status checks
       statuses: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v5
         with:
           # super-linter needs the full git history to get the
           # list of files that changed across commits
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.12"
-          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
-          cache: "pip"
-          cache-dependency-path: |
-            **/requirements*.txt
+          python-version-file: "pyproject.toml"
 
-      - name: Install dependencies with pip + requirements.txt
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install -r requirements.txt
-          .venv/bin/pip install -r requirements_develop.txt
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          activate-environment: true
 
-      - name: Move the dependencies
+      - name: Install Dependencies
+        shell: bash
+        run: uv sync --locked --dev
+
+      - name: Move the dependencies # Needed to deal with weirdness with super-linter's internal MyPy.
         run: mv .venv /home/runner/work/_temp/_github_workflow
 
-      - name: Get Python version from .python-version file
-        id: get-python-version
-        run: echo "python-version=$(cut -d '.' -f 1,2 .python-version)" >> "$GITHUB_OUTPUT"
-
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v7.3.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v8.2.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,4 +71,22 @@ jobs:
             -ignore 'unknown permission scope "attestations"'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
-          FILTER_REGEX_EXCLUDE: "LICENSE.md"
+          FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
+          IGNORE_GITIGNORED_FILES: true
+          # Set your fix mode variables to true
+          FIX_PYTHON_RUFF: true
+      - name: Commit and push linting fixes
+        # Run only on:
+        # - Pull requests from the same repository
+        # - Not on the default branch
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          add_options: "-- . :!super-linter-output/ :!github_conf/"
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: "chore: fix linting issues"
+          commit_user_name: super-linter
+          commit_user_email: super-linter@super-linter.dev

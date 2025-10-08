@@ -94,6 +94,7 @@ sys.excepthook = handle_exception
 
 
 def main_thread() -> None:
+    app_controller = None
     try:
         app_controller = AppController()
         sys.exit(app_controller.run())
@@ -122,7 +123,7 @@ def main_thread() -> None:
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if "app_controller" in locals():
+        if app_controller is not None and "app_controller" in locals():
             try:
                 logger.debug("Stopping watchdog...")
                 app_controller.shutdown_watchdog()

@@ -1,4 +1,13 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    func,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -24,9 +33,14 @@ class AuxMetadataEntry(Base):
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 
-    notes: Mapped[str] = mapped_column(String, default="")
-    color_hex: Mapped[str] = mapped_column(String, default="19232d")
+    user_notes: Mapped[str] = mapped_column(String, default="")
+    color_hex: Mapped[str] = mapped_column(
+        String, default=None, nullable=True
+    )  # None/NULL means use theme default
     ignore_warnings: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    outdated: Mapped[bool] = mapped_column(Boolean, default=False)
+    db_time_touched = Column(DateTime, default=func.now(), onupdate=func.now())
 
     tags: Mapped[list["TagsEntry"]] = relationship(
         secondary=tags_table, back_populates="mods"

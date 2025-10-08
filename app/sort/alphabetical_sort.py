@@ -9,6 +9,7 @@ def do_alphabetical_sort(
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
+
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
         (
@@ -24,8 +25,15 @@ def do_alphabetical_sort(
         )
         for uuid in active_mods_uuids
     )
+
+    def safe_name(name: object) -> str:
+        if isinstance(name, str):
+            return name.lower()
+        else:
+            return "name error in mod about.xml"
+
     active_mods_alphabetized = sorted(
-        active_mods_id_to_name.items(), key=lambda x: x[1], reverse=False
+        active_mods_id_to_name.items(), key=lambda x: safe_name(x[1]), reverse=False
     )
     dependencies_alphabetized = {}
     for tuple_id_name in active_mods_alphabetized:

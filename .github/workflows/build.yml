@@ -121,21 +121,24 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.12"
-          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
-          cache: "pip"
-          cache-dependency-path: |
-            **/requirements*.txt
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          activate-environment: true
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt -r requirements_build.txt
+        shell: bash
+        run: uv sync --locked --no-dev --group build
 
       - name: Build Actions
         shell: bash
         run: |
           set -e
-          python distribute.py \
-          --skip-pip \
+          uv run --frozen python \
+          ./distribute.py \
           --product-version='${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
@@ -160,6 +163,7 @@ jobs:
           file-description: "RimSort"
           include-data-files: |
             version.xml=version.xml
+          nofollow-import-to: "sqlalchemy.dialects.oracle"
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 
@@ -179,11 +183,36 @@ jobs:
           echo "Executable found at $executable"
         shell: bash
 
+      - name: Create MSI Package
+        if: matrix.platform == 'Windows'
+        run: |
+          dotnet tool install --global wix --version 6.0.0
+          
+          # Generate EULA.rtf from LICENSE.md for WiX License dialog
+          New-Item -ItemType Directory -Force -Path "themes\windows" | Out-Null
+          choco install pandoc -y
+          pandoc -s -o "themes\windows\EULA.rtf" "LICENSE.md"
+          
+          wix extension add WixToolset.UI.wixext
+          
+          wix build data\RimSort.wxs `
+            -ext WixToolset.UI.wixext `
+            -d PackageVersion="${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}.${{ steps.sem_version.outputs.increment }}" `
+            -d License="themes\windows\EULA.rtf" `
+            -o "RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi"
+        shell: powershell
+
       - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v2.2.3
+        uses: actions/attest-build-provenance@v3.0.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
+
+      - name: Generate MSI attestation
+        uses: actions/attest-build-provenance@v3.0.0
+        if: ${{ inputs.attest && matrix.platform == 'Windows' }}
+        with:
+          subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
 
       - name: Rename new build
         run: |
@@ -194,7 +223,7 @@ jobs:
         shell: bash
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v2.2.3
+        uses: actions/attest-build-provenance@v3.0.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
@@ -206,6 +235,16 @@ jobs:
           name: ${{ steps.filename.outputs.FILENAME }}
           path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
           if-no-files-found: error
+
+      # Upload the built executable
+      - name: Upload MSI Package
+        if: matrix.platform == 'Windows'
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.platform }}_${{ matrix.arch }}_msi
+          path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
+          if-no-files-found: error
+
     outputs:
       filename: ${{ steps.filename.outputs.FILENAME }}
 
