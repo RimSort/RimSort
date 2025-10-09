@@ -276,7 +276,7 @@ def using_zstd(fp: str) -> bool:
 
 def __open_file_maybe_compressed(path: str) -> Any:
     """
-    Open a file which may be comprssed.
+    Open a file which may be compressed.
     Mostly intended for savefiles but can be other compressed text files too.
 
     Compatible with gzip and zstd. (RimKeeper and Save File Compression)
