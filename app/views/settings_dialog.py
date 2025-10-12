@@ -203,6 +203,15 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
+        self.steam_client_integration_checkbox = QCheckBox(
+            self.tr("Enable Steam client integration")
+        )
+        group_layout.addWidget(self.steam_client_integration_checkbox)
+
+        self.steam_client_integration_checkbox.stateChanged.connect(
+            self._on_steam_integration_toggled
+        )
+
         section_label = QLabel(self.tr("Steam mods location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
@@ -1137,6 +1146,13 @@ This basically preserves your mod coloring, user notes etc. for this many second
         else:
             self.todds_custom_command_lineedit.setEnabled(False)
 
+    def _on_steam_integration_toggled(self) -> None:
+        checked = self.steam_client_integration_checkbox.isChecked()
+        self.steam_mods_folder_location.setEnabled(checked)
+        self.steam_mods_folder_location_open_button.setEnabled(checked)
+        self.steam_mods_folder_location_choose_button.setEnabled(checked)
+        self.steam_mods_folder_location_clear_button.setEnabled(checked)
+
     def _do_themes_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, self.tr("Theme"))
@@ -1533,11 +1549,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Check for mod updates on refresh")
         )
         group_layout.addWidget(self.show_mod_updates_checkbox)
-
-        self.steam_client_integration_checkbox = QCheckBox(
-            self.tr("Enable Steam client integration")
-        )
-        group_layout.addWidget(self.steam_client_integration_checkbox)
 
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
