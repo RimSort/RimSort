@@ -466,7 +466,7 @@ class ModInfo:
 
             # Set folder size
             try:
-                if self.settings_controller.settings.enable_advanced_filtering:
+                if self.settings_controller.settings.inactive_mods_sorting:
                     size_bytes = uuid_to_folder_size(uuid)
                     self.mod_info_folder_size_value.setText(
                         format_file_size(size_bytes)
@@ -492,7 +492,7 @@ class ModInfo:
             # Set filesystem modification time
             mod_path = mod_info.get("path")
             if (
-                self.settings_controller.settings.enable_advanced_filtering
+                self.settings_controller.settings.inactive_mods_sorting
                 and mod_path
                 and os.path.exists(mod_path)
             ):

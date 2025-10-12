@@ -94,6 +94,17 @@ class Settings(QObject):
         # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
         self.prefer_versioned_about_tags: bool = True
 
+        # Whether to notify user about missing mods
+        self.try_download_missing_mods: bool = True
+        # Whether to notify user about duplicate mods
+        self.duplicate_mods_warning: bool = True
+        # Whether to enable Mod type filter
+        self.mod_type_filter: bool = True
+        # Whether to hide invalid mods
+        self.hide_invalid_mods_when_filtering: bool = False
+        # Whether to enable inactive mods sorting options
+        self.inactive_mods_sorting: bool = True
+
         # DB Builder
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True
@@ -152,21 +163,14 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-
-        self.mod_type_filter_toggle: bool = True
-        self.hide_invalid_mods_when_filtering_toggle: bool = False
         self.color_background_instead_of_text_toggle: bool = True
-        self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
-        self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
         # UI: Save-comparison labels and icons
         self.show_save_comparison_indicators: bool = True
         # Clear button behavior
         self.clear_moves_dlc: bool = False
-        # Advanced filtering options
-        self.enable_advanced_filtering: bool = True
 
         # Update backup settings
         self.enable_backup_before_update: bool = True

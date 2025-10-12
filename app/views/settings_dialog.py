@@ -686,11 +686,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         xml_parsing_group_box.setLayout(xml_parsing_group_box_layout)
 
         # Prefer versioned About.xml tags over base tags
-        xml_parsing_explanatory_text = (
-            "When enabled, *ByVersion tags (e.g., modDependenciesByVersion, loadAfterByVersion, "
-            "loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion) take precedence "
-            "over the base tags. If a matching version tag exists but is empty, the base tag is ignored."
-        )
         xml_parsing_explanatory_label = QLabel(self.tr("XML Parsing Behavior"))
         xml_parsing_explanatory_label.setFont(GUIInfo().emphasis_font)
         xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
@@ -698,10 +693,82 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Prefer versioned About.xml tags over base tags")
         )
         self.prefer_versioned_about_tags_checkbox.setToolTip(
-            self.tr(xml_parsing_explanatory_text)
+            self.tr(
+                "When enabled, *ByVersion tags take precedence over the base tags, \n"
+                "If a matching version tag exists but is empty, the base tag is ignored. \n"
+                "e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)"
+            )
         )
+
         xml_parsing_group_box_layout.addWidget(
             self.prefer_versioned_about_tags_checkbox
+        )
+
+        # Mod list options group
+        modlist_option_group_box = QGroupBox()
+        tab_layout.addWidget(modlist_option_group_box)
+
+        modlist_option_group_box_layout = QVBoxLayout()
+        modlist_option_group_box.setLayout(modlist_option_group_box_layout)
+
+        modlist_option_label = QLabel(self.tr("Mod list options"))
+        modlist_option_label.setFont(GUIInfo().emphasis_font)
+        modlist_option_group_box_layout.addWidget(modlist_option_label)
+
+        # Download missing mods checkbox
+        self.download_missing_mods_checkbox = QCheckBox(
+            self.tr("Download missing mods automatically")
+        )
+        self.download_missing_mods_checkbox.setToolTip(
+            self.tr(
+                "Notifies to download mods that may be missing in the active modlist"
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.download_missing_mods_checkbox)
+
+        # Duplicate mod notification checkbox
+        self.show_duplicate_mods_warning_checkbox = QCheckBox(
+            self.tr("Show duplicate mods warning")
+        )
+        self.show_duplicate_mods_warning_checkbox.setToolTip(
+            self.tr("Notifies and displays the mods that have the same packageid")
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.show_duplicate_mods_warning_checkbox
+        )
+
+        # Mod type filter checkbox
+        self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
+        self.mod_type_filter_checkbox.setToolTip(
+            self.tr(
+                "Add icons and filtering options for easy mods identification and grouping"
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.mod_type_filter_checkbox)
+
+        # Hide invalid mod filtering checkbox
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
+            self.tr("Hide invalid mods when filtering")
+        )
+        self.hide_invalid_mods_when_filtering_checkbox.setToolTip(
+            self.tr("Hides invalid mods, not recommended to enable")
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.hide_invalid_mods_when_filtering_checkbox
+        )
+
+        # Inactive mods sorting options checkbox
+        self.enable_inactive_mods_sorting_checkbox = QCheckBox(
+            self.tr("Enable inactive mods sorting")
+        )
+        self.enable_inactive_mods_sorting_checkbox.setToolTip(
+            self.tr(
+                "Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods \n"
+                "Disabling this can improve performance by avoiding heavy calculations."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.enable_inactive_mods_sorting_checkbox
         )
 
         tab_layout.addStretch()
@@ -1458,21 +1525,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.watchdog_checkbox)
 
-        self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
-        group_layout.addWidget(self.mod_type_filter_checkbox)
-
-        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
-            self.tr("Hide invalid mods when filtering")
-        )
-        group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
-
-        # Moved to Performance tab under "Integration with recent save"
-
-        self.show_duplicate_mods_warning_checkbox = QCheckBox(
-            self.tr("Show duplicate mods warning")
-        )
-        group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
-
         # Clear button behavior
         self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
@@ -1487,11 +1539,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.steam_client_integration_checkbox)
 
-        self.download_missing_mods_checkbox = QCheckBox(
-            self.tr("Download missing mods automatically")
-        )
-        group_layout.addWidget(self.download_missing_mods_checkbox)
-
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )
@@ -1505,17 +1552,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
-
-        self.enable_advanced_filtering_checkbox = QCheckBox(
-            self.tr("Enable advanced filtering options")
-        )
-        self.enable_advanced_filtering_checkbox.setToolTip(
-            self.tr(
-                "If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. "
-                "Disabling this can improve performance by avoiding heavy calculations."
-            )
-        )
-        group_layout.addWidget(self.enable_advanced_filtering_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")

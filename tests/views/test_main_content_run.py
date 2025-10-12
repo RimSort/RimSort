@@ -17,9 +17,12 @@ from app.views.main_content_panel import MainContent
 class DummySettings:
     def __init__(self) -> None:
         self.current_instance = "inst1"
-        # Toggle filter for mod type filtering
-        self.mod_type_filter_toggle = False
-        self.enable_advanced_filtering = True
+        # Mod list options
+        self.try_download_missing_mods = True
+        self.duplicate_mods_warning = True
+        self.mod_type_filter = True
+        self.hide_invalid_mods_when_filtering = False
+        self.inactive_mods_sorting = True
         self.backup_saves_on_launch = False
         # Instance data with dummy game_folder and run_args
         self.instances = {
@@ -110,6 +113,9 @@ def main_content(
 
     # Cleanup: delete the widget to avoid Qt object reuse issues
     mc.deleteLater()
+    qapp.processEvents()
+    # Reset singleton for next test
+    MainContent._instance = None
 
 
 @pytest.fixture

@@ -376,7 +376,7 @@ class ModListItemInner(QWidget):
         # Icons that are conditional
         self.csharp_icon = None
         self.xml_icon = None
-        if self.settings_controller.settings.mod_type_filter_toggle:
+        if self.settings_controller.settings.mod_type_filter:
             if (
                 self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get(
                     "csharp"
@@ -626,7 +626,7 @@ class ModListItemInner(QWidget):
         mod_path = metadata.get("path")
         # Folder size: read from in-memory cache only; avoid computing on tooltip
         folder_size_line = "Folder Size: Not available\n"
-        if self.settings_controller.settings.enable_advanced_filtering:
+        if self.settings_controller.settings.inactive_mods_sorting:
             if isinstance(mod_path, str):
                 cached = _FOLDER_SIZE_CACHE.get(mod_path)
                 if cached:
@@ -2716,7 +2716,7 @@ class ModListWidget(QListWidget):
         Returns:
             None
         """
-        filtering = self.settings_controller.settings.enable_advanced_filtering
+        filtering = self.settings_controller.settings.inactive_mods_sorting
 
         if filtering:
             sorted_uuids = sort_uuids(uuids, key=key)
@@ -3082,7 +3082,7 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
         )
-        if self.settings_controller.settings.mod_type_filter_toggle:
+        if self.settings_controller.settings.mod_type_filter:
             self.active_mods_search_layout.addWidget(
                 self.active_data_source_filter_type_button
             )
@@ -3247,7 +3247,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
-        if self.settings_controller.settings.mod_type_filter_toggle:
+        if self.settings_controller.settings.mod_type_filter:
             self.inactive_mods_search_layout.addWidget(
                 self.inactive_data_source_filter_type_button
             )
@@ -3263,10 +3263,10 @@ class ModsPanel(QWidget):
 
         # Set initial visibility based on settings
         self.inactive_mods_sort_combobox.setVisible(
-            self.settings_controller.settings.enable_advanced_filtering
+            self.settings_controller.settings.inactive_mods_sorting
         )
         self.inactive_mods_sort_order_button.setVisible(
-            self.settings_controller.settings.enable_advanced_filtering
+            self.settings_controller.settings.inactive_mods_sorting
         )
 
         # Adding Completer.
@@ -3368,7 +3368,7 @@ class ModsPanel(QWidget):
     def on_inactive_mods_sort_changed(self, text: str) -> None:
         """Handle inactive mods sorting selection change."""
         # Determine the sorting key based on the selected text
-        if not self.settings_controller.settings.enable_advanced_filtering:
+        if not self.settings_controller.settings.inactive_mods_sorting:
             return
         if text == self.tr("Name"):
             sort_key = ModsPanelSortKey.MODNAME
@@ -3737,7 +3737,7 @@ class ModsPanel(QWidget):
             if pattern != "":
                 filters_active = True
             # Hide invalid items if enabled in settings
-            if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
+            if self.settings_controller.settings.hide_invalid_mods_when_filtering:
                 invalid = item_data["invalid"]
                 # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
                 if invalid and filters_active:
