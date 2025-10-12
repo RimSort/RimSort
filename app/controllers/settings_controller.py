@@ -124,6 +124,11 @@ class SettingsController(QObject):
         except Exception:
             pass
 
+        # Sorting: wiring for inactive mods sorting checkbox
+        self.settings_dialog.enable_inactive_mods_sorting_checkbox.toggled.connect(
+            self._on_enable_inactive_mods_sorting_checkbox_toggled
+        )
+
         # Locations tab
         self.settings_dialog.game_location.textChanged.connect(
             self._on_game_location_text_changed
@@ -408,6 +413,13 @@ class SettingsController(QObject):
         # Update model immediately for live UI response
         self.settings.show_save_comparison_indicators = checked
         self.settings.save()
+
+    @Slot(bool)
+    def _on_enable_inactive_mods_sorting_checkbox_toggled(self, checked: bool) -> None:
+        """
+        Enable or disable the inactive mods sorting group box based on the checkbox state.
+        """
+        self.settings_dialog.inactive_mods_sorting_group_box.setEnabled(checked)
 
     def create_instance(
         self,
@@ -727,6 +739,14 @@ class SettingsController(QObject):
         # Inactive mods sorting options checkbox
         self.settings_dialog.enable_inactive_mods_sorting_checkbox.setChecked(
             self.settings.inactive_mods_sorting
+        )
+        # Enable/disable the inactive mods sorting group box based on the checkbox state
+        self.settings_dialog.inactive_mods_sorting_group_box.setEnabled(
+            self.settings.inactive_mods_sorting
+        )
+        # Save inactive mods sort state
+        self.settings_dialog.save_inactive_mods_sort_state_checkbox.setChecked(
+            self.settings.save_inactive_mods_sort_state
         )
 
         # Database Builder tab
@@ -1075,6 +1095,10 @@ class SettingsController(QObject):
         # Inactive mods sorting options checkbox
         self.settings.inactive_mods_sorting = (
             self.settings_dialog.enable_inactive_mods_sorting_checkbox.isChecked()
+        )
+        # Save inactive mods sort state
+        self.settings.save_inactive_mods_sort_state = (
+            self.settings_dialog.save_inactive_mods_sort_state_checkbox.isChecked()
         )
 
         # Database Builder tab

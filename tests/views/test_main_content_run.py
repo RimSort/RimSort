@@ -22,8 +22,12 @@ class DummySettings:
         self.duplicate_mods_warning = True
         self.mod_type_filter = True
         self.hide_invalid_mods_when_filtering = False
-        self.inactive_mods_sorting = True
         self.backup_saves_on_launch = False
+        # Inactive mods sort settings
+        self.inactive_mods_sorting = True
+        self.save_inactive_mods_sort_state = False
+        self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
+        self.inactive_mods_sort_descending = True
         # Instance data with dummy game_folder and run_args
         self.instances = {
             "inst1": SimpleNamespace(
