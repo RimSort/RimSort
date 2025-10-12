@@ -679,7 +679,6 @@ class SettingsController(QObject):
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
-
         # Use dependencies for sorting checkbox
         if self.settings.use_moddependencies_as_loadTheseBefore:
             (
@@ -687,21 +686,38 @@ class SettingsController(QObject):
                     True
                 )
             )
-
         # Use alternativePackageIds as satisfying dependencies
         if self.settings.use_alternative_package_ids_as_satisfying_dependencies:
             self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setChecked(
                 True
             )
-
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(
             self.settings.check_dependencies_on_sort
         )
-
         # Prefer versioned About.xml tags over base tags
         if self.settings.prefer_versioned_about_tags:
             self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(True)
+        # Download missing mods checkbox
+        self.settings_dialog.download_missing_mods_checkbox.setChecked(
+            self.settings.try_download_missing_mods
+        )
+        # Duplicate mod notification checkbox
+        self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
+            self.settings.duplicate_mods_warning
+        )
+        # Mod type filter checkbox
+        self.settings_dialog.mod_type_filter_checkbox.setChecked(
+            self.settings.mod_type_filter
+        )
+        # Hide invalid mod filtering checkbox
+        self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
+            self.settings.hide_invalid_mods_when_filtering
+        )
+        # Inactive mods sorting options checkbox
+        self.settings_dialog.enable_inactive_mods_sorting_checkbox.setChecked(
+            self.settings.inactive_mods_sorting
+        )
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -870,17 +886,8 @@ class SettingsController(QObject):
         self.settings_dialog.auto_backup_compression_count_spinbox.setValue(
             self.settings.auto_backup_compression_count
         )
-        self.settings_dialog.mod_type_filter_checkbox.setChecked(
-            self.settings.mod_type_filter_toggle
-        )
-        self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
-            self.settings.hide_invalid_mods_when_filtering_toggle
-        )
         self.settings_dialog.color_background_instead_of_text_checkbox.setChecked(
             self.settings.color_background_instead_of_text_toggle
-        )
-        self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
-            self.settings.duplicate_mods_warning
         )
         # Clear button behavior
         self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
@@ -894,9 +901,6 @@ class SettingsController(QObject):
                 self.settings.current_instance
             ].steam_client_integration
         )
-        self.settings_dialog.download_missing_mods_checkbox.setChecked(
-            self.settings.try_download_missing_mods
-        )
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
         )
@@ -908,13 +912,6 @@ class SettingsController(QObject):
             self.settings.enable_backup_before_update
         )
         self.settings_dialog.max_backups_spinbox.setValue(self.settings.max_backups)
-        # Advanced: enable advanced filtering toggle
-        try:
-            self.settings_dialog.enable_advanced_filtering_checkbox.setChecked(
-                self.settings.enable_advanced_filtering
-            )
-        except Exception:
-            pass
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
         )
@@ -1042,18 +1039,35 @@ class SettingsController(QObject):
         self.settings.use_moddependencies_as_loadTheseBefore = (
             self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
         )
-
         # Use alternativePackageIds as satisfying dependencies
         self.settings.use_alternative_package_ids_as_satisfying_dependencies = self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.isChecked()
-
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
             self.settings_dialog.check_deps_checkbox.isChecked()
         )
-
         # Prefer versioned About.xml tags over base tags
         self.settings.prefer_versioned_about_tags = (
             self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
+        )
+        # Download missing mods checkbox
+        self.settings.try_download_missing_mods = (
+            self.settings_dialog.download_missing_mods_checkbox.isChecked()
+        )
+        # Duplicate mod notification checkbox
+        self.settings.duplicate_mods_warning = (
+            self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
+        )
+        # Mod type filter checkbox
+        self.settings.mod_type_filter = (
+            self.settings_dialog.mod_type_filter_checkbox.isChecked()
+        )
+        # Hide invalid mod filtering checkbox
+        self.settings.hide_invalid_mods_when_filtering = (
+            self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
+        )
+        # Inactive mods sorting options checkbox
+        self.settings.inactive_mods_sorting = (
+            self.settings_dialog.enable_inactive_mods_sorting_checkbox.isChecked()
         )
 
         # Database Builder tab
@@ -1188,17 +1202,8 @@ class SettingsController(QObject):
         self.settings.auto_backup_compression_count = (
             self.settings_dialog.auto_backup_compression_count_spinbox.value()
         )
-        self.settings.mod_type_filter_toggle = (
-            self.settings_dialog.mod_type_filter_checkbox.isChecked()
-        )
-        self.settings.hide_invalid_mods_when_filtering_toggle = (
-            self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
-        )
         self.settings.color_background_instead_of_text_toggle = (
             self.settings_dialog.color_background_instead_of_text_checkbox.isChecked()
-        )
-        self.settings.duplicate_mods_warning = (
-            self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
         )
         # Clear button behavior
         self.settings.clear_moves_dlc = (
@@ -1212,9 +1217,6 @@ class SettingsController(QObject):
         ].steam_client_integration = (
             self.settings_dialog.steam_client_integration_checkbox.isChecked()
         )
-        self.settings.try_download_missing_mods = (
-            self.settings_dialog.download_missing_mods_checkbox.isChecked()
-        )
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
         )
@@ -1226,13 +1228,6 @@ class SettingsController(QObject):
             self.settings_dialog.enable_backup_before_update_checkbox.isChecked()
         )
         self.settings.max_backups = self.settings_dialog.max_backups_spinbox.value()
-        # Advanced: enable advanced filtering toggle
-        try:
-            self.settings.enable_advanced_filtering = (
-                self.settings_dialog.enable_advanced_filtering_checkbox.isChecked()
-            )
-        except Exception:
-            pass
         self.settings.enable_aux_db_behavior_editing = (
             self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
         )
