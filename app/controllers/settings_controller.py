@@ -462,7 +462,6 @@ class SettingsController(QObject):
         self.settings_dialog.game_location_open_button.setEnabled(
             self.settings_dialog.game_location.text() != ""
         )
-
         self.settings_dialog.config_folder_location.setText(
             str(self.settings.instances[self.settings.current_instance].config_folder)
         )
@@ -470,7 +469,6 @@ class SettingsController(QObject):
         self.settings_dialog.config_folder_location_open_button.setEnabled(
             self.settings_dialog.config_folder_location.text() != ""
         )
-
         self.settings_dialog.steam_mods_folder_location.setText(
             str(self.settings.instances[self.settings.current_instance].workshop_folder)
         )
@@ -478,7 +476,6 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.steam_mods_folder_location.text() != ""
         )
-
         self.settings_dialog.local_mods_folder_location.setText(
             str(self.settings.instances[self.settings.current_instance].local_folder)
         )
@@ -486,6 +483,19 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
         )
+        self.settings_dialog.steam_client_integration_checkbox.setChecked(
+            self.settings.instances[
+                self.settings.current_instance
+            ].steam_client_integration
+        )
+        # Enable/disable Steam mods location fields based on checkbox state
+        checked = self.settings_dialog.steam_client_integration_checkbox.isChecked()
+        self.settings_dialog.steam_mods_folder_location.setEnabled(checked)
+        self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(checked)
+        self.settings_dialog.steam_mods_folder_location_choose_button.setEnabled(
+            checked
+        )
+        self.settings_dialog.steam_mods_folder_location_clear_button.setEnabled(checked)
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -896,11 +906,6 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
-        self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            self.settings.instances[
-                self.settings.current_instance
-            ].steam_client_integration
-        )
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
         )
@@ -943,18 +948,20 @@ class SettingsController(QObject):
         self.settings.instances[
             self.settings.current_instance
         ].game_folder = self.settings_dialog.game_location.text()
-
         self.settings.instances[
             self.settings.current_instance
         ].config_folder = self.settings_dialog.config_folder_location.text()
-
         self.settings.instances[
             self.settings.current_instance
         ].workshop_folder = self.settings_dialog.steam_mods_folder_location.text()
-
         self.settings.instances[
             self.settings.current_instance
         ].local_folder = self.settings_dialog.local_mods_folder_location.text()
+        self.settings.instances[
+            self.settings.current_instance
+        ].steam_client_integration = (
+            self.settings_dialog.steam_client_integration_checkbox.isChecked()
+        )
 
         # Databases tab
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
@@ -1211,11 +1218,6 @@ class SettingsController(QObject):
         )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
-        )
-        self.settings.instances[
-            self.settings.current_instance
-        ].steam_client_integration = (
-            self.settings_dialog.steam_client_integration_checkbox.isChecked()
         )
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
