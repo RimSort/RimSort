@@ -531,10 +531,23 @@ class MainContent(QObject):
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
+        # Determine sort key and descending for inactive mods
+        if (
+            self.settings_controller.settings.save_inactive_mods_sort_state
+            and self.settings_controller.settings.inactive_mods_sorting
+        ):
+            sort_key = ModsPanelSortKey[
+                self.settings_controller.settings.inactive_mods_sort_key
+            ]
+            descending = self.settings_controller.settings.inactive_mods_sort_descending
+        else:
+            sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
+            descending = True
         self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
             list_type="inactive",
             uuids=inactive_mods_uuids,
-            key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+            key=sort_key,
+            descending=descending,
         )
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"

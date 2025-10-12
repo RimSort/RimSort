@@ -766,6 +766,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.hide_invalid_mods_when_filtering_checkbox
         )
 
+        # Inactive mods sorting group
+        self.inactive_mods_sorting_group_box = QGroupBox()
+        tab_layout.addWidget(self.inactive_mods_sorting_group_box)
+
+        inactive_mods_sorting_group_box_layout = QVBoxLayout()
+        self.inactive_mods_sorting_group_box.setLayout(
+            inactive_mods_sorting_group_box_layout
+        )
+
+        inactive_mods_sorting_label = QLabel(self.tr("Inactive Mods Sorting"))
+        inactive_mods_sorting_label.setFont(GUIInfo().emphasis_font)
+        inactive_mods_sorting_group_box_layout.addWidget(inactive_mods_sorting_label)
+
         # Inactive mods sorting options checkbox
         self.enable_inactive_mods_sorting_checkbox = QCheckBox(
             self.tr("Enable inactive mods sorting")
@@ -776,8 +789,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
                 "Disabling this can improve performance by avoiding heavy calculations."
             )
         )
-        modlist_option_group_box_layout.addWidget(
+        inactive_mods_sorting_group_box_layout.addWidget(
             self.enable_inactive_mods_sorting_checkbox
+        )
+
+        self.save_inactive_mods_sort_state_checkbox = QCheckBox(
+            self.tr("Save inactive mods sort state")
+        )
+        inactive_mods_sorting_group_box_layout.addWidget(
+            self.save_inactive_mods_sort_state_checkbox
         )
 
         tab_layout.addStretch()

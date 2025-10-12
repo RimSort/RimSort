@@ -181,6 +181,32 @@ def uuid_to_folder_size(uuid: str) -> int:
     return total_size
 
 
+def uuid_to_packageid(uuid: str) -> str:
+    """
+    Converts a UUID to the corresponding mod packageid used for sorting.
+    Returns the packageid in lowercase if available; otherwise an empty string.
+    """
+    metadata = get_mod_metadata(uuid)
+    packageid = metadata.get("packageid") if metadata else None
+    if isinstance(packageid, str):
+        return packageid.lower()
+    else:
+        return ""
+
+
+def uuid_to_version(uuid: str) -> str:
+    """
+    Converts a UUID to the corresponding mod version used for sorting.
+    Returns the version in lowercase if available; otherwise an empty string.
+    """
+    metadata = get_mod_metadata(uuid)
+    version = metadata.get("modversion") if metadata else None
+    if isinstance(version, str):
+        return version.lower()
+    else:
+        return ""
+
+
 def get_dir_size(path: str) -> int:
     total = 0
     stack = [path]
@@ -232,6 +258,8 @@ class ModsPanelSortKey(Enum):
     FILESYSTEM_MODIFIED_TIME = 2
     AUTHOR = 3
     FOLDER_SIZE = 4
+    PACKAGEID = 5
+    VERSION = 6
 
 
 def sort_uuids(
@@ -260,6 +288,13 @@ def sort_uuids(
         # Default to largest first unless explicitly overridden
         reverse_flag = bool(descending) if descending is not None else True
         return sorted(uuids, key=uuid_to_folder_size, reverse=reverse_flag)
+    elif key == ModsPanelSortKey.PACKAGEID:
+        reverse_flag = bool(descending) if descending is not None else False
+        return sorted(uuids, key=uuid_to_packageid, reverse=reverse_flag)
+    elif key == ModsPanelSortKey.VERSION:
+        # Default to latest version first unless explicitly overridden
+        reverse_flag = bool(descending) if descending is not None else True
+        return sorted(uuids, key=uuid_to_version, reverse=reverse_flag)
     else:
         reverse_flag = bool(descending) if descending is not None else False
         return sorted(uuids, key=lambda x: x, reverse=reverse_flag)
@@ -2698,7 +2733,8 @@ class ModListWidget(QListWidget):
         self,
         list_type: str,
         uuids: list[str],
-        key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
+        key: ModsPanelSortKey,
+        descending: bool = False,
     ) -> None:
         """
         Reconstructs and sorts a mod list based on provided UUIDs and a sorting key.
@@ -2709,9 +2745,9 @@ class ModListWidget(QListWidget):
         Args:
             list_type (str): The type of mod list to recreate. ("Active", "Inactive")
             uuids (List[str]): The list of UUIDs representing the mods.
-            key (ModsPanelSortKey, optional): An enumeration value that determines the
-                                              sorting criterion for the mods. Defaults to
-                                              `ModsPanelSortKey.NOKEY`, which implies sorting by uuids.
+            key (ModsPanelSortKey): An enumeration value that determines the
+                                     sorting criterion for the mods.
+            descending (bool, optional): Whether to sort in descending order. Defaults to False.
 
         Returns:
             None
@@ -2719,7 +2755,7 @@ class ModListWidget(QListWidget):
         filtering = self.settings_controller.settings.inactive_mods_sorting
 
         if filtering:
-            sorted_uuids = sort_uuids(uuids, key=key)
+            sorted_uuids = sort_uuids(uuids, key=key, descending=descending)
             self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
         else:
             self.recreate_mod_list(list_type, uuids)
@@ -2733,6 +2769,24 @@ class ModListWidget(QListWidget):
         :param mods: dict of mod data
         """
         logger.info(f"Internally recreating {list_type} mod list")
+        # Sort inactive mods using saved settings if enabled
+        if (
+            list_type == "Inactive"
+            and self.settings_controller.settings.save_inactive_mods_sort_state
+            and self.settings_controller.settings.inactive_mods_sorting
+        ):
+            sort_key = ModsPanelSortKey[
+                self.settings_controller.settings.inactive_mods_sort_key
+            ]
+            descending = self.settings_controller.settings.inactive_mods_sort_descending
+            uuids = sort_uuids(uuids, key=sort_key, descending=descending)
+        else:
+            if list_type == "Inactive":
+                uuids = sort_uuids(
+                    uuids,
+                    key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+                    descending=True,
+                )
         # Disable updates
         self.setUpdatesEnabled(False)
         # Clear list
@@ -2870,6 +2924,34 @@ class ModsPanel(QWidget):
     save_btn_animation_signal = Signal()
     check_dependencies_signal = Signal()
 
+    def update_sort_ui_from_settings(self) -> None:
+        """
+        Update the sort UI elements based on the current settings.
+        """
+        self.inactive_mods_sort_key = (
+            self.settings_controller.settings.inactive_mods_sort_key
+        )
+        self.inactive_mods_sort_descending = (
+            self.settings_controller.settings.inactive_mods_sort_descending
+        )
+        # Map enum names to translated text for setting combo box selection
+        key_to_text = {
+            "MODNAME": self.tr("Name"),
+            "AUTHOR": self.tr("Author"),
+            "FILESYSTEM_MODIFIED_TIME": self.tr("Modified Time"),
+            "FOLDER_SIZE": self.tr("Folder Size"),
+            "VERSION": self.tr("Version"),
+            "PACKAGEID": self.tr("PackageId"),
+        }
+        # Set combo box selection based on loaded settings
+        self.inactive_mods_sort_combobox.setCurrentText(
+            key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
+        )
+        # Update sort order button text
+        self.inactive_mods_sort_order_button.setText(
+            self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
+        )
+
     def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the class.
@@ -2882,6 +2964,19 @@ class ModsPanel(QWidget):
         logger.debug("Initializing ModsPanel")
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
+
+        # Load inactive mods sort settings
+        flag = self.settings_controller.settings.save_inactive_mods_sort_state
+        if flag:
+            self.inactive_mods_sort_key = (
+                self.settings_controller.settings.inactive_mods_sort_key
+            )
+            self.inactive_mods_sort_descending = (
+                self.settings_controller.settings.inactive_mods_sort_descending
+            )
+        else:
+            self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
+            self.inactive_mods_sort_descending = True
 
         # Background folder-size sorting state
         self._size_progress_dialog: Optional[QProgressDialog] = None
@@ -3007,6 +3102,12 @@ class ModsPanel(QWidget):
 
         # Connect signals and slots
         self.connect_signals()
+
+        # Connect to settings changed to update sort UI
+        EventBus().settings_have_changed.connect(self.update_sort_ui_from_settings)
+
+        # Set the main layout for the widget
+        self.setLayout(self.panel)
 
         logger.debug("Finished ModsPanel initialization")
 
@@ -3232,18 +3333,33 @@ class ModsPanel(QWidget):
                 self.tr("Author"),
                 self.tr("Modified Time"),
                 self.tr("Folder Size"),
+                self.tr("Version"),
+                self.tr("PackageId"),
             ]
         )
-        # Set default to "Modified Time" since that's the current sorting
-        self.inactive_mods_sort_combobox.setCurrentText(self.tr("Modified Time"))
+        # Map enum names to translated text for setting initial combo box selection
+        key_to_text = {
+            "MODNAME": self.tr("Name"),
+            "AUTHOR": self.tr("Author"),
+            "FILESYSTEM_MODIFIED_TIME": self.tr("Modified Time"),
+            "FOLDER_SIZE": self.tr("Folder Size"),
+            "VERSION": self.tr("Version"),
+            "PACKAGEID": self.tr("PackageId"),
+        }
+        # Set initial combo box selection based on loaded settings
+        self.inactive_mods_sort_combobox.setCurrentText(
+            key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
+        )
         # Sort order toggle (Asc/Desc)
-        self.inactive_sort_descending: bool = True
+        self.inactive_sort_descending: bool = self.inactive_mods_sort_descending
         self.inactive_mods_sort_order_button: QToolButton = QToolButton()
         self.inactive_mods_sort_order_button.setParent(self)
         self.inactive_mods_sort_order_button.setObjectName("MainUI")
         self.inactive_mods_sort_order_button.setMaximumWidth(60)
         self.inactive_mods_sort_order_button.setToolTip(self.tr("Toggle sort order"))
-        self.inactive_mods_sort_order_button.setText(self.tr("Desc"))
+        self.inactive_mods_sort_order_button.setText(
+            self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
+        )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
@@ -3303,10 +3419,16 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_order_button.setText(
             self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
         )
-        # Re-apply sort using current selection
-        self.on_inactive_mods_sort_changed(
-            self.inactive_mods_sort_combobox.currentText()
-        )
+        # Save if enabled
+        if self.settings_controller.settings.save_inactive_mods_sort_state:
+            self.settings_controller.settings.inactive_mods_sort_descending = (
+                self.inactive_sort_descending
+            )
+            self.settings_controller.settings.save()
+            # Re-apply sort using current selection
+            self.on_inactive_mods_sort_changed(
+                self.inactive_mods_sort_combobox.currentText()
+            )
 
     # Slots for folder-size sorting (ensure UI updates happen on the main thread)
     @Slot(int, int)
@@ -3348,6 +3470,8 @@ class ModsPanel(QWidget):
                     self._size_progress_dialog.setValue(idx)
             lw.setUpdatesEnabled(True)
             lw.repaint()
+            lw.uuids = sorted_uuids
+            lw.list_update_signal.emit(str(lw.count()))
         finally:
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
                 self._size_progress_dialog.close()
@@ -3378,8 +3502,18 @@ class ModsPanel(QWidget):
             sort_key = ModsPanelSortKey.AUTHOR
         elif text == self.tr("Folder Size"):
             sort_key = ModsPanelSortKey.FOLDER_SIZE
+        elif text == self.tr("Version"):
+            sort_key = ModsPanelSortKey.VERSION
+        elif text == self.tr("PackageId"):
+            sort_key = ModsPanelSortKey.PACKAGEID
         else:
             sort_key = ModsPanelSortKey.MODNAME  # Default fallback
+
+        # Save the sort key if enabled
+        if self.settings_controller.settings.save_inactive_mods_sort_state:
+            self.settings_controller.settings.inactive_mods_sort_key = sort_key.name
+            self.settings_controller.settings.save()
+        self.inactive_mods_sort_key = sort_key.name
 
         # Re-sort the inactive mods list with the new key
         current_uuids = self.inactive_mods_list.uuids.copy()
@@ -3427,7 +3561,7 @@ class ModsPanel(QWidget):
                     descending=self.inactive_sort_descending,
                 )
                 self.inactive_mods_list.recreate_mod_list(
-                    list_type="inactive", uuids=sorted_uuids
+                    list_type="Inactive", uuids=sorted_uuids
                 )
 
     def mod_list_updated(
