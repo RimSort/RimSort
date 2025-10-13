@@ -22,7 +22,7 @@ dependencies = [
     "pygithub==2.8.1",
     "pyside6==6.9.3",
     "requests==2.32.5",
-    "sqlalchemy==2.0.43",
+    "sqlalchemy==2.0.44",
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
