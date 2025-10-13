@@ -44,6 +44,7 @@ import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
+from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
@@ -79,7 +80,6 @@ from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import (
     ModListWidget,
     ModsPanel,
-    ModsPanelSortKey,
 )
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
