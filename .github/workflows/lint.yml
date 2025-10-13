@@ -83,7 +83,7 @@ jobs:
           github.event_name == 'pull_request' &&
           github.ref_name != github.event.repository.default_branch &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: stefanzweifel/git-auto-commit-action@v6
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           add_options: "-- . :!super-linter-output/ :!github_conf/"
           branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
