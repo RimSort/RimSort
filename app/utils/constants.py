@@ -89,9 +89,5 @@ KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld.odyssey",
 }
 KNOWN_TIER_ONE_MODS = {
-    "vanillaexpanded.backgrounds",
-    "redmattis.betterprerequisites",
-    "adaptive.storage.framework",
-    "oskarpotocki.vanillafactionsexpanded.core",
     "unlimitedhugs.hugslib",
 }
