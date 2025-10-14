@@ -419,6 +419,18 @@ def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
         return obj
 
 
+def format_file_size(size_in_bytes: int) -> str:
+    """Format bytes to a human-readable string."""
+    if size_in_bytes < 1024:
+        return f"{size_in_bytes} B"
+    elif size_in_bytes < 1024 * 1024:
+        return f"{size_in_bytes / 1024:.1f} KB"
+    elif size_in_bytes < 1024 * 1024 * 1024:
+        return f"{size_in_bytes / (1024 * 1024):.1f} MB"
+    else:
+        return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
 def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
     Function to upload data to https://0x0.st/

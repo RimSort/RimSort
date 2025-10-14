@@ -60,7 +60,6 @@ from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
     ModsPanelSortKey,
-    format_file_size,
     sort_uuids,
     uuid_to_folder_size,
 )
@@ -77,6 +76,7 @@ from app.utils.generic import (
     copy_to_clipboard_safely,
     delete_files_except_extension,
     flatten_to_list,
+    format_file_size,
     launch_process,
     open_url_browser,
     platform_specific_open,

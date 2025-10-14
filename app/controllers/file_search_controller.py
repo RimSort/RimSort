@@ -14,6 +14,7 @@ from app.controllers.settings_controller import SettingsController
 from app.models.search_result import SearchResult
 from app.models.settings import Settings
 from app.utils.file_search import FileSearch
+from app.utils.generic import format_file_size
 from app.utils.ignore_extensions import IGNORE_EXTENSIONS
 from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import get_mod_paths_from_uuids
@@ -167,7 +168,7 @@ class SearchWorker(QThread):
             max_size = 20 * 1024 * 1024  # 20MB
             if file_size > max_size:
                 logger.warning(
-                    f"File too large to read fully: {file_path} ({file_size} bytes)"
+                    f"File too large to read fully: {file_path} ({format_file_size(file_size)})"
                 )
                 # For large files, read only the first part
                 try:
@@ -380,7 +381,7 @@ class SearchWorker(QThread):
 
             # Add a header with file info
             file_size = os.path.getsize(file_path)
-            file_size_str = self._format_file_size(file_size)
+            file_size_str = format_file_size(file_size)
 
             header = f"File: {os.path.basename(file_path)} ({file_size_str})\n"
             header += f"Path: {os.path.dirname(file_path)}\n"
@@ -484,15 +485,6 @@ class SearchWorker(QThread):
             logger.warning(f"Error generating XML preview for {file_path}: {e}")
             # Return empty string to fall back to standard preview
             return ""
-
-    def _format_file_size(self, size_in_bytes: int) -> str:
-        """Format file size in human-readable format"""
-        if size_in_bytes < 1024:
-            return f"{size_in_bytes} B"
-        elif size_in_bytes < 1024 * 1024:
-            return f"{size_in_bytes / 1024:.1f} KB"
-        else:
-            return f"{size_in_bytes / (1024 * 1024):.1f} MB"
 
     def _should_process_mod(self, mod_path: str) -> bool:
         """
