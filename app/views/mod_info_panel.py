@@ -19,12 +19,12 @@ from PySide6.QtWidgets import (
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
+from app.sort.mod_sorting import uuid_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
-from app.utils.generic import platform_specific_open
+from app.utils.generic import format_file_size, platform_specific_open
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
-from app.views.mods_panel import format_file_size, uuid_to_folder_size
 
 
 class ClickablePathLabel(QLabel):
