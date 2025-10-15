@@ -20,7 +20,7 @@ dependencies = [
     "psutil==7.1.0",
     "pygit2==1.18.2",
     "pygithub==2.8.1",
-    "pyside6==6.9.3",
+    "pyside6==6.10.0",
     "requests==2.32.5",
     "sqlalchemy==2.0.44",
     "steam==1.4.4",
