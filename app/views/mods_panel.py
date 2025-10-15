@@ -61,7 +61,6 @@ from app.sort.mod_sorting import (
     FolderSizeWorker,
     ModsPanelSortKey,
     sort_uuids,
-    uuid_to_folder_size,
 )
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
@@ -2566,9 +2565,6 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-                # Build foldersize cache at cost of load time
-                if filtering:
-                    uuid_to_folder_size(uuid_key)
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
