@@ -1673,13 +1673,11 @@ class ModListWidget(QListWidget):
                 invalid_color = True
                 new_color = QColor()
                 if action == change_mod_color_action:
-                    invalid_color = False
                     color_dlg = QColorDialog(options=QColorDialog.ColorDialogOption.DontUseNativeDialog)
                     self.SetUserCustomColors(color_dlg)
                     new_color = color_dlg.getColor()
                     self.SaveUserCustomColors(color_dlg)
-                    if not new_color.isValid():
-                        invalid_color = True
+                    invalid_color = not new_color.isValid()
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is CustomListWidgetItem:
