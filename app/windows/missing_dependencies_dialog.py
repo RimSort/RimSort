@@ -168,8 +168,9 @@ class MissingDependenciesDialog(QDialog):
         """
         while self.scroll_layout.count():
             child = self.scroll_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            widget = child.widget()
+            if widget is not None:
+                widget.deleteLater()
         self.checkboxes.clear()
         self.selected_mods.clear()
 

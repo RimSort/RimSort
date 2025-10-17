@@ -1109,13 +1109,16 @@ class RuleEditor(QWidget):
         # Iterate through all widgets in layout
         for i in range(layout.count()):
             item = layout.itemAt(i)
-            if visibility is None:  # We only need to set this once per pass
-                visibility = item.widget().isVisible()
-                # Override so we can toggle this upon initialization if we want to
-                if override:
-                    visibility = override
-            # Toggle visibility of the widgets
-            item.widget().setVisible(not visibility)
+            widget = item.widget()
+            if widget is not None:
+                if visibility is None:  # We only need to set this once per pass
+                    visibility = widget.isVisible()
+                    # Override so we can toggle this upon initialization if we want to
+                    if override:
+                        visibility = override
+                # Toggle visibility of the widgets
+                if visibility is not None:
+                    widget.setVisible(not visibility)
         # Change button text based on the layout we are toggling
         # If this is True, it means the widgets are hidden. Edit btn text + hide rules to reflect.
         if visibility is None:
