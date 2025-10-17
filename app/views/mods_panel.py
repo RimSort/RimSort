@@ -1674,7 +1674,10 @@ class ModListWidget(QListWidget):
                 new_color = QColor()
                 if action == change_mod_color_action:
                     invalid_color = False
-                    new_color = QColorDialog().getColor()
+                    color_dlg = QColorDialog(options=QColorDialog.ColorDialogOption.DontUseNativeDialog)
+                    self.SetUserCustomColors(color_dlg)
+                    new_color = color_dlg.getColor()
+                    self.SaveUserCustomColors(color_dlg)
                     if not new_color.isValid():
                         invalid_color = True
                 # Execute action for each selected mod
@@ -1824,6 +1827,27 @@ class ModListWidget(QListWidget):
         """
         self.check_widgets_visible()
         return super().resizeEvent(e)
+
+    def SetUserCustomColors(self, color_dlg: QColorDialog) -> None:
+        """
+        Sets the user's custom colors in the QColorDialog from settings.json.
+        """
+        settings = self.settings_controller.settings
+        colors = settings.color_picker_custom_colors
+        for i in range(16):
+            color_dlg.setCustomColor(i, colors[i])
+
+    def SaveUserCustomColors(self, color_dlg: QColorDialog) -> None:
+        """
+        Saves the user's custom colors from the QColorDialog to settings.json as list of hex strings.
+        """
+        settings = self.settings_controller.settings
+        colors = []
+        for i in range(16):
+            color = color_dlg.customColor(i)
+            colors.append(color.name())  # Store as hex string
+        settings.color_picker_custom_colors = colors
+        settings.save()
 
     def append_new_item(self, uuid: str) -> None:
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]

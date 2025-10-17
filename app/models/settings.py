@@ -201,6 +201,9 @@ class Settings(QObject):
         )
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
+        # Color Picker Custom Colors (Store as hex)
+        self.color_picker_custom_colors: list[str] = []
+
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
         if key.startswith("_"):
