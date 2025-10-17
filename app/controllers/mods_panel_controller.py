@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from functools import partial
-from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import QObject, Qt, Slot
@@ -10,6 +9,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.event_bus import EventBus
+from app.utils.metadata import MetadataManager
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
@@ -111,13 +111,8 @@ class ModsPanelController(QObject):
                     ]["packageid"]
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
-                    instance_path = Path(
-                        self.settings_controller.settings.current_instance_path
-                    )
-                    aux_metadata_controller = (
-                        AuxMetadataController.get_or_create_cached_instance(
-                            instance_path / "aux_metadata.db"
-                        )
+                    aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                        MetadataManager.instance().settings_controller.settings.db_path
                     )
                     uuid = mod_data["uuid"]
                     if not uuid:
@@ -255,9 +250,8 @@ class ModsPanelController(QObject):
             )
             return
 
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            MetadataManager.instance().settings_controller.settings.db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             stmt = (
@@ -285,9 +279,8 @@ class ModsPanelController(QObject):
             )
             return
 
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            MetadataManager.instance().settings_controller.settings.db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(

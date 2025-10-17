@@ -36,6 +36,50 @@ class AuxMetadataController(MetadataDbController):
         super().__init__(db_path)
         Base.metadata.create_all(self.engine)
 
+        # Add missing columns to existing databases
+        with self.engine.connect() as conn:
+            result = conn.execute(text("PRAGMA table_info(auxiliary_metadata)"))
+            columns = [row[1] for row in result.fetchall()]
+
+            if "mod_name" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN mod_name TEXT DEFAULT ''"
+                    )
+                )
+            if "author" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN author TEXT DEFAULT ''"
+                    )
+                )
+            if "packageid" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN packageid TEXT DEFAULT ''"
+                    )
+                )
+            if "supported_version" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN supported_version TEXT DEFAULT ''"
+                    )
+                )
+            if "filesystem_mtime" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN filesystem_mtime INTEGER DEFAULT 0"
+                    )
+                )
+            if "folder_size" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN folder_size INTEGER DEFAULT 0"
+                    )
+                )
+
+            conn.commit()
+
     @classmethod
     def get_or_create_cached_instance(cls, db_path: Path) -> "AuxMetadataController":
         """
@@ -255,3 +299,76 @@ class AuxMetadataController(MetadataDbController):
             entry.acf_time_touched = data.get("timetouched", -1)
 
         session.commit()
+
+    @staticmethod
+    def update_sorting_data(
+        session: Session, mod_path: Path | str, **sorting_data: str | int
+    ) -> AuxMetadataEntry | None:
+        """
+        Update sorting data fields for a mod entry.
+
+        :param session: The database session.
+        :type session: Session
+        :param mod_path: The mod path.
+        :type mod_path: Path | str
+        :param sorting_data: Keyword arguments for sorting data fields (mod_name, author, packageid, supported_version, filesystem_mtime).
+        :return: The updated aux metadata entry if found, otherwise None.
+        :rtype: AuxMetadataEntry | None
+        """
+        if isinstance(mod_path, Path):
+            mod_path = str(mod_path)
+
+        entry = AuxMetadataController.get_or_create(session, mod_path)
+        if entry is None:
+            return None
+
+        valid_fields = {
+            "mod_name",
+            "author",
+            "packageid",
+            "supported_version",
+            "filesystem_mtime",
+            "folder_size",
+        }
+        for key, value in sorting_data.items():
+            if key in valid_fields:
+                setattr(entry, key, value)
+
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.exception(f"Failed to update sorting data for {mod_path}: {e}")
+            raise e
+
+        return entry
+
+    @staticmethod
+    def get_sorting_data(
+        session: Session, mod_path: Path | str
+    ) -> dict[str, str | int] | None:
+        """
+        Get sorting data for a mod entry.
+
+        :param session: The database session.
+        :type session: Session
+        :param mod_path: The mod path.
+        :type mod_path: Path | str
+        :return: Dictionary with sorting data if found, otherwise None.
+        :rtype: dict[str, str | int] | None
+        """
+        if isinstance(mod_path, Path):
+            mod_path = str(mod_path)
+
+        entry = AuxMetadataController.get(session, mod_path)
+        if entry is None:
+            return None
+
+        return {
+            "mod_name": entry.mod_name,
+            "author": entry.author,
+            "packageid": entry.packageid,
+            "supported_version": entry.supported_version,
+            "filesystem_mtime": entry.filesystem_mtime,
+            "folder_size": entry.folder_size,
+        }

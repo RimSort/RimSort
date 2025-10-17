@@ -35,6 +35,7 @@ from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
+from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.acf_log_reader import AcfLogReader
@@ -1028,12 +1029,9 @@ class MainWindow(QMainWindow):
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
-                instance_path = Path(
-                    self.settings_controller.settings.current_instance_path
-                )
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
-                        instance_path / "aux_metadata.db"
+                        MetadataManager.instance().settings_controller.settings.db_path
                     )
                 )
                 aux_metadata_controller.engine.dispose()
