@@ -543,11 +543,13 @@ class PlayerLogTab(QWidget):
 
         for i in range(file_info_layout.count()):
             item = file_info_layout.itemAt(i)
-            if item and item.widget():
-                item.widget().setContentsMargins(0, 0, 0, 0)
-                item.widget().setSizePolicy(
-                    QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
-                )
+            if item:
+                widget = item.widget()
+                if widget:
+                    widget.setContentsMargins(0, 0, 0, 0)
+                    widget.setSizePolicy(
+                        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+                    )
 
     def _init_statistics_group(self) -> None:
         stats_group = QGroupBox(self.tr("Statistics"))
