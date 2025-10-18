@@ -201,6 +201,15 @@ class Settings(QObject):
         )
         self.instances: dict[str, Instance] = {"Default": Instance()}
 
+        # Auxiliary Metadata DB path
+        self.aux_metadata_db_path: str = str(
+            Path(self.current_instance_path) / "aux_metadata.db"
+        )
+
+    @property
+    def db_path(self) -> Path:
+        return Path(self.aux_metadata_db_path)
+
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
         if key.startswith("_"):
@@ -210,6 +219,8 @@ class Settings(QObject):
         if hasattr(self, key) and getattr(self, key) == value:
             return
         super().__setattr__(key, value)
+        if key == "current_instance_path":
+            self.aux_metadata_db_path = str(Path(value) / "aux_metadata.db")
         EventBus().settings_have_changed.emit()
 
     def load(self) -> None:

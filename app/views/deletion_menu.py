@@ -788,9 +788,8 @@ class ModDeletionMenu(QMenu):
             )
             return
 
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            MetadataManager.instance().settings_controller.settings.db_path
         )
         mod_path = Path(path)
         with aux_metadata_controller.Session() as session:

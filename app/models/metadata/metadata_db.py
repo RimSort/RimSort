@@ -42,6 +42,14 @@ class AuxMetadataEntry(Base):
     outdated: Mapped[bool] = mapped_column(Boolean, default=False)
     db_time_touched = Column(DateTime, default=func.now(), onupdate=func.now())
 
+    # Sorting data fields
+    mod_name: Mapped[str] = mapped_column(String, default="")
+    author: Mapped[str] = mapped_column(String, default="")
+    packageid: Mapped[str] = mapped_column(String, default="")
+    supported_version: Mapped[str] = mapped_column(String, default="")
+    filesystem_mtime: Mapped[int] = mapped_column(Integer, default=0)
+    folder_size: Mapped[int] = mapped_column(Integer, default=0)
+
     tags: Mapped[list["TagsEntry"]] = relationship(
         secondary=tags_table, back_populates="mods"
     )
