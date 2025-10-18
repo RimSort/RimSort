@@ -2681,12 +2681,8 @@ class ModsPanel(QWidget):
         """
         Update the sort UI elements based on the current settings.
         """
-        self.inactive_mods_sort_key = (
-            self.settings_controller.settings.inactive_mods_sort_key
-        )
-        self.inactive_mods_sort_descending = (
-            self.settings_controller.settings.inactive_mods_sort_descending
-        )
+        self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
+        self.inactive_mods_sort_descending = True
         # Map enum names to translated text for setting combo box selection
         key_to_text = {
             "MODNAME": self.tr("Name"),
@@ -2696,16 +2692,26 @@ class ModsPanel(QWidget):
             "FILESYSTEM_MODIFIED_TIME": self.tr("Modified Time"),
             "FOLDER_SIZE": self.tr("Folder Size"),
         }
-        # Set combo box selection based on loaded settings
-        self.inactive_mods_sort_combobox.setCurrentText(
-            key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
-        )
-        # Update sort order button text
-        self.inactive_mods_sort_order_button.setText(
-            self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
-        )
-        # Trigger re-sort if sorting is enabled, else reset to sorted order (by modified time descending)
         if self.settings_controller.settings.inactive_mods_sorting:
+            # Only use saved settings if save_inactive_mods_sort_state is checked
+            if self.settings_controller.settings.save_inactive_mods_sort_state:
+                self.inactive_mods_sort_key = (
+                    self.settings_controller.settings.inactive_mods_sort_key
+                )
+                self.inactive_mods_sort_descending = (
+                    self.settings_controller.settings.inactive_mods_sort_descending
+                )
+            # Default to Modified Time
+            self.inactive_mods_sort_combobox.setCurrentText(
+                key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
+            )
+            # Update sort order button text
+            self.inactive_mods_sort_order_button.setText(
+                self.tr("Desc")
+                if self.inactive_mods_sort_descending
+                else self.tr("Asc")
+            )
+            # Set combo box selection based on loaded settings
             self.on_inactive_mods_sort_changed(
                 self.inactive_mods_sort_combobox.currentText()
             )
