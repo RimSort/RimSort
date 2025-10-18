@@ -1832,6 +1832,8 @@ class ModListWidget(QListWidget):
         """
         settings = self.settings_controller.settings
         colors = settings.color_picker_custom_colors
+        if len(colors) != 16:
+            return
         for i in range(16):
             color_dlg.setCustomColor(i, colors[i])
 
