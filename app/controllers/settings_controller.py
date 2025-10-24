@@ -18,6 +18,7 @@ from app.utils.generic import (
     find_steam_rimworld,
     get_path_up_to_string,
     platform_specific_open,
+    validate_game_executable,
 )
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
@@ -341,6 +342,9 @@ class SettingsController(QObject):
             self.settings.load()
         except JSONDecodeError:
             logger.error("Unable to parse settings file")
+            show_settings_error()
+        except Exception as e:
+            logger.error(f"Failed to load settings: {e}")
             show_settings_error()
 
     def get_mod_paths(self) -> list[str]:
@@ -1293,11 +1297,59 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_view_from_model()
 
+    def _validate_game_location(self, game_location: str) -> bool:
+        """
+        Validate the game location and show a warning if invalid.
+
+        :param game_location: Path to the game folder as a string.
+        :return: True if valid, False otherwise.
+        """
+        if not validate_game_executable(game_location):
+            QMessageBox.information(
+                self.settings_dialog,
+                self.tr("Invalid Game Location"),
+                self.tr(
+                    "The selected game folder does not contain a valid RimWorld executable. Please select a valid game location."
+                ),
+            )
+            return False
+        return True
+
+    def _validate_config_folder_location(self, config_folder: str) -> bool:
+        """
+        Validate the config folder location and show a warning if invalid.
+
+        :param config_folder: Path to the config folder as a string.
+        :return: True if valid, False otherwise.
+        """
+        if not (Path(config_folder) / "ModsConfig.xml").exists():
+            QMessageBox.warning(
+                self.settings_dialog,
+                self.tr("Invalid Config Folder"),
+                self.tr(
+                    "The selected config folder does not contain ModsConfig.xml. Please select a valid config folder."
+                ),
+            )
+            return False
+        return True
+
     @Slot()
     def _on_global_ok_button_clicked(self) -> None:
         """
         Close the settings dialog, update the model from the view, and save the settings.
         """
+        # Validate game folder if set
+        game_folder_text = self.settings_dialog.game_location.text().strip()
+        if game_folder_text and not self._validate_game_location(game_folder_text):
+            return
+
+        # Validate config folder if set
+        config_folder_text = self.settings_dialog.config_folder_location.text().strip()
+        if config_folder_text and not self._validate_config_folder_location(
+            config_folder_text
+        ):
+            return
+
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
@@ -1331,7 +1383,13 @@ class SettingsController(QObject):
             game_location = self._on_game_location_choose_button_clicked_non_macos()
         if game_location is None:
             return
+        # Validate the selected game location immediately
+        if not self._validate_game_location(str(game_location)):
+            return
         self.settings_dialog.game_location.setText(str(game_location))
+        self.settings_dialog.local_mods_folder_location.setText(
+            str(game_location / "Mods")
+        )
         self._last_file_dialog_path = str(game_location)
 
     def _on_game_location_choose_button_clicked_macos(self) -> Path | None:
@@ -1388,6 +1446,9 @@ class SettingsController(QObject):
             _dir=str(self._last_file_dialog_path),
         )
         if not config_folder_location:
+            return
+
+        if not self._validate_config_folder_location(config_folder_location):
             return
 
         self.settings_dialog.config_folder_location.setText(config_folder_location)
