@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from functools import partial
-from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import QObject, Qt, Slot
@@ -111,12 +110,9 @@ class ModsPanelController(QObject):
                     ]["packageid"]
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
-                    instance_path = Path(
-                        self.settings_controller.settings.current_instance_path
-                    )
                     aux_metadata_controller = (
                         AuxMetadataController.get_or_create_cached_instance(
-                            instance_path / "aux_metadata.db"
+                            self.settings_controller.settings.aux_db_path
                         )
                     )
                     uuid = mod_data["uuid"]
@@ -255,9 +251,8 @@ class ModsPanelController(QObject):
             )
             return
 
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             stmt = (
@@ -285,9 +280,8 @@ class ModsPanelController(QObject):
             )
             return
 
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(

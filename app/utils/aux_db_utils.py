@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from PySide6.QtGui import QColor
 from sqlalchemy.orm.session import Session
 
@@ -19,11 +17,10 @@ def get_aux_db_entry(
     Get the AuxMetadataEntry for a given UUID from the Aux Metadata DB.
     """
     metadata_manager = MetadataManager.instance()
-    instance_path = Path(settings_controller.settings.current_instance_path)
     local_controller = (
         aux_db_controller
         or AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            settings_controller.settings.aux_db_path
         )
     )
     with session or local_controller.Session() as local_session:

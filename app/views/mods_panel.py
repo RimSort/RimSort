@@ -619,12 +619,9 @@ class ModListItemInner(QWidget):
 
         # Update Aux DB
         if not init and new_mod_color_name is not None:
-            instance_path = Path(
-                self.settings_controller.settings.current_instance_path
-            )
             aux_metadata_controller = (
                 AuxMetadataController.get_or_create_cached_instance(
-                    instance_path / "aux_metadata.db"
+                    self.settings_controller.settings.aux_db_path
                 )
             )
             with aux_metadata_controller.Session() as aux_metadata_session:
@@ -644,9 +641,8 @@ class ModListItemInner(QWidget):
         # Update ModListItemInner color
         self.mod_color = None
         # Update Aux DB
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
@@ -1673,7 +1669,9 @@ class ModListWidget(QListWidget):
                 invalid_color = True
                 new_color = QColor()
                 if action == change_mod_color_action:
-                    color_dlg = QColorDialog(options=QColorDialog.ColorDialogOption.DontUseNativeDialog)
+                    color_dlg = QColorDialog(
+                        options=QColorDialog.ColorDialogOption.DontUseNativeDialog
+                    )
                     self.SetUserCustomColors(color_dlg)
                     new_color = color_dlg.getColor()
                     self.SaveUserCustomColors(color_dlg)
@@ -1851,9 +1849,8 @@ class ModListWidget(QListWidget):
 
     def append_new_item(self, uuid: str) -> None:
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
@@ -2592,12 +2589,9 @@ class ModListWidget(QListWidget):
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
-                instance_path = Path(
-                    self.settings_controller.settings.current_instance_path
-                )
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
-                        instance_path / "aux_metadata.db"
+                        self.settings_controller.settings.aux_db_path
                     )
                 )
                 with aux_metadata_controller.Session() as aux_metadata_session:
@@ -2638,9 +2632,8 @@ class ModListWidget(QListWidget):
             self.ignore_warning_list.remove(packageid)
             item_data["warning_toggled"] = False
         # Update Aux DB
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         uuid = item_data["uuid"]
         if not uuid:

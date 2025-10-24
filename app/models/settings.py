@@ -204,6 +204,13 @@ class Settings(QObject):
         # Color Picker Custom Colors (Store as hex)
         self.color_picker_custom_colors: list[str] = []
 
+    @property
+    def aux_db_path(self) -> Path:
+        """
+        Get the path to the auxiliary metadata database for the current instance.
+        """
+        return Path(self.current_instance_path) / "aux_metadata.db"
+
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
         if key.startswith("_"):
