@@ -296,6 +296,40 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         )
 
 
+def validate_game_executable(game_folder: str) -> bool:
+    """
+    Validate if the provided game folder contains a valid RimWorld executable.
+
+    :param game_folder: Path to the game folder as a string.
+    :return: True if a valid executable is found, False otherwise.
+    """
+    game_install_path = Path(game_folder)
+    if not game_install_path.exists() or not game_install_path.is_dir():
+        return False
+
+    system_name = platform.system()
+    if system_name == "Darwin":
+        # MacOS
+        executable_path = str(game_install_path)
+        return os.path.exists(executable_path)
+    elif system_name == "Linux":
+        # Linux
+        executable_path = str((game_install_path / "RimWorldLinux"))
+        return os.path.exists(executable_path)
+    elif system_name == "Windows":
+        # Windows
+        path64 = game_install_path / "RimWorldWin64.exe"
+        path32 = game_install_path / "RimWorldWin.exe"
+
+        executable_path = str(path64)  # default to 64-bit executable
+        if not path64.exists() and path32.exists():
+            # look for and set path to 86x executable only if default doesn't exist
+            executable_path = str(path32)
+        return os.path.exists(executable_path)
+    else:
+        return False
+
+
 def launch_process(
     executable_path: str, args: list[str], cwd: str
 ) -> Tuple[int, list[str]]:
