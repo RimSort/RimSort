@@ -333,9 +333,8 @@ class ModInfo:
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
         # Update Aux DB
-        instance_path = Path(self.settings_controller.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings_controller.settings.aux_db_path
         )
         uuid = mod_data["uuid"]
         if not uuid:

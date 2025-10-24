@@ -2105,9 +2105,8 @@ class SettingsController(QObject):
         """
         Enable/disable the auxiliary metadata database performance mode based on the checkbox state.
         """
-        instance_path = Path(self.settings.current_instance_path)
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            instance_path / "aux_metadata.db"
+            self.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as session:
             if self.settings_dialog.aux_db_performance_mode.isChecked():
