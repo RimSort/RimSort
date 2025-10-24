@@ -3758,6 +3758,34 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>データベース</translation>
     </message>
     <message>
+        <source>Backup Settings</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+    </message>
+    <message>
+        <source>Automatically backup saves on first daily launch</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will automatically backup saves on the first daily launch.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+    </message>
+    <message>
+        <source>Number of backups to keep:</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+    </message>
+    <message>
+        <source>The number of backups to keep. Set to -1 to keep all backups, 0 to delete all.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+    </message>
+    <message>
+        <source>Number of saves to compress:</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+    </message>
+    <message>
+        <source>The number of recent saves to include in the backup. Set to -1 to compress all saves, 0 to compress none.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+    </message>
+    <message>
         <source>None</source>
         <translation>なし</translation>
     </message>
@@ -3824,6 +3852,49 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>ソート時に依存関係をダウンロードするかどうかをユーザーに確認する</translation>
+    </message>
+    <message>
+        <source>When enabled, *ByVersion tags take precedence over the base tags, 
+If a matching version tag exists but is empty, the base tag is ignored. 
+e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+    </message>
+    <message>
+        <source>Notifies to download mods that may be missing in the active modlist</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+    </message>
+    <message>
+        <source>Notifies and displays the mods that have the same packageid</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+    </message>
+    <message>
+        <source>Add icons and filtering options for easy mods identification and grouping</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+    </message>
+    <message>
+        <source>Hides invalid mods, not recommended to enable</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+    </message>
+    <message>
+        <source>Inactive Mods Sorting</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+    </message>
+    <message>
+        <source>Enable inactive mods sorting</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+    </message>
+    <message>
+        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
+Disabling this can improve performance by avoiding heavy calculations.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+    </message>
+    <message>
+        <source>Save inactive mods sort state</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
     </message>
     <message>
         <source>DB Builder</source>
@@ -4260,14 +4331,6 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>これにより、.pngファイルとペアリングされていない.ddsファイルが削除されます。
 
 このチェックには、存在する.DDSファイルの数に応じて数秒かかる場合があります。</translation>
-    </message>
-    <message>
-        <source>Enable advanced filtering options</source>
-        <translation>高度なフィルタリングオプションを有効にします</translation>
-    </message>
-    <message>
-        <source>If enabled, additional filtering options like folder size, author, and modified date will be available in the mods panel. Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>有効にすると、フォルダーサイズ、著者、変更された日付などの追加のフィルタリングオプションがMODSパネルで利用可能になります。これを無効にすると、重い計算を回避することでパフォーマンスを改善できます。</translation>
     </message>
     <message>
         <source>Prefer versioned About.xml tags over base tags</source>
