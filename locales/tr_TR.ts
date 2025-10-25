@@ -3662,6 +3662,22 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>Tüm ayarları varsayılan değerlerine sıfırlamak istediğinizden emin misiniz?</translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation>Geçersiz Oyun Konumu</translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation>Seçilen oyun klasörü geçerli bir RimWorld yürütülebilir dosyası içermiyor.Lütfen geçerli bir oyun konumu seçin.</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>Geçersiz Yapılandırma Klasörü</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation>Seçilen yapılandırma klasörü ModsConfig.xml içermiyor.Lütfen geçerli bir yapılandırma klasörü seçin.</translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation>Tüm yerleri temizleyin</translation>
     </message>

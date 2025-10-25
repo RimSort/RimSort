@@ -3657,6 +3657,22 @@ Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlg
         <translation>Sind Sie sicher, dass Sie alle Einstellungen auf ihre Standardwerte zurücksetzen möchten?</translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation>Ungültiger Spielstandort</translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation>Der ausgewählte Spielordner enthält keine gültige ausführbare RimWorld-Datei.Bitte wählen Sie einen gültigen Spielort aus.</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>Ungültiger Konfigurationsordner</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation>Der ausgewählte Konfigurationsordner enthält ModsConfig.xml nicht.Bitte wählen Sie einen gültigen Konfigurationsordner aus.</translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation>Alle Standorte löschen</translation>
     </message>

@@ -3675,6 +3675,22 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>すべての設定をデフォルト値に戻しますか？</translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation>無効なゲームの場所</translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation>選択したゲーム フォルダーには有効なRimWorld 実行可能ファイルが含まれていません。有効なゲームの場所を選択してください。</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>無効な構成フォルダー</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation>選択した構成フォルダーには ModsConfig.xml が含まれていません。有効な構成フォルダーを選択してください。</translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation>すべての場所をクリア</translation>
     </message>

@@ -3678,6 +3678,22 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>你确定要将所有设置恢复为默认值吗？</translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation>游戏地点无效</translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation>所选游戏文件夹不包含有效的 RimWorld 可执行文件。请选择有效的游戏地点。</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>无效的配置文件夹</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation>所选的配置文件夹不包含 ModsConfig.xml。请选择一个有效的配置文件夹。</translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation>清除所有路径</translation>
     </message>
