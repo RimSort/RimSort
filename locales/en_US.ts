@@ -3559,6 +3559,22 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation type="unfinished"></translation>
     </message>

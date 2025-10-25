@@ -3673,6 +3673,22 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Вы уверены, что хотите сбросить все настройки к значениям по умолчанию?</translation>
     </message>
     <message>
+        <source>Invalid Game Location</source>
+        <translation>Неверное местоположение игры</translation>
+    </message>
+    <message>
+        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <translation>Выбранная папка с игрой не содержит допустимого исполняемого файла RimWorld.Пожалуйста, выберите допустимую локацию для игры.</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>Неверная папка конфигурации</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation>Выбранная папка конфигурации не содержит ModsConfig.xml.Пожалуйста, выберите допустимую папку конфигурации.</translation>
+    </message>
+    <message>
         <source>Clear all locations</source>
         <translation>Очистить все местоположения</translation>
     </message>
