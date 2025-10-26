@@ -66,7 +66,7 @@ class LanguageController:
             "ru_RU": "Русский",
             "tr_TR": "Türkçe",
             "pt_BR": "Português (Brasil)",
-            "zh_TW": "正體中文"
+            "zh_TW": "正體中文",
         }
         available_languages = self.languages
         for lang_code in available_languages:
