@@ -147,6 +147,4 @@ Use the search bar above the mods list to quickly find specific mods by name. Th
 
 ## Related Topics
 
-- [Databases](databases.md): Learn about the Community Rules and User Rules databases
-- [Sorting](sorting.md): Understand how rules affect mod sorting
-- [Mod Management](mod-management.md): General mod handling in RimSort
+- [Databases](../user-guide/databases): Learn about the Community Rules and User Rules databases
