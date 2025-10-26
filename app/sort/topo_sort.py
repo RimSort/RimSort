@@ -12,7 +12,7 @@ def do_topo_sort(
 ) -> list[str]:
     """
     Sort mods using the topological sort algorithm. For each
-    topological level, sort the mods by packageid for consistency.
+    topological level, sort the mods alphabetically by name for consistency.
     """
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
@@ -28,14 +28,25 @@ def do_topo_sort(
     reordered = list()
     active_mods_uuid_to_packageid = {}
     active_mods_packageid_to_uuid = {}
+    active_mods_uuid_to_name = {}
     for uuid in active_mods_uuids:
         try:
             packageid = metadata_manager.internal_local_metadata[uuid]["packageid"]
             active_mods_uuid_to_packageid[uuid] = packageid
             active_mods_packageid_to_uuid[packageid] = uuid
+            name_value = metadata_manager.internal_local_metadata[uuid].get("name")
+            if not isinstance(name_value, str):
+                name_value = "name error in mod about.xml"
+            active_mods_uuid_to_name[uuid] = name_value
         except KeyError:
             logger.warning(f"Missing packageid for mod UUID {uuid}, skipping")
             continue
+
+    def safe_name(name: object) -> str:
+        if isinstance(name, str):
+            return name.lower()
+        else:
+            return "name error in mod about.xml"
 
     for level in sorted_dependencies:
         temp_mod_list = [
@@ -44,10 +55,10 @@ def do_topo_sort(
             if package_id in active_mods_packageid_to_uuid
         ]
 
-        # Sort packages in this topological level by packageid for consistency
+        # Sort packages in this topological level alphabetically by name for consistency
         sorted_temp_mod_list = sorted(
             temp_mod_list,
-            key=lambda u: active_mods_uuid_to_packageid[u].lower(),
+            key=lambda u: safe_name(active_mods_uuid_to_name[u]),
             reverse=False,
         )
         # Add into reordered list
