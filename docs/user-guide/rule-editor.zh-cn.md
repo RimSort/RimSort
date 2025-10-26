@@ -148,7 +148,5 @@ lang: zh-cn
 
 ## 相关主题
 
-- [数据库](databases.zh-cn.md)：了解社区规则和用户规则数据库
-- [排序](sorting.zh-cn.md)：了解规则如何影响 Mod 排序
-- [Mod 管理](mod-management.zh-cn.md)：RimSort 中的一般 Mod 处理
+- [数据库](../user-guide/databases.zh-cn)：了解社区规则和用户规则数据库
 
