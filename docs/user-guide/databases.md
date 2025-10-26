@@ -22,6 +22,18 @@ Databases can be configured in the settings under `Databases`.
 
 The community rules database is a collection of load order rules compiled by the community. While it is always best for mod authors to add the appropriate load order rules to their `about.xml` files, sometimes mod authors are unresponsive for one reason or another. As such, we instead compile these extra rules with notes into a public and community driven database. This database is also compatible with RimSort specific load rules such as `Force load at bottom of list`.
 
+## User Rules Database
+
+The user rules database (`userRules.json`) is a local, user-specific database that stores custom load order rules defined by the user. This file is automatically created in the databases folder if it does not exist, and it allows users to define their own rules for mod load ordering that persist across sessions. Rules in this database take precedence over community rules and can be edited through RimSort's rule editor interface.
+
+## Use This Instead Database
+
+The "Use This Instead" database is an optional external database that provides recommendations for alternative mods when outdated or incompatible mods are detected. This feature helps users identify updated versions or better alternatives for mods in their collection. The database source can be configured in settings and is typically sourced from the [Use This Instead mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3396308787) repository, which maintains a community-curated list of mod replacements and updates.
+
+## No Version Warning Database
+
+The No Version Warning database (`ModIdsToFix.xml`) is an external database that contains a list of mod package IDs that should not trigger version mismatch warnings. This is useful for mods that intentionally do not include version information in their `about.xml` files or for mods that are compatible across multiple game versions. The database helps reduce false positive warnings by identifying mods that are known to be version-agnostic. The source can be configured in settings and is typically sourced from the [No Version Warning mod](https://steamcommunity.com/sharedfiles/filedetails/?id=2599504692) repository.
+
 ## Steam Workshop Database
 
 {: .note}
