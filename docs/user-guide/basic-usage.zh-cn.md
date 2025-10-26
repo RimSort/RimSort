@@ -93,10 +93,12 @@ Steam 创意工坊元数据
       - RimWorld 原生支持的规则类型，通常定义在 Mod 的 About.xml 文件中
     - `loadBottom` - 由 Paladin 在 RimPy 社区规则数据库中首创
       - 强制将 Mod 排序至列表底部。RimSort 从外部元数据中读取此标记，将被标记 Mod 视为「第三梯队 Mod」，在排序时置于未标记 Mod 之后
-    - _**开发中**_ `loadTop`
+    - `loadTop`
       - 强制将 Mod 排序至列表顶部。这是 RimSort 首创的自定义规则，将被标记 Mod 视为「第一梯队 Mod」，在排序时置于未标记 Mod 之前
     - _**开发中**_ `isFramework`
       - 「框架 Mod」指为其他 Mod 提供扩展支持，但单独使用时无实际内容的 Mod。这是 RimSort 首创的自定义规则
       - 典型示例：
         - Universum、Vanilla Expanded Framework、XMLExtensions 等
       - RimSort 会标记带有此规则的 Mod，当检测到这些框架模组未被其他 Mod 依赖时发出警告。毕竟单独使用框架 Mod 没有意义！
+
+  有关使用规则编辑器创建和管理这些规则的详细说明，包括如何为特定 Mod 添加自定义加载顺序规则，请参阅 [规则编辑器](../user-guide/rule-editor.zh-cn) 页面。

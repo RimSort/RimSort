@@ -76,17 +76,19 @@ Rules Metadata
   > While you can modify the databases directly as they are plain text files, it is recommended to use RimSort's built in [Rule Editor](../user-guide/rule-editor) utility to edit the rules defined in these databases.
 
   > Why is this necessary?
-  
+
   This also allows us to load in custom sorting rules! Mod developers are not always as responsive when conflicts or incompatibilities are found. This allows people to define additional sorting rules that are generally agreed upon by others as required. Traditionally, Paladin distributed these via RimPy Community Mod Manager Database. RimSort has chosen a different path of distribution, utilizing git.
-   
+
    - `loadAfter` and `loadBefore`
       - These are rules native to RimWorld. These are typically defined in a mod's About.xml
-    - `loadBottom` - Originally defined by Paladin in RimPy Community Mod Manager Database community rules.
+   - `loadBottom` - Originally defined by Paladin in RimPy Community Mod Manager Database community rules.
       - Used to force mods to the bottom of a list when sorting. RimSort tags mods with this from external metadata when populated, allowing it to be considered as a "tier 3 mod" and sorting it _after_ any mods not tagged with this.
-    - _**WIP**_ `loadTop`
+    - `loadTop`
       - Used to force mods to the top of a list when sorting. RimSort tags mods with this from external metadata when populated, allowing it to be considered as a "tier 1 mod" and sorting it _before_ any mods not tagged with this. This custom rule is original to RimSort.
     - _**WIP**_ `isFramework`
       - A "framework mod" is a mod which provides extension to other mods, but does not provide actual content when used by itself. This custom rule is original to RimSort.
       - Examples of such mods:
         - Universum, Vanilla Expanded Framework, XMLExtensions, etc
       - RimSort will tag such mods that have this rule, so that it can display a warning when these mods are not being "depended on". There is not much point to using such mods without the mods that use them, it is a framework after all!
+
+  For detailed instructions on creating and managing these rules using the Rule Editor, including how to add custom load order rules for specific mods, see the [Rule Editor](../user-guide/rule-editor) page.
