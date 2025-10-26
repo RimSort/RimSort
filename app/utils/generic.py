@@ -382,12 +382,6 @@ def platform_specific_open(path: str | Path) -> None:
     logger.info(f"USER ACTION: opening {path}")
     p = Path(path)
     path = str(path)
-    if not p.exists():
-        dialogue.show_warning(
-            title="Path does not exist",
-            text=f"This path does not exist: {path}",
-        )
-        return
     if sys.platform == "darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
         if p.is_dir() and p.suffix == ".app":
