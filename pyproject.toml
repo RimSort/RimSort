@@ -17,7 +17,7 @@ dependencies = [
     "networkx==3.5",
     "packaging==25.0",
     "platformdirs==4.5.0",
-    "psutil==7.1.1",
+    "psutil==7.1.2",
     "pygit2==1.19.0",
     "pygithub==2.8.1",
     "pyside6==6.10.0",
