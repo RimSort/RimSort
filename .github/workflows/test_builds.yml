@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Download artifact from previous run
         if: ${{ github.event.inputs.run_id != null }}
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v6.0.0
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
           run-id: ${{ github.event.inputs.run_id }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Download artifact from current run
         if: ${{ github.event.inputs.run_id == null }}
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v6.0.0
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
 
