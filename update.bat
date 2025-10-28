@@ -1,5 +1,9 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
+REM Show the window
+title RimSort Update
+mode con: cols=100 lines=30
+echo RimSort update in progress... Please wait.
 
 REM ========================================================================
 REM RimSort Updater Script (Windows 10 & 11 Compatible)
@@ -7,55 +11,79 @@ REM Safely backs up and updates RimSort from provided temp path
 REM Usage: update.bat <temp_update_path> <log_path>
 REM ========================================================================
 
-goto main
-
-REM Function to get timestamp
-:GetTimestamp
-set "timestamp=%date% %time%"
-goto :eof
-
-:main
+REM Get arguments
 set "TEMP_UPDATE_PATH=%~1"
 set "LOG_PATH=%~2"
+
+REM Validate arguments
 if "%TEMP_UPDATE_PATH%" == "" (
     echo ERROR: Temp update path is required as first argument.
+    if defined LOG_PATH (
+        echo [%date% %time%] ERROR: Temp update path is required as first argument. >> "%LOG_PATH%"
+    )
     pause
     exit /b 1
 )
-call :GetTimestamp
+
+REM Log start
 if defined LOG_PATH (
-    echo [%timestamp%] INFO: Starting RimSort update process... >> "%LOG_PATH%"
-    echo [%timestamp%] INFO: Temp update path: %TEMP_UPDATE_PATH% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Starting RimSort update process... >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Temp update path: %TEMP_UPDATE_PATH% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Log path: %LOG_PATH% >> "%LOG_PATH%"
 ) else (
-    echo [%timestamp%] INFO: Starting RimSort update process...
-    echo [%timestamp%] INFO: Temp update path: %TEMP_UPDATE_PATH%
+    echo [%date% %time%] INFO: Starting RimSort update process...
+    echo [%date% %time%] INFO: Temp update path: %TEMP_UPDATE_PATH%
 )
 
-REM Get path of the currently running script
-set "current_dir=%~dp0"
-set "current_dir_no_slash=%current_dir:~0,-1%"
-set "executable_path=%current_dir%RimSort.exe"
+REM Get current directory (should be application folder)
+set "current_dir=%CD%"
+if "%current_dir:~-1%"=="\" (
+    set "current_dir_no_slash=%current_dir:~0,-1%"
+) else (
+    set "current_dir_no_slash=%current_dir%"
+)
 
-REM Use provided temp update path
+set "executable_path=%current_dir%\RimSort.exe"
 set "update_source_folder=%TEMP_UPDATE_PATH%"
 
 if defined LOG_PATH (
-    echo Current directory: %%CD%% >> "%LOG_PATH%"
-    echo Update source folder: %update_source_folder% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Current directory: %current_dir% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Update source folder: %update_source_folder% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Executable path: %executable_path% >> "%LOG_PATH%"
 ) else (
-    echo Current directory: %CD%
-    echo Update source folder: %update_source_folder%
+    echo [%date% %time%] INFO: Current directory: %current_dir%
+    echo [%date% %time%] INFO: Update source folder: %update_source_folder%
+    echo [%date% %time%] INFO: Executable path: %executable_path%
 )
 
 REM Attempt to stop RimSort if it's already running
-call :KillRimSort
+if defined LOG_PATH (
+    echo [%date% %time%] INFO: Stopping RimSort process... >> "%LOG_PATH%"
+) else (
+    echo [%date% %time%] INFO: Stopping RimSort process...
+)
+taskkill /F /im RimSort.exe >nul 2>&1
+if errorlevel 1 (
+    if defined LOG_PATH (
+        echo [%date% %time%] INFO: No running RimSort process found. >> "%LOG_PATH%"
+    ) else (
+        echo [%date% %time%] INFO: No running RimSort process found.
+    )
+) else (
+    if defined LOG_PATH (
+        echo [%date% %time%] INFO: RimSort process terminated. >> "%LOG_PATH%"
+    ) else (
+        echo [%date% %time%] INFO: RimSort process terminated.
+    )
+    ping -n 3 127.0.0.1 >nul
+)
 
 REM Check if update folder exists
 if not exist "%update_source_folder%" (
     if defined LOG_PATH (
-        echo ERROR: Update source folder does not exist: %update_source_folder% >> "%LOG_PATH%"
+        echo [%date% %time%] ERROR: Update source folder does not exist: %update_source_folder% >> "%LOG_PATH%"
     ) else (
-        echo ERROR: Update source folder does not exist: %update_source_folder%
+        echo [%date% %time%] ERROR: Update source folder does not exist: %update_source_folder%
     )
     pause
     exit /b 1
@@ -64,9 +92,9 @@ if not exist "%update_source_folder%" (
 REM Check if RimSort.exe exists in the update folder
 if not exist "%update_source_folder%\RimSort.exe" (
     if defined LOG_PATH (
-        echo ERROR: RimSort.exe not found in update source folder. >> "%LOG_PATH%"
+        echo [%date% %time%] ERROR: RimSort.exe not found in update source folder. >> "%LOG_PATH%"
     ) else (
-        echo ERROR: RimSort.exe not found in update source folder.
+        echo [%date% %time%] ERROR: RimSort.exe not found in update source folder.
     )
     pause
     exit /b 1
@@ -79,7 +107,7 @@ echo RimSort Update Ready
 echo Source: %update_source_folder%
 echo Target: %current_dir%
 echo.
-echo The update will start automatically in 5 seconds...
+echo The update will start automatically...
 echo ========================================================================
 if defined LOG_PATH (
     echo. >> "%LOG_PATH%"
@@ -87,81 +115,54 @@ if defined LOG_PATH (
     echo Source: %update_source_folder% >> "%LOG_PATH%"
     echo Target: %current_dir% >> "%LOG_PATH%"
     echo. >> "%LOG_PATH%"
-    echo The update will start automatically in 5 seconds... >> "%LOG_PATH%"
+    echo The update will start automatically... >> "%LOG_PATH%"
     echo ======================================================================== >> "%LOG_PATH%"
 )
-ping -n 6 127.0.0.1 >nul
 
-REM Begin update by mirroring files from temp update folder to app folder
-echo.
-echo Updating RimSort files...
-echo Source: %update_source_folder%
-echo Target: %current_dir_no_slash%
+REM Begin update by copying files from temp update folder to app folder
 if defined LOG_PATH (
-    echo. >> "%LOG_PATH%"
-    echo Updating RimSort files... >> "%LOG_PATH%"
-    echo Source: %update_source_folder% >> "%LOG_PATH%"
-    echo Target: %current_dir_no_slash% >> "%LOG_PATH%"
-)
-robocopy "%update_source_folder%" "%current_dir_no_slash%" /MIR /NFL /NDL /NJH /NJS /nc /ns /np /R:3 /W:1 >nul 2>&1
-set "robocopy_exit=!errorlevel!"
-echo Robocopy exit code: !robocopy_exit!
-if defined LOG_PATH (
-    echo Robocopy exit code: !robocopy_exit! >> "%LOG_PATH%"
-)
-
-REM Detailed robocopy exit code checking
-if !robocopy_exit! EQU 0 (
-    if defined LOG_PATH (
-        echo INFO: No files were copied. Source and destination are identical. >> "%LOG_PATH%"
-    ) else (
-        echo INFO: No files were copied. Source and destination are identical.
-    )
-) else if !robocopy_exit! EQU 1 (
-    if defined LOG_PATH (
-        echo SUCCESS: Files copied successfully. >> "%LOG_PATH%"
-    ) else (
-        echo SUCCESS: Files copied successfully.
-    )
-) else if !robocopy_exit! EQU 2 (
-    if defined LOG_PATH (
-        echo WARNING: Extra files or directories detected. >> "%LOG_PATH%"
-    ) else (
-        echo WARNING: Extra files or directories detected.
-    )
-) else if !robocopy_exit! EQU 3 (
-    if defined LOG_PATH (
-        echo SUCCESS: Files copied successfully with extra files detected. >> "%LOG_PATH%"
-    ) else (
-        echo SUCCESS: Files copied successfully with extra files detected.
-    )
-) else if !robocopy_exit! EQU 4 (
-    if defined LOG_PATH (
-        echo WARNING: Mismatched files or directories detected. >> "%LOG_PATH%"
-    ) else (
-        echo WARNING: Mismatched files or directories detected.
-    )
-) else if !robocopy_exit! EQU 5 (
-    if defined LOG_PATH (
-        echo WARNING: Copy successful with mismatched files detected. >> "%LOG_PATH%"
-    ) else (
-        echo WARNING: Copy successful with mismatched files detected.
-    )
-) else if !robocopy_exit! GEQ 8 (
-    if defined LOG_PATH (
-        echo ERROR: Update failed with critical errors (exit code !robocopy_exit!). >> "%LOG_PATH%"
-    ) else (
-        echo ERROR: Update failed with critical errors (exit code !robocopy_exit!).
-    )
-    pause
-    exit /b 1
+    echo [%date% %time%] INFO: Updating RimSort files... >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Source: %update_source_folder% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Target: %current_dir_no_slash% >> "%LOG_PATH%"
 ) else (
-    if defined LOG_PATH (
-        echo WARNING: Unknown robocopy exit code: !robocopy_exit! >> "%LOG_PATH%"
-    ) else (
-        echo WARNING: Unknown robocopy exit code: !robocopy_exit!
-    )
+    echo [%date% %time%] INFO: Updating RimSort files...
+    echo [%date% %time%] INFO: Source: %update_source_folder%
+    echo [%date% %time%] INFO: Target: %current_dir_no_slash%
 )
+
+REM Use robocopy for file copying with error handling
+if defined LOG_PATH (
+    echo [%date% %time%] INFO: Starting robocopy operation... >> "%LOG_PATH%"
+)
+robocopy "%update_source_folder%" "%current_dir_no_slash%" /E /COPY:DAT /R:3 /W:5 /NFL /NDL
+set "robocopy_exit=%errorlevel%"
+if defined LOG_PATH (
+    echo [%date% %time%] INFO: Robocopy completed with exit code: !robocopy_exit! >> "%LOG_PATH%"
+)
+
+REM Robocopy exit codes: 0=no errors, 1=files copied, 2=extra files, 4=mismatches, 8=some failures, 16=serious error
+REM For update, 0, 1, 2, 4 are generally acceptable
+if !robocopy_exit! LEQ 4 goto :robocopy_success
+goto :robocopy_error
+
+:robocopy_success
+if defined LOG_PATH (
+    echo [%date% %time%] INFO: Files copied successfully. >> "%LOG_PATH%"
+) else (
+    echo [%date% %time%] INFO: Files copied successfully.
+)
+goto :robocopy_done
+
+:robocopy_error
+if defined LOG_PATH (
+    echo [%date% %time%] ERROR: Update failed during file copy. >> "%LOG_PATH%"
+) else (
+    echo [%date% %time%] ERROR: Update failed during file copy.
+)
+pause
+exit /b 1
+
+:robocopy_done
 
 REM Give time for filesystem to sync
 ping -n 4 127.0.0.1 >nul
@@ -169,87 +170,120 @@ ping -n 4 127.0.0.1 >nul
 REM Verify the new executable exists
 if exist "%executable_path%" (
     if defined LOG_PATH (
-        echo RimSort.exe verified. >> "%LOG_PATH%"
+        echo [%date% %time%] INFO: RimSort.exe verified after update. >> "%LOG_PATH%"
     ) else (
-        echo RimSort.exe verified.
+        echo [%date% %time%] INFO: RimSort.exe verified after update.
     )
 ) else (
     if defined LOG_PATH (
-        echo ERROR: RimSort.exe not found after update. >> "%LOG_PATH%"
+        echo [%date% %time%] ERROR: RimSort.exe not found after update. >> "%LOG_PATH%"
     ) else (
-        echo ERROR: RimSort.exe not found after update.
+        echo [%date% %time%] ERROR: RimSort.exe not found after update.
     )
     pause
     exit /b 1
 )
 
 REM Cleanup temp update files
-echo.
-echo Cleaning up temporary files...
-echo Removing: %update_source_folder%
 if defined LOG_PATH (
-    echo. >> "%LOG_PATH%"
-    echo Cleaning up temporary files... >> "%LOG_PATH%"
-    echo Removing: %update_source_folder% >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Cleaning up temporary files... >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Removing: %update_source_folder% >> "%LOG_PATH%"
+) else (
+    echo [%date% %time%] INFO: Cleaning up temporary files...
+    echo [%date% %time%] INFO: Removing: %update_source_folder%
 )
 rd /s /q "%update_source_folder%" 2>nul
 if exist "%update_source_folder%" (
     if defined LOG_PATH (
-        echo WARNING: Failed to remove temporary folder. >> "%LOG_PATH%"
+        echo [%date% %time%] WARNING: Failed to remove temporary folder. >> "%LOG_PATH%"
     ) else (
-        echo WARNING: Failed to remove temporary folder.
+        echo [%date% %time%] WARNING: Failed to remove temporary folder.
     )
 ) else (
     if defined LOG_PATH (
-        echo Temporary files cleaned up. >> "%LOG_PATH%"
+        echo [%date% %time%] INFO: Temporary files cleaned up. >> "%LOG_PATH%"
     ) else (
-        echo Temporary files cleaned up.
+        echo [%date% %time%] INFO: Temporary files cleaned up.
     )
 )
 
 REM Launch updated RimSort
-echo.
-echo Launching RimSort...
 if defined LOG_PATH (
-    echo. >> "%LOG_PATH%"
-    echo Launching RimSort... >> "%LOG_PATH%"
+    echo [%date% %time%] INFO: Launching RimSort from: %executable_path% >> "%LOG_PATH%"
+) else (
+    echo [%date% %time%] INFO: Launching RimSort from: %executable_path%
 )
 
-REM Start RimSort
-start "" "%executable_path%"
-ping -n 3 127.0.0.1 >nul
+REM Give additional time for files to fully settle
+ping -n 2 127.0.0.1 >nul
 
-REM Confirm process launch
-tasklist /fi "imagename eq RimSort.exe" /fo csv | find /i "RimSort.exe" >nul
-if errorlevel 1 (
-    if defined LOG_PATH (
-        echo WARNING: RimSort may not have started. >> "%LOG_PATH%"
-        echo You can start it manually from: %executable_path% >> "%LOG_PATH%"
-    ) else (
-        echo WARNING: RimSort may not have started.
-        echo You can start it manually from: %executable_path%
-    )
-    pause
+REM Start RimSort with better error handling
+if exist "%executable_path%" (
+    echo Launching: %executable_path%
+    REM Change to app directory and launch with proper context
+    cd /d "%current_dir%"
+
+    REM Use PowerShell to start the process for better reliability
+    powershell -command "Start-Process '%executable_path%' -WorkingDirectory '%current_dir%'"
+
+    REM Wait for process to fully start (give it more time)
+    ping -n 6 127.0.0.1 >nul
 ) else (
     if defined LOG_PATH (
-        echo RimSort update completed and launched successfully! >> "%LOG_PATH%"
+        echo [%date% %time%] ERROR: RimSort.exe not found at: %executable_path% >> "%LOG_PATH%"
     ) else (
-        echo RimSort update completed and launched successfully!
+        echo [%date% %time%] ERROR: RimSort.exe not found at: %executable_path%
     )
+    echo.
+    echo ERROR: RimSort.exe not found at expected location: %executable_path%
+    echo.
+    echo Press any key to close this window...
+    pause >nul
+    exit /b 1
 )
+
+REM Confirm process launch (retry up to 5 times with longer wait)
+set "launch_confirmed=0"
+set "attempt=0"
+:check_launch
+set /a attempt+=1
+if !attempt! gtr 5 goto :launch_complete
+
+tasklist /fi "imagename eq RimSort.exe" /fo csv | find /i "RimSort.exe" >nul
+if not errorlevel 1 (
+    set "launch_confirmed=1"
+    goto :launch_success
+)
+ping -n 3 127.0.0.1 >nul
+goto :check_launch
+
+:launch_complete
+
+:launch_success
+if !launch_confirmed! EQU 1 (
+    if defined LOG_PATH (
+        echo [%date% %time%] INFO: RimSort update completed and launched successfully! >> "%LOG_PATH%"
+    ) else (
+        echo [%date% %time%] INFO: RimSort update completed and launched successfully!
+    )
+    echo.
+    echo Update completed successfully! The new RimSort version is now running.
+    echo This window will close automatically in 5 seconds...
+    ping -n 6 127.0.0.1 >nul
+) else (
+    if defined LOG_PATH (
+        echo [%date% %time%] WARNING: RimSort may not have started. >> "%LOG_PATH%"
+        echo [%date% %time%] INFO: You can start it manually from: %executable_path% >> "%LOG_PATH%"
+    ) else (
+        echo [%date% %time%] WARNING: RimSort may not have started.
+        echo [%date% %time%] INFO: You can start it manually from: %executable_path%
+    )
+    echo.
+    echo Note: RimSort may still be starting in the background.
+    echo Press any key to close this window...
+    pause >nul
+)
+
+
 
 exit /b 0
-
-REM --------------------------
-REM Function to kill RimSort
-REM --------------------------
-:KillRimSort
-echo Stopping RimSort process...
-taskkill /F /im RimSort.exe >nul 2>&1
-if errorlevel 1 (
-    echo No running RimSort process found.
-) else (
-    echo RimSort process terminated.
-    ping -n 3 127.0.0.1 >nul
-)
-goto :eof
