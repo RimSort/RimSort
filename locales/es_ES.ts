@@ -5012,18 +5012,6 @@ Detalles:  {e}</translation>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Actualización omitida</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Skinging actualización de actualización ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Actualización de Rimsort encontrada</translation>
     </message>
@@ -5038,28 +5026,16 @@ Do you want to update now?</source>
 ¿Quieres actualizar ahora?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>No se puede completar la actualización</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>No se pudo encontrar una versión válida de Rimsort para  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>No se puede recuperar la información de lanzamiento</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>No se pudo conectar a la API de GitHub: {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Descargar Rimsort {tag_name} versión ...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Extraer archivos de actualización ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Preparando el instalador de actualización...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5072,46 +5048,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>Creando copias de seguridad ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>Descargar fallido</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>No se pudo descargar la actualización.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>Fallado de extracción</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>No se pudo extraer la actualización descargada.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>El lanzamiento falló</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>No se pudo iniciar el script de actualización.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>La actualización falló</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Se produjo un error inesperado durante el proceso de actualización.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>No se puede recuperar la última información de lanzamiento</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Consulte su conexión a Internet y vuelva a intentarlo, también puede consultar 'https://github.com/rimsort/rimsort/releases' directamente.</translation>
     </message>
 </context>
 <context>

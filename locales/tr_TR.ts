@@ -5026,18 +5026,6 @@ Ayrıntılar: {e}</translation>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Güncelleme atlandı</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Python tercümanından kaçıyorsunuz.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Güncelleme kontrolünü atlama ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Rimsort güncellemesi bulundu</translation>
     </message>
@@ -5052,28 +5040,16 @@ Do you want to update now?</source>
 Şimdi güncellemek istiyor musunuz?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>Güncellemeyi tamamlayamıyor</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>için geçerli rimsort sürümü bulamadı {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Sürüm bilgilerini alamıyor</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>GitHub API'sına bağlanılamadı:  {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Rimsort {tag_name} sürümünü indirme ...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Güncelleme dosyalarını çıkarma ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Güncelleme yükleyicisi hazırlanıyor...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5086,46 +5062,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>Yedekleme Oluşturun ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>İndir başarısız</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>Güncellemeyi indiremedi.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>Çıkarma başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>İndirilen güncellemeyi çıkaramadı.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>Lansman başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>Güncelleme komut dosyasını başlatılamadı.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>Güncelleme başarısız oldu</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Güncelleme işlemi sırasında beklenmedik bir hata oluştu.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>En son sürüm bilgilerini alamıyor</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin, 'https://github.com/rimsort/rimsort/releases'i doğrudan kontrol edebilirsiniz.</translation>
     </message>
 </context>
 <context>

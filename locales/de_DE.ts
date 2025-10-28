@@ -5020,18 +5020,6 @@ Details: {e}</translation>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Update übersprungen</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Sie rennen vom Python -Dolmetscher.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Update überspringen ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>RIMSORT -Update gefunden</translation>
     </message>
@@ -5046,28 +5034,16 @@ Do you want to update now?</source>
 Möchten Sie jetzt aktualisieren?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>Update kann nicht abgeschlossen werden</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Es gab keine gültige RIMSORT -Version für  zu finden {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Release -Informationen können nicht abgerufen werden</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Es gab keine Verbindung zu Github API:  {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Herunterladen rimsort  Release ... {tag_name}</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Extrahieren von Aktualisierungsdateien ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Update-Installationsprogramm wird vorbereitet...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5080,46 +5056,6 @@ Möchten Sie jetzt aktualisieren?</translation>
     <message>
         <source>Creating backup...</source>
         <translation>Backup erstellen ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>Download fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>Das Update hat nicht heruntergeladen.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>Extraktion fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>Das heruntergeladene Update extrahiert nicht.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>Start fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>Das Update -Skript startete nicht.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>Update fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Während des Aktualisierungsprozesses trat ein unerwarteter Fehler auf.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Die neuesten Informationen zur Veröffentlichung können nicht abgerufen werden</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</translation>
     </message>
 </context>
 <context>

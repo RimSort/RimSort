@@ -5044,18 +5044,6 @@ Detalhes: {e}</translation>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Atualização pulou</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Você está fugindo de Python Interpreter.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Saltando a verificação de atualização ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Atualização do rimsort encontrada</translation>
     </message>
@@ -5070,28 +5058,16 @@ Do you want to update now?</source>
 Você quer atualizar agora?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>Incapaz de concluir a atualização</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Falha ao encontrar uma versão válida do RimSort para  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Incapaz de recuperar informações de liberação</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Falha ao conectar -se à API do GitHub:  {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Download de rimsort {tag_name} liberação ...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Extraindo arquivos de atualização ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Preparando o instalador da atualização...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5104,46 +5080,6 @@ Você quer atualizar agora?</translation>
     <message>
         <source>Creating backup...</source>
         <translation>Criando backup ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>Download falhou</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>Falha ao baixar a atualização.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>A extração falhou</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>Falha ao extrair a atualização baixada.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>O lançamento falhou</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>Falha ao iniciar o script de atualização.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>Atualização falhou</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Um erro inesperado ocorreu durante o processo de atualização.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Incapaz de recuperar as informações de lançamento mais recentes</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Verifique sua conexão com a Internet e tente novamente, você também pode verificar 'https://github.com/rimsort/rimsort/releases' diretamente.</translation>
     </message>
 </context>
 <context>
