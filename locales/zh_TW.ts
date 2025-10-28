@@ -934,8 +934,44 @@ How would you like to proceed?
         <translation>在解壓過程中發生錯誤。</translation>
     </message>
     <message>
+        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
+A report of discrepancies is generated. You will be prompted for these paths in order:
+
+	1) Select input A
+	2) Select input B</source>
+        <translation>- 這將產生 2 個 Steam DB 之間依賴數據的準確比較。
+生成差異報告。系統將按順序提示您輸入這些路徑：
+
+1) 選擇輸入A
+2) 選擇輸入B</translation>
+    </message>
+    <message>
         <source>Steam DB comparison report: {len} found</source>
         <translation>Steam 資料庫比較報告：{len} 發現</translation>
+    </message>
+    <message>
+        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.
+- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.
+- The following exceptions will be made:
+
+	{DB_BUILDER_RECURSE_EXCEPTIONS}
+
+The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
+
+	1) Select input A (db to-be-updated)
+	2) Select input B (update source)
+	3) Select output C (resultant db)</source>
+        <translation>- 這將有效地用 B 的鍵/值遞歸地覆蓋結果數據庫中的 A 的鍵/值。
+- 異常不會被遞歸更新。相反，它們將被 B 的密鑰完全覆蓋。
+- 以下情況除外：
+
+{DB_BUILDER_RECURSE_EXCEPTIONS}
+
+生成的數據庫 C 將保存到用戶指定的路徑。系統將按順序提示您輸入這些路徑：
+
+1）選擇輸入A（待更新的db）
+2）選擇輸入B（更新源）
+3) 選擇輸出C（結果db）</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -1012,48 +1048,12 @@ PublishedFileIDs are needed to retrieve mods from Steam!</source>
         <translation>此操作將比較兩個資料庫，A 和 B，通過檢查 A 中的依賴項與 B 中的依賴項。</translation>
     </message>
     <message>
-        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
-A report of discrepancies is generated. You will be prompted for these paths in order:
-
- 1) Select input A
- 2) Select input B</source>
-        <translation>- 這將生成兩個 Steam DB 之間依賴數據的確切比較。
-一個不一致的報告被生成。你將按順序提示這些路徑：
-
- 1) 選擇輸入 A
- 2) 選擇輸入 B</translation>
-    </message>
-    <message>
         <source>Click 'Show Details' to see the full report!</source>
         <translation>點擊 'Show Details' 查看完整報告！</translation>
     </message>
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
         <translation>此操作將合併兩個資料庫，A 和 B，通過遞歸地使用 B 更新 A，排除異常情況。</translation>
-    </message>
-    <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.
-- The following exceptions will be made:
-
- {DB_BUILDER_RECURSE_EXCEPTIONS}
-
-The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
-
- 1) Select input A (db to-be-updated)
- 2) Select input B (update source)
- 3) Select output C (resultant db)</source>
-        <translation>- 這將有效地遞歸地將 A 的鍵/值與 B 的鍵/值合併到結果資料庫中。
-- 異常不會被遞歸更新。相反，它們將被 B 的鍵完全覆蓋。
-- 以下異常將被保留：
-
- {DB_BUILDER_RECURSE_EXCEPTIONS}
-
-結果資料庫，C，保存到一個用戶指定的路徑。你將按順序提示這些路徑：
-
- 1) 選擇輸入 A (待更新的資料庫)
- 2) 選擇輸入 B (更新源)
- 3) 選擇輸出 C (結果資料庫)</translation>
     </message>
     <message>
         <source>Failed to read existing database</source>
@@ -5046,18 +5046,6 @@ Details: {e}</source>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>更新略過</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>您正在從Python解釋器中運行。</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>略過更新檢查...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Rimsort更新發現</translation>
     </message>
@@ -5072,28 +5060,16 @@ Do you want to update now?</source>
 您現在要更新嗎？ {current_version}</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>無法完成更新</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>無法找到的有效Rimsort版本 {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>無法檢索發佈資訊</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>無法連接到github api：{error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>下載Rimsort {tag_name}版本...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>提取更新文件...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>正在準備更新安裝程序...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5106,46 +5082,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>創建備份...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>下載失敗</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>無法下載更新。</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>提取失敗</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>未能提取下載的更新。</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>發射失敗</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>無法啟動更新腳本。</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>更新失敗</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>更新過程中發生了意外錯誤。</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>無法檢索最新版本的資訊</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>請檢查您的Internet連接並重試，您還可以直接檢查'https://github.com/rimsort/rimsort/releases'。</translation>
     </message>
 </context>
 <context>

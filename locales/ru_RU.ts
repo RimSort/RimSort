@@ -5039,18 +5039,6 @@ Details: {e}</source>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Обновление пропущено</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Вы бежите от интерпретатора Python.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Пропустить проверку обновления ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Обновление Rimsort найдено</translation>
     </message>
@@ -5065,28 +5053,16 @@ Do you want to update now?</source>
 Вы хотите обновить сейчас?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>Невозможно завершить обновление</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Не удалось найти действительный выпуск Rimsort для  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Невозможно получить информацию о выпуске</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Не удалось подключиться к API GitHub:  {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Загрузка rimsort  релиз ... {tag_name}</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Извлечение файлов обновления ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Подготовка установщика обновления...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5099,46 +5075,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>Создание резервной копии ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>Скачать не удалась</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>Не удалось скачать обновление.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>Извлечение не удалось</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>Не удалось извлечь загруженное обновление.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>Запуск не удался</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>Не удалось запустить сценарий обновления.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>Обновление не удалось</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Неожиданная ошибка произошла во время процесса обновления.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Невозможно получить информацию о последнем выпуске</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Пожалуйста, проверьте подключение к Интернету и попробуйте еще раз, вы также можете проверить «https://github.com/rimsort/rimsort/releases» напрямую.</translation>
     </message>
 </context>
 <context>

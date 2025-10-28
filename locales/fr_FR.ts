@@ -5020,18 +5020,6 @@ Détails: {e}</translation>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>Mise à jour ignorée</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Vous courez à partir de l'interprète Python.</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>Sauter la mise à jour Vérifier ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Mise à jour Rimsort trouvée</translation>
     </message>
@@ -5046,28 +5034,16 @@ Do you want to update now?</source>
 Voulez-vous mettre à jour maintenant?</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>Impossible de terminer la mise à jour</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>Échec pour trouver une version de rimsort valide pour  {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>Impossible de récupérer les informations de version</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Échec de la connexion à l'API GitHub: {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Téléchargement de la version Rimsort  ... {tag_name}</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>Extraction de fichiers de mise à jour ...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>Préparation du programme d'installation de la mise à jour...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5080,46 +5056,6 @@ Voulez-vous mettre à jour maintenant?</translation>
     <message>
         <source>Creating backup...</source>
         <translation>Création de sauvegarde ...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>Échec du téléchargement</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>Échec de la mise à jour.</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>Extraction a échoué</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>Échec de l'extraction de la mise à jour téléchargée.</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>Le lancement a échoué</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>Échec du lancement du script de mise à jour.</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>La mise à jour a échoué</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>Une erreur inattendue s'est produite pendant le processus de mise à jour.</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>Impossible de récupérer les dernières informations de version</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>Veuillez vérifier votre connexion Internet et réessayer, vous pouvez également vérifier directement 'https://github.com/rimsort/rimsort/releases.</translation>
     </message>
 </context>
 <context>

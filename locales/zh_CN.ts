@@ -5045,18 +5045,6 @@ Details: {e}</source>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>更新跳过</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>您正在从Python解释器中运行。</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>跳过更新检查...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>Rimsort更新发现</translation>
     </message>
@@ -5071,28 +5059,16 @@ Do you want to update now?</source>
 您现在要更新吗？ {current_version}</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>无法完成更新</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>无法找到的有效Rimsort版本 {system_info}</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>无法检索发布信息</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>无法连接到github api：{error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>下载Rimsort {tag_name}版本...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>提取更新文件...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>正在准备更新安装程序...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5105,46 +5081,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>创建备份...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>下载失败</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>无法下载更新。</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>提取失败</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>未能提取下载的更新。</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>发射失败</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>无法启动更新脚本。</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>更新失败</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>更新过程中发生了意外错误。</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>无法检索最新版本的信息</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>请检查您的Internet连接并重试，您还可以直接检查'https://github.com/rimsort/rimsort/releases'。</translation>
     </message>
 </context>
 <context>

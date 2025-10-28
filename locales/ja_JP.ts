@@ -5040,18 +5040,6 @@ Details: {e}</source>
 <context>
     <name>UpdateManager</name>
     <message>
-        <source>Update skipped</source>
-        <translation>更新がスキップされました</translation>
-    </message>
-    <message>
-        <source>You are running from Python interpreter.</source>
-        <translation>Pythonインタープリターから走っています。</translation>
-    </message>
-    <message>
-        <source>Skipping update check...</source>
-        <translation>更新チェックをスキップ...</translation>
-    </message>
-    <message>
         <source>RimSort update found</source>
         <translation>RIMSORTアップデートが見つかりました</translation>
     </message>
@@ -5066,28 +5054,16 @@ Do you want to update now?</source>
 今すぐ更新しますか？</translation>
     </message>
     <message>
-        <source>Unable to complete update</source>
-        <translation>更新を完了できません</translation>
-    </message>
-    <message>
-        <source>Failed to find valid RimSort release for {system_info}</source>
-        <translation>{system_info}の有効なrimsortリリースを見つけることができませんでした</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve release information</source>
-        <translation>リリース情報を取得できません</translation>
-    </message>
-    <message>
-        <source>Failed to connect to GitHub API: {error}</source>
-        <translation>Github APIに接続できなかった： {error}</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>rimsort {tag_name}リリースのダウンロード...</translation>
     </message>
     <message>
         <source>Extracting update files...</source>
         <translation>更新ファイルの抽出...</translation>
+    </message>
+    <message>
+        <source>Preparing update installer...</source>
+        <translation>アップデートインストーラーを準備しています...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5100,46 +5076,6 @@ Do you want to update now?</source>
     <message>
         <source>Creating backup...</source>
         <translation>バックアップの作成...</translation>
-    </message>
-    <message>
-        <source>Download failed</source>
-        <translation>ダウンロードが失敗しました</translation>
-    </message>
-    <message>
-        <source>Failed to download the update.</source>
-        <translation>更新をダウンロードできませんでした。</translation>
-    </message>
-    <message>
-        <source>Extraction failed</source>
-        <translation>抽出に失敗しました</translation>
-    </message>
-    <message>
-        <source>Failed to extract the downloaded update.</source>
-        <translation>ダウンロードされた更新を抽出できませんでした。</translation>
-    </message>
-    <message>
-        <source>Launch failed</source>
-        <translation>起動に失敗しました</translation>
-    </message>
-    <message>
-        <source>Failed to launch the update script.</source>
-        <translation>更新スクリプトの起動に失敗しました。</translation>
-    </message>
-    <message>
-        <source>Update failed</source>
-        <translation>更新に失敗しました</translation>
-    </message>
-    <message>
-        <source>An unexpected error occurred during the update process.</source>
-        <translation>更新プロセス中に予期しないエラーが発生しました。</translation>
-    </message>
-    <message>
-        <source>Unable to retrieve latest release information</source>
-        <translation>最新リリース情報を取得できません</translation>
-    </message>
-    <message>
-        <source>Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.</source>
-        <translation>インターネット接続を確認して再試行してください。「https://github.com/rimsort/rimsort/releases」を直接確認することもできます。</translation>
     </message>
 </context>
 <context>
