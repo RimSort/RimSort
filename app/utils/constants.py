@@ -81,6 +81,9 @@ KNOWN_MOD_REPLACEMENTS = {
     "aoba.motorization.engine": {"rimthunder.core"},
 }
 KNOWN_TIER_ZERO_MODS = {
+    "zetrith.prepatcher",
+    "brrainz.harmony",
+    "brrainz.visualexceptions",
     "ludeon.rimworld",
     "ludeon.rimworld.royalty",
     "ludeon.rimworld.ideology",
@@ -89,5 +92,17 @@ KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld.odyssey",
 }
 KNOWN_TIER_ONE_MODS = {
+    "adaptive.storage.framework",
+    "aoba.framework",
+    "aoba.exosuit.framework",
+    "ebsg.framework",
+    "imranfish.xmlextensions",
+    "thesepeople.ritualattachableoutcomes",
+    "ohno.asf.ab.local",
+    "oskarpotocki.vanillafactionsexpanded.core",
+    "owlchemist.cherrypicker",
+    "redmattis.betterprerequisites",
+    "smashphil.vehicleframework",
     "unlimitedhugs.hugslib",
+    "vanillaexpanded.backgrounds",
 }
