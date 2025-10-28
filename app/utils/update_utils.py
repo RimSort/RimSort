@@ -184,7 +184,9 @@ class ScriptConfig:
             Arguments string or list for subprocess
         """
         base_args = [str(script_path), str(temp_path), str(log_path)]
-        if install_dir and self.platform == "Linux":
+        if self.platform == "Windows":
+            base_args.append(str(AppInfo().application_folder))
+        elif install_dir and self.platform == "Linux":
             base_args.append(str(install_dir))
 
         return self._build_platform_args(base_args, script_path, needs_elevation)
@@ -221,7 +223,13 @@ class ScriptConfig:
                     '-Verb RunAs -WindowStyle Normal"'
                 )
             else:
-                return ["cmd", "/k"] + base_args
+                return [
+                    "cmd",
+                    "/k",
+                    str(script_path),
+                    str(base_args[1]),
+                    str(base_args[2]),
+                ]
         elif self.platform == "Linux":
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
             if needs_elevation:
@@ -1337,6 +1345,34 @@ class UpdateManager(QObject):
                 self._get_script_info(update_source_path, log_path, needs_elevation)
             )
 
+            # For Windows, copy update.bat to app_storage_folder to avoid conflicts during update
+            if self._system == "Windows":
+                app_storage_folder = AppInfo().app_storage_folder
+                temp_script_path = app_storage_folder / "update.bat"
+
+                # Copy update.bat to app storage folder
+                try:
+                    shutil.copy2(str(script_path), str(temp_script_path))
+                    logger.debug(
+                        f"Copied update.bat to app storage: {temp_script_path}"
+                    )
+                    script_path = temp_script_path
+
+                    # Rebuild args with new script path
+                    config = self._script_configs[self._system]
+                    args_repr = config.get_args(
+                        script_path,
+                        update_source_path,
+                        log_path,
+                        needs_elevation,
+                        install_dir,
+                    )
+                    logger.debug(f"Updated script path to: {script_path}")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to copy update.bat to app storage, using original: {e}"
+                    )
+
             if self._system == "Windows":
                 p = self._launch_windows_update_script(
                     script_path, args_repr, needs_elevation
@@ -1386,15 +1422,29 @@ class UpdateManager(QObject):
                 cwd=cwd,
             )
         else:
-            # Run normally with new process group
-            creationflags_value = (
-                subprocess.CREATE_NEW_PROCESS_GROUP
-                if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP")
-                else 0
-            )
+            # Convert list args to string command for proper window display and argument passing
+            if isinstance(args_repr, list):
+                # Build command string with proper quoting for paths with spaces
+                cmd_parts = []
+                for arg in args_repr:
+                    arg_str = str(arg)
+                    # Quote arguments that contain spaces
+                    if " " in arg_str:
+                        cmd_parts.append(f'"{arg_str}"')
+                    else:
+                        cmd_parts.append(arg_str)
+                cmd_str = " ".join(cmd_parts)
+            else:
+                cmd_str = args_repr
+
+            logger.debug(f"Launching update script with command: {cmd_str}")
+
+            # Use 'start' command to ensure visible console window
+            start_cmd = f'start "RimSort Update" /D "{cwd}" {cmd_str}'
+            logger.debug(f"Using start command: {start_cmd}")
+
             p = subprocess.Popen(
-                args_repr,
-                creationflags=creationflags_value,
+                start_cmd,
                 shell=True,
                 cwd=cwd,
             )
@@ -1516,7 +1566,7 @@ class UpdateManager(QObject):
         try:
             with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
                 lf.write(
-                    f"\n===== RimSort updater launched: {datetime.now().isoformat()} ({system}) =====\n"
+                    f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"
                 )
         except Exception:
             # Non-fatal; continue without preface
