@@ -691,7 +691,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
         try:  # Parse the JSON response
             json_response = request.json()
             logger.debug(json_response)
-            if json_response.get("response", {}).get("resultcount") > 0:
+            if json_response.get("response", {}).get("resultcount", 0) > 0:
                 for mod_metadata in json_response["response"]["collectiondetails"]:
                     metadata.append(mod_metadata)
         except requests.exceptions.JSONDecodeError as e:
@@ -734,7 +734,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             return None
         try:  # Parse the JSON response
             json_response = request.json()
-            if json_response.get("response", {}).get("resultcount") > 0:
+            if json_response.get("response", {}).get("resultcount", 0) > 0:
                 for mod_metadata in json_response["response"]["publishedfiledetails"]:
                     metadata.append(mod_metadata)
         except requests.exceptions.JSONDecodeError as e:
