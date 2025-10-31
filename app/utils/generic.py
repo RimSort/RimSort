@@ -215,6 +215,49 @@ def handle_remove_read_only(
             raise
 
 
+def get_executable_path(game_install_path: Path) -> str | None:
+    """
+    Determine the executable path for RimWorld based on the platform.
+
+    :param game_install_path: Path to the game folder.
+    :return: Executable path as string or None if not found.
+    """
+    system_name = platform.system()
+
+    # Define platform-specific executable checks
+    platform_checks = {
+        "Darwin": lambda p: str(p) if p.suffix == ".app" and p.is_dir() else None,
+        "Linux": lambda p: next(
+            (
+                str(exe)
+                for exe in [
+                    p / "RimWorldLinux",
+                    p / "RimWorldWin64.exe",
+                    p / "RimWorldWin.exe",
+                ]
+                if exe.exists()
+                and (exe.name != "RimWorldLinux" or os.access(exe, os.X_OK))
+            ),
+            None,
+        ),
+        "Windows": lambda p: next(
+            (
+                str(exe)
+                for exe in [p / "RimWorldWin64.exe", p / "RimWorldWin.exe"]
+                if exe.exists()
+            ),
+            None,
+        ),
+    }
+
+    check_func = platform_checks.get(system_name)
+    if check_func:
+        return check_func(game_install_path)
+    else:
+        logger.error(f"Unsupported platform for game launch: {system_name}")
+        return None
+
+
 def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
@@ -227,61 +270,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     :param game_install_path: is a path to the game folder
     :param args: is a list of strings representing the args to pass to the generated executable path
     """
-    logger.info(f"Attempting to find the game in the game folder {game_install_path}")
-    if game_install_path:
-        system_name = platform.system()
-        if system_name == "Darwin":
-            # MacOS
-            executable_path = str(game_install_path)
-        elif system_name == "Linux":
-            # Linux
-            executable_path = str((game_install_path / "RimWorldLinux"))
-        elif system_name == "Windows":
-            # Windows
-            path64 = game_install_path / "RimWorldWin64.exe"
-            path32 = game_install_path / "RimWorldWin.exe"
-
-            executable_path = str(path64)  # default to 64-bit executable
-            if (
-                not path64.exists() and path32.exists()
-            ):  # look for and set path to 86x executable only if default doesn't exist
-                executable_path = str(path32)
-
-        else:
-            logger.error("Unable to launch the game on an unknown system")
-            return
-
-        logger.info(f"Path to game executable generated: {executable_path}")
-        if os.path.exists(executable_path):
-            logger.info(
-                "Launching the game with subprocess.Popen(): `"
-                + executable_path
-                + "` with args: `"
-                + str(args)
-                + "`"
-            )
-            pid, popen_args = launch_process(
-                executable_path, args, str(game_install_path)
-            )
-            logger.info(
-                f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
-            )
-        else:
-            logger.debug("The game executable path does not exist")
-            dialogue.show_warning(
-                title=translate("launch_game_process", "File not found"),
-                text=translate("launch_game_process", "Unable to launch game process"),
-                information=(
-                    translate(
-                        "launch_game_process",
-                        "RimSort could not start RimWorld as the game executable does "
-                        "not exist at the specified path: {executable_path}. Please check "
-                        "that this directory is correct and the RimWorld game executable "
-                        "exists in it.",
-                    ).format(executable_path=executable_path)
-                ),
-            )
-    else:
+    if not game_install_path:
         logger.error("The path to the game folder is empty")
         dialogue.show_warning(
             title=translate("launch_game_process", "Game launch failed"),
@@ -294,6 +283,33 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                 ).format(game_install_path=game_install_path)
             ),
         )
+        return
+
+    logger.info(f"Attempting to launch the game from folder {game_install_path}")
+
+    # Get the executable path
+    executable_path = get_executable_path(game_install_path)
+    if not executable_path:
+        logger.error("Game executable validation failed - no valid executable found")
+        dialogue.show_warning(
+            title=translate("launch_game_process", "Invalid game folder"),
+            text=translate("launch_game_process", "Unable to launch RimWorld"),
+            information=(
+                translate(
+                    "launch_game_process",
+                    "RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.",
+                ).format(game_install_path=game_install_path)
+            ),
+        )
+        return
+
+    logger.info(
+        f"Launching the game with subprocess.Popen(): `{executable_path}` with args: {args}"
+    )
+    pid, popen_args = launch_process(executable_path, args, str(game_install_path))
+    logger.info(
+        f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
+    )
 
 
 def validate_game_executable(game_folder: str) -> bool:
@@ -303,31 +319,28 @@ def validate_game_executable(game_folder: str) -> bool:
     :param game_folder: Path to the game folder as a string.
     :return: True if a valid executable is found, False otherwise.
     """
+    if not game_folder or not game_folder.strip():
+        logger.info("Game folder path is empty or None")
+        return False
+
     game_install_path = Path(game_folder)
     if not game_install_path.exists() or not game_install_path.is_dir():
+        logger.info(
+            f"Game folder does not exist or is not a directory: {game_install_path}"
+        )
         return False
+
+    # Use the new get_executable_path function for validation
+    executable_path = get_executable_path(game_install_path)
+    if executable_path:
+        logger.debug(f"Valid RimWorld executable found: {executable_path}")
+        return True
 
     system_name = platform.system()
-    if system_name == "Darwin":
-        # MacOS
-        executable_path = str(game_install_path)
-        return os.path.exists(executable_path)
-    elif system_name == "Linux":
-        # Linux
-        executable_path = str((game_install_path / "RimWorldLinux"))
-        return os.path.exists(executable_path)
-    elif system_name == "Windows":
-        # Windows
-        path64 = game_install_path / "RimWorldWin64.exe"
-        path32 = game_install_path / "RimWorldWin.exe"
-
-        executable_path = str(path64)  # default to 64-bit executable
-        if not path64.exists() and path32.exists():
-            # look for and set path to 86x executable only if default doesn't exist
-            executable_path = str(path32)
-        return os.path.exists(executable_path)
-    else:
-        return False
+    logger.info(
+        f"No valid RimWorld executable found for {system_name} in: {game_install_path}"
+    )
+    return False
 
 
 def launch_process(
