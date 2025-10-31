@@ -1375,6 +1375,92 @@ class MainContent(QObject):
         )
         copy_to_clipboard_safely(active_mods_clipboard_report)
 
+    def _build_rentry_report(
+        self,
+        mods: list[str],
+        active_mods_packageid_to_uuid: dict[str, str],
+        active_steam_mods_packageid_to_pfid: dict[str, str],
+        active_steam_mods_pfid_to_preview_url: dict[str, str],
+        truncated: bool = False,
+    ) -> str:
+        truncated_note = " (truncated)" if truncated else ""
+        active_mods_rentry_report = (
+            "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
+            + f"\nCreated with RimSort {AppInfo().app_version}"
+            + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
+            + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
+            + f"\n\n\n\n!!! note Mod list length: `{len(mods)}`{truncated_note}\n"
+        )
+        # Add a line for each mod
+        for package_id in mods:
+            count = mods.index(package_id) + 1
+            uuid = active_mods_packageid_to_uuid[package_id]
+            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
+                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
+            else:
+                name = "No name specified"
+            if (
+                self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
+                or self.metadata_manager.internal_local_metadata[uuid]["data_source"]
+                == "workshop"
+            ) and active_steam_mods_packageid_to_pfid.get(package_id):
+                pfid = active_steam_mods_packageid_to_pfid[package_id]
+                if active_steam_mods_pfid_to_preview_url.get(pfid):
+                    preview_url = (
+                        active_steam_mods_pfid_to_preview_url[pfid]
+                        + "?imw=100&imh=100&impolicy=Letterbox"
+                    )
+                else:
+                    preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
+                if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid][
+                        "steam_url"
+                    ]
+                elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
+                else:
+                    url = None
+                if url is None:
+                    if package_id in active_steam_mods_packageid_to_pfid.keys():
+                        active_mods_rentry_report = (
+                            active_mods_rentry_report
+                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageid: {package_id}"
+                        )
+                else:
+                    if package_id in active_steam_mods_packageid_to_pfid.keys():
+                        active_mods_rentry_report = (
+                            active_mods_rentry_report
+                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
+                        )
+            else:
+                if self.metadata_manager.internal_local_metadata[uuid].get("url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
+                elif self.metadata_manager.internal_local_metadata[uuid].get(
+                    "steam_url"
+                ):
+                    url = self.metadata_manager.internal_local_metadata[uuid][
+                        "steam_url"
+                    ]
+                else:
+                    url = None
+                if url is None:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} {name} "
+                        + "{"
+                        + f"packageid: {package_id}"
+                        + "} "
+                    )
+                else:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
+                        + "{"
+                        + f"packageid: {package_id}"
+                        + "} "
+                    )
+        return active_mods_rentry_report
+
     def _do_upload_list_rentry(self) -> None:
         """
         Export the current list of active mods to the clipboard in a
@@ -1432,86 +1518,66 @@ class MainContent(QObject):
                         active_steam_mods_pfid_to_preview_url[pfid] = metadata[
                             "preview_url"
                         ]
-        # Build our report
-        active_mods_rentry_report = (
-            "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {AppInfo().app_version}"
-            + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
-            + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
-            + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
+        # Build our report using the helper method
+        active_mods_rentry_report = self._build_rentry_report(
+            active_mods,
+            active_mods_packageid_to_uuid,
+            active_steam_mods_packageid_to_pfid,
+            active_steam_mods_pfid_to_preview_url,
         )
-        # Add a line for each mod
-        for package_id in active_mods:
-            count = active_mods.index(package_id) + 1
-            uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
-                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
+        # Check report length and offer truncation if necessary
+        if len(active_mods_rentry_report) > 200000:
+            # Calculate the maximum number of mods that can fit within 200,000 characters
+            max_mods = 0
+            for i in range(1, len(active_mods) + 1):
+                test_mods = active_mods[:i]
+                test_report = self._build_rentry_report(
+                    test_mods,
+                    active_mods_packageid_to_uuid,
+                    active_steam_mods_packageid_to_pfid,
+                    active_steam_mods_pfid_to_preview_url,
+                    truncated=True,
+                )
+                if len(test_report) > 200000:
+                    max_mods = i - 1
+                    break
+                max_mods = i
+            if max_mods == 0:
+                dialogue.show_warning(
+                    title=self.tr("Report too long"),
+                    text=self.tr(
+                        "Even the first mod exceeds the 200,000 character limit."
+                    ),
+                    information=self.tr("Cannot upload this report to Rentry.co."),
+                )
+                return
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Report too long"),
+                text=self.tr("The mod list report exceeds 200,000 characters."),
+                information=self.tr(
+                    "Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?"
+                ).format(max_mods=max_mods),
+                button_text_override=[
+                    self.tr("Truncate to the first {max_mods} mods").format(
+                        max_mods=max_mods
+                    )
+                ],
+            )
+            if answer == self.tr("Truncate to the first {max_mods} mods").format(
+                max_mods=max_mods
+            ):
+                # Rebuild report with the maximum number of mods that fit
+                truncated_mods = active_mods[:max_mods]
+                active_mods_rentry_report = self._build_rentry_report(
+                    truncated_mods,
+                    active_mods_packageid_to_uuid,
+                    active_steam_mods_packageid_to_pfid,
+                    active_steam_mods_pfid_to_preview_url,
+                    truncated=True,
+                )
             else:
-                name = "No name specified"
-            if (
-                self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
-                or self.metadata_manager.internal_local_metadata[uuid]["data_source"]
-                == "workshop"
-            ) and active_steam_mods_packageid_to_pfid.get(package_id):
-                pfid = active_steam_mods_packageid_to_pfid[package_id]
-                if active_steam_mods_pfid_to_preview_url.get(pfid):
-                    preview_url = (
-                        active_steam_mods_pfid_to_preview_url[pfid]
-                        + "?imw=100&imh=100&impolicy=Letterbox"
-                    )
-                else:
-                    preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
-                if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                else:
-                    url = None
-                if url is None:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageid: {package_id}"
-                        )
-                else:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
-                        )
-            # if active_mods_json[uuid]["data_source"] == "expansion" or (
-            #     active_mods_json[uuid]["data_source"] == "local"
-            #     and not active_mods_json[uuid].get("steamcmd")
-            # ):
-            else:
-                if self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                elif self.metadata_manager.internal_local_metadata[uuid].get(
-                    "steam_url"
-                ):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                else:
-                    url = None
-                if url is None:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} {name} "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-                else:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
+                logger.info("USER ACTION: cancelled truncation, passing")
+                return
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         successful = rentry_uploader.upload_success
