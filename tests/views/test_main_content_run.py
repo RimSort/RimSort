@@ -28,10 +28,11 @@ class DummySettings:
         self.save_inactive_mods_sort_state = False
         self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
         self.inactive_mods_sort_descending = True
-        # Instance data with dummy game_folder and run_args
+        # Instance data with dummy game_folder, config_folder and run_args
         self.instances = {
             "inst1": SimpleNamespace(
                 game_folder="/fake/path",
+                config_folder="/fake/config",
                 run_args=["--test"],
                 steam_client_integration=False,
             )
@@ -112,6 +113,10 @@ def main_content(
     # Patch _do_save to capture calls
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
+    # Mock check_if_essential_paths_are_set to return True
+    monkeypatch.setattr(
+        mc, "check_if_essential_paths_are_set", lambda prompt=True: True
+    )
 
     yield mc, save_calls
 
