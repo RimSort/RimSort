@@ -3134,6 +3134,9 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        if not self.check_if_essential_paths_are_set(prompt=True):
+            return
+
         create_backup_in_thread(self.settings_controller.settings)
 
         if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
@@ -3143,10 +3146,17 @@ class MainContent(QObject):
                 button_text_override=[self.tr("Save and Run"), self.tr("Run Anyway")],
             )
             if answer == self.tr("Save and Run"):
+                logger.info(
+                    "User chose to save before proceeding with running the game."
+                )
                 self._do_save()
             elif answer == self.tr("Run Anyway"):
+                logger.info(
+                    "User chose to ignore unsaved changes and proceed with running the game anyway."
+                )
                 pass
             elif answer == QMessageBox.StandardButton.Cancel:
+                logger.info("User chose to cancel.")
                 return
 
         current_instance = self.settings_controller.settings.current_instance
@@ -3181,6 +3191,7 @@ class MainContent(QObject):
             steam_appid_path.unlink()
 
         # Launch independent game process without Steamworks API
+        logger.info("Launching game process without Steamworks API...")
         launch_game_process(game_install_path=game_install_path, args=run_args)
 
     @Slot()
