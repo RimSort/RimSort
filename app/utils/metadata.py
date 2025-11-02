@@ -46,10 +46,14 @@ from app.views.dialogue import (
 
 
 class ModReplacement:
-    def __init__(self, name: str, author: str, pfid: str):
+    def __init__(
+        self, name: str, author: str, packageid: str, pfid: str, supportedversions: str
+    ):
         self.name = name
         self.author = author
+        self.packageid = packageid
         self.pfid = pfid
+        self.supportedversions = supportedversions
 
 
 # TODO: Someday, it is probably worth typing out the keys
@@ -1452,7 +1456,9 @@ class MetadataManager(QObject):
         return ModReplacement(
             name=replacement_data["ReplacementName"],
             author=replacement_data["ReplacementAuthor"],
+            packageid=replacement_data["ReplacementModId"],
             pfid=replacement_data["ReplacementSteamId"],
+            supportedversions=replacement_data["ReplacementVersions"],
         )
 
     def process_batch(
