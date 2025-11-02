@@ -59,12 +59,14 @@ class ModDeletionMenu(QMenu):
         enable_delete_dds_only: bool = True,
         enable_delete_and_unsubscribe: bool = True,
         enable_delete_and_resubscribe: bool = True,
+        completion_callback: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
+        self.completion_callback = completion_callback
         self._actions_initialized = False
 
         # Debug logging for remove_from_uuids
@@ -291,6 +293,10 @@ class ModDeletionMenu(QMenu):
                         f"Failed to delete {result.failed_count} mod(s). Check logs for details."
                     ),
                 )
+
+        # Call completion callback if provided
+        if self.completion_callback:
+            self.completion_callback()
 
     def _iterate_mods(
         self,

@@ -557,24 +557,16 @@ class MainContent(QObject):
         # self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __duplicate_mods_prompt(self) -> None:
-        list_of_duplicate_mods = "\n".join(
-            [f"* {mod}" for mod in self.duplicate_mods.keys()]
+        """
+        Opens the DuplicateModsPanel to allow user to resolve duplicate mods.
+        """
+        from app.windows.duplicate_mods_panel import DuplicateModsPanel
+
+        duplicate_mods_panel = DuplicateModsPanel(
+            self.duplicate_mods, self.settings_controller
         )
-        dialogue.show_warning(
-            title=self.tr("Duplicate mod(s) found"),
-            text=self.tr(
-                "Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)"
-            ),
-            information=(
-                self.tr(
-                    "The following list of mods were set active in your ModsConfig.xml and "
-                    "duplicate instances were found of these mods in your mod data sources. "
-                    "The vanilla game will use the first 'local mod' of a particular package ID "
-                    "that is found - so RimSort will also adhere to this logic."
-                )
-            ),
-            details=list_of_duplicate_mods,
-        )
+        duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
+        duplicate_mods_panel.show()
 
     def __missing_mods_prompt(self) -> None:
         logger.debug(f"Could not find data for {len(self.missing_mods)} active mods")

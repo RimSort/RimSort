@@ -187,8 +187,8 @@ class BaseModsPanel(QWidget):
                 checkbox = self.editor_table_view.indexWidget(
                     self.editor_model.item(row, 0).index()
                 )
-                assert isinstance(checkbox, QCheckBox)
-                checkbox.setChecked(value)
+                if isinstance(checkbox, QCheckBox):
+                    checkbox.setChecked(value)
 
     def _row_count(self) -> int:
         return self.editor_model.rowCount()
