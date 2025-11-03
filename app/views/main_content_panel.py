@@ -86,7 +86,7 @@ from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
-from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
+from app.windows.workshop_mod_updater_panel import WorkshopModUpdaterPanel
 
 
 class MainContent(QObject):
@@ -2045,7 +2045,7 @@ class MainContent(QObject):
                 information=self.tr("Are you connected to the Internet?"),
             )
             return
-        workshop_mod_updater = ModUpdaterPrompt()
+        workshop_mod_updater = WorkshopModUpdaterPanel()
         workshop_mod_updater._populate_from_metadata()
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
