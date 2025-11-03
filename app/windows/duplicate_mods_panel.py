@@ -8,6 +8,7 @@ from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QPushButton, QToolButton
 
 from app.controllers.settings_controller import SettingsController
+from app.utils.acf_utils import load_acf_data
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager, ModMetadata
@@ -203,19 +204,11 @@ class DuplicateModsPanel(BaseModsPanel):
     def _load_acf_data(self) -> None:
         """
         Load ACF data to get timeupdated timestamps for mods from MetadataManager.
-        """
-        # Ensure ACF data is loaded
-        self.mm.refresh_acf_metadata()
 
-        # Directly build timeupdated_data from merged ACF sources
-        for acf_data in [self.mm.steamcmd_acf_data, self.mm.workshop_acf_data]:
-            if acf_data:
-                workshop_items = acf_data.get("AppWorkshop", {}).get(
-                    "WorkshopItemsInstalled", {}
-                )
-                for pfid, item in workshop_items.items():
-                    if isinstance(item, dict) and "timeupdated" in item:
-                        self.timeupdated_data[str(pfid)] = item["timeupdated"]
+        This method uses the shared ACF utility function to load and build
+        a dictionary of timeupdated timestamps from ACF data sources.
+        """
+        self.timeupdated_data = load_acf_data(self.mm)
 
     def get_relative_time(self, timestamp: int) -> str:
         """
