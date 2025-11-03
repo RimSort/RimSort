@@ -191,6 +191,66 @@
     </message>
 </context>
 <context>
+    <name>DuplicateModsPanel</name>
+    <message>
+        <source>Mod Name</source>
+        <translation>MOD名</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>著者</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>パッケージID</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>公開ファイルID</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>ソース</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Modのダウンロード</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>パス</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>ワークショップページ</translation>
+    </message>
+    <message>
+        <source>RimSort - Duplicate Mods Found</source>
+        <translation>rimSort - 重複した Mod が見つかりました</translation>
+    </message>
+    <message>
+        <source>Duplicate mods detected!</source>
+        <translation>重複した MOD が検出されました。</translation>
+    </message>
+    <message>
+        <source>
+The following table displays duplicate mods grouped by package ID. Select which versions to keep and choose an action.</source>
+        <translation>次の表は、重複する MOD をパッケージ ID ごとにグループ化して表示します。保持するバージョンを選択し、アクションを選択します。</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>消去</translation>
+    </message>
+    <message>
+        <source>Delete Selected Duplicates...</source>
+        <translation>選択した重複を削除...</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>ワークショップページを開く</translation>
+    </message>
+</context>
+<context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
@@ -590,18 +650,6 @@ Would you like to configure them now?</source>
 今すぐ構成しますか？</translation>
     </message>
     <message>
-        <source>Duplicate mod(s) found</source>
-        <translation>重複するモッドが見つかりました</translation>
-    </message>
-    <message>
-        <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation>ModsConfig.xml（アクティブモッドリスト）にあるパッケージIDの重複モッドが見つかりました</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first 'local mod' of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation>以下のモッドはModsConfig.xmlでアクティブに設定されており、モッドデータソースに重複するインスタンスが見つかりました。バニラゲームは、見つかった特定のパッケージIDの最初の「ローカルモッド」を使用します。したがって、RimSortもこのロジックに従います。</translation>
-    </message>
-    <message>
         <source>Could not find data for some mods!</source>
         <translation>一部のモッドのデータが見つかりませんでした！</translation>
     </message>
@@ -676,6 +724,30 @@ Are your game configuration paths correct?</source>
     <message>
         <source>Click "Show Details" to see the full report!</source>
         <translation>「詳細を表示」をクリックして、完全なレポートを表示してください！</translation>
+    </message>
+    <message>
+        <source>Report too long</source>
+        <translation>レポートが長すぎます</translation>
+    </message>
+    <message>
+        <source>Even the first mod exceeds the 200,000 character limit.</source>
+        <translation>最初のMODでも20万文字制限を超えています。</translation>
+    </message>
+    <message>
+        <source>Cannot upload this report to Rentry.co.</source>
+        <translation>このレポートは Rentry.co にアップロードできません。</translation>
+    </message>
+    <message>
+        <source>The mod list report exceeds 200,000 characters.</source>
+        <translation>MODリストレポートは20万文字を超えています。</translation>
+    </message>
+    <message>
+        <source>Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?</source>
+        <translation>Rentry.co は長すぎるアップロードを拒否する場合があります。レポートを最初の {max_mods} 個の MOD まで切り詰めますか、それともアップロードをキャンセルしますか?</translation>
+    </message>
+    <message>
+        <source>Truncate to the first {max_mods} mods</source>
+        <translation>最初の {max_mods} 個の MOD まで切り詰めます</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
@@ -2875,17 +2947,6 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>テキストエディターのオープンフォルダー</translation>
-    </message>
-</context>
-<context>
-    <name>ModUpdaterPrompt</name>
-    <message>
-        <source>Update mods</source>
-        <translation>MODを更新</translation>
-    </message>
-    <message>
-        <source>Update all</source>
-        <translation>すべてを更新</translation>
     </message>
 </context>
 <context>
@@ -5089,40 +5150,6 @@ Do you want to update now?</source>
         <translation>ワークショップMODの置き換えが利用可能です！</translation>
     </message>
     <message>
-        <source>
-The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
-        <translation>
-以下の表は、「これを代わりに使用」データベースに従って、提案された置き換えを持つワークショップMODを表示します</translation>
-    </message>
-    <message>
-        <source>Original Mod Name</source>
-        <translation>オリジナルMOD名</translation>
-    </message>
-    <message>
-        <source>Original Author</source>
-        <translation>オリジナル作者</translation>
-    </message>
-    <message>
-        <source>Original Workshop Page</source>
-        <translation>オリジナルワークショップページ</translation>
-    </message>
-    <message>
-        <source>Replacement Mod Name</source>
-        <translation>置き換えMOD名</translation>
-    </message>
-    <message>
-        <source>Replacement Author</source>
-        <translation>置き換え作者</translation>
-    </message>
-    <message>
-        <source>Replacement Workshop Page</source>
-        <translation>置き換えワークショップページ</translation>
-    </message>
-    <message>
-        <source>Download with SteamCMD</source>
-        <translation>SteamCMDでダウンロード</translation>
-    </message>
-    <message>
         <source>Subscribe</source>
         <translation>サブスクライブ</translation>
     </message>
@@ -5131,24 +5158,84 @@ The following table displays Workshop mods with suggested replacements according
         <translation>サブスクライブ解除</translation>
     </message>
     <message>
-        <source>Unsubscribe outdated</source>
-        <translation>古いMODをサブスクライブ解除</translation>
-    </message>
-    <message>
-        <source>Unsubscribe all outdated</source>
-        <translation>すべての古いMODをサブスクライブ解除</translation>
-    </message>
-    <message>
         <source>Refresh</source>
         <translation>更新</translation>
     </message>
     <message>
-        <source>Refresh Mod List</source>
-        <translation>MODリストを更新</translation>
+        <source>Mod Name</source>
+        <translation>MOD名</translation>
     </message>
     <message>
-        <source>Refresh Table</source>
-        <translation>テーブルを更新</translation>
+        <source>Author</source>
+        <translation>著者</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>パッケージID</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>公開ファイルID</translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation>サポートされているバージョン</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>ソース</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Modのダウンロード</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>パス</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>ワークショップページ</translation>
+    </message>
+    <message>
+        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
+        <translation>次の表は、「代わりにこれを使用する」データベースに基づいて推奨される代替品を含むワークショップ MOD を、代替 MOD ごとにグループ化して表示します。</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>選択</translation>
+    </message>
+    <message>
+        <source>Select all Originals</source>
+        <translation>すべてのオリジナルを選択</translation>
+    </message>
+    <message>
+        <source>Select all Replacements</source>
+        <translation>すべての代替品を選択</translation>
+    </message>
+    <message>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>SteamCMD で選択したダウンロード</translation>
+    </message>
+    <message>
+        <source>Download all replacements with SteamCMD</source>
+        <translation>SteamCMD を使用してすべての置換をダウンロードする</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>選択した購読を購読する</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>選択した購読を解除する</translation>
+    </message>
+    <message>
+        <source>Unsubscribe all originals</source>
+        <translation>すべてのオリジナルの購読を解除する</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -5163,20 +5250,64 @@ The following table displays Workshop mods with suggested replacements according
         <translation>これを代わりに使用</translation>
     </message>
     <message>
-        <source>Successfully subscribed to replacement mods</source>
-        <translation>置き換えMODに正常にサブスクライブしました</translation>
-    </message>
-    <message>
-        <source>Successfully unsubscribed to original mods</source>
-        <translation>オリジナルMODのサブスクライブを正常に解除しました</translation>
-    </message>
-    <message>
-        <source>Subscribe replacements</source>
-        <translation>置き換えをサブスクライブ</translation>
-    </message>
-    <message>
         <source>Subscribe all replacements</source>
         <translation>すべての置き換えをサブスクライブ</translation>
+    </message>
+    <message>
+        <source>Successfully {action}d {count} mods</source>
+        <translation>{count} 個の MOD を {action} 成功しました</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>ワークショップページを開く</translation>
+    </message>
+</context>
+<context>
+    <name>WorkshopModUpdaterPanel</name>
+    <message>
+        <source>RimSort - Updates found for Workshop mods</source>
+        <translation>rimSort - ワークショップ MOD のアップデートが見つかりました</translation>
+    </message>
+    <message>
+        <source>There updates available for Workshop mods!</source>
+        <translation>ワークショップ MOD のアップデートが利用可能です!</translation>
+    </message>
+    <message>
+        <source>
+The following table displays Workshop mods available for update from Steam.</source>
+        <translation>次の表に、Steam からアップデートできるワークショップ MOD を示します。</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>名前</translation>
+    </message>
+    <message>
+        <source>PublishedFileID</source>
+        <translation>公開ファイルID</translation>
+    </message>
+    <message>
+        <source>Mod Source</source>
+        <translation>Modソース</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Modのダウンロード</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>ワークショップについて更新しました</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>ワークショップページ</translation>
+    </message>
+    <message>
+        <source>Update Selected Mods</source>
+        <translation>選択した Mod を更新する</translation>
+    </message>
+    <message>
+        <source>Update All Mods</source>
+        <translation>すべての Mod を更新する</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
@@ -5261,18 +5392,6 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <source>File not found</source>
-        <translation>ファイルが見つかりません</translation>
-    </message>
-    <message>
-        <source>Unable to launch game process</source>
-        <translation>ゲームプロセスを起動できません</translation>
-    </message>
-    <message>
-        <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation>RimSortはRimWorldを起動できませんでした。指定されたパスにゲーム実行可能ファイルが存在しません: {executable_path}。このディレクトリが正しいことを確認し、RimWorldの実行可能ファイルが存在することを確認してください。</translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation>ゲームの起動に失敗しました</translation>
     </message>
@@ -5283,6 +5402,14 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation>RimSortはRimWorldを起動できませんでした。ゲームフォルダーが空であるか無効です: [{game_install_path}]。ゲームフォルダーが正しく設定されており、RimWorldの実行可能ファイルが存在することを確認してください。</translation>
+    </message>
+    <message>
+        <source>Invalid game folder</source>
+        <translation>無効なゲームフォルダー</translation>
+    </message>
+    <message>
+        <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
+        <translation>rimSort は、指定されたフォルダー {game_install_path} にあるrimWorld 実行可能ファイルを検証できませんでした。このディレクトリが正しく、有効なRimWorld ゲーム実行可能ファイルが含まれていることを確認してください。</translation>
     </message>
 </context>
 <context>

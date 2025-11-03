@@ -191,6 +191,66 @@
     </message>
 </context>
 <context>
+    <name>DuplicateModsPanel</name>
+    <message>
+        <source>Mod Name</source>
+        <translation>Имя мода</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Автор</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>Идентификатор пакета</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>Опубликованныйфилеид</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Источник</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Скачать мод</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>Путь</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Страница мастерской</translation>
+    </message>
+    <message>
+        <source>RimSort - Duplicate Mods Found</source>
+        <translation>RimSort — найдены повторяющиеся моды</translation>
+    </message>
+    <message>
+        <source>Duplicate mods detected!</source>
+        <translation>Обнаружены дубликаты модов!</translation>
+    </message>
+    <message>
+        <source>
+The following table displays duplicate mods grouped by package ID. Select which versions to keep and choose an action.</source>
+        <translation>В следующей таблице показаны повторяющиеся моды, сгруппированные по идентификатору пакета.Выберите, какие версии сохранить, и выберите действие.</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Delete Selected Duplicates...</source>
+        <translation>Удалить выбранные дубликаты...</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>Открыть страницу мастерской</translation>
+    </message>
+</context>
+<context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
@@ -592,18 +652,6 @@ Would you like to configure them now?</source>
 Хотите настроить их сейчас?</translation>
     </message>
     <message>
-        <source>Duplicate mod(s) found</source>
-        <translation>Обнаружены дублирующиеся моды</translation>
-    </message>
-    <message>
-        <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation>Обнаружены дублирующиеся моды для ID пакета в вашем ModsConfig.xml (список активных модов)</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first 'local mod' of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation>Следующий список модов был активирован в вашем ModsConfig.xml, и были найдены дублирующиеся экземпляры этих модов в ваших источниках данных модов. Обычная игра будет использовать первый 'локальный мод' определенного ID пакета, который будет найден, поэтому RimSort также будет следовать этой логике.</translation>
-    </message>
-    <message>
         <source>Could not find data for some mods!</source>
         <translation>Не удалось найти данные для некоторых модов!</translation>
     </message>
@@ -678,6 +726,30 @@ Are your game configuration paths correct?</source>
     <message>
         <source>Click "Show Details" to see the full report!</source>
         <translation>Нажмите "Показать детали", чтобы увидеть полный отчет!</translation>
+    </message>
+    <message>
+        <source>Report too long</source>
+        <translation>Отчет слишком длинный</translation>
+    </message>
+    <message>
+        <source>Even the first mod exceeds the 200,000 character limit.</source>
+        <translation>Даже первый мод превышает лимит в 200 000 символов.</translation>
+    </message>
+    <message>
+        <source>Cannot upload this report to Rentry.co.</source>
+        <translation>Невозможно загрузить этот отчет на Rentry.co.</translation>
+    </message>
+    <message>
+        <source>The mod list report exceeds 200,000 characters.</source>
+        <translation>Отчет о списке модов превышает 200 000 символов.</translation>
+    </message>
+    <message>
+        <source>Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?</source>
+        <translation>Rentry.co может отклонить слишком длинные загрузки.Хотите обрезать отчет до первых модов ({max_mods}) или отменить загрузку?</translation>
+    </message>
+    <message>
+        <source>Truncate to the first {max_mods} mods</source>
+        <translation>Усечь до первых модов: {max_mods}</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
@@ -2872,17 +2944,6 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>Открыть папки в текстовом редакторе</translation>
-    </message>
-</context>
-<context>
-    <name>ModUpdaterPrompt</name>
-    <message>
-        <source>Update mods</source>
-        <translation>Обновить моды</translation>
-    </message>
-    <message>
-        <source>Update all</source>
-        <translation>Обновить все</translation>
     </message>
 </context>
 <context>
@@ -5088,46 +5149,8 @@ Do you want to update now?</source>
         <translation>Доступны замены для модов Workshop!</translation>
     </message>
     <message>
-        <source>
-The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
-        <translation>
-Следующая таблица отображает моды Workshop с предложенными заменами согласно базе данных "Используйте это вместо"</translation>
-    </message>
-    <message>
-        <source>Original Mod Name</source>
-        <translation>Имя оригинального мода</translation>
-    </message>
-    <message>
-        <source>Original Author</source>
-        <translation>Оригинальный автор</translation>
-    </message>
-    <message>
-        <source>Original Workshop Page</source>
-        <translation>Оригинальная страница Workshop</translation>
-    </message>
-    <message>
-        <source>Replacement Mod Name</source>
-        <translation>Имя заменяющего мода</translation>
-    </message>
-    <message>
-        <source>Replacement Author</source>
-        <translation>Автор заменяющего мода</translation>
-    </message>
-    <message>
-        <source>Replacement Workshop Page</source>
-        <translation>Страница Workshop заменяющего мода</translation>
-    </message>
-    <message>
-        <source>Download with SteamCMD</source>
-        <translation>Скачать с помощью SteamCMD</translation>
-    </message>
-    <message>
         <source>Subscribe</source>
         <translation>Подписаться</translation>
-    </message>
-    <message>
-        <source>Subscribe replacements</source>
-        <translation>Подписаться на замены</translation>
     </message>
     <message>
         <source>Subscribe all replacements</source>
@@ -5138,24 +5161,84 @@ The following table displays Workshop mods with suggested replacements according
         <translation>Отписаться</translation>
     </message>
     <message>
-        <source>Unsubscribe outdated</source>
-        <translation>Отписаться от устаревших</translation>
-    </message>
-    <message>
-        <source>Unsubscribe all outdated</source>
-        <translation>Отписаться от всех устаревших</translation>
-    </message>
-    <message>
         <source>Refresh</source>
         <translation>Обновить</translation>
     </message>
     <message>
-        <source>Refresh Mod List</source>
-        <translation>Обновить список модов</translation>
+        <source>Mod Name</source>
+        <translation>Имя мода</translation>
     </message>
     <message>
-        <source>Refresh Table</source>
-        <translation>Обновить таблицу</translation>
+        <source>Author</source>
+        <translation>Автор</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>Идентификатор пакета</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>Опубликованныйфилеид</translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation>Поддерживаемые версии</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Источник</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Скачать мод</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>Путь</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Страница мастерской</translation>
+    </message>
+    <message>
+        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
+        <translation>В следующей таблице показаны моды Мастерской с предлагаемыми заменами в соответствии с базой данных «Используйте это вместо», сгруппированные по заменяющим модам.</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Выбирать</translation>
+    </message>
+    <message>
+        <source>Select all Originals</source>
+        <translation>Выбрать все оригиналы</translation>
+    </message>
+    <message>
+        <source>Select all Replacements</source>
+        <translation>Выбрать все замены</translation>
+    </message>
+    <message>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>Загрузка выбрана с помощью SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download all replacements with SteamCMD</source>
+        <translation>Загрузите все замены с помощью SteamCMD.</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>Подписаться выбрано</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>Отменить подписку выбрано</translation>
+    </message>
+    <message>
+        <source>Unsubscribe all originals</source>
+        <translation>Отписаться от всех оригиналов</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -5170,16 +5253,64 @@ The following table displays Workshop mods with suggested replacements according
         <translation>Используйте это вместо</translation>
     </message>
     <message>
-        <source>Successfully subscribed to replacement mods</source>
-        <translation>Успешно подписались на заменяющие моды</translation>
-    </message>
-    <message>
-        <source>Successfully unsubscribed to original mods</source>
-        <translation>Успешно отписались от оригинальных модов</translation>
+        <source>Successfully {action}d {count} mods</source>
+        <translation>Успешно добавлено {action} модификаций: {count}.</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
         <translation>Открыть страницу Workshop</translation>
+    </message>
+</context>
+<context>
+    <name>WorkshopModUpdaterPanel</name>
+    <message>
+        <source>RimSort - Updates found for Workshop mods</source>
+        <translation>RimSort — обнаружены обновления для модов Мастерской.</translation>
+    </message>
+    <message>
+        <source>There updates available for Workshop mods!</source>
+        <translation>Доступны обновления для модов Мастерской!</translation>
+    </message>
+    <message>
+        <source>
+The following table displays Workshop mods available for update from Steam.</source>
+        <translation>В следующей таблице показаны моды Мастерской, доступные для обновления из Steam.</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Имя</translation>
+    </message>
+    <message>
+        <source>PublishedFileID</source>
+        <translation>Опубликованныйфилеид</translation>
+    </message>
+    <message>
+        <source>Mod Source</source>
+        <translation>Источник мода</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Скачать мод</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>Обновлено в Мастерской</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Страница мастерской</translation>
+    </message>
+    <message>
+        <source>Update Selected Mods</source>
+        <translation>Обновить выбранные моды</translation>
+    </message>
+    <message>
+        <source>Update All Mods</source>
+        <translation>Обновить все моды</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>Открыть страницу мастерской</translation>
     </message>
 </context>
 <context>
@@ -5260,18 +5391,6 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <source>File not found</source>
-        <translation>Файл не найден</translation>
-    </message>
-    <message>
-        <source>Unable to launch game process</source>
-        <translation>Не удалось запустить игровой процесс</translation>
-    </message>
-    <message>
-        <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation>RimSort не удалось запустить RimWorld, так как исполняемый файл игры не существует по указанному пути: {executable_path}. Пожалуйста, проверьте, что этот каталог правильный и исполняемый файл RimWorld существует в нем.</translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation>Не удалось запустить игру</translation>
     </message>
@@ -5282,6 +5401,14 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation>RimSort не удалось запустить RimWorld, так как папка игры пуста или недействительна: [{game_install_path}]. Пожалуйста, проверьте, что папка игры правильно настроена и что исполняемый файл RimWorld существует в ней.</translation>
+    </message>
+    <message>
+        <source>Invalid game folder</source>
+        <translation>Неверная папка с игрой</translation>
+    </message>
+    <message>
+        <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
+        <translation>RimSort не удалось проверить исполняемый файл RimWorld в указанной папке: {game_install_path}.Пожалуйста, убедитесь, что этот каталог правильный и содержит действительный исполняемый файл игры RimWorld.</translation>
     </message>
 </context>
 <context>
