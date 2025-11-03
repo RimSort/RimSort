@@ -6,11 +6,13 @@ import socket
 import subprocess
 import sys
 import webbrowser
+from datetime import datetime
 from errno import EACCES
 from io import TextIOWrapper
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
+from time import localtime, strftime
 from typing import Any, Callable, Generator, Tuple
 
 import requests
@@ -757,8 +759,6 @@ def get_relative_time(timestamp: int) -> str:
         str: Human-readable relative time string, or "Invalid timestamp" if conversion fails.
     """
     try:
-        from datetime import datetime
-
         dt = datetime.fromtimestamp(timestamp)
         now = datetime.now()
         delta = now - dt
@@ -777,3 +777,25 @@ def get_relative_time(timestamp: int) -> str:
             return "Just now"
     except (ValueError, TypeError):
         return "Invalid timestamp"
+
+
+def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
+    """
+    Format a timestamp into absolute and relative time strings for display.
+
+    Args:
+        timestamp (int | None): Unix timestamp to format, or None if unknown.
+
+    Returns:
+        tuple[str, int | None]: A tuple of (formatted_time_string, timestamp).
+                                 If timestamp is None, returns ("Unknown", None).
+    """
+    if timestamp is None:
+        return "Unknown", None
+
+    try:
+        abs_time = strftime("%Y-%m-%d %H:%M:%S", localtime(timestamp))
+        rel_time = get_relative_time(timestamp)
+        return f"{abs_time} | {rel_time}", timestamp
+    except (ValueError, TypeError, OSError):
+        return "Invalid timestamp", None
