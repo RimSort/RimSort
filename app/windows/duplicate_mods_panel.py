@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QPushButton, QToolButton
 from app.controllers.settings_controller import SettingsController
 from app.utils.acf_utils import load_acf_data
 from app.utils.event_bus import EventBus
-from app.utils.generic import platform_specific_open
+from app.utils.generic import get_relative_time, platform_specific_open
 from app.utils.metadata import MetadataManager, ModMetadata
 from app.views.deletion_menu import ModDeletionMenu
 from app.windows.base_mods_panel import BaseModsPanel
@@ -138,7 +138,7 @@ class DuplicateModsPanel(BaseModsPanel):
                     try:
                         dt = datetime.fromtimestamp(int(timeupdated))
                         abs_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-                        rel_time = self.get_relative_time(int(timeupdated))
+                        rel_time = get_relative_time(int(timeupdated))
                         combined_text = f"{abs_time} | {rel_time}"
                         time_item = QStandardItem(combined_text)
                         time_item.setData(Qt.ItemDataRole.UserRole, int(timeupdated))
@@ -209,30 +209,6 @@ class DuplicateModsPanel(BaseModsPanel):
         a dictionary of timeupdated timestamps from ACF data sources.
         """
         self.timeupdated_data = load_acf_data(self.mm)
-
-    def get_relative_time(self, timestamp: int) -> str:
-        """
-        Convert a timestamp to a relative time string (e.g. "2 days ago").
-        """
-        try:
-            dt = datetime.fromtimestamp(timestamp)
-            now = datetime.now()
-            delta = now - dt
-
-            if delta.days > 365:
-                return f"{delta.days // 365} years ago"
-            elif delta.days > 30:
-                return f"{delta.days // 30} months ago"
-            elif delta.days > 0:
-                return f"{delta.days} days ago"
-            elif delta.seconds > 3600:
-                return f"{delta.seconds // 3600} hours ago"
-            elif delta.seconds > 60:
-                return f"{delta.seconds // 60} minutes ago"
-            else:
-                return "Just now"
-        except (ValueError, TypeError):
-            return "Invalid timestamp"
 
     def _refresh_after_deletion(self) -> None:
         """
