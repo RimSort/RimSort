@@ -80,6 +80,11 @@ class SteamBrowser(QWidget):
             logger.info("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
+        # Add Mods by Workshop ID Button (always create, not just non-Windows)
+        self.add_mods_by_id_button = QPushButton(self.tr("Add Mods by Workshop ID"))
+        self.add_mods_by_id_button.setObjectName("browserPanelAddModsByID")
+        self.add_mods_by_id_button.clicked.connect(self._show_add_mods_by_id_dialog)
+
         # VARIABLES
         profile_dir = Path(AppInfo()._browser_profile_folder)
         profile_dir.mkdir(parents=True, exist_ok=True)
@@ -219,6 +224,7 @@ class SteamBrowser(QWidget):
         self.downloader_layout.addWidget(self.downloader_label)
         self.downloader_layout.addWidget(self.downloader_list)
         self.downloader_layout.addWidget(self.clear_list_button)
+        self.downloader_layout.addWidget(self.add_mods_by_id_button)
         self.downloader_layout.addWidget(self.download_steamcmd_button)
         self.downloader_layout.addWidget(self.download_steamworks_button)
 
@@ -241,6 +247,30 @@ class SteamBrowser(QWidget):
         # launch the browser window
         self._launch_browser_window()
         logger.debug("Finished Browser Window initialization")
+
+    def _show_add_mods_by_id_dialog(self):
+        from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel
+        from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr("Add Mods by Workshop ID"))
+        layout = QVBoxLayout(dialog)
+        label = QLabel(self.tr("Enter one or more Workshop IDs (one per line or separated by commas):"))
+        layout.addWidget(label)
+        text_edit = QTextEdit()
+        layout.addWidget(text_edit)
+        buttons = ButtonBox(ButtonBox.StandardButton.Ok | ButtonBox.StandardButton.Cancel)
+        layout.addWidget(buttons)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            ids_text = text_edit.toPlainText()
+            ids = re.split(r'[\s,]+', ids_text.strip())
+            ids = [id_.strip() for id_ in ids if id_.strip()]
+            for workshop_id in ids:
+                self._add_mod_to_list(publishedfileid=workshop_id)
+
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
