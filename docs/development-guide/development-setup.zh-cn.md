@@ -31,7 +31,7 @@ RimSort 使用 [PySide6](https://pypi.org/project/PySide6/) 模块以及多个�
     - 最低要求示例：
       - Linux 构建：Ubuntu 22.04 和 24.04
       - macOS 构建：
-        - i386 架构使用 GitHub 的 macos-13 runner
+        - i386 架构使用 GitHub 的 macos-14 runner
         - arm 架构使用 GitHub 的 macos-latest（当前为 macos-14）runner
       - Windows 使用 GitHub 的 windows-latest（当前为 Windows 2022）runner
   - 安装对应平台的最新版 [Python](https://python.org/) 3.12（推荐 CPython）

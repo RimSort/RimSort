@@ -27,7 +27,7 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
   - `ubuntu-22.04`
   - `ubuntu-24.04`
 - macOS builds:
-  - `macos-13` (i386)
+  - `macos-14` (i386)
   - `macos-latest` (arm)
 - Windows:
   - `windows-latest` (Windows 2022 at the time of writing)
