@@ -71,20 +71,29 @@ class ClickablePathLabel(QLabel):
             self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse click to open the folder if clickable."""
+        """Handle mouse click to open the folder or URL if clickable."""
         if event.button() == Qt.MouseButton.LeftButton and self.path and self.clickable:
-            try:
-                path_obj = Path(self.path)
-                if path_obj.exists():
-                    if path_obj.is_dir():
-                        platform_specific_open(self.path)
-                        logger.info(f"Opening mod folder: {self.path}")
+            # If path looks like a URL, open in browser
+            if self.path.startswith("http://") or self.path.startswith("https://"):
+                import webbrowser
+                try:
+                    webbrowser.open(self.path)
+                    logger.info(f"Opening URL: {self.path}")
+                except Exception as e:
+                    logger.error(f"Failed to open URL {self.path}: {e}")
+            else:
+                try:
+                    path_obj = Path(self.path)
+                    if path_obj.exists():
+                        if path_obj.is_dir():
+                            platform_specific_open(self.path)
+                            logger.info(f"Opening mod folder: {self.path}")
+                        else:
+                            logger.warning(f"Path is not a directory: {self.path}")
                     else:
-                        logger.warning(f"Path is not a directory: {self.path}")
-                else:
-                    logger.warning(f"Mod folder does not exist: {self.path}")
-            except Exception as e:
-                logger.error(f"Failed to open mod folder {self.path}: {e}")
+                        logger.warning(f"Mod folder does not exist: {self.path}")
+                except Exception as e:
+                    logger.error(f"Failed to open mod folder {self.path}: {e}")
         super().mousePressEvent(event)
 
 
@@ -229,6 +238,13 @@ class ModInfoPanel:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_path_value.setWordWrap(True)
+        # Add Steam URL label and value
+        self.mod_info_steam_url_label = QLabel(self.tr("Steam URL:"))
+        self.mod_info_steam_url_label.setObjectName("summaryLabel")
+        self.mod_info_steam_url_value = ClickablePathLabel()
+        self.mod_info_steam_url_value.setObjectName("summaryValue")
+        self.mod_info_steam_url_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_steam_url_value.setWordWrap(True)
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
         self.mod_info_last_touched_value = QLabel()
@@ -331,6 +347,10 @@ class ModInfoPanel:
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
         self.mod_info_layout.addLayout(self.mod_info_folder_size)
         self.mod_info_layout.addLayout(self.mod_info_path)
+        self.mod_info_steam_url_layout = QHBoxLayout()
+        self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_label, 20)
+        self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_value, 80)
+        self.mod_info_layout.addLayout(self.mod_info_steam_url_layout)
         self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
@@ -343,6 +363,8 @@ class ModInfoPanel:
             self.mod_info_name_value,
             self.mod_info_path_label,
             self.mod_info_path_value,
+                self.mod_info_steam_url_label,
+                self.mod_info_steam_url_value,
         ]
 
         self.base_mod_info_widgets = [
@@ -624,6 +646,22 @@ class ModInfoPanel:
         self, mod_metadata: dict[str, Any], render_unity_rt: bool
     ) -> None:
         """Set the mod description with version-specific handling."""
+        self.mod_info_path_value.setPath(mod_info.get("path"))
+        # Set Steam URL value
+        steam_url = None
+        pfid = mod_info.get("pfid")
+        if pfid:
+            steam_url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+        elif mod_info.get("steam_url"):
+            steam_url = mod_info.get("steam_url")
+        elif mod_info.get("url"):
+            steam_url = mod_info.get("url")
+        self.mod_info_steam_url_value.setPath(steam_url)
+        if steam_url:
+            self.mod_info_steam_url_value.setToolTip(f"Click to open Steam Workshop: {steam_url}")
+        else:
+            self.mod_info_steam_url_value.setToolTip("")
+        # Set the scrolling description for the Mod Info Panel
         self.description.setText("")
         if "description" in mod_metadata:
             if mod_metadata["description"] is not None:
