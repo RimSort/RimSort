@@ -5,6 +5,7 @@ from typing import Optional
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
+from app.utils.generic import scanpath
 from app.utils.metadata import MetadataManager, ModMetadata
 
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
@@ -138,7 +139,7 @@ def get_dir_size(path: str) -> int:
     while stack:
         current = stack.pop()
         try:
-            for entry in os.scandir(current):
+            for entry in scanpath(current):
                 if entry.is_file():
                     total += entry.stat().st_size
                 elif entry.is_dir():
