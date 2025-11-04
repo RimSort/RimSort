@@ -90,12 +90,10 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             for metadata in self.mm.internal_local_metadata.values()
             if (
                 (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
+                and metadata.get("internal_time_touched")
                 and metadata.get("external_time_updated")
-                and (
-                    not metadata.get("internal_time_touched")
-                    or metadata["external_time_updated"]
-                    > metadata["internal_time_touched"]
-                )
+                and metadata["external_time_updated"]
+                > metadata["internal_time_touched"]
             )
         ]
 
