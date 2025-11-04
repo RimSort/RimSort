@@ -1846,6 +1846,16 @@ class ModParser(QRunnable):
                         ("authors" if key.lower() == "author" else key): value
                         for key, value in mod_metadata.items()
                     }
+                    # Normalize authors to a string
+                    authors = mod_metadata.get("authors")
+                    if isinstance(authors, dict) and authors.get("li"):
+                        mod_metadata["authors"] = ", ".join(authors["li"])
+                    elif isinstance(authors, list):
+                        mod_metadata["authors"] = ", ".join(authors)
+                    elif isinstance(authors, str):
+                        pass  # Keep as is
+                    else:
+                        mod_metadata["authors"] = "Unknown"
                     # Make sure <supportedversions> or <targetversion> is correct format
                     if mod_metadata.get("supportedversions") and not isinstance(
                         mod_metadata.get("supportedversions"), dict
@@ -3116,5 +3126,3 @@ def recursively_update_dict(
         for key in purge_keys:
             if key in a_dict:
                 del a_dict[key]
-
-            # (removed misplaced block: loadBefore byVersion processing belongs in compile_metadata)
