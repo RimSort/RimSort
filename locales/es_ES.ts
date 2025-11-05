@@ -191,6 +191,66 @@
     </message>
 </context>
 <context>
+    <name>DuplicateModsPanel</name>
+    <message>
+        <source>Mod Name</source>
+        <translation>Nombre del mod</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">Autor</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>ID del paquete</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>ID de archivo publicado</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Fuente</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Descarga de mods</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>Camino</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Página del taller</translation>
+    </message>
+    <message>
+        <source>RimSort - Duplicate Mods Found</source>
+        <translation>RimSort - Mods duplicados encontrados</translation>
+    </message>
+    <message>
+        <source>Duplicate mods detected!</source>
+        <translation>Mods duplicados detectados!</translation>
+    </message>
+    <message>
+        <source>
+The following table displays duplicate mods grouped by package ID. Select which versions to keep and choose an action.</source>
+        <translation>La siguiente tabla muestra modificaciones duplicadas agrupadas por ID de paquete.Seleccione qué versiones conservar y elija una acción.</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Borrar</translation>
+    </message>
+    <message>
+        <source>Delete Selected Duplicates...</source>
+        <translation>Eliminar duplicados seleccionados...</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>Abrir página del taller</translation>
+    </message>
+</context>
+<context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
@@ -581,18 +641,6 @@ Would you like to configure them now?</source>
         <translation>¿Te gustaría configurarlos ahora?</translation>
     </message>
     <message>
-        <source>Duplicate mod(s) found</source>
-        <translation>Módulo(s) duplicado(s) encontrado(s)</translation>
-    </message>
-    <message>
-        <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation>Módulo(s) duplicado(s) encontrado(s) para el ID de paquete(s) en tu ModsConfig.xml (lista de módulos activos)</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first 'local mod' of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation>La siguiente lista de módulos se estableció como activos en tu ModsConfig.xml y se encontraron instancias duplicadas de estos módulos en tus fuentes de datos de módulos. El juego vanilla usará la primera 'mod local' de un determinado ID de paquete que se encuentra, por lo que RimSort también seguirá este lógica.</translation>
-    </message>
-    <message>
         <source>Could not find data for some mods!</source>
         <translation>No se encontraron datos para algunos módulos!</translation>
     </message>
@@ -665,6 +713,30 @@ Are your game configuration paths correct?</source>
     <message>
         <source>Click "Show Details" to see the full report!</source>
         <translation>Haz clic en "Mostrar detalles" para ver el informe completo!</translation>
+    </message>
+    <message>
+        <source>Report too long</source>
+        <translation>Informe demasiado largo</translation>
+    </message>
+    <message>
+        <source>Even the first mod exceeds the 200,000 character limit.</source>
+        <translation>Incluso el primer mod supera el límite de 200.000 caracteres.</translation>
+    </message>
+    <message>
+        <source>Cannot upload this report to Rentry.co.</source>
+        <translation>No se puede cargar este informe en Rentry.co.</translation>
+    </message>
+    <message>
+        <source>The mod list report exceeds 200,000 characters.</source>
+        <translation>El informe de la lista de modificaciones supera los 200.000 caracteres.</translation>
+    </message>
+    <message>
+        <source>Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?</source>
+        <translation>Rentry.co puede rechazar cargas que sean demasiado largas.¿Le gustaría truncar el informe a las primeras modificaciones {max_mods} o cancelar la carga?</translation>
+    </message>
+    <message>
+        <source>Truncate to the first {max_mods} mods</source>
+        <translation>Truncar a las primeras modificaciones {max_mods}</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
@@ -2847,17 +2919,6 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>Abrir carpetas en el editor de texto</translation>
-    </message>
-</context>
-<context>
-    <name>ModUpdaterPrompt</name>
-    <message>
-        <source>Update mods</source>
-        <translation>Actualizar módulos</translation>
-    </message>
-    <message>
-        <source>Update all</source>
-        <translation>Actualizar todos</translation>
     </message>
 </context>
 <context>
@@ -5061,39 +5122,6 @@ Do you want to update now?</source>
         <translation>¡Hay reemplazos disponibles para los mods de Workshop!</translation>
     </message>
     <message>
-        <source>
-The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
-        <translation>La siguiente tabla muestra los mods de Workshop con reemplazos sugeridos según la base de datos "Usar Esto en Su Lugar"</translation>
-    </message>
-    <message>
-        <source>Original Mod Name</source>
-        <translation>Nombre del Mod Original</translation>
-    </message>
-    <message>
-        <source>Original Author</source>
-        <translation>Autor Original</translation>
-    </message>
-    <message>
-        <source>Original Workshop Page</source>
-        <translation>Página del Workshop Original</translation>
-    </message>
-    <message>
-        <source>Replacement Mod Name</source>
-        <translation>Nombre del Mod de Reemplazo</translation>
-    </message>
-    <message>
-        <source>Replacement Author</source>
-        <translation>Autor del Reemplazo</translation>
-    </message>
-    <message>
-        <source>Replacement Workshop Page</source>
-        <translation>Página del Workshop del Reemplazo</translation>
-    </message>
-    <message>
-        <source>Download with SteamCMD</source>
-        <translation>Descargar con SteamCMD</translation>
-    </message>
-    <message>
         <source>Subscribe</source>
         <translation>Suscribirse</translation>
     </message>
@@ -5102,24 +5130,84 @@ The following table displays Workshop mods with suggested replacements according
         <translation>Cancelar suscripción</translation>
     </message>
     <message>
-        <source>Unsubscribe outdated</source>
-        <translation>Cancelar suscripción a versiones obsoletas</translation>
-    </message>
-    <message>
-        <source>Unsubscribe all outdated</source>
-        <translation>Cancelar suscripción a todas las versiones obsoletas</translation>
-    </message>
-    <message>
         <source>Refresh</source>
         <translation>Actualizar</translation>
     </message>
     <message>
-        <source>Refresh Mod List</source>
-        <translation>Actualizar Lista de Mods</translation>
+        <source>Mod Name</source>
+        <translation>Nombre del mod</translation>
     </message>
     <message>
-        <source>Refresh Table</source>
-        <translation>Actualizar Tabla</translation>
+        <source>Author</source>
+        <translation type="unfinished">Autor</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>ID del paquete</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>ID de archivo publicado</translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation>Versiones compatibles</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Fuente</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Descarga de mods</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>Camino</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Página del taller</translation>
+    </message>
+    <message>
+        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
+        <translation>La siguiente tabla muestra las modificaciones de Workshop con reemplazos sugeridos según la base de datos "Usar esto en su lugar", agrupados por modificación de reemplazo.</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Seleccionar</translation>
+    </message>
+    <message>
+        <source>Select all Originals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Select all Replacements</source>
+        <translation>Seleccionar todos los reemplazos</translation>
+    </message>
+    <message>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>Descarga seleccionada con SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download all replacements with SteamCMD</source>
+        <translation>Descargue todos los reemplazos con SteamCMD</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Unsubscribe all originals</source>
+        <translation>Dar de baja todos los originales</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -5134,24 +5222,68 @@ The following table displays Workshop mods with suggested replacements according
         <translation>Usar Esto en Su Lugar</translation>
     </message>
     <message>
-        <source>Successfully subscribed to replacement mods</source>
-        <translation>Suscripción exitosa a los mods de reemplazo</translation>
-    </message>
-    <message>
-        <source>Successfully unsubscribed to original mods</source>
-        <translation>Cancelación de suscripción exitosa a los mods originales</translation>
-    </message>
-    <message>
-        <source>Subscribe replacements</source>
-        <translation>Suscribirse a reemplazos</translation>
-    </message>
-    <message>
         <source>Subscribe all replacements</source>
         <translation>Suscribirse a todos los reemplazos</translation>
     </message>
     <message>
+        <source>Successfully {action}d {count} mods</source>
+        <translation>{action}d {count} modificaciones con éxito</translation>
+    </message>
+    <message>
         <source>Open Workshop Page</source>
         <translation>Abrir Página del Workshop</translation>
+    </message>
+</context>
+<context>
+    <name>WorkshopModUpdaterPanel</name>
+    <message>
+        <source>RimSort - Updates found for Workshop mods</source>
+        <translation>RimSort: actualizaciones encontradas para mods de Workshop</translation>
+    </message>
+    <message>
+        <source>There updates available for Workshop mods!</source>
+        <translation>¡Hay actualizaciones disponibles para modificaciones de Workshop!</translation>
+    </message>
+    <message>
+        <source>
+The following table displays Workshop mods available for update from Steam.</source>
+        <translation>La siguiente tabla muestra las modificaciones de Workshop disponibles para actualizar desde Steam.</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Nombre</translation>
+    </message>
+    <message>
+        <source>PublishedFileID</source>
+        <translation>ID de archivo publicado</translation>
+    </message>
+    <message>
+        <source>Mod Source</source>
+        <translation>Fuente de modificación</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Descarga de mods</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>Actualizado en el taller</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Página del taller</translation>
+    </message>
+    <message>
+        <source>Update Selected Mods</source>
+        <translation>Actualizar modificaciones seleccionadas</translation>
+    </message>
+    <message>
+        <source>Update All Mods</source>
+        <translation>Actualizar todas las modificaciones</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>Abrir página del taller</translation>
     </message>
 </context>
 <context>
@@ -5232,18 +5364,6 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <source>File not found</source>
-        <translation>Archivo no encontrado</translation>
-    </message>
-    <message>
-        <source>Unable to launch game process</source>
-        <translation>No se puede lanzar el proceso de juego</translation>
-    </message>
-    <message>
-        <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation>Rimsort no pudo iniciar Rimworld ya que el ejecutable del juego no existe en la ruta especificada: . Verifique que este directorio sea correcto y el ejecutable de Rimworld Game existe en él. {executable_path}</translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation>El lanzamiento del juego falló</translation>
     </message>
@@ -5254,6 +5374,14 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation>Rimsort no pudo comenzar a Rimworld ya que la carpeta del juego está vacía o no es válida: [] verifique que la carpeta del juego esté configurada correctamente y que el ejecutable de Rimworld existe en ella. {game_install_path}</translation>
+    </message>
+    <message>
+        <source>Invalid game folder</source>
+        <translation>Carpeta de juego no válida</translation>
+    </message>
+    <message>
+        <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
+        <translation>RimSort no pudo validar el ejecutable de RimWorld en la carpeta especificada: {game_install_path}.Verifique que este directorio sea correcto y contenga un ejecutable del juego RimWorld válido.</translation>
     </message>
 </context>
 <context>

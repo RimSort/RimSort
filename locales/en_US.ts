@@ -191,6 +191,66 @@
     </message>
 </context>
 <context>
+    <name>DuplicateModsPanel</name>
+    <message>
+        <source>Mod Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">Author</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort - Duplicate Mods Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Duplicate mods detected!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+The following table displays duplicate mods grouped by package ID. Select which versions to keep and choose an action.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete Selected Duplicates...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
@@ -576,18 +636,6 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Duplicate mod(s) found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Could not find data for some mods!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -659,6 +707,30 @@ Are your game configuration paths correct?</source>
     </message>
     <message>
         <source>Click &quot;Show Details&quot; to see the full report!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Report too long</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Even the first mod exceeds the 200,000 character limit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot upload this report to Rentry.co.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The mod list report exceeds 200,000 characters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Truncate to the first {max_mods} mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2760,17 +2832,6 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Open folder(s) in text editor</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ModUpdaterPrompt</name>
-    <message>
-        <source>Update mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update all</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4915,39 +4976,6 @@ Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Original Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Original Author</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Original Workshop Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replacement Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replacement Author</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replacement Workshop Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Download with SteamCMD</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Subscribe</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4956,23 +4984,83 @@ The following table displays Workshop mods with suggested replacements according
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unsubscribe outdated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unsubscribe all outdated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh Mod List</source>
+        <source>Mod Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh Table</source>
+        <source>Author</source>
+        <translation type="unfinished">Author</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database, grouped by replacement mod.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all Originals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all Replacements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download all replacements with SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsubscribe all originals</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4988,19 +5076,63 @@ The following table displays Workshop mods with suggested replacements according
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successfully subscribed to replacement mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully unsubscribed to original mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Subscribe replacements</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Subscribe all replacements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully {action}d {count} mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>WorkshopModUpdaterPanel</name>
+    <message>
+        <source>RimSort - Updates found for Workshop mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There updates available for Workshop mods!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+The following table displays Workshop mods available for update from Steam.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PublishedFileID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update Selected Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update All Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5086,18 +5218,6 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <source>File not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to launch game process</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5107,6 +5227,14 @@ The following table displays Workshop mods with suggested replacements according
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid game folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

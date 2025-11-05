@@ -6,11 +6,13 @@ import socket
 import subprocess
 import sys
 import webbrowser
+from datetime import datetime
 from errno import EACCES
 from io import TextIOWrapper
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
+from time import localtime, strftime
 from typing import Any, Callable, Generator, Tuple
 
 import requests
@@ -744,3 +746,56 @@ def restart_application() -> None:
         instance.quit()
     else:
         logger.warning("No QApplication instance found, cannot restart the application")
+
+
+def get_relative_time(timestamp: int) -> str:
+    """
+    Convert a timestamp to a relative time string (e.g. "2 days ago").
+
+    Args:
+        timestamp (int): Unix timestamp to convert.
+
+    Returns:
+        str: Human-readable relative time string, or "Invalid timestamp" if conversion fails.
+    """
+    try:
+        dt = datetime.fromtimestamp(timestamp)
+        now = datetime.now()
+        delta = now - dt
+
+        if delta.days > 365:
+            return f"{delta.days // 365} years ago"
+        elif delta.days > 30:
+            return f"{delta.days // 30} months ago"
+        elif delta.days > 0:
+            return f"{delta.days} days ago"
+        elif delta.seconds > 3600:
+            return f"{delta.seconds // 3600} hours ago"
+        elif delta.seconds > 60:
+            return f"{delta.seconds // 60} minutes ago"
+        else:
+            return "Just now"
+    except (ValueError, TypeError):
+        return "Invalid timestamp"
+
+
+def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
+    """
+    Format a timestamp into absolute and relative time strings for display.
+
+    Args:
+        timestamp (int | None): Unix timestamp to format, or None if unknown.
+
+    Returns:
+        tuple[str, int | None]: A tuple of (formatted_time_string, timestamp).
+                                 If timestamp is None, returns ("Unknown", None).
+    """
+    if timestamp is None:
+        return "Unknown", None
+
+    try:
+        abs_time = strftime("%Y-%m-%d %H:%M:%S", localtime(timestamp))
+        rel_time = get_relative_time(timestamp)
+        return f"{abs_time} | {rel_time}", timestamp
+    except (ValueError, TypeError, OSError):
+        return "Invalid timestamp", None

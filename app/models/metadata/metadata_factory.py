@@ -296,8 +296,22 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     if isinstance(author, str):
         mod.authors.append(author)
 
-    if authors:
-        mod.authors.extend(authors)
+    # Normalize authors to list[str]
+    normalized_authors: list[str] = []
+    if isinstance(authors, dict) and authors.get("li"):
+        li = authors.get("li")
+        if isinstance(li, list):
+            normalized_authors = [str(a) for a in li if a]
+        elif isinstance(li, str):
+            normalized_authors = [li]
+    elif isinstance(authors, list):
+        normalized_authors = [str(a) for a in authors if a]
+    elif isinstance(authors, str):
+        normalized_authors = [authors]
+    else:
+        normalized_authors = []
+
+    mod.authors.extend(normalized_authors)
 
     supported_versions = value_extractor(mod_data.get("supportedVersions", False))
     if isinstance(supported_versions, list):

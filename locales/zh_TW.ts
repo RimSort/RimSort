@@ -191,6 +191,66 @@
     </message>
 </context>
 <context>
+    <name>DuplicateModsPanel</name>
+    <message>
+        <source>Mod Name</source>
+        <translation>模組名稱</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>封裝ID</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>發布文件ID</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>來源</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>模組下載</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>小路</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>研討會頁面</translation>
+    </message>
+    <message>
+        <source>RimSort - Duplicate Mods Found</source>
+        <translation>RimSort - 發現重複模組</translation>
+    </message>
+    <message>
+        <source>Duplicate mods detected!</source>
+        <translation>檢測到重複的模組！</translation>
+    </message>
+    <message>
+        <source>
+The following table displays duplicate mods grouped by package ID. Select which versions to keep and choose an action.</source>
+        <translation>下表顯示了按包 ID 分組的重複 mod。選擇要保留的版本並選擇操作。</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>刪除</translation>
+    </message>
+    <message>
+        <source>Delete Selected Duplicates...</source>
+        <translation>刪除選定的重複項...</translation>
+    </message>
+    <message>
+        <source>Open Workshop Page</source>
+        <translation>打開研討會頁面</translation>
+    </message>
+</context>
+<context>
     <name>FatalErrorDialog</name>
     <message>
         <source>Show Details</source>
@@ -592,18 +652,6 @@ Would you like to configure them now?</source>
 是否要現在配置它們？</translation>
     </message>
     <message>
-        <source>Duplicate mod(s) found</source>
-        <translation>發現重複的模組</translation>
-    </message>
-    <message>
-        <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation>在你的 ModsConfig.xml（啟用模組列表）中找到重複的模組（包名）</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first 'local mod' of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation>以下列表中的模組在你的 ModsConfig.xml 中設置為啟用，並且在你的模組數據源中找到了這些模組的重複實例。原版遊戲將使用在本地找到的特定包 ID 的第一個「本地模組」，因此 RimSort 也將遵循這一邏輯。</translation>
-    </message>
-    <message>
         <source>Could not find data for some mods!</source>
         <translation>無法找到某些模組的數據！</translation>
     </message>
@@ -670,6 +718,30 @@ Would you like to configure them now?</source>
     <message>
         <source>Click "Show Details" to see the full report!</source>
         <translation>點擊【顯示詳細資訊】以查看完整報告！</translation>
+    </message>
+    <message>
+        <source>Report too long</source>
+        <translation>報告太長</translation>
+    </message>
+    <message>
+        <source>Even the first mod exceeds the 200,000 character limit.</source>
+        <translation>即使第一個 mod 也超過了 200,000 字符的限制。</translation>
+    </message>
+    <message>
+        <source>Cannot upload this report to Rentry.co.</source>
+        <translation>無法將此報告上傳到 Rentry.co。</translation>
+    </message>
+    <message>
+        <source>The mod list report exceeds 200,000 characters.</source>
+        <translation>Mod 列表報告超過 200,000 個字符。</translation>
+    </message>
+    <message>
+        <source>Rentry.co may reject uploads that are too long. Would you like to truncate the report to the first {max_mods} mods or cancel the upload?</source>
+        <translation>Rentry.co 可能會拒絕太長的上傳。您想要將報告截斷到前 {max_mods} 個模組或取消上傳嗎？</translation>
+    </message>
+    <message>
+        <source>Truncate to the first {max_mods} mods</source>
+        <translation>截斷到第一個 {max_mods} 個 mod</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
@@ -2881,17 +2953,6 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
-    <name>ModUpdaterPrompt</name>
-    <message>
-        <source>Update mods</source>
-        <translation>更新模組</translation>
-    </message>
-    <message>
-        <source>Update all</source>
-        <translation>更新所有</translation>
-    </message>
-</context>
-<context>
     <name>ModsPanel</name>
     <message>
         <source>Showing All Mods</source>
@@ -5095,40 +5156,6 @@ Do you want to update now?</source>
         <translation>已有可替代的模組可用於工作坊模組！</translation>
     </message>
     <message>
-        <source>
-The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database</source>
-        <translation>
-以下表格根據『改用此項』資料庫，顯示了建議替換的 Steam 工作坊模組</translation>
-    </message>
-    <message>
-        <source>Original Mod Name</source>
-        <translation>原模組名稱</translation>
-    </message>
-    <message>
-        <source>Original Author</source>
-        <translation>原作者</translation>
-    </message>
-    <message>
-        <source>Original Workshop Page</source>
-        <translation>原工作坊頁面</translation>
-    </message>
-    <message>
-        <source>Replacement Mod Name</source>
-        <translation>替代模組名稱</translation>
-    </message>
-    <message>
-        <source>Replacement Author</source>
-        <translation>替代模組作者</translation>
-    </message>
-    <message>
-        <source>Replacement Workshop Page</source>
-        <translation>替代模組工坊頁面</translation>
-    </message>
-    <message>
-        <source>Download with SteamCMD</source>
-        <translation>使用 SteamCMD 下載</translation>
-    </message>
-    <message>
         <source>Subscribe</source>
         <translation>訂閱</translation>
     </message>
@@ -5141,6 +5168,82 @@ The following table displays Workshop mods with suggested replacements according
         <translation>重新整理</translation>
     </message>
     <message>
+        <source>Mod Name</source>
+        <translation>模組名稱</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>封裝ID</translation>
+    </message>
+    <message>
+        <source>PublishedFileId</source>
+        <translation>發布文件ID</translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation>支持的版本</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>來源</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>模組下載</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>小路</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>研討會頁面</translation>
+    </message>
+    <message>
+        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
+        <translation>下表顯示了根據“使用此替代”數據庫提供的建議替換的創意工坊模組，並按替換模組分組。</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>選擇</translation>
+    </message>
+    <message>
+        <source>Select all Originals</source>
+        <translation>選擇所有原件</translation>
+    </message>
+    <message>
+        <source>Select all Replacements</source>
+        <translation>選擇所有替換件</translation>
+    </message>
+    <message>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>使用 SteamCMD 下載選定的內容</translation>
+    </message>
+    <message>
+        <source>Download all replacements with SteamCMD</source>
+        <translation>使用 SteamCMD 下載所有替代品</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>訂閱已選</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>取消訂閱所選內容</translation>
+    </message>
+    <message>
+        <source>Unsubscribe all originals</source>
+        <translation>取消訂閱所有原創內容</translation>
+    </message>
+    <message>
         <source>Delete</source>
         <translation>刪除</translation>
     </message>
@@ -5149,44 +5252,72 @@ The following table displays Workshop mods with suggested replacements according
         <translation>改用此項</translation>
     </message>
     <message>
-        <source>Subscribe replacements</source>
-        <translation>訂閱替代項</translation>
+        <source>Successfully {action}d {count} mods</source>
+        <translation>已成功完成 {action} 個 {count} 個模組</translation>
     </message>
     <message>
         <source>Subscribe all replacements</source>
         <translation>訂閱全部替代項</translation>
     </message>
     <message>
-        <source>Refresh Mod List</source>
-        <translation>重新整理模組列表</translation>
-    </message>
-    <message>
-        <source>Refresh Table</source>
-        <translation>重新整理表格</translation>
-    </message>
-    <message>
-        <source>Unsubscribe outdated</source>
-        <translation>取消訂閱過時模組</translation>
-    </message>
-    <message>
-        <source>Unsubscribe all outdated</source>
-        <translation>取消訂閱所有過時模組</translation>
-    </message>
-    <message>
         <source>Delete Selected Original Mods...</source>
         <translation>刪除選中的原模組</translation>
     </message>
     <message>
-        <source>Successfully subscribed to replacement mods</source>
-        <translation>已成功訂閱替代模組</translation>
+        <source>Open Workshop Page</source>
+        <translation>開啟工作坊介面</translation>
+    </message>
+</context>
+<context>
+    <name>WorkshopModUpdaterPanel</name>
+    <message>
+        <source>RimSort - Updates found for Workshop mods</source>
+        <translation>RimSort - 找到創意工坊模組的更新</translation>
     </message>
     <message>
-        <source>Successfully unsubscribed to original mods</source>
-        <translation>已成功取消訂閱原模組</translation>
+        <source>There updates available for Workshop mods!</source>
+        <translation>創意工坊模組有可用更新！</translation>
+    </message>
+    <message>
+        <source>
+The following table displays Workshop mods available for update from Steam.</source>
+        <translation>下表顯示了可從 Steam 更新的創意工坊模組。</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>姓名</translation>
+    </message>
+    <message>
+        <source>PublishedFileID</source>
+        <translation>發布文件ID</translation>
+    </message>
+    <message>
+        <source>Mod Source</source>
+        <translation>模組源</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>模組下載</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>研討會更新</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>研討會頁面</translation>
+    </message>
+    <message>
+        <source>Update Selected Mods</source>
+        <translation>更新選定的模組</translation>
+    </message>
+    <message>
+        <source>Update All Mods</source>
+        <translation>更新所有模組</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
-        <translation>開啟工作坊介面</translation>
+        <translation>打開研討會頁面</translation>
     </message>
 </context>
 <context>
@@ -5267,18 +5398,6 @@ The following table displays Workshop mods with suggested replacements according
 <context>
     <name>launch_game_process</name>
     <message>
-        <source>File not found</source>
-        <translation>無法找到文件</translation>
-    </message>
-    <message>
-        <source>Unable to launch game process</source>
-        <translation>無法啟動遊戲進程</translation>
-    </message>
-    <message>
-        <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation>RimSort 無法啟動 RimWorld 因為遊戲可執行文件不存在於指定的路徑：{executable_path}。請檢查此目錄是否正確，並且 RimWorld 遊戲可執行文件是否存在。</translation>
-    </message>
-    <message>
         <source>Game launch failed</source>
         <translation>遊戲啟動失敗</translation>
     </message>
@@ -5289,6 +5408,14 @@ The following table displays Workshop mods with suggested replacements according
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation>RimSort 無法啟動 RimWorld 因為遊戲資料夾為空或無效：[{game_install_path}] 請檢查遊戲資料夾是否正確設置，並且 RimWorld 可執行文件是否存在。</translation>
+    </message>
+    <message>
+        <source>Invalid game folder</source>
+        <translation>遊戲文件夾無效</translation>
+    </message>
+    <message>
+        <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
+        <translation>RimSort 無法驗證指定文件夾中的 RimWorld 可執行文件：{game_install_path}。請檢查該目錄是否正確並包含有效的 RimWorld 遊戲可執行文件。</translation>
     </message>
 </context>
 <context>
