@@ -274,7 +274,7 @@ def scanpath(
 def directories(mods_path: Path | str) -> list[str]:
     try:
         return [entry.path for entry in scanpath(mods_path) if entry.is_dir()]
-    except Exception as e:
+    except OSError as e:
         logger.error(f"Error reading directory {mods_path}: {e}")
         return []
 
