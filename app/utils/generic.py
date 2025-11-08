@@ -14,7 +14,7 @@ from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from time import localtime, strftime
-from typing import Any, Callable, Generator, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Generator, Tuple
 
 import requests
 import vdf  # type: ignore
@@ -25,7 +25,7 @@ from PySide6.QtWidgets import QApplication
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
 
-if sys.platform == "win32":
+if TYPE_CHECKING or sys.platform == "win32":
     import ctypes
     from ctypes import wintypes
 
@@ -48,7 +48,7 @@ _Win32StatResult = namedtuple("_Win32StatResult", ["st_size"])
 
 
 class Win32DirEntry:
-    def __init__(self, path: Path, find_data):  # type: ignore[no-untyped-def]
+    def __init__(self, path: Path, find_data: Any):
         self.name = find_data.cFileName
         self.path = str(path / self.name)
         self.size = (find_data.nFileSizeHigh << 32) + find_data.nFileSizeLow
@@ -215,10 +215,7 @@ def delete_files_only_extension(directory: Path | str, extension: str) -> bool:
 def scanpath(
     path: Path | str,
 ) -> Generator[os.DirEntry[str] | Win32DirEntry, None, None]:
-    if sys.platform == "win32":
-        import ctypes
-        from ctypes import wintypes
-
+    if sys.platform == "win32" and "ctypes" in globals():
         try:
             INVALID_HANDLE_VALUE = -1
 
