@@ -48,7 +48,7 @@ _Win32StatResult = namedtuple("_Win32StatResult", ["st_size"])
 
 
 class Win32DirEntry:
-    def __init__(self, path: Path, find_data: "WIN32_FIND_DATAW"):  # type: ignore[name-defined]
+    def __init__(self, path: Path, find_data):  # type: ignore[no-untyped-def]
         self.name = find_data.cFileName
         self.path = str(path / self.name)
         self.size = (find_data.nFileSizeHigh << 32) + find_data.nFileSizeLow
