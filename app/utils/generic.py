@@ -6,6 +6,7 @@ import socket
 import subprocess
 import sys
 import webbrowser
+from collections import namedtuple
 from datetime import datetime
 from errno import EACCES
 from io import TextIOWrapper
@@ -23,6 +24,46 @@ from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
+
+if sys.platform == "win32":
+    import ctypes
+    from ctypes import wintypes
+
+    class WIN32_FIND_DATAW(ctypes.Structure):
+        _fields_ = [
+            ("dwFileAttributes", wintypes.DWORD),
+            ("ftCreationTime", wintypes.FILETIME),
+            ("ftLastAccessTime", wintypes.FILETIME),
+            ("ftLastWriteTime", wintypes.FILETIME),
+            ("nFileSizeHigh", wintypes.DWORD),
+            ("nFileSizeLow", wintypes.DWORD),
+            ("dwReserved0", wintypes.DWORD),
+            ("dwReserved1", wintypes.DWORD),
+            ("cFileName", wintypes.WCHAR * 260),
+            ("cAlternateFileName", wintypes.WCHAR * 14),
+        ]
+
+
+_Win32StatResult = namedtuple("_Win32StatResult", ["st_size"])
+
+
+class Win32DirEntry:
+    def __init__(self, path: Path, find_data):  # type: ignore[no-untyped-def]
+        self.name = find_data.cFileName
+        self.path = str(path / self.name)
+        self.size = (find_data.nFileSizeHigh << 32) + find_data.nFileSizeLow
+        self._dwFileAttributes = find_data.dwFileAttributes
+        self.FILE_ATTRIBUTE_DIRECTORY = 0x10
+
+    def is_dir(self) -> bool:
+        return bool(self._dwFileAttributes & self.FILE_ATTRIBUTE_DIRECTORY)
+
+    def is_file(self) -> bool:
+        return not self.is_dir()
+
+    def stat(self) -> _Win32StatResult:
+        return _Win32StatResult(self.size)
+
 
 translate = QCoreApplication.translate
 
@@ -171,10 +212,68 @@ def delete_files_only_extension(directory: Path | str, extension: str) -> bool:
     return delete_files_with_condition(directory, lambda file: file.endswith(extension))
 
 
+def scanpath(
+    path: Path | str,
+) -> Generator[os.DirEntry[str] | Win32DirEntry, None, None]:
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        try:
+            INVALID_HANDLE_VALUE = -1
+
+            find_data = WIN32_FIND_DATAW()
+            kernel32 = ctypes.windll.kernel32
+
+            # Define function prototypes
+            kernel32.FindFirstFileW.argtypes = [
+                wintypes.LPCWSTR,
+                ctypes.POINTER(WIN32_FIND_DATAW),
+            ]
+            kernel32.FindFirstFileW.restype = wintypes.HANDLE
+            kernel32.FindNextFileW.argtypes = [
+                wintypes.HANDLE,
+                ctypes.POINTER(WIN32_FIND_DATAW),
+            ]
+            kernel32.FindNextFileW.restype = wintypes.BOOL
+            kernel32.FindClose.argtypes = [wintypes.HANDLE]
+            kernel32.FindClose.restype = wintypes.BOOL
+
+            p = Path(path)
+
+            handle = kernel32.FindFirstFileW(str(p / "*"), ctypes.byref(find_data))
+
+            if handle == INVALID_HANDLE_VALUE:
+                last_error = ctypes.get_last_error()
+                if last_error != 2:  # File not found
+                    raise ctypes.WinError(last_error)
+                return
+
+            try:
+                while True:
+                    if find_data.cFileName not in (".", ".."):
+                        yield Win32DirEntry(p, find_data)
+                    if not kernel32.FindNextFileW(handle, ctypes.byref(find_data)):
+                        last_error = ctypes.get_last_error()
+                        if last_error in (0, 18):  # No more files
+                            return
+                        else:
+                            raise ctypes.WinError(last_error)
+            finally:
+                kernel32.FindClose(handle)
+        except OSError as e:
+            logger.error(f"An unexpected Win32 API error for scanpath occurred: {e}")
+    else:
+        try:
+            with os.scandir(path) as it:
+                yield from it
+        except OSError as e:
+            logger.error(f"os.scandir failed for directory {path}: {e}")
+
+
 def directories(mods_path: Path | str) -> list[str]:
     try:
-        with os.scandir(mods_path) as directories:
-            return [directory.path for directory in directories if directory.is_dir()]
+        return [entry.path for entry in scanpath(mods_path) if entry.is_dir()]
     except OSError as e:
         logger.error(f"Error reading directory {mods_path}: {e}")
         return []

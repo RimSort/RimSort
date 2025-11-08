@@ -22,7 +22,7 @@ from app.models.image_label import ImageLabel
 from app.sort.mod_sorting import uuid_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
-from app.utils.generic import format_file_size, platform_specific_open
+from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
 
@@ -608,7 +608,7 @@ class ModInfo:
                 if os.path.exists(about_folder_target_path):
                     # Look for a case-insensitive About folder
                     invalid_folder_path_found = True
-                    for temp_file in os.scandir(workshop_folder_path):
+                    for temp_file in scanpath(workshop_folder_path):
                         if (
                             temp_file.name.lower() == about_folder_name.lower()
                             and temp_file.is_dir()
@@ -619,7 +619,7 @@ class ModInfo:
                     # Look for a case-insensitive "Preview.png" file
                     invalid_file_path_found = True
                     preview_file_name = "Preview.png"
-                    for temp_file in os.scandir(
+                    for temp_file in scanpath(
                         str((Path(workshop_folder_path) / about_folder_name))
                     ):
                         if (

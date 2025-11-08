@@ -27,7 +27,7 @@ from app.utils.constants import (
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
-from app.utils.generic import directories
+from app.utils.generic import directories, scanpath
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
@@ -1751,7 +1751,7 @@ class ModParser(QRunnable):
         about_folder_name = "About"
         about_file_name = "About.xml"
         # Look for a case-insensitive "About" folder
-        for temp_file in os.scandir(mod_directory):
+        for temp_file in scanpath(mod_directory):
             if (
                 temp_file.name.lower() == about_folder_name.lower()
                 and temp_file.is_dir()
@@ -1761,7 +1761,7 @@ class ModParser(QRunnable):
                 break
             # Look for a case-insensitive "About.xml" file
         if not invalid_about_folder_path_found:
-            for temp_file in os.scandir(str((directory_path / about_folder_name))):
+            for temp_file in scanpath(str((directory_path / about_folder_name))):
                 if (
                     temp_file.name.lower() == about_file_name.lower()
                     and temp_file.is_file()
@@ -1771,7 +1771,7 @@ class ModParser(QRunnable):
                     break
         # Look for .rsc scenario files to load metadata from if we didn't find About.xml
         if invalid_about_file_path_found:
-            for temp_file in os.scandir(mod_directory):
+            for temp_file in scanpath(mod_directory):
                 if temp_file.name.lower().endswith(".rsc") and not temp_file.is_dir():
                     scenario_rsc_file = temp_file.name
                     scenario_rsc_found = True
@@ -1785,7 +1785,7 @@ class ModParser(QRunnable):
         # Look for a case-insensitive "PublishedFileId.txt" file if we didn't find a pfid
         elif not pfid and not invalid_about_folder_path_found:
             pfid_file_name = "PublishedFileId.txt"
-            for temp_file in os.scandir(str((directory_path / about_folder_name))):
+            for temp_file in scanpath(str((directory_path / about_folder_name))):
                 if (
                     temp_file.name.lower() == pfid_file_name.lower()
                     and temp_file.is_file()
