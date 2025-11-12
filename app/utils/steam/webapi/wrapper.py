@@ -3,6 +3,7 @@ import traceback
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
+from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Dict
 
@@ -16,6 +17,8 @@ from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from app.views.dialogue import show_dialogue_input, show_warning
+
+STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
 
 # Prevent circular dependencies for type checking
 if TYPE_CHECKING:
@@ -84,11 +87,6 @@ class CollectionImport:
         # Handle the import button click event
         logger.info("Import Workshop collection clicked")
         collection_link = self.link_input[0]
-        steamdb = (
-            self.metadata_manager.external_steam_metadata
-            if self.metadata_manager
-            else None
-        )
 
         # Check if the input link is a valid workshop collection link
         if not self.is_valid_collection_link(collection_link):
@@ -105,21 +103,6 @@ class CollectionImport:
             )
             return
 
-        # Check if there is a steamdb supplied
-        if not steamdb:
-            logger.error(
-                "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings."
-            )
-            # Show warning message box
-            show_warning(
-                title=self.translate("CollectionImport", "Invalid Database"),
-                text=self.translate(
-                    "CollectionImport",
-                    "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
-                ),
-            )
-            return
-
         try:
             if BASE_URL_STEAMFILES in collection_link:
                 collection_link = collection_link.split(BASE_URL_STEAMFILES, 1)[1]
@@ -132,21 +115,133 @@ class CollectionImport:
                 collection_webapi_result is not None
                 and len(collection_webapi_result) > 0
             ):
-                for mod in collection_webapi_result[0]["children"]:
-                    if mod.get("publishedfileid"):
-                        self.publishedfileids.append(mod["publishedfileid"])
+                self.publishedfileids = [
+                    pfid
+                    for mod in collection_webapi_result[0]["children"]
+                    if (pfid := _find_value_in_dict(mod, "publishedfileid"))
+                    if _find_value_in_dict(mod, "filetype") == 0
+                ]
+                failed_mods = []
                 for pfid in self.publishedfileids:
-                    if steamdb.get(pfid, {}).get("packageId"):
-                        self.package_ids.append(steamdb[pfid]["packageId"])
-                    else:
+                    try:
+                        pkgid = self._get_package_id_from_pfid(pfid)
+                    except ValueError:
                         logger.warning(
-                            f"Failed to parse packageId from collection PublishedFileId {pfid}"
+                            f"Failed to parse packageId from collection PublishedFileId {pfid}: "
+                            "incorrect pfid format"
                         )
+                        failed_mods.append(f"{pfid} - incorrect pfid format")
+                        continue
+                    if pkgid is None:
+                        # Try to check if the mod is inaccessible
+                        steam_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+
+                        try:
+                            steam_response = requests.get(steam_link).text
+                        except Exception as e:
+                            logger.exception(e)
+                            steam_response = ""
+                        if STEAM_THERE_WAS_A_PROBLEM_FLAG in steam_response:
+                            logger.info(f"Mod with pfid {pfid} is inaccessible")
+                            continue
+                        logger.error(
+                            f"Failed to fetch packageId from collection PublishedFileId {pfid}: "
+                            "PackageId not found. Try subscribing to collection first. "
+                            f"Check {steam_link} for mod details."
+                        )
+                        failed_mods.append(steam_link)
+                        continue
+                    self.package_ids.append(pkgid)
+
                 logger.info("Parsed packageIds from publishedfileids successfully")
+                if failed_mods:
+                    show_warning(
+                        title=self.translate("CollectionImport", "Incomplete import"),
+                        text=self.translate(
+                            "CollectionImport",
+                            f"{len(failed_mods)} mods could not be imported due to missing package ids. "
+                            "This may happen if you don't have all the mods downloaded.\n\n"
+                            "Try subscribing to the collection first",
+                        ),
+                        details="\n".join(failed_mods),
+                    )
         except Exception as e:
             logger.error(
                 f"An error occurred while fetching collection content: {str(e)}"
             )
+
+    def _get_package_id_from_pfid(self, pfid: str | int | None) -> str | None:
+        """Map published id to package id if possible
+
+        Order:
+
+        * steamdb, if configured
+        * internal metadata
+        * internal metadata using mod folder name as pfid
+        """
+        if pfid is None:
+            return None
+        pfid_str = str(pfid).strip()
+        if not pfid_str.isdigit():
+            raise ValueError(
+                f"PublishedFileId (pfid) is expected to be a numeric sequence, not {pfid_str}"
+            )
+        return (
+            self._get_package_id_from_pfid_using_steamdb(pfid_str)
+            or self._get_package_id_from_pfid_using_metadata(pfid_str)
+            or self._get_package_id_from_pfid_using_mod_folder_name(pfid_str)
+        )
+
+    def _get_package_id_from_pfid_using_metadata(self, pfid: str) -> str | None:
+        metadata_manager = self.metadata_manager
+        if not metadata_manager:
+            return None
+        return next(
+            (
+                package_id
+                for mod in metadata_manager.internal_local_metadata.values()
+                if str(_find_value_in_dict(mod, "publishedfileid")) == pfid
+                if (package_id := _find_value_in_dict(mod, "packageid"))
+            ),
+            None,
+        )
+
+    def _get_package_id_from_pfid_using_steamdb(self, pfid: str) -> str | None:
+        steamdb = (
+            self.metadata_manager.external_steam_metadata
+            if self.metadata_manager
+            else None
+        )
+        if not steamdb:
+            return None
+        mod = steamdb.get(pfid)
+        if not mod:
+            return None
+        return _find_value_in_dict(mod, "packageid")
+
+    def _get_package_id_from_pfid_using_mod_folder_name(self, pfid: str) -> str | None:
+        metadata_manager = self.metadata_manager
+        if not metadata_manager:
+            return None
+        return next(
+            (
+                package_id
+                for mod in metadata_manager.internal_local_metadata.values()
+                if (str_path := _find_value_in_dict(mod, "path"))
+                if ((path := Path(str_path)).is_dir())
+                if (path.name == pfid)
+                if (package_id := _find_value_in_dict(mod, "packageid"))
+            ),
+            None,
+        )
+
+
+def _find_value_in_dict(coll: dict[str, Any], key: str) -> Any:
+    key = key.strip().lower()
+    key_found = next((_ for _ in coll.keys() if _.strip().lower() == key), None)
+    if not key_found:
+        return None
+    return coll.get(key_found)
 
 
 class DynamicQuery(QObject):
