@@ -121,6 +121,7 @@ class CollectionImport:
                     if (pfid := _find_value_in_dict(mod, "publishedfileid"))
                     if _find_value_in_dict(mod, "filetype") == 0
                 ]
+                failed_mods = []
                 for pfid in self.publishedfileids:
                     try:
                         pkgid = self._get_package_id_from_pfid(pfid)
@@ -129,6 +130,7 @@ class CollectionImport:
                             f"Failed to parse packageId from collection PublishedFileId {pfid}: "
                             "incorrect pfid format"
                         )
+                        failed_mods.append(f"{pfid} - incorrect pfid format")
                         continue
                     if pkgid is None:
                         # Try to check if the mod is inaccessible
@@ -147,10 +149,22 @@ class CollectionImport:
                             "PackageId not found. Try subscribing to collection first. "
                             f"Check {steam_link} for mod details."
                         )
+                        failed_mods.append(steam_link)
                         continue
                     self.package_ids.append(pkgid)
 
                 logger.info("Parsed packageIds from publishedfileids successfully")
+                if failed_mods:
+                    show_warning(
+                        title=self.translate("CollectionImport", "Incomplete import"),
+                        text=self.translate(
+                            "CollectionImport",
+                            f"{len(failed_mods)} mods could not be imported due to missing package ids. "
+                            "This may happen if you don't have all the mods downloaded.\n\n"
+                            "Try subscribing to the collection first",
+                        ),
+                        details="\n".join(failed_mods),
+                    )
         except Exception as e:
             logger.error(
                 f"An error occurred while fetching collection content: {str(e)}"
