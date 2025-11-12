@@ -222,9 +222,12 @@ class CollectionImport:
         )
 
 
-def _find_value_in_dict(coll: dict, key: str):
+def _find_value_in_dict(coll: dict[str, Any], key: str) -> Any:
     key = key.strip().lower()
-    return coll.get(next((_ for _ in coll.keys() if _.strip().lower() == key), None))
+    key_found = next((_ for _ in coll.keys() if _.strip().lower() == key), None)
+    if not key_found:
+        return None
+    return coll.get(key_found)
 
 
 class DynamicQuery(QObject):
