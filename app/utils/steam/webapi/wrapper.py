@@ -3,6 +3,7 @@ import traceback
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
+from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Dict
 
@@ -16,6 +17,8 @@ from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from app.views.dialogue import show_dialogue_input, show_warning
+
+STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
 
 # Prevent circular dependencies for type checking
 if TYPE_CHECKING:
@@ -47,9 +50,9 @@ class CollectionImport:
         """
         self.metadata_manager = metadata_manager
         self.translate = QCoreApplication.translate
-        self.package_ids: list[str] = (
-            []
-        )  # Initialize an empty list to store package IDs
+        self.package_ids: list[
+            str
+        ] = []  # Initialize an empty list to store package IDs
         self.publishedfileids: list[str] = []  # Initialize an empty list to store pfids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
@@ -121,6 +124,7 @@ class CollectionImport:
                     pfid
                     for mod in collection_webapi_result[0]["children"]
                     if (pfid := _find_value_in_dict(mod, "publishedfileid"))
+                    if _find_value_in_dict(mod, "filetype") == 0
                 ]
                 for pfid in self.publishedfileids:
                     try:
@@ -132,9 +136,21 @@ class CollectionImport:
                         )
                         continue
                     if pkgid is None:
+                        # Try to check if the mod is inaccessible
+                        steam_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+
+                        try:
+                            steam_response = requests.get(steam_link).text
+                        except Exception as e:
+                            logger.exception(e)
+                            steam_response = ""
+                        if STEAM_THERE_WAS_A_PROBLEM_FLAG in steam_response:
+                            logger.info(f"Mod with pfid {pfid} is inaccessible")
+                            continue
                         logger.error(
                             f"Failed to fetch packageId from collection PublishedFileId {pfid}: "
-                            "PackageId not found. Try subscribing to collection first."
+                            "PackageId not found. Try subscribing to collection first. "
+                            f"Check {steam_link} for mod details."
                         )
                         continue
                     self.package_ids.append(pkgid)
@@ -150,8 +166,9 @@ class CollectionImport:
 
         Order:
 
-        * internal metadata
         * steamdb, if configured
+        * internal metadata
+        * internal metadata using mod folder name as pfid
         """
         if pfid is None:
             return None
@@ -160,9 +177,11 @@ class CollectionImport:
             raise ValueError(
                 f"PublishedFileId (pfid) is expected to be a numeric sequence, not {pfid_str}"
             )
-        return self._get_package_id_from_pfid_using_metadata(
-            pfid_str
-        ) or self._get_package_id_from_pfid_using_steamdb(pfid_str)
+        return (
+            self._get_package_id_from_pfid_using_steamdb(pfid_str)
+            or self._get_package_id_from_pfid_using_metadata(pfid_str)
+            or self._get_package_id_from_pfid_using_mod_folder_name(pfid_str)
+        )
 
     def _get_package_id_from_pfid_using_metadata(self, pfid: str) -> str | None:
         metadata_manager = self.metadata_manager
@@ -172,7 +191,7 @@ class CollectionImport:
             (
                 package_id
                 for mod in metadata_manager.internal_local_metadata.values()
-                if str(_find_value_in_dict(mod, "publishedfileid"))
+                if str(_find_value_in_dict(mod, "publishedfileid")) == pfid
                 if (package_id := _find_value_in_dict(mod, "packageid"))
             ),
             None,
@@ -190,6 +209,22 @@ class CollectionImport:
         if not mod:
             return None
         return _find_value_in_dict(mod, "packageid")
+
+    def _get_package_id_from_pfid_using_mod_folder_name(self, pfid: str) -> str | None:
+        metadata_manager = self.metadata_manager
+        if not metadata_manager:
+            return None
+        return next(
+            (
+                package_id
+                for mod in metadata_manager.internal_local_metadata.values()
+                if (str_path := _find_value_in_dict(mod, "path"))
+                if ((path := Path(str_path)).is_dir())
+                if (path.name == pfid)
+                if (package_id := _find_value_in_dict(mod, "packageid"))
+            ),
+            None,
+        )
 
 
 def _find_value_in_dict(coll: dict, key: str):
@@ -445,7 +480,9 @@ class DynamicQuery(QObject):
                     # logger.debug(f"{publishedfileid}: {metadata}")
                     # If the mod is no longer published
                     if metadata["result"] != 1:
-                        if not result["database"].get(
+                        if not result[
+                            "database"
+                        ].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
                             result["database"][publishedfileid] = {}
@@ -459,7 +496,9 @@ class DynamicQuery(QObject):
                         # This case is mostly intended for any missing_children passed back thru
                         # If this is part of an AppIDQuery, then it is useful for population of
                         # child_name and/or child_url below as part of the dependency data being collected
-                        if not result["database"].get(
+                        if not result[
+                            "database"
+                        ].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
                             result["database"][
@@ -469,9 +508,9 @@ class DynamicQuery(QObject):
                         result["database"][publishedfileid]["steamName"] = metadata[
                             "title"
                         ]
-                        result["database"][publishedfileid][
-                            "url"
-                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                        result["database"][publishedfileid]["url"] = (
+                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                        )
                         # Track time publishing created
                         # result["database"][publishedfileid][
                         #     "external_time_created"
