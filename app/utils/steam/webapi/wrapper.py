@@ -87,11 +87,6 @@ class CollectionImport:
         # Handle the import button click event
         logger.info("Import Workshop collection clicked")
         collection_link = self.link_input[0]
-        steamdb = (
-            self.metadata_manager.external_steam_metadata
-            if self.metadata_manager
-            else None
-        )
 
         # Check if the input link is a valid workshop collection link
         if not self.is_valid_collection_link(collection_link):
