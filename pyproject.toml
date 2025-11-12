@@ -7,7 +7,7 @@ version = "0.0.0" # Fake version, version is set in version.xml file # TODO: Swi
 requires-python = "==3.12.*"
 dependencies = [
     "beautifulsoup4==4.14.2",
-    "certifi==2025.10.5",
+    "certifi==2025.11.12",
     "chardet==5.2.0",
     "imageio==2.37.2",
     "loguru==0.7.3",
