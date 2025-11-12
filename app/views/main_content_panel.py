@@ -81,6 +81,7 @@ from app.views.mods_panel import (
     ModListWidget,
     ModsPanel,
 )
+from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
@@ -560,41 +561,53 @@ class MainContent(QObject):
         """
         Opens the DuplicateModsPanel to allow user to resolve duplicate mods.
         """
-        from app.windows.duplicate_mods_panel import DuplicateModsPanel
-
-        duplicate_mods_panel = DuplicateModsPanel(
-            self.duplicate_mods, self.settings_controller
-        )
-        duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
-        duplicate_mods_panel.show()
+        if not self.settings_controller.settings.duplicate_mods_warning:
+            logger.warning(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
+            return
+        elif (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            duplicate_mods_count = len(self.duplicate_mods)
+            logger.info(
+                f"Found {duplicate_mods_count} duplicate mods. Opening DuplicateModsPanel..."
+            )
+            duplicate_mods_panel = DuplicateModsPanel(
+                self.duplicate_mods, self.settings_controller
+            )
+            duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
+            duplicate_mods_panel.show()
+        else:
+            logger.info("No duplicate mods found. Skipping...")
 
     def __missing_mods_prompt(self) -> None:
-        logger.debug(f"Could not find data for {len(self.missing_mods)} active mods")
-        if (  # User configuration
-            self.settings_controller.settings.try_download_missing_mods
-            and self.metadata_manager.external_steam_metadata
-        ):  # Do we even have metadata to lookup...?
-            self.missing_mods_prompt = MissingModsPrompt(
-                packageids=self.missing_mods,
+        """Open the MissingModsPrompt to allow user to download missing mods."""
+        if not self.settings_controller.settings.try_download_missing_mods:
+            logger.warning(
+                "User preference is not configured to attempt downloading missing mods. Skipping..."
             )
+            return
+        elif (
+            self.settings_controller.settings.try_download_missing_mods
+            and self.missing_mods
+            and len(self.missing_mods) > 0
+        ):
+            missing_mods_count = len(self.missing_mods)
+            logger.info(
+                f"Found {missing_mods_count} missing mods. Opening MissingModsPrompt..."
+            )
+            # Always open the MissingModsPrompt panel, allowing manual entry if Steam database is unavailable
+            self.missing_mods_prompt = MissingModsPrompt(packageids=self.missing_mods)
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
             )
             self.missing_mods_prompt.show()
         else:
-            list_of_missing_mods = "\n".join([f"* {mod}" for mod in self.missing_mods])
-            dialogue.show_information(
-                text=self.tr("Could not find data for some mods!"),
-                information=(
-                    self.tr(
-                        "The following list of mods were set active in your mods list but "
-                        "no data could be found for these mods in local/workshop mod paths. "
-                        "\n\nAre your game configuration paths correct?"
-                    )
-                ),
-                details=list_of_missing_mods,
-            )
+            logger.info("No missing mods found. Skipping...")
 
     def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
         """
@@ -766,33 +779,19 @@ class MainContent(QObject):
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
-            # If we have duplicate mods, prompt user
-            if (
-                self.settings_controller.settings.duplicate_mods_warning
-                and self.duplicate_mods
-                and len(self.duplicate_mods) > 0
-            ):
-                self.__duplicate_mods_prompt()
-            elif not self.settings_controller.settings.duplicate_mods_warning:
-                logger.debug(
-                    "User preference is not configured to display duplicate mods. Skipping..."
-                )
+            # check if we have duplicate mods, prompt user
+            self.__duplicate_mods_prompt()
 
-            # If we have missing mods, prompt user
-            if self.missing_mods and len(self.missing_mods) > 0:
-                self.__missing_mods_prompt()
+            # check if we have missing mods, prompt user
+            self.__missing_mods_prompt()
 
             # Check Workshop mods for updates if configured
-            if (
-                self.settings_controller.settings.steam_mods_update_check
-            ):  # Check SteamCMD/Steam mods for updates if configured
-                logger.info(
-                    "User preference is configured to check Workshop mod for updates. Checking for Workshop mod updates..."
-                )
+            if self.settings_controller.settings.steam_mods_update_check:
+                logger.info("Checking Workshop mods for updates...")
                 self._do_check_for_workshop_updates()
             else:
                 logger.info(
-                    "User preference is not configured to check Steam mods for updates. Skipping..."
+                    "User preference is not configured to check Workshop mod for updates. Skipping.."
                 )
         else:
             self._insert_data_into_lists([], [])
@@ -1009,22 +1008,14 @@ class MainContent(QObject):
             ) = metadata.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
-            # If we have duplicate mods, prompt user
-            if (
-                self.settings_controller.settings.duplicate_mods_warning
-                and self.duplicate_mods
-                and len(self.duplicate_mods) > 0
-            ):
-                self.__duplicate_mods_prompt()
-            elif not self.settings_controller.settings.duplicate_mods_warning:
-                logger.debug(
-                    "User preference is not configured to display duplicate mods. Skipping..."
-                )
-            # If we have missing mods, prompt user
-            if self.missing_mods and len(self.missing_mods) >= 1:
-                self.__missing_mods_prompt()
+
+            # check if we have duplicate mods, prompt user
+            self.__duplicate_mods_prompt()
+
+            # check if we have missing mods, prompt user
+            self.__missing_mods_prompt()
         else:
-            logger.debug("USER ACTION: pressed cancel, passing")
+            logger.info("USER ACTION: pressed cancel, passing")
 
     def _do_export_list_file_xml(self) -> None:
         """
@@ -1238,21 +1229,11 @@ class MainContent(QObject):
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Rentry.co")
 
-        # If we have duplicate mods and user preference is configured to display them, prompt user
-        if (
-            self.settings_controller.settings.duplicate_mods_warning
-            and self.duplicate_mods
-            and len(self.duplicate_mods) > 0
-        ):
-            self.__duplicate_mods_prompt()
-        elif not self.settings_controller.settings.duplicate_mods_warning:
-            logger.debug(
-                "User preference is not configured to display duplicate mods. Skipping..."
-            )
+        # check if we have duplicate mods, prompt user
+        self.__duplicate_mods_prompt()
 
-        # If we have missing mods, prompt the user
-        if self.missing_mods and len(self.missing_mods) >= 1:
-            self.__missing_mods_prompt()
+        # check if we have missing mods, prompt user
+        self.__missing_mods_prompt()
 
     def _do_import_list_workshop_collection(self) -> None:
         # Check internet connection before attempting task
@@ -1295,21 +1276,11 @@ class MainContent(QObject):
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Workshop collection")
 
-        # If we have duplicate mods and user preference is configured to display them, prompt user
-        if (
-            self.settings_controller.settings.duplicate_mods_warning
-            and self.duplicate_mods
-            and len(self.duplicate_mods) > 0
-        ):
-            self.__duplicate_mods_prompt()
-        elif not self.settings_controller.settings.duplicate_mods_warning:
-            logger.debug(
-                "User preference is not configured to display duplicate mods. Skipping..."
-            )
+        # check if we have duplicate mods, prompt user
+        self.__duplicate_mods_prompt()
 
-        # If we have missing mods, prompt the user
-        if self.missing_mods and len(self.missing_mods) >= 1:
-            self.__missing_mods_prompt()
+        # check if we have missing mods, prompt user
+        self.__missing_mods_prompt()
 
     def _do_export_list_clipboard(self) -> None:
         """
@@ -1645,20 +1616,11 @@ class MainContent(QObject):
 
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
-        # If we have duplicate mods, prompt user
-        if (
-            self.settings_controller.settings.duplicate_mods_warning
-            and self.duplicate_mods
-            and len(self.duplicate_mods) > 0
-        ):
-            self.__duplicate_mods_prompt()
-        elif not self.settings_controller.settings.duplicate_mods_warning:
-            logger.debug(
-                "User preference is not configured to display duplicate mods. Skipping..."
-            )
-        # If we have missing mods, prompt user
-        if self.missing_mods and len(self.missing_mods) >= 1:
-            self.__missing_mods_prompt()
+        # check if we have duplicate mods, prompt user
+        self.__duplicate_mods_prompt()
+
+        # check if we have missing mods, prompt user
+        self.__missing_mods_prompt()
 
     def _do_open_app_directory(self) -> None:
         app_directory = os.getcwd()
