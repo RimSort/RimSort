@@ -2026,7 +2026,7 @@ class ModParser(QRunnable):
                             and workshop_item_details.get(publishedfileid, {}).get(
                                 "timetouched"
                             )
-                            != 0
+                            != "0"
                         ):
                             # The last time SteamCMD/Steam client touched a mod according to its entry
                             mod_metadata["internal_time_touched"] = int(
