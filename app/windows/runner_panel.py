@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -610,3 +611,4 @@ class RunnerPanel(QWidget):
         )
         if diag.exec_is_positive():
             self.close()
+            EventBus().do_metadata_refresh_cache.emit()

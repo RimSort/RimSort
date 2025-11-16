@@ -109,6 +109,7 @@ class EventBus(QObject):
 
     refresh_started = Signal()
     refresh_finished = Signal()
+    do_metadata_refresh_cache = Signal()
 
     # Dialog signals
     reset_settings_file = Signal()

@@ -1573,7 +1573,7 @@ class MetadataManager(QObject):
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
-        logger.info("Refreshing metadata cache...")
+        logger.warning("Refreshing metadata cache...")
 
         # If we are refreshing cache from user action, update user paths as well in case of change
         if not is_initial:

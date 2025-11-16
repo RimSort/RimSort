@@ -327,6 +327,8 @@ class MainContent(QObject):
                 self.do_threaded_loading_animation
             )
 
+            EventBus().do_metadata_refresh_cache.connect(self.do_metadata_refresh_cache)
+
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
@@ -357,6 +359,10 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    def do_metadata_refresh_cache(self) -> None:
+        """Force Refresh metadata cache"""
+        self.metadata_manager.refresh_cache(is_initial=False)
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
