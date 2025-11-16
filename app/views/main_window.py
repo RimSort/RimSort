@@ -276,8 +276,6 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller._on_set_current_instance(
             self.settings_controller.settings.current_instance
         )
-        # REFRESH CONFIGURED METADATA
-        self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
@@ -312,6 +310,8 @@ class MainWindow(QMainWindow):
             EventBus().do_check_for_application_update.emit()
         # Delete outdated entries in aux DB
         EventBus().do_delete_outdated_entries_in_aux_db.emit()
+        # REFRESH CONFIGURED METADATA
+        self.main_content_panel._do_refresh(is_initial=is_initial)
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
