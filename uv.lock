@@ -330,13 +330,13 @@ wheels = [
 
 [[package]]
 name = "nuitka"
-version = "2.8.4"
+version = "2.8.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ordered-set", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "zstandard", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/87/f20ffda1b6dc04361fa95390f4d47d974ee194e6e1e7688f13d324f3d89b/Nuitka-2.8.4.tar.gz", hash = "sha256:06b020ef33be97194f888dcfcd4c69c8452ceb61b31c7622e610d5156eb7923d", size = 3885111, upload-time = "2025-10-21T10:28:45.499Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/d9/c202b2e9d91f163417b4c5167df2a71707c57175d0540a4da8b1fc06d4f1/nuitka-2.8.6.tar.gz", hash = "sha256:a648c392d2a041f31c9582a68ef7c1a3a71166eaf2d344a0bb1d03f184ed3a2a", size = 3885843, upload-time = "2025-11-14T15:21:03.472Z" }
 
 [[package]]
 name = "numpy"
@@ -809,7 +809,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-build = [{ name = "nuitka", specifier = "==2.8.4" }]
+build = [{ name = "nuitka", specifier = "==2.8.6" }]
 dev = [
     { name = "lxml-stubs", specifier = ">=0.5.1" },
     { name = "mypy", specifier = ">=1.17.1" },
