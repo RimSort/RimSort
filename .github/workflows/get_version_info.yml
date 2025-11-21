@@ -88,7 +88,7 @@ jobs:
 
       - name: Checkout
         if: ${{ inputs.format_only == false }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
