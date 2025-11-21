@@ -425,7 +425,7 @@ class AcfTableModel(QAbstractTableModel):
         self._all_entries: list[AcfEntry] = []  # Full list of all entries
         self._loaded_count = 0  # Number of entries currently loaded
         self._mod_name_cache: OrderedDict[str, str] = OrderedDict()
-        self._mod_path_cache: OrderedDict[str, str] = OrderedDict()
+        self._mod_path_cache: OrderedDict[str, Optional[str]] = OrderedDict()
         self._metadata_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self.max_cache_size = 5000
         self._thread_pool = QThreadPool.globalInstance()
@@ -578,7 +578,11 @@ class AcfTableModel(QAbstractTableModel):
         if pfid in self._mod_path_cache:
             self._mod_path_cache.move_to_end(pfid)
             self._limit_cache_size(self._mod_path_cache)
-            return self._mod_path_cache[pfid]
+            cached_path = self._mod_path_cache[pfid]
+            if cached_path is not None:
+                return cached_path
+            else:
+                return UNKNOWN_STRING
         # Trigger background loading if not cached
         self._load_metadata_async(pfid, "path")
         return UNKNOWN_STRING
