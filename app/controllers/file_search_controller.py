@@ -1,7 +1,7 @@
 import os
 import re
 import xml.etree.ElementTree as ET
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from xml.dom import minidom
 
 import chardet
@@ -16,7 +16,6 @@ from app.models.settings import Settings
 from app.utils.file_search import FileSearch
 from app.utils.generic import format_file_size
 from app.utils.ignore_extensions import IGNORE_EXTENSIONS
-from app.utils.metadata import MetadataManager
 from app.utils.mod_utils import get_mod_paths_from_uuids
 from app.views.dialogue import show_warning
 from app.views.file_search_dialog import FileSearchDialog
@@ -514,70 +513,6 @@ class SearchWorker(QThread):
         return (scope == "active mods" and is_active) or (
             scope == "inactive mods" and not is_active
         )
-
-    def get_mod_name_from_pfid(self, pfid: Union[str, int, None]) -> str:
-        """
-        Get a mod's name from its PublishedFileID.
-
-        Args:
-            pfid: The PublishedFileID to lookup (str, int or None)
-
-        Returns:
-            str: The mod name or "Unknown Mod" if not found
-        """
-        if not pfid:
-            return f"{pfid}"
-
-        pfid_str = str(pfid)
-        if not pfid_str.isdigit():
-            return f"{pfid_str}"
-
-        metadata = self._get_mod_metadata(pfid_str)
-        if not isinstance(metadata, dict):
-            return f"{pfid_str}"
-
-        name = metadata.get("name") or metadata.get("steamName")
-        return repr(name) if name else f"{pfid_str}"
-
-    def _get_mod_metadata(self, pfid: str) -> dict[str, Any]:
-        """
-        Helper method to get metadata for a mod by PublishedFileID.
-        Checks both internal and external metadata sources.
-
-        Args:
-            pfid: The PublishedFileID to lookup
-        Returns:
-            Dictionary containing metadata or empty dict if not found
-        """
-        try:
-            if not hasattr(self, "metadata_manager"):
-                self.metadata_manager = MetadataManager.instance()
-
-            # First check internal local metadata
-            if hasattr(self.metadata_manager, "internal_local_metadata"):
-                for (
-                    uuid,
-                    metadata,
-                ) in self.metadata_manager.internal_local_metadata.items():
-                    if (
-                        metadata
-                        and isinstance(metadata, dict)
-                        and metadata.get("publishedfileid") == pfid
-                    ):
-                        return metadata
-
-            # Then check external steam metadata if available
-            if hasattr(self.metadata_manager, "external_steam_metadata"):
-                steam_metadata = getattr(
-                    self.metadata_manager, "external_steam_metadata", {}
-                )
-                if isinstance(steam_metadata, dict):
-                    return steam_metadata.get(pfid, {})
-
-            return {}
-        except Exception as e:
-            logger.error(f"Metadata lookup failed: {str(e)}")
-            return {}
 
     def _should_exclude(self, file_path: str) -> bool:
         """Check if a file or directory should be excluded based on exclude_options."""
