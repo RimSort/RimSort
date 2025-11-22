@@ -2252,7 +2252,8 @@ class MainContent(QObject):
                 "Processing Steam subscription action(s) via Steamworks API..."
             ),
         )
-        # self._do_refresh()
+        # Do a full refresh of metadata and UI
+        self._do_refresh()
 
         # GIT MOD ACTIONS
 
@@ -2664,6 +2665,7 @@ class MainContent(QObject):
                     output,
                     indent=4,
                 )
+            # Do a full refresh of metadata and UI
             self._do_refresh()
 
     def _do_download_entire_workshop(self, action: str) -> None:
@@ -3028,6 +3030,7 @@ class MainContent(QObject):
         if answer == QMessageBox.StandardButton.Yes:
             with open(path, "w", encoding="utf-8") as output:
                 json.dump(db_output_c, output, indent=4)
+            # Do a full refresh of metadata and UI
             self._do_refresh()
         else:
             logger.debug("USER ACTION: declined to continue rules database update.")
