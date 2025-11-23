@@ -193,7 +193,7 @@ class RunnerPanel(QWidget):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
-            self.close()
+            self.exit_window()
 
     def _do_clear_runner(self) -> None:
         self.text.clear()
@@ -553,7 +553,7 @@ class RunnerPanel(QWidget):
         if answer == QMessageBox.StandardButton.Yes:
             self.redownloading = True
             self.steamcmd_downloader_signal.emit(self.steamcmd_download_tracking)
-            self.close()
+            self.exit_window()
 
         else:
             self.redownloading = False
@@ -610,5 +610,9 @@ class RunnerPanel(QWidget):
             negative_text=self.tr("Ok"),
         )
         if diag.exec_is_positive():
-            self.close()
-            EventBus().do_metadata_refresh_cache.emit()
+            self.exit_window()
+
+    def exit_window(self) -> None:
+        """Clean up resources when the process window is closed."""
+        self.close()
+        EventBus().do_metadata_refresh_cache.emit()
