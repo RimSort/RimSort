@@ -47,13 +47,20 @@ from app.views.dialogue import (
 
 class ModReplacement:
     def __init__(
-        self, name: str, author: str, packageid: str, pfid: str, supportedversions: str
+        self,
+        name: str,
+        author: str,
+        packageid: str,
+        pfid: str,
+        supportedversions: str,
+        source: str = "database",
     ):
         self.name = name
         self.author = author
         self.packageid = packageid
         self.pfid = pfid
         self.supportedversions = supportedversions
+        self.source = source
 
 
 # TODO: Someday, it is probably worth typing out the keys
