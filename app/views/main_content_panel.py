@@ -362,7 +362,7 @@ class MainContent(QObject):
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
-        self.metadata_manager.refresh_cache(is_initial=False)
+        self.metadata_manager.refresh_cache()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
