@@ -1337,7 +1337,7 @@ class UpdateManager(QObject):
                 raise UpdateScriptLaunchError(
                     "MSI installers are only supported on Windows"
                 )
-            self._launch_msi_installer(update_source_path, needs_elevation)
+            self._launch_msi_installer(update_source_path, log_path, needs_elevation)
             return
 
         try:
@@ -1508,7 +1508,9 @@ class UpdateManager(QObject):
         )
         return p
 
-    def _launch_msi_installer(self, msi_path: Path, needs_elevation: bool) -> None:
+    def _launch_msi_installer(
+        self, msi_path: Path, log_path: Path, needs_elevation: bool
+    ) -> None:
         """
         Launch the MSI installer on Windows.
 
@@ -1523,27 +1525,21 @@ class UpdateManager(QObject):
             # Use PowerShell to run msiexec with elevated privileges
             cmd = (
                 f'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process msiexec.exe '
-                f"-ArgumentList @('/i', '{str(msi_path)}') -Verb RunAs -WindowStyle Normal\""
+                f"-ArgumentList @('/package', '{str(msi_path)}', '/passive', '/norestart', '/log', '{str(log_path)}') "
+                f'-Verb RunAs"'
             )
             logger.debug(f"Launching MSI with elevation: {cmd}")
-            try:
-                subprocess.run(cmd, shell=True, check=True)
-                logger.info("MSI installer launched successfully with elevation")
-            except subprocess.CalledProcessError as e:
-                raise UpdateScriptLaunchError(
-                    f"Failed to launch MSI installer: {e}"
-                ) from e
         else:
             # Launch MSI normally
-            cmd = f'msiexec /i "{msi_path}" /quiet /norestart'
+            cmd = f'msiexec /package "{msi_path}" /passive /norestart /log "{log_path}"'
             logger.debug(f"Launching MSI: {cmd}")
-            try:
-                subprocess.run(cmd, shell=True, check=True)
-                logger.info("MSI installer launched successfully")
-            except subprocess.CalledProcessError as e:
-                raise UpdateScriptLaunchError(
-                    f"Failed to launch MSI installer: {e}"
-                ) from e
+
+        try:
+            subprocess.Popen(cmd, shell=True)
+            logger.info("MSI installer launched successfully")
+            self.update_progress.emit(100, "Update launched!")
+        except Exception as e:
+            raise UpdateScriptLaunchError(f"Failed to launch MSI installer: {e}") from e
 
         # Exit the application after launching MSI
         sys.exit(0)
