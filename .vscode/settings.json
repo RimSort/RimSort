@@ -103,5 +103,8 @@
   "editor.defaultFormatter": "charliermarsh.ruff",
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
   }
 }
