@@ -2253,7 +2253,12 @@ class MainContent(QObject):
             ),
         )
         # Do a full refresh of metadata and UI
-        self._do_refresh()
+        # self._do_refresh()
+        # TODO  check if this is necessary
+        """       
+        Disabled refresh since steam downloads are not instant and in the background in its own time
+        Refreshing metadata and UI here could tag mods as invalid or cause crashes due to key errors etc
+        """
 
         # GIT MOD ACTIONS
 
