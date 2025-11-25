@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import traceback
 from datetime import datetime
 from functools import partial
@@ -27,13 +28,14 @@ from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 import requests
 from loguru import logger
 from packaging import version
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QEventLoop, QObject, Signal
 from PySide6.QtWidgets import QMessageBox
 
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import check_internet_connection
+from app.views.download_progress_window import DownloadProgressWindow
 
 # Pre-compiled regex patterns for performance
 VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
@@ -242,6 +244,7 @@ class ScriptConfig:
 
 class UpdateManager(QObject):
     update_progress = Signal(int, str)  # percent, message
+    download_complete = Signal(bool, str)  # success, error_message
 
     # Class-level cached platform patterns for performance
     _platform_patterns = {
@@ -305,6 +308,7 @@ class UpdateManager(QObject):
             if self._system in self._platform_patterns
             else None
         )
+        self._download_cancelled = False
 
     def _check_needs_elevation(self) -> bool:
         """
@@ -467,6 +471,7 @@ class UpdateManager(QObject):
             "tag_name": latest_tag_name,
             "latest_version": latest_version,
             "needs_elevation": needs_elevation,
+            "is_msi": latest_release_info.get("is_msi", False),
         }
 
     def _parse_current_version(self, current_version: str) -> version.Version:
@@ -537,8 +542,10 @@ class UpdateManager(QObject):
         download_url = update_info["download_url"]
         tag_name = update_info["tag_name"]
 
+        is_msi = bool(update_info.get("is_msi", False))
+
         try:
-            self._perform_update(download_url, tag_name)
+            self._perform_update(download_url, tag_name, is_msi)
         except UpdateError as e:
             logger.error(f"Update process failed: {e}")
             raise
@@ -677,9 +684,8 @@ class UpdateManager(QObject):
         )
         arch_patterns = arch_patterns_dict.get(self._arch, [])
 
-        # Prefer ZIP for all platforms except Windows installations installed in protected paths
-        preferred_extension = ZIP_EXTENSION
-        # Determine preferred extension based on platform and installation path
+        # Determine preferred extension order
+        preferred_order = [ZIP_EXTENSION]
         if self._system == "Windows":
             app_folder = AppInfo().application_folder
             app_path_str = str(app_folder).replace("/", "\\").upper()
@@ -689,21 +695,23 @@ class UpdateManager(QObject):
                 r"C:\WINDOWS",
             ]
             if any(protected in app_path_str for protected in protected_paths):
-                preferred_extension = MSI_EXTENSION
+                preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
+            else:
+                preferred_order = [ZIP_EXTENSION, MSI_EXTENSION]
 
         logger.debug(
-            f"Looking for asset matching system={self._system}, arch={self._arch}, patterns={system_patterns + arch_patterns}, extension={preferred_extension}"
+            f"Looking for asset matching system={self._system}, arch={self._arch}, patterns={system_patterns + arch_patterns}, order={preferred_order}"
         )
 
-        # Find best matching asset
-        candidate = self._find_best_asset_match(
-            assets, system_patterns, arch_patterns, preferred_extension
-        )
-        if candidate:
-            return candidate
+        for ext in preferred_order:
+            candidate = self._find_best_asset_match(
+                assets, system_patterns, arch_patterns, ext
+            )
+            if candidate:
+                return candidate
 
         logger.warning(
-            f"No matching asset found for {self._system} {self._arch} with extension {preferred_extension}"
+            f"No matching asset found for {self._system} {self._arch} with extensions order {preferred_order}"
         )
         return None
 
@@ -773,7 +781,17 @@ class UpdateManager(QObject):
 
         return candidate
 
-    def _perform_update(self, download_url: str, tag_name: str) -> None:
+    def _on_download_cancel(self) -> None:
+        self._download_cancelled = True
+
+    def _download_update_worker(self, url: str) -> None:
+        try:
+            self._download_update(url)
+            self.download_complete.emit(True, "")
+        except Exception as e:
+            self.download_complete.emit(False, str(e))
+
+    def _perform_update(self, download_url: str, tag_name: str, is_msi: bool) -> None:
         """
         Download and extract the update, then launch the update script.
 
@@ -786,30 +804,46 @@ class UpdateManager(QObject):
                 f"Downloading & extracting RimSort release from: {download_url}"
             )
 
-            # Download with progress animation
-            EventBus().do_threaded_loading_animation.emit(
-                str(AppInfo().theme_data_folder / "default-icons" / "refresh.gif"),
-                partial(
-                    self._download_update,
-                    url=download_url,
-                ),
+            # Download with progress window
+            self._download_cancelled = False
+            progress_window: DownloadProgressWindow = DownloadProgressWindow()
+            progress_window.update_progress(
+                0,
                 self.tr("Downloading RimSort {tag_name} release...").format(
                     tag_name=tag_name
                 ),
             )
+            progress_window.cancel_requested.connect(self._on_download_cancel)
+            self.update_progress.connect(progress_window.update_progress)
 
-            if self._update_content is None:
-                raise UpdateDownloadError("Download did not complete successfully")
+            loop = QEventLoop()
+            result: dict[str, Any] = {"success": False, "error": ""}
 
-            # Get release info to determine if MSI
-            latest_release_info = self._get_latest_release_info(
-                self._check_needs_elevation()
+            def on_complete(success: bool, error: str) -> None:
+                result["success"] = success
+                result["error"] = error
+                try:
+                    progress_window.close()
+                except Exception:
+                    pass
+                loop.quit()
+
+            self.download_complete.connect(on_complete)
+
+            worker = threading.Thread(
+                target=self._download_update_worker, args=(download_url,), daemon=True
             )
-            if not latest_release_info:
+            worker.start()
+
+            progress_window.show()
+            loop.exec()
+
+            if not result["success"] or self._update_content is None:
+                if self._download_cancelled:
+                    raise UpdateDownloadError("Download cancelled by user")
                 raise UpdateDownloadError(
-                    "Failed to retrieve release info for extraction"
+                    result["error"] or "Download did not complete successfully"
                 )
-            is_msi = latest_release_info.get("is_msi", False)
 
             # Extract or save with progress animation
             EventBus().do_threaded_loading_animation.emit(
@@ -898,11 +932,24 @@ class UpdateManager(QObject):
             File size in bytes, or 0 if unable to determine
         """
         try:
-            head_response = requests.head(url, timeout=API_TIMEOUT)
+            head_response = requests.head(
+                url, timeout=API_TIMEOUT, allow_redirects=True
+            )
             return int(head_response.headers.get("content-length", 0))
         except Exception as e:
             logger.debug(f"Failed to get file size: {e}")
             return 0
+
+    def _format_size(self, n: int) -> str:
+        units = ["B", "KB", "MB", "GB", "TB"]
+        size = float(n)
+        i = 0
+        while size >= 1024 and i < len(units) - 1:
+            size /= 1024.0
+            i += 1
+        if i == 0:
+            return f"{int(size)} {units[i]}"
+        return f"{size:.1f} {units[i]}"
 
     def _download_with_progress(
         self, response: requests.Response, total_size: int
@@ -920,32 +967,59 @@ class UpdateManager(QObject):
         content = bytearray()
         downloaded_size = 0
         chunk_count = 0
+        downloaded_since_last_emit = 0
         start_time = datetime.now()
 
+        if total_size <= 0:
+            self.update_progress.emit(-1, "Downloading...")
+
         for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+            if self._download_cancelled:
+                raise UpdateDownloadError("Download cancelled by user")
             if chunk:
                 content.extend(chunk)
                 downloaded_size += len(chunk)
                 chunk_count += 1
+                downloaded_since_last_emit += len(chunk)
 
-                # Log progress for large downloads and emit signal
-                if total_size > 0 and downloaded_size % (1024 * 1024) == 0:  # Every MB
-                    progress = (downloaded_size / total_size) * 100
+                # Emit progress approximately every 512KB
+                emit_update = downloaded_since_last_emit >= 512 * 1024
+
+                if emit_update:
                     elapsed = (datetime.now() - start_time).total_seconds()
                     speed = downloaded_size / elapsed if elapsed > 0 else 0
-                    logger.debug(
-                        f"Download progress: {progress:.1f}% ({downloaded_size}/{total_size} bytes) - Speed: {speed:.2f} B/s"
-                    )
-                    self.update_progress.emit(
-                        int(progress),
-                        f"Downloading... {progress:.1f}% ({downloaded_size}/{total_size} bytes)",
-                    )
+
+                    if total_size > 0:
+                        progress = (downloaded_size / total_size) * 100
+                        logger.debug(
+                            f"Download progress: {progress:.1f}% ({downloaded_size}/{total_size} bytes) - Speed: {speed:.2f} B/s"
+                        )
+                        self.update_progress.emit(
+                            int(progress),
+                            f"Downloading... {progress:.1f}% ({self._format_size(downloaded_size)}/{self._format_size(total_size)})",
+                        )
+                    else:  # total_size <= 0
+                        self.update_progress.emit(
+                            -1,
+                            f"Downloading... {self._format_size(downloaded_size)}",
+                        )
+
+                    downloaded_since_last_emit = 0  # reset counter
 
         total_time = (datetime.now() - start_time).total_seconds()
         avg_speed = len(content) / total_time if total_time > 0 else 0
         logger.debug(
             f"Downloaded {len(content)} bytes in {chunk_count} chunks over {total_time:.2f}s (avg speed: {avg_speed:.2f} B/s)"
         )
+        if self._download_cancelled:
+            raise UpdateDownloadError("Download cancelled by user")
+
+        if total_size > 0:
+            self.update_progress.emit(100, "Download complete")
+        else:
+            self.update_progress.emit(
+                100, f"Download complete ({self._format_size(len(content))})"
+            )
         return bytes(content)
 
     def _validate_download(self, content: bytes) -> None:
@@ -1522,17 +1596,19 @@ class UpdateManager(QObject):
             UpdateScriptLaunchError: If MSI launch fails
         """
         if needs_elevation:
-            # Use PowerShell to run msiexec with elevated privileges
+            # Use PowerShell to run msiexec with elevated privileges.
+            # Do NOT request the MSI to auto-launch the app when elevated,
+            # because that may run RimSort as SYSTEM and not visible to the user.
             cmd = (
                 f'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process msiexec.exe '
                 f"-ArgumentList @('/package', '{str(msi_path)}', '/passive', '/norestart', '/log', '{str(log_path)}') "
                 f'-Verb RunAs"'
             )
-            logger.debug(f"Launching MSI with elevation: {cmd}")
+            logger.debug("Launching MSI with elevation (no auto-launch): %s", cmd)
         else:
-            # Launch MSI normally
-            cmd = f'msiexec /package "{msi_path}" /passive /norestart /log "{log_path}"'
-            logger.debug(f"Launching MSI: {cmd}")
+            # Launch MSI normally and request the installer to launch the app at finish with logging and UI
+            cmd = f'msiexec /i "{msi_path}" /passive /norestart /log "{log_path}" LAUNCHAFTERINSTALL=1'
+            logger.debug("Launching MSI: %s", cmd)
 
         try:
             subprocess.Popen(cmd, shell=True)
