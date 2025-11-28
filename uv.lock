@@ -1032,11 +1032,11 @@ wheels = [
 
 [[package]]
 name = "types-psutil"
-version = "7.1.3.20251127"
+version = "7.1.3.20251128"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d8/ef/e24b8298f4d549d50de6c5385e676fa64af58d1b6863eff44290bf11a378/types_psutil-7.1.3.20251127.tar.gz", hash = "sha256:21d74eaca4688ef168aa28181a465dc067cf9d4bb09df949db573f9140f66557", size = 23864, upload-time = "2025-11-27T03:04:32.263Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/53/7c60d90d1acb18119cce7b04e73e17e35fb0c1f68d87b3d76c053bef793a/types_psutil-7.1.3.20251128.tar.gz", hash = "sha256:7e5b0b6b6db0b8a714d483636718baaf6587498e57b55953264b40a4fd6786ea", size = 23970, upload-time = "2025-11-28T03:04:05.442Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/f1/fc086be0bc6d7bb59ca10006b19efb83f7981e8331fefe22abd072e065ab/types_psutil-7.1.3.20251127-py3-none-any.whl", hash = "sha256:5721b44b33f0798c2330fa8f6c8977101d0deec5301c3d747fc43a0992f5a3ca", size = 28504, upload-time = "2025-11-27T03:04:31.227Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/c1/93c1517d85023628a045f81a746aac033ce4be3f631ccd026201b97a75d2/types_psutil-7.1.3.20251128-py3-none-any.whl", hash = "sha256:1e7906df7937bcc0447310c0f4ff43fb85687f2d8b600e85fef1dea660bd2c53", size = 29187, upload-time = "2025-11-28T03:04:04.291Z" },
 ]
 
 [[package]]
