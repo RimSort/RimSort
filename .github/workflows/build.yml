@@ -187,18 +187,27 @@ jobs:
         if: matrix.platform == 'Windows'
         run: |
           dotnet tool install --global wix --version 6.0.0
-          
-          # Generate EULA.rtf from LICENSE.md for WiX License dialog
-          New-Item -ItemType Directory -Force -Path "themes\windows" | Out-Null
-          choco install pandoc -y
-          pandoc -s -o "themes\windows\EULA.rtf" "LICENSE.md"
-          
           wix extension add WixToolset.UI.wixext
-          
+          wix extension add WixToolset.Util.wixext
+
+          # Absolute paths for license and build output
+          $AbsoluteLicensePath = Resolve-Path "data\EULA.rtf" -ErrorAction Stop
+          $AbsoluteBuildOutput = Resolve-Path "build\${{ matrix.env.BUILD_OUTPUT }}" -ErrorAction Stop
+
+          # Validate executable exists
+          $ExecutablePath = Join-Path "$AbsoluteBuildOutput" "${{ matrix.env.Executable }}"
+          if (-not (Test-Path $ExecutablePath)) {
+            Write-Error "Executable not found at: $ExecutablePath"
+            exit 1
+          }
+
+          # Create MSI package using WiX Toolset
           wix build data\RimSort.wxs `
             -ext WixToolset.UI.wixext `
+            -ext WixToolset.Util.wixext `
             -d PackageVersion="${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}.${{ steps.sem_version.outputs.increment }}" `
-            -d License="themes\windows\EULA.rtf" `
+            -d License="$AbsoluteLicensePath" `
+            -d BuildOutput="$AbsoluteBuildOutput" `
             -o "RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi"
         shell: powershell
 

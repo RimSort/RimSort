@@ -1,121 +1,142 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-    <Package Name="RimSort"
-        Language="1033"
-        Version="$(var.PackageVersion)"
-        Manufacturer="RimSort Team"
-        UpgradeCode="d4f7c3b9-8a5e-4e52-bb9f-3c2d1f7a9e24"
-        InstallerVersion="500"
-        Compressed="yes">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+    xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+    xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
-        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <!-- ===================================================== -->
+    <!-- Package Configuration -->
+    <!-- ===================================================== -->
+
+    <Package Name="RimSort" Language="1033" Version="$(PackageVersion)"
+        Manufacturer="RimSort Team" UpgradeCode="d4f7c3b9-8a5e-4e52-bb9f-3c2d1f7a9e24"
+        InstallerVersion="500" Compressed="yes">
+
+        <!-- ===================================================== -->
+        <!-- Upgrade and Error Handling -->
+        <!-- ===================================================== -->
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+            AllowSameVersionUpgrades="yes" />
         <MediaTemplate EmbedCab="yes" />
 
-        <!-- Registry search for previous installation directory -->
-        <Property Id="INSTALLFOLDER">
-            <RegistrySearch Id="PreviousInstallDirSearch"
-                Root="HKCU"
-                Key="Software\RimSort"
-                Name="InstallDir"
-                Type="raw" />
-        </Property>
+        <!-- ===================================================== -->
+        <!-- Properties and Configuration -->
+        <!-- ===================================================== -->
 
-        <!-- Application icon -->
-        <Icon Id="RimSortIcon" SourceFile="themes\default-icons\AppIcon.ico" />
-        <Property Id="ARPPRODUCTICON" Value="RimSortIcon" />
+        <!-- License file path for the installer UI -->
+        <Property Id="WixUILicenseRtf" Value="$(License)" />
 
-        <!-- Check if D drive exists -->
-        <Property Id="D_PROGRAM_FILES_EXISTS">
-            <DirectorySearch Id="CheckDProgramFiles" Path="D:\Program Files" Depth="0" AssignToProperty="yes" />
-        </Property>
+        <!-- Force complete reinstall like app is new - a=all files, e=even if not installed,
+        c=recache source, m=missing files, u=user registry, s=shortcuts -->
+        <Property Id="REINSTALLMODE" Value="aecmus" />
 
-        <!-- Custom action to set install folder to D drive if available -->
-        <CustomAction Id="SetInstallFolderToD"
-            Property="INSTALLFOLDER"
-            Value="D:\Program Files\RimSort"
+        <!-- ===================================================== -->
+        <!-- Icons -->
+        <!-- ===================================================== -->
+
+        <Icon Id="AppIcon.ico" SourceFile="themes\default-icons\AppIcon.ico" />
+
+        <!-- ===================================================== -->
+        <!-- UI Configuration -->
+        <!-- ===================================================== -->
+
+        <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+        <!-- ===================================================== -->
+        <!-- Custom Actions -->
+        <!-- ===================================================== -->
+
+        <!-- Automatically launch RimSort after installation -->
+        <Property Id="RIMSORTTARGET" Secure="yes" />
+        <CustomAction Id="SetRimSortTarget"
+            Property="RIMSORTTARGET"
+            Value="[INSTALLFOLDER]RimSort.exe"
             Execute="immediate" />
+        <CustomAction Id="LaunchRimSortAfterInstall"
+            Property="RIMSORTTARGET"
+            ExeCommand=""
+            Return="asyncNoWait"
+            Execute="deferred"
+            Impersonate="yes" />
 
-        <!-- Execute custom action during install sequence -->
-        <InstallUISequence>
-            <Custom Action="SetInstallFolderToD"
-                Before="CostFinalize"
-                Condition="D_PROGRAM_FILES_EXISTS AND NOT INSTALLFOLDER" />
-        </InstallUISequence>
+        <!-- ===================================================== -->
+        <!-- Installation Sequence -->
+        <!-- ===================================================== -->
 
-        <!-- Directory structure -->
-        <StandardDirectory Id="ProgramFilesFolder">
+        <InstallExecuteSequence>
+            <Custom Action="SetRimSortTarget" After="InstallFiles"
+                Condition="NOT Installed" />
+            <Custom Action="LaunchRimSortAfterInstall" After="SetRimSortTarget"
+                Condition="NOT REMOVE" />
+        </InstallExecuteSequence>
+
+        <!-- ===================================================== -->
+        <!-- Directory Structure -->
+        <!-- ===================================================== -->
+
+        <StandardDirectory Id="ProgramFiles6432Folder">
             <Directory Id="INSTALLFOLDER" Name="RimSort" />
         </StandardDirectory>
 
-        <!-- Alternative D drive directory structure -->
-        <Directory Id="D_Drive" Name="D">
-            <Directory Id="DProgramFilesFolder" Name="Program Files">
-                <Directory Id="INSTALLFOLDER_D" Name="RimSort" />
-            </Directory>
-        </Directory>
-
-        <!-- Start menu directory -->
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ApplicationProgramsFolder" Name="RimSort" />
+            <Directory Id="RimSortProgramMenu" Name="RimSort" />
         </StandardDirectory>
 
+        <!-- ===================================================== -->
+        <!-- Application Files -->
+        <!-- ===================================================== -->
+
         <!-- Main application files component group -->
-        <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
-            <Files Include="..\build\__main__.dist\**" />
+        <ComponentGroup Id="MainApplication" Directory="INSTALLFOLDER">
+            <Files Include="$(BuildOutput)\**" />
         </ComponentGroup>
 
-        <!-- Feature definition -->
-        <Feature Id="ProductFeature" Title="RimSort" Level="1">
-            <ComponentGroupRef Id="MainComponents" />
-            <ComponentGroupRef Id="ShortcutComponents" />
-            <ComponentGroupRef Id="RegistryComponents" />
-        </Feature>
+        <!-- ===================================================== -->
+        <!-- Shortcuts and Start Menu -->
+        <!-- ===================================================== -->
 
-        <!-- UI configuration - InstallDir and EULA -->
-        <ui:WixUI Id="WixUI_InstallDir" />
-        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-        <WixVariable Id="WixUILicenseRtf" Value="$(var.License)" />
-
-        <!-- Start menu shortcut components -->
-        <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
-            <Component Id="StartMenuShortcut" Guid="3C5F5459-99AE-5A3E-0422-E64DA66B4443">
-                <RegistryValue Root="HKCU"
-                    Key="Software\RimSort"
-                    Name="StartMenuShortcutInstalled"
-                    Type="integer"
-                    Value="1"
-                    KeyPath="yes" />
-                <Shortcut Id="ApplicationStartMenuShortcut"
-                    Directory="ApplicationProgramsFolder"
-                    Name="RimSort"
+        <!-- Desktop Shortcut Component -->
+        <ComponentGroup Id="DesktopShortcutComponent" Directory="DesktopFolder">
+            <Component Id="DesktopShortcut" Guid="DA2459A4-6821-4143-A427-02A4786845B2">
+                <Shortcut Id="ApplicationDesktopShortcut" Name="RimSort"
                     Target="[INSTALLFOLDER]RimSort.exe"
                     WorkingDirectory="INSTALLFOLDER"
-                    Icon="RimSortIcon"
-                    IconIndex="0" />
-                <RemoveFolder Id="RemoveApplicationProgramsFolder"
-                    Directory="ApplicationProgramsFolder"
+                    Icon="AppIcon.ico" />
+                <RegistryValue Root="HKCU" Key="Software\RimSort" Name="DesktopShortcut"
+                    Type="integer" Value="1" KeyPath="yes" />
+                <!-- Remove shortcut on uninstall -->
+                <RemoveFolder Id="RemoveDesktopShortcut" Directory="DesktopFolder" On="uninstall" />
+            </Component>
+        </ComponentGroup>
+
+        <!-- Start Menu Shortcuts Component -->
+        <ComponentGroup Id="StartMenuShortcutComponent" Directory="RimSortProgramMenu">
+            <Component Id="StartMenuShortcuts" Guid="AA2459A4-6821-4143-A427-02A4786845B3">
+                <Shortcut Id="StartMenuShortcut" Name="RimSort"
+                    Target="[INSTALLFOLDER]RimSort.exe"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="AppIcon.ico" />
+                <Shortcut Id="UninstallShortcut" Name="Uninstall RimSort"
+                    Target="[System64Folder]msiexec.exe"
+                    Arguments="/x [ProductCode]"
+                    Description="Uninstalls RimSort" />
+                <RegistryValue Root="HKCU" Key="Software\RimSort" Name="StartMenuShortcut"
+                    Type="integer" Value="1" KeyPath="yes" />
+                <!-- Remove start menu folder on uninstall -->
+                <RemoveFolder Id="RemoveStartMenuFolder" Directory="RimSortProgramMenu"
                     On="uninstall" />
             </Component>
         </ComponentGroup>
 
-        <!-- Registry components for installation tracking -->
-        <ComponentGroup Id="RegistryComponents" Directory="INSTALLFOLDER">
-            <Component Id="InstallFlagRegistry" Guid="92D579F1-DC10-4E2F-87F5-25B36476C271">
-                <RegistryValue Root="HKCU"
-                    Key="Software\RimSort\StartMenu"
-                    Name="installed"
-                    Type="integer"
-                    Value="1"
-                    KeyPath="yes" />
-            </Component>
-            <Component Id="InstallPathRegistry" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
-                <RegistryValue Root="HKCU"
-                    Key="Software\RimSort"
-                    Name="InstallDir"
-                    Type="string"
-                    Value="[INSTALLFOLDER]"
-                    KeyPath="yes" />
-            </Component>
-        </ComponentGroup>
+        <!-- ===================================================== -->
+        <!-- Features -->
+        <!-- ===================================================== -->
+
+        <Feature Id="MainFeature" Title="RimSort" Level="1" ConfigurableDirectory="INSTALLFOLDER">
+            <ComponentGroupRef Id="MainApplication" />
+            <ComponentGroupRef Id="DesktopShortcutComponent" />
+            <ComponentGroupRef Id="StartMenuShortcutComponent" />
+        </Feature>
+
     </Package>
+
 </Wix>
