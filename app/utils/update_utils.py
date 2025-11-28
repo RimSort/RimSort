@@ -1588,36 +1588,45 @@ class UpdateManager(QObject):
         """
         Launch the MSI installer on Windows.
 
+        The MSI is configured with CustomActions to automatically launch RimSort.exe
+        after installation completes. Windows handles UAC elevation if required.
+
         Args:
             msi_path: Path to the MSI file
-            needs_elevation: Whether to run with elevated privileges
+            log_path: Path to the installation log file
+            needs_elevation: Whether the app is installed in a protected location
 
         Raises:
             UpdateScriptLaunchError: If MSI launch fails
         """
-        if needs_elevation:
-            # Use PowerShell to run msiexec with elevated privileges.
-            # Do NOT request the MSI to auto-launch the app when elevated,
-            # because that may run RimSort as SYSTEM and not visible to the user.
-            cmd = (
-                f'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process msiexec.exe '
-                f"-ArgumentList @('/package', '{str(msi_path)}', '/passive', '/norestart', '/log', '{str(log_path)}') "
-                f'-Verb RunAs"'
-            )
-            logger.debug("Launching MSI with elevation (no auto-launch): %s", cmd)
-        else:
-            # Launch MSI normally and request the installer to launch the app at finish with logging and UI
-            cmd = f'msiexec /i "{msi_path}" /passive /norestart /log "{log_path}" LAUNCHAFTERINSTALL=1'
-            logger.debug("Launching MSI: %s", cmd)
+        # Validate MSI file exists
+        if not msi_path.exists():
+            raise UpdateScriptLaunchError(f"MSI file not found: {msi_path}")
+
+        if not msi_path.is_file():
+            raise UpdateScriptLaunchError(f"MSI path is not a file: {msi_path}")
+
+        # Ensure log directory exists
+        try:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+        except (OSError, IOError) as e:
+            logger.warning(f"Could not create log directory: {e}")
+
+        # Build msiexec command
+        cmd = f'msiexec /i "{msi_path}" /passive /norestart /log "{log_path}"'
 
         try:
+            logger.info(f"Launching MSI installer: {msi_path}")
             subprocess.Popen(cmd, shell=True)
-            logger.info("MSI installer launched successfully")
             self.update_progress.emit(100, "Update launched!")
-        except Exception as e:
-            raise UpdateScriptLaunchError(f"Failed to launch MSI installer: {e}") from e
+            logger.info("MSI launched, exiting RimSort to allow file replacement")
 
-        # Exit the application after launching MSI
+        except FileNotFoundError as e:
+            raise UpdateScriptLaunchError(f"msiexec executable not found: {e}") from e
+        except Exception as e:
+            raise UpdateScriptLaunchError(f"Failed to launch MSI: {e}") from e
+
+        # Exit immediately to allow MSI to replace files and process
         sys.exit(0)
 
     def _prepare_update_log(self, system: str) -> Path:
