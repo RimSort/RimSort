@@ -496,12 +496,12 @@ class UpdateManager(QObject):
                 )
                 if answer == QMessageBox.StandardButton.Yes:
                     logger.info(f"User chose to update version: {current_version}")
+                    # If user confirms, continue with update by returning a dummy version
                     return version.parse("0.0.0")
                 else:
                     logger.info(f"User chose not to update version: {current_version}")
-                    raise UpdateError(
-                        f"User chose not to update version: {current_version}"
-                    )
+                    # If user declines, return a dummy version that's higher than any valid version
+                    return version.parse("999.999.999")
 
             return version.parse(current_version)
         except Exception as e:
