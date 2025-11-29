@@ -8,11 +8,13 @@ lang: zh-cn
 ---
 
 # 翻译指南
+
 {: .no_toc}
 
 本指南说明如何为 RimSort 贡献翻译。项目使用 PySide6 的 Qt 国际化 (i18n) 系统和 QTranslator。
 
 ## 目录
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -21,6 +23,7 @@ lang: zh-cn
 ## 翻译系统概述
 
 RimSort 使用 Qt 翻译系统，包含以下组件：
+
 - **`.ts` 文件**：源翻译文件（XML 格式），供翻译者编辑
 - **`.qm` 文件**：编译后的二进制翻译文件，供应用程序使用
 - **QTranslator**：Qt 的翻译引擎，加载和应用翻译
@@ -32,6 +35,7 @@ RimSort/
 ├── locales/           # 翻译文件目录
 │   ├── en_US.ts      # 英语（源语言）
 │   ├── zh_CN.ts      # 简体中文
+│   ├── zh_TW.ts      # 正體中文
 │   ├── fr_FR.ts      # 法语
 │   ├── de_DE.ts      # 德语
 │   ├── es_ES.ts      # 西班牙语
@@ -50,6 +54,7 @@ RimSort/
 |----------|----------|------|
 | `en_US` | English | 完整（源语言） |
 | `zh_CN` | 简体中文 | 完整 |
+| `zh_TW` | 正體中文 | 进行中 |
 | `fr_FR` | Français（法语） | 完整 |
 | `de_DE` | Deutsch（德语） | 完整 |
 | `es_ES` | Español（西班牙语） | 完整 |
@@ -68,31 +73,60 @@ RimSort/
 
 翻译助手工具提供以下命令：
 
+#### 交互模式（推荐新用户使用）
+
+- **`--interactive` 或 `-i`**：启动交互式菜单来管理翻译
+  - 用户友好的语言选择提示
+  - 支持选择翻译服务
+  - 可配置选项（超时、重试、并发）
+  - 操作前确认提示
+  - 适合非技术翻译者
+
 #### 基本命令
+
 - **`check [language]`**：检查特定语言或所有语言（如果未指定语言）的翻译完整性
+  - 选项：`--json` 输出结构化 JSON 供程序使用
 - **`stats`**：显示所有语言的翻译统计信息
+  - 选项：`--json` 输出结构化 JSON 供程序使用
 - **`validate [language]`**：验证翻译文件格式和内容，自动修复占位符不匹配等常见问题
 - **`update-ts [language]`**：使用源语言的新字符串更新 .ts 文件
 - **`compile [language]`**：将 .ts 文件编译为二进制 .qm 格式
 
 #### 高级命令
+
 - **`auto-translate [language] --service [google|deepl|openai]`**：使用各种翻译服务自动翻译未完成的字符串
-  - 支持 Google Translate、DeepL 和 OpenAI GPT 模型
+  - **Google Translate**：免费，支持所有语言，无需 API 密钥
+  - **DeepL**：高质量翻译，需要 API 密钥，支持主要欧洲语言（EN、FR、DE、ES、PT、IT、NL、PL，不支持 RU）
+  - **OpenAI GPT**：AI 驱动翻译，需要 API 密钥，支持主要语言（不支持 RU、TR、PT-BR）
   - 选项：`--api-key` 用于服务认证，`--model` 用于 OpenAI 模型选择，`--continue-on-failure` 用于跳过失败的翻译
+  - 额外选项：`--timeout`、`--max-retries`、`--max-concurrent` 用于配置
 - **`process [language] --service [google|deepl|openai]`**：一键工作流程，按顺序运行 update-ts → auto-translate → compile
+  - 使用与 auto-translate 相同的翻译服务和限制（Google：所有语言，DeepL：主要欧洲语言除 RU 外，OpenAI：主要语言除 RU/TR/PT-BR 外）
   - 与 auto-translate 相同的选项：`--api-key`、`--model`、`--continue-on-failure`
+  - 配置选项：`--timeout`、`--max-retries`、`--max-concurrent`
 
 ### 命令示例
 
 ```bash
+# 启动交互模式（推荐新用户使用）
+python translation_helper.py --interactive
+python translation_helper.py -i
+
 # 检查所有语言的完整性
 python translation_helper.py check
 
 # 检查特定语言
 python translation_helper.py check zh_CN
 
+# 以 JSON 格式检查（供程序使用）
+python translation_helper.py check --json
+python translation_helper.py check zh_CN --json
+
 # 查看所有语言的统计信息
 python translation_helper.py stats
+
+# 以 JSON 格式查看统计信息
+python translation_helper.py stats --json
 
 # 验证并自动修复所有语言
 python translation_helper.py validate
@@ -109,6 +143,9 @@ python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR
 # 使用 OpenAI 自动翻译（需要 API 密钥）
 python translation_helper.py auto-translate zh_CN --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
 
+# 带配置选项的自动翻译
+python translation_helper.py auto-translate zh_CN --service google --timeout 30 --max-retries 5 --max-concurrent 10
+
 # 一键完整工作流程
 python translation_helper.py process zh_CN --service google
 
@@ -118,19 +155,34 @@ python translation_helper.py compile
 
 ### 功能特性
 
+- **交互模式**：用户友好的引导工作流，适合新用户和非技术翻译者
 - **批量操作**：大多数命令在未指定特定语言时支持对所有语言进行操作
 - **自动修复验证**：validate 命令自动修复占位符和 HTML 标签不匹配问题
 - **多种翻译服务**：支持 Google Translate（免费）、DeepL 和 OpenAI，可配置模型
 - **错误处理**：强大的错误处理，包括重试逻辑和 Google Translate 的 SSL 修复
+- **JSON 输出**：结构化 JSON 输出，适合程序使用和 CI/CD 集成
 - **进度跟踪**：实时进度条和详细统计信息
-- **缓存**：翻译缓存以避免重复的 API 调用
+- **配置选项**：可自定义超时、重试次数和并发请求限制
 - **并发**：优化的并行处理以加快批量操作速度
 
 具体使用方法请参见"[测试翻译](#步骤-5测试翻译)"部分。
 
 ## 快速开始
 
-如果你只想快速开始翻译工作，可以按照以下简化流程：
+如果你只想快速开始翻译工作，有两种选择：
+
+### 选项 1：交互模式（推荐新用户使用）
+
+1. **Fork 并克隆项目**
+2. **设置开发环境**（按照[开发环境设置指南](development-setup.zh-cn.md)）
+3. **启动交互模式**：运行 `python translation_helper.py --interactive`
+4. **按照引导菜单操作**：
+   - 选择"检查翻译完整性"查看需要翻译的内容
+   - 选择"自动翻译缺失字符串"使用 AI 自动填充
+   - 选择"完整流程"一次性更新、翻译和编译
+5. **提交代码**：提交 `.ts` 和 `.qm` 文件
+
+### 选项 2：命令行模式
 
 1. **Fork 并克隆项目**
 2. **设置开发环境**（按照[开发环境设置指南](development-setup.zh-cn.md)）
@@ -164,12 +216,14 @@ python translation_helper.py compile
 
 1. 在 GitHub 上 Fork RimSort 仓库
 2. 克隆你的 fork：
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/RimSort.git
    cd RimSort
    ```
 
 3. 为你的翻译创建新分支：
+
    ```bash
    git checkout -b translation-LANGUAGE_CODE
    # 例如：git checkout -b translation-pt_BR
@@ -178,6 +232,7 @@ python translation_helper.py compile
 ### 步骤 2：选择贡献类型
 
 #### 选项 A：改进现有翻译
+
 {: .no_toc}
 
 1. 导航到 `locales/` 目录
@@ -185,11 +240,13 @@ python translation_helper.py compile
 3. 查找标记为 `type="unfinished"` 或空的 `<translation>` 标签的条目
 
 #### 选项 B：创建新语言翻译
+
 {: .no_toc}
 
 1. 使用 PySide6 工具生成新的翻译文件：
 
    **Linux/macOS 系统**：
+
    ```bash
    pyside6-lupdate $(find app -name "*.py") -ts locales/NEW_LANGUAGE_CODE.ts -no-obsolete
    # 例如：
@@ -197,22 +254,24 @@ python translation_helper.py compile
    ```
 
    **Windows 系统（推荐使用翻译助手工具）**：
+
    ```powershell
    # 使用翻译助手工具（推荐，更简单）
    python translation_helper.py update-ts pt_BR
    ```
-   
+
    如果需要手动使用 PySide6 工具，可以参考 Linux/macOS 的命令格式，但建议使用翻译助手工具以避免复杂的路径处理。
 
 2. 更新文件中的语言属性：
+
    ```xml
    <TS version="2.1" language="pt_BR">
    ```
 
 3. 在语言控制器中注册新语言：
-   
+
    打开 `app/controllers/language_controller.py` 文件，找到 `populate_languages_combobox` 方法中的 `language_map` 字典，添加你的语言：
-   
+
    ```python
    language_map = {
        "en_US": "English",
@@ -224,16 +283,18 @@ python translation_helper.py compile
        "pt_BR": "Português (Brasil)",  # 添加新语言条目
    }
    ```
-   
+
    其中 `"pt_BR"` 是语言代码，`"Português (Brasil)"` 是在设置界面中显示的语言名称。
 
 ### 步骤 3：翻译过程
 
 #### 使用文本编辑器（推荐）
+
 {: .no_toc}
 
 1. 在你喜欢的文本编辑器中打开 `.ts` 文件
 2. 找到需要翻译的 `<message>` 块：
+
    ```xml
    <message>
        <location filename="../app/views/settings_dialog.py" line="896"/>
@@ -243,6 +304,7 @@ python translation_helper.py compile
    ```
 
 3. 用你的翻译内容替换空的翻译标签并删除 `type="unfinished"`：
+
    ```xml
    <message>
        <location filename="../app/views/settings_dialog.py" line="896"/>
@@ -252,6 +314,7 @@ python translation_helper.py compile
    ```
 
 #### 使用 Qt Linguist（可选）
+
 {: .no_toc}
 
 如果你已经安装了 Qt Linguist，也可以使用它：
@@ -269,14 +332,17 @@ python translation_helper.py compile
 ### 步骤 4：翻译指南
 
 #### 上下文理解
+
 {: .no_toc}
 
 每个可翻译字符串都有上下文信息：
+
 - **文件名**：显示包含该字符串的文件
 - **行号**：源代码中的确切位置
 - **上下文名称**：通常是类名（例如"SettingsDialog"、"ModInfo"）
 
 #### 翻译最佳实践
+
 {: .no_toc}
 
 1. **保留格式**：
@@ -297,6 +363,7 @@ python translation_helper.py compile
    - **文件格式和扩展名**：如".ts"、".qm"等保持原文
 
 #### 翻译示例
+
 {: .no_toc}
 
 ```xml
@@ -318,6 +385,7 @@ and restart the application</source>
 ### 步骤 5：测试翻译
 
 #### 5.1 验证翻译文件
+
 {: .no_toc}
 
 使用翻译助手工具进行文件验证：
@@ -336,9 +404,11 @@ python translation_helper.py stats
 ```
 
 #### 5.2 编译和测试翻译
+
 {: .no_toc}
 
 1. **编译翻译文件**：
+
    ```bash
    # 使用翻译助手工具编译（推荐）
    python translation_helper.py compile YOUR_LANGUAGE
@@ -351,6 +421,7 @@ python translation_helper.py stats
    **注意**：编译后会在 `locales/` 目录中生成对应的 `.qm` 文件。在本项目中，这些 `.qm` 文件也需要提交到版本控制系统中，以确保用户下载后可以直接使用翻译功能。
 
 #### 5.3 在应用程序中测试
+
 {: .no_toc}
 
 1. **启动 RimSort 并切换语言**：
@@ -375,6 +446,7 @@ python translation_helper.py stats
 ### 步骤 6：提交贡献
 
 1. **提交更改**：
+
    ```bash
    # 添加翻译文件（包括 .ts 源文件和编译后的 .qm 文件）
    git add locales/YOUR_LANGUAGE.ts
@@ -387,6 +459,7 @@ python translation_helper.py stats
    **注意**：在本项目中，需要同时提交 `.ts` 源文件和编译后的 `.qm` 文件，以确保用户可以直接使用翻译功能而无需额外的编译步骤。
 
 2. **推送到你的 fork**：
+
    ```bash
    git push origin translation-LANGUAGE_CODE
    ```
@@ -402,6 +475,7 @@ python translation_helper.py stats
      - 是否需要进一步测试
 
 **Pull Request 示例标题**：
+
 - `添加法语翻译 (fr_FR)`
 - `完善德语翻译 - 修复界面术语`
 - `更新日语翻译 - 新增设置页面翻译`
@@ -409,6 +483,7 @@ python translation_helper.py stats
 ## 翻译状态跟踪
 
 你可以通过查找以下标记来检查翻译完整性：
+
 - `type="unfinished"` 条目（需要翻译）
 - 空的 `<translation></translation>` 标签
 - `type="obsolete"` 条目（可能需要重新审查）
@@ -427,9 +502,11 @@ python translation_helper.py update-ts YOUR_LANGUAGE
 更新后，你只需要翻译新增的或被修改的字符串，已有的翻译内容会保持不变。
 
 ### 翻译文件格式
+
 {: .no_toc}
 
 `.ts` 文件使用 XML 格式，结构如下：
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
