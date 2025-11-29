@@ -59,7 +59,12 @@ from typing import Any, Dict, List, Optional, Set, TypedDict, cast
 import aiohttp
 import lxml.etree as ET
 import requests
-from googletrans import Translator as GoogleTranslator  # type: ignore
+
+# Try to import googletrans library (optional dependency)
+try:
+    from googletrans import Translator as GoogleTranslator  # type: ignore
+except ImportError:
+    GoogleTranslator = None
 
 # Try to import openai library (optional dependency)
 openai_module: Optional[types.ModuleType]
