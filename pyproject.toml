@@ -6,6 +6,7 @@ description = "An open source mod manager for RimWorld."
 version = "0.0.0" # Fake version, version is set in version.xml file # TODO: Switch to tracking version dynamically
 requires-python = "==3.12.*"
 dependencies = [
+    "aiohttp==3.10.10",
     "beautifulsoup4==4.14.2",
     "certifi==2025.11.12",
     "chardet==5.2.0",
