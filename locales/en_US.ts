@@ -28,6 +28,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -36,7 +48,35 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -44,63 +84,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -128,10 +116,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -147,10 +131,6 @@
         <source>Export failed</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -164,6 +144,30 @@
     </message>
     <message>
         <source>Do nothing and exit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -182,48 +186,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Invalid Database</source>
+        <source>Incomplete import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.
+
+Try subscribing to the collection first</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="unfinished">Author</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation type="unfinished"></translation>
@@ -238,15 +212,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
+        <source>Delete Selected Mods</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -633,16 +599,6 @@ When unchecked, search all file types with standard search.</source>
         <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
 
 Would you like to configure them now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2319,23 +2275,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source># Variants</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4976,54 +4916,6 @@ Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="unfinished">Author</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database, grouped by replacement mod.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5040,35 +4932,27 @@ Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>SteamCMD</source>
+        <source>Delete Selected Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
+        <source>Installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Download all replacements with SteamCMD</source>
+        <source>Not Installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Subscribe selected</source>
+        <source>Group {0}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
+        <source>Original</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete Selected Original Mods...</source>
+        <source>Replacement [{0}]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5076,15 +4960,7 @@ Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Subscribe all replacements</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Successfully {action}d {count} mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5104,39 +4980,11 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Name</source>
+        <source>Update with SteamCMD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
+        <source>Update with Steam client</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -28,6 +28,18 @@
         <translation>CSV'ye aktar</translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation>{total} öğeden {filtered} tanesi gösteriliyor (filtrelendi)</translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation>{total} öğe gösteriliyor</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>Arama...</translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>{count} öğe yüklendi | Son güncelleme: {time}</translation>
     </message>
@@ -36,72 +48,48 @@
         <translation>Dışa aktarma kullanıcı tarafından iptal edildi.</translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} öğe başarıyla {file_path} yoluna aktarıldı</translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation>Mod URL'sini aç</translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation>PFID'yi kopyala</translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation>Mod Ayrıntılarını Görüntüle</translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation>Mod Ayrıntıları</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>ACF içe aktarmayı onaylayın</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>Dışa aktarma başarısız: İsin reddedildi - dosya izinlerini kontrol edin</translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
+        <translation>Dışa aktarma başarısız oldu, bilinmeyen istisna oluştu</translation>
     </message>
     <message>
         <source>Export Error</source>
         <translation>Dışa Aktarma Hatası</translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>Dışa aktarma başarısız: Dosya sistemi hatası - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>Dışa aktarma başarısız: Dosya sistemi hatası</translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation>CSV'ye aktarılıyor...</translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation>Satırlar aktarılıyor...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>İptal Et</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>Dışa aktarırken bilinmeyen bir hata ile karşılaşıldı</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Steam Atöylesinde görüntüle</translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
         <translation>Mod Klasörünü Aç</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>Yayınlanmış Dosya ID'si</translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation>Mod İndir</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Atölyede güncellendi</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tür</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Mod İsmi</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>Mod Klasör Yolu</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>ACF içe aktarmasını doğrula</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
@@ -129,10 +117,6 @@
         <translation>ACF dosyası {acf_path} yolunda bulunamadı</translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Dışa aktarma için geçersiz bir dosya yolu belirtildi: {file_path}</translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation>ACF başarıyla {file_path} yoluna aktarıldı</translation>
     </message>
@@ -148,10 +132,6 @@
         <source>Export failed</source>
         <translation>Dışa aktarma Başarısız</translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>Dışa aktarılamadı, bilinmeyen bir hata meydana geldi</translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -166,6 +146,30 @@
     <message>
         <source>Do nothing and exit</source>
         <translation>Hiçbir şey yapma ve çık</translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation>Sayfayı Aç</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Yenile</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>SteamCMD ile seçilen indirme</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>Abone ol seçildi</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>Seçilen aboneliği iptal et</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Silmek</translation>
     </message>
 </context>
 <context>
@@ -183,48 +187,20 @@
         <translation>Geçersiz atölye linki. Lütfen geçerli bir atölye linki giriniz.</translation>
     </message>
     <message>
-        <source>Invalid Database</source>
-        <translation>Geçersiz veritabanı</translation>
+        <source>Incomplete import</source>
+        <translation>Eksik içe aktarma</translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation>Steamdb sağlanmadan koleksiyonu içe aktarılamıyor!Lütfen Steam Workshop veritabanını ayarlarda yapılandırın.</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
+
+Try subscribing to the collection first</source>
+        <translation>Eksik paket kimlikleri nedeniyle {len(failed_mods)} mod içe aktarılamadı.Tüm modları indirmediyseniz bu durum meydana gelebilir.
+
+Önce koleksiyona abone olmayı deneyin</translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation>Modun Adı</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Yazar</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>Paket Kimliği</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>Yayınlanan Dosya Kimliği</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Kaynak</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modu İndir</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Yol</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Atölye Sayfası</translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation>RimSort - Yinelenen Modlar Bulundu</translation>
@@ -239,16 +215,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Aşağıdaki tabloda paket kimliğine göre gruplandırılmış yinelenen modlar gösterilmektedir.Hangi sürümlerin saklanacağını seçin ve bir eylem seçin.</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>Silmek</translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation>Seçilen Kopyaları Sil...</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Atölye Sayfasını Aç</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Seçilen Modları Sil</translation>
     </message>
 </context>
 <context>
@@ -637,10 +605,6 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     <message>
         <source>Essential path(s)</source>
         <translation>Temel yol(lar)</translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation>Bazı modlar için veri bulunamadı!</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -1052,14 +1016,6 @@ Would you like to configure them now?</source>
         <translation>Rimsort, minimum olarak, oyun yükleme klasörü ve yapılandırma klasör yollarının ayarlanmasını ve yolların her ikisinin de var olmasını gerektirir.Lütfen bunların her ikisini de manuel olarak veya AutoDetect işlevini kullanarak ayarlayın.
 
 Şimdi bunları yapılandırmak ister misiniz?</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>Aşağıdaki mod listesi MODS listenizde aktif olarak ayarlandı, ancak yerel/atölye mod yollarında bu modlar için veri bulunamadı.
-
-Oyun yapılandırma yollarınız doğru mu?</translation>
     </message>
     <message>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
@@ -2390,24 +2346,8 @@ Etkin Modlar listenize hangi eksik bağımlılıkları ekleyeceğinizi seçin.</
         <translation>Etkin Mods listesinde eksik modlar var!</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>İsim</translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation>Paketi</translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation>Oyun sürümleri</translation>
-    </message>
-    <message>
         <source># Variants</source>
         <translation># Varyantlar</translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
-        <translation>Yayınlanmış fileid</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -5134,54 +5074,6 @@ Do you want to update now?</source>
         <translation>Atölye modları için yedekler mevcuttur!</translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation>Abone</translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation>Abartmak</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Yenilemek</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Modun Adı</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Yazar</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>Paket Kimliği</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>Yayınlanan Dosya Kimliği</translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation>Desteklenen Sürümler</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Kaynak</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modu İndir</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Yol</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Atölye Sayfası</translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>Aşağıdaki tabloda, değiştirme moduna göre gruplandırılmış "Bunun Yerine Bunu Kullan" veritabanına göre önerilen değiştirmelerle birlikte Atölye modları gösterilmektedir.</translation>
     </message>
@@ -5198,52 +5090,36 @@ Do you want to update now?</source>
         <translation>Tüm Değiştirmeleri Seç</translation>
     </message>
     <message>
-        <source>SteamCMD</source>
-        <translation>SteamCMD</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Seçilen Modları Sil</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>SteamCMD ile seçilen indirme</translation>
+        <source>Installed</source>
+        <translation>Yüklendi</translation>
     </message>
     <message>
-        <source>Download all replacements with SteamCMD</source>
-        <translation>SteamCMD ile tüm değiştirmeleri indirin</translation>
+        <source>Not Installed</source>
+        <translation>Kurulu Değil</translation>
     </message>
     <message>
-        <source>Subscribe selected</source>
-        <translation>Abone ol seçildi</translation>
+        <source>Group {0}</source>
+        <translation>Grup {0}</translation>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
-        <translation>Seçilen aboneliği iptal et</translation>
+        <source>Original</source>
+        <translation>Orijinal</translation>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation>Tüm orijinallerin aboneliğini iptal edin</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Silmek</translation>
-    </message>
-    <message>
-        <source>Delete Selected Original Mods...</source>
-        <translation>Seçilmiş Orijinal Modları Sil ...</translation>
+        <source>Replacement [{0}]</source>
+        <translation>Değiştirme [{0}]</translation>
     </message>
     <message>
         <source>Use This Instead</source>
         <translation>Bunun yerine bunu kullan</translation>
     </message>
     <message>
-        <source>Subscribe all replacements</source>
-        <translation>Tüm değiştirmelere abone olun</translation>
-    </message>
-    <message>
         <source>Successfully {action}d {count} mods</source>
         <translation>{action}d {count} mod başarıyla tamamlandı</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Atölye Sayfası</translation>
     </message>
 </context>
 <context>
@@ -5262,40 +5138,12 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>Aşağıdaki tabloda Steam'den güncellenebilecek Atölye modları gösterilmektedir.</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>İsim</translation>
+        <source>Update with SteamCMD</source>
+        <translation>SteamCMD ile güncelleme</translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation>YayınlananDosya Kimliği</translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation>Mod Kaynağı</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modu İndir</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Atölyede güncellendi</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Atölye Sayfası</translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation>Seçilen Modları Güncelle</translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation>Tüm Modları Güncelle</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Atölye Sayfasını Aç</translation>
+        <source>Update with Steam client</source>
+        <translation>Steam istemcisi ile güncelleme</translation>
     </message>
 </context>
 <context>

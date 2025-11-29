@@ -28,6 +28,18 @@
         <translation>Exportar a CSV</translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation>Mostrando  de {total} elementos (filtrados) {filtered}</translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation>Mostrando {total} artículos</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>Búsqueda...</translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>Cargado  elementos |Última actualización:  {time} {count}</translation>
     </message>
@@ -36,72 +48,48 @@
         <translation>Exportación cancelada por el usuario.</translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} elementos exportados correctamente a {file_path}</translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation>Abrir URL de modificación</translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation>Copiar PFID</translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation>Ver detalles de la modificación</translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation>Detalles de la modificación</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>Confirmar la importación de ACF</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>Exportación fallida: permiso denegado: verifique los permisos de archivo</translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
+        <translation>Error en la exportación: se produjo una excepción desconocida</translation>
     </message>
     <message>
         <source>Export Error</source>
         <translation>Error de exportación</translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>Exportar fallado: error del sistema de archivo - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>Exportar fallado: error del sistema de archivo</translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation>Exportar a CSV ...</translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation>Exportando filas ...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>La exportación falló debido a un error desconocido</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Ver en el taller de vapor</translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
         <translation>Abrir carpeta Mod</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>ID de archivo publicado</translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation>Descarga de mod</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Actualizado en el taller</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tipo</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Nombre del mod</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>Ruta de modificación</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>Conformar la importación ACF</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
@@ -128,10 +116,6 @@
         <translation>Archivo ACF no se encuentra en:  {acf_path}</translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Ruta de archivo no válida proporcionada para exportar: {file_path}</translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation>Exportó con éxito ACF a {file_path}</translation>
     </message>
@@ -147,10 +131,6 @@
         <source>Export failed</source>
         <translation>Exportación fallida</translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>Se produjo una excepción desconocida de exportación</translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -165,6 +145,30 @@
     <message>
         <source>Do nothing and exit</source>
         <translation>No hagas nada y salga</translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation>Abrir página</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Refrescar</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>Descarga seleccionada con SteamCMD</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Borrar</translation>
     </message>
 </context>
 <context>
@@ -182,48 +186,20 @@
         <translation>Enlace de colección del taller no válido. Ingrese un enlace de colección de taller válido.</translation>
     </message>
     <message>
-        <source>Invalid Database</source>
-        <translation>Base de datos no válida</translation>
+        <source>Incomplete import</source>
+        <translation>Importación incompleta</translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation>¡No se puede importar la colección sin STEAMDB suministrada! Configure la base de datos de Taller Steam en la configuración.</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
+
+Try subscribing to the collection first</source>
+        <translation>Los mods {len(failed_mods)} no se pudieron importar debido a que faltan identificadores de paquete.Esto puede suceder si no tienes todos los mods descargados.
+
+Primero intenta suscribirte a la colección.</translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation>Nombre del mod</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="unfinished">Autor</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>ID del paquete</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>ID de archivo publicado</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Fuente</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Descarga de mods</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Camino</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Página del taller</translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation>RimSort - Mods duplicados encontrados</translation>
@@ -238,16 +214,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>La siguiente tabla muestra modificaciones duplicadas agrupadas por ID de paquete.Seleccione qué versiones conservar y elija una acción.</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>Borrar</translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation>Eliminar duplicados seleccionados...</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Abrir página del taller</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Eliminar modificaciones seleccionadas</translation>
     </message>
 </context>
 <context>
@@ -639,16 +607,6 @@ Cuando no está marcado, buscar todos los tipos de archivos con búsqueda están
 
 Would you like to configure them now?</source>
         <translation>¿Te gustaría configurarlos ahora?</translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation>No se encontraron datos para algunos módulos!</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>¿Son correctos tus caminos de configuración de juego?</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -2391,24 +2349,8 @@ Rimworld Mods en Steam Workshop que comparten un paquete de paquetes son "varian
 Seleccione su variante de mod de Mod en la tabla a continuación. También puede abrir cada variante en el navegador Steam/Web para verificar.</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Nombre</translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation>Paquete</translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation>Versiones de juego</translation>
-    </message>
-    <message>
         <source># Variants</source>
         <translation># Variantes</translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
-        <translation>Fileid publicado</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -5122,54 +5064,6 @@ Do you want to update now?</source>
         <translation>¡Hay reemplazos disponibles para los mods de Workshop!</translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation>Suscribirse</translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation>Cancelar suscripción</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Actualizar</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Nombre del mod</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="unfinished">Autor</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>ID del paquete</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>ID de archivo publicado</translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation>Versiones compatibles</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Fuente</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Descarga de mods</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Camino</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Página del taller</translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>La siguiente tabla muestra las modificaciones de Workshop con reemplazos sugeridos según la base de datos "Usar esto en su lugar", agrupados por modificación de reemplazo.</translation>
     </message>
@@ -5186,52 +5080,36 @@ Do you want to update now?</source>
         <translation>Seleccionar todos los reemplazos</translation>
     </message>
     <message>
-        <source>SteamCMD</source>
-        <translation>SteamCMD</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Eliminar modificaciones seleccionadas</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>Descarga seleccionada con SteamCMD</translation>
-    </message>
-    <message>
-        <source>Download all replacements with SteamCMD</source>
-        <translation>Descargue todos los reemplazos con SteamCMD</translation>
-    </message>
-    <message>
-        <source>Subscribe selected</source>
+        <source>Installed</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
+        <source>Not Installed</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation>Dar de baja todos los originales</translation>
+        <source>Group {0}</source>
+        <translation>Grupo {0}</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>Eliminar</translation>
+        <source>Original</source>
+        <translation>Original</translation>
     </message>
     <message>
-        <source>Delete Selected Original Mods...</source>
-        <translation>Eliminar Mods Originales Seleccionados...</translation>
+        <source>Replacement [{0}]</source>
+        <translation>Reemplazo [{0}]</translation>
     </message>
     <message>
         <source>Use This Instead</source>
         <translation>Usar Esto en Su Lugar</translation>
     </message>
     <message>
-        <source>Subscribe all replacements</source>
-        <translation>Suscribirse a todos los reemplazos</translation>
-    </message>
-    <message>
         <source>Successfully {action}d {count} mods</source>
         <translation>{action}d {count} modificaciones con éxito</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Abrir Página del Workshop</translation>
     </message>
 </context>
 <context>
@@ -5250,40 +5128,12 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>La siguiente tabla muestra las modificaciones de Workshop disponibles para actualizar desde Steam.</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Nombre</translation>
+        <source>Update with SteamCMD</source>
+        <translation>Actualizar con SteamCMD</translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation>ID de archivo publicado</translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation>Fuente de modificación</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Descarga de mods</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Actualizado en el taller</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Página del taller</translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation>Actualizar modificaciones seleccionadas</translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation>Actualizar todas las modificaciones</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Abrir página del taller</translation>
+        <source>Update with Steam client</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
