@@ -28,6 +28,18 @@
         <translation>导出为 CSV</translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation>显示 {filtered} 项，共 {total} 项（已过滤）</translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation>显示 {total} 项</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>正在寻找...</translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>加载 {count} 项，最后更新时间：{time}</translation>
     </message>
@@ -36,72 +48,48 @@
         <translation>导出被用户取消。</translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>已成功将 {count} 个项目导出到 {file_path}</translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation>打开模组网址</translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation>复制 PFID</translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation>查看模组详细信息</translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation>模组详情</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>确认 ACF 导入</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>导出失败：权限不足 - 请检查文件权限</translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
+        <translation>导出失败发生未知异常</translation>
     </message>
     <message>
         <source>Export Error</source>
         <translation>导出错误</translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>导出失败：文件系统错误 - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>导出失败：文件系统错误</translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation>导出到 CSV...</translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation>导出行...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>导出失败：未知错误</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>在 Steam 创意工坊中查看</translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
         <translation>打开模组文件夹</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>发布文件 ID</translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation>模组下载时间</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>工坊更新时间</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>类型</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>模组名称</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>模组路径</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>确认导入 acf</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
@@ -128,10 +116,6 @@
         <translation>ACF 文件在此路径未找到：{acf_path}</translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>提供的导出文件路径无效: {file_path}</translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation>成功导出 ACF 到 {file_path}</translation>
     </message>
@@ -147,10 +131,6 @@
         <source>Export failed</source>
         <translation>导出失败</translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>导出失败，发生未知异常</translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -165,6 +145,30 @@
     <message>
         <source>Do nothing and exit</source>
         <translation>取消并退出</translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation>打开页面</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>使用 SteamCMD 下载选定的内容</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>订阅已选</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>取消订阅所选内容</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>删除</translation>
     </message>
 </context>
 <context>
@@ -182,48 +186,20 @@
         <translation>无效的创意工坊合集链接。请输入有效的合集链接。</translation>
     </message>
     <message>
-        <source>Invalid Database</source>
-        <translation>无效的数据库</translation>
+        <source>Incomplete import</source>
+        <translation>导入不完整</translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation>无法导入合集，因为未配置 SteamDB！请在设置中配置 Steam 创意工坊数据库。</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
+
+Try subscribing to the collection first</source>
+        <translation>由于缺少包 ID，无法导入 {len(failed_mods)} mod。如果您没有下载所有模组，则可能会发生这种情况。
+
+首先尝试订阅该集合</translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation>模组名称</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>作者</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>封装ID</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>发布文件ID</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>来源</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>模组下载</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>小路</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>研讨会页面</translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation>RimSort - 发现重复模组</translation>
@@ -238,16 +214,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>下表显示了按包 ID 分组的重复 mod。选择要保留的版本并选择操作。</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>删除</translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation>删除选定的重复项...</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>打开研讨会页面</translation>
+        <source>Delete Selected Mods</source>
+        <translation>删除选定的模组</translation>
     </message>
 </context>
 <context>
@@ -650,10 +618,6 @@ Would you like to configure them now?</source>
         <translation>RimSort 至少需要设置游戏安装文件夹和配置文件夹路径，并且路径都存在。请手动设置或使用自动检测功能。
 
 是否要现在配置它们？</translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation>无法找到某些模组的数据！</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -1190,14 +1154,6 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>Run Anyway</source>
         <translation>仍然运行</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>以下模组已在你的模组列表中被设置为激活，但在本地或创意工坊模组路径中未找到相关数据。
-
-你的游戏配置路径正确吗？</translation>
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
@@ -2395,24 +2351,8 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation>启用模组列表中缺少一些模组</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>名称</translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation>包名</translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation>游戏版本</translation>
-    </message>
-    <message>
         <source># Variants</source>
         <translation># 版本</translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
-        <translation>发布文件 ID</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -5155,54 +5095,6 @@ Do you want to update now?</source>
         <translation>已有可替代的模组可用于创意工坊模组！</translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation>订阅</translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation>取消订阅</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>刷新</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>模组名称</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>作者</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>封装ID</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>发布文件ID</translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation>支持的版本</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>来源</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>模组下载</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>小路</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>研讨会页面</translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>下表显示了根据“使用此替代”数据库提供的建议替换的创意工坊模组，并按替换模组分组。</translation>
     </message>
@@ -5219,32 +5111,28 @@ Do you want to update now?</source>
         <translation>选择所有替换件</translation>
     </message>
     <message>
-        <source>SteamCMD</source>
-        <translation>SteamCMD</translation>
+        <source>Delete Selected Mods</source>
+        <translation>删除选定的模组</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>使用 SteamCMD 下载选定的内容</translation>
+        <source>Installed</source>
+        <translation>已安装</translation>
     </message>
     <message>
-        <source>Download all replacements with SteamCMD</source>
-        <translation>使用 SteamCMD 下载所有替代品</translation>
+        <source>Not Installed</source>
+        <translation>未安装</translation>
     </message>
     <message>
-        <source>Subscribe selected</source>
-        <translation>订阅已选</translation>
+        <source>Group {0}</source>
+        <translation>组{0}</translation>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
-        <translation>取消订阅所选内容</translation>
+        <source>Original</source>
+        <translation>原来的</translation>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation>取消订阅所有原创内容</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>删除</translation>
+        <source>Replacement [{0}]</source>
+        <translation>替换[{0}]</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -5253,18 +5141,6 @@ Do you want to update now?</source>
     <message>
         <source>Successfully {action}d {count} mods</source>
         <translation>已成功完成 {action} 个 {count} 个模组</translation>
-    </message>
-    <message>
-        <source>Subscribe all replacements</source>
-        <translation>订阅全部替代项</translation>
-    </message>
-    <message>
-        <source>Delete Selected Original Mods...</source>
-        <translation>删除选中的原模组</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>打开创意工坊界面</translation>
     </message>
 </context>
 <context>
@@ -5283,40 +5159,12 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>下表显示了可从 Steam 更新的创意工坊模组。</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>姓名</translation>
+        <source>Update with SteamCMD</source>
+        <translation>使用 SteamCMD 更新</translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation>发布文件ID</translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation>模组源</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>模组下载</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>研讨会更新</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>研讨会页面</translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation>更新选定的模组</translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation>更新所有模组</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>打开研讨会页面</translation>
+        <source>Update with Steam client</source>
+        <translation>使用Steam客户端更新</translation>
     </message>
 </context>
 <context>

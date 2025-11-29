@@ -28,6 +28,18 @@
         <translation>CSVへのエクスポート</translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation>{total} 個中 {filtered} 個のアイテムを表示しています (フィルタリング済み)</translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation>個のアイテムを表示しています {total}</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>検索中...</translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>ロード{count}アイテム|最終更新： {time}</translation>
     </message>
@@ -36,72 +48,48 @@
         <translation>ユーザーがキャンセルしたエクスポート。</translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} 個のアイテムを {file_path} に正常にエクスポートしました</translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation>Mod URLを開く</translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation>PFIDをコピーする</translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation>MODの詳細を表示</translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation>MODの詳細</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>ACFインポートを確認する</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>エクスポートの失敗：許可拒否 - ファイル許可を確認します</translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
+        <translation>エクスポートに失敗しました 不明な例外が発生しました</translation>
     </message>
     <message>
         <source>Export Error</source>
         <translation>エクスポートエラー</translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>エクスポート失敗：ファイルシステムエラー -  {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>エクスポートの失敗：ファイルシステムエラー</translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation>CSVへのエクスポート...</translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation>行のエクスポート...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>キャンセル</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>エラーが不明のためにエクスポートが失敗しました</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Steamワークショップで見る</translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
         <translation>MODフォルダーを開きます</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>公開されたファイルID</translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation>modダウンロード</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>ワークショップで更新されました</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>タイプ</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>mod名</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>modパス</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>ACFインポートを適合させます</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
@@ -128,10 +116,6 @@
         <translation>ACFファイルが見つかりません：{acf_path}</translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>エクスポート用に提供される無効なファイルパス：{file_path}</translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation>ACFを{file_path}に正常にエクスポートしました</translation>
     </message>
@@ -147,10 +131,6 @@
         <source>Export failed</source>
         <translation>エクスポートは失敗しました</translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>ExportFailed未知の例外が発生しました</translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -165,6 +145,30 @@
     <message>
         <source>Do nothing and exit</source>
         <translation>何もしないで終了</translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation>ページを開く</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>リフレッシュ</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>SteamCMD で選択したダウンロード</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>選択した購読を購読する</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>選択した購読を解除する</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>消去</translation>
     </message>
 </context>
 <context>
@@ -182,48 +186,20 @@
         <translation>無効なワークショップコレクションリンクです。有効なワークショップコレクションリンクを入力してください。</translation>
     </message>
     <message>
-        <source>Invalid Database</source>
-        <translation>無効なデータベース</translation>
+        <source>Incomplete import</source>
+        <translation>不完全なインポート</translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation>SteamDBが提供されていないため、コレクションをインポートできません！設定でSteamワークショップデータベースを構成してください。</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
+
+Try subscribing to the collection first</source>
+        <translation>パッケージ ID が見つからないため、{len(failed_mods)} 個の MOD をインポートできませんでした。これは、すべての MOD をダウンロードしていない場合に発生する可能性があります。
+
+まずはコレクションを購読してみてください</translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation>MOD名</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>著者</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>パッケージID</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>公開ファイルID</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>ソース</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modのダウンロード</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>パス</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>ワークショップページ</translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation>rimSort - 重複した Mod が見つかりました</translation>
@@ -238,16 +214,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>次の表は、重複する MOD をパッケージ ID ごとにグループ化して表示します。保持するバージョンを選択し、アクションを選択します。</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>消去</translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation>選択した重複を削除...</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>ワークショップページを開く</translation>
+        <source>Delete Selected Mods</source>
+        <translation>選択したMODを削除</translation>
     </message>
 </context>
 <context>
@@ -648,18 +616,6 @@ Would you like to configure them now?</source>
         <translation>RimSortを使用するには、ゲームのインストールフォルダーと設定フォルダーのパスを設定し、両方のパスが存在する必要があります。これらのパスを手動で設定するか、自動検出機能を使用してください。
 
 今すぐ構成しますか？</translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation>一部のモッドのデータが見つかりませんでした！</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>以下のモッドはあなたのモッドリストでアクティブに設定されていますが、ローカル/ワークショップのモッドパスにこれらのモッドのデータが見つかりませんでした。
-
-ゲームの設定パスは正しいですか？</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -2409,24 +2365,8 @@ Please select your preferred mod variant in the table below. You can also open e
 以下の表から好みのMODバリアントを選択してください。また、各バリアントをSteam/Webブラウザで開いて確認することもできます。</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>名前</translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation>パッケージID</translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation>ゲームバージョン</translation>
-    </message>
-    <message>
         <source># Variants</source>
         <translation># バリアント</translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
-        <translation>PublishedFileID</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -5150,54 +5090,6 @@ Do you want to update now?</source>
         <translation>ワークショップMODの置き換えが利用可能です！</translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation>サブスクライブ</translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation>サブスクライブ解除</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>更新</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>MOD名</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>著者</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>パッケージID</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>公開ファイルID</translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation>サポートされているバージョン</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>ソース</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modのダウンロード</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>パス</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>ワークショップページ</translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>次の表は、「代わりにこれを使用する」データベースに基づいて推奨される代替品を含むワークショップ MOD を、代替 MOD ごとにグループ化して表示します。</translation>
     </message>
@@ -5214,52 +5106,36 @@ Do you want to update now?</source>
         <translation>すべての代替品を選択</translation>
     </message>
     <message>
-        <source>SteamCMD</source>
-        <translation>SteamCMD</translation>
+        <source>Delete Selected Mods</source>
+        <translation>選択したMODを削除</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>SteamCMD で選択したダウンロード</translation>
+        <source>Installed</source>
+        <translation>インストール済み</translation>
     </message>
     <message>
-        <source>Download all replacements with SteamCMD</source>
-        <translation>SteamCMD を使用してすべての置換をダウンロードする</translation>
+        <source>Not Installed</source>
+        <translation>インストールされていません</translation>
     </message>
     <message>
-        <source>Subscribe selected</source>
-        <translation>選択した購読を購読する</translation>
+        <source>Group {0}</source>
+        <translation>グループ{0}</translation>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
-        <translation>選択した購読を解除する</translation>
+        <source>Original</source>
+        <translation>オリジナル</translation>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation>すべてのオリジナルの購読を解除する</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>削除</translation>
-    </message>
-    <message>
-        <source>Delete Selected Original Mods...</source>
-        <translation>選択したオリジナルMODを削除...</translation>
+        <source>Replacement [{0}]</source>
+        <translation>置換 [{0}]</translation>
     </message>
     <message>
         <source>Use This Instead</source>
         <translation>これを代わりに使用</translation>
     </message>
     <message>
-        <source>Subscribe all replacements</source>
-        <translation>すべての置き換えをサブスクライブ</translation>
-    </message>
-    <message>
         <source>Successfully {action}d {count} mods</source>
         <translation>{count} 個の MOD を {action} 成功しました</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>ワークショップページを開く</translation>
     </message>
 </context>
 <context>
@@ -5278,40 +5154,12 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>次の表に、Steam からアップデートできるワークショップ MOD を示します。</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>名前</translation>
+        <source>Update with SteamCMD</source>
+        <translation>SteamCMD でアップデートする</translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation>公開ファイルID</translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation>Modソース</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Modのダウンロード</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>ワークショップについて更新しました</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>ワークショップページ</translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation>選択した Mod を更新する</translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation>すべての Mod を更新する</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>ワークショップページを開く</translation>
+        <source>Update with Steam client</source>
+        <translation>Steamクライアントでアップデートする</translation>
     </message>
 </context>
 <context>

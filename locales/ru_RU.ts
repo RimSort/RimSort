@@ -28,6 +28,18 @@
         <translation>Экспорт в CSV</translation>
     </message>
     <message>
+        <source>Showing {filtered} of {total} items (filtered)</source>
+        <translation>Показаны элементы: {filtered} из {total} (отфильтровано)</translation>
+    </message>
+    <message>
+        <source>Showing {total} items</source>
+        <translation>Показаны элементы: {total}</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>Идет поиск...</translation>
+    </message>
+    <message>
         <source>Loaded {count} items | Last updated: {time}</source>
         <translation>Загружен {count} элементы |Последнее обновление:  {time}</translation>
     </message>
@@ -36,72 +48,48 @@
         <translation>Экспорт отменен пользователем.</translation>
     </message>
     <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>Успешно экспортировано элементов: {count} в {file_path}.</translation>
+    </message>
+    <message>
+        <source>Open Mod URL</source>
+        <translation>Открыть URL-адрес мода</translation>
+    </message>
+    <message>
+        <source>Copy PFID</source>
+        <translation>Копировать PFID</translation>
+    </message>
+    <message>
+        <source>View Mod Details</source>
+        <translation>Посмотреть детали мода</translation>
+    </message>
+    <message>
+        <source>Mod Details</source>
+        <translation>Подробности мода</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>Подтвердить импорт ACF</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>Ошибка экспорта: разрешение отказано - проверьте разрешения на файл</translation>
+    </message>
+    <message>
+        <source>Export failed unknown exception occurred</source>
+        <translation>Ошибка экспорта, произошло неизвестное исключение</translation>
     </message>
     <message>
         <source>Export Error</source>
         <translation>Экспортная ошибка</translation>
     </message>
     <message>
-        <source>Export failed: File system error - {e}</source>
-        <translation>Ошибка экспорта: ошибка файловой системы - {e}</translation>
-    </message>
-    <message>
-        <source>Export failed: File system error</source>
-        <translation>Ошибка экспорта: ошибка файловой системы</translation>
-    </message>
-    <message>
         <source>Exporting to CSV...</source>
         <translation>Экспорт в CSV ...</translation>
     </message>
     <message>
-        <source>Exporting rows...</source>
-        <translation>Экспорт рядов ...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>Export failed due to an unknown error</source>
-        <translation>Экспорт не удался из -за неизвестной ошибки</translation>
-    </message>
-    <message>
-        <source>View in Steam Workshop</source>
-        <translation>Посмотреть на паровой мастерской</translation>
-    </message>
-    <message>
         <source>Open Mod Folder</source>
         <translation>Открыть папку мода</translation>
-    </message>
-    <message>
-        <source>Published File ID</source>
-        <translation>Опубликованный идентификатор файла</translation>
-    </message>
-    <message>
-        <source>Mod downloaded</source>
-        <translation>Мод скачать</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Обновлено на семинаре</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Тип</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Имя мода</translation>
-    </message>
-    <message>
-        <source>Mod Path</source>
-        <translation>МОД ПАТ</translation>
-    </message>
-    <message>
-        <source>Conform acf import</source>
-        <translation>Соответствует импорту ACF</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
@@ -128,10 +116,6 @@
         <translation>Файл ACF не найден по адресу: {acf_path}</translation>
     </message>
     <message>
-        <source>Invalid file path provided for export: {file_path}</source>
-        <translation>Неверный путь файла, предусмотренная для экспорта: {file_path}</translation>
-    </message>
-    <message>
         <source>Successfully exported ACF to {file_path}</source>
         <translation>Успешно экспортирован ACF в {file_path}</translation>
     </message>
@@ -147,10 +131,6 @@
         <source>Export failed</source>
         <translation>Экспорт не удался</translation>
     </message>
-    <message>
-        <source>Exportfailed unknown exception occurred</source>
-        <translation>Произошло экспорт. Неизвестное исключение произошло</translation>
-    </message>
 </context>
 <context>
     <name>BaseModsPanel</name>
@@ -165,6 +145,30 @@
     <message>
         <source>Do nothing and exit</source>
         <translation>Ничего не делать и выйти</translation>
+    </message>
+    <message>
+        <source>Open Page</source>
+        <translation>Открыть страницу</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Обновить</translation>
+    </message>
+    <message>
+        <source>Download selected with SteamCMD</source>
+        <translation>Загрузка выбрана с помощью SteamCMD</translation>
+    </message>
+    <message>
+        <source>Subscribe selected</source>
+        <translation>Подписаться выбрано</translation>
+    </message>
+    <message>
+        <source>Unsubscribe selected</source>
+        <translation>Отменить подписку выбрано</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Удалить</translation>
     </message>
 </context>
 <context>
@@ -182,48 +186,20 @@
         <translation>Неверная ссылка на коллекцию Workshop. Пожалуйста, введите действительную ссылку на коллекцию Workshop.</translation>
     </message>
     <message>
-        <source>Invalid Database</source>
-        <translation>Неверная база данных</translation>
+        <source>Incomplete import</source>
+        <translation>Неполный импорт</translation>
     </message>
     <message>
-        <source>Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.</source>
-        <translation>Невозможно импортировать коллекцию без предоставленного SteamDB! Пожалуйста, настройте базу данных Steam Workshop в настройках.</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
+
+Try subscribing to the collection first</source>
+        <translation>Не удалось импортировать моды {len(failed_mods)} из-за отсутствия идентификаторов пакетов.Это может произойти, если у вас не загружены все моды.
+
+Попробуйте сначала подписаться на подборку</translation>
     </message>
 </context>
 <context>
     <name>DuplicateModsPanel</name>
-    <message>
-        <source>Mod Name</source>
-        <translation>Имя мода</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Автор</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>Идентификатор пакета</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>Опубликованныйфилеид</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Источник</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Скачать мод</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Путь</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Страница мастерской</translation>
-    </message>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
         <translation>RimSort — найдены повторяющиеся моды</translation>
@@ -238,16 +214,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>В следующей таблице показаны повторяющиеся моды, сгруппированные по идентификатору пакета.Выберите, какие версии сохранить, и выберите действие.</translation>
     </message>
     <message>
-        <source>Delete</source>
-        <translation>Удалить</translation>
-    </message>
-    <message>
-        <source>Delete Selected Duplicates...</source>
-        <translation>Удалить выбранные дубликаты...</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Открыть страницу мастерской</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Удалить выбранные моды</translation>
     </message>
 </context>
 <context>
@@ -650,18 +618,6 @@ Would you like to configure them now?</source>
         <translation>RimSort требует, чтобы как минимум были установлены пути к папке установки игры и папке конфигурации, и чтобы оба пути существовали. Пожалуйста, установите оба этих пути вручную или с помощью функции автоматического определения.
 
 Хотите настроить их сейчас?</translation>
-    </message>
-    <message>
-        <source>Could not find data for some mods!</source>
-        <translation>Не удалось найти данные для некоторых модов!</translation>
-    </message>
-    <message>
-        <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
-
-Are your game configuration paths correct?</source>
-        <translation>Следующий список модов был активирован в вашем списке модов, но для этих модов не удалось найти данные в локальных/рабочих путях модов.
-
-Правильны ли ваши пути конфигурации игры?</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
@@ -2407,24 +2363,8 @@ Please select your preferred mod variant in the table below. You can also open e
 Пожалуйста, выберите предпочитаемый вариант мода в таблице ниже. Вы также можете открыть каждый вариант в Steam/Web браузере для проверки.</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Название</translation>
-    </message>
-    <message>
-        <source>PackageId</source>
-        <translation>Идентификатор пакета</translation>
-    </message>
-    <message>
-        <source>Game Versions</source>
-        <translation>Версии игры</translation>
-    </message>
-    <message>
         <source># Variants</source>
         <translation>Количество вариантов</translation>
-    </message>
-    <message>
-        <source>PublishedFileID</source>
-        <translation>Идентификатор опубликованного файла</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -5149,58 +5089,6 @@ Do you want to update now?</source>
         <translation>Доступны замены для модов Workshop!</translation>
     </message>
     <message>
-        <source>Subscribe</source>
-        <translation>Подписаться</translation>
-    </message>
-    <message>
-        <source>Subscribe all replacements</source>
-        <translation>Подписаться на все замены</translation>
-    </message>
-    <message>
-        <source>Unsubscribe</source>
-        <translation>Отписаться</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Обновить</translation>
-    </message>
-    <message>
-        <source>Mod Name</source>
-        <translation>Имя мода</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Автор</translation>
-    </message>
-    <message>
-        <source>Package ID</source>
-        <translation>Идентификатор пакета</translation>
-    </message>
-    <message>
-        <source>PublishedFileId</source>
-        <translation>Опубликованныйфилеид</translation>
-    </message>
-    <message>
-        <source>Supported Versions</source>
-        <translation>Поддерживаемые версии</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Источник</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Скачать мод</translation>
-    </message>
-    <message>
-        <source>Path</source>
-        <translation>Путь</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Страница мастерской</translation>
-    </message>
-    <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>В следующей таблице показаны моды Мастерской с предлагаемыми заменами в соответствии с базой данных «Используйте это вместо», сгруппированные по заменяющим модам.</translation>
     </message>
@@ -5217,36 +5105,28 @@ Do you want to update now?</source>
         <translation>Выбрать все замены</translation>
     </message>
     <message>
-        <source>SteamCMD</source>
-        <translation>SteamCMD</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Удалить выбранные моды</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>Загрузка выбрана с помощью SteamCMD</translation>
+        <source>Installed</source>
+        <translation>Установлено</translation>
     </message>
     <message>
-        <source>Download all replacements with SteamCMD</source>
-        <translation>Загрузите все замены с помощью SteamCMD.</translation>
+        <source>Not Installed</source>
+        <translation>Не установлено</translation>
     </message>
     <message>
-        <source>Subscribe selected</source>
-        <translation>Подписаться выбрано</translation>
+        <source>Group {0}</source>
+        <translation>Группа {0}</translation>
     </message>
     <message>
-        <source>Unsubscribe selected</source>
-        <translation>Отменить подписку выбрано</translation>
+        <source>Original</source>
+        <translation>Оригинал</translation>
     </message>
     <message>
-        <source>Unsubscribe all originals</source>
-        <translation>Отписаться от всех оригиналов</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Удалить</translation>
-    </message>
-    <message>
-        <source>Delete Selected Original Mods...</source>
-        <translation>Удалить выбранные оригинальные моды...</translation>
+        <source>Replacement [{0}]</source>
+        <translation>Замена [{0}]</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -5255,10 +5135,6 @@ Do you want to update now?</source>
     <message>
         <source>Successfully {action}d {count} mods</source>
         <translation>Успешно добавлено {action} модификаций: {count}.</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Открыть страницу Workshop</translation>
     </message>
 </context>
 <context>
@@ -5277,40 +5153,12 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>В следующей таблице показаны моды Мастерской, доступные для обновления из Steam.</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Имя</translation>
+        <source>Update with SteamCMD</source>
+        <translation>Обновление с помощью SteamCMD</translation>
     </message>
     <message>
-        <source>PublishedFileID</source>
-        <translation>Опубликованныйфилеид</translation>
-    </message>
-    <message>
-        <source>Mod Source</source>
-        <translation>Источник мода</translation>
-    </message>
-    <message>
-        <source>Mod Downloaded</source>
-        <translation>Скачать мод</translation>
-    </message>
-    <message>
-        <source>Updated on Workshop</source>
-        <translation>Обновлено в Мастерской</translation>
-    </message>
-    <message>
-        <source>Workshop Page</source>
-        <translation>Страница мастерской</translation>
-    </message>
-    <message>
-        <source>Update Selected Mods</source>
-        <translation>Обновить выбранные моды</translation>
-    </message>
-    <message>
-        <source>Update All Mods</source>
-        <translation>Обновить все моды</translation>
-    </message>
-    <message>
-        <source>Open Workshop Page</source>
-        <translation>Открыть страницу мастерской</translation>
+        <source>Update with Steam client</source>
+        <translation>Обновление с помощью клиента Steam</translation>
     </message>
 </context>
 <context>
