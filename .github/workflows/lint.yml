@@ -58,6 +58,7 @@ jobs:
             /github/workflow/.venv/lib/python3.12/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
+          VALIDATE_PYTHON_RUFF_FORMAT: true
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITLEAKS: true
           VALIDATE_JSON: true
