@@ -75,6 +75,7 @@ jobs:
           IGNORE_GITIGNORED_FILES: true
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
+          FIX_PYTHON_RUFF_FORMAT: true
       - name: Commit and push linting fixes
         # Run only on:
         # - Pull requests from the same repository
