@@ -7,11 +7,13 @@ permalink: development-guide/translation-guidelines
 ---
 
 # Translation Guide
+
 {: .no_toc}
 
 This guide explains how to contribute translations to RimSort. The project uses PySide6's Qt internationalization (i18n) system with QTranslator.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -20,6 +22,7 @@ This guide explains how to contribute translations to RimSort. The project uses 
 ## Translation System Overview
 
 RimSort uses Qt's translation system with the following components:
+
 - **`.ts` files**: Source translation files (XML format) that translators edit
 - **`.qm` files**: Compiled binary translation files used by the application
 - **QTranslator**: Qt's translation engine that loads and applies translations
@@ -31,6 +34,7 @@ RimSort/
 ├── locales/           # Translation files directory
 │   ├── en_US.ts      # English (source language)
 │   ├── zh_CN.ts      # Simplified Chinese
+│   ├── zh_TW.ts      # Traditional Chinese
 │   ├── fr_FR.ts      # French
 │   ├── de_DE.ts      # German
 │   ├── es_ES.ts      # Spanish
@@ -49,6 +53,7 @@ RimSort/
 |---------------|---------------|--------|
 | `en_US` | English | Complete (source) |
 | `zh_CN` | 简体中文 (Simplified Chinese) | Complete |
+| `zh_TW` | 正體中文 (Traditional Chinese) | In Progress |
 | `fr_FR` | Français (French) | Complete |
 | `de_DE` | Deutsch (German) | Complete |
 | `es_ES` | Español (Spanish) | Complete |
@@ -67,31 +72,60 @@ The project provides a comprehensive `translation_helper.py` script to assist wi
 
 The translation helper tool provides the following commands:
 
+#### Interactive Mode (Recommended for New Users)
+
+- **`--interactive` or `-i`**: Launch an interactive guided menu for managing translations
+  - User-friendly prompts for language selection
+  - Service selection with descriptions
+  - Configuration options (timeout, retries, concurrency)
+  - Confirmation prompts before operations
+  - Perfect for non-technical translators
+
 #### Basic Commands
+
 - **`check [language]`**: Check translation completeness for a specific language or all languages (if no language specified)
+  - Option: `--json` to output structured JSON for programmatic use
 - **`stats`**: Show translation statistics for all languages
+  - Option: `--json` to output structured JSON for programmatic use
 - **`validate [language]`**: Validate translation file format and content, automatically fixing common issues like placeholder mismatches
 - **`update-ts [language]`**: Update .ts files with new strings from the source language
 - **`compile [language]`**: Compile .ts files into binary .qm format
 
 #### Advanced Commands
+
 - **`auto-translate [language] --service [google|deepl|openai]`**: Auto-translate unfinished strings using various translation services
-  - Supports Google Translate, DeepL, and OpenAI GPT models
+  - **Google Translate**: Free, supports all languages, no API key required
+  - **DeepL**: High-quality translations, requires API key, supports major European languages (EN, FR, DE, ES, PT, IT, NL, PL, RU not supported)
+  - **OpenAI GPT**: AI-powered translations, requires API key, supports major languages (RU, TR, PT-BR not supported)
   - Options: `--api-key` for service authentication, `--model` for OpenAI model selection, `--continue-on-failure` to skip failed translations
+  - Additional options: `--timeout`, `--max-retries`, `--max-concurrent` for configuration
 - **`process [language] --service [google|deepl|openai]`**: One-click workflow that runs update-ts → auto-translate → compile in sequence
+  - Uses the same translation services and limitations as auto-translate (Google: all languages, DeepL: major European languages except RU, OpenAI: major languages except RU/TR/PT-BR)
   - Same options as auto-translate: `--api-key`, `--model`, `--continue-on-failure`
+  - Configuration options: `--timeout`, `--max-retries`, `--max-concurrent`
 
 ### Command Examples
 
 ```bash
+# Interactive mode (recommended for new users)
+python translation_helper.py --interactive
+python translation_helper.py -i
+
 # Check completeness for all languages
 python translation_helper.py check
 
 # Check specific language
 python translation_helper.py check zh_CN
 
+# Check with JSON output (for programmatic use)
+python translation_helper.py check --json
+python translation_helper.py check zh_CN --json
+
 # View statistics for all languages
 python translation_helper.py stats
+
+# View statistics as JSON
+python translation_helper.py stats --json
 
 # Validate and auto-fix all languages
 python translation_helper.py validate
@@ -108,6 +142,9 @@ python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR
 # Auto-translate using OpenAI (requires API key)
 python translation_helper.py auto-translate zh_CN --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
 
+# Auto-translate with configuration options
+python translation_helper.py auto-translate zh_CN --service google --timeout 30 --max-retries 5 --max-concurrent 10
+
 # One-click complete workflow
 python translation_helper.py process zh_CN --service google
 
@@ -117,19 +154,34 @@ python translation_helper.py compile
 
 ### Features
 
+- **Interactive Mode**: User-friendly guided workflow perfect for new users and non-technical translators
 - **Batch Operations**: Most commands support operating on all languages when no specific language is provided
 - **Auto-Fixing Validation**: The validate command automatically fixes placeholder and HTML tag mismatches
 - **Multiple Translation Services**: Support for Google Translate (free), DeepL, and OpenAI with configurable models
 - **Error Handling**: Robust error handling with retry logic and SSL fixes for Google Translate
+- **JSON Output**: Structured JSON output for programmatic use and CI/CD integration
 - **Progress Tracking**: Real-time progress bars and detailed statistics
-- **Caching**: Translation caching to avoid redundant API calls
+- **Configuration Options**: Customizable timeout, retry attempts, and concurrent request limits
 - **Concurrency**: Optimized parallel processing for faster bulk operations
 
 For specific usage methods, please refer to the "[Testing Your Translation](#step-5-testing-your-translation)" section.
 
 ## Quick Start
 
-If you want to get started quickly with translation work, you can follow this simplified process:
+If you want to get started quickly with translation work, you have two options:
+
+### Option 1: Interactive Mode (Recommended for New Users)
+
+1. **Fork and clone the project**
+2. **Set up development environment** (following the [Development Setup Guide](development-setup.md))
+3. **Launch interactive mode**: Run `python translation_helper.py --interactive`
+4. **Follow the guided menu**:
+   - Select "Check translation completeness" to see what needs translation
+   - Select "Auto-translate missing strings" to fill in gaps with AI
+   - Select "Full process" to update, translate, and compile all at once
+5. **Submit code**: Commit both `.ts` and `.qm` files
+
+### Option 2: Command-Line Mode
 
 1. **Fork and clone the project**
 2. **Set up development environment** (following the [Development Setup Guide](development-setup.md))
@@ -163,12 +215,14 @@ Before starting translation work, you need to prepare the following:
 
 1. Fork the RimSort repository on GitHub
 2. Clone your fork:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/RimSort.git
    cd RimSort
    ```
 
 3. Create a new branch for your translation:
+
    ```bash
    git checkout -b translation-LANGUAGE_CODE
    # Example: git checkout -b translation-pt_BR
@@ -177,6 +231,7 @@ Before starting translation work, you need to prepare the following:
 ### Step 2: Choose Your Contribution Type
 
 #### Option A: Improve Existing Translation
+
 {: .no_toc}
 
 1. Navigate to the `locales/` directory
@@ -184,11 +239,13 @@ Before starting translation work, you need to prepare the following:
 3. Look for entries marked as `type="unfinished"` or empty `<translation>` tags
 
 #### Option B: Create New Language Translation
+
 {: .no_toc}
 
 1. Use PySide6 tools to generate new translation file:
 
    **Linux/macOS systems**:
+
    ```bash
    pyside6-lupdate $(find app -name "*.py") -ts locales/NEW_LANGUAGE_CODE.ts -no-obsolete
    # Example:
@@ -196,22 +253,24 @@ Before starting translation work, you need to prepare the following:
    ```
 
    **Windows systems (recommended to use translation helper tool)**:
+
    ```powershell
    # Use translation helper tool (recommended, simpler)
    python translation_helper.py update-ts pt_BR
    ```
-   
+
    If you need to manually use PySide6 tools, you can refer to the Linux/macOS command format, but using the translation helper tool is recommended to avoid complex path handling.
 
 2. Update the language attribute in the file:
+
    ```xml
    <TS version="2.1" language="pt_BR">
    ```
 
 3. Register the new language in the language controller:
-   
+
    Open the file `app/controllers/language_controller.py` and find the `language_map` dictionary in the `populate_languages_combobox` method, add your language:
-   
+
    ```python
    language_map = {
        "en_US": "English",
@@ -223,16 +282,18 @@ Before starting translation work, you need to prepare the following:
        "pt_BR": "Português (Brasil)",  # Add new language entry
    }
    ```
-   
+
    Where `"pt_BR"` is the language code and `"Português (Brasil)"` is the language name that will be displayed in the settings interface.
 
 ### Step 3: Translation Process
 
 #### Using Text Editor (Recommended)
+
 {: .no_toc}
 
 1. Open the `.ts` file in your preferred text editor
 2. Find `<message>` blocks that need translation:
+
    ```xml
    <message>
        <location filename="../app/views/settings_dialog.py" line="896"/>
@@ -242,6 +303,7 @@ Before starting translation work, you need to prepare the following:
    ```
 
 3. Replace the empty translation with your text and remove `type="unfinished"`:
+
    ```xml
    <message>
        <location filename="../app/views/settings_dialog.py" line="896"/>
@@ -251,6 +313,7 @@ Before starting translation work, you need to prepare the following:
    ```
 
 #### Using Qt Linguist (Optional)
+
 {: .no_toc}
 
 If you already have Qt Linguist installed, you can also use it:
@@ -268,14 +331,17 @@ If you already have Qt Linguist installed, you can also use it:
 ### Step 4: Translation Guidelines
 
 #### Context Understanding
+
 {: .no_toc}
 
 Each translatable string has context information:
+
 - **Filename**: Shows which file contains the string
 - **Line number**: Exact location in the source code
 - **Context name**: Usually the class name (e.g., "SettingsDialog", "ModInfo")
 
 #### Translation Best Practices
+
 {: .no_toc}
 
 1. **Preserve formatting**:
@@ -296,6 +362,7 @@ Each translatable string has context information:
    - **File formats and extensions**: Such as ".ts", ".qm" should be kept as original
 
 #### Example Translation
+
 {: .no_toc}
 
 ```xml
@@ -317,6 +384,7 @@ y reiniciar la aplicación</translation>
 ### Step 5: Testing Your Translation
 
 #### 5.1 Validate Translation File
+
 {: .no_toc}
 
 Use the translation helper tool for file validation:
@@ -335,9 +403,11 @@ Use the translation helper tool for file validation:
    ```
 
 #### 5.2 Compile and Test Translation
+
 {: .no_toc}
 
-1. **Compile translation file**:   
+1. **Compile translation file**:
+
    ```bash
    # Using translation helper tool (recommended)
    python translation_helper.py compile YOUR_LANGUAGE
@@ -350,6 +420,7 @@ Use the translation helper tool for file validation:
    **Note**: Compilation generates corresponding `.qm` files in the `locales/` directory. In this project, these `.qm` files are also committed to version control to ensure users can directly use translation features after downloading without additional compilation steps.
 
 #### 5.3 Test in Application
+
 {: .no_toc}
 
 1. **Launch RimSort and switch language**:
@@ -374,6 +445,7 @@ Use the translation helper tool for file validation:
 ### Step 6: Submit Your Contribution
 
 1. **Commit your changes**:
+
    ```bash
    # Add translation files (including .ts source files and compiled .qm files)
    git add locales/YOUR_LANGUAGE.ts
@@ -386,6 +458,7 @@ Use the translation helper tool for file validation:
    **Note**: Both `.ts` source files and compiled `.qm` files need to be committed in this project to ensure users can directly use translation features without additional compilation steps.
 
 2. **Push to your fork**:
+
    ```bash
    git push origin translation-LANGUAGE_CODE
    ```
@@ -401,6 +474,7 @@ Use the translation helper tool for file validation:
      - Whether further testing is needed
 
 **Pull Request Title Examples**:
+
 - `Add French translation (fr_FR)`
 - `Improve German translation - Fix interface terminology`
 - `Update Japanese translation - Add settings page translations`
@@ -408,6 +482,7 @@ Use the translation helper tool for file validation:
 ## Translation Status Tracking
 
 You can check translation completeness by looking for:
+
 - `type="unfinished"` entries (need translation)
 - Empty `<translation></translation>` tags
 - `type="obsolete"` entries (may need review)
@@ -426,9 +501,11 @@ python translation_helper.py update-ts YOUR_LANGUAGE
 After updating, you only need to translate new or modified strings; existing translations will be preserved.
 
 ### Translation File Format
+
 {: .no_toc}
 
 The `.ts` files use XML format with this structure:
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
