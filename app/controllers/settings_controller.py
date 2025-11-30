@@ -653,7 +653,6 @@ class SettingsController(QObject):
         self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
 
         if self.settings.external_use_this_instead_metadata_source == "None":
-            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_none_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
@@ -667,7 +666,6 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source
             == "Configured git repository"
         ):
-            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_github_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
@@ -681,7 +679,6 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source
             == "Configured file path"
         ):
-            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_local_file_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
@@ -692,7 +689,7 @@ class SettingsController(QObject):
                 True
             )
         self.settings_dialog.use_this_instead_db_local_file.setText(
-            self.settings.external_use_this_instead_folder_path
+            self.settings.external_use_this_instead_file_path
         )
         self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
         self.settings_dialog.use_this_instead_db_github_url.setText(
@@ -1046,7 +1043,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source = (
                 "Configured git repository"
             )
-        self.settings.external_use_this_instead_folder_path = (
+        self.settings.external_use_this_instead_file_path = (
             self.settings_dialog.use_this_instead_db_local_file.text()
         )
         self.settings.external_use_this_instead_repo_path = (
@@ -1361,6 +1358,8 @@ class SettingsController(QObject):
             self.settings.enable_themes,
             self.settings.theme_name,
         )
+        # Do a full refresh after updating the settings
+        EventBus().do_refresh_mods_lists.emit()
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
@@ -1965,12 +1964,13 @@ class SettingsController(QObject):
     @Slot()
     def _on_use_this_instead_db_local_file_choose_button_clicked(self) -> None:
         """
-        Open a file dialog to select the "Use This Instead" folder and handle the result.
+        Open a file dialog to select the "Use This Instead" replacements file and handle the result.
         """
         use_this_instead_db_location = show_dialogue_file(
-            mode="open_dir",
-            caption='Select "Use This Instead" Folder',
+            mode="open",
+            caption='Select "Use This Instead" Replacements File',
             _dir=str(self._last_file_dialog_path),
+            _filter="JSON Files (*.json *.json.gz)",
         )
         if not use_this_instead_db_location:
             return

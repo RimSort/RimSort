@@ -3170,13 +3170,22 @@ class MainContent(QObject):
         """
         When clicked, opens the Use This Instead panel.
         """
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "None"
+        ):
+            dialogue.show_warning(
+                title=self.tr("Use This Instead"),
+                text=self.tr(
+                    'Please configure "Use This Instead" database in settings.'
+                ),
+            )
+            return
+
         self.use_this_instead_dialog = UseThisInsteadPanel(
             mod_metadata=self.metadata_manager.internal_local_metadata
         )
-        self.use_this_instead_dialog._populate_from_metadata()
-        if self.use_this_instead_dialog.editor_model.rowCount() > 0:
-            self.use_this_instead_dialog.show()
-        else:
+        if not self.use_this_instead_dialog.show_if_has_alternatives():
             dialogue.show_information(
                 title=self.tr("Use This Instead"),
                 text=self.tr(
