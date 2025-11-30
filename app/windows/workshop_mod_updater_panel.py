@@ -73,8 +73,12 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         # Configure table settings
         self._setup_table_configuration(sorting_enabled=True)
 
-        # TODO: let user configure window launch state and size from settings controller
-        self.showNormal()
+        # Show the panel only if there are mods with updates available
+        if self.eligible_metadata and len(self.eligible_metadata) > 0:
+            logger.info("Showing WorkshopModUpdaterPanel")
+            self.showNormal()
+        else:  # If no mods have updates available, log a warning message
+            logger.warning("No mods with updates available.")
 
     def _filter_eligible_mods(self) -> list[dict[str, Any]]:
         """
@@ -99,10 +103,12 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             # Clear existing table data before populating since it shows duplicate rows if not cleared
             self._clear_table_model()
 
-            eligible_metadata = self._filter_eligible_mods()
-            logger.debug(f"Found {len(eligible_metadata)} eligible mods for update")
+            self.eligible_metadata = self._filter_eligible_mods()
+            logger.debug(
+                f"Found {len(self.eligible_metadata)} eligible mods for update"
+            )
 
-            for metadata in eligible_metadata:
+            for metadata in self.eligible_metadata:
                 self._add_update_mod_row(metadata)
         except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")
