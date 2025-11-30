@@ -119,7 +119,6 @@ class EventBus(QObject):
     filters_changed_in_active_modlist = Signal()
     filters_changed_in_inactive_modlist = Signal()
     use_this_instead_clicked = Signal()
-    reset_use_this_instead_cache = Signal()
 
     # Help Menu bar signals
     do_check_for_application_update = Signal()

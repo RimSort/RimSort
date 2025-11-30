@@ -138,13 +138,20 @@ class UseThisInsteadPanel(BaseModsPanel):
         self._original_rows: set[int] = set()
         self._replacement_rows: set[int] = set()
 
-        self._populate_from_metadata()
+    def show_if_has_alternatives(self) -> bool:
+        """
+        Populate the panel and show it if alternatives exist.
 
-        # Configure table settings
+        Returns:
+            True if alternatives were found and panel was shown, False otherwise.
+        """
+        self._populate_from_metadata()
         self._setup_table_configuration(sorting_enabled=False)
 
-        # TODO: let user configure window launch state and size from settings controller
-        self.showNormal()
+        if self.editor_model.rowCount() > 0:
+            self.showNormal()
+            return True
+        return False
 
     def _on_mod_action_completed(self, action: str, count: int) -> None:
         """Handle successful mod action completion."""

@@ -61,9 +61,6 @@ class MainWindowController(QObject):
         )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
-        EventBus().reset_use_this_instead_cache.connect(
-            self.on_reset_use_this_instead_cache
-        )
 
     def _parse_workshop_id(self, url: str) -> str | None:
         """Extract a Steam Workshop ID from a dependency URL."""
@@ -416,10 +413,3 @@ class MainWindowController(QObject):
     def set_buttons_enabled(self, enabled: bool) -> None:
         for btn in self.buttons:
             btn.setEnabled(enabled)
-
-    @Slot()
-    def on_reset_use_this_instead_cache(self) -> None:
-        logger.warning(
-            'Resetting "Use This Instead" cache - performance may be impacted until xml is re-cached'
-        )
-        MetadataManager.instance().has_alternative_mod.cache_clear()

@@ -1,7 +1,7 @@
+import gzip
 import json
 import os
 import traceback
-from functools import lru_cache
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
@@ -52,7 +52,7 @@ class ModReplacement:
         author: str,
         packageid: str,
         pfid: str,
-        supportedversions: str,
+        supportedversions: list[str],
         source: str = "database",
     ):
         self.name = name
@@ -101,7 +101,7 @@ class MetadataManager(QObject):
             self.external_community_rules_path: str | None = None
             self.external_no_version_warning: list[str] | None = None
             self.external_no_version_warning_path: str | None = None
-            # self.external_use_this_instead_replacements: dict[str, ModReplacement] | None = None
+            self.external_use_this_instead_replacements: dict[str, Any] | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -422,6 +422,54 @@ class MetadataManager(QObject):
                 '"No Version Warning" override disabled by user. Please choose a metadata source in settings.'
             )
 
+        # External Use This Instead metadata
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured file path"
+        ):
+            path = Path(
+                self.settings_controller.settings.external_use_this_instead_file_path
+            )
+            if validate_db_path(str(path), "Use This Instead", expect_directory=False):
+                try:
+                    if path.suffix == ".gz":
+                        with gzip.open(str(path), "rt", encoding="utf-8-sig") as f:
+                            self.external_use_this_instead_replacements = json.load(f)
+                    else:
+                        with open(str(path), "r", encoding="utf-8-sig") as f:
+                            self.external_use_this_instead_replacements = json.load(f)
+                    logger.info(f"Loaded Use This Instead DB from {path}")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to load Use This Instead DB from {path}: {e}"
+                    )
+        elif (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+        ):
+            path = (
+                AppInfo().databases_folder
+                / Path(
+                    os.path.split(
+                        self.settings_controller.settings.external_use_this_instead_repo_path
+                    )[1]
+                )
+                / "replacements.json.gz"
+            )
+            if validate_db_path(str(path), "Use This Instead", expect_directory=False):
+                try:
+                    with gzip.open(str(path), "rt", encoding="utf-8-sig") as f:
+                        self.external_use_this_instead_replacements = json.load(f)
+                    logger.info(f"Loaded Use This Instead DB from {path}")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to load Use This Instead DB from {path}: {e}"
+                    )
+        else:
+            logger.info(
+                "Use This Instead metadata disabled by user. Please choose a metadata source in settings."
+            )
+
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         def batch_by_data_source(
             data_source: str, mod_directories: list[str]
@@ -673,15 +721,15 @@ class MetadataManager(QObject):
                 mod["supportedversions"] = {"li": version}
             else:
                 mod.pop("supportedversions", None)
-        # Apply canonical fields
-        mod.update(
-            {
-                "appid": appid,
-                "name": dlc_meta["name"],
-                "steam_url": dlc_meta["steam_url"],
-                "description": dlc_meta["description"],
-            }
-        )
+            # Apply canonical fields
+            mod.update(
+                {
+                    "appid": appid,
+                    "name": dlc_meta["name"],
+                    "steam_url": dlc_meta["steam_url"],
+                    "description": dlc_meta["description"],
+                }
+            )
 
     def compile_metadata(self, uuids: list[str] = []) -> None:
         """
@@ -1337,8 +1385,11 @@ class MetadataManager(QObject):
                 "No User Rules database supplied from external metadata. skipping."
             )
 
-        # logger.info("Flagging obsoleted mods from the Use This Instead database")
-        # if self.settings_controller.settings.external_use_this_instead_metadata_source != "None":
+        if self.external_use_this_instead_replacements:
+            logger.info("Flagging obsoleted mods from the Use This Instead database")
+            for uuid in uuids:
+                if self.has_alternative_mod(uuid):
+                    self.internal_local_metadata[uuid]["obsolete"] = True
 
         logger.info("Finished compiling internal metadata with external metadata")
 
@@ -1399,74 +1450,43 @@ class MetadataManager(QObject):
         # Return result
         return result
 
-    @lru_cache
     def has_alternative_mod(self, uuid: str) -> ModReplacement | None:
         """
-        If the use has configured a "Use This Instead" database, this function checks if a given mod has
+        If the user has configured a "Use This Instead" database, this function checks if a given mod has
         a recommended alternative.
 
-        If the user does not, it always returns false
+        If the user does not, it always returns None
         """
-
-        if (
-            self.settings_controller.settings.external_use_this_instead_metadata_source
-            == "None"
-        ):
+        if not self.external_use_this_instead_replacements:
             return None
 
-        path: Path
-
-        if (
-            self.settings_controller.settings.external_use_this_instead_metadata_source
-            == "Configured file path"
-        ):
-            path = Path(
-                self.settings_controller.settings.external_use_this_instead_folder_path
-            )
-        elif (
-            self.settings_controller.settings.external_use_this_instead_metadata_source
-            == "Configured git repository"
-        ):
-            path = (
-                AppInfo().databases_folder
-                / Path(
-                    os.path.split(
-                        self.settings_controller.settings.external_use_this_instead_repo_path
-                    )[1]
-                )
-                / "Replacements"
-            )
-        else:
-            return None
-
-        # At this point, path points to a directory of xml files, each named for a mod.
         mod_data = self.internal_local_metadata.get(uuid, False)
-        if not mod_data or "publishedfileid" not in mod_data:
+        if not mod_data:
             return None
 
-        check_path = path / Path(mod_data["publishedfileid"] + ".xml")
-        if not check_path.exists():
-            return None
-        replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
-
-        # check if replacement supports the game version
-        try:
-            major, minor = self.game_version.split(".")[:2]
-            version_regex = rf"{major}.{minor}"
-        except Exception:
-            version_regex = None
-        if not version_regex or version_regex not in replacement_data.get(
-            "ReplacementVersions", {}
-        ):
+        mod_workshop_id = str(mod_data.get("publishedfileid", ""))
+        if not mod_workshop_id:
             return None
 
-        return ModReplacement(
-            name=replacement_data["ReplacementName"],
-            author=replacement_data["ReplacementAuthor"],
-            packageid=replacement_data["ReplacementModId"],
-            pfid=replacement_data["ReplacementSteamId"],
-            supportedversions=replacement_data["ReplacementVersions"],
-        )
+        # Get the rules array from the replacements database
+        rules = self.external_use_this_instead_replacements.get("rules", [])
+
+        # Search through replacements database for a match
+        for replacement_entry in rules:
+            if (
+                isinstance(replacement_entry, dict)
+                and str(replacement_entry.get("oldWorkshopId", "")) == mod_workshop_id
+            ):
+                return ModReplacement(
+                    name=replacement_entry.get("newName", ""),
+                    author=replacement_entry.get("newAuthor", ""),
+                    packageid=replacement_entry.get("newPackageId", ""),
+                    pfid=replacement_entry.get("newWorkshopId", ""),
+                    supportedversions=replacement_entry.get("newVersions", []),
+                    source="database",
+                )
+
+        return None
 
     def process_batch(
         self,
@@ -3133,3 +3153,4 @@ def recursively_update_dict(
         for key in purge_keys:
             if key in a_dict:
                 del a_dict[key]
+    return None
