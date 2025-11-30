@@ -895,6 +895,9 @@ class MainContent(QObject):
         # Get active mods
         active_mods = set(self.mods_panel.active_mods_list.uuids)
 
+        # Compile metadata for active mods so newly-added ones have dependency info
+        self.metadata_manager.compile_metadata(uuids=list(active_mods))
+
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
