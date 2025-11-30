@@ -721,15 +721,15 @@ class MetadataManager(QObject):
                 mod["supportedversions"] = {"li": version}
             else:
                 mod.pop("supportedversions", None)
-            # Apply canonical fields
-            mod.update(
-                {
-                    "appid": appid,
-                    "name": dlc_meta["name"],
-                    "steam_url": dlc_meta["steam_url"],
-                    "description": dlc_meta["description"],
-                }
-            )
+        # Apply canonical fields
+        mod.update(
+            {
+                "appid": appid,
+                "name": dlc_meta["name"],
+                "steam_url": dlc_meta["steam_url"],
+                "description": dlc_meta["description"],
+            }
+        )
 
     def compile_metadata(self, uuids: list[str] = []) -> None:
         """
