@@ -614,5 +614,5 @@ class RunnerPanel(QWidget):
 
     def exit_window(self) -> None:
         """Clean up resources when the process window is closed."""
-        EventBus().do_metadata_refresh_cache.emit()
         self.close()
+        EventBus().do_metadata_refresh_cache.emit()
