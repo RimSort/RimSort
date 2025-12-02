@@ -149,7 +149,6 @@ jobs:
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
-        if: true
         with:
           nuitka-version: main
           script-name: app/__main__.py
