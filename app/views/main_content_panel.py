@@ -539,14 +539,10 @@ class MainContent(QObject):
             list_type="active", uuids=active_mods_uuids
         )
         # Determine sort key and descending for inactive mods
-        if (
-            self.settings_controller.settings.save_inactive_mods_sort_state
-            and self.settings_controller.settings.inactive_mods_sorting
-        ):
-            sort_key = ModsPanelSortKey[
-                self.settings_controller.settings.inactive_mods_sort_key
-            ]
-            descending = self.settings_controller.settings.inactive_mods_sort_descending
+        if self.settings_controller.settings.inactive_mods_sorting:
+            # Use current UI state from the combobox and button
+            sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
+            descending = self.mods_panel.inactive_sort_descending
         else:
             sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
             descending = True

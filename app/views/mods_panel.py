@@ -19,6 +19,7 @@ from PySide6.QtCore import (
     QSize,
     Qt,
     QThread,
+    QTimer,
     Signal,
     Slot,
 )
@@ -60,6 +61,7 @@ from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
     ModsPanelSortKey,
+    get_cached_metadata_for_batch,
     sort_uuids,
 )
 from app.utils.app_info import AppInfo
@@ -761,6 +763,19 @@ class ModListWidget(QListWidget):
     active and inactive mods. Mods can be rearranged within
     their own lists or moved from one list to another.
     """
+
+    SORT_TEXT_TO_KEY_MAP = {
+        "Name": ModsPanelSortKey.MODNAME,
+        "Author": ModsPanelSortKey.AUTHOR,
+        "Modified Time": ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+        "Folder Size": ModsPanelSortKey.FOLDER_SIZE,
+        "Version": ModsPanelSortKey.VERSION,
+        "PackageId": ModsPanelSortKey.PACKAGEID,
+    }
+
+    @staticmethod
+    def _text_to_sort_key(text: str) -> ModsPanelSortKey:
+        return ModListWidget.SORT_TEXT_TO_KEY_MAP.get(text, ModsPanelSortKey.MODNAME)
 
     edit_rules_signal = Signal(bool, str, str)
     item_added_signal = Signal(str)
@@ -1867,6 +1882,7 @@ class ModListWidget(QListWidget):
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
+        self.uuids.append(uuid)  # Append for new item
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
@@ -2547,7 +2563,10 @@ class ModListWidget(QListWidget):
         filtering = self.settings_controller.settings.inactive_mods_sorting
 
         if filtering:
-            sorted_uuids = sort_uuids(uuids, key=key, descending=descending)
+            cached_metadata = get_cached_metadata_for_batch(uuids)
+            sorted_uuids = sort_uuids(
+                uuids, key=key, descending=descending, cached_metadata=cached_metadata
+            )
             self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
         else:
             self.recreate_mod_list(list_type, uuids)
@@ -2559,29 +2578,43 @@ class ModListWidget(QListWidget):
         Clear all mod items and add new ones from a dict.
 
         :param mods: dict of mod data
+        :param filtering: if True, UUIDs are already sorted; skip sorting
         """
         logger.info(f"Internally recreating {list_type} mod list")
-        # Sort inactive mods using saved settings if enabled
-        if (
-            list_type == "Inactive"
-            and self.settings_controller.settings.save_inactive_mods_sort_state
-            and self.settings_controller.settings.inactive_mods_sorting
-        ):
-            sort_key = ModsPanelSortKey[
-                self.settings_controller.settings.inactive_mods_sort_key
-            ]
-            descending = self.settings_controller.settings.inactive_mods_sort_descending
-            uuids = sort_uuids(uuids, key=sort_key, descending=descending)
-        else:
-            if list_type == "Inactive":
-                uuids = sort_uuids(
-                    uuids,
-                    key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
-                    descending=True,
+        # Skip sorting if UUIDs are already filtered/sorted (filtering=True)
+        if not filtering:
+            # Sort inactive mods using saved settings if enabled
+            if (
+                list_type == "Inactive"
+                and self.settings_controller.settings.save_inactive_mods_sort_state
+                and self.settings_controller.settings.inactive_mods_sorting
+            ):
+                sort_key = ModsPanelSortKey[
+                    self.settings_controller.settings.inactive_mods_sort_key
+                ]
+                descending = (
+                    self.settings_controller.settings.inactive_mods_sort_descending
                 )
-        # Disable updates
+                uuids = sort_uuids(uuids, key=sort_key, descending=descending)
+            else:
+                if list_type == "Inactive":
+                    uuids = sort_uuids(
+                        uuids,
+                        key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+                        descending=True,
+                    )
+        # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
-        # Clear list
+        # Temporarily disconnect model signals to avoid cascading updates and duplicate items
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass  # Signal not connected
+        try:
+            self.model().rowsAboutToBeRemoved.disconnect(self.handle_rows_removed)
+        except TypeError:
+            pass  # Signal not connected
+
         self.clear()
         self.uuids = list()
         if uuids:  # Insert data...
@@ -2612,13 +2645,32 @@ class ModListWidget(QListWidget):
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
+            # Set uuids list to match the widget after all items are added
+            self.uuids = uuids
 
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
+            # Reconnect model signals
+            self.model().rowsInserted.connect(
+                self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+            )
+            self.model().rowsAboutToBeRemoved.connect(
+                self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
+            )
             return
+
+        # Reconnect model signals
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+        self.model().rowsAboutToBeRemoved.connect(
+            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
+        )
         # Enable updates and repaint
         self.setUpdatesEnabled(True)
         self.repaint()
+        # Load visible widgets after rebuild completes
+        self.check_widgets_visible()
 
     def toggle_warning(self, packageid: str, uuid: str) -> None:
         logger.debug(f"Toggled warning icon for: {packageid}")
@@ -2709,9 +2761,22 @@ class ModsPanel(QWidget):
     save_btn_animation_signal = Signal()
     check_dependencies_signal = Signal()
 
+    # OPTIMIZATION: Class-level constant for sort text to enum mapping
+    # Centralizes the text->enum conversion logic
+    SORT_TEXT_TO_KEY_MAP = {
+        "Name": ModsPanelSortKey.MODNAME,
+        "Author": ModsPanelSortKey.AUTHOR,
+        "Modified Time": ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+        "Folder Size": ModsPanelSortKey.FOLDER_SIZE,
+        "Version": ModsPanelSortKey.VERSION,
+        "PackageId": ModsPanelSortKey.PACKAGEID,
+    }
+
     def update_sort_ui_from_settings(self) -> None:
         """
-        Update the sort UI elements based on the current settings.
+        Update the inactive mods sort UI elements from settings.
+
+        Restores the saved sort key and direction to the UI combobox and button.
         """
         self.inactive_mods_sort_key = (
             self.settings_controller.settings.inactive_mods_sort_key
@@ -2751,8 +2816,10 @@ class ModsPanel(QWidget):
         self.settings_controller = settings_controller
 
         # Load inactive mods sort settings
-        flag = self.settings_controller.settings.save_inactive_mods_sort_state
-        if flag:
+        if (
+            self.settings_controller.settings.inactive_mods_sorting
+            and self.settings_controller.settings.save_inactive_mods_sort_state
+        ):
             self.inactive_mods_sort_key = (
                 self.settings_controller.settings.inactive_mods_sort_key
             )
@@ -2768,6 +2835,14 @@ class ModsPanel(QWidget):
         self._size_thread: Optional[QThread] = None
         self._size_worker: Optional[FolderSizeWorker] = None
         self._size_current_uuids: list[str] = []
+
+        # Debounce timer for non-heavy sort operations
+        self._sort_debounce_timer = QTimer()
+        self._sort_debounce_timer.setSingleShot(True)
+        self._sort_debounce_timer.timeout.connect(self._execute_pending_sort)
+        self._pending_sort_params: Optional[
+            tuple[str, list[str], ModsPanelSortKey, bool]
+        ] = None
 
         # Base layout horizontal, sub-layouts vertical
         self.panel = QVBoxLayout()
@@ -3163,12 +3238,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
         # Set initial visibility based on settings
-        self.inactive_mods_sort_combobox.setVisible(
-            self.settings_controller.settings.inactive_mods_sorting
-        )
-        self.inactive_mods_sort_order_button.setVisible(
-            self.settings_controller.settings.inactive_mods_sorting
-        )
+        if self.settings_controller.settings.inactive_mods_sorting:
+            self.inactive_mods_sort_combobox.setVisible(True)
+            self.inactive_mods_sort_order_button.setVisible(True)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -3199,31 +3271,62 @@ class ModsPanel(QWidget):
         )
 
     def on_inactive_mods_sort_order_toggled(self) -> None:
+        """
+        Handle the Asc/Desc toggle button click for inactive mods sorting.
+
+        Toggles the sort direction, updates the button label, saves the state
+        if enabled, and re-sorts the list with the new direction.
+        """
         # Toggle state and update button label
         self.inactive_sort_descending = not self.inactive_sort_descending
         self.inactive_mods_sort_order_button.setText(
             self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
         )
+
         # Save if enabled
-        if self.settings_controller.settings.save_inactive_mods_sort_state:
+        if (
+            self.settings_controller.settings.inactive_mods_sorting
+            and self.settings_controller.settings.save_inactive_mods_sort_state
+        ):
             self.settings_controller.settings.inactive_mods_sort_descending = (
                 self.inactive_sort_descending
             )
             self.settings_controller.settings.save()
-            # Re-apply sort using current selection
-            self.on_inactive_mods_sort_changed(
-                self.inactive_mods_sort_combobox.currentText()
-            )
 
-    # Slots for folder-size sorting (ensure UI updates happen on the main thread)
+        # Apply updated sort direction - re-sort with new descending flag
+        if self.settings_controller.settings.inactive_mods_sorting:
+            current_text = self.inactive_mods_sort_combobox.currentText()
+            # Re-sort list with updated descending flag
+            self.on_inactive_mods_sort_changed(current_text)
+
     @Slot(int, int)
     def _on_folder_size_progress(self, current: int, total: int) -> None:
+        """
+        Update the progress dialog during folder size calculation.
+
+        Slot for FolderSizeWorker.progress signal. Updates the progress dialog
+        with the current progress (current/total items processed).
+
+        Args:
+            current: Current number of items processed
+            total: Total number of items to process
+        """
         if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
             self._size_progress_dialog.setMaximum(total)
             self._size_progress_dialog.setValue(current)
 
     @Slot(dict)
     def _on_folder_size_finished(self, sizes: dict[str, int]) -> None:
+        """
+        Handle completion of folder size calculation.
+
+        Slot for FolderSizeWorker.finished signal. Sorts the inactive mods list
+        by computed folder sizes, rebuilds the UI with the sorted order,
+        and cleans up the background worker and progress dialog.
+
+        Args:
+            sizes: Dictionary mapping mod UUID -> folder size in bytes
+        """
         try:
             # Sort and rebuild with visible progress to avoid post-close pause
             current_uuids: list[str] = getattr(self, "_size_current_uuids", [])
@@ -3238,25 +3341,59 @@ class ModsPanel(QWidget):
                 self._size_progress_dialog.setValue(0)
 
             lw = self.inactive_mods_list
+            # Disconnect model signals during rebuild to prevent cascading updates and duplicate items
             lw.setUpdatesEnabled(False)
+            try:
+                lw.model().rowsInserted.disconnect(lw.handle_rows_inserted)
+            except TypeError:
+                pass  # Signal not connected
+            try:
+                lw.model().rowsAboutToBeRemoved.disconnect(lw.handle_rows_removed)
+            except TypeError:
+                pass  # Signal not connected
+
             lw.clear()
             lw.uuids = list()
-            for idx, uuid_key in enumerate(sorted_uuids, start=1):
-                list_item = CustomListWidgetItem(lw)
-                data = CustomListWidgetItemMetadata(
-                    uuid=uuid_key, settings_controller=self.settings_controller
+
+            # Get aux controller once for performance
+            aux_metadata_controller = (
+                AuxMetadataController.get_or_create_cached_instance(
+                    self.settings_controller.settings.aux_db_path
                 )
-                list_item.setData(Qt.ItemDataRole.UserRole, data)
-                lw.addItem(list_item)
-                if (
-                    hasattr(self, "_size_progress_dialog")
-                    and self._size_progress_dialog
-                ):
-                    self._size_progress_dialog.setValue(idx)
+            )
+
+            # OPTIMIZATION 1: Single DB session for all mods instead of per-mod
+            with aux_metadata_controller.Session() as aux_metadata_session:
+                for idx, uuid_key in enumerate(sorted_uuids, start=1):
+                    list_item = CustomListWidgetItem(lw)
+                    # Create metadata with aux controller to reduce lookups
+                    data = CustomListWidgetItemMetadata(
+                        uuid=uuid_key,
+                        list_type=lw.list_type,
+                        settings_controller=self.settings_controller,
+                        aux_metadata_controller=aux_metadata_controller,
+                        aux_metadata_session=aux_metadata_session,
+                    )
+                    list_item.setData(Qt.ItemDataRole.UserRole, data)
+                    lw.addItem(list_item)
+                    if (
+                        hasattr(self, "_size_progress_dialog")
+                        and self._size_progress_dialog
+                    ):
+                        self._size_progress_dialog.setValue(idx)
+            lw.uuids = sorted_uuids
+
+            # Reconnect model signals
+            lw.model().rowsInserted.connect(
+                lw.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+            )
+            lw.model().rowsAboutToBeRemoved.connect(
+                lw.handle_rows_removed, Qt.ConnectionType.QueuedConnection
+            )
             lw.setUpdatesEnabled(True)
             lw.repaint()
-            lw.uuids = sorted_uuids
-            lw.list_update_signal.emit(str(lw.count()))
+            # Load visible widgets after rebuild completes
+            lw.check_widgets_visible()
         finally:
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
                 self._size_progress_dialog.close()
@@ -3274,54 +3411,85 @@ class ModsPanel(QWidget):
                     pass
                 self._size_worker = None
 
+    def _execute_pending_sort(self) -> None:
+        """
+        Execute the pending sort operation after debounce timer expires.
+
+        Non-heavy sorts (Name, Author, etc.) are debounced to prevent rapid
+        rebuilds. This method executes the actual sort after the debounce delay.
+
+        Uses _pending_sort_params stored by on_inactive_mods_sort_changed.
+        """
+        if self._pending_sort_params:
+            list_type, uuids, key, descending = self._pending_sort_params
+            self._pending_sort_params = None
+            # Get the appropriate list widget and call recreate_mod_list_and_sort
+            mod_list = (
+                self.active_mods_list
+                if list_type == "Active"
+                else self.inactive_mods_list
+            )
+            mod_list.recreate_mod_list_and_sort(list_type, uuids, key, descending)
+
+    @staticmethod
+    def _text_to_sort_key(text: str) -> ModsPanelSortKey:
+        """
+        Convert combobox text to sort key enum.
+
+        Uses SORT_TEXT_TO_KEY_MAP constant for centralized text-to-enum mapping.
+        Falls back to FILESYSTEM_MODIFIED_TIME if text is not found.
+
+        Args:
+            text: The selected sort option text from the combobox
+                 (e.g., "Name", "Author", "Folder Size")
+
+        Returns:
+            ModsPanelSortKey enum corresponding to the text, or
+            FILESYSTEM_MODIFIED_TIME if not found
+        """
+        return ModsPanel.SORT_TEXT_TO_KEY_MAP.get(
+            text,
+            ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,  # Default fallback
+        )
+
     def on_inactive_mods_sort_changed(self, text: str) -> None:
-        """Handle inactive mods sorting selection change."""
-        # Determine the sorting key based on the selected text
+        """
+        Handle selection change in the inactive mods sort combobox.
+
+        Determines whether to use background calculation (for folder size sorting)
+        or debounced fast sorting (for other sorts). Folder size sorting requires
+        filesystem I/O and is calculated in the background. Other sorts are fast
+        data-only lookups and use debouncing to prevent rapid rebuilds.
+
+        Args:
+            text: The selected sort option text from the combobox
+        """
+        # Check if inactive mods sorting is enabled
         if not self.settings_controller.settings.inactive_mods_sorting:
             return
-        if text == self.tr("Name"):
-            sort_key = ModsPanelSortKey.MODNAME
-        elif text == self.tr("Modified Time"):
-            sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
-        elif text == self.tr("Author"):
-            sort_key = ModsPanelSortKey.AUTHOR
-        elif text == self.tr("Folder Size"):
-            sort_key = ModsPanelSortKey.FOLDER_SIZE
-        elif text == self.tr("Version"):
-            sort_key = ModsPanelSortKey.VERSION
-        elif text == self.tr("PackageId"):
-            sort_key = ModsPanelSortKey.PACKAGEID
-        else:
-            sort_key = ModsPanelSortKey.MODNAME  # Default fallback
 
-        # Save the sort key if enabled
-        if self.settings_controller.settings.save_inactive_mods_sort_state:
-            self.settings_controller.settings.inactive_mods_sort_key = sort_key.name
-            self.settings_controller.settings.save()
-        self.inactive_mods_sort_key = sort_key.name
+        # Convert combobox text to sort key enum
+        sort_key = self._text_to_sort_key(text)
 
-        # Re-sort the inactive mods list with the new key
+        # Get current list of UUIDs to sort
         current_uuids = self.inactive_mods_list.uuids.copy()
         if current_uuids:
-            # Show a modal progress dialog for heavy sorts
-            is_heavy = sort_key in (ModsPanelSortKey.FOLDER_SIZE,)
+            # Folder size sorting requires background calculation
+            # Other sorts are fast data lookups using debounce
+            is_heavy = sort_key == ModsPanelSortKey.FOLDER_SIZE
             if is_heavy:
-                # Set up dialog
-                dlg = QProgressDialog(
-                    self.tr("Calculating folder sizes..."),
-                    "",
-                    0,
-                    len(current_uuids),
-                    self,
-                )
+                # Background calculation required for folder size sorting
+                dlg = QProgressDialog(self)
+                dlg.setLabelText(self.tr("Calculating folder sizes..."))
+                # Set up dialog without cancel button (calculation cannot be interrupted)
+                dlg.setCancelButton(None)
+                dlg.setRange(0, len(current_uuids))
                 dlg.setWindowModality(Qt.WindowModality.WindowModal)
                 dlg.setMinimumDuration(0)
-                dlg.setCancelButton(None)
                 dlg.setAutoClose(True)
                 dlg.setAutoReset(True)
                 dlg.setValue(0)
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-
                 # Start worker thread
                 thr = QThread(self)
                 self._size_thread = thr
@@ -3329,25 +3497,36 @@ class ModsPanel(QWidget):
                 worker = FolderSizeWorker(current_uuids)
                 self._size_worker = worker
                 worker.moveToThread(thr)
-
                 worker.progress.connect(self._on_folder_size_progress)
                 worker.finished.connect(self._on_folder_size_finished)
                 thr.started.connect(worker.run)
                 thr.start()
-
                 self._size_progress_dialog = dlg
                 dlg.show()
             else:
-                # Fast path for other sort keys
-                # Apply order by passing flag to sort_uuids via recreate_mod_list_and_sort
-                sorted_uuids = sort_uuids(
+                # Non-heavy sorts use debouncing to prevent rapid rebuilds
+                # Store pending sort parameters
+                self._pending_sort_params = (
+                    "Inactive",
                     current_uuids,
-                    key=sort_key,
-                    descending=self.inactive_sort_descending,
+                    sort_key,
+                    self.inactive_sort_descending,
                 )
-                self.inactive_mods_list.recreate_mod_list(
-                    list_type="Inactive", uuids=sorted_uuids
-                )
+
+                # Cancel pending sort and start new timer (200ms debounce delay)
+                self._sort_debounce_timer.stop()
+                self._sort_debounce_timer.start(200)
+
+                # Save the sort key immediately if enabled
+                if (
+                    self.settings_controller.settings.inactive_mods_sorting
+                    and self.settings_controller.settings.save_inactive_mods_sort_state
+                ):
+                    self.settings_controller.settings.inactive_mods_sort_key = (
+                        sort_key.name
+                    )
+                    self.settings_controller.settings.save()
+                self.inactive_mods_sort_key = sort_key.name
 
     def mod_list_updated(
         self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True
