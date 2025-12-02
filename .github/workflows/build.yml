@@ -45,31 +45,31 @@ jobs:
             platform: "Darwin"
             arch: "i386"
             env:
-              BUILD_OUTPUT: "__main__.app"
+              BUILD_OUTPUT: "app.app"
               Executable: RimSort
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
-              BUILD_OUTPUT: "__main__.app"
+              BUILD_OUTPUT: "app.app"
               Executable: RimSort
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
-              BUILD_OUTPUT: "__main__.dist"
+              BUILD_OUTPUT: "app.dist"
               Executable: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
-              BUILD_OUTPUT: "__main__.dist"
+              BUILD_OUTPUT: "app.dist"
               Executable: RimSort
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
             env:
-              BUILD_OUTPUT: "__main__.dist"
+              BUILD_OUTPUT: "app.dist"
               Executable: RimSort.exe
     steps:
       - name: Check-out repository
@@ -151,7 +151,8 @@ jobs:
         uses: Nuitka/Nuitka-Action@main
         with:
           nuitka-version: main
-          script-name: app/__main__.py
+          script-name: app/
+          python-flag: -m
           mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
           static-libpython: auto
           product-version: >-

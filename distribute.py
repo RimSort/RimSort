@@ -40,7 +40,8 @@ _NUITKA_CMD = [
     PY_CMD,
     "-m",
     "nuitka",
-    "app/__main__.py",
+    "app/",
+    "--python-flag=-m",
     f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
