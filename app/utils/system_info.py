@@ -77,9 +77,12 @@ class SystemInfo:
                 f"Unsupported operating system detected: {platform.system()}."
             )
 
-        if platform.machine() in ["x86_64", "AMD64"]:
+        arch = platform.machine().lower()
+        if arch in ["x86_64", "amd64"]:
             self._architecture = SystemInfo.Architecture.X64
-        elif platform.machine() in ["arm64", "aarch64"]:
+        elif arch in ["x86", "i386", "i686"]:
+            self._architecture = SystemInfo.Architecture.X86
+        elif arch in ["arm64", "aarch64", "arm64e"]:
             self._architecture = SystemInfo.Architecture.ARM64
         else:
             raise UnsupportedArchitectureError(
