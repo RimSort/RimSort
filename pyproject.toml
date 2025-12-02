@@ -59,7 +59,7 @@ dev = [
 ]
 
 build = [
-    "nuitka==2.8.8",
+    "nuitka==2.8.9",
 ]
 
 [tool.uv]
