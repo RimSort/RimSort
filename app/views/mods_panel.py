@@ -2671,6 +2671,8 @@ class ModListWidget(QListWidget):
         self.repaint()
         # Load visible widgets after rebuild completes
         self.check_widgets_visible()
+        # Emit signal to update counts and errors/warnings
+        self.list_update_signal.emit(str(self.count()))
 
     def toggle_warning(self, packageid: str, uuid: str) -> None:
         logger.debug(f"Toggled warning icon for: {packageid}")
@@ -3394,6 +3396,8 @@ class ModsPanel(QWidget):
             lw.repaint()
             # Load visible widgets after rebuild completes
             lw.check_widgets_visible()
+            # Emit signal to update counts and errors/warnings
+            lw.list_update_signal.emit(str(lw.count()))
         finally:
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
                 self._size_progress_dialog.close()
