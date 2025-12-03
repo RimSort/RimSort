@@ -84,6 +84,7 @@ from app.views.mods_panel import (
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
+from app.windows.missing_packageid_panel import MissingPackageIdPanel
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
@@ -611,6 +612,33 @@ class MainContent(QObject):
         else:
             logger.info("No missing mods found. Skipping...")
 
+    def __check_and_warn_missing_packageid(self) -> None:
+        """
+        Check for mods with missing packageid and display a panel
+        to notify the user.
+        """
+        missing_packageid_uuids = [
+            uuid
+            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
+            if mod_metadata.get("packageid") == metadata.DEFAULT_MISSING_PACKAGEID
+        ]
+
+        if not missing_packageid_uuids:
+            logger.info("No mods with missing packageid found. Skipping...")
+            return
+
+        missing_packageid_count = len(missing_packageid_uuids)
+        logger.info(
+            f"Found {missing_packageid_count} mod(s) with missing or invalid Package ID. Opening MissingPackageIdPanel..."
+        )
+
+        # Open the MissingPackageIdPanel to display mods with missing packageid
+        missing_packageid_panel = MissingPackageIdPanel(
+            missing_packageid_uuids, self.settings_controller
+        )
+        missing_packageid_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
+        missing_packageid_panel.show()
+
     def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
         """
         This slot method is triggered when the user clicks on an item
@@ -786,6 +814,9 @@ class MainContent(QObject):
 
             # check if we have missing mods, prompt user
             self.__missing_mods_prompt()
+
+            # check if we have mods with missing packageid, warn user
+            self.__check_and_warn_missing_packageid()
 
             # Check Workshop mods for updates if configured
             if self.settings_controller.settings.steam_mods_update_check:

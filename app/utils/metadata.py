@@ -43,6 +43,8 @@ from app.views.dialogue import (
 )
 
 # Locally installed mod metadata
+# Default packageId for mods with missing or invalid packageId
+DEFAULT_MISSING_PACKAGEID = "missing.packageid"
 
 
 class ModReplacement:
@@ -1767,6 +1769,8 @@ class ModParser(QRunnable):
         data_malformed = None
         # Any pfid parsed will be stored here locally
         pfid = None
+        # Use module-level constant for default packageId
+        default_packageid = DEFAULT_MISSING_PACKAGEID
         # Define defaults for scenario
         scenario_rsc_found = False
         scenario_rsc_file = ""
@@ -1940,21 +1944,34 @@ class ModParser(QRunnable):
                         # ...check type of packageid, use first packageid parsed
                         if isinstance(mod_metadata["packageid"], list):
                             # Loop through the list and find str. If we find one, use it.
+                            found = False
                             for potential_packageid in mod_metadata["packageid"]:
                                 if potential_packageid and isinstance(
                                     potential_packageid, str
                                 ):
                                     mod_metadata["packageid"] = potential_packageid
+                                    found = True
                                     break
+                            # If no string found in list, set to error packageid
+                            if not found:
+                                mod_metadata["packageid"] = default_packageid
                         # Normalize package ID in metadata
                         if isinstance(mod_metadata["packageid"], str):
                             mod_metadata["packageid"] = mod_metadata[
                                 "packageid"
                             ].lower()
+                        elif isinstance(mod_metadata["packageid"], dict):
+                            # Handle dict packageid (from malformed XML), try to extract text
+                            if mod_metadata["packageid"].get("#text"):
+                                mod_metadata["packageid"] = mod_metadata["packageid"][
+                                    "#text"
+                                ].lower()
+                                if not mod_metadata["packageid"]:
+                                    mod_metadata["packageid"] = default_packageid
+                            else:
+                                mod_metadata["packageid"] = default_packageid
                         else:
-                            mod_metadata["packageid"] = (
-                                "packageid error in mod about.xml"
-                            )
+                            mod_metadata["packageid"] = default_packageid
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (
@@ -1970,7 +1987,11 @@ class ModParser(QRunnable):
                                 ].lower()
                             )
                         else:
-                            mod_metadata.setdefault("packageid", "missing.packageid")
+                            # Ensure packageid is always set, default to missing.packageid
+                            mod_metadata.setdefault("packageid", default_packageid)
+                    # Log warning if packageid is missing
+                    if mod_metadata.get("packageid") == default_packageid:
+                        logger.warning(f"Invalid packageId in mod: {mod_data_path}")
                     # Track pfid if we parsed one earlier
                     if pfid:  # Make some assumptions if we have a pfid
                         mod_metadata["publishedfileid"] = pfid
@@ -2199,6 +2220,13 @@ class ModParser(QRunnable):
                 self.data_source, self.mod_directory, self.metadata_manager, self.uuid
             )
             packageid = mod_metadata[self.uuid].get("packageid")
+            # Ensure packageid is always a string, never a dict
+            if isinstance(packageid, dict):
+                packageid = packageid.get("#text", DEFAULT_MISSING_PACKAGEID)
+                mod_metadata[self.uuid]["packageid"] = packageid
+            elif not isinstance(packageid, str):
+                packageid = DEFAULT_MISSING_PACKAGEID
+                mod_metadata[self.uuid]["packageid"] = packageid
             self.metadata_manager.internal_local_metadata.update(mod_metadata)
             # Track packageid -> uuid relationships for future uses
             self.metadata_manager.packageid_to_uuids.setdefault(packageid, set()).add(
