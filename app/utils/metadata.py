@@ -530,83 +530,144 @@ class MetadataManager(QObject):
         )
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
+        """
+        Refresh all internal mod metadata from the file system.
+
+        This method performs a complete scan of all mod directories (expansions, local, and workshop),
+        parsing metadata for each discovered mod. It maintains consistency between internal metadata
+        state and the file system by:
+
+        1. Reading game version from Version.txt for DLC/base game compatibility
+        2. Scanning three data sources for mods:
+           - Expansion: Official RimWorld DLC and base game content
+           - Local: Locally installed mods (SteamCMD)
+           - Workshop: Steam Workshop mods
+        3. Purging metadata for mods that no longer exist on disk
+        4. Rebuilding path-to-uuid mappers used by file watchers
+
+        On initial load (`is_initial=True`), orphaned metadata is not purged. On subsequent refreshes,
+        only mods found in the current file system scan are retained for each data source.
+
+        Parameters:
+            is_initial (bool): If True, skip purging to preserve any existing metadata during initialization.
+                              If False (default), purge metadata for mods no longer present on disk.
+        """
+
         def batch_by_data_source(
             data_source: str, mod_directories: list[str]
-        ) -> dict[str, Any]:
+        ) -> dict[str, str]:
             """
-            Returns a batch of mod path <-> uuid mappings for a given data source.
+            Create a batch of mod path <-> uuid mappings for discovered directories.
+
+            For each discovered directory, retrieves an existing UUID from the mapper or generates
+            a new one. This ensures consistent UUID assignment across refreshes, allowing mods to
+            be tracked even as their physical locations may change.
 
             Parameters:
-                data_source (str): The data source to batch.
-                mod_directories (list[str]): A list of mod directories to use to filter items not in that batch.
-            """
-            return {
-                path: self.mod_metadata_dir_mapper.get(path, str(uuid4()))
-                for path in mod_directories
-            }
+                data_source (str): The data source type (expansion, local, or workshop).
+                                  Used for filtering and logging purposes.
+                mod_directories (list[str]): List of absolute directory paths discovered in the file system.
 
-        def purge_by_data_source(data_source: str, batch: list[str] = []) -> None:
+            Returns:
+                dict[str, str]: Mapping of directory path to UUID. New UUIDs are generated for
+                               previously unknown directories; existing UUIDs are reused from the mapper.
             """
-            Removes all metadata for a given data source.
+            mapper = self.mod_metadata_dir_mapper
+            return {path: mapper.get(path, str(uuid4())) for path in mod_directories}
 
-            Optionally pass a batch of uuids to use to filter items not in that batch.
+        def purge_by_data_source(
+            data_source: str, batch: dict[str, str] | None = None
+        ) -> None:
+            """
+            Remove metadata for mods that no longer exist in the file system.
+
+            When refreshing metadata, this function identifies and removes any stored metadata
+            entries for mods that:
+            1. Belong to a specific data source (expansion, local, or workshop)
+            2. Are NOT in the current batch of discovered directories
+
+            This keeps internal metadata in sync with the actual file system state. Also updates
+            the packageid_to_uuids index to maintain referential integrity.
 
             Parameters:
-                data_source (str): The data source to purge.
-                batch (list[str], optional): A list of uuids to use to filter items not in that batch.
+                data_source (str): The data source type to filter by (expansion, local, or workshop).
+                batch (dict[str, str], optional): A dict mapping discovered paths to their UUIDs.
+                                                 If provided, only mods NOT in this batch are purged.
+                                                 If None, ALL metadata for the data_source is purged.
+
+            Notes:
+                - Uses optimized list comprehension with early branch for batch existence
+                - Handles race conditions where metadata may be deleted during iteration
+                - Updates packageid_to_uuids index when removing mods with packageids
             """
-            if not batch:  # Purge all metadata for a given data source
+            # Collect uuids to remove
+            batch_uuids = set(batch.values()) if batch else None
+            internal_meta = self.internal_local_metadata
+
+            # Optimized filtering: branch on batch_uuids to avoid ternary check in hot loop
+            # When batch is None (full purge), simpler comprehension; when batch exists, exclude members
+            if batch_uuids is None:
+                # Full purge: remove all metadata for this data_source
                 uuids_to_remove = [
                     uuid
-                    for uuid, metadata in self.internal_local_metadata.items()
+                    for uuid, metadata in internal_meta.items()
                     if metadata.get("data_source") == data_source
                 ]
-            else:  # Purge all metadata for a given data source that is not in the batch
+            else:
+                # Selective purge: remove only metadata NOT in current batch (file system state)
                 uuids_to_remove = [
                     uuid
-                    for uuid, metadata in self.internal_local_metadata.items()
-                    if metadata.get("data_source") == data_source and uuid not in batch
+                    for uuid, metadata in internal_meta.items()
+                    if metadata.get("data_source") == data_source
+                    and uuid not in batch_uuids
                 ]
-            # If we have uuids to remove
-            if uuids_to_remove:
-                logger.debug(
-                    f"[{data_source}] Purging leftover metadata from directories that no longer exist"
-                )
-                # Purge metadata from internal metadata
-                for uuid in uuids_to_remove:
-                    logger.debug(
-                        f"Removing metadata for {uuid}: {self.internal_local_metadata.get(uuid)}"
+
+            # Early return if nothing to purge
+            if not uuids_to_remove:
+                return
+
+            logger.debug(
+                f"[{data_source}] Purging {len(uuids_to_remove)} leftover metadata entries"
+            )
+
+            # Remove metadata entries and update reverse indices
+            packageid_to_uuids = self.packageid_to_uuids
+            for uuid in uuids_to_remove:
+                deleted_mod = internal_meta.pop(uuid, None)
+                if deleted_mod is None:
+                    # Race condition: another thread may have already deleted this entry
+                    logger.warning(
+                        f"Unable to find metadata for {uuid} in internal metadata. Possible race condition!"
                     )
-                    deleted_mod = self.internal_local_metadata.get(uuid)
-                    if deleted_mod is None:
-                        logger.warning(
-                            f"Unable to find metadata for {uuid} in internal metadata, skipping removal. Possible race condition!"
-                        )
-                        continue
+                    continue
 
-                    deleted_mod_packageid = deleted_mod.get("packageid")
-                    self.internal_local_metadata.pop(uuid)
+                # Maintain packageid_to_uuids reverse index consistency
+                if deleted_mod_packageid := deleted_mod.get("packageid"):
+                    if packageid_uuids := packageid_to_uuids.get(deleted_mod_packageid):
+                        packageid_uuids.discard(uuid)
 
-                    if deleted_mod_packageid and self.packageid_to_uuids.get(
-                        deleted_mod_packageid
-                    ):
-                        self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
-
-        # Get & set Rimworld version string
-        game_folder = self.settings_controller.settings.instances[
+        # ===== INITIALIZATION =====
+        # Cache settings instance to avoid repeated attribute lookups
+        settings_instance = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
-        ].game_folder
-        version_file_path = str(game_folder / Path("Version.txt"))
-        if os.path.exists(version_file_path):
+        ]
+
+        # ===== GAME VERSION DETECTION =====
+        # Read game version from Version.txt file; required for DLC/base game compatibility checks
+        # Version is used in supplement_dlc_metadata() and by content managers for versioning logic
+        game_folder = settings_instance.game_folder
+        version_file_path = game_folder / Path("Version.txt")
+        if version_file_path.exists():
             try:
-                with open(version_file_path, encoding="utf-8") as f:
-                    self.game_version = f.read().strip()
-                    logger.info(
-                        f"Retrieved game version from Version.txt: {self.game_version}"
-                    )
-            except Exception:
+                self.game_version = version_file_path.read_text(
+                    encoding="utf-8"
+                ).strip()
+                logger.info(
+                    f"Retrieved game version from Version.txt: {self.game_version}"
+                )
+            except Exception as e:
                 logger.error(
-                    f"Unable to parse Version.txt from game folder: {version_file_path}"
+                    f"Unable to parse Version.txt from game folder: {version_file_path}: {e}"
                 )
         else:
             logger.error(
@@ -616,114 +677,100 @@ class MetadataManager(QObject):
                 self.tr("Missing Version.txt"),
                 self.tr(
                     "RimSort is unable to get the game version at the expected path: [{version_file_path}]."
-                ).format(version_file_path=version_file_path),
+                ).format(version_file_path=str(version_file_path)),
                 self.tr(
                     "\nIs your game path {folder} set correctly? There should be a Version.txt file in the game install directory."
-                ).format(
-                    folder=self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].game_folder
-                ),
+                ).format(folder=game_folder),
                 "",
             )
-        # Get and cache installed base game / DLC data
-        if game_folder and game_folder != Path():
-            # Get mod data
-            data_path = str(game_folder / Path("Data"))
-            logger.info(
-                f"Querying Official expansions from RimWorld's Data folder: {data_path}"
-            )
-            # Scan our Official expansions directory
-            expansion_subdirectories = directories(data_path)
-            expansions_batch = batch_by_data_source(
-                "expansion", expansion_subdirectories
-            )
+
+        def process_data_source_folder(
+            data_source: str, folder_path: Path | str | None, subfolder: str = ""
+        ) -> None:
+            """
+            Scan a data source folder and update metadata for all discovered mods.
+
+            This function handles the complete lifecycle of processing a single data source:
+            1. Validates the folder path exists and is configured
+            2. Discovers all subdirectories (each represents a mod)
+            3. Generates or reuses UUIDs for consistent tracking
+            4. Removes metadata for mods no longer present (unless initial load)
+            5. Queues batch processing via thread pool
+
+            Parameters:
+                data_source (str): The data source type (expansion, local, or workshop).
+                                  Controls logging level and data source filtering.
+                folder_path (Path | str | None): The root folder containing mods.
+                                                 Can be None or empty Path if not configured.
+                subfolder (str, optional): Optional subdirectory to scan within folder_path.
+                                          Used for expansion data which is in the "Data" subfolder.
+
+            Notes:
+                - Returns early if folder_path is not configured (None or empty)
+                - Returns early if no subdirectories found (prevents unnecessary processing)
+                - On initial load, metadata is not purged to preserve state
+                - Processing is queued asynchronously via self.process_batch()
+            """
+            # Check if folder path is empty
+            if not folder_path or folder_path == Path():
+                log_func = logger.error if data_source == "expansion" else logger.debug
+                log_func(
+                    f"Skipping parsing data from empty {data_source} path. Is the {data_source} path configured?"
+                )
+                purge_by_data_source(data_source)
+                return
+
+            # Construct folder path
+            folder_to_scan = Path(folder_path)
+            if subfolder:
+                folder_to_scan = folder_to_scan / subfolder
+
+            logger.info(f"Querying {data_source} from path: {folder_to_scan}")
+            subdirectories = directories(str(folder_to_scan))
+
+            # Skip processing if no subdirectories found
+            if not subdirectories:
+                logger.debug(f"No subdirectories found in {folder_to_scan}")
+                purge_by_data_source(data_source)
+                return
+
+            batch = batch_by_data_source(data_source, subdirectories)
+
             if not is_initial:
-                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source("expansion", list(expansions_batch.values()))
-            # Query the batch
-            self.process_batch(
-                batch=expansions_batch,
-                data_source="expansion",
-            )
-            # Wait for pool to complete
-            self.parser_threadpool.waitForDone()
-            self.parser_threadpool.clear()
-        else:
-            logger.error(
-                "Skipping parsing data from empty game data path. Is the game path configured?"
-            )
-            # Check for and purge any found expansion metadata from cache
-            purge_by_data_source("expansion")
-        # Get and cache installed local/SteamCMD Workshop mods
-        current_instance = self.settings_controller.settings.current_instance
-        local_folder = self.settings_controller.settings.instances[
-            current_instance
-        ].local_folder
-        if local_folder and local_folder != "":
-            # Get mod data
-            logger.info(f"Querying local mods from path: {local_folder}")
-            local_subdirectories = directories(local_folder)
-            local_batch = batch_by_data_source("local", local_subdirectories)
-            if not is_initial:
-                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source("local", list(local_batch.values()))
-            # Query the batch
-            self.process_batch(
-                batch=local_batch,
-                data_source="local",
-            )
-        else:
-            logger.debug(
-                "Skipping parsing data from empty local mods path. Is the local mods path configured?"
-            )
-            # Check for and purge any found local mod metadata from cache
-            purge_by_data_source("local")
-        # Get and cache installed Steam client Workshop mods
-        current_instance = self.settings_controller.settings.current_instance
-        workshop_folder = self.settings_controller.settings.instances[
-            current_instance
-        ].workshop_folder
-        if workshop_folder and workshop_folder != "":
-            logger.info(f"Querying workshop mods from path: {workshop_folder}")
-            workshop_subdirectories = directories(workshop_folder)
-            workshop_batch = batch_by_data_source("workshop", workshop_subdirectories)
-            if not is_initial:
-                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source("workshop", list(workshop_batch.values()))
-            # Query the batch
-            self.process_batch(
-                batch=workshop_batch,
-                data_source="workshop",
-            )
-        else:
-            logger.debug(
-                "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
-            )
-            # Check for and purge any found workshop mod metadata from cache
-            purge_by_data_source("workshop")
-        # Wait for pool to complete
+                purge_by_data_source(data_source, batch)
+            self.process_batch(batch=batch, data_source=data_source)
+
+        # ===== METADATA SCANNING =====
+        # Scan three data sources for mods, each queued for concurrent parsing via threadpool
+
+        # Process official RimWorld content (Base game + DLC)
+        process_data_source_folder("expansion", game_folder, "Data")
+
+        # Process locally installed mods (SteamCMD, manual installs)
+        process_data_source_folder("local", settings_instance.local_folder)
+
+        # Process Steam Workshop mods
+        process_data_source_folder("workshop", settings_instance.workshop_folder)
+
+        # ===== THREAD SYNCHRONIZATION =====
+        # Wait for all queued metadata parsing tasks to complete before rebuilding mappers
+        # This ensures all internal_local_metadata updates are visible before we rebuild indices
         self.parser_threadpool.waitForDone()
         self.parser_threadpool.clear()
-        # Generate our file <-> UUID mappers for Watchdog and friends
-        # Map mod uuid to metadata file path
-        self.mod_metadata_file_mapper = {
-            **{
-                metadata.get(
-                    "metadata_file_path"
-                ): uuid  # We watch the mod's parent directory for changes, so we need to map to the mod's uuid
-                for uuid, metadata in self.internal_local_metadata.items()
-            },
-        }
-        # Map mod uuid to mod dir path
-        self.mod_metadata_dir_mapper = {
-            **{
-                metadata.get(
-                    "path"
-                ): uuid  # We watch the mod's parent directory for changes, so we need to map to the mod's uuid
-                for uuid, metadata in self.internal_local_metadata.items()
-            },
-        }
+
+        # ===== MAPPER RECONSTRUCTION =====
+        # Rebuild path-to-uuid mapping indices used by file watchers for change detection
+        # Single pass through metadata builds both file mapper and directory mapper simultaneously
+        file_mapper = {}
+        dir_mapper = {}
+        for uuid, metadata in self.internal_local_metadata.items():
+            if mfp := metadata.get("metadata_file_path"):
+                file_mapper[mfp] = uuid
+            if mp := metadata.get("path"):
+                dir_mapper[mp] = uuid
+
+        self.mod_metadata_file_mapper = file_mapper
+        self.mod_metadata_dir_mapper = dir_mapper
 
     def __update_from_settings(self) -> None:
         self.community_rules_repo = (
