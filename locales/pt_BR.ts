@@ -974,6 +974,10 @@ Como você gostaria de prosseguir?
         <translation>Relatório de comparação do Steam DB: {len} encontrado</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>Não foram encontradas sugestões no banco de dados “Use isto em vez disso”.</translation>
     </message>
@@ -2245,26 +2249,6 @@ Como você gostaria de prosseguir?</translation>
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>{db_type} Falta no banco de dados</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>Configurar {db_type} Banco de dados não encontrado!</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>Não é possível inicializar metadados externos. Não há metadados externos {db_type} sendo considerados!
-
-Verifique se as configurações de localização do banco de dados estão corretas.</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>O caminho do banco de dados {db_type} configurado não é um diretório {not_dir}! Esperava-se um caminho {file_dir}.</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Metadados do Steam DB expiraram</translation>
     </message>
@@ -2375,6 +2359,23 @@ Selecione a variante do mod que prefere na tabela abaixo. Também pode abrir cad
     <message>
         <source>Download with Steam client</source>
         <translation>Baixe com o cliente Steam</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
     </message>
 </context>
 <context>
@@ -5115,7 +5116,7 @@ Você quer atualizar agora?</translation>
     </message>
     <message>
         <source>Installed</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
     </message>
     <message>
         <source>Not Installed</source>

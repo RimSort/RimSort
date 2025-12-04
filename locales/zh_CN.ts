@@ -974,6 +974,10 @@ How would you like to proceed?
         <translation>Steam 数据库比较报告：{len} 发现</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>在 "替代为此" 数据库中没有找到任何建议。</translation>
     </message>
@@ -2245,26 +2249,6 @@ RimSort 可以复制所有你的创意工坊模组到新实例的本地模组文
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>缺少 {db_type} 数据库</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>未找到配置的 {db_type} DB</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>无法初始化外部元数据。未检测到外部 {db_type} 元数据！
-
-请确保你的数据库位置设置正确。</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>配置的 {db_type} DB 路径是 {not_dir} 而不是一个目录！预期一个 {file_dir} 路径。</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Steam 数据库元数据已过期</translation>
     </message>
@@ -2375,6 +2359,23 @@ Please select your preferred mod variant in the table below. You can also open e
 Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变体'。在下载之前，请注意这一点。
 
 请选择你在下表中偏好的 模组变体。你也可以在 Steam 或网页浏览器中打开每个变体进行验证。"</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
     </message>
 </context>
 <context>

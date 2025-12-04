@@ -1132,6 +1132,10 @@ Die resultierende Datenbank C wird in einem benutzerdefinierten Pfad gespeichert
         <translation>Verwenden Sie dies stattdessen</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293353C0&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>In der Datenbank "Diese Stattdessen" wurden keine Vorschläge gefunden.</translation>
     </message>
@@ -2239,26 +2243,6 @@ Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>{db_type} db fehlt</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>Konfiguriert {db_type} db nicht gefunden!</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>Externe Metadaten können nicht initialisieren.Es gibt keine externen {db_type} metadaten, die berücksichtigt werden!
-
-Bitte stellen Sie sicher, dass Ihre Datenbankorteinstellungen korrekt sind.</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>Konfiguriert {db_type} db path ist {not_dir} ein Verzeichnis!Erwartet einen {file_dir} Pfad.</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Dampf -DB -Metadaten sind abgelaufen</translation>
     </message>
@@ -2366,6 +2350,23 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
     <message>
         <source>Download with Steam client</source>
         <translation>Download mit Steam Client</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
     </message>
 </context>
 <context>

@@ -1128,6 +1128,10 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>これを代わりに使用</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>「これを代わりに使用」データベースに提案は見つかりませんでした。</translation>
     </message>
@@ -2245,26 +2249,6 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>{db_type} DB が見つかりません</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>構成された {db_type} DB が見つかりません！</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>外部メタデータを初期化できません。外部 {db_type} メタデータがファクタリングされていません！
-
-データベースの場所設定が正しいことを確認してください。</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>構成された {db_type} DB パスは {not_dir} ディレクトリではありません！ {file_dir} パスが必要です。</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Steam DB メタデータの有効期限が切れました</translation>
     </message>
@@ -2375,6 +2359,23 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Download with Steam client</source>
         <translation>Steamクライアントでダウンロード</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
     </message>
 </context>
 <context>

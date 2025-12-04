@@ -160,11 +160,11 @@
     </message>
     <message>
         <source>Subscribe selected</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
     </message>
     <message>
         <source>Unsubscribe selected</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -1123,6 +1123,10 @@ La base de datos resultante, C, se guarda en una ruta especificada por el usuari
     <message>
         <source>Use This Instead</source>
         <translation>Usa esto en su lugar</translation>
+    </message>
+    <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -2232,26 +2236,6 @@ Alternativamente, puedes mantener tu antigua preferencia de carpeta del taller d
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>DB falta {db_type}</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>Configurado {db_type} db no encontrado!</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>No se puede inicializar metadatos externos. ¡No hay metadatos externos {db_type} que se tengan en cuenta!
-
-Asegúrese de que la configuración de ubicación de su base de datos sea correcta.</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>Configurada {db_type} db ruta es  un directorio! Esperado una ruta {file_dir}. {not_dir}</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Vapor DB Metadatos expirados</translation>
     </message>
@@ -2359,6 +2343,23 @@ Seleccione su variante de mod de Mod en la tabla a continuación. También puede
     <message>
         <source>Download with Steam client</source>
         <translation>Descargar con el cliente Steam</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293353C0&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
     </message>
 </context>
 <context>
@@ -5073,7 +5074,7 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Select all Originals</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
     </message>
     <message>
         <source>Select all Replacements</source>
@@ -5085,11 +5086,11 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Installed</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
     </message>
     <message>
         <source>Not Installed</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
     </message>
     <message>
         <source>Group {0}</source>
@@ -5133,7 +5134,7 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>Update with Steam client</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
     </message>
 </context>
 <context>
