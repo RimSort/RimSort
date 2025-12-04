@@ -480,6 +480,45 @@ class MetadataManager(QObject):
             else (None, None)
         )
 
+    def __read_game_version(self) -> None:
+        """Read game version from Version.txt file.
+
+        This must be called before loading external metadata like "No Version Warning"
+        since those loaders may depend on the game version for constructing file paths.
+        """
+        settings_instance = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ]
+        game_folder = settings_instance.game_folder
+        version_file_path = game_folder / Path("Version.txt")
+
+        if version_file_path.exists():
+            try:
+                self.game_version = version_file_path.read_text(
+                    encoding="utf-8"
+                ).strip()
+                logger.info(
+                    f"Retrieved game version from Version.txt: {self.game_version}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Unable to parse Version.txt from game folder: {version_file_path}: {e}"
+                )
+        else:
+            logger.error(
+                f"The provided Version.txt path does not exist: {version_file_path}"
+            )
+            self.show_warning_signal.emit(
+                self.tr("Missing Version.txt"),
+                self.tr(
+                    "RimSort is unable to get the game version at the expected path: [{version_file_path}]."
+                ).format(version_file_path=str(version_file_path)),
+                self.tr(
+                    "\nIs your game path {folder} set correctly? There should be a Version.txt file in the game install directory."
+                ).format(folder=game_folder),
+                "",
+            )
+
     def __refresh_external_metadata(self) -> None:
         """Load all external metadata from configured sources.
 
@@ -651,38 +690,11 @@ class MetadataManager(QObject):
         settings_instance = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
         ]
+        game_folder = settings_instance.game_folder
 
         # ===== GAME VERSION DETECTION =====
-        # Read game version from Version.txt file; required for DLC/base game compatibility checks
-        # Version is used in supplement_dlc_metadata() and by content managers for versioning logic
-        game_folder = settings_instance.game_folder
-        version_file_path = game_folder / Path("Version.txt")
-        if version_file_path.exists():
-            try:
-                self.game_version = version_file_path.read_text(
-                    encoding="utf-8"
-                ).strip()
-                logger.info(
-                    f"Retrieved game version from Version.txt: {self.game_version}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Unable to parse Version.txt from game folder: {version_file_path}: {e}"
-                )
-        else:
-            logger.error(
-                f"The provided Version.txt path does not exist: {version_file_path}"
-            )
-            self.show_warning_signal.emit(
-                self.tr("Missing Version.txt"),
-                self.tr(
-                    "RimSort is unable to get the game version at the expected path: [{version_file_path}]."
-                ).format(version_file_path=str(version_file_path)),
-                self.tr(
-                    "\nIs your game path {folder} set correctly? There should be a Version.txt file in the game install directory."
-                ).format(folder=game_folder),
-                "",
-            )
+        # Game version is already loaded by __read_game_version() before this method is called.
+        # This ensures external metadata loaders can use it for path construction (e.g., No Version Warning).
 
         def process_data_source_folder(
             data_source: str, folder_path: Path | str | None, subfolder: str = ""
@@ -1697,14 +1709,26 @@ class MetadataManager(QObject):
 
     def refresh_cache(self, is_initial: bool = False) -> None:
         """
-        This function contains expensive calculations for getting workshop
-        mods, known expansions, community rules, and most importantly, calculating
-        dependencies for all mods.
+        Refresh the metadata cache by performing a comprehensive update of mod metadata.
 
-        This function should be called on app initialization
-        and whenever the refresh button is pressed (mostly after changing the workshop
-        somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
-        but also after ModsConfig.xml path has been changed).
+        This method is called on app initialization and whenever the refresh button is pressed,
+        typically after changes to workshop settings, mod paths, or downloading new mods.
+
+        It performs the following steps in a specific order to ensure dependencies are met:
+        1. Updates user paths from settings if not initial load.
+        2. Refreshes ACF metadata from Steam client and SteamCMD for workshop mod details.
+        3. Reads the game version from Version.txt; this must be done before external metadata loading
+           since loaders like "No Version Warning" depend on the game version for path construction.
+        4. Loads external metadata sources in parallel (user rules, Steam database, community rules,
+           no version warning, and use this instead replacements); loading external metadata before
+           scanning internal mod metadata ensures that mods depending on SteamDB for generating
+           missing mod info are assigned proper data correctly, compatible with old mods.
+        5. Scans internal mod directories (expansion, local, workshop) to parse and update mod metadata,
+           purging outdated entries (unless initial load) and rebuilding path-to-UUID mappers.
+        6. Compiles metadata to calculate dependencies, incompatibilities, and load order rules.
+
+        Parameters:
+            is_initial (bool): If True, indicates initial load and skips purging orphaned metadata.
         """
         logger.warning("Refreshing metadata cache...")
 
@@ -1714,10 +1738,18 @@ class MetadataManager(QObject):
 
         # Update paths from game configuration
 
-        # Populate metadata
+        # Refresh ACF metadata from Steam sources for workshop mod details
         self.refresh_acf_metadata(steamclient=True, steamcmd=True)
-        self.__refresh_internal_metadata(is_initial=is_initial)
+        # Read game version first since external metadata loading (e.g., No Version Warning) depends on it
+        self.__read_game_version()
+        # Load external metadata sources in parallel (user rules, Steam DB, community rules, etc.)
+        # Loading external metadata before scanning internal mod metadata ensures that mods
+        # which depend on SteamDB for generating missing mod info are assigned proper data correctly.
+        # This is necessary for compatibility with old mods, such as https://steamcommunity.com/sharedfiles/filedetails/?id=1147799676
         self.__refresh_external_metadata()
+        # Scan and refresh internal mod metadata from file system (expansion, local, workshop)
+        self.__refresh_internal_metadata(is_initial=is_initial)
+        # Compile metadata to calculate dependencies, incompatibilities, and load rules
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
 
     def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
