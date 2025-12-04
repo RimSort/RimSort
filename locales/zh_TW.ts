@@ -1010,6 +1010,10 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
 3) 選擇輸出C（結果db）</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>在『改用此項』資料庫中沒有找到任何建議。</translation>
     </message>
@@ -2245,26 +2249,6 @@ RimSort 可以複製所有你的工作坊模組到新實例的本地模組資料
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>缺少 {db_type} 資料庫</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>未找到配置的 {db_type} DB</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>無法初始化外部元數據。未檢測到外部 {db_type} 元數據！
-
-請確保你的資料庫位置設置正確。</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>配置的 {db_type} DB 路徑是 {not_dir} 而不是一個目錄！預期一個 {file_dir} 路徑。</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Steam 資料庫元數據已過期</translation>
     </message>
@@ -2376,6 +2360,23 @@ Please select your preferred mod variant in the table below. You can also open e
 Steam Workshop 上的 RimWorld 模組如果共享相同的 包名，則為 '變體'。在下載之前，請注意這一點。
 
 請選擇你在下表中偏好的 模組變體。你也可以在 Steam 或網頁瀏覽器中開啟每個變體進行驗證。"</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
     </message>
 </context>
 <context>

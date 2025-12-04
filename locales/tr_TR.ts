@@ -897,6 +897,10 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Steam DB karşılaştırma raporu: {len} bulundu</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>"Use This Instead" veritabanında bir öneri bulunamadı.</translation>
     </message>
@@ -2242,18 +2246,6 @@ Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>{db_type} db eksik</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>Yapılandırılmış {db_type} db bulunamadı!</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>Yapılandırılmış {db_type} db yolu {not_dir} bir dizindir! Beklenen bir {file_dir} yolu.</translation>
-    </message>
-    <message>
         <source>Steam DB metadata expired</source>
         <translation>Steam DB meta verilerin süresi doldu</translation>
     </message>
@@ -2264,14 +2256,6 @@ Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
         <translation>Rimsort, oyun sürümünü beklenen yolda alamaz: []. {version_file_path}</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>Harici meta verileri başlatılamıyor. Faktörlü harici {db_type} meta veri yoktur!
-
-Lütfen veritabanı konum ayarlarınızın doğru olduğundan emin olun.</translation>
     </message>
     <message>
         <source>Steam DB is expired! Consider updating!
@@ -2369,6 +2353,23 @@ Please select your preferred mod variant in the table below. You can also open e
 Bir paketini paylaşan Steam Workshop'ta Rimworld modları "varyantlar" dır. İndirmeden önce lütfen bunu aklınızda bulundurun. 
 
 Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak için her varyant Steam/Web tarayıcısında da açabilirsiniz.</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
     </message>
 </context>
 <context>

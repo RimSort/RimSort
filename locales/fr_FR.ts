@@ -1132,6 +1132,10 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
         <translation>Utilisez-le à la place</translation>
     </message>
     <message>
+        <source>Please configure "Use This Instead" database in settings.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+    </message>
+    <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
         <translation>Aucune suggestion n'a été trouvée dans la base de données "Utilisez ceci à la place".</translation>
     </message>
@@ -2239,22 +2243,6 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>{db_type} DB is missing</source>
-        <translation>{db_type} db est manquant</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB not found!</source>
-        <translation>Configuré {db_type} db introuvable!</translation>
-    </message>
-    <message>
-        <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
-
-Please make sure your Database location settings are correct.</source>
-        <translation>Impossible d'initialiser les métadonnées externes. Il n'y a pas de métadonnées externes {db_type} en cours de prise en compte!
-
-Veuillez vous assurer que les paramètres de localisation de la base de données sont corrects.</translation>
-    </message>
-    <message>
         <source>Steam DB is expired! Consider updating!
 </source>
         <translation>Steam DB est expiré! Envisagez de mettre à jour!</translation>
@@ -2271,10 +2259,6 @@ Retour à la base de données de vapeur en cache, mais expirée ...</translation
         <source>
 Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
         <translation>Votre chemin de jeu  est-il réglé correctement? Il devrait y avoir un fichier version.txt dans le répertoire d'installation du jeu. {folder}</translation>
-    </message>
-    <message>
-        <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation>Configuré {db_type} Le chemin DB est {not_dir} un répertoire! Attendu un chemin {file_dir}.</translation>
     </message>
     <message>
         <source>Steam DB metadata expired</source>
@@ -2366,6 +2350,23 @@ Veuillez sélectionner votre variante de mod préférée dans le tableau ci-dess
     <message>
         <source>Download with Steam client</source>
         <translation>Télécharger avec un client Steam</translation>
+    </message>
+</context>
+<context>
+    <name>MissingPackageIdPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Package ID</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Package ID detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
+
+For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
     </message>
 </context>
 <context>
@@ -5103,7 +5104,7 @@ Voulez-vous mettre à jour maintenant?</translation>
     </message>
     <message>
         <source>Original</source>
-        <translation type="unfinished"/>
+        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
     </message>
     <message>
         <source>Replacement [{0}]</source>
