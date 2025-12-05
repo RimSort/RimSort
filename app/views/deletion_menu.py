@@ -271,11 +271,14 @@ class ModDeletionMenu(QMenu):
 
     def _process_deletion_result(self, result: DeletionResult) -> None:
         """Process the results of a deletion operation."""
-        # Purge SteamCMD metadata for deleted mods
+        # Purge SteamCMD metadata for deleted mods (only if auto-clear depot cache is enabled)
         if result.steamcmd_purge_ids:
             steamcmd_purge_mods(
                 metadata_manager=self.metadata_manager,
                 publishedfileids=result.steamcmd_purge_ids,
+                auto_clear_enabled=self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].steamcmd_auto_clear_depot_cache,
             )
 
         # Show success message
