@@ -31,6 +31,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
+from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -1104,9 +1105,9 @@ class MainWindow(QMainWindow):
                 ].workshop_folder,
             ],
         )
-        # Connect watchdog to MetadataManager
+        # Connect watchdog to MetadataManager for ACF changes
         self.watchdog_event_handler.acf_changed.connect(
-            self.main_content_panel.metadata_manager.refresh_acf_metadata
+            partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
         )
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation

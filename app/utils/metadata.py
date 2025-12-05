@@ -21,6 +21,7 @@ from PySide6.QtCore import (
 )
 
 from app.controllers.settings_controller import SettingsController
+from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
@@ -1676,37 +1677,6 @@ class MetadataManager(QObject):
             self.compile_metadata(uuids=[uuid])
             self.mod_metadata_updated_signal.emit(uuid)
 
-    def refresh_acf_metadata(
-        self, steamclient: bool = True, steamcmd: bool = True
-    ) -> None:
-        # If we can find the appworkshop_294100.acf files from...
-        # ...Steam client
-        if steamclient and os.path.exists(self.workshop_acf_path):
-            try:
-                self.workshop_acf_data = acf_to_dict(self.workshop_acf_path)
-                logger.info(
-                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.workshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse Steam client appworkshop.acf metadata from: {self.workshop_acf_path}. Error: {e}"
-                )
-        # ...SteamCMD
-        if steamcmd and os.path.exists(
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        ):
-            try:
-                self.steamcmd_acf_data = acf_to_dict(
-                    self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-                )
-                logger.info(
-                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}. Error: {e}"
-                )
-
     def refresh_cache(self, is_initial: bool = False) -> None:
         """
         Refresh the metadata cache by performing a comprehensive update of mod metadata.
@@ -1739,7 +1709,7 @@ class MetadataManager(QObject):
         # Update paths from game configuration
 
         # Refresh ACF metadata from Steam sources for workshop mod details
-        self.refresh_acf_metadata(steamclient=True, steamcmd=True)
+        refresh_acf_metadata(self, steamclient=True, steamcmd=True)
         # Read game version first since external metadata loading (e.g., No Version Warning) depends on it
         self.__read_game_version()
         # Load external metadata sources in parallel (user rules, Steam DB, community rules, etc.)
@@ -1751,68 +1721,6 @@ class MetadataManager(QObject):
         self.__refresh_internal_metadata(is_initial=is_initial)
         # Compile metadata to calculate dependencies, incompatibilities, and load rules
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
-
-    def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
-        """
-        Removes a mod from SteamCMD install
-        """
-        # Parse the SteamCMD workshop .acf metadata file
-        acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        if not os.path.exists(acf_path):
-            logger.warning(
-                f"SteamCMD ACF file not found at: {acf_path}, Skipping removing mods from ACF."
-            )
-            return
-
-        try:
-            acf_metadata = acf_to_dict(path=acf_path)
-        except Exception as e:
-            logger.error(f"Failed to parse SteamCMD ACF file: {e}")
-            return
-
-        depotcache_path = self.steamcmd_wrapper.steamcmd_depotcache_path
-        # WorkshopItemsInstalled
-        workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
-            "WorkshopItemsInstalled"
-        )
-        # WorkshopItemDetails
-        workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
-            "WorkshopItemDetails"
-        )
-        # List of mod manifest ids to remove afterward
-        mod_manifest_ids = set()
-        # Loop through the supplied PublishedFileID's
-        for delete_pfid in publishedfileids:
-            # Parse the mod manifest id from acf metadata
-            if workshop_items_installed is not None:
-                mod_manifest_id = workshop_items_installed.get(delete_pfid, {}).get(
-                    "manifest"
-                )
-                if mod_manifest_id is not None:
-                    mod_manifest_ids.add(mod_manifest_id)
-                workshop_items_installed.pop(delete_pfid, None)
-
-            if workshop_item_details is not None:
-                mod_manifest_id = workshop_item_details.get(delete_pfid, {}).get(
-                    "manifest"
-                )
-                if (
-                    mod_manifest_id is not None
-                    and mod_manifest_id not in mod_manifest_ids
-                ):
-                    mod_manifest_ids.add(mod_manifest_id)
-                workshop_item_details.pop(delete_pfid, None)
-        # Save the updated .acf metadata
-        dict_to_acf(data=acf_metadata, path=acf_path)
-        # Remove the depotcache files if we have manifest id and file(s) exist
-        for mod_manifest_id in mod_manifest_ids:
-            manifest_path = Path(depotcache_path) / f"294100_{mod_manifest_id}.manifest"
-            if manifest_path.exists():
-                logger.debug(f"Removing mod manifest file: {manifest_path}")
-                try:
-                    os.remove(manifest_path)
-                except Exception as e:
-                    logger.error(e)
 
     def get_mod_name_from_package_id(self, package_id: str) -> str:
         """Get a mod's name from its package ID"""
