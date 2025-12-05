@@ -1493,11 +1493,14 @@ class ModListWidget(QListWidget):
                             steamcmd_acf_pfid_purge = set(
                                 steamcmd_publishedfileid_to_redownload
                             )
-                        # Purge any deleted SteamCMD mods from acf metadata
+                        # Purge any deleted SteamCMD mods from acf metadata (only if auto-clear depot cache is enabled)
                         if steamcmd_acf_pfid_purge:
                             steamcmd_purge_mods(
                                 metadata_manager=self.metadata_manager,
                                 publishedfileids=steamcmd_acf_pfid_purge,
+                                auto_clear_enabled=self.settings_controller.settings.instances[
+                                    self.settings_controller.settings.current_instance
+                                ].steamcmd_auto_clear_depot_cache,
                             )
                         # Emit signal to steamcmd downloader to re-download
                         logger.debug(

@@ -374,7 +374,9 @@ def _extract_manifest_ids_and_remove_pfid(
 
 
 def steamcmd_purge_mods(
-    metadata_manager: "MetadataManager", publishedfileids: set[str]
+    metadata_manager: "MetadataManager",
+    publishedfileids: set[str],
+    auto_clear_enabled: bool = True,
 ) -> None:
     """
     Remove mods from SteamCMD installation and clean up associated files.
@@ -393,9 +395,12 @@ def steamcmd_purge_mods(
                          configured. Must have steamcmd_wrapper with valid paths.
         publishedfileids: Set of published file IDs (PFIDs) as strings to remove
                          from SteamCMD. These correspond to workshop item IDs.
+        auto_clear_enabled: Whether to perform the purge operation. If False,
+                           returns early without making any changes. Defaults to True.
 
     Note:
         The operation is tolerant of missing files and parsing errors:
+        - If auto_clear_enabled is False, returns early without error
         - If ACF file is missing, returns early without error
         - If parsing fails, returns early without error
         - Individual manifest file deletions are logged but don't halt the operation
@@ -405,6 +410,11 @@ def steamcmd_purge_mods(
         >>> steamcmd_purge_mods(metadata_manager, {"123456789", "987654321"})
         # Removes the specified mods from SteamCMD ACF and deletes manifest files
     """
+    # Return early if auto-clear is not enabled
+    if not auto_clear_enabled:
+        logger.debug("SteamCMD auto-clear is disabled, skipping mod purge operation")
+        return
+
     # Load SteamCMD workshop ACF metadata file
     acf_path = metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
     acf_metadata = load_acf_from_path(acf_path)
