@@ -64,6 +64,7 @@ from app.sort.mod_sorting import (
     get_cached_metadata_for_batch,
     sort_uuids,
 )
+from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
@@ -1494,8 +1495,9 @@ class ModListWidget(QListWidget):
                             )
                         # Purge any deleted SteamCMD mods from acf metadata
                         if steamcmd_acf_pfid_purge:
-                            self.metadata_manager.steamcmd_purge_mods(
-                                publishedfileids=steamcmd_acf_pfid_purge
+                            steamcmd_purge_mods(
+                                metadata_manager=self.metadata_manager,
+                                publishedfileids=steamcmd_acf_pfid_purge,
                             )
                         # Emit signal to steamcmd downloader to re-download
                         logger.debug(

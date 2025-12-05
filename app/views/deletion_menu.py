@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QMenu, QMessageBox
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     attempt_chmod,
@@ -272,8 +273,9 @@ class ModDeletionMenu(QMenu):
         """Process the results of a deletion operation."""
         # Purge SteamCMD metadata for deleted mods
         if result.steamcmd_purge_ids:
-            self.metadata_manager.steamcmd_purge_mods(
-                publishedfileids=result.steamcmd_purge_ids
+            steamcmd_purge_mods(
+                metadata_manager=self.metadata_manager,
+                publishedfileids=result.steamcmd_purge_ids,
             )
 
         # Show success message

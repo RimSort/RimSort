@@ -55,6 +55,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.settings_controller import SettingsController
+from app.utils.acf_utils import load_and_merge_acf_data
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     format_time_display,
@@ -67,7 +68,6 @@ from app.utils.mod_utils import (
     get_mod_path_from_pfid,
 )
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamfiles.wrapper import acf_to_dict
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
@@ -117,10 +117,10 @@ class AcfEntry:
 
 class AcfLoadWorker(QThread):
     """
-    Background worker thread for loading and processing ACF data from SteamCMD and Steam paths.
+    Background worker thread for loading and processing ACF data.
 
-    This worker loads ACF files, merges workshop item data, and creates AcfEntry objects
-    for display in the table model. It emits signals for completion or errors.
+    This worker delegates business logic to acf_utils and emits signals for
+    completion or errors. It runs on a separate thread to avoid blocking the UI.
     """
 
     finished = Signal(list, dict, dict)  # entries, steamcmd_acf_data, steam_acf_data
@@ -140,138 +140,22 @@ class AcfLoadWorker(QThread):
         self.steamcmd_acf_path = steamcmd_acf_path
         self.steam_acf_path = steam_acf_path
 
-    def _load_steamcmd_acf(self) -> dict[str, Any]:
-        """Load ACF data from SteamCMD path."""
-        steamcmd_acf_data = {}
-        if self.steamcmd_acf_path and self.steamcmd_acf_path.exists():
-            try:
-                steamcmd_acf_data = acf_to_dict(str(self.steamcmd_acf_path))
-                logger.info(
-                    f"Loaded ACF data from SteamCMD at {self.steamcmd_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse ACF file at {self.steamcmd_acf_path}: {str(e)}"
-                )
-        return steamcmd_acf_data
-
-    def _load_steam_acf(self) -> dict[str, Any]:
-        """Load ACF data from Steam path."""
-        steam_acf_data = {}
-        if self.steam_acf_path and self.steam_acf_path.exists():
-            try:
-                steam_acf_data = acf_to_dict(str(self.steam_acf_path))
-                logger.info(f"Loaded ACF data from Steam at {self.steam_acf_path}")
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse ACF file at {self.steam_acf_path}: {str(e)}"
-                )
-        return steam_acf_data
-
-    def _merge_acf_data(
-        self, steamcmd_acf_data: dict[str, Any], steam_acf_data: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Merge ACF data from SteamCMD and Steam sources."""
-        combined_acf_data: dict[str, Any] = {}
-        for source_data in (steamcmd_acf_data, steam_acf_data):
-            for key, value in source_data.items():
-                if key == "AppWorkshop" and key in combined_acf_data:
-                    # Merge WorkshopItemsInstalled dictionaries
-                    existing_items = combined_acf_data[key].get(
-                        "WorkshopItemsInstalled", {}
-                    )
-                    new_items = value.get("WorkshopItemsInstalled", {})
-                    merged_items = {**existing_items, **new_items}
-                    combined_acf_data[key]["WorkshopItemsInstalled"] = merged_items
-                else:
-                    combined_acf_data[key] = value
-        return combined_acf_data
-
-    def _create_entries(
-        self,
-        combined_acf_data: dict[str, Any],
-        steamcmd_pfids: set[str],
-        steam_pfids: set[str],
-    ) -> list[AcfEntry]:
-        """Create AcfEntry objects from combined ACF data."""
-        workshop_items = combined_acf_data.get("AppWorkshop", {}).get(
-            "WorkshopItemsInstalled", {}
-        )
-        if not isinstance(workshop_items, dict):
-            raise ValueError("Invalid workshop items data format")
-
-        entries: list[AcfEntry] = []
-
-        for pfid, item in workshop_items.items():
-            if not isinstance(item, dict):
-                continue
-
-            pfid_str = str(pfid)
-            if pfid_str in steamcmd_pfids:
-                mod_source = "SteamCMD"
-            elif pfid_str in steam_pfids:
-                mod_source = "Steam"
-            else:
-                mod_source = "Local"
-            timeupdated_raw = item.get("timeupdated")
-            timeupdated_int = None
-            if timeupdated_raw is not None:
-                try:
-                    timeupdated_int = int(timeupdated_raw)
-                except (ValueError, TypeError):
-                    logger.warning(
-                        f"Invalid timeupdated for PFID {pfid_str}: {timeupdated_raw}"
-                    )
-            entries.append(
-                AcfEntry(
-                    published_file_id=pfid_str,
-                    mod_source=mod_source,
-                    timeupdated=timeupdated_int,
-                )
-            )
-
-        return entries
-
     def run(self) -> None:
         try:
-            # Load ACF data using helper methods
-            steamcmd_acf_data = self._load_steamcmd_acf()
-            steam_acf_data = self._load_steam_acf()
-
-            # Merge ACF data
-            combined_acf_data = self._merge_acf_data(steamcmd_acf_data, steam_acf_data)
-
-            if not combined_acf_data:
-                self.error.emit(
-                    "Failed to load any ACF data from SteamCMD or Steam paths"
-                )
-                return
-
-            workshop_items = combined_acf_data.get("AppWorkshop", {}).get(
-                "WorkshopItemsInstalled", {}
+            # Load and merge ACF data using utility function
+            entries_list, steamcmd_acf_data, steam_acf_data = load_and_merge_acf_data(
+                self.steamcmd_acf_path, self.steam_acf_path
             )
-            if not isinstance(workshop_items, dict):
-                self.error.emit("Invalid workshop items data format")
-                return
 
-            # Determine source for each PFID
-            steamcmd_pfids = set()
-            if steamcmd_acf_data:
-                steamcmd_items = steamcmd_acf_data.get("AppWorkshop", {}).get(
-                    "WorkshopItemsInstalled", {}
+            # Convert tuple entries to AcfEntry objects for the table model
+            entries = [
+                AcfEntry(
+                    published_file_id=pfid,
+                    mod_source=source,
+                    timeupdated=timeupdated,
                 )
-                steamcmd_pfids = set(str(pfid) for pfid in steamcmd_items.keys())
-
-            steam_pfids = set()
-            if steam_acf_data:
-                steam_items = steam_acf_data.get("AppWorkshop", {}).get(
-                    "WorkshopItemsInstalled", {}
-                )
-                steam_pfids = set(str(pfid) for pfid in steam_items.keys())
-
-            entries = self._create_entries(
-                combined_acf_data, steamcmd_pfids, steam_pfids
-            )
+                for pfid, source, timeupdated in entries_list
+            ]
 
             self.finished.emit(entries, steamcmd_acf_data, steam_acf_data)
 
@@ -1070,7 +954,20 @@ class AcfLogReader(QWidget):
         steamcmd_acf_data: dict[str, Any],
         steam_acf_data: dict[str, Any],
     ) -> None:
-        """Handle completion of ACF load worker."""
+        """
+        Handle completion of ACF load worker.
+
+        Updates both the table display and the MetadataManager cache to ensure
+        other components have access to the latest ACF data.
+        """
+        # Update MetadataManager cache with loaded ACF data
+        if steamcmd_acf_data:
+            self.metadata_manager.steamcmd_acf_data = steamcmd_acf_data
+            logger.debug("Updated MetadataManager.steamcmd_acf_data from worker")
+        if steam_acf_data:
+            self.metadata_manager.workshop_acf_data = steam_acf_data
+            logger.debug("Updated MetadataManager.workshop_acf_data from worker")
+
         self.entries = entries
         self.populate_table(entries)
         self.status_bar.showMessage(
@@ -1143,6 +1040,9 @@ class AcfLogReader(QWidget):
         self, steamcmd_acf_mtime: Optional[float], steam_acf_mtime: Optional[float]
     ) -> bool:
         """Check if reload can be skipped based on modification times."""
+        # Skip only if both are None (no files) or modification times haven't changed
+        if steamcmd_acf_mtime is None and steam_acf_mtime is None:
+            return False
         if (
             steamcmd_acf_mtime == self._last_steamcmd_acf_mtime
             and steam_acf_mtime == self._last_steam_acf_mtime
@@ -1161,13 +1061,25 @@ class AcfLogReader(QWidget):
     def _update_modification_times(
         self, steamcmd_acf_mtime: Optional[float], steam_acf_mtime: Optional[float]
     ) -> None:
-        """Update stored modification times."""
+        """
+        Update stored modification times for ACF files.
+
+        Called after loading ACF data to cache the current modification times.
+        These are compared on subsequent loads to determine if a reload is needed.
+
+        Args:
+            steamcmd_acf_mtime: Modification time of SteamCMD ACF file, or None.
+            steam_acf_mtime: Modification time of Steam ACF file, or None.
+        """
         self._last_steamcmd_acf_mtime = steamcmd_acf_mtime
         self._last_steam_acf_mtime = steam_acf_mtime
 
     def load_acf_data(self) -> None:
         """
         Load workshop item data from SteamCMD and Steam ACF files using background thread.
+
+        Loads fresh data via worker thread and updates MetadataManager cache with results.
+        This avoids double-reading ACF files and prevents file lock contention.
 
         Raises:
             RuntimeError: If neither ACF file can be loaded or data format is invalid.
@@ -1189,6 +1101,10 @@ class AcfLogReader(QWidget):
             self._update_modification_times(steamcmd_acf_mtime, steam_acf_mtime)
             self._start_acf_load_worker(steamcmd_acf_path, steam_acf_path)
 
+        except FileNotFoundError as e:
+            logger.error(f"ACF file not found: {str(e)}")
+            self.status_bar.showMessage(f"ACF file not found: {str(e)}")
+            self._set_buttons_enabled(True)
         except Exception as e:
             logger.error(f"Error starting ACF data loading: {str(e)}")
             error_msg = f"{str(e)}"
@@ -1505,7 +1421,7 @@ class AcfLogReader(QWidget):
             return
 
         acf_path = steamcmd.steamcmd_appworkshop_acf_path
-        if not acf_path or not os.path.isfile(acf_path):
+        if not acf_path or not Path(acf_path).is_file():
             acf_path_str = acf_path or "None"
             self.status_bar.showMessage(
                 self.tr("ACF file not found: {acf_path}").format(acf_path=acf_path_str)
