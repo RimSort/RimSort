@@ -985,6 +985,9 @@ class AcfLogReader(QWidget):
         logger.error(f"{title}: {error_msg}")
         self.status_bar.showMessage(error_msg)
         self._set_buttons_enabled(True)
+        # Stop auto-refresh when an error occurs
+        if hasattr(self, "refresh_timer") and self.refresh_timer.isActive():
+            self.refresh_timer.stop()
         self._show_error_dialog(title, error_msg)
 
     def _show_error_dialog(
