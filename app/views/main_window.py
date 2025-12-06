@@ -54,6 +54,12 @@ from app.views.player_log_tab import PlayerLogTab
 from app.views.status_panel import Status
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
+# Instance constants
+INSTANCE_FOLDER_NAME = "instances"
+DEFAULT_INSTANCE_NAME = "Default"
+STEAMCMD_FOLDER_NAME = "steamcmd"
+STEAM_FOLDER_NAME = "steam"
+
 
 class MainWindow(QMainWindow):
     """
@@ -390,11 +396,12 @@ class MainWindow(QMainWindow):
         return answer_str or cancelled_str
 
     def __backup_existing_instance(self, instance_name: str) -> None:
+        """Backup an instance to a ZIP archive."""
         # Get instance data from Settings
         instance = self.settings_controller.settings.instances.get(instance_name)
 
         # If the instance_name is "Default", prompt the user for a new instance name.
-        if instance_name == "Default":
+        if instance_name == DEFAULT_INSTANCE_NAME:
             new_instance_name = self.__ask_for_non_default_instance_name()
             if not new_instance_name:
                 logger.info("User cancelled operation")
@@ -441,6 +448,7 @@ class MainWindow(QMainWindow):
             return
 
     def __restore_instance_from_archive(self) -> None:
+        """Restore an instance from a ZIP archive."""
         # Prompt user to select input path for instance archive
         input_path = show_dialogue_file(
             mode="open",
@@ -464,10 +472,10 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # Grab the instance name from the archive's "instance.json" file and extract archive
+        # Load instance from archive using factory method
         try:
-            instance_controller = InstanceController(input_path)
-        except InvalidArchivePathError as _:
+            instance_controller = InstanceController.from_archive(input_path)
+        except InvalidArchivePathError:
             # Handled in controller. Gracefully fail.
             return
         except Exception as e:
@@ -578,6 +586,8 @@ class MainWindow(QMainWindow):
             )
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
+        """Clone an existing instance to create a new one with copied data."""
+
         def copy_game_folder(
             existing_instance_game_folder: str, target_game_folder: str
         ) -> None:
@@ -701,49 +711,39 @@ class MainWindow(QMainWindow):
             return
         # Get instance data from Settings
         current_instances = list(self.settings_controller.settings.instances.keys())
-        existing_instance_game_folder = self.settings_controller.settings.instances[
+        existing_instance = self.settings_controller.settings.instances[
             existing_instance_name
-        ].game_folder
+        ]
+
+        existing_instance_game_folder = existing_instance.game_folder
         game_folder_name = os.path.split(existing_instance_game_folder)[1]
-        existing_instance_local_folder = self.settings_controller.settings.instances[
-            existing_instance_name
-        ].local_folder
+        existing_instance_local_folder = existing_instance.local_folder
         local_folder_name = os.path.split(existing_instance_local_folder)[1]
-        existing_instance_workshop_folder = self.settings_controller.settings.instances[
-            existing_instance_name
-        ].workshop_folder
-        existing_instance_config_folder = self.settings_controller.settings.instances[
-            existing_instance_name
-        ].config_folder
-        existing_instance_run_args = self.settings_controller.settings.instances[
-            existing_instance_name
-        ].run_args
+        existing_instance_workshop_folder = existing_instance.workshop_folder
+        existing_instance_config_folder = existing_instance.config_folder
+        existing_instance_run_args = existing_instance.run_args
         existing_instance_steamcmd_install_path = (
-            self.settings_controller.settings.instances[
-                existing_instance_name
-            ].steamcmd_install_path
+            existing_instance.steamcmd_install_path
         )
         existing_instance_steam_client_integration = (
-            self.settings_controller.settings.instances[
-                existing_instance_name
-            ].steam_client_integration
+            existing_instance.steam_client_integration
         )
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name()
         if (
             new_instance_name
-            and new_instance_name != "Default"
+            and new_instance_name != DEFAULT_INSTANCE_NAME
             and new_instance_name not in current_instances
         ):
             new_instance_path = str(
-                Path(AppInfo().app_storage_folder) / "instances" / new_instance_name
+                InstanceController.get_instance_folder_path(new_instance_name)
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
                 text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
-                + "This will clone the instance's data!"
-                + "\n\n",
+                + "\nThis will clone the instance's data! and may take a long time depending on the data being cloned \n"
+                + "\nThe following folders will be cloned:",
                 information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
                 + f"\nLocal folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
                 + f"\nWorkshop folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
@@ -919,15 +919,18 @@ class MainWindow(QMainWindow):
                 title=self.tr("Error cloning instance"),
                 text=self.tr("Unable to clone instance."),
                 information=self.tr(
-                    "Please enter a valid, unique instance name. It cannot be 'Default' or empty."
+                    f"Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty."
                 ),
             )
         else:
             logger.debug("User cancelled clone operation")
 
     def __create_new_instance(
-        self, instance_name: str = "", instance_data: dict[str, Any] = {}
+        self, instance_name: str = "", instance_data: dict[str, Any] | None = None
     ) -> None:
+        """Create a new instance with the provided name and data."""
+        if instance_data is None:
+            instance_data = {}
         if not instance_name:
             # Sanitize the input so that it does not produce any KeyError down the road
             new_instance_name = self.__ask_for_new_instance_name()
@@ -938,17 +941,13 @@ class MainWindow(QMainWindow):
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
             instance_name
-            and instance_name != "Default"
+            and instance_name != DEFAULT_INSTANCE_NAME
             and instance_name not in current_instances
         ):
-            if not instance_data:
-                instance_data = {}
             # Create new instance folder if it does not exist
-            instance_path = str(
-                Path(AppInfo().app_storage_folder) / "instances" / instance_name
-            )
-            if not os.path.exists(instance_path):
-                os.makedirs(instance_path)
+            instance_path = InstanceController.get_instance_folder_path(instance_name)
+            if not instance_path.exists():
+                instance_path.mkdir(parents=True, exist_ok=True)
             # Get run args from instance data, autogenerate additional config items if desired
             run_args = []
             generated_instance_run_args = []
@@ -967,8 +966,8 @@ class MainWindow(QMainWindow):
                     # Append new run args to the existing run args
                     generated_instance_run_args = [
                         "-logfile",
-                        str(Path(instance_path) / "RimWorld.log"),
-                        f"-savedatafolder={str(Path(instance_path) / 'InstanceData')}",
+                        str(instance_path / "RimWorld.log"),
+                        f"-savedatafolder={str(instance_path / 'InstanceData')}",
                     ]
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
@@ -980,7 +979,7 @@ class MainWindow(QMainWindow):
                 workshop_folder=instance_data.get("workshop_folder", ""),
                 config_folder=instance_data.get("config_folder", ""),
                 run_args=run_args,
-                steamcmd_install_path=instance_path,
+                steamcmd_install_path=str(instance_path),
                 steam_client_integration=instance_data.get(
                     "steam_client_integration", False
                 ),
@@ -995,12 +994,13 @@ class MainWindow(QMainWindow):
                 title=self.tr("Error creating instance"),
                 text=self.tr("Unable to create new instance."),
                 information=self.tr(
-                    "Please enter a valid, unique instance name. It cannot be 'Default' or empty."
+                    f"Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty."
                 ),
             )
 
     def __delete_current_instance(self) -> None:
-        if self.settings_controller.settings.current_instance == "Default":
+        """Delete the current instance and all its data."""
+        if self.settings_controller.settings.current_instance == DEFAULT_INSTANCE_NAME:
             show_warning(
                 title=self.tr("Problem deleting instance"),
                 text=self.tr("Unable to delete instance {current_instance}.").format(
@@ -1058,10 +1058,11 @@ class MainWindow(QMainWindow):
                 self.__switch_to_instance("Default")
 
     def __switch_to_instance(self, instance: str) -> None:
+        """Switch to a different instance."""
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
-        instance_path = str(Path(AppInfo().app_storage_folder) / "instances" / instance)
+        instance_path = str(InstanceController.get_instance_folder_path(instance))
         self.settings_controller.settings.current_instance_path = instance_path
         # Update window title with current instance
         self.__set_window_title(instance)
