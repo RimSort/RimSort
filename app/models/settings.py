@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication
 
 from app.controllers.instance_controller import InstanceController
 from app.models.instance import Instance
+from app.utils.acf_utils import validate_acf_file_exists
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DEFAULT_INSTANCE_NAME,
@@ -375,8 +376,10 @@ class Settings(QObject):
                     mitigations = False
                 # Parse data from settings.json into the model
                 self._from_dict(data)
-                # Save the model to the file if there were mitigations
-                if mitigations:
+                # Validate Steam integration configuration after loading
+                config_fixed = self._validate_steam_integration_config()
+                # Save the model to the file if there were mitigations or config fixes
+                if mitigations or config_fixed:
                     self.save()
         except FileNotFoundError:
             self.save()
@@ -439,3 +442,44 @@ class Settings(QObject):
             )
         data["instances"] = instances_dict
         return data
+
+    def _validate_steam_integration_config(self) -> bool:
+        """
+        Validate and fix Steam client integration configuration.
+
+        Ensures that Steam client integration settings are valid:
+        - If steam_client_integration is enabled but workshop_folder is not set, disable it.
+        - If workshop_folder is set but the appworkshop_294100.acf file is missing,
+          disable steam_client_integration and clear workshop_folder.
+
+        Invalid configurations are silently fixed without user interaction.
+
+        :return: True if configuration was fixed, False if no changes were made.
+        """
+        active_instance = self.instances[self.current_instance]
+        steam_client_integration = active_instance.steam_client_integration
+        workshop_folder = active_instance.workshop_folder
+
+        # If neither is enabled, no validation needed
+        if not steam_client_integration and not workshop_folder:
+            return False
+
+        # If steam_client_integration is enabled but workshop_folder is not set, disable it
+        if steam_client_integration and not workshop_folder:
+            logger.warning(
+                "Steam client integration is enabled but workshop folder is not configured. Disabling..."
+            )
+            active_instance.steam_client_integration = False
+            return True
+
+        # If workshop_folder is set, validate that the ACF file exists
+        if workshop_folder and not validate_acf_file_exists(workshop_folder):
+            logger.warning(
+                f"ACF file not found for workshop folder: {workshop_folder}. "
+                "Disabling Steam client integration and clearing workshop folder..."
+            )
+            active_instance.steam_client_integration = False
+            active_instance.workshop_folder = ""
+            return True
+
+        return False
