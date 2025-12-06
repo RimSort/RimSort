@@ -11,6 +11,11 @@ from PySide6.QtCore import QCoreApplication, QObject
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
+from app.utils.constants import (
+    DEFAULT_INSTANCE_NAME,
+    INSTANCE_FOLDER_NAME,
+    STEAMCMD_FOLDER_NAME,
+)
 from app.views.dialogue import (
     show_fatal_error,
     show_warning,
@@ -76,13 +81,22 @@ class InstanceController(QObject):
 
     @property
     def instance_folder_path(self) -> Path:
-        """Get the instance folder path."""
-        return AppInfo().app_storage_folder / "instances" / self.instance.name
+        """Get instance folder path, using override if configured."""
+        # Default instance never uses override
+        if (
+            self.instance.instance_folder_override
+            and self.instance.name != DEFAULT_INSTANCE_NAME
+        ):
+            return Path(self.instance.instance_folder_override) / self.instance.name
+        return AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / self.instance.name
 
     @staticmethod
-    def get_instance_folder_path(instance_name: str) -> Path:
-        """Get instance folder path for a given instance name."""
-        return AppInfo().app_storage_folder / "instances" / instance_name
+    def get_instance_folder_path(instance_name: str, override_path: str = "") -> Path:
+        """Get instance folder path, using override if provided."""
+        # Default instance never uses override
+        if override_path and instance_name != DEFAULT_INSTANCE_NAME:
+            return Path(override_path) / instance_name
+        return AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / instance_name
 
     @staticmethod
     def get_game_data_path(instance: Instance) -> Path | None:
@@ -122,6 +136,7 @@ class InstanceController(QObject):
         run_args: list[str] | None = None,
         steamcmd_install_path: str = "",
         steam_client_integration: bool = False,
+        instance_folder_override: str = "",
     ) -> Instance:
         """
         Create a new Instance with the provided parameters.
@@ -134,6 +149,7 @@ class InstanceController(QObject):
         :param run_args: Run arguments list
         :param steamcmd_install_path: Path to SteamCMD installation
         :param steam_client_integration: Enable Steam client integration
+        :param instance_folder_override: Custom folder path for instance (overrides default)
         :return: Created Instance
         :rtype: Instance
         """
@@ -148,6 +164,7 @@ class InstanceController(QObject):
             run_args=run_args,
             steamcmd_install_path=steamcmd_install_path,
             steam_client_integration=steam_client_integration,
+            instance_folder_override=instance_folder_override,
         )
 
     def compress_to_archive(self, output_path: str) -> None:
@@ -230,6 +247,34 @@ class InstanceController(QObject):
             logger.error(f"An error occurred while deleting instance folder: {e}")
             raise
 
+    def validate_instance_folder_override(self) -> tuple[bool, str]:
+        """
+        Validate instance folder override path.
+
+        Returns tuple of (is_valid, error_message)
+        """
+        if not self.instance.instance_folder_override:
+            return True, ""
+
+        override_path = Path(self.instance.instance_folder_override)
+
+        # Check if parent directory exists
+        if not override_path.parent.exists():
+            return False, f"Parent directory does not exist: {override_path.parent}"
+
+        # Check if path is writable (try to create a test file)
+        try:
+            override_path.mkdir(parents=True, exist_ok=True)
+            test_file = override_path / ".rimsort_test"
+            test_file.touch()
+            test_file.unlink()
+        except PermissionError:
+            return False, f"No write permission for: {override_path}"
+        except Exception as e:
+            return False, f"Cannot access folder: {e}"
+
+        return True, ""
+
     def validate_paths(self, clear: bool = True) -> list[str]:
         """Validate instance paths exist and optionally clear invalid ones."""
         invalid_paths = []
@@ -251,7 +296,7 @@ class InstanceController(QObject):
 
         # Auto-recover steamcmd path if folder exists in instance directory
         if "steamcmd_install_path" in invalid_paths:
-            default_path = self.instance_folder_path / "steamcmd"
+            default_path = self.instance_folder_path / STEAMCMD_FOLDER_NAME
             if default_path.exists():
                 object.__setattr__(
                     self.instance,
