@@ -23,6 +23,7 @@ from app.utils.generic import (
     validate_game_executable,
 )
 from app.utils.system_info import SystemInfo
+from app.utils.win_find_steam import find_steam_folder
 from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_file,
@@ -1811,8 +1812,6 @@ class SettingsController(QObject):
         """
         if sys.platform == "win32":
             user_home = Path.home()
-            from app.utils.win_find_steam import find_steam_folder
-
             steam_folder, found = find_steam_folder()
 
             if not found:
