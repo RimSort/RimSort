@@ -572,6 +572,18 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>恢復實例時出錯</translation>
     </message>
@@ -1840,32 +1852,12 @@ Error: {error}</source>
         <translation>提供實例名稱</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>輸入一個唯一的實例備份名稱，該名稱不是 "Default"</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>克隆實例 [{existing_instance_name}]</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>你想要如何處理配置的工作坊模組資料夾？</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>工作坊資料夾：{existing_instance_workshop_folder}
-
-RimSort 可以複製所有你的工作坊模組到新實例的本地模組資料夾。這將有效地將任何現有的 Steam 客戶端模組轉換為 SteamCMD 模組，你可以在新實例中管理它們。
-
-或者，你可以保留你的舊 Steam 工作坊資料夾偏好。你可以在設置中隨時更改此設置。
-
-你想要如何繼續？</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1956,8 +1948,15 @@ RimSort 可以複製所有你的工作坊模組到新實例的本地模組資料
         <translation>無法克隆實例。</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>請輸入一個有效的、唯一的實例名稱。它不能是 'Default' 或空。</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1966,10 +1965,6 @@ RimSort 可以複製所有你的工作坊模組到新實例的本地模組資料
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>你想自動為新實例生成啟動參數嗎？</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>這將嘗試根據配置的遊戲/配置資料夾為新實例生成啟動參數。</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2014,6 +2009,22 @@ RimSort 可以複製所有你的工作坊模組到新實例的本地模組資料
     <message>
         <source>Convert to SteamCMD</source>
         <translation>轉換為 SteamCMD</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2960,6 +2971,10 @@ Alternative Dependencies:</source>
         <translation>包名</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
         <source>Author(s)</source>
         <translation>作者</translation>
     </message>
@@ -3774,6 +3789,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Local mods location</source>
         <translation>本地模組所在路徑</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -5194,21 +5221,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>請檢查你的互聯網連接並重試。</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>無效的存檔路徑</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>提供的存檔路徑無效。</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>請提供一個有效的存檔路徑。</translation>
     </message>
 </context>
 <context>

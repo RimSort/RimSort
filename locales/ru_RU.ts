@@ -572,6 +572,18 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>Ошибка восстановления инстанса</translation>
     </message>
@@ -1848,32 +1860,12 @@ Error: {error}</source>
         <translation>Укажите имя инстанса</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>Введите уникальное имя для резервной копии инстанса, которое не является "По умолчанию"</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>Клонировать инстанс [{existing_instance_name}]</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>Что вы хотите сделать с настроенной папкой модов Workshop?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>Папка модов Workshop: {existing_instance_workshop_folder}
-
-RimSort может скопировать все ваши моды Workshop в локальную папку модов нового инстанса. Это эффективно преобразует любые существующие моды клиента Steam в моды SteamCMD, которые вы затем сможете управлять внутри нового инстанса.
-
-В качестве альтернативы вы можете сохранить свои старые настройки папки модов Steam Workshop. Вы всегда можете изменить это позже в настройках.
-
-Как вы хотите продолжить?</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1964,8 +1956,15 @@ RimSort может скопировать все ваши моды Workshop в �
         <translation>Не удалось клонировать инстанс.</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>Пожалуйста, введите допустимое, уникальное имя инстанса. Оно не может быть 'По умолчанию' или пустым.</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1974,10 +1973,6 @@ RimSort может скопировать все ваши моды Workshop в �
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>Хотите ли вы автоматически сгенерировать аргументы запуска для нового инстанса?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>Это попытается сгенерировать аргументы запуска для нового инстанса на основе настроенных папок Game/Config.</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2022,6 +2017,22 @@ RimSort может скопировать все ваши моды Workshop в �
     <message>
         <source>Convert to SteamCMD</source>
         <translation>Преобразовать в SteamCmd</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -3014,6 +3025,10 @@ Alternative Dependencies:</source>
         <translation>Проверьте базу данных "Используйте это вместо"</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation>Проверьте зависимости</translation>
     </message>
@@ -3768,6 +3783,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Local mods location</source>
         <translation>Местоположение локальных модов</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -5187,21 +5214,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>Пожалуйста, проверьте свое интернет-соединение и попробуйте снова.</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>Недопустимый путь к архиву</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>Предоставленный путь к архиву недопустим.</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>Пожалуйста, предоставьте действительный путь к архиву.</translation>
     </message>
 </context>
 <context>

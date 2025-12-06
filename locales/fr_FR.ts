@@ -572,6 +572,18 @@ Une fois non contrôlé, recherchez tous les types de fichiers avec une recherch
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>Instance de restauration d'erreur</translation>
     </message>
@@ -1834,10 +1846,6 @@ Erreur:  {error}</translation>
         <translation>Fournir un nom d'instance</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>Entrez un nom unique pour l'instance sauvegardée qui n'est pas "par défaut"</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>Instance clone [] {existing_instance_name}</translation>
     </message>
@@ -1852,22 +1860,6 @@ Erreur:  {error}</translation>
         <translation>Cela vous permettra d'utiliser des fonctionnalités RimSort qui nécessitent le client Steam. Cela comprend, entre autres choses, le désabonnement des mods d'atelier et les liens d'atelier d'ouverture via le client Steam. 
                 &lt;br&gt; &lt;br&gt;
                 Vous pouvez le modifier dans les paramètres sous l'onglet Avancé.</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>Folder d'atelier: 
-
-Rimsort peut copier tous vos mods d'atelier dans le dossier MODS local de la nouvelle instance. Cela convertira efficacement tous les mods clients Steam existants en mods SteamCMD que vous pouvez ensuite gérer à l'intérieur de la nouvelle instance.
-
-Alternativement, vous pouvez conserver votre ancienne préférence de dossier d'atelier Steam. Vous pouvez toujours le modifier plus tard dans les paramètres.
-
-Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1938,8 +1930,8 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
         <translation>Le dossier d'instance n'a pas été trouvé après avoir extrait les archives. Peut-être que l'archive est corrompue ou que le nom d'instance n'est pas valide.</translation>
     </message>
     <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>Cela essaiera de générer des args d'exécution pour la nouvelle instance en fonction des dossiers jeu / configuration configurés.</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Couldn't restore steamcmd symlink/junction</source>
@@ -1962,16 +1954,19 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
         <translation>Impossible de cloner l'instance.</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>Veuillez saisir un nom d'instance valide et unique. Il ne peut pas être «par défaut» ou vide.</translation>
-    </message>
-    <message>
         <source>Create new instance [{instance_name}]</source>
         <translation>Créer une nouvelle instance [{instance_name}]</translation>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>Souhaitez-vous générer automatiquement des args d'exécution pour la nouvelle instance?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2016,6 +2011,22 @@ Comment aimeriez-vous procéder? {existing_instance_workshop_folder}</translatio
     <message>
         <source>Convert to SteamCMD</source>
         <translation>Convertir en Steamcmd</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2998,6 +3009,10 @@ Alternative Dependencies:</source>
         <translation>Vérifiez la base de données "Utiliser ceci à la place"</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation>Vérifier les dépendances</translation>
     </message>
@@ -3854,6 +3869,18 @@ Le nom du dossier sera utilisé comme nom du thème et tout thème non valide se
     <message>
         <source>"No Version Warning" Database</source>
         <translation>Base de données "sans version"</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
         <source>Backup Settings</source>
@@ -5168,21 +5195,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>Veuillez vérifier votre connexion Internet et réessayer.</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>Chemin d'archives non valide</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>Le chemin d'archives fourni n'est pas valide.</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>Veuillez fournir un chemin d'archives valide.</translation>
     </message>
 </context>
 <context>

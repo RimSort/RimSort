@@ -557,6 +557,18 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1777,25 +1789,11 @@ Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not &quot;Default&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance&apos;s local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1887,7 +1885,14 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be &apos;Default&apos; or empty.</source>
+        <source>Please enter a valid, unique instance name. It cannot be &apos;{DEFAULT_INSTANCE_NAME}&apos; or empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1896,10 +1901,6 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1944,6 +1945,22 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2873,6 +2890,10 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3655,6 +3676,18 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Local mods location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5015,21 +5048,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>Please check your internet connection and try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

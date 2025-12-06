@@ -572,6 +572,18 @@ Suchen Sie beim Deaktivieren alle Dateitypen mit Standardsuche.</translation>
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>Fehlerwiederherstellungsinstanz</translation>
     </message>
@@ -1842,32 +1854,12 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
         <translation>Instanzname angeben</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>Geben Sie einen eindeutigen Namen für die gesicherte Instanz ein, die nicht "Standard" ist</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>Clone Instance [] {existing_instance_name}</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>Was möchten Sie mit dem konfigurierten Workshop -Mods -Ordner tun?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>Workshop -Ordner: }
-
-RIMSORT kann alle Ihre Workshop -Mods in den lokalen Mods -Ordner der neuen Instanz kopieren.Dadurch werden vorhandene Steam -Client -Mods effektiv in SteamCMD -Mods umgewandelt, die Sie dann in der neuen Instanz verwalten können.
-
-Alternativ können Sie Ihre alte Dampf -Workshop -Ordnerpräferenz beibehalten.Sie können dies immer später in den Einstellungen ändern.
-
-Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1958,8 +1950,15 @@ Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
         <translation>Instanz nicht klonen.</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>Bitte geben Sie einen gültigen eindeutigen Instanznamen ein.Es kann nicht "Standard" oder leer sein.</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1968,10 +1967,6 @@ Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>Möchten Sie automatisch Laufargs für die neue Instanz generieren?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>Dadurch wird versucht, Run -ARGs für die neue Instanz basierend auf den konfigurierten Spiel-/Konfigurationsordnern zu generieren.</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2016,6 +2011,22 @@ Wie möchten Sie fortfahren? {existing_instance_workshop_folder}</translation>
     <message>
         <source>Convert to SteamCMD</source>
         <translation>In SteamCMD konvertieren</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2998,6 +3009,10 @@ Alternative Dependencies:</source>
         <translation>Überprüfen Sie die Datenbank "Verwenden Sie diese stattdessen"</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation>Überprüfen Sie die Abhängigkeiten</translation>
     </message>
@@ -3752,6 +3767,18 @@ Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlg
     <message>
         <source>Local mods location</source>
         <translation>Lokale Mods Standort</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -5168,21 +5195,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>Ungültiger Archivpfad</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>Der bereitgestellte Archivpfad ist ungültig.</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>Bitte geben Sie einen gültigen Archivpfad an.</translation>
     </message>
 </context>
 <context>
