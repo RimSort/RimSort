@@ -1,6 +1,12 @@
 from enum import Enum
 from typing import Any
 
+# Instance constants
+DEFAULT_INSTANCE_NAME = "Default"
+INSTANCE_FOLDER_NAME = "instances"
+STEAMCMD_FOLDER_NAME = "steamcmd"
+STEAM_FOLDER_NAME = "steam"
+
 
 class SortMethod(str, Enum):
     ALPHABETICAL = "Alphabetical"

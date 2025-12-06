@@ -95,6 +95,7 @@ class SettingsDialog(QDialog):
         self._do_config_folder_location_area(tab_layout)
         self._do_steam_mods_folder_location_area(tab_layout)
         self._do_local_mods_folder_location_area(tab_layout)
+        self._do_instance_folder_location_area(tab_layout)
 
         # Set the tab order:
         # "Game location" → "Config location" → "Steam mods location" → "Local mods location"
@@ -276,6 +277,39 @@ class SettingsDialog(QDialog):
             GUIInfo().default_font_line_height * 2
         )
         group_layout.addWidget(self.local_mods_folder_location)
+
+    def _do_instance_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
+        """Create UI for custom instance folder location selection."""
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout(group_box)
+
+        header_layout = QHBoxLayout()
+        group_layout.addLayout(header_layout)
+
+        section_label = QLabel(self.tr("Instance folder location (optional)"))
+        section_label.setFont(GUIInfo().emphasis_font)
+        header_layout.addWidget(section_label)
+
+        self.instance_folder_location_choose_button = QToolButton()
+        self.instance_folder_location_choose_button.setText(self.tr("Choose…"))
+        header_layout.addWidget(self.instance_folder_location_choose_button)
+
+        self.instance_folder_location_clear_button = QToolButton()
+        self.instance_folder_location_clear_button.setText(self.tr("Use Default"))
+        header_layout.addWidget(self.instance_folder_location_clear_button)
+
+        self.instance_folder_location = QLineEdit()
+        self.instance_folder_location.setReadOnly(True)
+        self.instance_folder_location.setPlaceholderText(
+            self.tr("Leave empty to use default location")
+        )
+        self.instance_folder_location.setTextMargins(GUIInfo().text_field_margins)
+        self.instance_folder_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.instance_folder_location)
 
     def _do_databases_tab(self) -> None:
         tab = QWidget()

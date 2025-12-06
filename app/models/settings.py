@@ -11,9 +11,16 @@ from loguru import logger
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
+from app.controllers.instance_controller import InstanceController
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
-from app.utils.constants import SortMethod
+from app.utils.constants import (
+    DEFAULT_INSTANCE_NAME,
+    INSTANCE_FOLDER_NAME,
+    STEAM_FOLDER_NAME,
+    STEAMCMD_FOLDER_NAME,
+    SortMethod,
+)
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 
@@ -195,11 +202,13 @@ class Settings(QObject):
         self.auto_load_player_log_on_startup: bool = False
 
         # Instances
-        self.current_instance: str = "Default"
+        self.current_instance: str = DEFAULT_INSTANCE_NAME
         self.current_instance_path: str = str(
-            Path(AppInfo().app_storage_folder) / "instances" / self.current_instance
+            Path(AppInfo().app_storage_folder)
+            / INSTANCE_FOLDER_NAME
+            / self.current_instance
         )
-        self.instances: dict[str, Instance] = {"Default": Instance()}
+        self.instances: dict[str, Instance] = {DEFAULT_INSTANCE_NAME: Instance()}
 
         # Color Picker Custom Colors (Store as hex)
         self.color_picker_custom_colors: list[str] = []
@@ -209,7 +218,18 @@ class Settings(QObject):
         """
         Get the path to the auxiliary metadata database for the current instance.
         """
-        return Path(self.current_instance_path) / "aux_metadata.db"
+
+        instance = self.instances[self.current_instance]
+        # Default instance never uses override
+        override = (
+            ""
+            if self.current_instance == DEFAULT_INSTANCE_NAME
+            else instance.instance_folder_override
+        )
+        instance_path = InstanceController.get_instance_folder_path(
+            self.current_instance, override
+        )
+        return instance_path / "aux_metadata.db"
 
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
@@ -239,12 +259,16 @@ class Settings(QObject):
                         "Instances key not found in settings.json. Performing mitigation."
                     )
                     steamcmd_prefix_default_instance_path = str(
-                        Path(AppInfo().app_storage_folder / "instances" / "Default")
+                        Path(
+                            AppInfo().app_storage_folder
+                            / INSTANCE_FOLDER_NAME
+                            / DEFAULT_INSTANCE_NAME
+                        )
                     )
                     # Create Default instance
                     data["instances"] = {
-                        "Default": Instance(
-                            name="Default",
+                        DEFAULT_INSTANCE_NAME: Instance(
+                            name=DEFAULT_INSTANCE_NAME,
                             game_folder=data.get("game_folder", ""),
                             local_folder=data.get("local_folder", ""),
                             workshop_folder=data.get("workshop_folder", ""),
@@ -256,10 +280,10 @@ class Settings(QObject):
                     }
                     steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path", "")
                     steamcmd_path_to_mitigate = str(
-                        Path(steamcmd_prefix_to_mitigate) / "steamcmd"
+                        Path(steamcmd_prefix_to_mitigate) / STEAMCMD_FOLDER_NAME
                     )
                     steam_path_to_mitigate = str(
-                        Path(steamcmd_prefix_to_mitigate) / "steam"
+                        Path(steamcmd_prefix_to_mitigate) / STEAM_FOLDER_NAME
                     )
                     if steamcmd_prefix_to_mitigate and path.exists(
                         steamcmd_prefix_to_mitigate
@@ -268,10 +292,12 @@ class Settings(QObject):
                             "Configured SteamCMD install path found. Attempting to migrate it to the Default instance path..."
                         )
                         steamcmd_prefix_steamcmd_path = str(
-                            Path(steamcmd_prefix_default_instance_path) / "steamcmd"
+                            Path(steamcmd_prefix_default_instance_path)
+                            / STEAMCMD_FOLDER_NAME
                         )
                         steamcmd_prefix_steam_path = str(
-                            Path(steamcmd_prefix_default_instance_path) / "steam"
+                            Path(steamcmd_prefix_default_instance_path)
+                            / STEAM_FOLDER_NAME
                         )
                         try:
                             if path.exists(steamcmd_prefix_steamcmd_path):
@@ -329,7 +355,7 @@ class Settings(QObject):
                     logger.debug(
                         "Current instance not found in settings.json. Performing mitigation."
                     )
-                    data["current_instance"] = "Default"
+                    data["current_instance"] = DEFAULT_INSTANCE_NAME
 
                     new_path = str(
                         Path(AppInfo().app_storage_folder)

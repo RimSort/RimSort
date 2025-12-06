@@ -8,11 +8,12 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from sqlalchemy import text
 
+from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
-from app.utils.constants import SortMethod
+from app.utils.constants import DEFAULT_INSTANCE_NAME, SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     find_steam_rimworld,
@@ -25,6 +26,7 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_file,
     show_settings_error,
+    show_warning,
 )
 from app.views.settings_dialog import SettingsDialog
 
@@ -182,6 +184,18 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
             self._on_local_mods_folder_location_clear_button_clicked
         )
+
+        # Instance folder location (custom override)
+        try:
+            self.settings_dialog.instance_folder_location_choose_button.clicked.connect(
+                self._on_instance_folder_location_choose_button_clicked
+            )
+            self.settings_dialog.instance_folder_location_clear_button.clicked.connect(
+                self._on_instance_folder_location_clear_button_clicked
+            )
+        except AttributeError:
+            # Buttons may not exist if UI hasn't been updated yet
+            pass
 
         self.settings_dialog.locations_clear_button.clicked.connect(
             self._on_locations_clear_button_clicked
@@ -435,6 +449,7 @@ class SettingsController(QObject):
         run_args: list[str] = [],
         steamcmd_install_path: str = "",
         steam_client_integration: bool = False,
+        instance_folder_override: str = "",
     ) -> None:
         """
         Create and set the instance.
@@ -448,6 +463,7 @@ class SettingsController(QObject):
             run_args=run_args,
             steamcmd_install_path=steamcmd_install_path,
             steam_client_integration=steam_client_integration,
+            instance_folder_override=instance_folder_override,
         )
 
         self.set_instance(instance)
@@ -512,6 +528,23 @@ class SettingsController(QObject):
             checked
         )
         self.settings_dialog.steam_mods_folder_location_clear_button.setEnabled(checked)
+
+        # Instance folder location (custom override)
+        # Only enable for Default instance
+        is_default_instance = self.settings.current_instance == DEFAULT_INSTANCE_NAME
+        self.settings_dialog.instance_folder_location.setText(
+            self.settings.instances[
+                self.settings.current_instance
+            ].instance_folder_override
+        )
+        self.settings_dialog.instance_folder_location.setCursorPosition(0)
+        self.settings_dialog.instance_folder_location.setEnabled(is_default_instance)
+        self.settings_dialog.instance_folder_location_choose_button.setEnabled(
+            is_default_instance
+        )
+        self.settings_dialog.instance_folder_location_clear_button.setEnabled(
+            is_default_instance
+        )
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -2131,6 +2164,68 @@ class SettingsController(QObject):
     def _on_run_args_text_changed(self, text: str = "") -> None:
         run_args_list = text.split(",")
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
+        self.settings.save()
+
+    @Slot()
+    def _on_instance_folder_location_choose_button_clicked(self) -> None:
+        """Open folder dialog to select custom instance folder location."""
+        # Only allow changing instance folder location for Default instance
+        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
+            show_warning(
+                title="Cannot Modify Instance Folder",
+                text="Only the Default instance can have a custom folder location.",
+                information="Custom instance folder location is managed by the Default instance.",
+            )
+            return
+
+        instance_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Instance Folder Location",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not instance_folder_location:
+            return
+
+        # Validate the path before setting it
+
+        test_controller = InstanceController(
+            self.settings.instances[self.settings.current_instance]
+        )
+        test_controller.instance.instance_folder_override = instance_folder_location
+        is_valid, error_msg = test_controller.validate_instance_folder_override()
+
+        if not is_valid:
+            show_warning(
+                title="Invalid Instance Folder",
+                text="Cannot use selected folder as instance location.",
+                information=error_msg,
+            )
+            return
+
+        # Update the instance and UI
+        self.settings.instances[
+            self.settings.current_instance
+        ].instance_folder_override = instance_folder_location
+        self.settings_dialog.instance_folder_location.setText(instance_folder_location)
+        self._last_file_dialog_path = str(Path(instance_folder_location).parent)
+        self.settings.save()
+
+    @Slot()
+    def _on_instance_folder_location_clear_button_clicked(self) -> None:
+        """Clear custom instance folder and use default location."""
+        # Only allow changing instance folder location for Default instance
+        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
+            show_warning(
+                title="Cannot Modify Instance Folder",
+                text="Only the Default instance can have a custom folder location.",
+                information="Custom instance folder location is managed by the Default instance.",
+            )
+            return
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].instance_folder_override = ""
+        self.settings_dialog.instance_folder_location.setText("")
         self.settings.save()
 
     @Slot()

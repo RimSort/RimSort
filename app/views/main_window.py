@@ -33,6 +33,12 @@ from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
+from app.utils.constants import (
+    DEFAULT_INSTANCE_NAME,
+    INSTANCE_FOLDER_NAME,
+    STEAM_FOLDER_NAME,
+    STEAMCMD_FOLDER_NAME,
+)
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
@@ -53,12 +59,6 @@ from app.views.menu_bar import MenuBar
 from app.views.player_log_tab import PlayerLogTab
 from app.views.status_panel import Status
 from app.views.troubleshooting_dialog import TroubleshootingDialog
-
-# Instance constants
-INSTANCE_FOLDER_NAME = "instances"
-DEFAULT_INSTANCE_NAME = "Default"
-STEAMCMD_FOLDER_NAME = "steamcmd"
-STEAM_FOLDER_NAME = "steam"
 
 
 class MainWindow(QMainWindow):
@@ -355,10 +355,10 @@ class MainWindow(QMainWindow):
             instance_name, ok = show_dialogue_input(
                 title=self.tr("Provide instance name"),
                 label=self.tr(
-                    'Input a unique name for the backed up instance that is not "Default"'
-                ),
+                    'Input a unique name for the backed up instance that is not "{name}"'
+                ).format(name=DEFAULT_INSTANCE_NAME),
             )
-            if ok and instance_name.lower() != "default":
+            if ok and instance_name.lower() != DEFAULT_INSTANCE_NAME.lower():
                 return instance_name
             else:
                 return None
@@ -378,9 +378,10 @@ class MainWindow(QMainWindow):
             information=(
                 self.tr(
                     "Workshop folder: {existing_instance_workshop_folder}\n\n"
-                    + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
-                    + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
-                    + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
+                    + "Option 1: Convert to SteamCMD\n"
+                    + "RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.\n\n"
+                    + "Option 2: Keep Workshop Folder\n"
+                    + "The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.\n\n"
                     + "How would you like to proceed?"
                 ).format(
                     existing_instance_workshop_folder=existing_instance_workshop_folder
@@ -728,6 +729,7 @@ class MainWindow(QMainWindow):
         existing_instance_steam_client_integration = (
             existing_instance.steam_client_integration
         )
+        existing_instance_folder_override = existing_instance.instance_folder_override
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name()
         if (
@@ -736,21 +738,23 @@ class MainWindow(QMainWindow):
             and new_instance_name not in current_instances
         ):
             new_instance_path = str(
-                InstanceController.get_instance_folder_path(new_instance_name)
+                InstanceController.get_instance_folder_path(
+                    new_instance_name, existing_instance_folder_override
+                )
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
                 text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
-                + "\nThis will clone the instance's data! and may take a long time depending on the data being cloned \n"
+                + "\nThis will clone the instance's game, mod, and configuration data. This operation may take a long time depending on the amount of data being cloned.\n"
                 + "\nThe following folders will be cloned:",
                 information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
-                + f"\nLocal folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
-                + f"\nWorkshop folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
-                + f"\nConfig folder:\n{existing_instance_config_folder if existing_instance_config_folder else '<None>'}\n"
-                + f"\nRun args:\n{'[' + ' '.join(existing_instance_run_args) + ']' if existing_instance_run_args else '<None>'}\n"
+                + f"\nConfiguration folder:\n{existing_instance_config_folder if existing_instance_config_folder else '<None>'}\n"
+                + f"\nLocal mods folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
+                + f"\nWorkshop mods folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
                 + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
-                + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n",
+                + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n"
+                + f"\nRun arguments:\n{'[' + ' '.join(existing_instance_run_args) + ']' if existing_instance_run_args else '<None>'}\n",
             )
             if answer.exec_is_positive():
                 # Clone the RimWorld game_folder to the new instance
@@ -774,7 +778,12 @@ class MainWindow(QMainWindow):
                     f"Cloning RimWorld game / config folders from [{existing_instance_name}] to [{new_instance_name}] instance...",
                 )
                 # Clone the existing local_folder to the new instance
-                if existing_instance_local_folder:
+                # Skip if local folder is already included within the game folder (prevents redundant cloning)
+                local_folder_in_game = (
+                    str(Path(existing_instance_game_folder) / local_folder_name)
+                    == existing_instance_local_folder
+                )
+                if existing_instance_local_folder and not local_folder_in_game:
                     if os.path.exists(existing_instance_local_folder) and os.path.isdir(
                         existing_instance_local_folder
                     ):
@@ -828,13 +837,13 @@ class MainWindow(QMainWindow):
                         target_workshop_folder = str(existing_instance_workshop_folder)
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
                 steamcmd_install_path = str(
-                    Path(existing_instance_steamcmd_install_path) / "steamcmd"
+                    Path(existing_instance_steamcmd_install_path) / STEAMCMD_FOLDER_NAME
                 )
                 if os.path.exists(steamcmd_install_path) and os.path.isdir(
                     steamcmd_install_path
                 ):
                     target_steamcmd_install_path = str(
-                        Path(new_instance_path) / "steamcmd"
+                        Path(new_instance_path) / STEAMCMD_FOLDER_NAME
                     )
                     if os.path.exists(target_steamcmd_install_path) and os.path.isdir(
                         target_steamcmd_install_path
@@ -857,12 +866,14 @@ class MainWindow(QMainWindow):
                     )
                 # If the instance has a 'steam' folder, clone it to the new instance
                 steam_install_path = str(
-                    Path(existing_instance_steamcmd_install_path) / "steam"
+                    Path(existing_instance_steamcmd_install_path) / STEAM_FOLDER_NAME
                 )
                 if os.path.exists(steam_install_path) and os.path.isdir(
                     steam_install_path
                 ):
-                    target_steam_install_path = str(Path(new_instance_path) / "steam")
+                    target_steam_install_path = str(
+                        Path(new_instance_path) / STEAM_FOLDER_NAME
+                    )
                     if os.path.exists(target_steam_install_path) and os.path.isdir(
                         target_steam_install_path
                     ):
@@ -908,10 +919,11 @@ class MainWindow(QMainWindow):
                         "run_args": existing_instance_run_args or [],
                         "steamcmd_install_path": str(
                             AppInfo().app_storage_folder
-                            / "instances"
+                            / INSTANCE_FOLDER_NAME
                             / new_instance_name
                         ),
                         "steam_client_integration": existing_instance_steam_client_integration,
+                        "instance_folder_override": existing_instance_folder_override,
                     },
                 )
         elif new_instance_name:
@@ -944,14 +956,33 @@ class MainWindow(QMainWindow):
             and instance_name != DEFAULT_INSTANCE_NAME
             and instance_name not in current_instances
         ):
+            # Get instance folder override if provided
+            # First check if override was passed in instance_data (e.g., from cloning)
+            instance_folder_override = instance_data.get("instance_folder_override", "")
+            # If not provided in instance_data, check the current instance's override
+            # This allows new instances to use the custom folder set in settings
+            if not instance_folder_override:
+                current_instance = self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]
+                instance_folder_override = current_instance.instance_folder_override
             # Create new instance folder if it does not exist
-            instance_path = InstanceController.get_instance_folder_path(instance_name)
+            instance_path = InstanceController.get_instance_folder_path(
+                instance_name, instance_folder_override
+            )
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
             # Get run args from instance data, autogenerate additional config items if desired
             run_args = []
             generated_instance_run_args = []
             if instance_data.get("game_folder") and instance_data.get("config_folder"):
+                # Generate preview of run args
+                preview_generated_run_args = [
+                    "-logfile",
+                    str(instance_path / "RimWorld.log"),
+                    f"-savedatafolder={str(instance_path / 'InstanceData')}",
+                ]
+                preview_text = " ".join(preview_generated_run_args)
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(
                     title=self.tr("Create new instance [{instance_name}]"),
@@ -959,16 +990,13 @@ class MainWindow(QMainWindow):
                         "Would you like to automatically generate run args for the new instance?"
                     ),
                     information=self.tr(
-                        "This will try to generate run args for the new instance based on the configured Game/Config folders."
-                    ),
+                        "This will try to generate run args for the new instance based on the configured Game/Config folders.\n\n"
+                        + "Generated run arguments preview:\n{preview}"
+                    ).format(preview=preview_text),
                 )
                 if answer == QMessageBox.StandardButton.Yes:
-                    # Append new run args to the existing run args
-                    generated_instance_run_args = [
-                        "-logfile",
-                        str(instance_path / "RimWorld.log"),
-                        f"-savedatafolder={str(instance_path / 'InstanceData')}",
-                    ]
+                    # Use the preview generated run args
+                    generated_instance_run_args = preview_generated_run_args
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
             # Add new instance to Settings
@@ -983,6 +1011,7 @@ class MainWindow(QMainWindow):
                 steam_client_integration=instance_data.get(
                     "steam_client_integration", False
                 ),
+                instance_folder_override=instance_folder_override,
             )
 
             # Save settings
@@ -1042,7 +1071,7 @@ class MainWindow(QMainWindow):
                         str(
                             Path(
                                 AppInfo().app_storage_folder
-                                / "instances"
+                                / INSTANCE_FOLDER_NAME
                                 / self.settings_controller.settings.current_instance
                             )
                         ),
@@ -1055,7 +1084,7 @@ class MainWindow(QMainWindow):
                 self.settings_controller.settings.instances.pop(
                     self.settings_controller.settings.current_instance
                 )
-                self.__switch_to_instance("Default")
+                self.__switch_to_instance(DEFAULT_INSTANCE_NAME)
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""
