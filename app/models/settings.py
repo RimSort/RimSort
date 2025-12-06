@@ -405,7 +405,11 @@ class Settings(QObject):
                 continue
             data[key] = value
 
-        data["instances"] = {
-            name: instance.as_dict() for name, instance in self.instances.items()
-        }
+        # Serialize instances using msgspec
+        instances_dict = {}
+        for name, instance in self.instances.items():
+            instances_dict[name] = msgspec.json.decode(
+                msgspec.json.encode(instance), type=dict
+            )
+        data["instances"] = instances_dict
         return data
