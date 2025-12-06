@@ -13,6 +13,7 @@ from app.controllers.language_controller import LanguageController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
+from app.utils.acf_utils import validate_acf_file_exists
 from app.utils.constants import DEFAULT_INSTANCE_NAME, SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
@@ -1363,6 +1364,85 @@ class SettingsController(QObject):
             return False
         return True
 
+    def _check_steam_integration_validity(
+        self, steam_client_integration: bool, steam_mods_location: str
+    ) -> bool:
+        """
+        Check if Steam client integration and Steam mods location are valid.
+
+        Validation rules:
+        - If both disabled: valid
+        - If steam_client_integration enabled but steam_mods_location empty: invalid
+        - If steam_mods_location set: must have valid ACF file
+        - If steam_mods_location set but ACF missing: invalid
+
+        :param steam_client_integration: Whether Steam client integration is enabled.
+        :param steam_mods_location: Path to the Steam mods folder.
+        :return: True if valid configuration, False if invalid.
+        """
+        # If integration disabled, no location validation needed
+        if not steam_client_integration and not steam_mods_location:
+            return True
+
+        # If integration enabled but no location, invalid
+        if steam_client_integration and not steam_mods_location:
+            return False
+
+        # If location set (with or without integration), check ACF file
+        if steam_mods_location:
+            return validate_acf_file_exists(steam_mods_location)
+
+        return True
+
+    def _validate_steam_integration(self) -> bool:
+        """
+        Validate Steam client integration and Steam mods location configuration.
+        Shows appropriate warnings if validation fails and prevents saving.
+
+        :return: True if valid configuration, False if invalid.
+        """
+        steam_client_integration = (
+            self.settings_dialog.steam_client_integration_checkbox.isChecked()
+        )
+        steam_mods_location = (
+            self.settings_dialog.steam_mods_folder_location.text().strip()
+        )
+
+        is_valid = self._check_steam_integration_validity(
+            steam_client_integration, steam_mods_location
+        )
+
+        if not is_valid:
+            # Disable integration checkbox
+            self.settings_dialog.steam_client_integration_checkbox.setChecked(False)
+
+            # Determine which validation failed for appropriate error message
+            if steam_client_integration and not steam_mods_location:
+                QMessageBox.warning(
+                    self.settings_dialog,
+                    self.tr("Steam Mods Location Required"),
+                    self.tr(
+                        "Steam client integration requires a Steam mods location to be configured. "
+                        "Steam client integration has been disabled."
+                    ),
+                )
+            elif steam_mods_location and not validate_acf_file_exists(
+                steam_mods_location
+            ):
+                QMessageBox.warning(
+                    self.settings_dialog,
+                    self.tr("Steam Workshop File Not Found"),
+                    self.tr(
+                        "The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. "
+                        "Steam client integration and Steam mods location have been disabled. "
+                        "Please ensure Steam is properly installed and has downloaded RimWorld Workshop data."
+                    ),
+                )
+                # Clear location since ACF is missing
+                self.settings_dialog.steam_mods_folder_location.setText("")
+
+        return is_valid
+
     @Slot()
     def _on_global_ok_button_clicked(self) -> None:
         """
@@ -1378,6 +1458,10 @@ class SettingsController(QObject):
         if config_folder_text and not self._validate_config_folder_location(
             config_folder_text
         ):
+            return
+
+        # Validate Steam integration if enabled
+        if not self._validate_steam_integration():
             return
 
         self.settings_dialog.close()
