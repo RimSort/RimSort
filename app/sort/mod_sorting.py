@@ -6,6 +6,7 @@ from typing import Any, Optional
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.utils.generic import scanpath
 from app.utils.metadata import MetadataManager, ModMetadata
 
@@ -211,6 +212,36 @@ def uuid_to_version(uuid: str, cached_metadata: Optional[dict[str, Any]] = None)
         return ""
 
 
+def uuid_to_mod_color(
+    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
+) -> str:
+    """
+    Get mod color hex value for inactive mods list sorting.
+
+    Retrieves the custom color assigned to a mod from its metadata.
+    Mods without a color sort first (empty string), followed by colored mods
+    sorted alphabetically by their hex color code.
+    Optionally uses pre-cached metadata to avoid repeated lookups.
+
+    Args:
+        uuid: The UUID of the mod
+        cached_metadata: Optional pre-cached metadata dict to avoid repeated lookups
+
+    Returns:
+        Color hex string (e.g., "#RRGGBB"), or empty string if no color assigned
+    """
+    if cached_metadata is not None:
+        metadata = cached_metadata.get(uuid)
+    else:
+        metadata = get_mod_metadata(uuid)
+
+    color_hex = metadata.get("color_hex") if metadata else None
+    if isinstance(color_hex, str):
+        return color_hex.lower()
+    else:
+        return ""
+
+
 def get_dir_size(path: str) -> int:
     total = 0
     stack = [path]
@@ -242,6 +273,8 @@ def get_mod_metadata(uuid: str) -> Optional[ModMetadata]:
 
 def get_cached_metadata_for_batch(
     uuids: list[str],
+    include_aux_metadata: bool = False,
+    settings_controller: Optional[Any] = None,
 ) -> dict[str, Optional[ModMetadata]]:
     """
     Pre-fetch metadata for a batch of UUIDs to optimize sorting operations.
@@ -250,12 +283,18 @@ def get_cached_metadata_for_batch(
     MetadataManager lookups during the sort process. This provides a
     5-10% performance improvement in sorting operations.
 
+    Optionally fetches auxiliary metadata (like mod colors) from the aux database
+    for use in color-based sorting.
+
     Args:
         uuids: List of mod UUIDs to fetch metadata for
+        include_aux_metadata: If True, also fetch color_hex from aux database
+        settings_controller: SettingsController instance, required if include_aux_metadata is True
 
     Returns:
         Dictionary mapping UUID -> metadata dict (or None if not found).
         Used by sort functions to avoid repeated metadata lookups.
+        When include_aux_metadata is True, includes 'color_hex' field.
 
     Example:
         >>> uuids = ["uuid1", "uuid2", "uuid3"]
@@ -267,6 +306,24 @@ def get_cached_metadata_for_batch(
 
     for uuid in uuids:
         cached[uuid] = metadata_manager.internal_local_metadata.get(uuid)
+
+    # Optionally fetch auxiliary metadata (mod colors) for sorting
+    if include_aux_metadata and settings_controller is not None:
+        try:
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings_controller.settings.aux_db_path
+            )
+            with aux_controller.Session() as aux_session:
+                for uuid in uuids:
+                    metadata = cached[uuid]
+                    if metadata is not None:
+                        mod_path = metadata.get("path")
+                        if mod_path:
+                            aux_entry = aux_controller.get(aux_session, mod_path)
+                            if aux_entry:
+                                metadata["color_hex"] = aux_entry.color_hex
+        except Exception as e:
+            logger.warning(f"Failed to fetch auxiliary metadata for batch: {e}")
 
     return cached
 
@@ -310,6 +367,8 @@ def _build_sort_key_map(
             sort_key_map[uuid] = uuid_to_packageid(uuid, cached_metadata)
         elif key == ModsPanelSortKey.VERSION:
             sort_key_map[uuid] = uuid_to_version(uuid, cached_metadata)
+        elif key == ModsPanelSortKey.MOD_COLOR:
+            sort_key_map[uuid] = uuid_to_mod_color(uuid, cached_metadata)
         else:
             sort_key_map[uuid] = uuid
     return sort_key_map
@@ -327,6 +386,7 @@ class ModsPanelSortKey(Enum):
     FOLDER_SIZE = 4
     PACKAGEID = 5
     VERSION = 6
+    MOD_COLOR = 7
 
 
 # Lookup dictionary for default sort direction flags
@@ -339,6 +399,7 @@ DEFAULT_REVERSE_FLAGS = {
     ModsPanelSortKey.FOLDER_SIZE: False,
     ModsPanelSortKey.PACKAGEID: False,
     ModsPanelSortKey.VERSION: False,
+    ModsPanelSortKey.MOD_COLOR: False,
 }
 
 
@@ -347,6 +408,7 @@ def sort_uuids(
     key: ModsPanelSortKey,
     descending: Optional[bool] = None,
     cached_metadata: Optional[dict[str, Any]] = None,
+    settings_controller: Optional[Any] = None,
 ) -> list[str]:
     """
     Sort inactive mods UUIDs by the specified attribute.
@@ -355,22 +417,24 @@ def sort_uuids(
     sort keys and optional pre-cached metadata for performance optimization.
     Includes performance instrumentation for logging sort duration.
 
+    Automatically fetches auxiliary metadata (mod colors) when sorting by MOD_COLOR.
+
     Args:
         uuids: List of mod UUIDs to sort
         key: ModsPanelSortKey enum specifying the sort attribute
-             (MODNAME, FILESYSTEM_MODIFIED_TIME, AUTHOR, FOLDER_SIZE, PACKAGEID, VERSION)
+             (MODNAME, FILESYSTEM_MODIFIED_TIME, AUTHOR, FOLDER_SIZE, PACKAGEID, VERSION, MOD_COLOR)
         descending: Optional bool to override default sort direction.
                    If None, uses DEFAULT_REVERSE_FLAGS. If True/False, sorts descending/ascending.
         cached_metadata: Optional pre-cached metadata dict to avoid repeated lookups.
                         Should be obtained via get_cached_metadata_for_batch().
+        settings_controller: Optional SettingsController for fetching auxiliary metadata when sorting by color.
 
     Returns:
         Sorted list of UUIDs in the specified order.
 
     Example:
         >>> uuids = ["uuid1", "uuid2", "uuid3"]
-        >>> cached = get_cached_metadata_for_batch(uuids)
-        >>> sorted_uuids = sort_uuids(uuids, ModsPanelSortKey.MODNAME, descending=False, cached_metadata=cached)
+        >>> sorted_uuids = sort_uuids(uuids, ModsPanelSortKey.MODNAME, descending=False)
         >>> # Result: uuids sorted alphabetically by mod name (A-Z)
 
     Note:
@@ -379,6 +443,18 @@ def sort_uuids(
     """
     # Performance instrumentation - track sort timing
     start_time = time.perf_counter()
+
+    # Automatically fetch auxiliary metadata if sorting by color
+    if (
+        key == ModsPanelSortKey.MOD_COLOR
+        and cached_metadata is None
+        and settings_controller is not None
+    ):
+        cached_metadata = get_cached_metadata_for_batch(
+            uuids,
+            include_aux_metadata=True,
+            settings_controller=settings_controller,
+        )
 
     # Pre-compute sort keys to avoid repeated function calls during sort
     sort_key_map = _build_sort_key_map(uuids, key, cached_metadata)

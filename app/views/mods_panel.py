@@ -61,7 +61,6 @@ from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
     ModsPanelSortKey,
-    get_cached_metadata_for_batch,
     sort_uuids,
 )
 from app.utils.acf_utils import steamcmd_purge_mods
@@ -772,6 +771,7 @@ class ModListWidget(QListWidget):
         "Folder Size": ModsPanelSortKey.FOLDER_SIZE,
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
+        "Color": ModsPanelSortKey.MOD_COLOR,
     }
 
     @staticmethod
@@ -2568,9 +2568,11 @@ class ModListWidget(QListWidget):
         filtering = self.settings_controller.settings.inactive_mods_sorting
 
         if filtering:
-            cached_metadata = get_cached_metadata_for_batch(uuids)
             sorted_uuids = sort_uuids(
-                uuids, key=key, descending=descending, cached_metadata=cached_metadata
+                uuids,
+                key=key,
+                descending=descending,
+                settings_controller=self.settings_controller,
             )
             self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
         else:
@@ -2600,13 +2602,19 @@ class ModListWidget(QListWidget):
                 descending = (
                     self.settings_controller.settings.inactive_mods_sort_descending
                 )
-                uuids = sort_uuids(uuids, key=sort_key, descending=descending)
+                uuids = sort_uuids(
+                    uuids,
+                    key=sort_key,
+                    descending=descending,
+                    settings_controller=self.settings_controller,
+                )
             else:
                 if list_type == "Inactive":
                     uuids = sort_uuids(
                         uuids,
                         key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
                         descending=True,
+                        settings_controller=self.settings_controller,
                     )
         # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
@@ -2777,6 +2785,7 @@ class ModsPanel(QWidget):
         "Folder Size": ModsPanelSortKey.FOLDER_SIZE,
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
+        "Color": ModsPanelSortKey.MOD_COLOR,
     }
 
     def update_sort_ui_from_settings(self) -> None:
@@ -2799,6 +2808,7 @@ class ModsPanel(QWidget):
             "FOLDER_SIZE": self.tr("Folder Size"),
             "VERSION": self.tr("Version"),
             "PACKAGEID": self.tr("PackageId"),
+            "MOD_COLOR": self.tr("Color"),
         }
         # Set combo box selection based on loaded settings
         self.inactive_mods_sort_combobox.setCurrentText(
@@ -3202,6 +3212,7 @@ class ModsPanel(QWidget):
                 self.tr("Folder Size"),
                 self.tr("Version"),
                 self.tr("PackageId"),
+                self.tr("Color"),
             ]
         )
         # Map enum names to translated text for setting initial combo box selection
@@ -3212,6 +3223,7 @@ class ModsPanel(QWidget):
             "FOLDER_SIZE": self.tr("Folder Size"),
             "VERSION": self.tr("Version"),
             "PACKAGEID": self.tr("PackageId"),
+            "MOD_COLOR": self.tr("Color"),
         }
         # Set initial combo box selection based on loaded settings
         self.inactive_mods_sort_combobox.setCurrentText(
