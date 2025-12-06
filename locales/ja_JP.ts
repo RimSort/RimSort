@@ -571,6 +571,18 @@ When unchecked, search all file types with standard search.</source>
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>インスタンスの復元中にエラーが発生しました</translation>
     </message>
@@ -1848,32 +1860,12 @@ GitHubで手動でプルリクエストを作成できます。
         <translation>インスタンス名を提供</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>バックアップされたインスタンスの一意の名前を入力してください。これは "Default" ではありません:</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>インスタンスを複製 [{existing_instance_name}]</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>設定されたワークショップモッドフォルダをどうしますか？</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>ワークショップフォルダー: {existing_instance_workshop_folder}
-
-RimSortは、すべてのワークショップMODを新しいインスタンスのローカルMODフォルダーにコピーできます。これにより、既存のSteamクライアントMODがSteamCMD MODに変換され、新しいインスタンス内で管理できるようになります。
-
-または、従来のSteamワークショップフォルダー設定を維持することもできます。これは後で設定からいつでも変更できます。
-
-どのように進めますか？</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1964,8 +1956,15 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
         <translation>インスタンスをクローンできませんでした。</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>有効で一意のインスタンス名を入力してください。「Default」または空にすることはできません。</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1974,10 +1973,6 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>新しいインスタンスの実行引数を自動的に生成しますか？</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>これは、構成されたGame/Configフォルダに基づいて新しいインスタンスの実行引数を生成しようとします。</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2022,6 +2017,22 @@ RimSortは、すべてのワークショップMODを新しいインスタンス�
     <message>
         <source>Convert to SteamCMD</source>
         <translation>Steamcmdに変換します</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -3017,6 +3028,10 @@ Alternative Dependencies:</source>
         <translation>このデータベースを使用</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation>依存関係を確認</translation>
     </message>
@@ -3770,6 +3785,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Local mods location</source>
         <translation>ローカルモッドの場所</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -5188,21 +5215,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>インターネット接続を確認し、再試行してください。</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>無効なアーカイブパス</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>提供されたアーカイブパスは無効です。</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>有効なアーカイブパスを指定してください。</translation>
     </message>
 </context>
 <context>

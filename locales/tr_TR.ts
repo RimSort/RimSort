@@ -573,6 +573,18 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
 <context>
     <name>InstanceController</name>
     <message>
+        <source>Invalid archive path</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>The provided archive path is invalid.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
+        <source>Please provide a valid archive path.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Error restoring instance</source>
         <translation>Öğe geri yüklenirken hata</translation>
     </message>
@@ -1837,16 +1849,24 @@ Hata:  {error}</translation>
         <translation>Örnek Adı Sağlayın</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "Default"</source>
-        <translation>Yedeklenen örnek için "varsayılan" olmayan benzersiz bir ad girin</translation>
-    </message>
-    <message>
         <source>Clone instance [{existing_instance_name}]</source>
         <translation>Klon örneği [] {existing_instance_name}</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>Yapılandırılmış Atölye Mods klasörü ile ne yapmak istersiniz?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}
+
+Option 1: Convert to SteamCMD
+RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
+
+Option 2: Keep Workshop Folder
+The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
+
+How would you like to proceed?</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -1925,8 +1945,8 @@ Hata:  {error}</translation>
         <translation>Örnek klonlanamıyor.</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be 'Default' or empty.</source>
-        <translation>Lütfen geçerli, benzersiz bir örnek adı girin. 'Varsayılan' veya boş olamaz.</translation>
+        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1935,6 +1955,13 @@ Hata:  {error}</translation>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>Yeni örnek için otomatik olarak Run Args oluşturmak ister misiniz?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
+
+Generated run arguments preview:
+{preview}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -1981,6 +2008,10 @@ Hata:  {error}</translation>
         <translation>Steamcmd'ye dönüştürün</translation>
     </message>
     <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+    </message>
+    <message>
         <source>Keep Workshop Folder</source>
         <translation>Atölye Klasörünü Tutun</translation>
     </message>
@@ -2001,22 +2032,6 @@ Hata:  {error}</translation>
                 Bunu Gelişmiş sekmesinin altındaki ayarlarda değiştirebilirsiniz.</translation>
     </message>
     <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively  convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.
-
-Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
-
-How would you like to proceed?</source>
-        <translation>Atölye klasörü: 
-
-Rimsort, tüm atölye modlarınızı yeni örneğin yerel MODS klasörüne kopyalayabilir. Bu, mevcut Steam istemci modlarını etkili bir şekilde yeni örnekte yönetebileceğiniz Steamcmd modlarına dönüştürecektir.
-
-Alternatif olarak, eski Steam Workshop klasör tercihinizi koruyabilirsiniz. Bunu her zaman daha sonra ayarlarda değiştirebilirsiniz.
-
-Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
-    </message>
-    <message>
         <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
         <translation>Geri yüklenen örnekten bazı klasör yolları geçersizdir ve temizlenmiştir. Lütfen bunları ayarlarda yeniden yapılandırın</translation>
     </message>
@@ -2027,10 +2042,6 @@ Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
     <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
         <translation>Örnek klasörü, arşivi çıkardıktan sonra bulunamadı. Belki arşiv yozlaşmış veya örnek adı geçersiz.</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation>Bu, yapılandırılmış oyun/yapılandırma klasörlerine dayanan yeni örnek için Run Args oluşturmaya çalışacaktır.</translation>
     </message>
     <message>
         <source>Player Log</source>
@@ -2969,6 +2980,10 @@ An alternative updated mod is recommended:
         <translation>"Use This Instead" Veritabanını kontrol et</translation>
     </message>
     <message>
+        <source>Color</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+    </message>
+    <message>
         <source>Check Dependencies</source>
         <translation>Gerekli Modları Kontrol Et</translation>
     </message>
@@ -3755,6 +3770,18 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     <message>
         <source>Local mods location</source>
         <translation>Yerel mod lokasyonu</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Use Default</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+    </message>
+    <message>
+        <source>Leave empty to use default location</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -5172,21 +5199,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Please check your internet connection and try again.</source>
         <translation>Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.</translation>
-    </message>
-</context>
-<context>
-    <name>__new__</name>
-    <message>
-        <source>Invalid archive path</source>
-        <translation>Geçersiz arşiv yolu</translation>
-    </message>
-    <message>
-        <source>The provided archive path is invalid.</source>
-        <translation>Sağlanan arşiv yolu geçersizdir.</translation>
-    </message>
-    <message>
-        <source>Please provide a valid archive path.</source>
-        <translation>Lütfen geçerli bir arşiv yolu sağlayın.</translation>
     </message>
 </context>
 <context>
