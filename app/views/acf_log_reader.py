@@ -1026,7 +1026,7 @@ class AcfLogReader(QWidget):
                 self.settings_controller.settings.instances[
                     current_instance
                 ].workshop_folder
-            ).parent.parent
+            )
             / "appworkshop_294100.acf"
         )
         steamcmd_acf_mtime = (
