@@ -260,13 +260,24 @@ def show_fatal_error(
     diag.exec_()
 
 
-def show_internet_connection_error() -> None:
-    """Show a warning dialog for no internet connection, with firewall info and user information for help."""
+def show_internet_connection_error(failed_urls: list[str] | None = None) -> None:
+    """Show a warning dialog for no internet connection, with firewall info and user information for help.
+
+    :param failed_urls: Optional list of URLs that failed to connect
+    """
     logger.info("Showing no internet connection error dialog")
+
+    failed_urls_str = (
+        f"Failed to reach: {', '.join(failed_urls)}"
+        if failed_urls
+        else "Unable to reach internet services"
+    )
+
     show_information(
         title="No Internet Connection",
         text="RimSort requires an active internet connection to perform this operation.",
         information=(
+            f"{failed_urls_str}\n\n"
             "If you are connected but still see this message, your firewall or security software may be blocking RimSort. \n"
             "To resolve this issue: \n\n"
             "Add RimSort to your firewall's allowed applications. \n"

@@ -35,7 +35,6 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
     show_dialogue_conditional,
-    show_internet_connection_error,
 )
 from app.views.main_content_panel import MainContent
 
@@ -363,7 +362,6 @@ class MainContentController(QObject):
         """Handle clone request: ask user before starting."""
         # Check internet connection before attempting task
         if not check_internet_connection():
-            show_internet_connection_error()
             return
         repo_folder = git_utils.git_get_repo_name(repo_url)
         full_repo_path = Path(base_path) / repo_folder
@@ -416,7 +414,6 @@ class MainContentController(QObject):
 
         # Check internet connection before attempting task
         if not check_internet_connection():
-            show_internet_connection_error()
             return
 
         # Community Rules database
@@ -589,7 +586,6 @@ class MainContentController(QObject):
         """
         # Check internet connection before attempting task
         if not check_internet_connection():
-            show_internet_connection_error()
             return
 
         if not repo_url or not repo_url.strip():
