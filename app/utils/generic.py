@@ -1,8 +1,6 @@
-import http.client
 import os
 import platform
 import shutil
-import socket
 import subprocess
 import sys
 import webbrowser
@@ -729,102 +727,33 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     return str(full_rimworld_path) if rimworld_path else rimworld_path
 
 
-def check_internet_connection(
-    primary_host: str = "8.8.8.8",
-    fallback_host: str = "1.1.1.1",
-    port: int = 53,
-    fallback_port: int = 443,
-    timeout: float = 10,
-) -> bool:
+def check_internet_connection(timeout: float = 10) -> bool:
     """
-    Check if there is an active internet connection by attempting to connect to a known host (DNS),
-    As a fallback, try an HTTP request to a well-known google website.
-    """
-    socket.setdefaulttimeout(timeout)
+    Check if there is an active internet connection by verifying access to Steam and GitHub.
 
-    def try_connect(host: str, port_to_try: int) -> bool:
+    :param timeout: Timeout in seconds for each connection attempt
+    :return: True if at least one service is accessible, False otherwise
+    """
+    urls = [
+        "https://steamcommunity.com",
+        "https://github.com",
+    ]
+
+    failed_urls = []
+
+    for url in urls:
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((host, port_to_try))
+            requests.head(url, timeout=timeout)
+            logger.debug(f"Internet connection verified via {url}")
             return True
-        except OSError as e:
-            logger.warning(f"Socket connection to {host}:{port_to_try} failed: {e}")
-            return False
+        except requests.exceptions.RequestException as e:
+            logger.debug(f"Connection to {url} failed: {e}")
+            failed_urls.append(url)
 
-    # Try connecting to the primary host on both ports
-    if try_connect(primary_host, port) or try_connect(primary_host, fallback_port):
-        return True
-
-    # Try connecting to the fallback host on both ports
-    if try_connect(fallback_host, port) or try_connect(fallback_host, fallback_port):
-        return True
-
-    # Fallback: try HTTP request to a well-known site
-    try:  # Try google.com first
-        conn = http.client.HTTPSConnection("www.google.com", timeout=timeout)
-        conn.request("HEAD", "/")
-        response = conn.getresponse()
-        if response.status < 500:
-            return True
-    except Exception as e:
-        logger.warning(f"HTTP connection to www.google.com failed: {e}")
-
-    try:  # Try cloudflare fallback site
-        conn = http.client.HTTPSConnection("www.cloudflare.com", timeout=timeout)
-        conn.request("HEAD", "/")
-        response = conn.getresponse()
-        if response.status < 500:
-            return True
-    except Exception as e:
-        logger.warning(f"HTTP connection to www.cloudflare.com failed: {e}")
-
-    try:  # Try microsoft.com as another fallback site
-        conn = http.client.HTTPSConnection("www.microsoft.com", timeout=timeout)
-        conn.request("HEAD", "/")
-        response = conn.getresponse()
-        if response.status < 500:
-            return True
-    except Exception as e:
-        logger.warning(f"HTTP connection to www.microsoft.com failed: {e}")
-
-    logger.error("No internet connection detected.")
-
-    try:  # Try additional fallback: try curl command to google.com
-        result = subprocess.run(
-            ["curl", "-Is", "https://www.google.com"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout,
-        )
-        if result.returncode == 0 and b"HTTP" in result.stdout:
-            return True
-    except Exception as e:
-        logger.warning(f"Curl command to www.google.com failed: {e}")
-
-    try:  # Try additional fallback: try curl command to cloudflare.com
-        result = subprocess.run(
-            ["curl", "-Is", "https://www.cloudflare.com"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout,
-        )
-        if result.returncode == 0 and b"HTTP" in result.stdout:
-            return True
-    except Exception as e:
-        logger.warning(f"Curl command to www.cloudflare.com failed: {e}")
-
-    try:  # Try additional fallback: try curl command to microsoft.com
-        result = subprocess.run(
-            ["curl", "-Is", "https://www.microsoft.com"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout,
-        )
-        if result.returncode == 0 and b"HTTP" in result.stdout:
-            return True
-    except Exception as e:
-        logger.warning(f"Curl command to www.microsoft.com failed: {e}")
-
+    logger.error(
+        f"No internet connection detected. Failed to reach: {', '.join(failed_urls)}"
+    )
+    dialogue.show_internet_connection_error(failed_urls=failed_urls)
     return False
 
 

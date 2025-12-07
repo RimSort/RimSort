@@ -421,7 +421,6 @@ class UpdateManager(QObject):
 
         # Check internet connection
         if not check_internet_connection():
-            dialogue.show_internet_connection_error()
             return False
 
         return True

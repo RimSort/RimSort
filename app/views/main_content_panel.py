@@ -1274,7 +1274,6 @@ class MainContent(QObject):
     def _do_import_list_workshop_collection(self) -> None:
         # Check internet connection before attempting task
         if not check_internet_connection():
-            dialogue.show_internet_connection_error()
             return
         # Create an instance of collection_import
         # This also triggers the import dialogue and gets result
@@ -2020,7 +2019,6 @@ class MainContent(QObject):
     def _do_check_for_workshop_updates(self) -> None:
         # Check internet connection before attempting task
         if not check_internet_connection():
-            dialogue.show_internet_connection_error()
             return
         # Query Workshop for update data
         updates_checked = self.do_threaded_loading_animation(
@@ -2325,7 +2323,6 @@ class MainContent(QObject):
             if url and ok:
                 # Check internet connection before attempting task
                 if not check_internet_connection():
-                    dialogue.show_internet_connection_error()
                     return
                 fd, temp_path = tempfile.mkstemp(suffix=".zip")
                 os.close(fd)
