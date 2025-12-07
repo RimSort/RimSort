@@ -1408,13 +1408,25 @@ class SettingsController(QObject):
             self.settings_dialog.steam_mods_folder_location.text().strip()
         )
 
+        if not steam_client_integration:
+            QMessageBox.warning(
+                self.settings_dialog,
+                self.tr("Steam Client Integration Disabled"),
+                self.tr(
+                    "Steam client integration is disabled. Steam mods location will be cleared."
+                ),
+            )
+            # If integration disabled, clear the steam mods location
+            self.settings_dialog.steam_mods_folder_location.setText("")
+
         is_valid = self._check_steam_integration_validity(
             steam_client_integration, steam_mods_location
         )
 
         if not is_valid:
-            # Disable integration checkbox
+            # Disable integration checkbox and clear the mods location
             self.settings_dialog.steam_client_integration_checkbox.setChecked(False)
+            self.settings_dialog.steam_mods_folder_location.setText("")
 
             # Determine which validation failed for appropriate error message
             if steam_client_integration and not steam_mods_location:
@@ -1423,7 +1435,7 @@ class SettingsController(QObject):
                     self.tr("Steam Mods Location Required"),
                     self.tr(
                         "Steam client integration requires a Steam mods location to be configured. "
-                        "Steam client integration has been disabled."
+                        "Steam client integration and Steam mods location have been disabled."
                     ),
                 )
             elif steam_mods_location and not validate_acf_file_exists(
