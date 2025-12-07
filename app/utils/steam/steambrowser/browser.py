@@ -9,7 +9,7 @@ from string import Template
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QUrl, Signal
+from PySide6.QtCore import QPoint, Qt, QUrl
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
@@ -58,8 +58,6 @@ class SteamBrowser(QWidget):
     """
     A generic panel used to browse Workshop content - downloader included
     """
-
-    steamworks_subscription_signal = Signal(list)
 
     def __init__(
         self,
@@ -501,7 +499,7 @@ class SteamBrowser(QWidget):
         logger.debug(
             f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
         )
-        self.steamworks_subscription_signal.emit(
+        EventBus().do_steamworks_api_call.emit(
             [
                 "subscribe",
                 [eval(str_pfid) for str_pfid in self.downloader_list_mods_tracking],

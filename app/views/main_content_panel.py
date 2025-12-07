@@ -301,12 +301,6 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
-            self.mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
-            self.mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
                 self._do_blacklist_action_steamdb
             )
@@ -2001,9 +1995,6 @@ class MainContent(QObject):
             "https://steamcommunity.com/app/294100/workshop/",
             self.metadata_manager,
             self.settings_controller,
-        )
-        self.steam_browser.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call_animated
         )
         self.steam_browser.show()
 
