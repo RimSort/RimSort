@@ -13,16 +13,7 @@ from functools import partial
 from io import BytesIO
 from pathlib import Path
 from tempfile import gettempdir
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    TypedDict,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Union, cast
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 import requests
@@ -171,6 +162,7 @@ class ScriptConfig:
         log_path: Path,
         needs_elevation: bool = False,
         install_dir: Optional[Path] = None,
+        update_manager: Optional["UpdateManager"] = None,
     ) -> Union[str, List[str]]:
         """
         Get the appropriate arguments for launching the update script based on platform and elevation needs.
@@ -191,10 +183,60 @@ class ScriptConfig:
         elif install_dir and self.platform == "Linux":
             base_args.append(str(install_dir))
 
-        return self._build_platform_args(base_args, script_path, needs_elevation)
+        return self._build_platform_args(
+            base_args, script_path, needs_elevation, update_manager
+        )
+
+    @staticmethod
+    def _build_terminal_command(
+        terminal: str, base_args: List[str], needs_elevation: bool
+    ) -> str:
+        """
+        Build terminal-specific command string for launching update script.
+
+        Args:
+            terminal: Name of the terminal emulator (e.g., "gnome-terminal")
+            base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
+            needs_elevation: Whether to use sudo
+
+        Returns:
+            Command string for the terminal emulator
+
+        Raises:
+            ValueError: If terminal emulator is unknown
+        """
+        quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
+
+        # gnome-terminal uses -- instead of -e
+        if terminal == "gnome-terminal":
+            if needs_elevation:
+                return f'gnome-terminal -- bash -c "sudo {quoted_args}"'
+            else:
+                return f'gnome-terminal -- bash -c "{quoted_args}; read -p \\"Press enter to close\\""'
+
+        # konsole, xterm, and x-terminal-emulator use -e
+        elif terminal in ["konsole", "xterm", "x-terminal-emulator"]:
+            if needs_elevation:
+                return f'{terminal} -e bash -c "sudo {quoted_args}"'
+            else:
+                return f'{terminal} -e bash -c "{quoted_args}; read -p \\"Press enter to close\\""'
+
+        # xfce4-terminal and mate-terminal need nested quoting
+        elif terminal in ["xfce4-terminal", "mate-terminal"]:
+            if needs_elevation:
+                return f"{terminal} -e \"bash -c 'sudo {quoted_args}'\""
+            else:
+                return f'{terminal} -e "bash -c \'{quoted_args}; read -p \\"Press enter to close\\"\'"'
+
+        else:
+            raise ValueError(f"Unknown terminal emulator: {terminal}")
 
     def _build_platform_args(
-        self, base_args: List[str], script_path: Path, needs_elevation: bool
+        self,
+        base_args: List[str],
+        script_path: Path,
+        needs_elevation: bool,
+        update_manager: Optional["UpdateManager"] = None,
     ) -> Union[str, List[str]]:
         """
         Build platform-specific arguments for launching the update script.
@@ -203,12 +245,13 @@ class ScriptConfig:
             base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
             script_path: Path to the update script
             needs_elevation: Whether elevated privileges are required
+            update_manager: UpdateManager instance (required for Linux platform)
 
         Returns:
             Arguments string or list for subprocess
 
         Raises:
-            ValueError: If platform is unsupported
+            ValueError: If platform is unsupported or update_manager is None for Linux
         """
         if self.platform == "Darwin":
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
@@ -233,11 +276,13 @@ class ScriptConfig:
                     str(base_args[2]),
                 ]
         elif self.platform == "Linux":
-            quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
-            if needs_elevation:
-                return f'x-terminal-emulator -e "sudo {quoted_args}"'
-            else:
-                return f'x-terminal-emulator -e bash -c "{quoted_args}; read -p \\"Press enter to close\\""'
+            if update_manager is None:
+                raise ValueError("update_manager required for Linux platform")
+
+            terminal = update_manager._detect_terminal_emulator()
+            cmd = self._build_terminal_command(terminal, base_args, needs_elevation)
+            logger.debug(f"Built terminal command using {terminal}")
+            return cmd
         else:
             raise ValueError(f"Unsupported platform: {self.platform}")
 
@@ -309,6 +354,9 @@ class UpdateManager(QObject):
             else None
         )
         self._download_cancelled = False
+        self._detected_terminal: Optional[str] = (
+            None  # Cache detected terminal emulator
+        )
 
     def _check_needs_elevation(self) -> bool:
         """
@@ -355,6 +403,42 @@ class UpdateManager(QObject):
                 AppInfo().application_folder, os.W_OK
             )
             return self._elevation_needed
+
+    def _detect_terminal_emulator(self) -> str:
+        """
+        Detect available terminal emulator on Linux systems.
+        Caches the result to avoid redundant filesystem checks.
+
+        Returns:
+            str: Name of the detected terminal emulator
+
+        Raises:
+            UpdateScriptLaunchError: If no terminal emulator is found
+        """
+        if self._detected_terminal is not None:
+            return self._detected_terminal
+
+        # Priority order: desktop environment terminals first, then universal fallback
+        terminal_candidates = [
+            "gnome-terminal",
+            "konsole",
+            "xfce4-terminal",
+            "mate-terminal",
+            "xterm",
+            "x-terminal-emulator",  # Debian/Ubuntu backward compatibility
+        ]
+
+        for terminal in terminal_candidates:
+            if shutil.which(terminal) is not None:
+                logger.debug(f"Detected terminal emulator: {terminal}")
+                self._detected_terminal = terminal
+                return terminal
+
+        # No terminal found - provide helpful error
+        raise UpdateScriptLaunchError(
+            "No terminal emulator found on system. Please install one of: "
+            "gnome-terminal, konsole, xfce4-terminal, mate-terminal, or xterm"
+        )
 
     def do_check_for_update(self) -> None:
         """
@@ -1439,6 +1523,7 @@ class UpdateManager(QObject):
                         log_path,
                         needs_elevation,
                         install_dir,
+                        update_manager=self,
                     )
                     logger.debug(f"Updated script path to: {script_path}")
                 except Exception as e:
@@ -1571,6 +1656,7 @@ class UpdateManager(QObject):
                 log_path,
                 needs_elevation,
                 install_dir,
+                update_manager=self,
             )
 
         # Launch in terminal emulator
@@ -1672,7 +1758,12 @@ class UpdateManager(QObject):
         script_path = config.get_script_path()
         install_dir = script_path.parent
         args_repr = config.get_args(
-            script_path, update_source_path, log_path, needs_elevation, install_dir
+            script_path,
+            update_source_path,
+            log_path,
+            needs_elevation,
+            install_dir,
+            update_manager=self,
         )
         start_new_session = config.start_new_session
 
