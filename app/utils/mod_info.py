@@ -44,8 +44,12 @@ class ModInfo:
         try:
             name = cls._parse_name(metadata)
             authors = cls._parse_authors(metadata)
-            packageid = metadata.get("packageid", "")
-            published_file_id = metadata.get("publishedfileid", "")
+            packageid = str(
+                metadata.get("packageid", "")
+            )  # make sure packageid is a string
+            published_file_id = str(
+                metadata.get("publishedfileid", "")
+            )  # make sure published_file_id is a string
             supported_versions = cls._parse_supported_versions_static(
                 metadata.get("supportedversions")
             )
