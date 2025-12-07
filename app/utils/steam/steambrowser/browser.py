@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
@@ -58,7 +59,6 @@ class SteamBrowser(QWidget):
     A generic panel used to browse Workshop content - downloader included
     """
 
-    steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
     def __init__(
@@ -135,7 +135,8 @@ class SteamBrowser(QWidget):
         )
         self.download_steamcmd_button.clicked.connect(
             partial(
-                self.steamcmd_downloader_signal.emit, self.downloader_list_mods_tracking
+                EventBus().do_steamcmd_download.emit,
+                self.downloader_list_mods_tracking,
             )
         )
         self.download_steamworks_button = QPushButton(

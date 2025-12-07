@@ -787,7 +787,6 @@ class ModListWidget(QListWidget):
     refresh_signal = Signal()
     update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
-    steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
     def __init__(self, list_type: str, settings_controller: SettingsController) -> None:
@@ -1504,9 +1503,9 @@ class ModListWidget(QListWidget):
                             )
                         # Emit signal to steamcmd downloader to re-download
                         logger.debug(
-                            f"Emitting steamcmd_downloader_signal for {list(steamcmd_publishedfileid_to_redownload)}"
+                            f"Emitting do_steamcmd_download for {list(steamcmd_publishedfileid_to_redownload)}"
                         )
-                        self.steamcmd_downloader_signal.emit(
+                        EventBus().do_steamcmd_download.emit(
                             list(steamcmd_publishedfileid_to_redownload)
                         )
                     return True

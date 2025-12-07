@@ -37,7 +37,6 @@ class RunnerPanel(QWidget):
     """
 
     closing_signal = Signal()
-    steamcmd_downloader_signal = Signal(list)
 
     def __init__(
         self,
@@ -552,7 +551,7 @@ class RunnerPanel(QWidget):
         )
         if answer == QMessageBox.StandardButton.Yes:
             self.redownloading = True
-            self.steamcmd_downloader_signal.emit(self.steamcmd_download_tracking)
+            EventBus().do_steamcmd_download.emit(self.steamcmd_download_tracking)
             self.exit_window()
 
         else:
