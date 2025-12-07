@@ -187,7 +187,12 @@ class TableResizer:
             return max(0, int(self.table_view.width()))
 
     def _init_or_sync_column_weights(self: "TableResizer") -> None:
-        """Ensure column weights exist and match current column count."""
+        """
+        Initialize or synchronize column weights with the current column count.
+
+        If weights don't exist or don't match the column count, initialize them
+        with equal proportional widths.
+        """
         model = self.table_view.model()
         if not model:
             return
@@ -198,10 +203,15 @@ class TableResizer:
             not getattr(self, "_table_col_weights", None)
             or len(self._table_col_weights) != col_count
         ):
-            # Initialize equal weights
             self._table_col_weights = [1.0 / col_count for _ in range(col_count)]
 
     def _recalculate_weights_from_current_widths(self: "TableResizer") -> None:
+        """
+        Recalculate column weight proportions based on current widths.
+
+        Used when user manually resizes a column to maintain proportions
+        for future viewport resize events.
+        """
         model = self.table_view.model()
         if not model:
             return
@@ -214,6 +224,7 @@ class TableResizer:
         self._table_col_weights = [s / total for s in sizes]
 
     def _apply_table_widths_to_viewport(self: "TableResizer") -> None:
+        """Apply computed column widths to fill the viewport proportionally."""
         model = self.table_view.model()
         if not model:
             return
@@ -225,13 +236,13 @@ class TableResizer:
         if vpw <= 0:
             return
         header = self.table_view.horizontalHeader()
-        # Compute widths from weights, clamp min, fix rounding on the last
+        # Compute widths from weights, ensuring minimum width per column
         min_w = max(self.min_column_width, int(vpw * 0.05 / col_count))
         widths = [max(min_w, int(round(w * vpw))) for w in self._table_col_weights]
-        # Adjust last section to fill exact viewport width
+        # Adjust last section to fill exact viewport width (accounts for rounding)
         diff = vpw - sum(widths)
         widths[-1] = max(min_w, widths[-1] + diff)
-        # Apply sizes
+        # Suppress resize events while applying widths to avoid recursion
         self._suppress_section_resize_updates = True
         try:
             for i, w in enumerate(widths):
@@ -242,9 +253,13 @@ class TableResizer:
     def _on_table_section_resized(
         self: "TableResizer", index: int, old: int, new: int
     ) -> None:
+        """
+        Handle column resize events by updating weights and applying proportional widths.
+
+        Skipped if updates are suppressed during programmatic resizing.
+        """
         if self._suppress_section_resize_updates:
             return
-        # Update weights and normalize to viewport width immediately
         self._recalculate_weights_from_current_widths()
         self._apply_table_widths_to_viewport()
 
@@ -258,6 +273,13 @@ class TableResizer:
 
 
 class MetadataLoadTask(QRunnable):
+    """
+    Background task for loading mod metadata asynchronously.
+
+    Fetches mod names or paths for a batch of PFIDs and updates the model's
+    caches. Runs in a thread pool to avoid blocking the UI.
+    """
+
     def __init__(
         self,
         pfids: list[str],
@@ -265,6 +287,15 @@ class MetadataLoadTask(QRunnable):
         model: "AcfTableModel",
         priority: int = 0,
     ) -> None:
+        """
+        Initialize the metadata load task.
+
+        Args:
+            pfids: List of published file IDs to load metadata for.
+            data_type: Type of metadata to load ('name' or 'path').
+            model: Reference to AcfTableModel for updating caches.
+            priority: Task priority (unused, for future enhancement).
+        """
         super().__init__()
         self.pfids = pfids
         self.data_type = data_type
@@ -272,6 +303,12 @@ class MetadataLoadTask(QRunnable):
         self.priority = priority
 
     def run(self) -> None:
+        """
+        Load metadata for all PFIDs and update model caches.
+
+        Fetches mod names or paths and stores them in the appropriate cache.
+        Triggers UI updates for affected rows via pending updates mechanism.
+        """
         for pfid in self.pfids:
             try:
                 if self.data_type == "name":
@@ -286,7 +323,7 @@ class MetadataLoadTask(QRunnable):
                     logger.info(f"Loaded mod path for PFID {pfid}: {path}")
                 # Collect updates for batch emission
                 self.model._pending_updates.add(pfid)
-                # Schedule batch emission
+                # Schedule batch emission to UI
                 self.model.start_update_timer.emit()
             except Exception as e:
                 logger.error(
@@ -306,17 +343,15 @@ class AcfTableModel(QAbstractTableModel):
         super().__init__(parent)
         self._parent = parent
         self.entries: list[AcfEntry] = []
-        self._all_entries: list[AcfEntry] = []  # Full list of all entries
-        self._loaded_count = 0  # Number of entries currently loaded
+        self._all_entries: list[AcfEntry] = []  # Full list for virtual scrolling
+        self._loaded_count = 0  # Number of rows currently loaded into display
         self._mod_name_cache: OrderedDict[str, str] = OrderedDict()
         self._mod_path_cache: OrderedDict[str, Optional[str]] = OrderedDict()
         self._metadata_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self.max_cache_size = 5000
         self._thread_pool = QThreadPool.globalInstance()
-        self._thread_pool.setMaxThreadCount(
-            min(8, os.cpu_count() or 4)
-        )  # Dynamic thread count
-        self._semaphore = Semaphore(10)  # Limit concurrent metadata fetches
+        self._thread_pool.setMaxThreadCount(min(8, os.cpu_count() or 4))
+        self._semaphore = Semaphore(10)
         self._pending_updates: set[str] = set()
         self._update_timer = QTimer(self)
         self._update_timer.setSingleShot(True)
@@ -338,13 +373,18 @@ class AcfTableModel(QAbstractTableModel):
             cache.popitem(last=False)
 
     def _emit_pending_updates(self) -> None:
-        """Emit dataChanged for pending updates, batched for efficiency."""
+        """
+        Emit dataChanged for pending updates in a single batch.
+
+        Collects all pending PFID updates, identifies affected rows, and emits
+        a single dataChanged signal for the range to improve rendering efficiency.
+        """
         if not self._pending_updates:
             return
-        # Collect all pending updates and clear immediately to avoid concurrent modification
+        # Copy and clear immediately to avoid concurrent modification issues
         pending = self._pending_updates.copy()
         self._pending_updates.clear()
-        # Collect all affected rows
+        # Find all rows affected by pending updates
         affected_rows = set()
         for pfid in pending:
             for row in range(len(self.entries)):
@@ -354,7 +394,7 @@ class AcfTableModel(QAbstractTableModel):
         if affected_rows:
             min_row = min(affected_rows)
             max_row = max(affected_rows)
-            # Emit single dataChanged for the range, affecting columns 0 and 5
+            # Emit single dataChanged for contiguous range, updates all columns
             self.dataChanged.emit(self.index(min_row, 0), self.index(max_row, 5))
 
     def canFetchMore(
@@ -365,19 +405,25 @@ class AcfTableModel(QAbstractTableModel):
     def fetchMore(
         self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
     ) -> None:
+        """
+        Load next page of entries for virtual scrolling.
+
+        Fetches up to PAGE_SIZE entries from the full entry list and adds them
+        to the display list. Properly notifies Qt model of row insertions.
+        """
         if not self.canFetchMore(parent):
             return
 
-        # Calculate how many more to load
+        # Calculate how many more rows to load
         remaining = len(self._all_entries) - self._loaded_count
         fetch_count = min(self.PAGE_SIZE, remaining)
 
-        # Get the next batch of entries
+        # Get next batch of entries from full list
         start_index = self._loaded_count
         end_index = start_index + fetch_count
         new_entries = self._all_entries[start_index:end_index]
 
-        # Insert the new entries into the current entries list
+        # Notify Qt of new rows and add them to display
         self.beginInsertRows(
             QModelIndex(), self._loaded_count, self._loaded_count + fetch_count - 1
         )
@@ -498,7 +544,12 @@ class AcfTableModel(QAbstractTableModel):
             return UNKNOWN_STRING
 
     def _load_metadata_async(self, pfid: str, data_type: str) -> None:
-        """Load metadata asynchronously using thread pool."""
+        """
+        Queue a PFID for asynchronous metadata loading.
+
+        Collects PFIDs by type and uses a batch timer to aggregate requests
+        before processing them in the thread pool.
+        """
         if not pfid.isdigit():
             return
 
@@ -507,10 +558,17 @@ class AcfTableModel(QAbstractTableModel):
         elif data_type == "path":
             self._pending_path_pfids.add(pfid)
 
+        # Start batch timer if not already running
         if not self._batch_timer.isActive():
             self._batch_timer.start(100)
 
     def _process_batch_metadata(self) -> None:
+        """
+        Process pending metadata requests in batches.
+
+        Creates thread pool tasks for pending names and paths, then reschedules
+        the batch timer if more requests are pending.
+        """
         batch_size = 20
         name_batch = list(self._pending_name_pfids)[:batch_size]
         path_batch = list(self._pending_path_pfids)[:batch_size]
@@ -522,15 +580,22 @@ class AcfTableModel(QAbstractTableModel):
         if path_batch:
             task = MetadataLoadTask(path_batch, "path", self)
             self._thread_pool.start(task)
+        # Reschedule if more pending
         if self._pending_name_pfids or self._pending_path_pfids:
             self._batch_timer.start(100)
 
     def set_entries(self, entries: list[AcfEntry]) -> None:
-        """Set new entries and reset caches."""
+        """
+        Set new entries and reset caches.
+
+        Replaces the full entry list with new data and resets all caches.
+        Queues metadata loading for all entries, prioritizing the first page
+        for immediate display.
+        """
         self.beginResetModel()
-        self._all_entries = entries  # Full list of all entries
-        self.entries = []  # Currently loaded entries
-        self._loaded_count = 0  # Number of entries currently loaded
+        self._all_entries = entries  # Full list for virtual scrolling
+        self.entries = []  # Currently visible entries
+        self._loaded_count = 0  # Rows currently loaded into display
         self._mod_name_cache.clear()
         self._mod_path_cache.clear()
         self._metadata_cache.clear()
@@ -538,7 +603,10 @@ class AcfTableModel(QAbstractTableModel):
         if self._update_timer.isActive():
             self._update_timer.stop()
         self.endResetModel()
-        # Preload metadata for all entries in background, prioritizing the first page for immediate display
+        # Load first page immediately so table displays data right away
+        if self._all_entries:
+            self.fetchMore()
+        # Queue metadata loads, prioritizing first page for faster initial display
         first_page_entries = self._all_entries[: self.PAGE_SIZE]
         remaining_entries = self._all_entries[self.PAGE_SIZE :]
         self._pending_name_pfids.update(
@@ -553,6 +621,7 @@ class AcfTableModel(QAbstractTableModel):
         self._pending_path_pfids.update(
             str(entry.published_file_id) for entry in remaining_entries
         )
+        # Start batch processing if not already running
         if not self._batch_timer.isActive():
             self._batch_timer.start(100)
 
@@ -562,7 +631,13 @@ class AcfTableModel(QAbstractTableModel):
         mod_path_cache: dict[str, str],
         pfid_to_metadata: dict[str, dict[str, Any]],
     ) -> None:
-        """Update metadata caches and emit dataChanged for affected rows."""
+        """
+        Update metadata caches and notify view of changes.
+
+        Merges new metadata into the caches and enforces size limits.
+        Emits dataChanged signal for all visible rows since metadata updates
+        may affect multiple columns.
+        """
         self._mod_name_cache.update(mod_name_cache)
         self._mod_path_cache.update(mod_path_cache)
         self._metadata_cache.update(pfid_to_metadata)
@@ -570,7 +645,7 @@ class AcfTableModel(QAbstractTableModel):
         self._limit_cache_size(self._mod_path_cache)
         self._limit_cache_size(self._metadata_cache)
 
-        # Emit dataChanged for all rows since metadata may affect multiple columns
+        # Emit dataChanged for all visible rows
         if self.entries:
             self.dataChanged.emit(
                 self.index(0, 0),
@@ -587,6 +662,12 @@ class AcfSortFilterProxyModel(QSortFilterProxyModel):
         self._pattern_cache: dict[str, Optional[re.Pattern[str]]] = {}
 
     def setFilterText(self, text: str) -> None:
+        """
+        Set filter text and compile regex pattern if needed.
+
+        Attempts to treat the text as regex; falls back to literal search on error.
+        Uses caching to avoid recompiling patterns for the same search text.
+        """
         self.search_text = text
         self.filter_disabled = False
         if text in self._pattern_cache:
@@ -601,6 +682,7 @@ class AcfSortFilterProxyModel(QSortFilterProxyModel):
                     self.pattern = re.compile(text, re.IGNORECASE)
                     self.use_regex = True
                 except re.error:
+                    # Fall back to literal search on regex error
                     self.pattern = None
                     self.use_regex = False
                     self.filter_disabled = True
@@ -610,10 +692,16 @@ class AcfSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(
         self, source_row: int, source_parent: QModelIndex | QPersistentModelIndex
     ) -> bool:
+        """
+        Determine if a row matches the filter criteria.
+
+        Searches across multiple columns (mod name, PFID, path, source) using
+        either regex or literal substring matching.
+        """
         if not self.search_text or self.filter_disabled:
             return True
         model = self.sourceModel()
-        # Search visible columns that are likely to contain searchable text
+        # Search columns that contain user-facing searchable text
         search_columns = {
             AcfLogReader.COL_PFID,
             AcfLogReader.COL_MOD_NAME,
@@ -628,6 +716,7 @@ class AcfSortFilterProxyModel(QSortFilterProxyModel):
                     if self.pattern.search(item_text):
                         return True
                 except re.error:
+                    # Fall back to literal match on regex error
                     if self.search_text.lower() in item_text.lower():
                         return True
             else:
@@ -694,6 +783,8 @@ class AcfLogReader(QWidget):
         self.setWindowTitle("Log Reader")
         self.settings_controller = settings_controller
         self.active_mods_list = active_mods_list
+
+        # Initialize SteamCMD interface and metadata manager
         self.steamcmd_interface = SteamcmdInterface.instance()
         self.metadata_manager = MetadataManager.instance()
 
@@ -707,44 +798,49 @@ class AcfLogReader(QWidget):
 
         # Status bar
         self.status_bar = QStatusBar()
-        # Improve readability: make status text white
         self.status_bar.setStyleSheet("QStatusBar, QStatusBar QLabel { color: white; }")
         self.status_bar.showMessage(self.tr("Ready"))
 
         # Top controls layout
         controls_layout = QHBoxLayout()
 
-        # Search box
+        # Toggle button for enabling/disabling ACF Log Reader
+        self.toggle_acf_btn = QPushButton(self.tr("Disable ACF Log Reader"))
+        self.toggle_acf_btn.setToolTip(self.tr("Click to disable the ACF Log Reader"))
+        self.toggle_acf_btn.clicked.connect(self._on_toggle_acf_clicked)
+        controls_layout.addWidget(self.toggle_acf_btn)
+
+        # Search box with debounced filtering
         self.search_box = QLineEdit()
         self.search_box.setPlaceholderText(self.tr("Search..."))
         self.search_box.textChanged.connect(self._debounced_filter_table)
         controls_layout.addWidget(self.search_box)
 
-        # Refresh button
+        # Refresh button to reload ACF data manually
         self.refresh_btn = QPushButton(self.tr("Refresh"))
         self.refresh_btn.clicked.connect(self._on_refresh_clicked)
         controls_layout.addWidget(self.refresh_btn)
 
-        # Import ACF Data button
+        # Import ACF data button
         self.import_acf_btn = QPushButton(self.tr("Import ACF Data"))
         self.import_acf_btn.clicked.connect(self._on_import_acf_clicked)
         controls_layout.addWidget(self.import_acf_btn)
 
-        # Export ACF Data button
+        # Export raw ACF file button
         self.export_acf_btn = QPushButton(self.tr("Export ACF Data"))
         self.export_acf_btn.clicked.connect(self._on_export_acf_clicked)
         controls_layout.addWidget(self.export_acf_btn)
 
-        # Export button
+        # Export table data to CSV button
         self.export_btn = QPushButton(self.tr("Export to CSV"))
         self.export_btn.clicked.connect(self._on_export_to_csv_clicked)
         controls_layout.addWidget(self.export_btn)
 
         main_layout.addLayout(controls_layout)
 
-        # Table view with model
+        # Table view with columns for mod data
         self.table_view = QTableView()
-        # Ensure columns fit window width but allow manual resizing
+        # No horizontal scrollbar - columns fill viewport width
         self.table_view.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
@@ -755,33 +851,31 @@ class AcfLogReader(QWidget):
 
         main_layout.addWidget(self.table_view)
 
-        # Initialize table model and proxy model for filtering
+        # Initialize table model and proxy for filtering/sorting
         self.table_model = AcfTableModel()
         self.proxy_model = AcfSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.table_model)
         self.table_view.setModel(self.proxy_model)
         self.table_view.setItemDelegate(ActiveModDelegate(self))
 
-        # Enable column sorting
+        # Enable sorting by clicking column headers
         self.table_view.setSortingEnabled(True)
-        # Sort by MOD_DOWNLOADED column descending (most recent first)
+        # Default sort: most recently downloaded first
         self.table_view.sortByColumn(
             self.COL_MOD_DOWNLOADED, Qt.SortOrder.DescendingOrder
         )
 
-        # Initialize helper classes after table_view is created
+        # Helper for proportional column resizing
         self.table_resizer = TableResizer(self.table_view, self.MIN_COLUMN_WIDTH)
 
         main_layout.addWidget(self.status_bar)
         self.setLayout(main_layout)
 
-        # Set up custom context menu for table view
+        # Right-click context menu on table rows
         self.table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
 
-        # Set up keyboard shortcuts
-
-        # Add keyboard shortcuts for buttons using QAction
+        # Keyboard shortcuts for common actions
         self.refresh_action = QAction("Refresh", self)
         self.refresh_action.setShortcut(QKeySequence("F5"))
         self.refresh_action.triggered.connect(self._on_refresh_clicked)
@@ -807,58 +901,119 @@ class AcfLogReader(QWidget):
         self.search_action.triggered.connect(self.search_box.setFocus)
         self.addAction(self.search_action)
 
-        # Initialize last modification times for ACF files
+        # Track file modification times to skip redundant loads
         self._last_steamcmd_acf_mtime: Optional[float] = None
         self._last_steam_acf_mtime: Optional[float] = None
 
-        # Connect to MetadataManager signals for cache invalidation
-        self.metadata_manager.mod_created_signal.connect(self._on_mod_change)
-        self.metadata_manager.mod_deleted_signal.connect(self._on_mod_change)
-        self.metadata_manager.mod_metadata_updated_signal.connect(self._on_mod_change)
+        # Listen to metadata changes to invalidate caches
+        self.metadata_manager.mod_created_signal.connect(self._clear_caches)
+        self.metadata_manager.mod_deleted_signal.connect(self._clear_caches)
+        self.metadata_manager.mod_metadata_updated_signal.connect(self._clear_caches)
 
-        # Wait for refresh signal before starting refresh loop
-        EventBus().refresh_finished.connect(self.load_acf_data)
-        logger.info("Waiting for initial refresh to complete.")
-
-        # Flag to track if application is quitting
+        # Handle application shutdown gracefully
         self._app_quitting = False
         app = QApplication.instance()
         if app:
             app.aboutToQuit.connect(self._on_app_quitting)
 
-        # Ensure the dialog remains visible
+        # Keep dialog visible while app is running
         self.visibility_timer = QTimer(self)
         self.visibility_timer.timeout.connect(self._check_visibility)
-        self.visibility_timer.start(1000)  # Check every 1 second
+        self.visibility_timer.start(1000)
 
-        # Start refresh timer once initial refresh completes
+        # Initialize periodic refresh timer
         self._start_refresh_timer()
 
+        # Wait for initial refresh before starting auto-refresh
+        EventBus().refresh_finished.connect(self._update_acf_reader_state)
+        logger.info("Waiting for initial refresh to complete.")
+
+    def _on_toggle_acf_clicked(self) -> None:
+        """
+        Toggle ACF Log Reader enabled state and persist to settings.
+
+        Updates the configuration and triggers state refresh.
+        """
+        self.settings_controller.settings.enable_acf_log_reader = (
+            not self.settings_controller.settings.enable_acf_log_reader
+        )
+        self.settings_controller.settings.save()
+        self._update_acf_reader_state()
+
+    def _update_acf_reader_state(self) -> None:
+        """
+        Update UI state and functionality based on enable_acf_log_reader setting.
+
+        Enables/disables controls, updates button UI, starts/stops auto-refresh,
+        and loads/clears data accordingly.
+        """
+        is_enabled = self.settings_controller.settings.enable_acf_log_reader
+        logger.info(f"ACF Log Reader {'enabled' if is_enabled else 'disabled'}")
+
+        # Update all controls and button UI in one call
+        self._set_all_controls_enabled(is_enabled)
+
+        if is_enabled:
+            self.status_bar.showMessage(self.tr("Ready"))
+            # Start auto-refresh timer and load fresh data
+            if hasattr(self, "refresh_timer"):
+                self.refresh_timer.start()
+            # Reset modification times to force fresh load
+            self._last_steamcmd_acf_mtime = None
+            self._last_steam_acf_mtime = None
+            self.load_acf_data()
+        else:
+            self.status_bar.showMessage(self.tr("ACF Log Reader disabled"))
+            self._stop_refresh_timer()
+            # Clear table and caches when disabled
+            self.table_model.set_entries([])
+            self._clear_caches()
+
+    def _stop_refresh_timer(self) -> None:
+        """Stop the auto-refresh timer if currently running."""
+        if hasattr(self, "refresh_timer") and self.refresh_timer.isActive():
+            self.refresh_timer.stop()
+            logger.debug("ACF Log Reader refresh timer stopped")
+
     def _on_app_quitting(self) -> None:
-        """Handle application quitting."""
+        """Handle application shutdown by stopping timers."""
         self._app_quitting = True
         self.visibility_timer.stop()
 
     def _check_visibility(self) -> None:
-        """Ensure the dialog remains visible at all times."""
+        """Keep dialog visible while application is running."""
         if not self._app_quitting and not self.isVisible():
             self.show()
 
-    def _on_mod_change(self) -> None:
-        """Handle mod creation, deletion, or metadata update by clearing caches."""
-        logger.debug("Clearing caches due to mod change event")
+    def _clear_caches(self) -> None:
+        """
+        Clear all model caches (mod names, paths, and metadata).
+
+        Called when mods change or when disabling the ACF reader to ensure
+        fresh data on next load.
+        """
         self.table_model._mod_name_cache.clear()
         self.table_model._mod_path_cache.clear()
         self.table_model._metadata_cache.clear()
 
     def _start_refresh_timer(self) -> None:
-        """Start a timer to periodically refresh the view."""
-        self.refresh_timer = QTimer(self)  # Setup auto-refresh timer
-        self.refresh_timer.setInterval(self.REFRESH_INTERVAL_MS)  # 30 seconds
+        """
+        Initialize a timer to periodically refresh the ACF data.
+
+        The actual timer start is controlled by the ACF reader enabled state.
+        When started, the timer triggers load_acf_data() at REFRESH_INTERVAL_MS
+        intervals (30 seconds).
+        """
+        self.refresh_timer = QTimer(self)
+        self.refresh_timer.setInterval(self.REFRESH_INTERVAL_MS)
         self.refresh_timer.timeout.connect(self.load_acf_data)
 
     def _apply_filter(self) -> None:
-        """Apply filter to the proxy model."""
+        """
+        Apply search filter to the proxy model and update status.
+
+        Sets the filter text and updates the status bar with result counts.
+        """
         self.proxy_model.setFilterText(self.search_box.text())
         # Update status bar with search result count
         total_rows = self.table_model.rowCount()
@@ -875,11 +1030,16 @@ class AcfLogReader(QWidget):
             )
 
     def _show_searching_status(self) -> None:
-        """Show 'Searching...' status during debounce."""
+        """Display 'Searching...' status message during debounce delay."""
         self.status_bar.showMessage(self.tr("Searching..."))
 
     def _debounced_filter_table(self) -> None:
-        """Debounce filter application to improve performance on rapid input."""
+        """
+        Apply filter with debouncing to avoid excessive recompilation.
+
+        Delays filter application by DEBOUNCE_DELAY_MS to allow user to finish
+        typing before performing expensive regex operations.
+        """
         if hasattr(self, "_filter_timer") and self._filter_timer.isActive():
             self._filter_timer.stop()
         else:
@@ -889,16 +1049,50 @@ class AcfLogReader(QWidget):
         self._filter_timer.start(self.DEBOUNCE_DELAY_MS)
 
     def _set_buttons_enabled(self, enabled: bool) -> None:
-        """Enable or disable buttons during long operations."""
+        """
+        Enable/disable action buttons during operations.
+
+        Toggle button is always enabled to allow user control. Called during
+        long operations to prevent duplicate requests.
+        """
         self.refresh_btn.setEnabled(enabled)
         self.import_acf_btn.setEnabled(enabled)
         self.export_acf_btn.setEnabled(enabled)
         self.export_btn.setEnabled(enabled)
 
+    def _set_all_controls_enabled(self, enabled: bool) -> None:
+        """
+        Enable/disable all controls and update toggle button UI.
+
+        Updates button text/tooltip, enables/disables controls except toggle button
+        which always remains enabled for user control.
+        """
+        # Update toggle button text and tooltip
+        button_text = self.tr(
+            "Disable ACF Log Reader" if enabled else "Enable ACF Log Reader"
+        )
+        tooltip_text = self.tr(
+            "Click to disable the ACF Log Reader"
+            if enabled
+            else "Click to enable the ACF Log Reader"
+        )
+        self.toggle_acf_btn.setText(button_text)
+        self.toggle_acf_btn.setToolTip(tooltip_text)
+
+        # Enable/disable action buttons
+        self._set_buttons_enabled(enabled)
+
+        # Enable/disable other controls
+        self.search_box.setEnabled(enabled)
+        self.table_view.setEnabled(enabled)
+        # Toggle button always enabled
+        self.toggle_acf_btn.setEnabled(True)
+
     def _on_refresh_clicked(self) -> None:
+        """Handle manual refresh button click - force full ACF reload."""
         self._set_buttons_enabled(False)
         try:
-            # Force refresh: clear all caches and reset modification times to force ACF reload
+            # Clear all caches and reset modification times to force ACF reload
             self.table_model._mod_name_cache.clear()
             self.table_model._mod_path_cache.clear()
             self.table_model._metadata_cache.clear()
@@ -909,6 +1103,7 @@ class AcfLogReader(QWidget):
             self._set_buttons_enabled(True)
 
     def _on_import_acf_clicked(self) -> None:
+        """Handle import ACF button click."""
         self._set_buttons_enabled(False)
         try:
             self.import_acf_data()
@@ -916,6 +1111,7 @@ class AcfLogReader(QWidget):
             self._set_buttons_enabled(True)
 
     def _on_export_acf_clicked(self) -> None:
+        """Handle export ACF button click."""
         self._set_buttons_enabled(False)
         try:
             self.export_acf_data()
@@ -923,6 +1119,7 @@ class AcfLogReader(QWidget):
             self._set_buttons_enabled(True)
 
     def _on_export_to_csv_clicked(self) -> None:
+        """Handle export to CSV button click."""
         self._set_buttons_enabled(False)
         try:
             self.export_to_csv()
@@ -930,10 +1127,12 @@ class AcfLogReader(QWidget):
             self._set_buttons_enabled(True)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
+        """Handle window resize by updating column widths."""
         super().resizeEvent(event)
         self.table_resizer.handle_resize_event(event)
 
     def showEvent(self, event: QShowEvent) -> None:
+        """Handle window show by deferring column width application."""
         super().showEvent(event)
         self.table_resizer.handle_show_event(event)
 
@@ -1092,6 +1291,9 @@ class AcfLogReader(QWidget):
         logger.info("Starting ACF data loading.")
         self.status_bar.showMessage("Loading ACF data...")
         self._set_buttons_enabled(False)
+        logger.debug(
+            f"Buttons disabled for loading. Modification times: steamcmd={self._last_steamcmd_acf_mtime}, steam={self._last_steam_acf_mtime}"
+        )
 
         try:
             steamcmd_acf_path, steam_acf_path, steamcmd_acf_mtime, steam_acf_mtime = (
@@ -1367,7 +1569,12 @@ class AcfLogReader(QWidget):
         show_information(title=self.tr("Mod Details"), text=details)
 
     def _build_active_pfids(self) -> None:
-        """Build set of active PFIDs from active_mods_list."""
+        """
+        Build set of currently active mod PFIDs.
+
+        Extracts PFIDs from the active mods list by looking up metadata for each UUID.
+        Used to highlight active mods in the table view.
+        """
         self.active_pfids = set()
         if self.active_mods_list is not None:
             uuids = getattr(self.active_mods_list, "uuids", None)
@@ -1380,27 +1587,33 @@ class AcfLogReader(QWidget):
 
     def populate_table(self, entries: list[AcfEntry]) -> None:
         """
-        Populate the table model with ACF data entries.
+        Populate the table with ACF data entries and highlight active mods.
 
         Args:
-            entries: List of AcfEntry objects containing ACF data.
+            entries: List of AcfEntry objects containing workshop mod metadata.
         """
+        logger.debug(f"Populating table with {len(entries)} entries")
         self.entries = entries
         self.table_model.set_entries(entries)
         self._build_active_pfids()
 
     def import_acf_data(self) -> None:
+        """
+        Import an ACF file to replace the current SteamCMD ACF data.
+
+        Shows confirmation dialog and imports the file if user confirms.
+        """
         answer = show_dialogue_conditional(
             title=self.tr("Confirm ACF import"),
             text=self.tr("This will replace your current steamcmd .acf file"),
             information=self.tr(
-                "Are you sure you want to import .acf? THis only works for steamcmd"
+                "Are you sure you want to import .acf? This only works for steamcmd"
             ),
             button_text_override=[
                 self.tr("Import .acf"),
             ],
         )
-        # Import .acf if user wants to import
+        # Import .acf if user confirms
         answer_str = str(answer)
         download_text = self.tr("Import .acf")
         if download_text in answer_str:
@@ -1482,7 +1695,20 @@ class AcfLogReader(QWidget):
 
 
 class ActiveModDelegate(QStyledItemDelegate):
+    """
+    Custom cell delegate to highlight active mods in the table.
+
+    Renders cells with bold white text on dark green background for mods
+    that are currently active in the game.
+    """
+
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """
+        Initialize the delegate.
+
+        Args:
+            parent: Parent AcfLogReader widget for accessing active_pfids set.
+        """
         super().__init__(parent)
         self.acf_log_reader: Optional["AcfLogReader"] = cast("AcfLogReader", parent)
 
@@ -1492,6 +1718,11 @@ class ActiveModDelegate(QStyledItemDelegate):
         option: QStyleOptionViewItem,
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
+        """
+        Paint cell content with highlighting for active mods.
+
+        Active mods are rendered with bold white text on dark green background.
+        """
         acf_log_reader = self.acf_log_reader
         if acf_log_reader is None:
             super().paint(painter, option, index)
@@ -1502,16 +1733,19 @@ class ActiveModDelegate(QStyledItemDelegate):
             pfid_index, Qt.ItemDataRole.DisplayRole
         )
 
+        # Highlight if this mod's PFID is in the active set
         if pfid and pfid in getattr(acf_log_reader, "active_pfids", set()):
             painter.save()
 
             rect = option.rect  # type: ignore[attr-defined]
             font: QFont = option.font  # type: ignore[attr-defined]
 
-            painter.fillRect(rect, QColor(0, 100, 0))  # Dark green background
+            # Dark green background for active mods
+            painter.fillRect(rect, QColor(0, 100, 0))
             font.setBold(True)
             painter.setFont(font)
-            painter.setPen(QColor(255, 255, 255))  # White text
+            # White text for contrast
+            painter.setPen(QColor(255, 255, 255))
             painter.drawText(
                 rect.adjusted(5, 0, 0, 0),
                 Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
