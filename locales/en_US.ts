@@ -8,6 +8,14 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Disable ACF Log Reader</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click to disable the ACF Log Reader</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -25,6 +33,10 @@
     </message>
     <message>
         <source>Export to CSV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF Log Reader disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -72,6 +84,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation type="unfinished"></translation>
     </message>
@@ -93,10 +109,6 @@
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3597,6 +3609,30 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Client Integration Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Mods Location Required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Workshop File Not Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file &apos;appworkshop_294100.acf&apos; was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

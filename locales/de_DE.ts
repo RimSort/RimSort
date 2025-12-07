@@ -8,6 +8,14 @@
         <translation>Bereit</translation>
     </message>
     <message>
+        <source>Disable ACF Log Reader</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+    </message>
+    <message>
+        <source>Click to disable the ACF Log Reader</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+    </message>
+    <message>
         <source>Search...</source>
         <translation>Suchen...</translation>
     </message>
@@ -26,6 +34,10 @@
     <message>
         <source>Export to CSV</source>
         <translation>Export zu CSV</translation>
+    </message>
+    <message>
+        <source>ACF Log Reader disabled</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -72,6 +84,10 @@
         <translation>Bestätigen Sie den ACF-Import</translation>
     </message>
     <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>Exportfehler</translation>
     </message>
@@ -94,10 +110,6 @@
     <message>
         <source>This will replace your current steamcmd .acf file</source>
         <translation>Dies ersetzt Ihre aktuelle SteamCMD .ACF -Datei</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation>Sind Sie sicher, dass Sie .ACF importieren möchten?Dies funktioniert nur für SteamCMD</translation>
     </message>
     <message>
         <source>Import .acf</source>
@@ -1951,14 +1963,14 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt; {preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2014,7 +2026,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2026,7 +2038,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -3688,6 +3700,30 @@ Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlg
     <message>
         <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
         <translation>Der ausgewählte Konfigurationsordner enthält ModsConfig.xml nicht.Bitte wählen Sie einen gültigen Konfigurationsordner aus.</translation>
+    </message>
+    <message>
+        <source>Steam Client Integration Disabled</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BDDC040&gt;</translation>
+    </message>
+    <message>
+        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+    </message>
+    <message>
+        <source>Steam Mods Location Required</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+    </message>
+    <message>
+        <source>Steam Workshop File Not Found</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
     </message>
     <message>
         <source>Clear all locations</source>
