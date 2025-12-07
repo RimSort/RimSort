@@ -468,41 +468,35 @@ def steamcmd_purge_mods(
 
 def validate_acf_file_exists(steam_mods_location: str) -> bool:
     """
-    Validate that the appworkshop_294100.acf file exists for the Steam Workshop location.
+    Validate that appworkshop_294100.acf file exists in the provided path.
 
-    Checks if the Steam Workshop ACF metadata file exists at the expected location
-    relative to the provided steam mods folder path. This file is required for
-    Steam Workshop integration to function properly.
+    Checks if appworkshop_294100.acf exists directly in the provided directory.
+    Supports custom Steam locations and cross-platform usage.
 
     Args:
-        steam_mods_location: Path to the Steam Workshop mods folder (typically
-                           steamapps/workshop/content/294100). The ACF file is expected
-                           at parent.parent/appworkshop_294100.acf
+        steam_mods_location: Path to search for appworkshop_294100.acf file.
 
     Returns:
-        True if the ACF file exists and is accessible, False if missing or empty path.
+        True if appworkshop_294100.acf exists in the path, False otherwise.
 
     Example:
-        >>> is_valid = validate_acf_file_exists("C:\\Steam\\steamapps\\workshop\\content\\294100")
-        >>> # Checks for C:\\Steam\\steamapps\\appworkshop_294100.acf
+        >>> validate_acf_file_exists("C:\\Steam\\steamapps")
+        True  # if appworkshop_294100.acf exists there
     """
-    # Validate input
     if not steam_mods_location or not steam_mods_location.strip():
-        logger.debug("Steam mods location is empty or None, ACF validation skipped")
+        logger.debug("Steam mods location is empty or None")
         return False
 
     try:
-        acf_file_path = (
-            Path(steam_mods_location).parent.parent / "appworkshop_294100.acf"
-        )
+        acf_file_path = Path(steam_mods_location) / "appworkshop_294100.acf"
         exists = acf_file_path.exists() and acf_file_path.is_file()
 
         if exists:
-            logger.debug(f"ACF file validated at: {acf_file_path}")
+            logger.debug(f"ACF file found at: {acf_file_path}")
         else:
-            logger.debug(f"ACF file not found at expected location: {acf_file_path}")
+            logger.debug(f"ACF file not found at: {acf_file_path}")
 
         return exists
     except Exception as e:
-        logger.warning(f"Error validating ACF file path for {steam_mods_location}: {e}")
+        logger.warning(f"Error checking ACF file at {steam_mods_location}: {e}")
         return False
