@@ -301,12 +301,6 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
-            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
             self.mods_panel.active_mods_list.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
@@ -2008,9 +2002,6 @@ class MainContent(QObject):
             self.metadata_manager,
             self.settings_controller,
         )
-        self.steam_browser.steamcmd_downloader_signal.connect(
-            self._do_download_mods_with_steamcmd
-        )
         self.steam_browser.steamworks_subscription_signal.connect(
             self._do_steamworks_api_call_animated
         )
@@ -2137,9 +2128,6 @@ class MainContent(QObject):
             self.steamcmd_runner = RunnerPanel(
                 steamcmd_download_tracking=publishedfileids,
                 steam_db=steam_db,
-            )
-            self.steamcmd_runner.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
             )
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
             self.steamcmd_runner.show()
