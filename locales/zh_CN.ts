@@ -8,6 +8,14 @@
         <translation>准备</translation>
     </message>
     <message>
+        <source>Disable ACF Log Reader</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+    </message>
+    <message>
+        <source>Click to disable the ACF Log Reader</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+    </message>
+    <message>
         <source>Search...</source>
         <translation>搜索...</translation>
     </message>
@@ -26,6 +34,10 @@
     <message>
         <source>Export to CSV</source>
         <translation>导出为 CSV</translation>
+    </message>
+    <message>
+        <source>ACF Log Reader disabled</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -72,6 +84,10 @@
         <translation>确认 ACF 导入</translation>
     </message>
     <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+    </message>
+    <message>
         <source>Export failed: Permission denied - check file permissions</source>
         <translation>导出失败：权限不足 - 请检查文件权限</translation>
     </message>
@@ -94,10 +110,6 @@
     <message>
         <source>This will replace your current steamcmd .acf file</source>
         <translation>这将替换你当前的 steamcmd .acf 文件</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation>你确定要导入 .acf 吗？这仅适用于 steamcmd</translation>
     </message>
     <message>
         <source>Import .acf</source>
@@ -1949,14 +1961,14 @@ Error: {error}</source>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2012,7 +2024,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2024,7 +2036,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt; {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -3709,6 +3721,30 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
         <translation>所选的配置文件夹不包含 ModsConfig.xml。请选择一个有效的配置文件夹。</translation>
+    </message>
+    <message>
+        <source>Steam Client Integration Disabled</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+    </message>
+    <message>
+        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+    </message>
+    <message>
+        <source>Steam Mods Location Required</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+    </message>
+    <message>
+        <source>Steam Workshop File Not Found</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
     </message>
     <message>
         <source>Clear all locations</source>
