@@ -787,7 +787,6 @@ class ModListWidget(QListWidget):
     refresh_signal = Signal()
     update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
-    steamworks_subscription_signal = Signal(list)
 
     def __init__(self, list_type: str, settings_controller: SettingsController) -> None:
         """
@@ -1586,7 +1585,7 @@ class ModListWidget(QListWidget):
                             delete_files_except_extension(
                                 directory=path, extension=".dds"
                             )
-                        self.steamworks_subscription_signal.emit(
+                        EventBus().do_steamworks_api_call.emit(
                             [
                                 "resubscribe",
                                 [eval(str_pfid) for str_pfid in publishedfileids],
@@ -1610,7 +1609,7 @@ class ModListWidget(QListWidget):
                         logger.debug(
                             f"Unsubscribing from {len(publishedfileids)} mod(s)"
                         )
-                        self.steamworks_subscription_signal.emit(
+                        EventBus().do_steamworks_api_call.emit(
                             [
                                 "unsubscribe",
                                 [eval(str_pfid) for str_pfid in publishedfileids],
