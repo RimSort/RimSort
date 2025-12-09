@@ -59,6 +59,7 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
+from app.utils.ignore_manager import IgnoreManager
 from app.utils.metadata import MetadataManager, SettingsController
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
@@ -82,6 +83,7 @@ from app.views.mods_panel import (
     ModsPanel,
 )
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
+from app.windows.ignore_json_editor import IgnoreJsonEditor
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mod_properties_panel import MissingModPropertiesPanel
 from app.windows.missing_mods_panel import MissingModsPrompt
@@ -207,6 +209,10 @@ class MainContent(QObject):
                 lambda: self._do_open_rule_editor(
                     compact=False, initial_mode="community_rules"
                 )
+            )
+            EventBus().do_ignore_json_editor.connect(self._do_open_ignore_json_editor)
+            EventBus().do_check_missing_mod_properties.connect(
+                self.__check_and_warn_missing_mod_properties
             )
 
             # Download Menu bar Eventbus
@@ -610,7 +616,6 @@ class MainContent(QObject):
 
         :return: List of internal UUIDs for mods with missing Package ID.
         """
-        # Filter metadata to find mods matching the default missing package ID placeholder
         return [
             uuid
             for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
@@ -627,13 +632,13 @@ class MainContent(QObject):
 
         :return: List of internal UUIDs for mods with missing Publish Field ID.
         """
-        # Filter metadata for mods that lack a Publish Field ID
-        # and are not part of RimWorld's built-in content
+        ignored_mods = IgnoreManager.load_ignored_mods()
         return [
             uuid
             for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
             if mod_metadata.get("publishedfileid") is None
             and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
+            and mod_metadata.get("packageid") not in ignored_mods
         ]
 
     def __check_and_warn_missing_mod_properties(self) -> None:
@@ -2560,6 +2565,12 @@ class MainContent(QObject):
         self.rule_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
         self.rule_editor.show()
+
+    def _do_open_ignore_json_editor(self) -> None:
+        """Open the Ignore JSON Editor dialog."""
+        self.ignore_json_editor = IgnoreJsonEditor()
+        self.ignore_json_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.ignore_json_editor.show()
 
     def _do_configure_steam_db_file_path(self) -> None:
         # Input file

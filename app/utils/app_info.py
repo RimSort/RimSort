@@ -85,6 +85,7 @@ class AppInfo:
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
         self._user_rules_file = self.databases_folder / "userRules.json"
+        self._ignore_mods_file: Path = self.databases_folder / "ignore.json"
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
         self._backup_folder: Path = self._app_storage_folder / "backup"
@@ -185,6 +186,15 @@ class AppInfo:
         May or may not exist.
         """
         return self._user_rules_file
+
+    @property
+    def ignore_mods_file(self) -> Path:
+        """
+        Get the path to the file where ignored mods are stored.
+
+        May or may not exist.
+        """
+        return self._ignore_mods_file
 
     @property
     def user_log_folder(self) -> Path:
