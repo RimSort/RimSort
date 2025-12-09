@@ -83,8 +83,8 @@ from app.views.mods_panel import (
 )
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
+from app.windows.missing_mod_properties_panel import MissingModPropertiesPanel
 from app.windows.missing_mods_panel import MissingModsPrompt
-from app.windows.missing_packageid_panel import MissingPackageIdPanel
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
@@ -600,32 +600,90 @@ class MainContent(QObject):
         else:
             logger.info("No missing mods found. Skipping...")
 
-    def __check_and_warn_missing_packageid(self) -> None:
+    def _get_missing_packageid_uuids(self) -> list[str]:
         """
-        Check for mods with missing packageid and display a panel
-        to notify the user.
+        Identify mods lacking a valid Package ID in their About.xml.
+
+        A missing or invalid Package ID can cause dependency resolution issues
+        and prevent proper mod identification. Mods are marked with a default
+        placeholder value when no valid Package ID is found.
+
+        :return: List of internal UUIDs for mods with missing Package ID.
         """
-        missing_packageid_uuids = [
+        # Filter metadata to find mods matching the default missing package ID placeholder
+        return [
             uuid
             for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
             if mod_metadata.get("packageid") == metadata.DEFAULT_MISSING_PACKAGEID
         ]
 
-        if not missing_packageid_uuids:
-            logger.info("No mods with missing packageid found. Skipping...")
-            return
+    def _get_missing_publishfieldid_uuids(self) -> list[str]:
+        """
+        Identify mods lacking a Publish Field ID (Steam Workshop ID).
 
-        missing_packageid_count = len(missing_packageid_uuids)
-        logger.info(
-            f"Found {missing_packageid_count} mod(s) with missing or invalid Package ID. Opening MissingPackageIdPanel..."
-        )
+        Workshop mods without a Publish Field ID cannot support automatic
+        redownloads or update checking. This check intentionally excludes
+        RimWorld core content and DLC since they are not published mods.
 
-        # Open the MissingPackageIdPanel to display mods with missing packageid
-        missing_packageid_panel = MissingPackageIdPanel(
-            missing_packageid_uuids, self.settings_controller
-        )
-        missing_packageid_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
-        missing_packageid_panel.show()
+        :return: List of internal UUIDs for mods with missing Publish Field ID.
+        """
+        # Filter metadata for mods that lack a Publish Field ID
+        # and are not part of RimWorld's built-in content
+        return [
+            uuid
+            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
+            if mod_metadata.get("publishedfileid") is None
+            and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
+        ]
+
+    def __check_and_warn_missing_mod_properties(self) -> None:
+        """
+        Scan for mods with missing critical properties and notify the user.
+
+        This method checks all loaded mods for two critical properties:
+        1. Package ID (required for proper mod identification and dependencies)
+        2. Publish Field ID (required for Workshop mods to support updates)
+
+        If any mods are missing these properties, a dedicated panel is displayed
+        allowing the user to review the affected mods and contact authors.
+
+        The method handles all exceptions gracefully to prevent disrupting
+        the main application flow.
+        """
+        try:
+            # Identify mods with missing critical properties
+            missing_packageid_uuids = self._get_missing_packageid_uuids()
+            missing_publishfieldid_uuids = self._get_missing_publishfieldid_uuids()
+
+            # If no mods have missing properties, log and return early
+            if not missing_packageid_uuids and not missing_publishfieldid_uuids:
+                logger.info("No mods with missing properties found. Skipping...")
+                return
+
+            # Log summary statistics for debugging
+            missing_packageid_count = len(missing_packageid_uuids)
+            missing_publishfieldid_count = len(missing_publishfieldid_uuids)
+
+            logger.info(
+                f"Found {missing_packageid_count} mod(s) with missing Package ID and "
+                f"{missing_publishfieldid_count} mod(s) with missing Publish Field ID. "
+                f"Opening MissingModPropertiesPanel..."
+            )
+
+            # Display a unified panel showing all mods with missing properties,
+            # grouped by property type for better user comprehension
+            missing_mod_properties_panel = MissingModPropertiesPanel(
+                missing_packageid_mods=missing_packageid_uuids,
+                missing_publishfieldid_mods=missing_publishfieldid_uuids,
+                settings_controller=self.settings_controller,
+            )
+            # Make the panel modal to ensure user acknowledges the issues
+            missing_mod_properties_panel.setWindowModality(
+                Qt.WindowModality.ApplicationModal
+            )
+            missing_mod_properties_panel.show()
+        except Exception as e:
+            logger.error(f"Error checking mod properties: {e}")
 
     def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
         """
@@ -803,8 +861,8 @@ class MainContent(QObject):
             # check if we have missing mods, prompt user
             self.__missing_mods_prompt()
 
-            # check if we have mods with missing packageid, warn user
-            self.__check_and_warn_missing_packageid()
+            # Check if we have mods with missing properties (Package ID and/or Publish Field ID)
+            self.__check_and_warn_missing_mod_properties()
 
             # Check Workshop mods for updates if configured
             if self.settings_controller.settings.steam_mods_update_check:
