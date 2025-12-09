@@ -3,8 +3,8 @@ from typing import Any, Iterable
 from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
-import app.utils.metadata as metadata
 from app.controllers.settings_controller import SettingsController
+from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
 from app.utils.ignore_manager import IgnoreManager
 from app.utils.mod_info import ModInfo
@@ -211,9 +211,9 @@ class MissingModPropertiesPanel(BaseModsPanel):
             packageid = mod_info.packageid
 
             # Validate package ID
-            if packageid and packageid != metadata.DEFAULT_MISSING_PACKAGEID:
+            if packageid and packageid != DEFAULT_MISSING_PACKAGEID:
                 valid_packageids.append(packageid)
-            elif packageid == metadata.DEFAULT_MISSING_PACKAGEID:
+            elif packageid == DEFAULT_MISSING_PACKAGEID:
                 # Collect for warning
                 skipped_mods.append(mod_info.name)
 

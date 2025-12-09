@@ -26,6 +26,7 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
+    DEFAULT_MISSING_PACKAGEID,
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
@@ -43,10 +44,6 @@ from app.views.dialogue import (
     show_dialogue_file,
     show_warning,
 )
-
-# Locally installed mod metadata
-# Default packageId for mods with missing or invalid packageId
-DEFAULT_MISSING_PACKAGEID = "missing.packageid"
 
 # Metadata loader source constants
 SOURCE_FILE_PATH = "Configured file path"
