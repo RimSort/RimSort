@@ -619,7 +619,7 @@ class MainContent(QObject):
         return [
             uuid
             for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("packageid") == metadata.DEFAULT_MISSING_PACKAGEID
+            if mod_metadata.get("packageid") == app_constants.DEFAULT_MISSING_PACKAGEID
         ]
 
     def _get_missing_publishfieldid_uuids(self) -> list[str]:
