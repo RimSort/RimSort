@@ -401,6 +401,9 @@ class BaseModsPanel(QWidget):
         causes crash in steamworks api call when passing empty string
         this approach works because it will just skip over any missing published_file_ids
         """
+        # Check for mods without Publish Field ID in missing_publishfieldid_mods (if attribute exists)
+        self._check_missing_publish_field_id_notification()
+
         steamcmd_pfids, steam_pfids = self._collect_pfids_by_mode(pfid_column, mode)
         # filter out empty strings happens when MissingModsPrompt does not have published_file_id for mods in the table
         filtered_steamcmd_pfids = [
@@ -1270,3 +1273,61 @@ class BaseModsPanel(QWidget):
             enable_delete_and_resubscribe=enable_delete_and_unsubscribe
             and steam_client_integration_enabled,
         )
+
+    def _check_missing_publish_field_id_notification(self) -> None:
+        """
+        Check if selected mods are missing Publish Field IDs and show notification.
+        Works with all BaseModsPanel subclasses by checking for empty published_file_id in table data.
+        """
+        selected_indices = self._get_selected_row_indices()
+        if not selected_indices:
+            return
+
+        # Check if subclass has missing_publishfieldid_mods attribute (for explicit tracking)
+        missing_publishfieldid_mods = getattr(self, "missing_publishfieldid_mods", None)
+        use_explicit_mode = missing_publishfieldid_mods is not None
+
+        missing_pfid_mods = [
+            self.editor_model.item(row, 1).text()
+            for row in selected_indices
+            if self._row_has_missing_pfid(
+                row, missing_publishfieldid_mods, use_explicit_mode
+            )
+            and self.editor_model.item(row, 1) is not None
+        ]
+
+        if missing_pfid_mods:
+            self._show_missing_pfid_notification(missing_pfid_mods)
+
+    def _row_has_missing_pfid(
+        self,
+        row: int,
+        missing_publishfieldid_mods: list[str] | None,
+        use_explicit_mode: bool,
+    ) -> bool:
+        """Check if a mod at given row has missing Publish Field ID."""
+        if use_explicit_mode:
+            uuid = self._get_uuid_from_row(row)
+            return bool(
+                uuid
+                and missing_publishfieldid_mods
+                and uuid in missing_publishfieldid_mods
+            )
+        else:
+            pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)
+            return bool(pfid_item and not pfid_item.text().strip())
+
+    def _show_missing_pfid_notification(self, missing_pfid_mods: list[str]) -> None:
+        """Show notification about mods without Publish Field ID."""
+        show_message = getattr(self, "_show_message", None)
+        if not show_message:
+            return
+
+        mod_list = "\n".join([f"• {name}" for name in missing_pfid_mods])
+        message = (
+            "The following selected mods do not have a Publish Field ID "
+            "and cannot be updated via Steam Workshop:\n\n"
+            f"{mod_list}\n\n"
+            "Only mods with valid Publish Field IDs will be updated."
+        )
+        show_message("Missing Publish Field ID", message, "warning")
