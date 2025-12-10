@@ -113,6 +113,9 @@ class MenuBarController(QObject):
         self.menu_bar.copy_action.triggered.connect(self._on_menu_bar_copy_triggered)
         self.menu_bar.paste_action.triggered.connect(self._on_menu_bar_paste_triggered)
         self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
+        self.menu_bar.ignore_json_editor_action.triggered.connect(
+            EventBus().do_ignore_json_editor
+        )
         self.menu_bar.reset_all_warnings_action.triggered.connect(
             self._on_menu_bar_reset_warnings_triggered
         )

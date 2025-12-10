@@ -54,6 +54,7 @@ class MenuBar(QObject):
         self.copy_action: QAction
         self.paste_action: QAction
         self.rule_editor_action: QAction
+        self.ignore_json_editor_action: QAction
         self.reset_all_warnings_action: QAction
         self.reset_all_mod_colors_action: QAction
         self.add_git_mod_action: QAction
@@ -254,6 +255,9 @@ class MenuBar(QObject):
         self.paste_action = self._add_action(edit_menu, self.tr("Paste"), "Ctrl+V")
         edit_menu.addSeparator()
         self.rule_editor_action = self._add_action(edit_menu, self.tr("Rule Editor…"))
+        self.ignore_json_editor_action = self._add_action(
+            edit_menu, self.tr("Ignore JSON Editor…")
+        )
         self.reset_all_warnings_action = self._add_action(
             edit_menu, self.tr("Reset Warning Toggles")
         )

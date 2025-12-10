@@ -7,6 +7,9 @@ INSTANCE_FOLDER_NAME = "instances"
 STEAMCMD_FOLDER_NAME = "steamcmd"
 STEAM_FOLDER_NAME = "steam"
 
+# Default packageId for mods with missing or invalid packageId
+DEFAULT_MISSING_PACKAGEID = "missing.packageid"
+
 
 class SortMethod(str, Enum):
     ALPHABETICAL = "Alphabetical"
