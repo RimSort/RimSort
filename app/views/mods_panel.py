@@ -1830,6 +1830,12 @@ class ModListWidget(QListWidget):
             ):
                 self.key_press_signal.emit(key_pressed)
             else:
+                # Handle Delete key for mod deletion
+                if event.key() == Qt.Key.Key_Delete:
+                    # Only trigger if there are selected mods
+                    if self.selectedItems():
+                        self.deletion_sub_menu.delete_mod_completely()
+                    return
                 return super().keyPressEvent(event)
 
     def resizeEvent(self, e: QResizeEvent) -> None:
