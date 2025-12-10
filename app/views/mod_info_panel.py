@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from re import match
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
@@ -24,7 +25,16 @@ from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.metadata import MetadataManager
+from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
+
+# Constants for layout proportions
+NAME_LABEL_RATIO = 20
+NAME_VALUE_RATIO = 80
+IMAGE_LAYOUT_STRETCH = 35
+MOD_INFO_LAYOUT_STRETCH = 20
+NOTES_LAYOUT_STRETCH = 15
+DESCRIPTION_LAYOUT_STRETCH = 30
 
 
 class ClickablePathLabel(QLabel):
@@ -77,7 +87,7 @@ class ClickablePathLabel(QLabel):
         super().mousePressEvent(event)
 
 
-class ModInfo:
+class ModInfoPanel:
     """
     This class controls the layout and functionality for the
     mod information panel on the GUI.
@@ -244,32 +254,60 @@ class ModInfo:
         self.notes.setVisible(False)  # Only shows when a mod is selected
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
-        self.mod_info_name.addWidget(self.mod_info_name_label, 20)
-        self.mod_info_name.addWidget(self.mod_info_name_value, 80)
-        self.mod_info_path.addWidget(self.mod_info_path_label, 20)
-        self.mod_info_path.addWidget(self.mod_info_path_value, 80)
-        self.scenario_info_summary.addWidget(self.scenario_info_summary_label, 20)
-        self.scenario_info_summary.addWidget(self.scenario_info_summary_value, 80)
-        self.mod_info_package_id.addWidget(self.mod_info_package_id_label, 20)
-        self.mod_info_package_id.addWidget(self.mod_info_package_id_value, 80)
-        self.mod_info_authors.addWidget(self.mod_info_author_label, 20)
-        self.mod_info_authors.addWidget(self.mod_info_author_value, 80)
-        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, 20)
-        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, 80)
-        self.mod_info_supported_versions.addWidget(
-            self.mod_info_supported_versions_label, 20
+        self.mod_info_name.addWidget(self.mod_info_name_label, NAME_LABEL_RATIO)
+        self.mod_info_name.addWidget(self.mod_info_name_value, NAME_VALUE_RATIO)
+        self.mod_info_path.addWidget(self.mod_info_path_label, NAME_LABEL_RATIO)
+        self.mod_info_path.addWidget(self.mod_info_path_value, NAME_VALUE_RATIO)
+        self.scenario_info_summary.addWidget(
+            self.scenario_info_summary_label, NAME_LABEL_RATIO
+        )
+        self.scenario_info_summary.addWidget(
+            self.scenario_info_summary_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_package_id.addWidget(
+            self.mod_info_package_id_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_package_id.addWidget(
+            self.mod_info_package_id_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_authors.addWidget(self.mod_info_author_label, NAME_LABEL_RATIO)
+        self.mod_info_authors.addWidget(self.mod_info_author_value, NAME_VALUE_RATIO)
+        self.mod_info_mod_version.addWidget(
+            self.mod_info_mod_version_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_mod_version.addWidget(
+            self.mod_info_mod_version_value, NAME_VALUE_RATIO
         )
         self.mod_info_supported_versions.addWidget(
-            self.mod_info_supported_versions_value, 80
+            self.mod_info_supported_versions_label, NAME_LABEL_RATIO
         )
-        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_label, 20)
-        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_value, 80)
-        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_label, 20)
-        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_value, 80)
-        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_label, 20)
-        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_value, 80)
-        self.mod_info_external_times.addWidget(self.mod_info_external_times_label, 20)
-        self.mod_info_external_times.addWidget(self.mod_info_external_times_value, 80)
+        self.mod_info_supported_versions.addWidget(
+            self.mod_info_supported_versions_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_folder_size.addWidget(
+            self.mod_info_folder_size_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_folder_size.addWidget(
+            self.mod_info_folder_size_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_last_touched.addWidget(
+            self.mod_info_last_touched_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_last_touched.addWidget(
+            self.mod_info_last_touched_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_filesystem_time.addWidget(
+            self.mod_info_filesystem_time_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_filesystem_time.addWidget(
+            self.mod_info_filesystem_time_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_external_times.addWidget(
+            self.mod_info_external_times_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_external_times.addWidget(
+            self.mod_info_external_times_value, NAME_VALUE_RATIO
+        )
         self.mod_info_layout.addLayout(self.mod_info_name)
         self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
@@ -360,21 +398,20 @@ class ModInfo:
         self.notes.blockSignals(False)
         logger.debug(f"Finished setting notes for UUID: {mod_data['uuid']}")
 
+    def _add_label_value_to_layout(
+        self, layout: QHBoxLayout, label: QLabel, value: QLabel
+    ) -> None:
+        """Helper method to add label-value pairs to layouts with consistent ratios."""
+        layout.addWidget(label, NAME_LABEL_RATIO)
+        layout.addWidget(value, NAME_VALUE_RATIO)
+
     @staticmethod
     def tr(text: str) -> str:
         return QCoreApplication.translate("ModInfo", text)
 
-    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
-        """
-        This slot receives a the complete mod data json for
-        the mod that was just clicked on. It will set the relevant
-        information on the info panel.
-
-        :param mod_info: complete json info for the mod
-        """
-        mod_info = self.metadata_manager.internal_local_metadata.get(uuid, {})
-        # Style summary values based on validity
-        if mod_info and mod_info.get("invalid"):
+    def _set_widget_styling(self, is_invalid: bool) -> None:
+        """Set widget styling based on mod validity."""
+        if is_invalid:
             # Set invalid value style
             for widget in (
                 self.mod_info_name_value,
@@ -402,180 +439,176 @@ class ModInfo:
             # Set valid path style (inherits theme color, clickable styling)
             self.mod_info_path_value.setStyleSheet("text-decoration: underline;")
             self.mod_info_path_value.setClickable(True)
-        # Set name value
-        name_value = mod_info.get("name", "Not specified")
-        if isinstance(name_value, dict):
-            # Convert dict to string representation or fallback
-            name_value = str(name_value)
-        self.mod_info_name_value.setText(name_value)
-        # Show essential info widgets
-        for widget in self.essential_info_widgets:
-            if not widget.isVisible():
-                widget.show()
-        # If it's not invalid, and it's not a scenario, it must be a mod!
-        if not mod_info.get("invalid") and not mod_info.get("scenario"):
-            # Show valid-mod-specific fields, hide scenario summary
-            for widget in self.base_mod_info_widgets:
-                widget.show()
 
-            for widget in self.scenario_info_widgets:
-                widget.hide()
-
-            # Populate values from metadata
-
-            # Set package ID
-            self.mod_info_package_id_value.setText(
-                mod_info.get("packageid", "Not specified")
+    def _set_mod_version_info(self, mod_metadata: dict[str, Any]) -> None:
+        """Set mod version information with error handling."""
+        mod_version = mod_metadata.get("modversion", {})
+        if isinstance(mod_version, dict):
+            self.mod_info_mod_version_value.setText(mod_version.get("#text", UNKNOWN))
+        else:
+            self.mod_info_mod_version_value.setText(
+                mod_version if mod_version else UNKNOWN
             )
 
-            # Set authors
-            authors_tag = mod_info.get("authors", "Not specified")
-            if isinstance(authors_tag, dict) and authors_tag.get("li"):
-                list_of_authors = authors_tag["li"]
-                authors_text = ", ".join(list_of_authors)
-                self.mod_info_author_value.setText(authors_text)
-            elif isinstance(authors_tag, str):
-                self.mod_info_author_value.setText(
-                    authors_tag if authors_tag else "Not specified"
-                )
+    def _set_folder_size_info(self, uuid: str) -> None:
+        """Set folder size information using optimized calculation."""
+        try:
+            if self.settings_controller.settings.inactive_mods_sorting:
+                size_bytes = uuid_to_folder_size(uuid)
+                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
             else:
-                self.mod_info_author_value.setText("Not specified")
-
-            # Set mod version
-            mod_version = mod_info.get("modversion", {})
-            if isinstance(mod_version, dict):
-                self.mod_info_mod_version_value.setText(
-                    mod_version.get("#text", "Not specified")
-                )
-            else:
-                self.mod_info_mod_version_value.setText(mod_version)
-
-            # Set supported versions
-            supported_versions_tag = mod_info.get("supportedversions", {})
-            supported_versions_list = supported_versions_tag.get("li")
-            if isinstance(supported_versions_list, list):
-                supported_versions_text = ", ".join(supported_versions_list)
-                self.mod_info_supported_versions_value.setText(supported_versions_text)
-            else:
-                self.mod_info_supported_versions_value.setText(
-                    supported_versions_list
-                    if supported_versions_list
-                    else "Not specified"
-                )
-
-            # Set folder size
-            try:
-                if self.settings_controller.settings.inactive_mods_sorting:
-                    size_bytes = uuid_to_folder_size(uuid)
-                    self.mod_info_folder_size_value.setText(
-                        format_file_size(size_bytes)
-                    )
-                else:
-                    self.mod_info_folder_size_value.setText("Not available")
-            except Exception:
                 self.mod_info_folder_size_value.setText("Not available")
+        except Exception as e:
+            logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
+            self.mod_info_folder_size_value.setText("Not available")
 
-            # Set last touched
-            internal_time_touched = mod_info.get("internal_time_touched")
-            if internal_time_touched and internal_time_touched != 0:
-                try:
-                    dt_touched = datetime.fromtimestamp(int(internal_time_touched))
-                    formatted_time = dt_touched.strftime("%Y-%m-%d %H:%M:%S")
-                    self.mod_info_last_touched_value.setText(formatted_time)
-                except (ValueError, OSError, OverflowError) as e:
-                    logger.error(f"Error formatting internal_time_touched: {e}")
-                    self.mod_info_last_touched_value.setText("Invalid timestamp")
-            else:
-                self.mod_info_last_touched_value.setText("Not available")
+    def _set_timestamp_info(
+        self, timestamp: int | None, label: QLabel, field_name: str
+    ) -> None:
+        """Set timestamp information with consistent error handling."""
+        if timestamp and timestamp != 0:
+            try:
+                dt = datetime.fromtimestamp(int(timestamp))
+                formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                label.setText(formatted_time)
+            except (ValueError, OSError, OverflowError) as e:
+                logger.error(f"Error formatting {field_name}: {e}")
+                label.setText("Invalid timestamp")
+        else:
+            label.setText("Not available")
 
-            # Set filesystem modification time
-            mod_path = mod_info.get("path")
-            if (
-                self.settings_controller.settings.inactive_mods_sorting
-                and mod_path
-                and os.path.exists(mod_path)
-            ):
-                try:
-                    fs_time = int(os.path.getmtime(mod_path))
-                    dt_fs = datetime.fromtimestamp(fs_time)
-                    formatted_fs_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
-                    self.mod_info_filesystem_time_value.setText(formatted_fs_time)
-                except (ValueError, OSError, OverflowError) as e:
-                    logger.error(f"Error formatting filesystem time: {e}")
-                    self.mod_info_filesystem_time_value.setText("Invalid timestamp")
-            else:
-                self.mod_info_filesystem_time_value.setText("Not available")
+    def _set_filesystem_time_info(self, mod_path: str | None) -> None:
+        """Set filesystem modification time information."""
+        if (
+            self.settings_controller.settings.inactive_mods_sorting
+            and mod_path
+            and os.path.exists(mod_path)
+        ):
+            try:
+                fs_time = int(os.path.getmtime(mod_path))
+                self._set_timestamp_info(
+                    fs_time, self.mod_info_filesystem_time_value, "filesystem time"
+                )
+            except (ValueError, OSError, OverflowError) as e:
+                logger.error(f"Error formatting filesystem time: {e}")
+                self.mod_info_filesystem_time_value.setText("Invalid timestamp")
+        else:
+            self.mod_info_filesystem_time_value.setText("Not available")
 
-            # Set external workshop times
-            external_times = []
-            external_time_created = mod_info.get("external_time_created")
-            external_time_updated = mod_info.get("external_time_updated")
-            internal_time_updated = mod_info.get("internal_time_updated")
+    def _set_external_times_info(self, mod_metadata: dict[str, Any]) -> None:
+        """Set external workshop times information."""
+        external_times = []
+        external_time_created = mod_metadata.get("external_time_created")
+        external_time_updated = mod_metadata.get("external_time_updated")
+        internal_time_updated = mod_metadata.get("internal_time_updated")
 
-            if external_time_created:
-                try:
-                    dt_created = datetime.fromtimestamp(int(external_time_created))
-                    external_times.append(
-                        f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                except (ValueError, OSError, OverflowError):
-                    external_times.append("Created: Invalid")
+        if external_time_created:
+            try:
+                dt_created = datetime.fromtimestamp(int(external_time_created))
+                external_times.append(
+                    f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+            except (ValueError, OSError, OverflowError):
+                external_times.append("Created: Invalid")
 
-            if external_time_updated:
-                try:
-                    dt_updated = datetime.fromtimestamp(int(external_time_updated))
-                    external_times.append(
-                        f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                except (ValueError, OSError, OverflowError):
-                    external_times.append("Updated: Invalid")
+        if external_time_updated:
+            try:
+                dt_updated = datetime.fromtimestamp(int(external_time_updated))
+                external_times.append(
+                    f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+            except (ValueError, OSError, OverflowError):
+                external_times.append("Updated: Invalid")
 
-            if internal_time_updated:
-                try:
-                    dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
-                    external_times.append(
-                        f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                except (ValueError, OSError, OverflowError):
-                    external_times.append("Steam Updated: Invalid")
+        if internal_time_updated:
+            try:
+                dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
+                external_times.append(
+                    f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+            except (ValueError, OSError, OverflowError):
+                external_times.append("Steam Updated: Invalid")
 
-            if external_times:
-                self.mod_info_external_times_value.setText("\n".join(external_times))
-            else:
-                self.mod_info_external_times_value.setText("Not available")
-        elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
-            for widget in self.base_mod_info_widgets:
-                widget.hide()
+        if external_times:
+            self.mod_info_external_times_value.setText("\n".join(external_times))
+        else:
+            self.mod_info_external_times_value.setText("Not available")
 
-            for widget in self.scenario_info_widgets:
-                widget.show()
+    def _set_mod_info_fields(
+        self, mod_metadata: dict[str, Any], mod_info: ModInfo, uuid: str
+    ) -> None:
+        """Set information fields for valid mods."""
+        # Show valid-mod-specific fields, hide scenario summary
+        for widget in self.base_mod_info_widgets:
+            widget.show()
+        for widget in self.scenario_info_widgets:
+            widget.hide()
 
-            self.scenario_info_summary_value.setText(
-                mod_info.get("summary", "Not specified")
-            )
-        elif mod_info.get("invalid"):  # Hide all except bare minimum if invalid
-            for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
-                widget.hide()
+        # Populate values from ModInfo - all edge cases already handled
+        self.mod_info_package_id_value.setText(mod_info.packageid)
+        self.mod_info_author_value.setText(mod_info.authors)
+        self.mod_info_supported_versions_value.setText(mod_info.supported_versions)
 
-        self.mod_info_path_value.setPath(mod_info.get("path"))
-        # Set the scrolling description for the Mod Info Panel
+        # Set mod version
+        self._set_mod_version_info(mod_metadata)
+
+        # Set folder size
+        self._set_folder_size_info(uuid)
+
+        # Set last touched
+        self._set_timestamp_info(
+            mod_metadata.get("internal_time_touched"),
+            self.mod_info_last_touched_value,
+            "internal_time_touched",
+        )
+
+        # Set filesystem modification time
+        self._set_filesystem_time_info(mod_metadata.get("path"))
+
+        # Set external workshop times
+        self._set_external_times_info(mod_metadata)
+
+    def _set_scenario_info_fields(self, mod_metadata: dict[str, Any]) -> None:
+        """Set information fields for scenarios."""
+        # Hide mod-specific widgets, show scenario
+        for widget in self.base_mod_info_widgets:
+            widget.hide()
+        for widget in self.scenario_info_widgets:
+            widget.show()
+
+        self.scenario_info_summary_value.setText(
+            mod_metadata.get("summary", "Not specified")
+        )
+
+    def _set_invalid_info_fields(self) -> None:
+        """Set information fields for invalid mods."""
+        # Hide all except bare minimum if invalid
+        for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
+            widget.hide()
+
+    def _set_description(
+        self, mod_metadata: dict[str, Any], render_unity_rt: bool
+    ) -> None:
+        """Set the mod description with version-specific handling."""
         self.description.setText("")
-        if "description" in mod_info:
-            if mod_info["description"] is not None:
-                if isinstance(mod_info["description"], str):
-                    self.description.setText(mod_info["description"], render_unity_rt)
+        if "description" in mod_metadata:
+            if mod_metadata["description"] is not None:
+                if isinstance(mod_metadata["description"], str):
+                    self.description.setText(
+                        mod_metadata["description"], render_unity_rt
+                    )
                 else:
                     logger.error(
-                        f"[description] tag is not a string: {mod_info['description']}"
+                        f"[description] tag is not a string: {mod_metadata['description']}"
                     )
-        elif "descriptionsbyversion" in mod_info and isinstance(
-            mod_info["descriptionsbyversion"], dict
+        elif "descriptionsbyversion" in mod_metadata and isinstance(
+            mod_metadata["descriptionsbyversion"], dict
         ):
             major, minor = self.metadata_manager.game_version.split(".")[
                 :2
             ]  # Split the version and take the first two parts
             version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-            for version, description_by_ver in mod_info[
+            for version, description_by_ver in mod_metadata[
                 "descriptionsbyversion"
             ].items():
                 if match(version_regex, version):
@@ -585,9 +618,12 @@ class ModInfo:
                         logger.error(
                             f"[descriptionbyversion] value for {version} is not a string: {description_by_ver}"
                         )
-        # It is OK for the description value to be None (was not provided)
-        # It is OK for the description key to not be in mod_info
-        if mod_info.get("scenario"):
+
+    def _load_preview_image(
+        self, mod_metadata: dict[str, Any], is_scenario: bool
+    ) -> None:
+        """Load and set the preview image for the mod."""
+        if is_scenario:
             pixmap = QPixmap(self.scenario_image_path)
             self.preview_picture.setPixmap(
                 pixmap.scaled(
@@ -596,7 +632,7 @@ class ModInfo:
             )
         else:
             # Get Preview.png
-            workshop_folder_path = mod_info.get("path", "")
+            workshop_folder_path = mod_metadata.get("path", "")
             logger.debug(
                 f"Retrieved mod path to parse preview image: {workshop_folder_path}"
             )
@@ -663,4 +699,48 @@ class ModInfo:
                             Qt.AspectRatioMode.KeepAspectRatio,
                         )
                     )
+
+    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
+        """
+        This slot receives a the complete mod data json for
+        the mod that was just clicked on. It will set the relevant
+        information on the info panel.
+
+        :param uuid: UUID of the mod to display
+        """
+        mod_metadata = self.metadata_manager.internal_local_metadata.get(uuid, {})
+        is_invalid = mod_metadata and mod_metadata.get("invalid")
+        is_scenario = mod_metadata and mod_metadata.get("scenario")
+
+        # Create ModInfo object - it handles all edge cases and formatting
+        mod_info = ModInfo.from_metadata(uuid, mod_metadata)
+
+        # Set widget styling based on validity
+        self._set_widget_styling(is_invalid)
+
+        # Set name value using ModInfo (which handles formatting and "Unknown")
+        self.mod_info_name_value.setText(mod_info.name)
+
+        # Show essential info widgets
+        for widget in self.essential_info_widgets:
+            if not widget.isVisible():
+                widget.show()
+
+        # Set fields based on mod type
+        if not is_invalid and not is_scenario:
+            self._set_mod_info_fields(mod_metadata, mod_info, uuid)
+        elif is_scenario:
+            self._set_scenario_info_fields(mod_metadata)
+        elif is_invalid:
+            self._set_invalid_info_fields()
+
+        # Set path
+        self.mod_info_path_value.setPath(mod_metadata.get("path"))
+
+        # Set description
+        self._set_description(mod_metadata, render_unity_rt)
+
+        # Load preview image
+        self._load_preview_image(mod_metadata, is_scenario)
+
         logger.debug("Finished displaying mod info")
