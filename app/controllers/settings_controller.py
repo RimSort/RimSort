@@ -1336,13 +1336,16 @@ class SettingsController(QObject):
         :return: True if valid, False otherwise.
         """
         if not validate_game_executable(game_location):
-            QMessageBox.information(
+            override = QMessageBox.question(
                 self.settings_dialog,
                 self.tr("Invalid Game Location"),
                 self.tr(
-                    "The selected game folder does not contain a valid RimWorld executable. Please select a valid game location."
+                    "The selected game folder does not contain a valid RimWorld executable. Would you like to override this? (May cause issues later)",
                 ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
+            if override == QMessageBox.StandardButton.Yes:
+                return True
             return False
         return True
 
