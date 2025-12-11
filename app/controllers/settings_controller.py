@@ -985,9 +985,23 @@ class SettingsController(QObject):
         self.settings_dialog.github_token.setText(self.settings.github_token)
         self.settings_dialog.github_token.setCursorPosition(0)
 
-        run_args_str = ",".join(
+        # Migrate old comma-separated format to new space-separated format if needed
+        run_args_list = self._migrate_run_args(
             self.settings.instances[self.settings.current_instance].run_args
         )
+        # Save migrated format back to settings
+        if (
+            run_args_list
+            != self.settings.instances[self.settings.current_instance].run_args
+        ):
+            self.settings.instances[
+                self.settings.current_instance
+            ].run_args = run_args_list
+            self.settings.save()
+            logger.info(f"Saved migrated run_args: {run_args_list}")
+
+        # Extract command string from single-element list
+        run_args_str = run_args_list[0] if run_args_list else ""
         self.settings_dialog.run_args.setText(run_args_str)
         self.settings_dialog.run_args.setCursorPosition(0)
         self.settings_dialog.run_args.textChanged.connect(
@@ -1298,9 +1312,11 @@ class SettingsController(QObject):
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
-        run_args_str = ",".join(
+        # Migrate and extract command string from single-element list
+        run_args_list = self._migrate_run_args(
             self.settings.instances[self.settings.current_instance].run_args
         )
+        run_args_str = run_args_list[0] if run_args_list else ""
         self.settings_dialog.run_args.setText(run_args_str)
 
     @Slot()
@@ -2256,9 +2272,47 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
 
+    def _migrate_run_args(self, run_args: list[str]) -> list[str]:
+        """
+        Migrate old comma-separated run_args format to new space-separated format.
+
+        Old format examples:
+        - ["-logfile", "/tmp/log", "-popupwindow"] (multiple elements)
+        - ["-logfile,/tmp/log,-popupwindow"] (single comma-separated string)
+
+        New format:
+        - ["-logfile /tmp/log -popupwindow"]
+
+        The parser will treat this as game args (since no %command% placeholder).
+        Users can later add %command%, env vars, or wrappers if desired.
+
+        :param run_args: Current run_args list
+        :return: Migrated run_args list in new format
+        """
+        if not run_args:
+            return []
+
+        # Single element - check if it needs migration
+        if len(run_args) == 1:
+            arg = run_args[0]
+            # If it contains commas, migrate from comma-separated to space-separated
+            if "," in arg:
+                logger.info(f"Migrating comma-separated run_args: {run_args}")
+                parts = [part.strip() for part in arg.split(",") if part.strip()]
+                migrated = " ".join(parts)
+                return [migrated]
+            # Already in new format (single string, no commas)
+            return run_args
+
+        # Multiple elements - join with spaces
+        logger.info(f"Migrating multi-element run_args: {run_args}")
+        migrated = " ".join(run_args)
+        return [migrated]
+
     @Slot(str)
     def _on_run_args_text_changed(self, text: str = "") -> None:
-        run_args_list = text.split(",")
+        # Store full command string as single-element list for %command% syntax
+        run_args_list = [text] if text.strip() else []
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()
 
