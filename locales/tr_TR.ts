@@ -582,6 +582,53 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     </message>
 </context>
 <context>
+    <name>IgnoreJsonEditor</name>
+    <message>
+        <source>RimSort - Manage Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Mods checked below will be removed from the ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Remove Selected</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to load ignored mods: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Ignore list has been saved successfully.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to save changes to ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Error saving changes: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+</context>
+<context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
@@ -2162,6 +2209,10 @@ Generated run arguments preview:
         <translation>Kural Düzenleyicisi</translation>
     </message>
     <message>
+        <source>Ignore JSON Editor…</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
         <source>Reset Warning Toggles</source>
         <translation>Uyarı Ayarlarını Sıfırla</translation>
     </message>
@@ -2342,6 +2393,34 @@ Etkin Modlar listenize hangi eksik bağımlılıkları ekleyeceğinizi seçin.</
     </message>
 </context>
 <context>
+    <name>MissingModPropertiesPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Properties</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Properties detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods are missing important properties that may cause issues:
+
+• Missing Package ID: Mods without a valid Package ID in About.xml may have dependency and compatibility issues.
+• Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
+
+Please contact the mod authors to add these properties to their mods.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Delete Mods</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Add to Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+</context>
+<context>
     <name>MissingModsPrompt</name>
     <message>
         <source>RimSort - Missing mods found</source>
@@ -2375,23 +2454,6 @@ Please select your preferred mod variant in the table below. You can also open e
 Bir paketini paylaşan Steam Workshop'ta Rimworld modları "varyantlar" dır. İndirmeden önce lütfen bunu aklınızda bulundurun. 
 
 Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak için her varyant Steam/Web tarayıcısında da açabilirsiniz.</translation>
-    </message>
-</context>
-<context>
-    <name>MissingPackageIdPanel</name>
-    <message>
-        <source>RimSort - Mods with Missing Package ID</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
-    </message>
-    <message>
-        <source>Mods with Missing Package ID detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
-    </message>
-    <message>
-        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
-
-For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
     </message>
 </context>
 <context>
@@ -2572,58 +2634,58 @@ Devam etmek ister misin? {action_capitalized}</translation>
     </message>
 </context>
 <context>
-    <name>ModInfo</name>
+    <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>İsim:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>Özet:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>PackageId:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>Yapımcılar:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>Mod Sürümü:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>Desteklenen Sürüm:</translation>
-    </message>
-    <message>
-        <source>Path:</source>
-        <translation>Yol:</translation>
-    </message>
-    <message>
-        <source>Welcome to RimSort!</source>
-        <translation>RimSort'a hoşgeldin!</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>Klasör Boyutu:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>Son dokundu:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>Dosya sistemi değiştirildi:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>Çalıştay Zamanları:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Welcome to RimSort!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>Kişisel mod notlarınızı buraya koyun!</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
 </context>
 <context>
@@ -3819,6 +3881,30 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
+        <source>Game Launch</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
         <source>Databases</source>
         <translation>Veritabanları</translation>
     </message>
@@ -4359,19 +4445,6 @@ Klasörün adı temanın adı olarak kullanılacak ve herhangi bir geçersiz tem
     <message>
         <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
         <translation>Rimsort başladığında etkin veritabanlarını otomatik olarak güncellemek için bu seçeneği etkinleştirin. Bu, güncellemeleri kontrol eder ve varsa indirir.</translation>
-    </message>
-    <message>
-        <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
-
- Examples : 
-
- -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
-</source>
-        <translation>Rimworld yürütülebilir dosyasına geçmek için virgül ayrılmış bir argüman listesi girin 
-
- Örnekler: 
-
- -logfile,/yol/to/file.log, -savedatafolder =/yol/to/saRedata, -PopupWindow</translation>
     </message>
     <message>
         <source>Custom todds command</source>

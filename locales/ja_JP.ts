@@ -581,6 +581,53 @@ When unchecked, search all file types with standard search.</source>
     </message>
 </context>
 <context>
+    <name>IgnoreJsonEditor</name>
+    <message>
+        <source>RimSort - Manage Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Mods checked below will be removed from the ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Remove Selected</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to load ignored mods: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Ignore list has been saved successfully.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to save changes to ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Error saving changes: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+</context>
+<context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
@@ -2166,6 +2213,10 @@ How would you like to proceed?</source>
         <translation>ルールエディタ…</translation>
     </message>
     <message>
+        <source>Ignore JSON Editor…</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
         <source>Reset Warning Toggles</source>
         <translation>警告トグルをリセット</translation>
     </message>
@@ -2348,6 +2399,34 @@ Select which missing dependencies to add to your active mods list.</source>
     </message>
 </context>
 <context>
+    <name>MissingModPropertiesPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Properties</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Properties detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods are missing important properties that may cause issues:
+
+• Missing Package ID: Mods without a valid Package ID in About.xml may have dependency and compatibility issues.
+• Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
+
+Please contact the mod authors to add these properties to their mods.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Delete Mods</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Add to Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+</context>
+<context>
     <name>MissingModsPrompt</name>
     <message>
         <source>RimSort - Missing mods found</source>
@@ -2382,23 +2461,6 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Download with Steam client</source>
         <translation>Steamクライアントでダウンロード</translation>
-    </message>
-</context>
-<context>
-    <name>MissingPackageIdPanel</name>
-    <message>
-        <source>RimSort - Mods with Missing Package ID</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
-    </message>
-    <message>
-        <source>Mods with Missing Package ID detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
-    </message>
-    <message>
-        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
-
-For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
     </message>
 </context>
 <context>
@@ -2582,58 +2644,58 @@ Do you want to proceed?</source>
     </message>
 </context>
 <context>
-    <name>ModInfo</name>
+    <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>名前:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>概要:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>パッケージID:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>作者:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>モッドバージョン:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>サポートされているバージョン:</translation>
-    </message>
-    <message>
-        <source>Path:</source>
-        <translation>パス:</translation>
-    </message>
-    <message>
-        <source>Welcome to RimSort!</source>
-        <translation>RimSortへようこそ！</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>フォルダーサイズ：</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>最後に触れた：</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>ファイルシステムの変更：</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>ワークショップタイム：</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Welcome to RimSort!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>ここにあなたの個人的なmodノートを置いてください！</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
 </context>
 <context>
@@ -3835,6 +3897,30 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
+        <source>Game Launch</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
         <source>Databases</source>
         <translation>データベース</translation>
     </message>
@@ -4240,20 +4326,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>GitHub personal access token:</source>
         <translation>GitHub個人アクセストークン:</translation>
-    </message>
-    <message>
-        <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
-
- Examples : 
-
- -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
-</source>
-        <translation> Rimworld実行ファイルに渡す引数のカンマ区切りリストを入力してください
-
-例:
-
--logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow
-        </translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
