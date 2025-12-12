@@ -12,7 +12,7 @@ from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from time import localtime, strftime
-from typing import TYPE_CHECKING, Any, Callable, Generator, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Generator
 
 import requests
 import vdf  # type: ignore
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
+from app.utils.launch_command_parser import parse_launch_command
 
 if TYPE_CHECKING or sys.platform == "win32":
     import ctypes
@@ -364,7 +365,8 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     The game will be launched with the game install path being the working directory.
 
     :param game_install_path: is a path to the game folder
-    :param args: is a list of strings representing the args to pass to the generated executable path
+    :param args: is a list containing a single launch command string with Steam-style
+                 %command% syntax (e.g., ["PROTON_LOG=1 gamemoderun %command% -logfile /tmp/log"])
     """
     if not game_install_path:
         logger.error("The path to the game folder is empty")
@@ -399,10 +401,31 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         )
         return
 
+    # Parse the launch command if args is non-empty
+    if args and len(args) > 0:
+        # Treat first element as full command string with %command% syntax
+        command_string = args[0]
+        logger.info(f"Parsing launch command: {command_string}")
+        parsed = parse_launch_command(command_string)
+        env_vars = parsed.env_vars
+        wrapper_commands = parsed.wrapper_commands
+        game_args = parsed.game_args
+    else:
+        env_vars = {}
+        wrapper_commands = []
+        game_args = []
+
     logger.info(
-        f"Launching the game with subprocess.Popen(): `{executable_path}` with args: {args}"
+        f"Launching the game with subprocess.Popen(): `{executable_path}` "
+        f"with env_vars: {list(env_vars.keys())}, wrappers: {wrapper_commands}, args: {game_args}"
     )
-    pid, popen_args = launch_process(executable_path, args, str(game_install_path))
+    pid, popen_args = launch_process(
+        executable_path,
+        game_args,
+        str(game_install_path),
+        env_vars=env_vars,
+        wrapper_commands=wrapper_commands,
+    )
     logger.info(
         f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
     )
@@ -440,17 +463,57 @@ def validate_game_executable(game_folder: str) -> bool:
 
 
 def launch_process(
-    executable_path: str, args: list[str], cwd: str
-) -> Tuple[int, list[str]]:
+    executable_path: str,
+    args: list[str],
+    cwd: str,
+    env_vars: dict[str, str] | None = None,
+    wrapper_commands: list[str] | None = None,
+) -> tuple[int, list[str]]:
+    """
+    Launch a process with optional environment variables and wrapper executables.
+
+    This function handles platform-specific process launching for RimWorld, supporting
+    macOS, Windows, and Linux. It can prepend wrapper executables (like gamemoderun)
+    and set environment variables for the launched process.
+
+    Platform-specific behavior:
+    - macOS: Uses 'open' command; wrapper executables are NOT supported and will be ignored
+    - Linux/Windows: Directly launches executable with wrapper commands prepended
+
+    :param executable_path: Path to the executable to launch
+    :param args: List of command-line arguments to pass to the executable
+    :param cwd: Working directory for the launched process
+    :param env_vars: Optional dictionary of environment variables to set for the process
+    :param wrapper_commands: Optional list of wrapper executables to prepend (e.g., ['gamemoderun'])
+                             Note: Ignored on macOS as the 'open' command doesn't support this
+    :return: Tuple of (process PID, list of popen arguments used)
+    """
     pid = -1
+
+    # Prepare environment variables
+    env = os.environ.copy()
+    if env_vars:
+        env.update(env_vars)
+        logger.info(f"Setting environment variables: {list(env_vars.keys())}")
+
+    # Prepare wrapper commands
+    wrappers = wrapper_commands or []
+
     # https://stackoverflow.com/a/21805723
     if platform.system() == "Darwin":  # MacOS
+        # macOS 'open' command doesn't support wrapper executables well
+        if wrappers:
+            logger.warning(
+                f"Wrapper commands are not supported on macOS: {wrappers}. "
+                "These will be ignored. Use environment variables instead."
+            )
         popen_args = ["open", executable_path, "--args"]
         popen_args.extend(args)
-        p = subprocess.Popen(popen_args)
+        p = subprocess.Popen(popen_args, env=env)
         pid = p.pid
     else:
-        popen_args = [executable_path]
+        # On Linux/Windows, prepend wrapper commands before the executable
+        popen_args = wrappers + [executable_path]
         popen_args.extend(args)
 
         if sys.platform == "win32":
@@ -459,11 +522,12 @@ def launch_process(
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                 shell=True,
                 cwd=cwd,
+                env=env,
             )
             pid = p.pid
         else:
             # not Windows, so assume POSIX; if not, we'll get a usable exception
-            p = subprocess.Popen(popen_args, start_new_session=True, cwd=cwd)
+            p = subprocess.Popen(popen_args, start_new_session=True, cwd=cwd, env=env)
             pid = p.pid
     return pid, popen_args
 

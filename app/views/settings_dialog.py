@@ -1662,12 +1662,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.run_args_info_label = QLabel(
             self.tr(
-                "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
-                "\n Examples : \n"
-                "\n -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow \n"
+                "Enter launch options using Steam-style syntax with optional %command% placeholder:\n"
+                "\n Basic examples (game arguments only):\n"
+                "\n   -logfile /tmp/log -popupwindow\n"
+                "\n   -savedatafolder=/path/to/savedata\n"
+                "\n Advanced examples (with %command%, env vars, wrappers):\n"
+                "\n   PROTON_LOG=1 %command%\n"
+                "\n   gamemoderun %command% -logfile /tmp/log\n"
+                "\n   DXVK_HUD=1 mangohud %command% -popupwindow\n"
+                "\n NOTE: wrapper commands will be ignored on macOS"
             )
         )
-        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)
+        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 17)
         run_args_info_layout.addWidget(self.run_args_info_label, 0)
         self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
