@@ -582,6 +582,53 @@ Quando desmarcado, pesquisa todos os tipos de arquivos com a pesquisa padrão.</
     </message>
 </context>
 <context>
+    <name>IgnoreJsonEditor</name>
+    <message>
+        <source>RimSort - Manage Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Mods checked below will be removed from the ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Remove Selected</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to load ignored mods: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Ignore list has been saved successfully.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Failed to save changes to ignore list.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Error saving changes: {e}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+</context>
+<context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
@@ -2166,6 +2213,10 @@ How would you like to proceed?</source>
         <translation>Editor de regras...</translation>
     </message>
     <message>
+        <source>Ignore JSON Editor…</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
         <source>Reset Warning Toggles</source>
         <translation>Redefinir avisos</translation>
     </message>
@@ -2348,6 +2399,34 @@ Selecione quais dependências ausentes adicionar à sua lista de mods ativos.</t
     </message>
 </context>
 <context>
+    <name>MissingModPropertiesPanel</name>
+    <message>
+        <source>RimSort - Mods with Missing Properties</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Mods with Missing Properties detected!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+    </message>
+    <message>
+        <source>The following mods are missing important properties that may cause issues:
+
+• Missing Package ID: Mods without a valid Package ID in About.xml may have dependency and compatibility issues.
+• Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
+
+Please contact the mod authors to add these properties to their mods.</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+    </message>
+    <message>
+        <source>Delete Mods</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+    </message>
+    <message>
+        <source>Add to Ignore List</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+</context>
+<context>
     <name>MissingModsPrompt</name>
     <message>
         <source>RimSort - Missing mods found</source>
@@ -2382,23 +2461,6 @@ Selecione a variante do mod que prefere na tabela abaixo. Também pode abrir cad
     <message>
         <source>Download with Steam client</source>
         <translation>Baixe com o cliente Steam</translation>
-    </message>
-</context>
-<context>
-    <name>MissingPackageIdPanel</name>
-    <message>
-        <source>RimSort - Mods with Missing Package ID</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
-    </message>
-    <message>
-        <source>Mods with Missing Package ID detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
-    </message>
-    <message>
-        <source>The following mods do not have a valid Package ID defined in their About.xml file. This may cause issues with mod dependencies and compatibility checking.
-
-For Workshop mods, you can identify them by the Published File ID column. Please contact the mod authors to add a Package ID to their About.xml file.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
     </message>
 </context>
 <context>
@@ -2582,58 +2644,58 @@ Você quer prosseguir? {action_capitalized}</translation>
     </message>
 </context>
 <context>
-    <name>ModInfo</name>
+    <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>Nome:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>Resumo:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>ID do Pacote:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>Autores:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>Versão do Mod:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>Versões Suportáveis:</translation>
-    </message>
-    <message>
-        <source>Path:</source>
-        <translation>Caminho:</translation>
-    </message>
-    <message>
-        <source>Welcome to RimSort!</source>
-        <translation>Bem-vindo ao RimSort!</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>Tamanho da pasta:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+    </message>
+    <message>
+        <source>Path:</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>Último acesso:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>Modificado no sistema de arquivos:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>Horários da Workshop:</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Welcome to RimSort!</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>Coloque suas notas de mod pessoal aqui!</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
     </message>
 </context>
 <context>
@@ -3839,6 +3901,30 @@ Clique em “Mostrar Detalhes” para ver a lista de mods que falharam.</transla
         <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
     </message>
     <message>
+        <source>Game Launch</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS</source>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+    </message>
+    <message>
         <source>Databases</source>
         <translation>Bancos de dados</translation>
     </message>
@@ -4246,19 +4332,6 @@ O nome da pasta será usado como nome do tema e qualquer tema inválido será ig
     <message>
         <source>GitHub personal access token:</source>
         <translation>GitHub personal access token:</translation>
-    </message>
-    <message>
-        <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
-
- Examples : 
-
- -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
-</source>
-        <translation>Digite uma lista de argumentos separados por vírgulas para passar ao executável do RimWorld 
-
-Exemplos: 
--logfile,/caminho/para/arquivo.log,-savedatafolder=/caminho/para/savedata,-popupwindow 
-</translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
