@@ -206,6 +206,11 @@ class SettingsController(QObject):
             self._on_locations_autodetect_button_clicked
         )
 
+        # Game Launch tab
+        self.settings_dialog.run_args.textChanged.connect(
+            self._on_run_args_text_changed
+        )
+
         # Wire up the Databases tab buttons
 
         self.settings_dialog.community_rules_db_none_radio.clicked.connect(
@@ -1004,9 +1009,6 @@ class SettingsController(QObject):
         run_args_str = run_args_list[0] if run_args_list else ""
         self.settings_dialog.run_args.setText(run_args_str)
         self.settings_dialog.run_args.setCursorPosition(0)
-        self.settings_dialog.run_args.textChanged.connect(
-            self._on_run_args_text_changed
-        )
 
     def _update_model_from_view(self) -> None:
         """

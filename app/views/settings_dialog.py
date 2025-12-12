@@ -71,6 +71,7 @@ class SettingsDialog(QDialog):
     def _init_tabs(self) -> None:
         """Initialize all tabs in the settings dialog."""
         self._do_locations_tab()
+        self._do_game_launch_tab()
         self._do_databases_tab()
         self._do_cross_version_databases_tab()
         self._do_sorting_tab()
@@ -310,6 +311,55 @@ class SettingsDialog(QDialog):
             GUIInfo().default_font_line_height * 2
         )
         group_layout.addWidget(self.instance_folder_location)
+
+    def _do_game_launch_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Game Launch"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        run_args_group = QGroupBox()
+        tab_layout.addWidget(run_args_group)
+
+        run_args_layout = QGridLayout()
+        run_args_group.setLayout(run_args_layout)
+
+        run_args_info_layout = QHBoxLayout()
+
+        self.run_args_info_label = QLabel(
+            self.tr(
+                "Enter launch options using Steam-style syntax with optional %command% placeholder:\n"
+                "\n Basic examples (game arguments only):\n"
+                "\n   -logfile /tmp/log -popupwindow\n"
+                "\n   -savedatafolder=/path/to/savedata\n"
+                "\n Advanced examples (with %command%, env vars, wrappers):\n"
+                "\n   PROTON_LOG=1 %command%\n"
+                "\n   gamemoderun %command% -logfile /tmp/log\n"
+                "\n   DXVK_HUD=1 mangohud %command% -popupwindow\n"
+                "\n NOTE: wrapper commands will be ignored on macOS"
+            )
+        )
+        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 17)
+        run_args_info_layout.addWidget(self.run_args_info_label, 0)
+        self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
+
+        run_args_label = QLabel(self.tr("Edit Game Run Arguments:"))
+        run_args_layout.addWidget(
+            run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.run_args = QLineEdit()
+        self.run_args.setTextMargins(GUIInfo().text_field_margins)
+        self.run_args.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        run_args_layout.addWidget(self.run_args, 1, 1)
+
+        self.setTabOrder(self.run_args_info_label, self.run_args)
+
+        # Push the content to the top
+        tab_layout.addStretch()
 
     def _do_databases_tab(self) -> None:
         tab = QWidget()
@@ -1651,45 +1701,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         backup_layout.addWidget(self.max_backups_spinbox)
 
         group_layout.addLayout(backup_layout)
-
-        run_args_group = QGroupBox()
-        tab_layout.addWidget(run_args_group)
-
-        run_args_layout = QGridLayout()
-        run_args_group.setLayout(run_args_layout)
-
-        run_args_info_layout = QHBoxLayout()
-
-        self.run_args_info_label = QLabel(
-            self.tr(
-                "Enter launch options using Steam-style syntax with optional %command% placeholder:\n"
-                "\n Basic examples (game arguments only):\n"
-                "\n   -logfile /tmp/log -popupwindow\n"
-                "\n   -savedatafolder=/path/to/savedata\n"
-                "\n Advanced examples (with %command%, env vars, wrappers):\n"
-                "\n   PROTON_LOG=1 %command%\n"
-                "\n   gamemoderun %command% -logfile /tmp/log\n"
-                "\n   DXVK_HUD=1 mangohud %command% -popupwindow\n"
-                "\n NOTE: wrapper commands will be ignored on macOS"
-            )
-        )
-        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 17)
-        run_args_info_layout.addWidget(self.run_args_info_label, 0)
-        self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
-
-        run_args_label = QLabel(self.tr("Edit Game Run Arguments:"))
-        run_args_layout.addWidget(
-            run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.run_args = QLineEdit()
-        self.run_args.setTextMargins(GUIInfo().text_field_margins)
-        self.run_args.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        run_args_layout.addWidget(self.run_args, 1, 1)
-
-        self.setTabOrder(self.run_args_info_label, self.run_args)
 
     def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):
