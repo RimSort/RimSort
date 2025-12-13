@@ -5,7 +5,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import requests
 from loguru import logger
@@ -263,6 +263,7 @@ class DynamicQuery(QObject):
         appid: int,
         get_appid_deps: bool = False,
         life: int = 0,
+        callback: Optional[Callable[[str], None]] = None,
     ) -> None:
         QObject.__init__(self)
 
@@ -278,6 +279,7 @@ class DynamicQuery(QObject):
         self.publishedfileids: list[str] = []
         self.total = 0
         self.database: dict[str, Any] = {}
+        self.callback = callback
 
     def __expires(self, life: int) -> int:
         """Returns current epoch + life
@@ -288,6 +290,20 @@ class DynamicQuery(QObject):
         :rtype: int
         """
         return int(time() + life)
+
+    def _emit_message(self, msg: str) -> None:
+        """
+        Emit a progress message via callback or Qt signal.
+
+        If a callback was provided during initialization, use it.
+        Otherwise, fall back to the Qt signal for GUI compatibility.
+
+        :param msg: The message to emit
+        """
+        if self.callback:
+            self.callback(msg)
+        else:
+            self.dq_messaging_signal.emit(msg)
 
     def __initialize_webapi(self) -> None:
         if self.api:
@@ -315,9 +331,9 @@ class DynamicQuery(QObject):
             logger.warning(
                 f"Dynamic Query received an uncaught exception: {e.__class__.__name__}"
             )
-            self.dq_messaging_signal.emit(
+            self._emit_message(
                 "\nDynamicQuery failed to initialize WebAPI query!"
-                + "\nAre you connected to the internet?\nIs your configured key invalid or revoked?\n",
+                + "\nAre you connected to the internet?\nIs your configured key invalid or revoked?\n"
             )
 
     def create_steam_db(
@@ -354,7 +370,7 @@ class DynamicQuery(QObject):
             ):  # If we have missing data for any dependency...
                 # Uncomment to see the contents of missing_children
                 # logger.debug(missing_children)
-                self.dq_messaging_signal.emit(
+                self._emit_message(
                     f"\nRetrieving dependency information for {len(missing_children)} missing children"
                 )
                 # Extend publishedfileids with the missing_children PublishedFileIds for final query
@@ -378,7 +394,7 @@ class DynamicQuery(QObject):
                     return
 
                 query, missing_children = result
-                self.dq_messaging_signal.emit(
+                self._emit_message(
                     "\nLaunching addiitonal full query to complete dependency information for the missing children"
                 )
             else:  # Stop querying once we have 0 missing_children
@@ -386,7 +402,7 @@ class DynamicQuery(QObject):
                 querying = False
 
         if self.get_appid_deps:
-            self.dq_messaging_signal.emit(
+            self._emit_message(
                 "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)"
             )
             # ISteamUGC/GetAppDependencies
@@ -394,13 +410,13 @@ class DynamicQuery(QObject):
                 publishedfileids=publishedfileids, query=query
             )
         else:
-            self.dq_messaging_signal.emit(
+            self._emit_message(
                 "\nAppID dependency retrieval disabled. Skipping Steamworks API call(s)!"
             )
 
         # Notify & return
         total = len(query["database"])
-        self.dq_messaging_signal.emit(
+        self._emit_message(
             f"\nReturning Steam Workshop metadata for {total} items"
         )
         self.database.update(query)
@@ -423,7 +439,7 @@ class DynamicQuery(QObject):
                     self.next_cursor
                 )
         else:
-            self.dq_messaging_signal.emit("AppIDQuery: WebAPI failed to initialize!")
+            self._emit_message("AppIDQuery: WebAPI failed to initialize!")
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: dict[Any, Any], publishedfileids: list[str]
@@ -445,10 +461,10 @@ class DynamicQuery(QObject):
         """
         chunks_processed = 0
         total = len(publishedfileids)
-        self.dq_messaging_signal.emit(
+        self._emit_message(
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
         )
-        self.dq_messaging_signal.emit(
+        self._emit_message(
             f"IPublishedFileService/GetDetails chunk [0/{total}]"
         )
         if not self.api:  # If we don't have API initialized
@@ -587,7 +603,7 @@ class DynamicQuery(QObject):
                 logger.error(
                     f"IPublishedFileService/GetDetails errored querying batch [{chunks_processed}/{total}]: {stacktrace}"
                 )
-            self.dq_messaging_signal.emit(
+            self._emit_message(
                 f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]"
             )
         for missing_child in missing_children:
@@ -673,10 +689,10 @@ class DynamicQuery(QObject):
                 )
                 # Since this is only run during the initial loop, we print out the 0
                 # needed for RunnerPanel progress bar calculations
-                self.dq_messaging_signal.emit(
+                self._emit_message(
                     "IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
                 )
-        self.dq_messaging_signal.emit(
+        self._emit_message(
             f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}"
             + f"/{str(self.pages)}]"
         )
@@ -701,7 +717,7 @@ class DynamicQuery(QObject):
         RimPy db_data["database"] format, or the skeleton of one from local_metadata
         :return: Dict containing the updated json data from PublishedFileIds query
         """
-        self.dq_messaging_signal.emit(
+        self._emit_message(
             f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
         # Maximum processes
@@ -725,12 +741,12 @@ class DynamicQuery(QObject):
             # Map the execution of the queries to the pool of processes
             results = pool.map(SteamworksAppDependenciesQuery.run, queries)
         # Merge the results from all processes into a single dictionary
-        self.dq_messaging_signal.emit("Processes completed!\nCollecting results")
+        self._emit_message("Processes completed!\nCollecting results")
         pfids_appid_deps: dict[int, list[int]] = {}
         for result in results:
             if result is not None:
                 pfids_appid_deps.update(result)
-        self.dq_messaging_signal.emit(f"\nTotal: {len(pfids_appid_deps.keys())}")
+        self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)
         # Add our metadata to the query...

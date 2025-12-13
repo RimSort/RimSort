@@ -2719,6 +2719,10 @@ class SteamDatabaseBuilder(QThread):
         mods: dict[str, Any] = {},
     ):
         QThread.__init__(self)
+        # Import here to avoid circular dependencies
+        from app.utils.db_builder_core import DBBuilderCore
+
+        # For backwards compatibility with GUI code that uses these attributes
         self.apikey = apikey
         self.appid = appid
         self.database_expiry = database_expiry
@@ -2729,7 +2733,29 @@ class SteamDatabaseBuilder(QThread):
         self.publishedfileids: list[str] = []
         self.update = update
 
+        # Note: DBBuilderCore only supports "no_local" mode currently
+        # The "all_mods" and "pfids_by_appid" modes remain in the Qt wrapper
+        if mode == "no_local":
+            # Create core instance with callback connected to Qt signal
+            self.core = DBBuilderCore(
+                apikey=apikey,
+                appid=appid,
+                database_expiry=database_expiry,
+                output_database_path=output_database_path,
+                get_appid_deps=get_appid_deps,
+                update=update,
+                progress_callback=self.db_builder_message_output_signal.emit,
+            )
+        else:
+            self.core = None
+
     def run(self) -> None:
+        # Use core implementation for no_local mode
+        if self.mode == "no_local" and self.core:
+            self.core.run()
+            return
+
+        # Original implementation for other modes
         self.db_builder_message_output_signal.emit(
             f"\nInitiating RimSort Steam Database Builder with mode : {self.mode}\n"
         )
@@ -2738,43 +2764,7 @@ class SteamDatabaseBuilder(QThread):
                 "Received valid Steam WebAPI key from settings"
             )
             # Since the key is valid, we try to launch a live query
-            if self.mode == "no_local":
-                self.db_builder_message_output_signal.emit(
-                    f'\nInitializing "DynamicQuery" with configured Steam API key for AppID: {self.appid}\n\n'
-                )
-                # Create query
-                dynamic_query = DynamicQuery(
-                    apikey=self.apikey,
-                    appid=self.appid,
-                    life=self.database_expiry,
-                    get_appid_deps=self.get_appid_deps,
-                )
-                # Connect messaging signal
-                dynamic_query.dq_messaging_signal.connect(
-                    self.db_builder_message_output_signal.emit
-                )
-                # Compile PublishedFileIds
-                dynamic_query.pfids_by_appid()
-                # Make sure we have PublishedFileIds to work with...
-                if (
-                    len(dynamic_query.publishedfileids) == 0
-                ):  # If we didn't get any pfids
-                    self.db_builder_message_output_signal.emit(
-                        "Did not receive any PublishedFileIds from IPublishedFileService/QueryFiles! Cannot continue!"
-                    )
-                    return  # Exit operation
-
-                database = self._init_empty_db_from_publishedfileids(
-                    dynamic_query.publishedfileids
-                )
-                dynamic_query.create_steam_db(
-                    database=database, publishedfileids=dynamic_query.publishedfileids
-                )
-                self._output_database(dynamic_query.database)
-                self.db_builder_message_output_signal.emit(
-                    "SteamDatabasebuilder: Completed!"
-                )
-            elif self.mode == "all_mods":
+            if self.mode == "all_mods":
                 if not self.mods:
                     self.db_builder_message_output_signal.emit(
                         "SteamDatabaseBuilder: Please passthrough a dict of mod metadata for this mode."

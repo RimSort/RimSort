@@ -145,6 +145,24 @@ if __name__ == "__main__":
     # Otherwise, use sys.argv[0] to get the actual relative path to the executable
     #########################################################################################
 
+    # CRITICAL: Check for CLI mode BEFORE any imports that might use Qt
+    # This must happen before AppInfo() or any other code that could trigger Qt initialization
+    if len(sys.argv) > 1 and sys.argv[1] in ["build-db", "--help", "--version"]:
+        # CLI mode - import and run without any GUI setup
+        try:
+            from app.cli.main import cli
+
+            cli()
+        except Exception as e:
+            # Handle CLI errors without Qt dialogs
+            import traceback
+
+            print(f"Error: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    # GUI mode continues below with normal initialization
     # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
     debug_file_path = AppInfo().app_storage_folder / "DEBUG"
     if debug_file_path.exists() and debug_file_path.is_file():
