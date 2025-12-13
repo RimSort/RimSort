@@ -110,9 +110,7 @@ def build_db(
                     settings = json.load(f)
                     api_key = settings.get("steam_apikey")
                     if api_key and not quiet:
-                        click.echo(
-                            "Using Steam API key from settings.json", err=True
-                        )
+                        click.echo("Using Steam API key from settings.json", err=True)
             except Exception as e:
                 if not quiet:
                     click.echo(

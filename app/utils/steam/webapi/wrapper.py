@@ -416,9 +416,7 @@ class DynamicQuery(QObject):
 
         # Notify & return
         total = len(query["database"])
-        self._emit_message(
-            f"\nReturning Steam Workshop metadata for {total} items"
-        )
+        self._emit_message(f"\nReturning Steam Workshop metadata for {total} items")
         self.database.update(query)
 
     def pfids_by_appid(self) -> None:
@@ -464,9 +462,7 @@ class DynamicQuery(QObject):
         self._emit_message(
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
         )
-        self._emit_message(
-            f"IPublishedFileService/GetDetails chunk [0/{total}]"
-        )
+        self._emit_message(f"IPublishedFileService/GetDetails chunk [0/{total}]")
         if not self.api:  # If we don't have API initialized
             return None  # Exit query
         missing_children = []

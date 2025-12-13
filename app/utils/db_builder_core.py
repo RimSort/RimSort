@@ -71,9 +71,7 @@ class DBBuilderCore:
         )
 
         if len(self.apikey) == 32:  # If supplied WebAPI key is 32 characters
-            self.progress_callback(
-                "Received valid Steam WebAPI key"
-            )
+            self.progress_callback("Received valid Steam WebAPI key")
             # Since the key is valid, we try to launch a live query
             self.progress_callback(
                 f'\nInitializing "DynamicQuery" with configured Steam API key for AppID: {self.appid}\n\n'
@@ -89,9 +87,7 @@ class DBBuilderCore:
             # Compile PublishedFileIds
             dynamic_query.pfids_by_appid()
             # Make sure we have PublishedFileIds to work with...
-            if (
-                len(dynamic_query.publishedfileids) == 0
-            ):  # If we didn't get any pfids
+            if len(dynamic_query.publishedfileids) == 0:  # If we didn't get any pfids
                 self.progress_callback(
                     "Did not receive any PublishedFileIds from IPublishedFileService/QueryFiles! Cannot continue!"
                 )
@@ -104,17 +100,13 @@ class DBBuilderCore:
                 database=database, publishedfileids=dynamic_query.publishedfileids
             )
             self._output_database(dynamic_query.database)
-            self.progress_callback(
-                "SteamDatabasebuilder: Completed!"
-            )
+            self.progress_callback("SteamDatabasebuilder: Completed!")
             return True
         else:  # Otherwise, API key is not valid
             self.progress_callback(
                 f"SteamDatabaseBuilder (no_local): Invalid Steam WebAPI key!"
             )
-            self.progress_callback(
-                f"SteamDatabaseBuilder (no_local): Exiting..."
-            )
+            self.progress_callback(f"SteamDatabaseBuilder (no_local): Exiting...")
             return False
 
     def _init_empty_db_from_publishedfileids(
@@ -180,13 +172,9 @@ class DBBuilderCore:
             if self.output_database_path and os.path.exists(self.output_database_path):
                 with open(self.output_database_path, encoding="utf-8") as f:
                     json_string = f.read()
-                    self.progress_callback(
-                        "\nReading info from file..."
-                    )
+                    self.progress_callback("\nReading info from file...")
                     db_to_update = json.loads(json_string)
-                    self.progress_callback(
-                        "Retrieved cached database!\n"
-                    )
+                    self.progress_callback("Retrieved cached database!\n")
                 self.progress_callback(
                     "Recursively updating previous database with new metadata...\n"
                 )
