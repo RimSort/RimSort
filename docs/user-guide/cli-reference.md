@@ -138,7 +138,7 @@ RimSort build-db --output steamDB.json --overwrite
 RimSort build-db --output steamDB.json --update
 ```
 
-#####**DLC data collection fails silently**
+##### **`DLC data collection fails silently`**
 
 DLC dependency data requires the Steamworks API, which needs:
 - Steam client running and authenticated
