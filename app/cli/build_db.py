@@ -29,20 +29,6 @@ from app.utils.db_builder_core import DBBuilderCore
     help="Output JSON file path for the database.",
 )
 @click.option(
-    "--appid",
-    type=int,
-    default=294100,
-    show_default=True,
-    help="Steam AppID (294100 is RimWorld).",
-)
-@click.option(
-    "--expiry",
-    type=int,
-    default=0,
-    show_default=True,
-    help="Database expiry time in seconds (0 = no expiry).",
-)
-@click.option(
     "--dlc-data/--no-dlc-data",
     default=True,
     show_default=True,
@@ -62,8 +48,6 @@ from app.utils.db_builder_core import DBBuilderCore
 def build_db(
     api_key: Optional[str],
     output: Path,
-    appid: int,
-    expiry: int,
     dlc_data: bool,
     update: bool,
     quiet: bool,
@@ -170,7 +154,7 @@ def build_db(
     # Create and run DB builder
     if not quiet:
         click.echo(
-            f"Starting database build for AppID {appid}...",
+            "Starting database build for AppID 294100...",
             err=True,
         )
         if dlc_data:
@@ -182,8 +166,8 @@ def build_db(
     try:
         core = DBBuilderCore(
             apikey=api_key,
-            appid=appid,
-            database_expiry=expiry,
+            appid=294100,  # RimWorld AppID
+            database_expiry=0,  # No expiry
             output_database_path=str(output),
             get_appid_deps=dlc_data,
             update=update,
