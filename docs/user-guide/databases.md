@@ -37,7 +37,7 @@ The No Version Warning database (`ModIdsToFix.xml`) is an external database that
 ## Steam Workshop Database
 
 {: .note}
-> For information on how to build or update the Steam Workshop Database, see [this page](../user-guide/db-builder)
+> For information on how to build or update the Steam Workshop Database, see the [DB Builder GUI](db-builder) or [CLI Reference](cli-reference#build-db).
 
 The Steam Workshop Database (Steam DB) is primarily used to provide additional dependency data. This information can only be gathered by crawling the Steam Workshop and downloading the workshop mods to parse mod data. By having a static database, users do not need to have these mods downloaded in order to access this information.
 
