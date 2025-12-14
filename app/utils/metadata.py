@@ -2732,6 +2732,7 @@ class SteamDatabaseBuilder(QThread):
         self.output_database_path = output_database_path
         self.publishedfileids: list[str] = []
         self.update = update
+        self.core: DBBuilderCore | None
 
         # Note: DBBuilderCore only supports "no_local" mode currently
         # The "all_mods" and "pfids_by_appid" modes remain in the Qt wrapper
