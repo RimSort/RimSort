@@ -10,8 +10,6 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from loguru import logger
-
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
@@ -104,9 +102,9 @@ class DBBuilderCore:
             return True
         else:  # Otherwise, API key is not valid
             self.progress_callback(
-                f"SteamDatabaseBuilder (no_local): Invalid Steam WebAPI key!"
+                "SteamDatabaseBuilder (no_local): Invalid Steam WebAPI key!"
             )
-            self.progress_callback(f"SteamDatabaseBuilder (no_local): Exiting...")
+            self.progress_callback("SteamDatabaseBuilder (no_local): Exiting...")
             return False
 
     def _init_empty_db_from_publishedfileids(
