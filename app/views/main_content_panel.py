@@ -26,6 +26,7 @@ from PySide6.QtCore import (
     Slot,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -73,6 +74,7 @@ from app.utils.todds.wrapper import ToddsInterface
 from app.utils.update_utils import UpdateManager
 from app.utils.xml import json_to_xml_write
 from app.utils.zip_extractor import ExtractionProgressWindow, ZipExtractThread
+from app.views.download_progress_window import DownloadProgressWindow
 from app.views.mod_info_panel import ModInfoPanel
 from app.views.mods_panel import (
     ModListWidget,
@@ -2359,22 +2361,70 @@ class MainContent(QObject):
                 # Check internet connection before attempting task
                 if not check_internet_connection():
                     return
-                fd, temp_path = tempfile.mkstemp(suffix=".zip")
-                os.close(fd)
+                # Create temporary directory for downloading
+                file_download, temp_path = tempfile.mkstemp(suffix=".zip")
+                os.close(file_download)
+
+                # Create and show download progress window
+                progress_window = DownloadProgressWindow()
+                progress_window.show()
+
+                # Flag to track if download was cancelled
+                download_cancelled = False
+
+                def on_cancel_requested() -> None:
+                    nonlocal download_cancelled
+                    download_cancelled = True
+                    logger.info("User cancelled download")
+
+                progress_window.cancel_requested.connect(on_cancel_requested)
 
                 try:
                     logger.info(f"Downloading {url} to {temp_path}")
                     response = requests.get(url, stream=True)
                     response.raise_for_status()
 
+                    # Get total file size
+                    total_size = int(response.headers.get("content-length", 0))
+                    downloaded_size = 0
+
                     with open(temp_path, "wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
+                            # Check if download was cancelled
+                            if download_cancelled:
+                                logger.warning("Download cancelled by user")
+                                break
+
                             if chunk:
                                 f.write(chunk)
+                                downloaded_size += len(chunk)
 
-                    self._extract_zip_file(temp_path, delete=True)
+                                # Update progress
+                                if total_size > 0:
+                                    percent = int((downloaded_size / total_size) * 100)
+                                else:
+                                    percent = -1  # Indeterminate progress
+
+                                progress_window.update_progress(
+                                    percent,
+                                    f"Downloading: {downloaded_size / (1024 * 1024):.2f} MB",
+                                )
+
+                                # Process events to allow UI updates and cancel clicks
+                                QApplication.processEvents()
+
+                    progress_window.close()
+
+                    # Only extract if download completed successfully
+                    if not download_cancelled:
+                        self._extract_zip_file(temp_path, delete=True)
+                    else:
+                        # Clean up cancelled download
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
 
                 except Exception as e:
+                    progress_window.close()
                     logger.error(f"Failed to download zip file: {e}")
                     dialogue.show_warning(
                         title=self.tr("Failed to download zip file"),
@@ -2383,6 +2433,9 @@ class MainContent(QObject):
                             file_path=temp_path, e=e
                         ),
                     )
+                    # Clean up on error
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
         elif answer == "Select from local":
             file_path = dialogue.show_dialogue_file(
                 mode="open",
@@ -2518,6 +2571,7 @@ class MainContent(QObject):
         self.progress_window.progressBar.setValue(percent)
 
     def _on_extract_finished(self, success: bool, message: str) -> None:
+        self.progress_window.setVisible(False)
         if success:
             dialogue.show_information(
                 title=self.tr("Extraction completed"),
@@ -2530,7 +2584,6 @@ class MainContent(QObject):
                 text=self.tr("An error occurred during extraction."),
                 information=message,
             )
-        self.progress_window.setVisible(False)
 
     def _do_notify_no_git(self) -> None:
         answer = dialogue.show_dialogue_conditional(  # We import last so we can use gui + utils
