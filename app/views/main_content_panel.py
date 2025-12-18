@@ -5,7 +5,6 @@ import tempfile
 import time
 import traceback
 import webbrowser
-import zipfile
 from functools import partial
 from math import ceil
 from multiprocessing import Pool, cpu_count
@@ -13,7 +12,6 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Callable, Optional, cast
 from urllib.parse import urlparse
-from zipfile import ZipFile
 
 import requests
 from loguru import logger
@@ -73,7 +71,12 @@ from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.update_utils import UpdateManager
 from app.utils.xml import json_to_xml_write
-from app.utils.zip_extractor import ExtractionProgressWindow, ZipExtractThread
+from app.utils.zip_extractor import (
+    BadZipFile,
+    ZipExtractThread,
+    ZipProgressWindow,
+    get_zip_contents,
+)
 from app.views.download_progress_window import DownloadProgressWindow
 from app.views.mod_info_panel import ModInfoPanel
 from app.views.mods_panel import (
@@ -2480,7 +2483,7 @@ class MainContent(QObject):
                     file_path=file_path, e=e
                 ),
             )
-        except (zipfile.BadZipfile, ValueError, PermissionError, OSError) as e:
+        except (BadZipFile, ValueError, PermissionError, OSError) as e:
             logger.error(f"Failed to extract zip file: {e}")
             dialogue.show_warning(
                 title=self.tr("Failed to extract zip file"),
@@ -2493,66 +2496,65 @@ class MainContent(QObject):
     def _do_extract_zip_to_path(
         self, base_path: str, file_path: str, delete: bool = False
     ) -> None:
-        with ZipFile(file_path) as zipobj:
-            zip_contents = zipobj.namelist()
-            conflicts = []
-            non_conflicts = []
+        zip_contents = get_zip_contents(file_path)
+        conflicts = []
+        non_conflicts = []
 
-            top_level_dirs = set(p.split("/")[0] for p in zip_contents if "/" in p)
-            is_bare_mod = "About" in top_level_dirs and not all(
-                p.startswith(tuple(top_level_dirs - {"About"})) for p in zip_contents
+        top_level_dirs = set(p.split("/")[0] for p in zip_contents if "/" in p)
+        is_bare_mod = "About" in top_level_dirs and not all(
+            p.startswith(tuple(top_level_dirs - {"About"})) for p in zip_contents
+        )
+
+        if is_bare_mod or len(top_level_dirs) == 0:
+            folder_name = Path(file_path).stem
+            base_path = os.path.join(base_path, folder_name)
+            os.makedirs(base_path, exist_ok=True)
+
+        for item in zip_contents:
+            target_path = os.path.join(base_path, item)
+            if os.path.exists(target_path):
+                conflicts.append(item)
+            else:
+                non_conflicts.append(item)
+
+        overwrite = True
+        if conflicts and not non_conflicts:
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Existing files or directories found"),
+                text=self.tr(
+                    "All files in the archive already exist in the target path."
+                ),
+                information=self.tr(
+                    "How would you like to proceed?\n\n"
+                    "1) Overwrite All — Replace all existing files and directories.\n"
+                    "2) Cancel — Abort the operation."
+                ),
+                button_text_override=["Overwrite All"],
             )
-
-            if is_bare_mod or len(top_level_dirs) == 0:
-                folder_name = Path(file_path).stem
-                base_path = os.path.join(base_path, folder_name)
-                os.makedirs(base_path, exist_ok=True)
-
-            for item in zip_contents:
-                target_path = os.path.join(base_path, item)
-                if os.path.exists(target_path):
-                    conflicts.append(item)
-                else:
-                    non_conflicts.append(item)
-
+            if answer != "Overwrite All":
+                return
             overwrite = True
-            if conflicts and not non_conflicts:
-                answer = dialogue.show_dialogue_conditional(
-                    title=self.tr("Existing files or directories found"),
-                    text=self.tr(
-                        "All files in the archive already exist in the target path."
-                    ),
-                    information=self.tr(
-                        "How would you like to proceed?\n\n"
-                        "1) Overwrite All — Replace all existing files and directories.\n"
-                        "2) Cancel — Abort the operation."
-                    ),
-                    button_text_override=["Overwrite All"],
-                )
-                if answer != "Overwrite All":
-                    return
-                overwrite = True
-            elif conflicts:
-                answer = dialogue.show_dialogue_conditional(
-                    title=self.tr("Existing files or directories found"),
-                    text=self.tr(
-                        "The following files or directories already exist in the target path:"
-                    ),
-                    information=self.tr(
-                        "{conflicts_list}\n\n"
-                        "How would you like to proceed?\n\n"
-                        "1) Overwrite All — Replace all existing files and directories.\n"
-                        "2) Skip Existing — Extract only new files and leave existing ones untouched.\n"
-                        "3) Cancel — Abort the extraction."
-                    ).format(
-                        conflicts_list="<br/>".join(conflicts[:5])
-                        + ("<br/>...<br/>" if len(conflicts) > 5 else "")
-                    ),
-                    button_text_override=["Overwrite All", "Skip Existing"],
-                )
-                if answer == "Cancel":
-                    return
-                overwrite = answer == "Overwrite All"
+        elif conflicts:
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Existing files or directories found"),
+                text=self.tr(
+                    "The following files or directories already exist in the target path:"
+                ),
+                information=self.tr(
+                    "{conflicts_list}\n\n"
+                    "How would you like to proceed?\n\n"
+                    "1) Overwrite All — Replace all existing files and directories.\n"
+                    "2) Skip Existing — Extract only new files and leave existing ones untouched.\n"
+                    "3) Cancel — Abort the extraction."
+                ).format(
+                    conflicts_list="<br/>".join(conflicts[:5])
+                    + ("<br/>...<br/>" if len(conflicts) > 5 else "")
+                ),
+                button_text_override=["Overwrite All", "Skip Existing"],
+            )
+            if answer == "Cancel":
+                return
+            overwrite = answer == "Overwrite All"
 
         self._extract_thread = ZipExtractThread(
             file_path, base_path, overwrite_all=overwrite, delete=delete
@@ -2560,7 +2562,7 @@ class MainContent(QObject):
         self._extract_thread.progress.connect(self._on_extract_progress)
         self._extract_thread.finished.connect(self._on_extract_finished)
 
-        self.progress_window = ExtractionProgressWindow()
+        self.progress_window = ZipProgressWindow()
         self.progress_window.progressBar.setValue(0)
         self.progress_window.cancel_button.clicked.connect(self._extract_thread.stop)
 
