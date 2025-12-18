@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import sys
 import tempfile
 import time
@@ -23,7 +22,6 @@ from PySide6.QtCore import (
     QObject,
     QProcess,
     Qt,
-    QThread,
     Signal,
     Slot,
 )
@@ -32,10 +30,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMessageBox,
-    QProgressBar,
-    QPushButton,
     QSplitter,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -77,6 +72,7 @@ from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.update_utils import UpdateManager
 from app.utils.xml import json_to_xml_write
+from app.utils.zip_extractor import ExtractionProgressWindow, ZipExtractThread
 from app.views.mod_info_panel import ModInfoPanel
 from app.views.mods_panel import (
     ModListWidget,
@@ -340,9 +336,6 @@ class MainContent(QObject):
 
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
-
-            self.progress_window: ProgressWindow = ProgressWindow()
-            self._extract_thread: ZipExtractThread | None = None
 
             logger.info("Finished MainContent initialization")
             self.initialized = True
@@ -2514,6 +2507,7 @@ class MainContent(QObject):
         self._extract_thread.progress.connect(self._on_extract_progress)
         self._extract_thread.finished.connect(self._on_extract_finished)
 
+        self.progress_window = ExtractionProgressWindow()
         self.progress_window.progressBar.setValue(0)
         self.progress_window.cancel_button.clicked.connect(self._extract_thread.stop)
 
@@ -3264,82 +3258,3 @@ class MainContent(QObject):
                     'No suggestions were found in the "Use This Instead" database.'
                 ),
             )
-
-
-class ZipExtractThread(QThread):
-    progress = Signal(int)
-    finished = Signal(bool, str)
-
-    def __init__(
-        self,
-        zip_path: str,
-        target_path: str,
-        overwrite_all: bool = True,
-        delete: bool = False,
-    ):
-        super().__init__()
-        self.zip_path = zip_path
-        self.target_path = target_path
-        self.overwrite_all = overwrite_all
-        self.delete = delete
-        self._should_abort = False
-
-    def run(self) -> None:
-        start = time.perf_counter()
-
-        with ZipFile(self.zip_path) as zipobj:
-            file_list = zipobj.infolist()
-            total_files = len(file_list)
-            update_interval = max(1, total_files // 100)
-
-            for i, zip_info in enumerate(file_list):
-                if self._should_abort:
-                    self.finished.emit(False, "Operation aborted")
-                    return
-                filename = zip_info.filename
-                dst = os.path.join(self.target_path, filename)
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-
-                if zip_info.is_dir():
-                    os.makedirs(dst, exist_ok=True)
-                else:
-                    if os.path.exists(dst) and not self.overwrite_all:
-                        continue
-
-                    with zipobj.open(zip_info) as src, open(dst, "wb") as out_file:
-                        shutil.copyfileobj(src, out_file)
-
-                if i % update_interval == 0 or i == total_files - 1:
-                    self.progress.emit(int((i + 1) / total_files * 100))
-
-        end = time.perf_counter()
-        elapsed = end - start
-        self.finished.emit(
-            True,
-            f"{self.zip_path} → {self.target_path}\nTime elapsed: {elapsed:.2f} seconds",
-        )
-        if self.delete:
-            os.remove(self.zip_path)
-
-    def stop(self) -> None:
-        self._should_abort = True
-
-
-class ProgressWindow(QWidget):
-    def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle("Extract Zip")
-        self.resize(300, 100)
-
-        self.progressBar = QProgressBar()
-        self.progressBar.setMinimum(0)
-        self.progressBar.setMaximum(100)
-        self.progressBar.setValue(0)
-        self.progressBar.setVisible(True)
-
-        self.cancel_button = QPushButton("Cancel")
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.progressBar)
-        self.setLayout(layout)
-        layout.addWidget(self.cancel_button)
