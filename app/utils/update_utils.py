@@ -7,14 +7,12 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import traceback
 from datetime import datetime
-from functools import partial
-from io import BytesIO
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Union, cast
-from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 import requests
 from loguru import logger
@@ -24,8 +22,15 @@ from PySide6.QtWidgets import QMessageBox
 
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
-from app.utils.event_bus import EventBus
 from app.utils.generic import check_internet_connection
+from app.utils.zip_extractor import (
+    BadZipFile,
+    ZipExtractThread,
+    ZipProgressWindow,
+    create_zip_backup,
+    get_zip_contents,
+    validate_zip_integrity,
+)
 from app.views.download_progress_window import DownloadProgressWindow
 
 # Pre-compiled regex patterns for performance
@@ -928,14 +933,12 @@ class UpdateManager(QObject):
                     result["error"] or "Download did not complete successfully"
                 )
 
-            # Extract or save with progress animation
-            EventBus().do_threaded_loading_animation.emit(
-                str(AppInfo().theme_data_folder / "default-icons" / "refresh.gif"),
-                partial(self._extract_update, is_msi=is_msi),
-                self.tr("Extracting update files...")
-                if not is_msi
-                else self.tr("Preparing update installer..."),
-            )
+            # Extract or save with progress window
+            try:
+                self._extract_update_with_progress(is_msi)
+            except Exception as e:
+                logger.error(f"Extraction/preparation failed: {e}")
+                raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
 
             if self._extracted_path is None:
                 raise UpdateExtractionError(
@@ -956,13 +959,9 @@ class UpdateManager(QObject):
 
             # Check if backup is enabled in settings
             if self.settings_controller.settings.enable_backup_before_update:
-                # Create backup of current installation with progress animation
-                EventBus().do_threaded_loading_animation.emit(
-                    str(AppInfo().theme_data_folder / "default-icons" / "refresh.gif"),
-                    partial(self._create_backup),
-                    self.tr("Creating backup..."),
-                )
-            # Clean up old backups Aflways even when not creating new one
+                # Create backup of current installation with progress window
+                self._create_backup_with_progress()
+            # Clean up old backups always even when not creating new one
             self._cleanup_old_backups()
 
             # Prepare for launch
@@ -1184,7 +1183,7 @@ class UpdateManager(QObject):
 
     def _extract_zip(self, content: bytes, temp_base: Path) -> int:
         """
-        Extract ZIP content to the temporary directory.
+        Extract ZIP content to the temporary directory using ZipExtractThread with UI progress.
 
         Args:
             content: ZIP file content as bytes
@@ -1197,22 +1196,76 @@ class UpdateManager(QObject):
             UpdateExtractionError: If ZIP is corrupted or extraction fails
         """
         logger.debug("Extracting update to temporary directory")
-        with ZipFile(BytesIO(content)) as zipobj:
-            # Test ZIP integrity before extracting
+
+        # Write content to temporary ZIP file for extraction
+        temp_zip_path = temp_base.parent / f"{temp_base.name}.zip"
+        temp_zip_path.write_bytes(content)
+
+        try:
+            # Validate ZIP integrity
             logger.debug("Testing ZIP file integrity")
-            corruption_info = zipobj.testzip()
-            if corruption_info is not None:
-                logger.debug(f"ZIP file corrupted at: {corruption_info}")
-                raise UpdateExtractionError(
-                    f"ZIP file is corrupted at: {corruption_info}"
-                )
+            is_valid, error_msg = validate_zip_integrity(temp_zip_path)
+            if not is_valid:
+                logger.debug(f"ZIP validation failed: {error_msg}")
+                raise UpdateExtractionError(error_msg)
+
+            # Get ZIP contents
+            zip_contents = get_zip_contents(temp_zip_path)
+            extracted_files = len(zip_contents)
+            logger.debug(f"ZIP file list (first 10): {zip_contents[:10]}")
 
             logger.debug("ZIP integrity check passed, starting extraction")
-            zipobj.extractall(temp_base)
-            extracted_files = len(zipobj.namelist())
+
+            # Create and display extraction progress window
+            progress_window: ZipProgressWindow = ZipProgressWindow(
+                title="Extracting Update", show_message=True
+            )
+            progress_window.set_message("Extracting files...")
+            progress_window.show()
+
+            # Create and run extraction thread
+            loop = QEventLoop()
+            result: dict[str, Any] = {"success": False, "error": ""}
+
+            def on_extraction_progress(percent: int) -> None:
+                progress_window.progressBar.setValue(percent)
+
+            def on_extraction_finished(success: bool, message: str) -> None:
+                result["success"] = success
+                result["error"] = message
+                try:
+                    progress_window.close()
+                except Exception:
+                    pass
+                loop.quit()
+
+            extract_thread = ZipExtractThread(
+                zip_path=str(temp_zip_path),
+                target_path=str(temp_base),
+                overwrite_all=True,
+                delete=True,
+            )
+            extract_thread.progress.connect(on_extraction_progress)
+            extract_thread.finished.connect(on_extraction_finished)
+            extract_thread.start()
+
+            loop.exec()
+
+            if not result["success"]:
+                raise UpdateExtractionError(f"Extraction failed: {result['error']}")
+
             logger.info(f"Extracted {extracted_files} files from ZIP to {temp_base}")
-            logger.debug(f"ZIP file list (first 10): {zipobj.namelist()[:10]}")
             return extracted_files
+
+        except BadZipFile as e:
+            raise UpdateExtractionError(f"Invalid ZIP file: {e}") from e
+        finally:
+            # Clean up temporary ZIP file if it still exists
+            if temp_zip_path.exists():
+                try:
+                    temp_zip_path.unlink()
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temp ZIP file: {e}")
 
     def _normalize_structure(self, temp_base: Path, extracted_files: int) -> None:
         """
@@ -1494,6 +1547,11 @@ class UpdateManager(QObject):
                 raise UpdateScriptLaunchError(
                     "MSI installers are only supported on Windows"
                 )
+            # Validate MSI path
+            if not update_source_path.exists() or not update_source_path.is_file():
+                raise UpdateScriptLaunchError(
+                    f"MSI file not found or is not a file: {update_source_path}"
+                )
             self._launch_msi_installer(update_source_path, log_path, needs_elevation)
             return
 
@@ -1501,6 +1559,10 @@ class UpdateManager(QObject):
             script_path, args_repr, start_new_session, install_dir = (
                 self._get_script_info(update_source_path, log_path, needs_elevation)
             )
+
+            # Validate script exists before proceeding
+            if not script_path.exists():
+                raise UpdateScriptLaunchError(f"Update script not found: {script_path}")
 
             # For Windows, copy update.bat to app_storage_folder to avoid conflicts during update
             if self._system == "Windows":
@@ -1547,6 +1609,9 @@ class UpdateManager(QObject):
 
             logger.debug(f"External updater script launched with PID: {p.pid}")
             logger.debug(f"Arguments used: {args_repr}")
+
+            # Give subprocess time to initialize before exit
+            time.sleep(1)
 
             # Exit the application to allow update
             sys.exit(0)
@@ -1706,6 +1771,9 @@ class UpdateManager(QObject):
             self.update_progress.emit(100, "Update launched!")
             logger.info("MSI launched, exiting RimSort to allow file replacement")
 
+            # Give subprocess time to initialize before exit
+            time.sleep(1)
+
         except FileNotFoundError as e:
             raise UpdateScriptLaunchError(f"msiexec executable not found: {e}") from e
         except Exception as e:
@@ -1769,6 +1837,49 @@ class UpdateManager(QObject):
 
         return script_path, args_repr, start_new_session, install_dir
 
+    def _extract_update_with_progress(self, is_msi: bool = False) -> None:
+        """
+        Extract or prepare the update with a progress window.
+
+        For ZIP files, _extract_zip creates its own progress window with ZipExtractThread.
+        MSI preparation is instant (just writes bytes) so no UI needed.
+        Extraction runs on main thread to ensure Qt operations work correctly.
+
+        Args:
+            is_msi: Whether the update is an MSI installer
+        """
+        # Run extraction on main thread (Qt operations require main thread)
+        self._extract_update_thread_worker(is_msi)
+
+    def _extract_update_thread_worker(self, is_msi: bool = False) -> None:
+        """Worker thread for extraction."""
+        self._extract_update(is_msi)
+
+    def _create_backup_with_progress(self) -> None:
+        """Create a backup with a progress window."""
+        progress_window = ZipProgressWindow(title="Creating Backup", show_message=True)
+        progress_window.set_message(self.tr("Creating backup..."))
+        progress_window.show()
+
+        loop = QEventLoop()
+
+        def on_backup_complete() -> None:
+            try:
+                progress_window.close()
+            except Exception:
+                pass
+            loop.quit()
+
+        # Run backup in a thread
+        backup_thread = threading.Thread(target=self._create_backup)
+        backup_thread.daemon = True
+        backup_thread.start()
+
+        # Wait for thread to complete with timeout
+        backup_thread.join(timeout=600)  # 10 minute timeout
+
+        on_backup_complete()
+
     def _create_backup(self) -> None:
         """
         Create a compressed backup of the current RimSort installation as a ZIP file.
@@ -1787,12 +1898,7 @@ class UpdateManager(QObject):
 
         try:
             # Create ZIP backup of the application folder
-            with ZipFile(backup_path, "w", ZIP_DEFLATED) as zipf:
-                for root, dirs, files in os.walk(app_folder):
-                    for file in files:
-                        file_path = Path(root) / file
-                        arcname = file_path.relative_to(app_folder)
-                        zipf.write(file_path, arcname)
+            create_zip_backup(app_folder, backup_path)
             logger.info("Compressed backup created successfully")
         except Exception as e:
             logger.warning(f"Failed to create backup: {e}")
