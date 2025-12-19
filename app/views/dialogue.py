@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Union
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -17,7 +17,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QMessageBox,
     QPlainTextEdit,
@@ -29,7 +28,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from typing_extensions import deprecated
 
 import app.utils.generic as generic
 from app.utils.app_info import AppInfo
@@ -106,17 +104,6 @@ def show_dialogue_conditional(
             return std_button
     # Fallback to return button text if no match found
     return response.text()
-
-
-@deprecated("Just use QInputDialog().getText() instead")
-def show_dialogue_input(
-    title: str = "",
-    label: str = "",
-    text: str = "",
-    parent: QWidget | None = None,
-) -> Tuple[str, bool]:
-    actual_parent = parent if parent is not None else QWidget()
-    return QInputDialog().getText(actual_parent, title, label, text=text)
 
 
 def show_dialogue_file(

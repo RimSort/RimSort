@@ -6,12 +6,11 @@ from typing import Any
 import requests
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from app.controllers.settings_controller import SettingsController
 from app.views.dialogue import (
     InformationBox,
-    show_dialogue_input,
     show_fatal_error,
     show_warning,
 )
@@ -188,9 +187,10 @@ class RentryImport:
 
     def input_dialog(self) -> None:
         """Initialize the UI for entering Rentry.co links."""
-        self.link_input = show_dialogue_input(
-            title=translate("RentryImport", "Enter Rentry.co link"),
-            label=translate("RentryImport", "Enter the Rentry.co link:"),
+        self.link_input = QInputDialog.getText(
+            None,
+            translate("RentryImport", "Enter Rentry.co link"),
+            translate("RentryImport", "Enter the Rentry.co link:"),
         )
         logger.info("Rentry link Input UI initialized successfully!")
         if self.link_input[1]:

@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -88,7 +89,6 @@ from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_valida
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
-    show_dialogue_input,
     show_warning,
 )
 
@@ -1634,9 +1634,10 @@ class ModListWidget(QListWidget):
                         )
                         return False
 
-                    args, ok = show_dialogue_input(
-                        title=self.tr("Add comment"),
-                        label=self.tr(
+                    args, ok = QInputDialog.getText(
+                        self,
+                        self.tr("Add comment"),
+                        self.tr(
                             "Enter a comment providing your reasoning for wanting to blacklist this mod: "
                         )
                         + f"{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get('steamName', steamdb_add_blacklist)}",

@@ -11,6 +11,7 @@ from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -49,7 +50,6 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
     show_dialogue_file,
-    show_dialogue_input,
     show_fatal_error,
     show_warning,
 )
@@ -342,19 +342,19 @@ class MainWindow(QMainWindow):
         return
 
     def __ask_for_new_instance_name(self) -> str | None:
-        instance_name, ok = show_dialogue_input(
-            title=self.tr("Create new instance"),
-            label=self.tr(
-                "Input a unique name of new instance that is not already used:"
-            ),
+        instance_name, ok = QInputDialog.getText(
+            self,
+            self.tr("Create new instance"),
+            self.tr("Input a unique name of new instance that is not already used:"),
         )
         return instance_name.strip() if ok else None
 
     def __ask_for_non_default_instance_name(self) -> str | None:
         while True:
-            instance_name, ok = show_dialogue_input(
-                title=self.tr("Provide instance name"),
-                label=self.tr(
+            instance_name, ok = QInputDialog.getText(
+                self,
+                self.tr("Provide instance name"),
+                self.tr(
                     'Input a unique name for the backed up instance that is not "{name}"'
                 ).format(name=DEFAULT_INSTANCE_NAME),
             )
