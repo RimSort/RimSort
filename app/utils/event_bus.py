@@ -25,7 +25,6 @@ class EventBus(QObject):
     _instance: Union[None, "EventBus"] = None
 
     # Menu bar signals
-    do_check_for_application_update = Signal()
     do_open_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
@@ -124,7 +123,6 @@ class EventBus(QObject):
 
     # Help Menu bar signals
     do_check_for_application_update = Signal()
-    do_check_for_update_startup = Signal()
 
     # Performance settings signals
     enable_aux_db_performance_mode = Signal()
