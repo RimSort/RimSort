@@ -2,7 +2,6 @@
 
 This module provides:
 - ZipExtractThread: Threaded ZIP extraction with progress reporting
-- ZipProgressWindow: UI widget for progress feedback during ZIP operations
 - Utility functions: validate_zip_integrity, get_zip_contents, create_zip_backup
 """
 
@@ -10,17 +9,15 @@ import os
 import shutil
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from loguru import logger
-from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtWidgets import QLabel, QProgressBar, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import QThread, Signal
 
 # Export for use in other modules
 __all__ = [
     "ZipExtractThread",
-    "ZipProgressWindow",
     "validate_zip_integrity",
     "get_zip_contents",
     "create_zip_backup",
@@ -37,11 +34,11 @@ class ZipExtractThread(QThread):
     """Extract ZIP files in a separate thread with progress reporting.
 
     Signals:
-        progress: Emitted with percentage (0-100) during extraction
+        progress: Emitted with (percentage, message) during extraction
         finished: Emitted when extraction completes with (success, message)
     """
 
-    progress = Signal(int)
+    progress = Signal(int, str)  # percentage, message
     finished = Signal(bool, str)
 
     def __init__(
@@ -99,7 +96,9 @@ class ZipExtractThread(QThread):
                             shutil.copyfileobj(src, out_file)
 
                     if i % update_interval == 0 or i == total_files - 1:
-                        self.progress.emit(int((i + 1) / total_files * 100))
+                        percent = int((i + 1) / total_files * 100)
+                        message = f"Extracting: {i + 1} / {total_files} files"
+                        self.progress.emit(percent, message)
 
             end = time.perf_counter()
             elapsed = end - start
@@ -118,68 +117,6 @@ class ZipExtractThread(QThread):
     def stop(self) -> None:
         """Signal the thread to abort extraction on next iteration."""
         self._should_abort = True
-
-
-# ============================================================================
-# ZIP Progress Window
-# ============================================================================
-
-
-class ZipProgressWindow(QWidget):
-    """Progress window for ZIP operations with optional message display.
-
-    Displays a progress bar, optional status message, and cancel button.
-    Used for visual feedback during ZIP extraction and backup creation.
-
-    Attributes:
-        progressBar: Progress bar widget showing 0-100%
-        messageLabel: Optional label for status message (None if not shown)
-        cancel_button: Button to cancel ongoing operation
-    """
-
-    def __init__(self, title: str = "Processing", show_message: bool = False) -> None:
-        """Initialize the progress window.
-
-        Args:
-            title: Window title (default: "Processing")
-            show_message: Whether to display message label (default: False)
-        """
-        super().__init__()
-        self.setWindowTitle(title)
-        self.resize(350, 140 if show_message else 120)
-
-        layout = QVBoxLayout()
-
-        # Optional message label
-        self.messageLabel: Optional[QLabel] = None
-        if show_message:
-            label = QLabel("")
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.addWidget(label)
-            self.messageLabel = label
-
-        # Progress bar
-        self.progressBar = QProgressBar()
-        self.progressBar.setMinimum(0)
-        self.progressBar.setMaximum(100)
-        self.progressBar.setValue(0)
-        self.progressBar.setVisible(True)
-        layout.addWidget(self.progressBar)
-
-        # Cancel button
-        self.cancel_button = QPushButton("Cancel")
-        layout.addWidget(self.cancel_button)
-
-        self.setLayout(layout)
-
-    def set_message(self, message: str) -> None:
-        """Update the status message if message label exists.
-
-        Args:
-            message: New status message to display
-        """
-        if self.messageLabel:
-            self.messageLabel.setText(message)
 
 
 # ============================================================================
@@ -208,10 +145,13 @@ def validate_zip_integrity(zip_path: str | Path) -> tuple[bool, str]:
             corruption_info = zipobj.testzip()
             if corruption_info is not None:
                 return False, f"ZIP file corrupted at: {corruption_info}"
+        logger.info(f"ZIP file validated successfully: {zip_path}")
         return True, ""
     except BadZipFile as e:
+        logger.error(f"Invalid ZIP file: {e}")
         return False, f"Invalid ZIP file: {str(e)}"
     except Exception as e:
+        logger.error(f"Failed to validate ZIP: {e}")
         return False, f"Error validating ZIP: {str(e)}"
 
 
@@ -237,10 +177,15 @@ def get_zip_contents(zip_path: str | Path) -> list[str]:
     except BadZipFile:
         raise
     except Exception as e:
+        logger.error(f"Failed to read ZIP contents: {e}")
         raise BadZipFile(f"Failed to read ZIP contents: {str(e)}") from e
 
 
-def create_zip_backup(source_dir: str | Path, backup_path: str | Path) -> None:
+def create_zip_backup(
+    source_dir: str | Path,
+    backup_path: str | Path,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
+) -> None:
     """Create a compressed ZIP backup of a directory.
 
     Recursively archives all files in source_dir to a single ZIP file
@@ -249,6 +194,7 @@ def create_zip_backup(source_dir: str | Path, backup_path: str | Path) -> None:
     Args:
         source_dir: Source directory to backup
         backup_path: Destination ZIP file path
+        progress_callback: Optional callback function(current, total) for progress updates
 
     Raises:
         OSError: If source directory doesn't exist or backup can't be written
@@ -261,16 +207,33 @@ def create_zip_backup(source_dir: str | Path, backup_path: str | Path) -> None:
     backup_file = Path(backup_path)
 
     if not source_path.exists():
+        logger.error(f"Source directory does not exist: {source_path}")
         raise OSError(f"Source directory does not exist: {source_path}")
 
     # Ensure backup directory exists
     backup_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with ZipFile(backup_file, "w", ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(source_path):
-            for file in files:
-                file_path = Path(root) / file
-                arcname = file_path.relative_to(source_path)
-                zipf.write(file_path, arcname)
+    # First pass: collect all files and count total for progress reporting
+    logger.info(f"Scanning {source_path} for files to backup...")
+    file_list = []
+    for root, dirs, files in os.walk(source_path):
+        for file in files:
+            file_path = Path(root) / file
+            arcname = file_path.relative_to(source_path)
+            file_list.append((file_path, arcname))
 
-    logger.debug(f"Created backup: {backup_file}")
+    total_files = len(file_list)
+    logger.info(f"Found {total_files} files to backup")
+
+    # Second pass: write files to ZIP with progress updates
+    with ZipFile(backup_file, "w", ZIP_DEFLATED) as zipf:
+        for current_file, (file_path, arcname) in enumerate(file_list, 1):
+            try:
+                zipf.write(file_path, arcname)
+                # Update progress
+                if progress_callback:
+                    progress_callback(current_file, total_files)
+            except Exception as e:
+                logger.error(f"Failed to add {file_path} to backup: {e}")
+
+    logger.info(f"Created backup: {backup_file}")

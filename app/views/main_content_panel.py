@@ -74,15 +74,14 @@ from app.utils.xml import json_to_xml_write
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
-    ZipProgressWindow,
     get_zip_contents,
 )
-from app.views.download_progress_window import DownloadProgressWindow
 from app.views.mod_info_panel import ModInfoPanel
 from app.views.mods_panel import (
     ModListWidget,
     ModsPanel,
 )
+from app.views.task_progress_window import TaskProgressWindow
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.ignore_json_editor import IgnoreJsonEditor
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -341,6 +340,9 @@ class MainContent(QObject):
 
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
+
+            # Progress widget for extraction operations
+            self._extract_progress_widget: Optional[TaskProgressWindow] = None
 
             logger.info("Finished MainContent initialization")
             self.initialized = True
@@ -747,7 +749,9 @@ class MainContent(QObject):
         """
         Check for RimSort updates using UpdateManager.
         """
-        update_manager = UpdateManager(self.settings_controller, self)
+        update_manager = UpdateManager(
+            self.settings_controller, self, self.mod_info_panel
+        )
         update_manager.do_check_for_update()
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
@@ -2368,9 +2372,17 @@ class MainContent(QObject):
                 file_download, temp_path = tempfile.mkstemp(suffix=".zip")
                 os.close(file_download)
 
-                # Create and show download progress window
-                progress_window = DownloadProgressWindow()
-                progress_window.show()
+                # Hide the mod info panel and show progress in the panel instead
+                self.mod_info_panel.info_panel_frame.hide()
+                self.disable_enable_widgets_signal.emit(False)
+
+                # Create and show download progress in panel
+                progress_widget = TaskProgressWindow(
+                    title="Downloading ZIP File",
+                    show_message=True,
+                    show_percent=True,
+                )
+                self.mod_info_panel.panel.addWidget(progress_widget)
 
                 # Flag to track if download was cancelled
                 download_cancelled = False
@@ -2380,11 +2392,11 @@ class MainContent(QObject):
                     download_cancelled = True
                     logger.info("User cancelled download")
 
-                progress_window.cancel_requested.connect(on_cancel_requested)
+                progress_widget.cancel_requested.connect(on_cancel_requested)
 
                 try:
                     logger.info(f"Downloading {url} to {temp_path}")
-                    response = requests.get(url, stream=True)
+                    response = requests.get(url, stream=True, timeout=30)
                     response.raise_for_status()
 
                     # Get total file size
@@ -2405,18 +2417,22 @@ class MainContent(QObject):
                                 # Update progress
                                 if total_size > 0:
                                     percent = int((downloaded_size / total_size) * 100)
+                                    size_mb = downloaded_size / (1024 * 1024)
+                                    total_mb = total_size / (1024 * 1024)
+                                    message = f"Downloading: {size_mb:.2f} / {total_mb:.2f} MB"
                                 else:
                                     percent = -1  # Indeterminate progress
+                                    size_mb = downloaded_size / (1024 * 1024)
+                                    message = f"Downloading: {size_mb:.2f} MB"
 
-                                progress_window.update_progress(
-                                    percent,
-                                    f"Downloading: {downloaded_size / (1024 * 1024):.2f} MB",
-                                )
+                                progress_widget.update_progress(percent, message)
 
                                 # Process events to allow UI updates and cancel clicks
                                 QApplication.processEvents()
 
-                    progress_window.close()
+                    # Clean up progress widget
+                    self.mod_info_panel.panel.removeWidget(progress_widget)
+                    progress_widget.close()
 
                     # Only extract if download completed successfully
                     if not download_cancelled:
@@ -2425,9 +2441,12 @@ class MainContent(QObject):
                         # Clean up cancelled download
                         if os.path.exists(temp_path):
                             os.remove(temp_path)
+                        logger.info("Download cancelled, cleaned up temporary file")
 
                 except Exception as e:
-                    progress_window.close()
+                    # Clean up progress widget
+                    self.mod_info_panel.panel.removeWidget(progress_widget)
+                    progress_widget.close()
                     logger.error(f"Failed to download zip file: {e}")
                     dialogue.show_warning(
                         title=self.tr("Failed to download zip file"),
@@ -2439,6 +2458,10 @@ class MainContent(QObject):
                     # Clean up on error
                     if os.path.exists(temp_path):
                         os.remove(temp_path)
+
+                # Restore mod info panel
+                self.mod_info_panel.info_panel_frame.show()
+                self.disable_enable_widgets_signal.emit(True)
         elif answer == "Select from local":
             file_path = dialogue.show_dialogue_file(
                 mode="open",
@@ -2556,36 +2579,65 @@ class MainContent(QObject):
                 return
             overwrite = answer == "Overwrite All"
 
+        # Hide the mod info panel and show progress in the panel instead
+        self.mod_info_panel.info_panel_frame.hide()
+        self.disable_enable_widgets_signal.emit(False)
+
+        # Create and show extraction progress in panel
+        progress_widget = TaskProgressWindow(
+            title="Extracting ZIP File",
+            show_message=True,
+            show_percent=True,
+        )
+        self.mod_info_panel.panel.addWidget(progress_widget)
+
+        # Store reference for signal connections
+        self._extract_progress_widget = progress_widget
+
         self._extract_thread = ZipExtractThread(
             file_path, base_path, overwrite_all=overwrite, delete=delete
         )
         self._extract_thread.progress.connect(self._on_extract_progress)
         self._extract_thread.finished.connect(self._on_extract_finished)
-
-        self.progress_window = ZipProgressWindow()
-        self.progress_window.progressBar.setValue(0)
-        self.progress_window.cancel_button.clicked.connect(self._extract_thread.stop)
+        progress_widget.cancel_requested.connect(self._extract_thread.stop)
 
         self._extract_thread.start()
 
-    def _on_extract_progress(self, percent: int) -> None:
-        self.progress_window.setVisible(True)
-        self.progress_window.progressBar.setValue(percent)
+    def _on_extract_progress(self, percent: int, message: str) -> None:
+        """Update progress bar during extraction."""
+        if hasattr(self, "_extract_progress_widget") and self._extract_progress_widget:
+            self._extract_progress_widget.update_progress(percent, message)
 
     def _on_extract_finished(self, success: bool, message: str) -> None:
-        self.progress_window.setVisible(False)
-        if success:
-            dialogue.show_information(
-                title=self.tr("Extraction completed"),
-                text=self.tr("The ZIP file was successfully extracted!"),
-                information=message,
-            )
-        else:
-            dialogue.show_warning(
-                title=self.tr("Extraction failed"),
-                text=self.tr("An error occurred during extraction."),
-                information=message,
-            )
+        """Handle extraction completion."""
+        try:
+            # Clean up progress widget
+            if (
+                hasattr(self, "_extract_progress_widget")
+                and self._extract_progress_widget
+            ):
+                self.mod_info_panel.panel.removeWidget(self._extract_progress_widget)
+                self._extract_progress_widget.close()
+                self._extract_progress_widget = None
+
+            # Show completion dialog
+            if success:
+                dialogue.show_information(
+                    title=self.tr("Extraction completed"),
+                    text=self.tr("The ZIP file was successfully extracted!"),
+                    information=message,
+                )
+            else:
+                dialogue.show_warning(
+                    title=self.tr("Extraction failed"),
+                    text=self.tr("An error occurred during extraction."),
+                    information=message,
+                )
+
+        finally:
+            # Always restore mod info panel (like download does)
+            self.mod_info_panel.info_panel_frame.show()
+            self.disable_enable_widgets_signal.emit(True)
 
     def _do_notify_no_git(self) -> None:
         answer = dialogue.show_dialogue_conditional(  # We import last so we can use gui + utils
