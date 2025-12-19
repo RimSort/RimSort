@@ -48,6 +48,18 @@ DOWNLOAD_CHUNK_SIZE = 131072  # 128KB for better performance
 MIN_UPDATE_SIZE = 1024  # Minimum reasonable size for an app update
 UPDATER_LOG_FILENAME = "updater.log"
 
+# Windows protected paths (application cannot write to these)
+WINDOWS_PROTECTED_PATHS = [
+    r"C:\PROGRAM FILES",
+    r"C:\PROGRAM FILES (X86)",
+    r"C:\WINDOWS",
+]
+
+# Thread timeouts and waits
+BACKUP_TIMEOUT_SECONDS = 600  # 10 minutes for backup
+EXTRACTION_THREAD_TIMEOUT_MS = 5000  # 5 seconds for thread cleanup
+THREAD_JOIN_TIMEOUT = 5  # 5 seconds for thread join
+
 # Platform-specific constants
 # Note: TEMP_DIR_DARWIN and TEMP_DIR_DEFAULT are unused and can be removed
 
@@ -69,6 +81,8 @@ ERR_DOWNLOAD_FAILED_TITLE = "Download failed"
 ERR_DOWNLOAD_FAILED_TEXT = "Failed to download the update."
 ERR_EXTRACTION_FAILED_TITLE = "Extraction failed"
 ERR_EXTRACTION_FAILED_TEXT = "Failed to extract the downloaded update."
+ERR_BACKUP_FAILED_TITLE = "Backup failed"
+ERR_BACKUP_FAILED_TEXT = "Failed to create a backup before updating."
 ERR_LAUNCH_FAILED_TITLE = "Launch failed"
 ERR_LAUNCH_FAILED_TEXT = "Failed to launch the update script."
 ERR_UPDATE_FAILED_TITLE = "Update failed"
@@ -380,31 +394,15 @@ class UpdateManager(QObject):
             return self._elevation_needed
 
         if self._system == "Windows":
-            app_folder = AppInfo().application_folder
-            app_path_str = str(app_folder).replace("/", "\\").upper()
-            protected_paths = [
-                r"C:\PROGRAM FILES",
-                r"C:\PROGRAM FILES (X86)",
-                r"C:\WINDOWS",
-            ]
-
-            # Check if in protected path
-            for protected in protected_paths:
-                if protected in app_path_str:
-                    logger.debug(f"Elevation forced due to protected path: {protected}")
-                    self._elevation_needed = True
-                    return True
+            if self._is_in_protected_path():
+                self._elevation_needed = True
+                return True
 
             # Test write access
-            try:
-                test_file = app_folder / "test_write.tmp"
-                test_file.write_text("test")
-                test_file.unlink()
-                logger.debug("Write test passed; no elevation needed")
+            if self._test_write_access():
                 self._elevation_needed = False
                 return False
-            except (OSError, IOError, PermissionError) as write_err:
-                logger.debug(f"Write test failed ({write_err}); elevation needed")
+            else:
                 self._elevation_needed = True
                 return True
         else:
@@ -413,6 +411,32 @@ class UpdateManager(QObject):
                 AppInfo().application_folder, os.W_OK
             )
             return self._elevation_needed
+
+    def _is_in_protected_path(self) -> bool:
+        """Check if application is installed in Windows protected path."""
+        app_folder = AppInfo().application_folder
+        app_path_str = str(app_folder).replace("/", "\\").upper()
+
+        for protected in WINDOWS_PROTECTED_PATHS:
+            if protected in app_path_str:
+                logger.info(
+                    f"Application in protected path: {protected} - elevation required"
+                )
+                return True
+        return False
+
+    def _test_write_access(self) -> bool:
+        """Test if write access is available in application folder."""
+        app_folder = AppInfo().application_folder
+        try:
+            test_file = app_folder / "test_write.tmp"
+            test_file.write_text("test")
+            test_file.unlink()
+            logger.debug("Write test passed; no elevation needed")
+            return True
+        except (OSError, IOError, PermissionError) as write_err:
+            logger.info(f"Write access test failed ({write_err}); elevation required")
+            return False
 
     def _detect_terminal_emulator(self) -> str:
         """
@@ -458,7 +482,7 @@ class UpdateManager(QObject):
         for better maintainability and testability.
         """
         start_time = datetime.now()
-        logger.debug("Starting update check process...")
+        logger.info("Starting update check process...")
 
         try:
             # Validate prerequisites
@@ -533,7 +557,7 @@ class UpdateManager(QObject):
             needs_elevation = False
 
         current_version = AppInfo().app_version
-        logger.debug(f"Current RimSort version: {current_version}")
+        logger.info(f"Current RimSort version: {current_version}")
 
         # Get the latest release info
         logger.info("Fetching latest release information from GitHub API...")
@@ -546,13 +570,13 @@ class UpdateManager(QObject):
         latest_tag_name = latest_release_info["tag_name"]
         download_url = latest_release_info["download_url"]
 
-        logger.debug(f"Latest RimSort version: {latest_version}")
+        logger.info(f"Latest RimSort version: {latest_version}")
         logger.info(f"Update available: {latest_tag_name} ({latest_version})")
 
         # Compare versions
         current_version_parsed = self._parse_current_version(current_version)
         if current_version_parsed >= latest_version:
-            logger.info("Up to date!")
+            logger.info("Already running the latest version")
             return None
 
         # Prompt user for update
@@ -778,19 +802,14 @@ class UpdateManager(QObject):
         arch_patterns = arch_patterns_dict.get(self._arch, [])
 
         # Determine preferred extension order
-        preferred_order = [ZIP_EXTENSION]
-        if self._system == "Windows":
-            app_folder = AppInfo().application_folder
-            app_path_str = str(app_folder).replace("/", "\\").upper()
-            protected_paths = [
-                r"C:\PROGRAM FILES",
-                r"C:\PROGRAM FILES (X86)",
-                r"C:\WINDOWS",
-            ]
-            if any(protected in app_path_str for protected in protected_paths):
-                preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
-            else:
-                preferred_order = [ZIP_EXTENSION, MSI_EXTENSION]
+        if self._system == "Windows" and self._is_in_protected_path():
+            preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
+        else:
+            preferred_order = (
+                [ZIP_EXTENSION, MSI_EXTENSION]
+                if self._system == "Windows"
+                else [ZIP_EXTENSION]
+            )
 
         logger.debug(
             f"Looking for asset matching system={self._system}, arch={self._arch}, patterns={system_patterns + arch_patterns}, order={preferred_order}"
@@ -966,7 +985,7 @@ class UpdateManager(QObject):
                 raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
 
             update_source_path = self._extracted_path
-            logger.warning(f"Update source path: {update_source_path}")
+            logger.info(f"Update extracted to: {update_source_path}")
 
             if update_source_path is None:
                 raise UpdateExtractionError(
@@ -997,7 +1016,7 @@ class UpdateManager(QObject):
                 self._cleanup_old_backups()
 
             # Prepare for update script execution
-            logger.warning("Preparing update log...")
+            logger.info("Preparing to launch update...")
             log_path = self._prepare_update_log(self._system)
             needs_elevation = self._check_needs_elevation()
 
@@ -1173,19 +1192,13 @@ class UpdateManager(QObject):
         Raises:
             UpdateDownloadError: If download fails
         """
-        logger.debug(f"Starting download from URL: {url}")
-        logger.debug(
-            f"Download timeout: {DOWNLOAD_TIMEOUT}s, API timeout: {API_TIMEOUT}s"
-        )
+        logger.info(f"Starting download from URL: {url}")
         try:
-            logger.debug("Entering _download_update method")
-            logger.debug(f"Starting update download from {url}")
-
             # Get file size first for progress tracking
             total_size = self._get_file_size(url)
-            logger.debug(f"Total file size: {total_size} bytes")
+            if total_size:
+                logger.info(f"File size: {total_size / (1024 * 1024):.2f} MB")
 
-            logger.debug("Starting download with streaming")
             response = requests.get(url, timeout=DOWNLOAD_TIMEOUT, stream=True)
             response.raise_for_status()
             logger.debug(f"HTTP response status: {response.status_code}")
@@ -1197,15 +1210,15 @@ class UpdateManager(QObject):
             self._validate_download(content)
 
             self._update_content = content
-            logger.debug("Update downloaded and validated successfully")
+            logger.info("Update downloaded and validated successfully")
 
         except requests.RequestException as e:
-            logger.debug(f"Request exception during download: {e}")
+            logger.error(f"Download failed: {e}")
             raise UpdateDownloadError(f"Failed to download update: {e}") from e
         except UpdateError:
             raise
         except Exception as e:
-            logger.debug(f"Unexpected exception during download: {e}")
+            logger.error(f"Unexpected error during download: {e}")
             raise UpdateDownloadError(f"Failed to download update: {e}") from e
 
     def _create_temp_dir(self) -> Path:
@@ -1220,7 +1233,6 @@ class UpdateManager(QObject):
             / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         temp_base.mkdir(exist_ok=True)
-        logger.debug(f"Using extraction temp dir: {temp_base}")
         return temp_base
 
     def _extract_zip(self, content: bytes, temp_base: Path) -> int:
@@ -1237,7 +1249,7 @@ class UpdateManager(QObject):
         Raises:
             UpdateExtractionError: If ZIP is corrupted or extraction fails
         """
-        logger.debug("Extracting update to temporary directory")
+        logger.info("Extracting update from ZIP")
 
         # Write content to temporary ZIP file for extraction
         temp_zip_path = temp_base.parent / f"{temp_base.name}.zip"
@@ -1245,18 +1257,15 @@ class UpdateManager(QObject):
 
         try:
             # Validate ZIP integrity
-            logger.debug("Testing ZIP file integrity")
             is_valid, error_msg = validate_zip_integrity(temp_zip_path)
             if not is_valid:
-                logger.debug(f"ZIP validation failed: {error_msg}")
+                logger.error(f"ZIP validation failed: {error_msg}")
                 raise UpdateExtractionError(error_msg)
 
             # Get ZIP contents
             zip_contents = get_zip_contents(temp_zip_path)
             extracted_files = len(zip_contents)
-            logger.debug(f"ZIP file list (first 10): {zip_contents[:10]}")
-
-            logger.debug("ZIP integrity check passed, starting extraction")
+            logger.info(f"ZIP contains {extracted_files} files")
 
             # Create and display extraction progress widget
             self._progress_widget = TaskProgressWindow(
@@ -1301,8 +1310,8 @@ class UpdateManager(QObject):
                             )
                             # Restore panel visibility
                             self.mod_info_panel.info_panel_frame.show()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Error closing progress widget: {e}")
 
             extract_thread = ZipExtractThread(
                 zip_path=str(temp_zip_path),
@@ -1318,20 +1327,20 @@ class UpdateManager(QObject):
             loop.exec()
 
             # Ensure thread is properly cleaned up before continuing
-            extract_thread.wait(5000)
+            extract_thread.wait(EXTRACTION_THREAD_TIMEOUT_MS)
             if extract_thread.isRunning():
                 logger.warning(
                     "Extraction thread still running after timeout, forcing quit"
                 )
                 extract_thread.quit()
-                extract_thread.wait(2000)
+                extract_thread.wait(2000)  # Final attempt to stop thread
 
             if not extraction_result["success"]:
                 raise UpdateExtractionError(
                     f"Extraction failed: {extraction_result['error']}"
                 )
 
-            logger.info(f"Extracted {extracted_files} files from ZIP to {temp_base}")
+            logger.info(f"Extracted {extracted_files} files from ZIP")
             return extracted_files
 
         except BadZipFile as e:
@@ -1342,7 +1351,7 @@ class UpdateManager(QObject):
                 try:
                     temp_zip_path.unlink()
                 except Exception as e:
-                    logger.warning(f"Failed to clean up temp ZIP file: {e}")
+                    logger.debug(f"Failed to clean up temp ZIP file: {e}")
 
     def _normalize_structure(self, temp_base: Path, extracted_files: int) -> None:
         """
@@ -1352,7 +1361,7 @@ class UpdateManager(QObject):
             temp_base: Temporary directory containing extracted files
             extracted_files: Number of files extracted
         """
-        logger.debug("Starting structure normalization")
+        logger.info("Normalizing extracted structure")
 
         # Create and display normalization progress widget
         self._progress_widget = TaskProgressWindow(
@@ -1421,23 +1430,20 @@ class UpdateManager(QObject):
         Raises:
             UpdateExtractionError: If extraction or saving fails
         """
-        logger.debug("Starting update extraction/preparation")
+        logger.info("Extracting update")
         try:
-            logger.debug("Entering _extract_update method")
             if self._update_content is None:
-                logger.debug("No update content available for extraction")
+                logger.error("No update content available")
                 raise UpdateExtractionError(
                     "No update content available for extraction"
                 )
-
-            logger.debug(f"Update content size: {len(self._update_content)} bytes")
 
             if is_msi:
                 # For MSI, just save the file to temp location
                 temp_base = self._create_temp_dir()
                 msi_path = temp_base / "RimSort_Update.msi"
                 msi_path.write_bytes(self._update_content)
-                logger.debug(f"MSI file saved to: {msi_path}")
+                logger.info("MSI prepared")
                 self._extracted_path = msi_path
                 return msi_path
             else:
@@ -1446,27 +1452,25 @@ class UpdateManager(QObject):
 
                 # Extract ZIP content
                 extracted_files = self._extract_zip(self._update_content, temp_base)
-                logger.warning(
-                    f"Extracted {extracted_files} files to temporary directory"
-                )
+                logger.info(f"Extracted {extracted_files} files")
 
                 # Normalize structure
                 self._normalize_structure(temp_base, extracted_files)
 
-                logger.debug("Update extracted and normalized successfully")
+                logger.info("Update extraction complete")
 
                 self._extracted_path = temp_base
                 return temp_base
 
         except BadZipFile as e:
-            logger.debug(f"BadZipFile exception during extraction: {e}")
+            logger.error(f"Invalid ZIP file: {e}")
             raise UpdateExtractionError(
                 f"Downloaded file is not a valid ZIP archive: {e}"
             ) from e
         except UpdateError:
             raise
         except Exception as e:
-            logger.debug(f"Unexpected exception during extraction: {e}")
+            logger.error(f"Extraction failed: {e}")
             raise UpdateExtractionError(f"Failed to extract update: {e}") from e
 
     def _should_unwrap_directory(self, top_dir: Path) -> bool:
@@ -1559,9 +1563,10 @@ class UpdateManager(QObject):
                     )
                     if executable_path.exists():
                         executable_found = True
-                        logger.debug(f"Verified macOS executable at: {executable_path}")
+                        logger.info("Found macOS executable")
                         break
             if not executable_found:
+                logger.error("RimSort.app bundle not found")
                 raise UpdateExtractionError(
                     "Expected RimSort.app bundle with executable not found after normalization"
                 )
@@ -1570,7 +1575,7 @@ class UpdateManager(QObject):
             executable_path = extract_path / expected_executable
             if executable_path.exists():
                 executable_found = True
-                logger.debug(f"Verified executable at: {executable_path}")
+                logger.info(f"Found executable: {expected_executable}")
             else:
                 # Fallback: check if executable is in any subdirectory
                 for child in children:
@@ -1578,7 +1583,7 @@ class UpdateManager(QObject):
                         candidate_path = child / expected_executable
                         if candidate_path.exists():
                             executable_found = True
-                            logger.debug(f"Verified executable at: {candidate_path}")
+                            logger.info("Found executable in subdirectory")
                             break
 
             if not executable_found:
@@ -2005,27 +2010,47 @@ class UpdateManager(QObject):
         """Worker thread for extraction."""
         return self._extract_update(is_msi)
 
+    def _show_progress_widget(
+        self, progress_widget: TaskProgressWindow, cancellable: bool = True
+    ) -> None:
+        """Show progress widget in panel or as standalone window."""
+        progress_widget.set_cancel_enabled(cancellable)
+
+        if self.mod_info_panel:
+            self.mod_info_panel.info_panel_frame.hide()
+            if hasattr(self.main_content, "disable_enable_widgets_signal"):
+                self.main_content.disable_enable_widgets_signal.emit(False)
+            self.mod_info_panel.panel.addWidget(progress_widget)
+            progress_widget.show()
+        else:
+            progress_widget.show()
+
+    def _hide_progress_widget(
+        self, progress_widget: Optional[TaskProgressWindow]
+    ) -> None:
+        """Close and remove progress widget from panel."""
+        try:
+            if progress_widget:
+                progress_widget.close()
+                if self.mod_info_panel:
+                    self.mod_info_panel.panel.removeWidget(progress_widget)
+                    self.mod_info_panel.info_panel_frame.show()
+        except Exception as e:
+            logger.error(f"Error cleaning up progress widget: {e}")
+
     def _create_backup_with_progress(self) -> None:
         """Create a backup with a progress widget."""
         self._progress_widget = TaskProgressWindow(
             title="Creating Backup",
             show_message=True,
-            show_percent=True,  # Show progress percentage
+            show_percent=True,
         )
         self._progress_widget.set_message(
             self.tr("Creating backup... (this may take several minutes)")
         )
-        self._progress_widget.set_cancel_enabled(
-            False
-        )  # Backup can't be cancelled mid-way
 
-        # Show progress widget in panel or as standalone window
-        if self.mod_info_panel:
-            self.mod_info_panel.info_panel_frame.hide()
-            self.mod_info_panel.panel.addWidget(self._progress_widget)
-            self._progress_widget.show()
-        else:
-            self._progress_widget.show()
+        # Show progress widget (backup cannot be cancelled)
+        self._show_progress_widget(self._progress_widget, cancellable=False)
 
         # Run backup in a thread (not daemon - ensure proper cleanup)
         backup_thread = threading.Thread(target=self._create_backup)
@@ -2034,28 +2059,20 @@ class UpdateManager(QObject):
 
         # Wait for thread to complete with timeout
         start_time = time.time()
-        timeout_seconds = 600  # 10 minutes
         while backup_thread.is_alive():
             QApplication.processEvents()
             time.sleep(1)
             elapsed = time.time() - start_time
-            if elapsed > timeout_seconds:
+            if elapsed > BACKUP_TIMEOUT_SECONDS:
                 logger.warning(f"Backup thread timeout after {elapsed:.0f} seconds")
                 break
 
         # Ensure thread is joined before cleanup
-        backup_thread.join(timeout=5)
+        backup_thread.join(timeout=THREAD_JOIN_TIMEOUT)
         if backup_thread.is_alive():
             logger.warning("Backup thread still alive after join timeout")
 
-        try:
-            if self._progress_widget:
-                self._progress_widget.close()
-                # Remove from panel if it was added there
-                if self.mod_info_panel:
-                    self.mod_info_panel.panel.removeWidget(self._progress_widget)
-        except Exception as e:
-            logger.debug(f"Error cleaning up progress widget: {e}")
+        self._hide_progress_widget(self._progress_widget)
 
     def _create_backup(self) -> None:
         """
@@ -2070,9 +2087,7 @@ class UpdateManager(QObject):
         backup_filename = f"RimSort_Backup_{timestamp}.zip"
         backup_path = backup_folder / backup_filename
 
-        logger.info(
-            f"Creating compressed backup of current installation to: {backup_path}"
-        )
+        logger.info("Creating backup of RimSort installation")
 
         def update_backup_progress(current: int, total: int) -> None:
             """Update progress widget during backup (thread-safe)."""
@@ -2086,9 +2101,6 @@ class UpdateManager(QObject):
                     logger.debug(f"Error updating backup progress: {e}")
 
         try:
-            logger.debug(f"Backup folder: {backup_folder}")
-            logger.debug(f"Backup path: {backup_path}")
-
             # Create ZIP backup of the application folder with progress updates
             create_zip_backup(
                 app_folder, backup_path, progress_callback=update_backup_progress
@@ -2098,14 +2110,23 @@ class UpdateManager(QObject):
             if backup_path.exists():
                 backup_size = backup_path.stat().st_size
                 logger.info(
-                    f"Compressed backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
+                    f"Backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
                 )
             else:
-                logger.warning(f"Backup file not found at {backup_path}")
+                logger.warning("Backup file not created")
 
         except Exception as e:
             logger.warning(f"Failed to create backup: {e}")
-            logger.debug(f"Backup creation error traceback: {traceback.format_exc()}")
+            logger.error(f"Backup creation error traceback: {traceback.format_exc()}")
+            # show dialog and ask user to if they want to proceed with update anyway
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr(ERR_BACKUP_FAILED_TITLE),
+                text=self.tr(ERR_BACKUP_FAILED_TEXT),
+                information=f"{e}",
+                details=f"{traceback.format_exc()}",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
             # Continue with update even if backup fails
 
     def _cleanup_old_backups(self) -> None:
