@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 
@@ -10,7 +9,6 @@ from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.utils.constants import DEFAULT_USER_RULES
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
@@ -29,8 +27,6 @@ class AppController(QObject):
         self.app = QApplication(sys.argv)
         self.app.setWindowIcon(GUIInfo().app_icon)
 
-        # Initialize user rules.
-        self.initialize_user_rules()
         # Initialize the application settings.
         self.initialize_settings()
         # set the language of the application.
@@ -69,14 +65,6 @@ class AppController(QObject):
             self.settings.enable_themes,
             self.settings.theme_name,
         )
-
-    def initialize_user_rules(self) -> None:
-        """Initializes userRules.json if it does not exist."""
-        user_rules_path = AppInfo().user_rules_file
-        if not user_rules_path.exists():
-            initial_rules_db = DEFAULT_USER_RULES
-            with open(user_rules_path, "w", encoding="utf-8") as output:
-                json.dump(initial_rules_db, output, indent=4)
 
     def initialize_settings(self) -> None:
         """Initializes the settings model, view, and controller."""

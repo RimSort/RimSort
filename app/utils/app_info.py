@@ -1,9 +1,12 @@
+import json
 import os
 import sys
 from pathlib import Path
 
 from lxml import etree, objectify
 from platformdirs import PlatformDirs
+
+from app.utils.constants import DEFAULT_USER_RULES
 
 
 class AppInfo:
@@ -99,6 +102,12 @@ class AppInfo:
         self._databases_folder.mkdir(parents=True, exist_ok=True)
         self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
         self._backup_folder.mkdir(parents=True, exist_ok=True)
+
+        # Initialize user rules file if it does not exist
+        if not self._user_rules_file.exists():
+            self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._user_rules_file, "w", encoding="utf-8") as output:
+                json.dump(DEFAULT_USER_RULES, output, indent=4)
 
         self._is_initialized: bool = True
 
