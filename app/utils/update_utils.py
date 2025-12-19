@@ -18,7 +18,7 @@ import requests
 from loguru import logger
 from packaging import version
 from PySide6.QtCore import QEventLoop, QObject, Signal
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 import app.views.dialogue as dialogue
 from app.utils.app_info import AppInfo
@@ -26,12 +26,11 @@ from app.utils.generic import check_internet_connection
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
-    ZipProgressWindow,
     create_zip_backup,
     get_zip_contents,
     validate_zip_integrity,
 )
-from app.views.download_progress_window import DownloadProgressWindow
+from app.views.task_progress_window import TaskProgressWindow
 
 # Pre-compiled regex patterns for performance
 VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
@@ -341,11 +340,15 @@ class UpdateManager(QObject):
     }
 
     def __init__(
-        self, settings_controller: "SettingsController", main_content: Any
+        self,
+        settings_controller: "SettingsController",
+        main_content: Any,
+        mod_info_panel: Optional[Any] = None,
     ) -> None:
         super().__init__()
         self.settings_controller = settings_controller
         self.main_content = main_content
+        self.mod_info_panel = mod_info_panel
         self._update_content: bytes | None = None
         self._extracted_path: Path | None = None
         self._elevation_needed: Optional[bool] = None  # Cache elevation check result
@@ -362,6 +365,8 @@ class UpdateManager(QObject):
         self._detected_terminal: Optional[str] = (
             None  # Cache detected terminal emulator
         )
+        # Progress window for update operations
+        self._progress_widget: Optional[TaskProgressWindow] = None
 
     def _check_needs_elevation(self) -> bool:
         """
@@ -892,29 +897,39 @@ class UpdateManager(QObject):
                 f"Downloading & extracting RimSort release from: {download_url}"
             )
 
-            # Download with progress window
+            # Download with progress widget
             self._download_cancelled = False
-            progress_window: DownloadProgressWindow = DownloadProgressWindow()
-            progress_window.update_progress(
+            self._progress_widget = TaskProgressWindow(
+                title="RimSort Update",
+                show_message=True,
+                show_percent=True,
+            )
+            self._progress_widget.update_progress(
                 0,
                 self.tr("Downloading RimSort {tag_name} release...").format(
                     tag_name=tag_name
                 ),
             )
-            progress_window.cancel_requested.connect(self._on_download_cancel)
-            self.update_progress.connect(progress_window.update_progress)
+            self._progress_widget.cancel_requested.connect(self._on_download_cancel)
+            self.update_progress.connect(self._progress_widget.update_progress)
 
+            download_result: dict[str, Any] = {"success": False, "error": ""}
             loop = QEventLoop()
-            result: dict[str, Any] = {"success": False, "error": ""}
 
             def on_complete(success: bool, error: str) -> None:
-                result["success"] = success
-                result["error"] = error
+                download_result["success"] = success
+                download_result["error"] = error
+                loop.quit()
                 try:
-                    progress_window.close()
+                    if self._progress_widget:
+                        self._progress_widget.close()
+                        # Remove from panel if it was added there
+                        if self.mod_info_panel:
+                            self.mod_info_panel.panel.removeWidget(
+                                self._progress_widget
+                            )
                 except Exception:
                     pass
-                loop.quit()
 
             self.download_complete.connect(on_complete)
 
@@ -923,14 +938,24 @@ class UpdateManager(QObject):
             )
             worker.start()
 
-            progress_window.show()
+            # Show progress widget in panel or as standalone window
+            if self.mod_info_panel:
+                self.mod_info_panel.info_panel_frame.hide()
+                if hasattr(self.main_content, "disable_enable_widgets_signal"):
+                    self.main_content.disable_enable_widgets_signal.emit(False)
+                self.mod_info_panel.panel.addWidget(self._progress_widget)
+                self._progress_widget.show()
+            else:
+                self._progress_widget.show()
+
+            # Wait for download to complete without blocking event loop
             loop.exec()
 
-            if not result["success"] or self._update_content is None:
+            if not download_result["success"] or self._update_content is None:
                 if self._download_cancelled:
                     raise UpdateDownloadError("Download cancelled by user")
                 raise UpdateDownloadError(
-                    result["error"] or "Download did not complete successfully"
+                    download_result["error"] or "Download did not complete successfully"
                 )
 
             # Extract or save with progress window
@@ -940,31 +965,39 @@ class UpdateManager(QObject):
                 logger.error(f"Extraction/preparation failed: {e}")
                 raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
 
-            if self._extracted_path is None:
+            update_source_path = self._extracted_path
+            logger.warning(f"Update source path: {update_source_path}")
+
+            if update_source_path is None:
                 raise UpdateExtractionError(
                     "Extraction/preparation did not complete successfully"
                 )
-
-            update_source_path = self._extracted_path
 
             # Confirm installation
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Update downloaded"),
                 text=self.tr("Do you want to proceed with the update?"),
-                information=f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {update_source_path}",
+                information=self.tr(
+                    f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {update_source_path}"
+                ),
             )
 
             if answer != QMessageBox.StandardButton.Yes:
+                logger.info("User declined update")
+                # Restore panel if it was hidden
+                if self.mod_info_panel:
+                    self.mod_info_panel.info_panel_frame.show()
                 return
 
             # Check if backup is enabled in settings
             if self.settings_controller.settings.enable_backup_before_update:
                 # Create backup of current installation with progress window
                 self._create_backup_with_progress()
-            # Clean up old backups always even when not creating new one
-            self._cleanup_old_backups()
+                # Clean up old backups after successful backup creation
+                self._cleanup_old_backups()
 
-            # Prepare for launch
+            # Prepare for update script execution
+            logger.warning("Preparing update log...")
             log_path = self._prepare_update_log(self._system)
             needs_elevation = self._check_needs_elevation()
 
@@ -1002,6 +1035,15 @@ class UpdateManager(QObject):
                 information=f"Error: {str(e)}\nURL: {download_url}",
                 details=traceback.format_exc(),
             )
+        finally:
+            # Always restore the panel if it was hidden
+            if self.mod_info_panel:
+                try:
+                    self.mod_info_panel.info_panel_frame.show()
+                    if hasattr(self.main_content, "disable_enable_widgets_signal"):
+                        self.main_content.disable_enable_widgets_signal.emit(True)
+                except Exception:
+                    pass
 
     def _get_file_size(self, url: str) -> int:
         """
@@ -1216,28 +1258,51 @@ class UpdateManager(QObject):
 
             logger.debug("ZIP integrity check passed, starting extraction")
 
-            # Create and display extraction progress window
-            progress_window: ZipProgressWindow = ZipProgressWindow(
-                title="Extracting Update", show_message=True
+            # Create and display extraction progress widget
+            self._progress_widget = TaskProgressWindow(
+                title="Extracting Update",
+                show_message=True,
+                show_percent=True,
             )
-            progress_window.set_message("Extracting files...")
-            progress_window.show()
+            self._progress_widget.set_message("Extracting files...")
+
+            # Show progress widget in panel or as standalone window
+            if self.mod_info_panel:
+                self.mod_info_panel.info_panel_frame.hide()
+                self.mod_info_panel.panel.addWidget(self._progress_widget)
+                self._progress_widget.show()
+            else:
+                self._progress_widget.show()
 
             # Create and run extraction thread
+            extraction_result: dict[str, Any] = {
+                "success": False,
+                "error": "",
+                "done": False,
+            }
             loop = QEventLoop()
-            result: dict[str, Any] = {"success": False, "error": ""}
 
-            def on_extraction_progress(percent: int) -> None:
-                progress_window.progressBar.setValue(percent)
+            def on_extraction_progress(percent: int, message: str) -> None:
+                if self._progress_widget:
+                    self._progress_widget.update_progress(percent, message)
 
             def on_extraction_finished(success: bool, message: str) -> None:
-                result["success"] = success
-                result["error"] = message
+                extraction_result["success"] = success
+                extraction_result["error"] = message
+                extraction_result["done"] = True
+                loop.quit()
                 try:
-                    progress_window.close()
+                    if self._progress_widget:
+                        self._progress_widget.close()
+                        # Remove from panel if it was added there
+                        if self.mod_info_panel:
+                            self.mod_info_panel.panel.removeWidget(
+                                self._progress_widget
+                            )
+                            # Restore panel visibility
+                            self.mod_info_panel.info_panel_frame.show()
                 except Exception:
                     pass
-                loop.quit()
 
             extract_thread = ZipExtractThread(
                 zip_path=str(temp_zip_path),
@@ -1249,10 +1314,22 @@ class UpdateManager(QObject):
             extract_thread.finished.connect(on_extraction_finished)
             extract_thread.start()
 
+            # Wait for extraction to complete without blocking event loop
             loop.exec()
 
-            if not result["success"]:
-                raise UpdateExtractionError(f"Extraction failed: {result['error']}")
+            # Ensure thread is properly cleaned up before continuing
+            extract_thread.wait(5000)
+            if extract_thread.isRunning():
+                logger.warning(
+                    "Extraction thread still running after timeout, forcing quit"
+                )
+                extract_thread.quit()
+                extract_thread.wait(2000)
+
+            if not extraction_result["success"]:
+                raise UpdateExtractionError(
+                    f"Extraction failed: {extraction_result['error']}"
+                )
 
             logger.info(f"Extracted {extracted_files} files from ZIP to {temp_base}")
             return extracted_files
@@ -1276,7 +1353,61 @@ class UpdateManager(QObject):
             extracted_files: Number of files extracted
         """
         logger.debug("Starting structure normalization")
-        self._normalize_extracted_structure(temp_base, extracted_files)
+
+        # Create and display normalization progress widget
+        self._progress_widget = TaskProgressWindow(
+            title="Normalizing Update",
+            show_message=True,
+            show_percent=False,
+        )
+        self._progress_widget.set_message("Normalizing extracted structure...")
+
+        # Show progress widget in panel or as standalone window
+        if self.mod_info_panel:
+            self.mod_info_panel.info_panel_frame.hide()
+            self.mod_info_panel.panel.addWidget(self._progress_widget)
+            self._progress_widget.show()
+        else:
+            self._progress_widget.show()
+
+        # Use a thread and event loop to keep UI responsive during normalization
+        normalization_result: dict[str, Any] = {"success": False, "error": None}
+        loop = QEventLoop()
+
+        def worker_func() -> None:
+            try:
+                self._normalize_extracted_structure(temp_base, extracted_files)
+                normalization_result["success"] = True
+            except Exception as e:
+                normalization_result["error"] = e
+            finally:
+                logger.debug("Structure normalization worker thread completed")
+                loop.quit()
+
+        thread = threading.Thread(target=worker_func, daemon=False)
+        thread.start()
+
+        loop.exec()
+
+        try:
+            if self._progress_widget:
+                self._progress_widget.close()
+                # Remove from panel if it was added there
+                if self.mod_info_panel:
+                    self.mod_info_panel.panel.removeWidget(self._progress_widget)
+                    # Restore panel visibility
+                    self.mod_info_panel.info_panel_frame.show()
+        except Exception:
+            pass
+
+        if not normalization_result["success"]:
+            error = normalization_result["error"]
+            if isinstance(error, UpdateExtractionError):
+                raise error
+            raise UpdateExtractionError(
+                f"Structure normalization failed: {error}"
+            ) from error
+
         logger.debug(f"Normalized update ready at: {temp_base}")
 
     def _extract_update(self, is_msi: bool = False) -> Path:
@@ -1315,6 +1446,9 @@ class UpdateManager(QObject):
 
                 # Extract ZIP content
                 extracted_files = self._extract_zip(self._update_content, temp_base)
+                logger.warning(
+                    f"Extracted {extracted_files} files to temporary directory"
+                )
 
                 # Normalize structure
                 self._normalize_structure(temp_base, extracted_files)
@@ -1479,51 +1613,67 @@ class UpdateManager(QObject):
         Raises:
             UpdateExtractionError: If normalization fails
         """
-        if not extract_path.exists():
-            raise UpdateExtractionError(
-                "Extracted path does not exist after extraction"
-            )
-
-        children = list(extract_path.iterdir())
-        logger.debug(f"Initial extracted children: {[c.name for c in children]}")
-        if len(children) == 0:
-            raise UpdateExtractionError("No files extracted from ZIP")
-
-        # Check for common ZIP wrapping patterns, unwrap recursively if needed
-        while len(children) == 1 and children[0].is_dir():
-            top_dir = children[0]
-
-            if not self._should_unwrap_directory(top_dir):
-                logger.debug(
-                    f"No unwrapping needed for '{top_dir.name}'; using existing structure"
+        try:
+            if not extract_path.exists():
+                raise UpdateExtractionError(
+                    "Extracted path does not exist after extraction"
                 )
-                break
 
-            logger.debug(f"Detected wrapped structure in '{top_dir.name}'; normalizing")
-            logger.debug(
-                f"Wrapper '{top_dir.name}' children: {[c.name for c in top_dir.iterdir()]}"
-            )
-
-            # Move all contents from top_dir to extract_path
-            moved_items = self._move_directory_contents(top_dir, extract_path)
-
-            if moved_items == 0:
-                logger.warning("No items were successfully moved during normalization")
-                break
-
-            # Remove empty top_dir if possible
-            try:
-                top_dir.rmdir()
-                logger.debug("Structure normalized: contents moved to root")
-            except OSError as e:
-                logger.warning(f"Failed to remove wrapper dir {top_dir}: {e}")
-
-            # Refresh children list after unwrapping
             children = list(extract_path.iterdir())
-            logger.debug(f"Post-normalization children: {[c.name for c in children]}")
+            logger.debug(f"Initial extracted children: {[c.name for c in children]}")
+            if len(children) == 0:
+                raise UpdateExtractionError("No files extracted from ZIP")
 
-        # Validate expected structure based on platform
-        self._validate_executable_presence(extract_path, children)
+            # Check for common ZIP wrapping patterns, unwrap recursively if needed
+            while len(children) == 1 and children[0].is_dir():
+                top_dir = children[0]
+
+                if not self._should_unwrap_directory(top_dir):
+                    logger.debug(
+                        f"No unwrapping needed for '{top_dir.name}'; using existing structure"
+                    )
+                    break
+
+                logger.debug(
+                    f"Detected wrapped structure in '{top_dir.name}'; normalizing"
+                )
+                logger.debug(
+                    f"Wrapper '{top_dir.name}' children: {[c.name for c in top_dir.iterdir()]}"
+                )
+
+                # Move all contents from top_dir to extract_path
+                moved_items = self._move_directory_contents(top_dir, extract_path)
+
+                if moved_items == 0:
+                    logger.warning(
+                        "No items were successfully moved during normalization"
+                    )
+                    break
+
+                # Remove empty top_dir if possible
+                try:
+                    top_dir.rmdir()
+                    logger.debug("Structure normalized: contents moved to root")
+                except OSError as e:
+                    logger.warning(f"Failed to remove wrapper dir {top_dir}: {e}")
+
+                # Refresh children list after unwrapping
+                children = list(extract_path.iterdir())
+                logger.debug(
+                    f"Post-normalization children: {[c.name for c in children]}"
+                )
+
+            # Validate expected structure based on platform
+            self._validate_executable_presence(extract_path, children)
+        except Exception as e:
+            logger.error(f"Unexpected error during structure normalization: {e}")
+            logger.error(f"Extract path: {extract_path}")
+            logger.error(
+                f"Children: {[c.name for c in extract_path.iterdir()] if extract_path.exists() else 'N/A'}"
+            )
+            raise UpdateExtractionError(
+                f"Structure normalization failed: {str(e)}"
+            ) from e
 
     def _launch_update_script(
         self,
@@ -1849,40 +1999,68 @@ class UpdateManager(QObject):
             is_msi: Whether the update is an MSI installer
         """
         # Run extraction on main thread (Qt operations require main thread)
-        self._extract_update_thread_worker(is_msi)
+        self._extracted_path = self._extract_update_thread_worker(is_msi)
 
-    def _extract_update_thread_worker(self, is_msi: bool = False) -> None:
+    def _extract_update_thread_worker(self, is_msi: bool = False) -> Path:
         """Worker thread for extraction."""
-        self._extract_update(is_msi)
+        return self._extract_update(is_msi)
 
     def _create_backup_with_progress(self) -> None:
-        """Create a backup with a progress window."""
-        progress_window = ZipProgressWindow(title="Creating Backup", show_message=True)
-        progress_window.set_message(self.tr("Creating backup..."))
-        progress_window.show()
+        """Create a backup with a progress widget."""
+        self._progress_widget = TaskProgressWindow(
+            title="Creating Backup",
+            show_message=True,
+            show_percent=True,  # Show progress percentage
+        )
+        self._progress_widget.set_message(
+            self.tr("Creating backup... (this may take several minutes)")
+        )
+        self._progress_widget.set_cancel_enabled(
+            False
+        )  # Backup can't be cancelled mid-way
 
-        loop = QEventLoop()
+        # Show progress widget in panel or as standalone window
+        if self.mod_info_panel:
+            self.mod_info_panel.info_panel_frame.hide()
+            self.mod_info_panel.panel.addWidget(self._progress_widget)
+            self._progress_widget.show()
+        else:
+            self._progress_widget.show()
 
-        def on_backup_complete() -> None:
-            try:
-                progress_window.close()
-            except Exception:
-                pass
-            loop.quit()
-
-        # Run backup in a thread
+        # Run backup in a thread (not daemon - ensure proper cleanup)
         backup_thread = threading.Thread(target=self._create_backup)
-        backup_thread.daemon = True
+        backup_thread.daemon = False
         backup_thread.start()
 
         # Wait for thread to complete with timeout
-        backup_thread.join(timeout=600)  # 10 minute timeout
+        start_time = time.time()
+        timeout_seconds = 600  # 10 minutes
+        while backup_thread.is_alive():
+            QApplication.processEvents()
+            time.sleep(1)
+            elapsed = time.time() - start_time
+            if elapsed > timeout_seconds:
+                logger.warning(f"Backup thread timeout after {elapsed:.0f} seconds")
+                break
 
-        on_backup_complete()
+        # Ensure thread is joined before cleanup
+        backup_thread.join(timeout=5)
+        if backup_thread.is_alive():
+            logger.warning("Backup thread still alive after join timeout")
+
+        try:
+            if self._progress_widget:
+                self._progress_widget.close()
+                # Remove from panel if it was added there
+                if self.mod_info_panel:
+                    self.mod_info_panel.panel.removeWidget(self._progress_widget)
+        except Exception as e:
+            logger.debug(f"Error cleaning up progress widget: {e}")
 
     def _create_backup(self) -> None:
         """
         Create a compressed backup of the current RimSort installation as a ZIP file.
+        Updates progress widget during backup.
         """
         app_folder = AppInfo().application_folder
         backup_folder = AppInfo().backup_folder
@@ -1896,12 +2074,38 @@ class UpdateManager(QObject):
             f"Creating compressed backup of current installation to: {backup_path}"
         )
 
+        def update_backup_progress(current: int, total: int) -> None:
+            """Update progress widget during backup (thread-safe)."""
+            if self._progress_widget and total > 0:
+                percent = int((current / total) * 100)
+                message = f"Backing up files: {current} / {total}"
+                # Use emit for thread safety, or call directly if on main thread
+                try:
+                    self._progress_widget.update_progress(percent, message)
+                except Exception as e:
+                    logger.debug(f"Error updating backup progress: {e}")
+
         try:
-            # Create ZIP backup of the application folder
-            create_zip_backup(app_folder, backup_path)
-            logger.info("Compressed backup created successfully")
+            logger.debug(f"Backup folder: {backup_folder}")
+            logger.debug(f"Backup path: {backup_path}")
+
+            # Create ZIP backup of the application folder with progress updates
+            create_zip_backup(
+                app_folder, backup_path, progress_callback=update_backup_progress
+            )
+
+            # Verify backup was created
+            if backup_path.exists():
+                backup_size = backup_path.stat().st_size
+                logger.info(
+                    f"Compressed backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
+                )
+            else:
+                logger.warning(f"Backup file not found at {backup_path}")
+
         except Exception as e:
             logger.warning(f"Failed to create backup: {e}")
+            logger.debug(f"Backup creation error traceback: {traceback.format_exc()}")
             # Continue with update even if backup fails
 
     def _cleanup_old_backups(self) -> None:
