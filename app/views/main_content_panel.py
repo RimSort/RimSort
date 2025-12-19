@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QMessageBox,
     QSplitter,
@@ -2358,11 +2359,10 @@ class MainContent(QObject):
         )
 
         if answer == "Download":
-            url, ok = dialogue.show_dialogue_input(
-                title=self.tr("Enter zip file url"),
-                label=self.tr(
-                    "Enter a zip file url (http/https) to download to local mods:"
-                ),
+            url, ok = QInputDialog.getText(
+                None,
+                self.tr("Enter zip file url"),
+                self.tr("Enter a zip file url (http/https) to download to local mods:"),
             )
             if url and ok:
                 # Check internet connection before attempting task
@@ -2716,9 +2716,10 @@ class MainContent(QObject):
         Opens a QDialogInput that allows user to edit their Steam DB repo
         This URL is used for Steam DB repo related actions.
         """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit Steam DB repo"),
-            label=self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
+        args, ok = QInputDialog.getText(
+            None,
+            self.tr("Edit Steam DB repo"),
+            self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
             text=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
@@ -2730,9 +2731,10 @@ class MainContent(QObject):
         Opens a QDialogInput that allows user to edit their Community Rules
         DB repo. This URL is used for Steam DB repo related actions.
         """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit Community Rules DB repo"),
-            label=self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
+        args, ok = QInputDialog.getText(
+            None,
+            self.tr("Edit Community Rules DB repo"),
+            self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
             text=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
@@ -2941,9 +2943,10 @@ class MainContent(QObject):
         that are configured to be passed to the "Dynamic Query" feature for
         the Steam Workshop metadata needed for sorting
         """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit Steam WebAPI key"),
-            label=self.tr("Enter your personal 32 character Steam WebAPI key here:"),
+        args, ok = QInputDialog.getText(
+            None,
+            self.tr("Edit Steam WebAPI key"),
+            self.tr("Enter your personal 32 character Steam WebAPI key here:"),
             text=self.settings_controller.settings.steam_apikey,
         )
         if ok:
@@ -3221,9 +3224,10 @@ class MainContent(QObject):
         Opens a QDialogInput that allows the user to edit their preferred
         WebAPI Query Expiry (in seconds)
         """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit SteamDB expiry:"),
-            label=self.tr(
+        args, ok = QInputDialog.getText(
+            None,
+            self.tr("Edit SteamDB expiry:"),
+            self.tr(
                 "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):"
             ),
             text=str(self.settings_controller.settings.database_expiry),

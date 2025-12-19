@@ -10,13 +10,14 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 import requests
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, QObject, Signal
+from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
-from app.views.dialogue import show_dialogue_input, show_warning
+from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
 
@@ -58,9 +59,10 @@ class CollectionImport:
 
     def input_dialog(self) -> None:
         # Initialize the UI for entering collection links
-        self.link_input = show_dialogue_input(
-            title=self.translate("CollectionImport", "Add Workshop collection link"),
-            label=self.translate("CollectionImport", "Add Workshop collection link"),
+        self.link_input = QInputDialog.getText(
+            None,
+            self.translate("CollectionImport", "Add Workshop collection link"),
+            self.translate("CollectionImport", "Add Workshop collection link"),
         )
         logger.info("Workshop collection link Input UI initialized successfully!")
         if self.link_input[1]:
