@@ -27,7 +27,6 @@ from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_MISSING_PACKAGEID,
-    DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories, scanpath
@@ -277,24 +276,6 @@ class MetadataManager(QObject):
             logger.info(
                 f"Loaded {total_entries} additional sorting rules from User Rules"
             )
-        else:
-            logger.info(
-                "Unable to find userRules.json in storage. Creating new user rules db!"
-            )
-            try:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                with open(path, "w", encoding="utf-8") as output:
-                    json.dump(DEFAULT_USER_RULES, output, indent=4)
-            except Exception as e:
-                logger.error(f"Failed to create/write userRules.json: {e}")
-                return
-
-            # Set defaults
-            default_rules: Any = DEFAULT_USER_RULES.get("rules")
-            if isinstance(default_rules, dict):
-                self.external_user_rules = default_rules
-            else:
-                self.external_user_rules = {}
 
     def _load_steam_db(
         self, life: int, path: str
