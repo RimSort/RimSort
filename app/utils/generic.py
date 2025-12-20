@@ -462,6 +462,60 @@ def validate_game_executable(game_folder: str) -> bool:
     return False
 
 
+def is_steam_running() -> bool:
+    """
+    Check if the Steam client is currently running.
+
+    Uses psutil to enumerate processes and looks for platform-specific
+    Steam process names. This is used to validate that Steam is running
+    before launching RimWorld with Steam integration enabled.
+
+    Platform-specific process names:
+    - Windows: steam.exe
+    - Linux: steam or steamwebhelper
+    - macOS: Steam or steamwebhelper
+
+    :return: True if Steam is detected running, False otherwise
+    """
+    try:
+        import psutil
+
+        system_name = platform.system()
+
+        # Define platform-specific Steam process names
+        if system_name == "Windows":
+            steam_process_names = {"steam.exe"}
+        elif system_name == "Linux":
+            steam_process_names = {"steam", "steamwebhelper"}
+        elif system_name == "Darwin":  # macOS
+            steam_process_names = {"Steam", "steamwebhelper"}
+        else:
+            logger.warning(
+                f"is_steam_running called on unsupported platform: {system_name}"
+            )
+            # On unknown platforms, assume Steam is running to avoid blocking
+            return True
+
+        # Iterate through running processes
+        for proc in psutil.process_iter(["name"]):
+            try:
+                proc_name = proc.info["name"]
+                if proc_name in steam_process_names:
+                    logger.debug(f"Steam process detected: {proc_name}")
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                # Process terminated or access denied - skip it
+                continue
+
+        logger.info("No Steam process detected")
+        return False
+
+    except Exception as e:
+        logger.error(f"Error checking if Steam is running: {e}")
+        # On error, assume Steam is running to avoid false negatives
+        return True
+
+
 def launch_process(
     executable_path: str,
     args: list[str],

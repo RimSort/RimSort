@@ -48,6 +48,7 @@ from app.utils.generic import (
     check_internet_connection,
     chunks,
     copy_to_clipboard_safely,
+    is_steam_running,
     launch_game_process,
     launch_process,
     open_url_browser,
@@ -3321,6 +3322,29 @@ class MainContent(QObject):
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
         ].steam_client_integration
+
+        # Check if Steam is running when Steam integration is enabled
+        if steam_client_integration and not is_steam_running():
+            logger.warning(
+                "Attempted to launch game with Steam integration enabled, but Steam is not running"
+            )
+            answer = dialogue.show_dialogue_conditional(
+                title=self.tr("Steam Not Running"),
+                text=self.tr("Steam does not appear to be running"),
+                information=self.tr(
+                    "RimWorld is configured to use Steam integration, but Steam does not appear to be running.\n\n"
+                    "Please start Steam and try again, or click 'Launch Anyway' to proceed without Steam validation.\n\n"
+                    "You can also disable Steam integration in Settings > Locations."
+                ),
+                button_text_override=[self.tr("Launch Anyway")],
+            )
+            if answer == self.tr("Launch Anyway"):
+                logger.info(
+                    "User chose to launch game anyway despite Steam not running"
+                )
+            elif answer == QMessageBox.StandardButton.Cancel:
+                logger.info("User chose to cancel game launch due to Steam not running")
+                return
 
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.
