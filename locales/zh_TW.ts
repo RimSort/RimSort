@@ -609,7 +609,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt; {e}</translation>
     </message>
     <message>
         <source>Success</source>
@@ -625,7 +625,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt; {e}</translation>
     </message>
 </context>
 <context>
@@ -4241,6 +4241,10 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>選擇語言（需要重新啟動以應用更改）</translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt;</translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation>高級</translation>
     </message>
@@ -5202,12 +5206,14 @@ Do you want to update now?</source>
         <translation>下載Rimsort {tag_name}版本...</translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
-        <translation>提取更新文件...</translation>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt; {update_source_path}</translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
-        <translation>正在準備更新安裝程序...</translation>
+        <source>Creating backup... (this may take several minutes)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5216,10 +5222,6 @@ Do you want to update now?</source>
     <message>
         <source>Do you want to proceed with the update?</source>
         <translation>您想繼續更新嗎？</translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
-        <translation>創建備份...</translation>
     </message>
 </context>
 <context>

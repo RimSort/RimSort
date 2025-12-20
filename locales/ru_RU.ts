@@ -609,7 +609,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt; {e}</translation>
     </message>
     <message>
         <source>Success</source>
@@ -625,7 +625,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
     </message>
 </context>
 <context>
@@ -4256,6 +4256,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Выберите язык (требуется перезапуск для применения изменений)</translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation>Расширенные</translation>
     </message>
@@ -5194,12 +5198,14 @@ Do you want to update now?</source>
         <translation>Загрузка rimsort  релиз ... {tag_name}</translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
-        <translation>Извлечение файлов обновления ...</translation>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt; {update_source_path}</translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
-        <translation>Подготовка установщика обновления...</translation>
+        <source>Creating backup... (this may take several minutes)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5208,10 +5214,6 @@ Do you want to update now?</source>
     <message>
         <source>Do you want to proceed with the update?</source>
         <translation>Вы хотите продолжить обновление?</translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
-        <translation>Создание резервной копии ...</translation>
     </message>
 </context>
 <context>

@@ -609,7 +609,7 @@ Une fois non contrôlé, recherchez tous les types de fichiers avec une recherch
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
     </message>
     <message>
         <source>Success</source>
@@ -625,7 +625,7 @@ Une fois non contrôlé, recherchez tous les types de fichiers avec une recherch
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt; {e}</translation>
     </message>
 </context>
 <context>
@@ -4243,6 +4243,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>Sélectionnez la langue (redémarrer requise pour appliquer les modifications)</translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation>Avancé</translation>
     </message>
@@ -5176,12 +5180,14 @@ Voulez-vous mettre à jour maintenant?</translation>
         <translation>Téléchargement de la version Rimsort  ... {tag_name}</translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
-        <translation>Extraction de fichiers de mise à jour ...</translation>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt; {update_source_path}</translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
-        <translation>Préparation du programme d'installation de la mise à jour...</translation>
+        <source>Creating backup... (this may take several minutes)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5190,10 +5196,6 @@ Voulez-vous mettre à jour maintenant?</translation>
     <message>
         <source>Do you want to proceed with the update?</source>
         <translation>Voulez-vous procéder à la mise à jour?</translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
-        <translation>Création de sauvegarde ...</translation>
     </message>
 </context>
 <context>
