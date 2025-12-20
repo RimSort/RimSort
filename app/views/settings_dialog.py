@@ -1400,6 +1400,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
         user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(user_note)
 
+        self.constrain_dialogues_to_main_window_monitor_checkbox = QCheckBox(
+            self.tr("Constrain dialogues to main window monitor")
+        )
+        group_layout.addWidget(self.constrain_dialogues_to_main_window_monitor_checkbox)
+
         size_note = QLabel(
             self.tr(
                 "Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults."

@@ -150,6 +150,10 @@ class Settings(QObject):
         # Language
         self.language = "en_US"
 
+        # Launch state
+        # Dialogue positioning
+        self.constrain_dialogues_to_main_window_monitor: bool = False
+
         # Launch state setting: "maximized", "normal", or "custom"
         # Main Window
         self.main_window_launch_state: str = "maximized"
