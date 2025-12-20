@@ -12,17 +12,6 @@ from app.models.settings import Settings
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
-@pytest.fixture(scope="session")
-def qapp() -> QApplication:
-    """Qt application instance for tests."""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    elif not isinstance(app, QApplication):
-        raise RuntimeError("Expected QApplication instance, got QCoreApplication.")
-    return app
-
-
 @pytest.fixture
 def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
     """Setup temporary directories and minimal files for testing."""

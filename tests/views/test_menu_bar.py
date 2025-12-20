@@ -1,5 +1,5 @@
 import os
-from typing import Generator, Union
+from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,15 +9,6 @@ from PySide6.QtWidgets import QApplication, QMenuBar
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
 from app.views.menu_bar import MenuBar
-
-
-@pytest.fixture(scope="session")
-def qapp() -> Generator[Union[QApplication, QCoreApplication], None, None]:
-    """Create a QApplication instance for Qt tests."""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    yield app
 
 
 @pytest.fixture
