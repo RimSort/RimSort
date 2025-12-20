@@ -93,6 +93,15 @@ def handle_exception(
 sys.excepthook = handle_exception
 
 
+# Process --disable-updater flag if present (before any other initialization)
+if "--disable-updater" in sys.argv:
+    os.environ["RIMSORT_DISABLE_UPDATER"] = "1"
+    # Remove all instances of the flag
+    while "--disable-updater" in sys.argv:
+        sys.argv.remove("--disable-updater")
+    # Note: logger not yet configured, so can't log here
+
+
 def main_thread() -> None:
     app_controller = None
     try:

@@ -16,6 +16,9 @@ def cli() -> None:
     """RimSort - RimWorld mod manager CLI
 
     Headless tools for managing RimWorld mods, building databases, and more.
+
+    Global flags (processed before CLI):
+      --disable-updater    Disable automatic update checks (same as RIMSORT_DISABLE_UPDATER env var)
     """
     pass
 
