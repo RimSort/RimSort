@@ -1,4 +1,4 @@
-﻿<component type="desktop-application">
+<component type="desktop-application">
     <id>io.github.rimsort.RimSort</id>
     <url type="homepage">https://rimsort.github.io/RimSort/</url>
     <url type="vcs-browser">https://github.com/RimSort/RimSort</url>
