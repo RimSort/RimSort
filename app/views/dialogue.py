@@ -30,11 +30,26 @@ from PySide6.QtWidgets import (
 )
 
 import app.utils.generic as generic
+import app.utils.globals as app_globals
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 
 # Constants
 DEFAULT_TITLE = "RimSort"
+
+
+def _get_parent_if_constrain_enabled(parent: QWidget | None = None) -> QWidget | None:
+    """Helper function to set parent to main window if constrain dialogues setting is enabled."""
+    if (
+        parent is None
+        and hasattr(app_globals, "MAIN_WINDOW")
+        and app_globals.MAIN_WINDOW
+        and hasattr(app_globals, "SETTINGS_CONTROLLER")
+        and app_globals.SETTINGS_CONTROLLER
+        and app_globals.SETTINGS_CONTROLLER.settings.constrain_dialogues_to_main_window_monitor
+    ):
+        return app_globals.MAIN_WINDOW
+    return parent
 
 
 def show_dialogue_conditional(
@@ -43,6 +58,7 @@ def show_dialogue_conditional(
     information: str | None = None,
     details: str | None = None,
     button_text_override: list[str] | None = None,
+    parent: QWidget | None = None,
 ) -> Union[str, QMessageBox.StandardButton]:
     """
     Displays a dialogue, prompting the user for input
@@ -57,8 +73,10 @@ def show_dialogue_conditional(
         f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}] BTN OVERRIDES: [{button_text_override}]"
     )
 
+    parent = _get_parent_if_constrain_enabled(parent)
+
     # Set up the message box
-    dialogue = _setup_messagebox(title)
+    dialogue = _setup_messagebox(title, parent=parent)
 
     # Create our buttons (accommodate any overrides passed)
     if button_text_override:
@@ -152,6 +170,9 @@ def show_information(
     logger.info(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
     )
+
+    parent = _get_parent_if_constrain_enabled(parent)
+
     # Set up the message box
     info_message_box = QMessageBox(parent=parent)
     info_message_box.setTextFormat(Qt.TextFormat.RichText)
@@ -200,6 +221,9 @@ def show_warning(
     logger.info(
         f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
     )
+
+    parent = _get_parent_if_constrain_enabled(parent)
+
     # Set up the message box
     warning_message_box = QMessageBox(parent=parent)
     warning_message_box.setTextFormat(Qt.TextFormat.RichText)
@@ -228,6 +252,7 @@ def show_fatal_error(
     text: str = "A fatal error has occurred!",
     information: str = "Please report the error to the developers.",
     details: str = "",
+    parent: QWidget | None = None,
 ) -> None:
     """
     Displays a critical error message box, containing text,
@@ -239,18 +264,26 @@ def show_fatal_error(
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
+    :param parent: The parent widget
     """
     logger.info(
         f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
     )
-    diag = FatalErrorDialog(title, text, information, details)
+
+    parent = _get_parent_if_constrain_enabled(parent)
+
+    diag = FatalErrorDialog(title, text, information, details, parent=parent)
     diag.exec_()
 
 
-def show_internet_connection_error(failed_urls: list[str] | None = None) -> None:
+def show_internet_connection_error(
+    failed_urls: list[str] | None = None, parent: QWidget | None = None
+) -> None:
     """Show a warning dialog for no internet connection, with firewall info and user information for help.
 
     :param failed_urls: Optional list of URLs that failed to connect
+    :param parent: The parent widget
+    :type parent: QWidget | None
     """
     logger.info("Showing no internet connection error dialog")
 
@@ -276,6 +309,7 @@ def show_internet_connection_error(failed_urls: list[str] | None = None) -> None
             "On other systems, check your firewall or security software settings. \n"
             "If you need more help, Please reach out to us on Github Issues page or Discord server."
         ),
+        parent=parent,
     )
 
 

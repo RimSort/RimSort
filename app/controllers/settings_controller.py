@@ -886,6 +886,12 @@ class SettingsController(QObject):
         except Exception:
             pass
 
+        # Launch State tab
+        # Dialogue positioning
+        self.settings_dialog.constrain_dialogues_to_main_window_monitor_checkbox.setChecked(
+            self.settings.constrain_dialogues_to_main_window_monitor
+        )
+
         # Windows launch state
         # Main Window
         main_window_launch_state = self.settings.main_window_launch_state
@@ -1227,6 +1233,10 @@ class SettingsController(QObject):
         )
         self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
         self.settings.language = self.settings_dialog.language_combobox.currentData()
+
+        # Launch State tab
+        # Dialogue positioning
+        self.settings.constrain_dialogues_to_main_window_monitor = self.settings_dialog.constrain_dialogues_to_main_window_monitor_checkbox.isChecked()
 
         # Windows launch state
         # Main Window

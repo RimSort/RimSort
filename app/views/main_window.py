@@ -32,6 +32,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
+from app.utils import globals
 from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
@@ -77,6 +78,10 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.settings_controller = settings_controller
+
+        # Set global references
+        globals.MAIN_WINDOW = self
+        globals.SETTINGS_CONTROLLER = settings_controller
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
