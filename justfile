@@ -9,15 +9,15 @@ run: dev-setup
     uv run python -m app
 
 # Run tests with coverage reporting to terminal
-test:
+test: dev-setup
     uv run pytest --doctest-modules -s --no-qt-log
 
 # Run tests with verbose output and short tracebacks
-test-verbose:
+test-verbose: dev-setup
     uv run pytest --doctest-modules -v --tb=short -s --no-qt-log
 
 # Run tests with full coverage reports (XML, HTML, and terminal)
-test-coverage:
+test-coverage: dev-setup
     uv run pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing --no-qt-log
 
 # Code Quality
@@ -55,7 +55,8 @@ ci: check test-coverage
 
 ## Dependency Management
 # Install all dependencies including dev and build groups
-dev-setup:
+dev-setup: submodules-init
+    uv venv --allow-existing
     uv sync --locked --dev --group build
 
 # Update all dependencies to latest compatible versions
