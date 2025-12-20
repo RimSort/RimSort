@@ -1,7 +1,7 @@
 # tests/views/test_main_content_run.py
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Generator, Iterator, List, Tuple
+from typing import Generator, List, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -42,15 +42,6 @@ class DummySettings:
 class DummySettingsController:
     def __init__(self) -> None:
         self.settings = DummySettings()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def qapp() -> Iterator[QApplication]:
-    """Create QApplication instance for the test session."""
-    app = QApplication.instance()
-    if app is None or not isinstance(app, QApplication):
-        app = QApplication([])
-    yield app
 
 
 @pytest.fixture(autouse=True)

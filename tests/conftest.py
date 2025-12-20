@@ -1,5 +1,8 @@
+from typing import Generator, Union
+
 import pytest
-from PySide6.QtWidgets import QDialog
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication, QDialog
 
 
 @pytest.fixture(autouse=True)
@@ -14,3 +17,12 @@ def auto_accept_dialogs(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(QDialog, "exec_", fake_exec)
     monkeypatch.setattr(QDialog, "exec", fake_exec)
+
+
+@pytest.fixture(scope="function")
+def qapp() -> Generator[Union[QApplication, QCoreApplication], None, None]:
+    """Create a QApplication instance for Qt tests."""
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+    yield app

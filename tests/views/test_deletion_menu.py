@@ -1,6 +1,6 @@
 import errno
 from pathlib import Path
-from typing import Any, Dict, Generator, Union
+from typing import Any, Dict, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,15 +10,6 @@ from PySide6.QtWidgets import QApplication
 from app.controllers.settings_controller import SettingsController
 from app.utils.metadata import MetadataManager
 from app.views.deletion_menu import DeletionResult, ModDeletionMenu
-
-
-@pytest.fixture(scope="session")
-def qapp() -> Generator[Union[QApplication, QCoreApplication], None, None]:
-    """Create a QApplication instance for Qt tests."""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    yield app
 
 
 @pytest.fixture

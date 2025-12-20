@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from pathlib import Path
 from typing import Callable
@@ -70,8 +71,8 @@ class MenuBar(QObject):
         self.delete_dds_textures_action: QAction
         self.wiki_action: QAction
         self.github_action: QAction
-        self.check_for_updates_action: QAction
-        self.check_for_updates_on_startup_action: QAction
+        self.check_for_updates_action: QAction | None = None
+        self.check_for_updates_on_startup_action: QAction | None = None
 
         self.import_submenu: QMenu
         self.export_submenu: QMenu
@@ -379,5 +380,6 @@ class MenuBar(QObject):
         self._create_download_menu()
         self._create_instances_menu()
         self._create_texture_menu()
-        self._create_update_menu()
+        if not os.getenv("RIMSORT_DISABLE_UPDATER"):
+            self._create_update_menu()
         self._create_help_menu()

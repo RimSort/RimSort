@@ -27,16 +27,18 @@ class MenuBarController(QObject):
             raise RuntimeError("QApplication instance not found")
         self.menu_bar.quit_action.triggered.connect(instance.quit)
 
-        # Update menu
-        self.menu_bar.check_for_updates_action.triggered.connect(
-            EventBus().do_check_for_application_update.emit
-        )
-        self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
-            self._on_menu_bar_check_for_updates_on_startup_triggered
-        )
-        self.menu_bar.check_for_updates_on_startup_action.setChecked(
-            self.settings_controller.settings.check_for_update_startup
-        )
+        # Update menu (only if updater is not disabled)
+        if self.menu_bar.check_for_updates_action is not None:
+            self.menu_bar.check_for_updates_action.triggered.connect(
+                EventBus().do_check_for_application_update.emit
+            )
+        if self.menu_bar.check_for_updates_on_startup_action is not None:
+            self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
+                self._on_menu_bar_check_for_updates_on_startup_triggered
+            )
+            self.menu_bar.check_for_updates_on_startup_action.setChecked(
+                self.settings_controller.settings.check_for_update_startup
+            )
 
         # Settings menu
         self.menu_bar.settings_action.triggered.connect(
@@ -222,6 +224,8 @@ class MenuBarController(QObject):
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
+        if self.menu_bar.check_for_updates_on_startup_action is None:
+            return
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
         self.settings_controller.settings.check_for_update_startup = is_checked
         self.settings_controller.settings.save()
