@@ -9,7 +9,7 @@
 %global __provides_exclude ^(libcrypto-.*\\.so.*|libssl-.*\\.so.*|libgfortran-.*\\.so.*|libjpeg-.*\\.so.*|liblzma-.*\\.so.*|libopenjp2-.*\\.so.*|libpcre-.*\\.so.*|libquadmath-.*\\.so.*|libsharpyuv-.*\\.so.*|libssh2-.*\\.so.*|libtiff-.*\\.so.*|libwebp-.*\\.so.*|libwebpdemux-.*\\.so.*|libwebpmux-.*\\.so.*|libxcb-.*\\.so.*|libXau-.*\\.so.*|libgit2-.*\\.so.*|libscipy_openblas.*\\.so.*|libtiff\\.so\\.5.*|libsteam_api\\.so.*)$
 
 Name:           rimsort
-Version:        1.0.63
+Version:        %{?version}%{!?version:1.0.63}
 Release:        1%{?dist}
 Summary:        Mod manager for RimWorld
 
