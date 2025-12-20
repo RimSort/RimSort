@@ -609,7 +609,7 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt; {e}</translation>
     </message>
     <message>
         <source>Success</source>
@@ -625,7 +625,7 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt; {e}</translation>
     </message>
 </context>
 <context>
@@ -4196,6 +4196,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>Dili seçin (değişiklikleri uygulamak için gerekli yeniden başlat)</translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation>Gelişmiş</translation>
     </message>
@@ -5179,12 +5183,14 @@ Do you want to update now?</source>
         <translation>Rimsort {tag_name} sürümünü indirme ...</translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
-        <translation>Güncelleme dosyalarını çıkarma ...</translation>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt; {update_source_path}</translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
-        <translation>Güncelleme yükleyicisi hazırlanıyor...</translation>
+        <source>Creating backup... (this may take several minutes)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5193,10 +5199,6 @@ Do you want to update now?</source>
     <message>
         <source>Do you want to proceed with the update?</source>
         <translation>Güncellemeye devam etmek ister misiniz?</translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
-        <translation>Yedekleme Oluşturun ...</translation>
     </message>
 </context>
 <context>

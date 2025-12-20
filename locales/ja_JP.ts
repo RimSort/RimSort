@@ -608,7 +608,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
     </message>
     <message>
         <source>Success</source>
@@ -624,7 +624,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
     </message>
 </context>
 <context>
@@ -4256,6 +4256,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>言語を選択します（変更を適用するには再起動が必要です）</translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation>高度な</translation>
     </message>
@@ -5195,12 +5199,14 @@ Do you want to update now?</source>
         <translation>rimsort {tag_name}リリースのダウンロード...</translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
-        <translation>更新ファイルの抽出...</translation>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt; {update_source_path}</translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
-        <translation>アップデートインストーラーを準備しています...</translation>
+        <source>Creating backup... (this may take several minutes)</source>
+        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5209,10 +5215,6 @@ Do you want to update now?</source>
     <message>
         <source>Do you want to proceed with the update?</source>
         <translation>アップデートを進めたいですか？</translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
-        <translation>バックアップの作成...</translation>
     </message>
 </context>
 <context>

@@ -4139,6 +4139,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Constrain dialogues to main window monitor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Advanced</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5034,11 +5038,13 @@ Do you want to update now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Extracting update files...</source>
+        <source>
+Successfully retrieved latest release.
+The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Preparing update installer...</source>
+        <source>Creating backup... (this may take several minutes)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5047,10 +5053,6 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Creating backup...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
