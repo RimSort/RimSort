@@ -2112,7 +2112,9 @@ class MainContent(QObject):
             return
         # REFRESH TIMESTAMPS: Query Steam directly for current installation timestamps
         # This ensures we compare against Steam's live state, not stale ACF data
-        refresh_stats = self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
+        refresh_stats = (
+            self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
+        )
 
         # Warn user if Steam unavailable - update detection may have false positives
         if refresh_stats.get("steam_unavailable"):
@@ -3384,6 +3386,54 @@ class MainContent(QObject):
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
         ].steam_client_integration
+
+        # Check if Steam is running when Steam integration is enabled
+        if steam_client_integration:
+            try:
+                from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+                steamworks = SteamworksInterface.instance(
+                    _libs=str(AppInfo().application_folder / "libs")
+                )
+
+                if steamworks.steam_not_running:
+                    logger.warning(
+                        "Steam is not running but steam_client_integration is enabled"
+                    )
+
+                    # Show warning dialog
+                    from app.views.dialogue import BinaryChoiceDialog
+
+                    dialog = BinaryChoiceDialog(
+                        title=self.tr("Steam Not Running"),
+                        text=self.tr("Steam does not appear to be running."),
+                        information=self.tr(
+                            "Steam integration is enabled for this game instance, but Steam does not appear to be running.\n\n"
+                            "RimWorld may fail to launch or may not have access to Steam features like Workshop mods or achievements.\n\n"
+                            "Do you want to launch RimWorld anyway?"
+                        ),
+                        positive_text=self.tr("Launch Anyway"),
+                        negative_text=self.tr("Cancel"),
+                        icon=QMessageBox.Icon.Warning,
+                    )
+
+                    if not dialog.exec_is_positive():
+                        logger.info(
+                            "User cancelled game launch due to Steam not running"
+                        )
+                        return
+                    else:
+                        logger.info(
+                            "User chose to launch game anyway despite Steam not running"
+                        )
+                else:
+                    logger.info("Steam is running, proceeding with launch")
+            except Exception as e:
+                # If we can't check Steam status, log and continue
+                # Don't block the user from launching
+                logger.warning(
+                    f"Unable to check Steam status: {e}. Proceeding with launch."
+                )
 
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.

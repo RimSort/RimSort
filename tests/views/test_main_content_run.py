@@ -170,3 +170,159 @@ def test_run_without_unsaved(
     assert patch_dialogue.return_value is None
     assert save_calls == []
     assert patch_launch == [(Path("/fake/path"), ["--test"])]
+
+
+# Tests for Steam running check
+
+
+@pytest.fixture(autouse=True)
+def patch_steam_appid_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Mock file operations for steam_appid.txt to avoid filesystem errors."""
+    import builtins
+
+    original_open = builtins.open
+
+    def mock_open(file: any, mode: str = "r", *args: any, **kwargs: any) -> any:
+        # Mock the steam_appid.txt file operations
+        if "steam_appid.txt" in str(file):
+            mock_file = Mock()
+            mock_file.__enter__ = Mock(return_value=mock_file)
+            mock_file.__exit__ = Mock(return_value=False)
+            mock_file.write = Mock()
+            return mock_file
+        return original_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", mock_open)
+
+    # Mock Path.exists() for steam_appid.txt
+    from pathlib import Path
+
+    original_exists = Path.exists
+
+    def mock_exists(self: Path) -> bool:
+        if "steam_appid.txt" in str(self):
+            return False  # Always pretend file doesn't exist for tests
+        return original_exists(self)
+
+    monkeypatch.setattr(Path, "exists", mock_exists)
+
+    # Mock Path.unlink() for steam_appid.txt
+    original_unlink = Path.unlink
+
+    def mock_unlink(self: Path, *args: any, **kwargs: any) -> None:
+        if "steam_appid.txt" in str(self):
+            return  # Do nothing for steam_appid.txt
+        return original_unlink(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", mock_unlink)
+
+
+@pytest.fixture
+def patch_steamworks(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Fixture to control SteamworksInterface behavior."""
+    from app.utils.steam.steamworks import wrapper
+
+    mock_steamworks = Mock()
+    mock_steamworks.steam_not_running = False  # Default: Steam running
+
+    monkeypatch.setattr(
+        wrapper.SteamworksInterface,
+        "instance",
+        classmethod(lambda cls, _libs=None: mock_steamworks),
+    )
+    return mock_steamworks
+
+
+@pytest.fixture
+def patch_binary_dialog(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Fixture to control BinaryChoiceDialog behavior."""
+    mock_dialog = Mock()
+    mock_dialog.exec_is_positive.return_value = False  # Default: cancel
+
+    from app.views import dialogue
+
+    monkeypatch.setattr(dialogue, "BinaryChoiceDialog", lambda **kwargs: mock_dialog)
+    return mock_dialog
+
+
+@pytest.mark.parametrize(
+    "steam_integration, steam_running, dialog_result, launch_expected",
+    [
+        # Steam integration disabled - no check performed
+        (False, False, None, True),
+        (False, True, None, True),
+        # Steam running - no dialog shown
+        (True, True, None, True),
+        # Steam not running, user cancels
+        (True, False, False, False),
+        # Steam not running, user launches anyway
+        (True, False, True, True),
+    ],
+)
+def test_run_game_steam_check(
+    patch_steamworks: Mock,
+    patch_binary_dialog: Mock,
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    steam_integration: bool,
+    steam_running: bool,
+    dialog_result: bool | None,
+    launch_expected: bool,
+) -> None:
+    """Test Steam running check with various scenarios."""
+    mc, _ = main_content
+
+    # Configure test scenario
+    mc.settings_controller.settings.instances[
+        "inst1"
+    ].steam_client_integration = steam_integration
+    mc.mods_panel.active_mods_list.uuids = ["a"]
+    mc.active_mods_uuids_last_save = ["a"]
+
+    patch_steamworks.steam_not_running = not steam_running
+
+    if dialog_result is not None:
+        patch_binary_dialog.exec_is_positive.return_value = dialog_result
+
+    # Run the game launch
+    mc._do_run_game()
+
+    # Verify expected behavior
+    if launch_expected:
+        assert len(patch_launch) == 1
+        assert patch_launch[0] == (Path("/fake/path"), ["--test"])
+    else:
+        assert len(patch_launch) == 0
+
+
+def test_run_game_steam_check_exception(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that game launches even if Steam check fails with exception."""
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Enable Steam integration
+    mc.settings_controller.settings.instances["inst1"].steam_client_integration = True
+    mc.mods_panel.active_mods_list.uuids = ["a"]
+    mc.active_mods_uuids_last_save = ["a"]
+
+    # Make SteamworksInterface.instance() raise an exception
+    def raise_exception(*args: any, **kwargs: any) -> None:
+        raise RuntimeError("Steamworks initialization failed")
+
+    monkeypatch.setattr(
+        wrapper.SteamworksInterface,
+        "instance",
+        classmethod(lambda cls, _libs=None: raise_exception()),
+    )
+
+    # Run the game launch - should proceed despite exception
+    mc._do_run_game()
+
+    # Game should launch (fail-open behavior)
+    assert len(patch_launch) == 1
+    assert patch_launch[0] == (Path("/fake/path"), ["--test"])
