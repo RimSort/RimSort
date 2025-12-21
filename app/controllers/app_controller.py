@@ -37,6 +37,9 @@ class AppController(QObject):
         self.set_theme()
         # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
+        # NOTE: SteamworksInterface is NOT initialized in main process
+        # It's only used in child processes (multiprocessing.Pool, multiprocessing.Process)
+        # Each child process creates its own singleton instance via lazy initialization
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
         # Initialize the metadata manager
@@ -135,5 +138,7 @@ class AppController(QObject):
         self.main_window.shutdown_watchdog()
 
     def quit(self) -> None:
-        """Exits the application."""
+        """Exit the application."""
+        # NOTE: No need to shutdown SteamworksInterface here
+        # It's only initialized in child processes which clean up on termination
         self.app.quit()
