@@ -74,8 +74,8 @@ clean:
 # Build/Distribution
 
 # Build RimSort executable
-build: submodules-init check
-    uv run python distribute.py
+build *ARGS='': submodules-init check
+    uv run python distribute.py {{ARGS}}
 
 # Build RimSort executable with specific version (e.g., "1.2.3.4")
 build-version VERSION: submodules-init check
@@ -86,3 +86,7 @@ build-version VERSION: submodules-init check
 # Initialize and update git submodules (run after cloning)
 submodules-init:
     git submodule update --init --recursive
+
+# Show help for distribute.py build script
+build-help:
+    uv run python ./distribute.py --help
