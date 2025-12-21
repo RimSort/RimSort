@@ -348,7 +348,9 @@ def test_steamworks_concurrent_operations_blocked(
     mock_steamworks_obj.initialize = Mock()
     mock_steamworks_obj.loaded = Mock(return_value=True)
     mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
-    monkeypatch.setattr("app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
 
     # Create a real SteamworksInterface instance with mocked Steamworks
     steamworks = wrapper.SteamworksInterface.instance()
