@@ -16,7 +16,7 @@ from steam.webapi import WebAPI
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
-from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.utils.steam.steamworks.wrapper import steamworks_app_dependencies_worker
 from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
@@ -722,12 +722,12 @@ class DynamicQuery(QObject):
         num_processes = cpu_count()
         # Create a pool of worker processes
         with Pool(processes=num_processes) as pool:
-            # Create instances of SteamworksAppDependenciesQuery for each chunk
-            queries = [
-                SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk],
-                    interval=1,
-                    _libs=str((AppInfo().application_folder / "libs")),
+            # Prepare arguments for worker function
+            args = [
+                (
+                    [eval(str_pfid) for str_pfid in chunk],
+                    1,
+                    str((AppInfo().application_folder / "libs")),
                 )
                 for chunk in list(
                     chunks(
@@ -737,7 +737,7 @@ class DynamicQuery(QObject):
                 )
             ]
             # Map the execution of the queries to the pool of processes
-            results = pool.map(SteamworksAppDependenciesQuery.run, queries)
+            results = pool.starmap(steamworks_app_dependencies_worker, args)
         # Merge the results from all processes into a single dictionary
         self._emit_message("Processes completed!\nCollecting results")
         pfids_appid_deps: dict[int, list[int]] = {}

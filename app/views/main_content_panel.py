@@ -61,8 +61,8 @@ from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
-    SteamworksGameLaunch,
-    SteamworksSubscriptionHandler,
+    steamworks_game_launch_worker,
+    steamworks_subscription_worker,
 )
 from app.utils.steam.webapi.wrapper import (
     CollectionImport,
@@ -2231,11 +2231,18 @@ class MainContent(QObject):
             ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
-                    steamworks_api_process = SteamworksGameLaunch(
-                        game_install_path=instruction[1][0],
-                        args=instruction[1][1],
-                        _libs=str((AppInfo().application_folder / "libs")),
-                    )
+
+                    # Create Process with worker function
+                    from multiprocessing import Process
+
+                    def _launch_game() -> None:
+                        steamworks_game_launch_worker(
+                            game_install_path=instruction[1][0],
+                            args=instruction[1][1],
+                            _libs=str((AppInfo().application_folder / "libs")),
+                        )
+
+                    steamworks_api_process = Process(target=_launch_game)
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
                     logger.info(
@@ -2264,18 +2271,18 @@ class MainContent(QObject):
                     )
                     # Create a pool of worker processes
                     with Pool(processes=num_processes) as pool:
-                        # Create instances of SteamworksSubscriptionHandler for each chunk
-                        actions = [
-                            SteamworksSubscriptionHandler(
-                                action=instruction[0],
-                                pfid_or_pfids=chunk,
-                                interval=1,
-                                _libs=str((AppInfo().application_folder / "libs")),
+                        # Prepare arguments for worker function
+                        args = [
+                            (
+                                instruction[0],
+                                chunk,
+                                1,
+                                str((AppInfo().application_folder / "libs")),
                             )
                             for chunk in pfids_chunked
                         ]
                         # Map the execution of the subscription actions to the pool of processes
-                        pool.map(SteamworksSubscriptionHandler.run, actions)
+                        pool.starmap(steamworks_subscription_worker, args)
                     self.steamworks_in_use = False
                 else:
                     logger.warning(
