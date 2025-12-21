@@ -2110,6 +2110,9 @@ class MainContent(QObject):
         # Check internet connection before attempting task
         if not check_internet_connection():
             return
+        # REFRESH TIMESTAMPS: Query Steam directly for current installation timestamps
+        # This ensures we compare against Steam's live state, not stale ACF data
+        self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
         # Query Workshop for update data
         updates_checked = self.do_threaded_loading_animation(
             gif_path=str(

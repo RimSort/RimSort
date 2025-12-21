@@ -1753,6 +1753,61 @@ class MetadataManager(QObject):
 
         return missing_deps
 
+    def refresh_workshop_timestamps_via_steamworks(self) -> None:
+        """
+        Query Steam client via Steamworks API for current installation timestamps.
+
+        This gets the authoritative "when did Steam last update this mod" timestamp
+        directly from Steam's internal state, eliminating stale ACF file issues.
+        """
+        from app.utils.app_info import AppInfo
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        logger.info("Refreshing Workshop mod timestamps via Steamworks API")
+
+        # Initialize Steamworks
+        steamworks = SteamworksInterface.instance(
+            _libs=str((AppInfo().application_folder / "libs"))
+        )
+
+        if steamworks.steam_not_running or not steamworks.steamworks.loaded():
+            logger.warning(
+                "Steam not running - cannot query install info via Steamworks"
+            )
+            return
+
+        # Query each Workshop mod for current install timestamp
+        workshop_mods_updated = 0
+        for uuid, metadata in self.internal_local_metadata.items():
+            # Only check Workshop mods
+            if metadata.get("data_source") != "workshop":
+                continue
+
+            pfid = metadata.get("publishedfileid")
+            if not pfid:
+                continue
+
+            try:
+                # Query Steam for current install info
+                # Convert pfid from string to int (metadata stores as string)
+                install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(
+                    int(pfid)
+                )
+
+                if install_info and install_info.get("timestamp"):
+                    # Update with authoritative timestamp from Steam
+                    metadata["internal_time_touched"] = install_info["timestamp"]
+                    workshop_mods_updated += 1
+                    logger.debug(
+                        f"Updated timestamp for {metadata.get('name')}: {install_info['timestamp']}"
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to get install info for PFID {pfid}: {e}")
+
+        logger.info(
+            f"Updated timestamps for {workshop_mods_updated} Workshop mods via Steamworks API"
+        )
+
 
 class ModParser(QRunnable):
     mod_metadata_updated_signal = Signal(str)
