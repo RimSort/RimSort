@@ -6,8 +6,6 @@ import time
 import traceback
 import webbrowser
 from functools import partial
-from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Callable, Optional, cast
@@ -19,7 +17,9 @@ from PySide6.QtCore import (
     QEventLoop,
     QObject,
     QProcess,
+    QRunnable,
     Qt,
+    QThreadPool,
     Signal,
     Slot,
 )
@@ -46,7 +46,6 @@ from app.utils.event_bus import EventBus
 from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
     check_internet_connection,
-    chunks,
     copy_to_clipboard_safely,
     launch_game_process,
     launch_process,
@@ -60,10 +59,7 @@ from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (
-    steamworks_game_launch_worker,
-    steamworks_subscription_worker,
-)
+from app.utils.steam.steamworks.wrapper import steamworks_game_launch_worker
 from app.utils.steam.webapi.wrapper import (
     CollectionImport,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -92,6 +88,52 @@ from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import WorkshopModUpdaterPanel
+
+
+class SteamSubscriptionRunnable(QRunnable):
+    """
+    Runnable for executing Steam Workshop subscription operations in Qt thread pool.
+
+    This ensures subscription requests are made from the main process context,
+    allowing Steam client to properly receive and act on them.
+    """
+
+    def __init__(self, action: str, pfids: list[int]) -> None:
+        """
+        Initialize the runnable.
+
+        :param action: "subscribe", "unsubscribe", or "resubscribe"
+        :param pfids: List of PublishedFileIds to process
+        """
+        super().__init__()
+        self.action = action
+        self.pfids = pfids
+
+    @Slot()
+    def run(self) -> None:
+        """Execute the subscription action in a thread."""
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        logger.info(
+            f"[STEAM_THREAD] Executing {self.action} for {len(self.pfids)} mods"
+        )
+
+        steamworks_interface = SteamworksInterface.instance(
+            _libs=str((AppInfo().application_folder / "libs"))
+        )
+
+        if self.action == "subscribe":
+            steamworks_interface.subscribe_to_mods(self.pfids, interval=1)
+        elif self.action == "unsubscribe":
+            steamworks_interface.unsubscribe_from_mods(self.pfids, interval=1)
+        elif self.action == "resubscribe":
+            steamworks_interface.resubscribe_to_mods(self.pfids, interval=1)
+        else:
+            logger.error(f"Unknown subscription action: {self.action}")
+
+        logger.info(
+            f"[STEAM_THREAD] Completed {self.action} for {len(self.pfids)} mods"
+        )
 
 
 class MainContent(QObject):
@@ -2257,32 +2299,22 @@ class MainContent(QObject):
                     instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
-                        f"Creating Steamworks API process with instruction {instruction}"
+                        f"Creating Steamworks subscription task with instruction {instruction}"
                     )
                     self.steamworks_in_use = True
-                    # Maximum processes
-                    num_processes = cpu_count()
-                    # Chunk the publishedfileids
-                    pfids_chunked = list(
-                        chunks(
-                            _list=instruction[1],
-                            limit=ceil(len(instruction[1]) / num_processes),
-                        )
-                    )
-                    # Create a pool of worker processes
-                    with Pool(processes=num_processes) as pool:
-                        # Prepare arguments for worker function
-                        args = [
-                            (
-                                instruction[0],
-                                chunk,
-                                1,
-                                str((AppInfo().application_folder / "libs")),
-                            )
-                            for chunk in pfids_chunked
-                        ]
-                        # Map the execution of the subscription actions to the pool of processes
-                        pool.starmap(steamworks_subscription_worker, args)
+
+                    # instruction[1] already contains int pfids from EventBus
+                    pfids = instruction[1]
+
+                    # Create and execute runnable in Qt thread pool
+                    runnable = SteamSubscriptionRunnable(instruction[0], pfids)
+                    QThreadPool.globalInstance().start(runnable)
+
+                    # Wait for thread to complete
+                    logger.debug("Waiting for subscription thread to complete...")
+                    QThreadPool.globalInstance().waitForDone()
+                    logger.info("Subscription thread completed")
+
                     self.steamworks_in_use = False
                 else:
                     logger.warning(
