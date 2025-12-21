@@ -2,14 +2,13 @@ import sys
 import traceback
 from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QCoreApplication, QObject, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
@@ -244,6 +243,97 @@ def _find_value_in_dict(coll: dict[str, Any], key: str) -> Any:
     if not key_found:
         return None
     return coll.get(key_found)
+
+
+class AppDependenciesWorker(QRunnable):
+    """
+    QRunnable worker for querying app dependencies sequentially.
+
+    Since SteamworksInterface enforces operation serialization (only one
+    operation at a time via lock), we process chunks sequentially rather
+    than in parallel.
+    """
+
+    class Signals(QObject):
+        """Signal container for AppDependenciesWorker."""
+
+        progress = Signal(str)  # Progress message
+        chunk_complete = Signal(int, int)  # (current_chunk, total_chunks)
+        finished = Signal(dict)  # Final results: dict[int, list[int]]
+        error = Signal(str)  # Error message
+
+    def __init__(
+        self,
+        publishedfileids: list[str],
+        libs_path: str,
+        chunk_size: int,
+    ):
+        """
+        Initialize the AppDependenciesWorker.
+
+        :param publishedfileids: List of PublishedFileIds to query
+        :param libs_path: Path to Steamworks libraries
+        :param chunk_size: Number of mods to process per chunk
+        """
+        super().__init__()
+        self.publishedfileids = publishedfileids
+        self.libs_path = libs_path
+        self.chunk_size = chunk_size
+        self.signals = self.Signals()
+        self.setAutoDelete(True)
+
+    def run(self) -> None:
+        """Process all chunks sequentially and collect results."""
+        try:
+            pfids_appid_deps: dict[int, list[int]] = {}
+
+            # Create chunks
+            chunks_list = list(
+                chunks(
+                    _list=self.publishedfileids,
+                    limit=self.chunk_size,
+                )
+            )
+            total_chunks = len(chunks_list)
+
+            # Emit initial progress
+            self.signals.progress.emit(
+                f"Processing {len(self.publishedfileids)} mods in {total_chunks} chunks"
+            )
+
+            # Process each chunk sequentially
+            for idx, chunk in enumerate(chunks_list, start=1):
+                # Convert string pfids to integers
+                int_pfids = [eval(str_pfid) for str_pfid in chunk]
+
+                # Emit progress
+                self.signals.progress.emit(
+                    f"Processing chunk {idx}/{total_chunks} ({len(int_pfids)} mods)"
+                )
+
+                # Query this chunk - SteamworksInterface handles locking
+                result = steamworks_app_dependencies_worker(
+                    pfid_or_pfids=int_pfids,
+                    interval=1,
+                    _libs=self.libs_path,
+                )
+
+                # Merge results
+                if result is not None:
+                    pfids_appid_deps.update(result)
+
+                # Emit chunk completion
+                self.signals.chunk_complete.emit(idx, total_chunks)
+
+            # Emit final results
+            self.signals.progress.emit(
+                f"Completed! Collected {len(pfids_appid_deps)} results"
+            )
+            self.signals.finished.emit(pfids_appid_deps)
+
+        except Exception as e:
+            logger.error(f"Error in AppDependenciesWorker: {e}")
+            self.signals.error.emit(str(e))
 
 
 class DynamicQuery(QObject):
@@ -718,32 +808,51 @@ class DynamicQuery(QObject):
         self._emit_message(
             f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
-        # Maximum processes
-        num_processes = cpu_count()
-        # Create a pool of worker processes
-        with Pool(processes=num_processes) as pool:
-            # Prepare arguments for worker function
-            args = [
-                (
-                    [eval(str_pfid) for str_pfid in chunk],
-                    1,
-                    str((AppInfo().application_folder / "libs")),
-                )
-                for chunk in list(
-                    chunks(
-                        _list=publishedfileids,
-                        limit=ceil(len(publishedfileids) / num_processes),
-                    )
-                )
-            ]
-            # Map the execution of the queries to the pool of processes
-            results = pool.starmap(steamworks_app_dependencies_worker, args)
-        # Merge the results from all processes into a single dictionary
-        self._emit_message("Processes completed!\nCollecting results")
+
+        # Determine chunk size - balance between progress granularity and overhead
+        # Process ~50-100 mods per chunk for reasonable progress updates
+        chunk_size = min(100, max(50, len(publishedfileids) // 10))
+
+        # Storage for results (accessed only after worker completes)
         pfids_appid_deps: dict[int, list[int]] = {}
-        for result in results:
-            if result is not None:
-                pfids_appid_deps.update(result)
+        worker_error: list[str] = []  # Mutable container for error capture
+
+        # Create worker
+        worker = AppDependenciesWorker(
+            publishedfileids=publishedfileids,
+            libs_path=str(AppInfo().application_folder / "libs"),
+            chunk_size=chunk_size,
+        )
+
+        # Connect signals
+        worker.signals.progress.connect(lambda msg: self._emit_message(f"\n{msg}"))
+        worker.signals.chunk_complete.connect(
+            lambda current, total: self._emit_message(
+                f"Chunk {current}/{total} complete"
+            )
+        )
+        worker.signals.finished.connect(
+            lambda results: pfids_appid_deps.update(results)
+        )
+        worker.signals.error.connect(lambda error: worker_error.append(error))
+
+        # Use global thread pool (consistent with rest of codebase)
+        thread_pool = QThreadPool.globalInstance()
+
+        # Start worker
+        thread_pool.start(worker)
+
+        # Wait for completion - QThreadPool.waitForDone() waits for all tasks
+        self._emit_message("\nWaiting for Steamworks queries to complete...")
+        thread_pool.waitForDone()
+
+        # Check for errors
+        if worker_error:
+            self._emit_message(f"\nError during processing: {worker_error[0]}")
+            logger.error(f"AppDependencies worker failed: {worker_error[0]}")
+            return
+
+        self._emit_message("\nThreads completed!\nCollecting results...")
         self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)

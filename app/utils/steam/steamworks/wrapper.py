@@ -426,7 +426,7 @@ class SteamworksInterface:
             sleep(1)
 
 
-# Worker functions for multiprocessing
+# Worker functions for background processing
 
 
 def steamworks_app_dependencies_worker(
@@ -435,7 +435,10 @@ def steamworks_app_dependencies_worker(
     _libs: Union[str, None] = None,
 ) -> Union[dict[int, Any], None]:
     """
-    Worker for querying app dependencies in multiprocessing pool.
+    Worker for querying app dependencies.
+
+    Called from QThreadPool worker (AppDependenciesWorker) to query Steam Workshop
+    mod app dependencies via Steamworks API.
 
     :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
     :param interval: Sleep interval between API calls (seconds)
