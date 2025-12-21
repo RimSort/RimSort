@@ -1,7 +1,7 @@
 # tests/views/test_main_content_run.py
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Generator, List, Tuple
+from typing import Any, Generator, List, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -182,7 +182,7 @@ def patch_steam_appid_file(monkeypatch: pytest.MonkeyPatch) -> None:
 
     original_open = builtins.open
 
-    def mock_open(file: any, mode: str = "r", *args: any, **kwargs: any) -> any:
+    def mock_open(file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
         # Mock the steam_appid.txt file operations
         if "steam_appid.txt" in str(file):
             mock_file = Mock()
@@ -209,7 +209,7 @@ def patch_steam_appid_file(monkeypatch: pytest.MonkeyPatch) -> None:
     # Mock Path.unlink() for steam_appid.txt
     original_unlink = Path.unlink
 
-    def mock_unlink(self: Path, *args: any, **kwargs: any) -> None:
+    def mock_unlink(self: Path, *args: Any, **kwargs: Any) -> None:
         if "steam_appid.txt" in str(self):
             return  # Do nothing for steam_appid.txt
         return original_unlink(self, *args, **kwargs)
@@ -311,7 +311,7 @@ def test_run_game_steam_check_exception(
     mc.active_mods_uuids_last_save = ["a"]
 
     # Make SteamworksInterface.instance() raise an exception
-    def raise_exception(*args: any, **kwargs: any) -> None:
+    def raise_exception(*args: Any, **kwargs: Any) -> None:
         raise RuntimeError("Steamworks initialization failed")
 
     monkeypatch.setattr(
