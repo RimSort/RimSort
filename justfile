@@ -40,7 +40,7 @@ format-fix:
 
 # Run type checking with mypy
 typecheck:
-    uv run mypy app/
+    uv run mypy --config-file pyproject.toml .
 
 # Run all code quality checks (lint, format, typecheck)
 check: lint format typecheck
