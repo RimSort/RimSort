@@ -117,13 +117,25 @@ jobs:
         id: artifacts
         run: |
           mv artifacts/Windows_x86_64_msi artifacts/msi
+          mv artifacts/Fedora-42_x86_64_rpm artifacts/rpm-f42 || true
+          mv artifacts/Fedora-43_x86_64_rpm artifacts/rpm-f43 || true
           cd artifacts
           for artifact in ./*; do
-            file=${artifact##*/} 
+            file=${artifact##*/}
             if [[ "$file" == "msi" ]]; then
               cd "$artifact"
               name="RimSort-${{ needs.pre-build.outputs.version }}-Windows_x86_64.msi"
               mv ./*.msi "../$name"
+              cd ..
+            elif [[ "$file" == "rpm-f42" ]]; then
+              cd "$artifact"
+              name="RimSort-${{ needs.pre-build.outputs.version }}-Fedora-42_x86_64.rpm"
+              mv ./*.rpm "../$name"
+              cd ..
+            elif [[ "$file" == "rpm-f43" ]]; then
+              cd "$artifact"
+              name="RimSort-${{ needs.pre-build.outputs.version }}-Fedora-43_x86_64.rpm"
+              mv ./*.rpm "../$name"
               cd ..
             else
               base=${file%%.tar}
@@ -183,7 +195,7 @@ jobs:
         uses: ncipollo/release-action@v1.20.0
         id: release
         with:
-          artifacts: "artifacts/*.zip,artifacts/*.msi"
+          artifacts: "artifacts/*.zip,artifacts/*.msi,artifacts/*.rpm"
           tag: ${{ steps.tag.outputs.tag }}
           generateReleaseNotes: true
           prerelease: ${{ needs.pre-build.outputs.prerelease }}

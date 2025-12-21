@@ -1,0 +1,26 @@
+# rpmlint configuration for rimsort
+#
+# This package uses Nuitka to create a standalone binary with all dependencies bundled.
+# As a result, it triggers several warnings that are expected and acceptable for this
+# packaging approach.
+
+# Bundled shared libraries are expected in Nuitka standalone builds
+addFilter("E: shlib-policy-name-error")
+
+# Bundled libraries may call exit() directly
+addFilter("W: shared-lib-calls-exit")
+
+# Nuitka binaries are not stripped (preserves debugging capabilities)
+addFilter("W: unstripped-binary-or-object")
+
+# Large binary size (~700MB) is expected due to bundled Qt6, Python runtime, and dependencies
+addFilter("W: file-size-mismatch")
+
+# The application binary is installed in /usr/share (via wrapper) which is intentional
+addFilter("W: arch-dependent-file-in-usr-share")
+
+# Package doesn't use standard %{_libdir} because everything is bundled
+addFilter("W: library-not-linked-against-libc")
+
+# Python bytecode is bundled by Nuitka, not installed separately
+addFilter("W: python-bytecode-without-source")

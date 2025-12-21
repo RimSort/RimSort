@@ -81,6 +81,68 @@ build *ARGS='': submodules-init check
 build-version VERSION: submodules-init check
     uv run python distribute.py --product-version="{{VERSION}}"
 
+# Create source tarball with submodules for RPM building
+rpm-tarball VERSION='1.0.0':
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Auto-append .1 if version has only 3 parts (for Nuitka compatibility)
+    PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
+    if [ "$PART_COUNT" -eq 3 ]; then
+        FULL_VERSION="{{VERSION}}.1"
+    else
+        FULL_VERSION="{{VERSION}}"
+    fi
+
+    TARBALL="$HOME/rpmbuild/SOURCES/rimsort-$FULL_VERSION.tar.gz"
+
+    echo "Creating source tarball with submodules for version $FULL_VERSION..."
+
+    # Create temporary directory
+    TMPDIR=$(mktemp -d)
+    trap 'rm -rf "$TMPDIR"' EXIT
+
+    # Archive main repository
+    git archive --prefix="RimSort-$FULL_VERSION/" HEAD | tar -x -C "$TMPDIR"
+
+    # Archive submodules
+    git submodule foreach --quiet "git archive --prefix=\"RimSort-$FULL_VERSION/\$displaypath/\" HEAD | tar -x -C \"$TMPDIR\""
+
+    # Create the final tarball
+    cd "$TMPDIR"
+    tar -czf "$TARBALL" "RimSort-$FULL_VERSION"
+
+    echo "Tarball created: $TARBALL"
+    ls -lh "$TARBALL"
+
+# Build RPM package for Fedora/RHEL (e.g., just build-rpm 1.0.63 or just build-rpm 1.0.63.1)
+build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Auto-append .1 if version has only 3 parts (for Nuitka compatibility)
+    PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
+    if [ "$PART_COUNT" -eq 3 ]; then
+        FULL_VERSION="{{VERSION}}.1"
+    else
+        FULL_VERSION="{{VERSION}}"
+    fi
+
+    echo "Setting up RPM build environment..."
+    mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+    echo "Building RPM package for version $FULL_VERSION..."
+    rpmbuild -bb packaging/rpm/rimsort.spec --define "version $FULL_VERSION"
+
+    echo "RPM build complete!"
+    RPM_FILE=$(find ~/rpmbuild/RPMS/x86_64/ -name "rimsort-$FULL_VERSION-*.rpm" | head -n 1)
+    if [ -n "$RPM_FILE" ]; then
+        echo "Built RPM: $RPM_FILE"
+        ls -lh "$RPM_FILE"
+    else
+        echo "Warning: Could not find built RPM"
+    fi
+
 # Utilities
 
 # Initialize and update git submodules (run after cloning)
