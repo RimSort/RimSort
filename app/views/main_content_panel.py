@@ -2112,7 +2112,28 @@ class MainContent(QObject):
             return
         # REFRESH TIMESTAMPS: Query Steam directly for current installation timestamps
         # This ensures we compare against Steam's live state, not stale ACF data
-        self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
+        refresh_stats = self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
+
+        # Warn user if Steam unavailable - update detection may have false positives
+        if refresh_stats.get("steam_unavailable"):
+            dialogue.show_information(
+                title=self.tr("Steam Client Not Available"),
+                text=self.tr(
+                    "Steam client is not running or Steamworks API is unavailable.\n\n"
+                    "Update detection will use ACF file timestamps, which may be stale "
+                    "if Steam recently updated mods.\n\n"
+                    "For best results, ensure Steam is running before checking for updates."
+                ),
+                information=self.tr(
+                    "Recently-updated mods may incorrectly show as needing updates."
+                ),
+            )
+        else:
+            logger.info(
+                f"Refreshed timestamps for {refresh_stats.get('updated', 0)} Workshop mods "
+                f"({refresh_stats.get('failed', 0)} failed)"
+            )
+
         # Query Workshop for update data
         updates_checked = self.do_threaded_loading_animation(
             gif_path=str(

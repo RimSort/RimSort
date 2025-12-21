@@ -1753,17 +1753,47 @@ class MetadataManager(QObject):
 
         return missing_deps
 
-    def refresh_workshop_timestamps_via_steamworks(self) -> None:
+    def refresh_workshop_timestamps_via_steamworks(self) -> dict[str, Any]:
         """
         Query Steam client via Steamworks API for current installation timestamps.
 
         This gets the authoritative "when did Steam last update this mod" timestamp
         directly from Steam's internal state, eliminating stale ACF file issues.
+
+        TIMESTAMP SEMANTICS:
+        - Steamworks GetItemInstallInfo().timestamp: When Steam last updated the local copy
+        - ACF WorkshopItemDetails.timetouched: When Steam last "touched" the mod locally
+        - ACF WorkshopItemDetails.timeupdated: When Steam last downloaded/updated the mod
+        - WebAPI GetPublishedFileDetails.time_updated: When mod author last updated on Workshop
+
+        The comparison for update detection is:
+            external_time_updated (author's last update) > internal_time_touched (our last download)
+
+        This ensures we detect when the Workshop version is newer than our local copy.
+
+        IMPORTANT: Requires Steam client to be running. Falls back to ACF file timestamps
+        if Steam is unavailable, which may be stale if Steam recently auto-updated mods.
+
+        Returns:
+            Statistics dict with keys:
+            - total_mods: Total workshop mods checked
+            - updated: Successfully updated timestamps
+            - failed: Failed to get install info
+            - steam_unavailable: True if Steam not running
         """
+        from datetime import datetime
+
         from app.utils.app_info import AppInfo
         from app.utils.steam.steamworks.wrapper import SteamworksInterface
 
-        logger.info("Refreshing Workshop mod timestamps via Steamworks API")
+        stats = {
+            "total_mods": 0,
+            "updated": 0,
+            "failed": 0,
+            "steam_unavailable": False,
+        }
+
+        logger.info("Refreshing Workshop mod timestamps via Steamworks API...")
 
         # Initialize Steamworks
         steamworks = SteamworksInterface.instance(
@@ -1772,12 +1802,14 @@ class MetadataManager(QObject):
 
         if steamworks.steam_not_running or not steamworks.steamworks.loaded():
             logger.warning(
-                "Steam not running - cannot query install info via Steamworks"
+                "Steam client not running or Steamworks API unavailable. "
+                "Falling back to ACF file timestamps, which may be stale if Steam "
+                "recently updated mods. For accurate update detection, ensure Steam is running."
             )
-            return
+            stats["steam_unavailable"] = True
+            return stats
 
         # Query each Workshop mod for current install timestamp
-        workshop_mods_updated = 0
         for uuid, metadata in self.internal_local_metadata.items():
             # Only check Workshop mods
             if metadata.get("data_source") != "workshop":
@@ -1787,6 +1819,8 @@ class MetadataManager(QObject):
             if not pfid:
                 continue
 
+            stats["total_mods"] += 1
+
             try:
                 # Query Steam for current install info
                 # Convert pfid from string to int (metadata stores as string)
@@ -1795,18 +1829,54 @@ class MetadataManager(QObject):
                 )
 
                 if install_info and install_info.get("timestamp"):
+                    old_timestamp = metadata.get("internal_time_touched")
+                    new_timestamp = install_info["timestamp"]
+
+                    # Log the update with human-readable dates
+                    mod_name = metadata.get("name", "Unknown")
+                    old_date_str = (
+                        datetime.fromtimestamp(old_timestamp).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                        if old_timestamp
+                        else "None"
+                    )
+                    new_date_str = datetime.fromtimestamp(new_timestamp).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+
+                    if old_timestamp:
+                        delta = new_timestamp - old_timestamp
+                        logger.info(
+                            f"Refreshed timestamp for {mod_name} (PFID: {pfid}): "
+                            f"old={old_timestamp} ({old_date_str}), "
+                            f"new={new_timestamp} ({new_date_str}), "
+                            f"delta={delta}s ({delta / 86400:.1f} days)"
+                        )
+                    else:
+                        logger.info(
+                            f"Set timestamp for {mod_name} (PFID: {pfid}): "
+                            f"{new_timestamp} ({new_date_str})"
+                        )
+
                     # Update with authoritative timestamp from Steam
-                    metadata["internal_time_touched"] = install_info["timestamp"]
-                    workshop_mods_updated += 1
+                    metadata["internal_time_touched"] = new_timestamp
+                    stats["updated"] += 1
+                else:
+                    stats["failed"] += 1
                     logger.debug(
-                        f"Updated timestamp for {metadata.get('name')}: {install_info['timestamp']}"
+                        f"No timestamp in install_info for PFID {pfid}: {install_info}"
                     )
             except Exception as e:
+                stats["failed"] += 1
                 logger.warning(f"Failed to get install info for PFID {pfid}: {e}")
 
         logger.info(
-            f"Updated timestamps for {workshop_mods_updated} Workshop mods via Steamworks API"
+            f"Steamworks timestamp refresh complete: {stats['updated']} updated, "
+            f"{stats['failed']} failed out of {stats['total_mods']} Workshop mods"
         )
+
+        return stats
 
 
 class ModParser(QRunnable):
