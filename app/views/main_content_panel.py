@@ -118,9 +118,7 @@ class SteamSubscriptionRunnable(QRunnable):
             f"[STEAM_THREAD] Executing {self.action} for {len(self.pfids)} mods"
         )
 
-        steamworks_interface = SteamworksInterface.instance(
-            _libs=str((AppInfo().application_folder / "libs"))
-        )
+        steamworks_interface = SteamworksInterface.instance()
 
         if self.action == "subscribe":
             steamworks_interface.subscribe_to_mods(self.pfids, interval=1)
@@ -3392,9 +3390,7 @@ class MainContent(QObject):
             try:
                 from app.utils.steam.steamworks.wrapper import SteamworksInterface
 
-                steamworks = SteamworksInterface.instance(
-                    _libs=str(AppInfo().application_folder / "libs")
-                )
+                steamworks = SteamworksInterface.instance()
 
                 if steamworks.steam_not_running:
                     logger.warning(

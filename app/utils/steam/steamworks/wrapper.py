@@ -52,6 +52,12 @@ class SteamworksInterface:
         if hasattr(self, "initialized"):
             return
 
+        # If _libs not provided, use default path
+        if _libs is None:
+            from app.utils.app_info import AppInfo
+
+            _libs = str(AppInfo().application_folder / "libs")
+
         logger.info("SteamworksInterface initializing...")
 
         # One-time initialization
@@ -94,9 +100,15 @@ class SteamworksInterface:
         :return: The singleton instance of SteamworksInterface
         :raises ValueError: If instance already initialized with different _libs
         """
+        # If _libs not provided, use default path
+        if _libs is None:
+            from app.utils.app_info import AppInfo
+
+            _libs = str(AppInfo().application_folder / "libs")
+
         if cls._instance is None:
             cls._instance = cls(_libs=_libs)
-        elif _libs is not None and cls._instance._libs != _libs:
+        elif _libs != cls._instance._libs:
             raise ValueError(
                 f"SteamworksInterface already initialized with different _libs. "
                 f"Existing: {cls._instance._libs}, Requested: {_libs}"
@@ -392,32 +404,6 @@ def steamworks_app_dependencies_worker(
     """
     steamworks_interface = SteamworksInterface.instance(_libs=_libs)
     return steamworks_interface.query_app_dependencies(pfid_or_pfids, interval)
-
-
-def steamworks_subscription_worker(
-    action: str,
-    pfid_or_pfids: Union[int, list[int]],
-    interval: int = 1,
-    _libs: Union[str, None] = None,
-) -> None:
-    """
-    Worker for subscription actions in multiprocessing pool.
-
-    :param action: "subscribe", "unsubscribe", or "resubscribe"
-    :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
-    :param interval: Sleep interval between API calls (seconds)
-    :param _libs: Optional path to Steamworks libraries
-    """
-    steamworks_interface = SteamworksInterface.instance(_libs=_libs)
-
-    if action == "subscribe":
-        steamworks_interface.subscribe_to_mods(pfid_or_pfids, interval)
-    elif action == "unsubscribe":
-        steamworks_interface.unsubscribe_from_mods(pfid_or_pfids, interval)
-    elif action == "resubscribe":
-        steamworks_interface.resubscribe_to_mods(pfid_or_pfids, interval)
-    else:
-        logger.error(f"Unknown subscription action: {action}")
 
 
 def steamworks_game_launch_worker(

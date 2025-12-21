@@ -38,8 +38,8 @@ class AppController(QObject):
         # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
         # NOTE: SteamworksInterface is NOT initialized in main process
-        # It's only used in child processes (multiprocessing.Pool, multiprocessing.Process)
-        # Each child process creates its own singleton instance via lazy initialization
+        # It's lazily initialized when first used (typically in Qt thread pool workers)
+        # Each usage context gets the same singleton instance
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
         # Initialize the metadata manager
