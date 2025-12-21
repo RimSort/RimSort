@@ -6,7 +6,7 @@
 
 # Run the RimSort application
 run: dev-setup
-    uv run python -m app
+    uv run python -m app --dev
 
 # Run tests with coverage reporting to terminal
 test: dev-setup
