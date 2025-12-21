@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Any, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -131,7 +131,7 @@ def test_filter_eligible_mods_missing_timestamps() -> None:
     """Test that mods with missing timestamps are skipped."""
     now = 1700000000
 
-    metadata = {
+    metadata: dict[str, dict[str, Any]] = {
         "uuid1": {
             "name": "Missing Internal",
             "publishedfileid": "123456",
