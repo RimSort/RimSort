@@ -1,7 +1,7 @@
 import sys
 from os import getcwd
 from pathlib import Path
-from threading import Thread
+from threading import RLock, Thread
 from time import sleep, time
 from typing import Any, Union
 
@@ -15,6 +15,10 @@ if "__compiled__" not in globals():
 
 from app.utils.generic import launch_game_process
 from steamworks import STEAMWORKS  # type: ignore
+from steamworks.structs import (  # type: ignore
+    GetAppDependenciesResult,
+    SubscriptionResult,
+)
 
 
 class SteamworksInterface:
@@ -65,6 +69,10 @@ class SteamworksInterface:
         self.steam_not_running = False
         self.steamworks = STEAMWORKS(_libs=_libs)
 
+        # Thread safety lock for operation state
+        self._operation_lock = RLock()
+        self._current_operation: str | None = None
+
         try:
             self.steamworks.initialize()  # Init the Steamworks API
             logger.info("Steamworks API initialized successfully")
@@ -82,7 +90,8 @@ class SteamworksInterface:
         self.initialized = True
 
     def _reset_operation_state(self) -> None:
-        """Reset per-operation state between operations."""
+        """Reset per-operation state between operations. Must be called with lock held."""
+        self._current_operation = None
         self.callbacks = False
         self.callbacks_count = 0
         self.callbacks_total: int | None = None
@@ -134,7 +143,7 @@ class SteamworksInterface:
             return None
 
         try:
-            self._begin_callbacks(callbacks_total=len(pfids))
+            self._begin_callbacks("query_app_dependencies", callbacks_total=len(pfids))
 
             for pfid in pfids:
                 logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
@@ -184,7 +193,7 @@ class SteamworksInterface:
         callbacks_total = len(pfids) * 2 if action == "resubscribe" else len(pfids)
 
         try:
-            self._begin_callbacks(callbacks_total=callbacks_total)
+            self._begin_callbacks(action, callbacks_total=callbacks_total)
 
             if action == "resubscribe":
                 for pfid in pfids:
@@ -235,42 +244,51 @@ class SteamworksInterface:
         # API already initialized in __init__, just launch game
         launch_game_process(game_install_path=Path(game_install_path), args=args)
 
-    def _begin_callbacks(self, callbacks_total: Union[int, None] = None) -> None:
+    def _begin_callbacks(
+        self, operation_name: str, callbacks_total: Union[int, None] = None
+    ) -> None:
         """
         Start callback thread for current operation. INTERNAL USE ONLY.
+        Thread-safe: Acquires operation lock to prevent concurrent operations.
 
+        :param operation_name: Name of operation starting (for logging/debugging)
         :param callbacks_total: Total number of callbacks expected for this operation
         :raises RuntimeError: If callbacks are already in progress
         """
         if self.steam_not_running:
             return
 
-        # Prevent concurrent operations from interfering with each other
-        if self.callbacks:
-            logger.error(
-                "Cannot start new callback operation - callbacks already in progress!"
-            )
-            raise RuntimeError(
-                "SteamworksInterface callbacks already in progress. "
-                "Wait for current operation to complete before starting a new one."
-            )
+        with self._operation_lock:
+            # Prevent concurrent operations from interfering with each other
+            if self.callbacks:
+                logger.error(
+                    f"Cannot start new operation '{operation_name}' - "
+                    f"operation '{self._current_operation}' already in progress!"
+                )
+                raise RuntimeError(
+                    f"SteamworksInterface operation already in progress: {self._current_operation}. "
+                    "Wait for current operation to complete before starting a new one."
+                )
 
-        self._reset_operation_state()
-        self.callbacks = True
-        self.callbacks_total = callbacks_total
-        self.multiple_queries = bool(callbacks_total)
-        self.end_callbacks = False
+            self._reset_operation_state()
+            self._current_operation = operation_name
+            self.callbacks = True
+            self.callbacks_total = callbacks_total
+            self.multiple_queries = bool(callbacks_total)
+            self.end_callbacks = False
 
-        logger.debug("Starting callback thread")
-        self.steamworks_thread = self._daemon()
-        self.steamworks_thread.start()
+            logger.debug(f"Starting callback thread for operation: {operation_name}")
+            self.steamworks_thread = self._daemon()
+            self.steamworks_thread.start()
 
     def _finish_callbacks(self, timeout: int = 60) -> None:
         """
         Wait for callbacks to complete and join thread. INTERNAL USE ONLY.
+        Thread-safe: Acquires lock to update state.
 
         :param timeout: Maximum time to wait for callbacks in seconds
         """
+        # Check without lock first (optimization)
         if not self.callbacks or self.steamworks_thread is None:
             return
 
@@ -278,11 +296,15 @@ class SteamworksInterface:
 
         if self.steamworks_thread.is_alive():
             logger.warning("Callback thread timeout, forcing end")
-            self.end_callbacks = True
+            with self._operation_lock:
+                self.end_callbacks = True
 
         self.steamworks_thread.join(timeout=5)
-        logger.info("Callback thread completed")
-        self._reset_operation_state()
+
+        with self._operation_lock:
+            operation_name = self._current_operation
+            logger.info(f"Callback thread completed for operation: {operation_name}")
+            self._reset_operation_state()
 
     def shutdown(self) -> None:
         """Shutdown Steamworks API. Called at app shutdown."""
@@ -310,52 +332,70 @@ class SteamworksInterface:
                 f"{self.callbacks_count} callback(s) received. Ending thread..."
             )
 
-    # TODO: Rework this for proper static type checking
-    def _cb_app_dependencies_result_callback(self, *args: Any, **kwargs: Any) -> None:
+    def _cb_app_dependencies_result_callback(
+        self, result: GetAppDependenciesResult
+    ) -> None:
         """
-        Executes upon Steamworks API callback response
-        """
-        # Add to callbacks count
-        self.callbacks_count = self.callbacks_count + 1
-        # Debug prints
-        logger.debug(f"GetAppDependencies query callback: {args}, {kwargs}")
-        logger.debug(f"result : {args[0].result}")
-        pfid = args[0].publishedFileId
-        logger.debug(f"publishedFileId : {pfid}")
-        app_dependencies_list = args[0].get_app_dependencies_list()
-        logger.debug(f"app_dependencies_list : {app_dependencies_list}")
-        # Collect data for our query if dependencies were returned
-        if len(app_dependencies_list) > 0:
-            self.get_app_deps_query_result[pfid] = app_dependencies_list
-        # Check for multiple actions
-        if self.multiple_queries and self.callbacks_count == self.callbacks_total:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
-        elif not self.multiple_queries:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
+        Callback handler for GetAppDependencies Steamworks API response.
 
-    def _cb_subscription_action(self, *args: Any, **kwargs: Any) -> None:
+        Receives structured result from Steamworks with:
+        - result: Result code (EResult enum)
+        - publishedFileId: Workshop item ID
+        - array_app_dependencies: Pointer to array of AppIDs
+        - array_num_app_dependencies: Number of dependencies in array
+        - total_num_app_dependencies: Total dependencies (may be > array size)
+
+        :param result: GetAppDependenciesResult containing query results
         """
-        Executes upon Steamworks API callback response
+        with self._operation_lock:
+            # Add to callbacks count
+            self.callbacks_count = self.callbacks_count + 1
+            # Debug prints
+            logger.debug("GetAppDependencies query callback")
+            logger.debug(f"result: {result.result}")
+            pfid = result.publishedFileId
+            logger.debug(f"publishedFileId: {pfid}")
+            app_dependencies_list = result.get_app_dependencies_list()
+            logger.debug(f"app_dependencies_list: {app_dependencies_list}")
+            # Collect data for our query if dependencies were returned
+            if len(app_dependencies_list) > 0:
+                self.get_app_deps_query_result[pfid] = app_dependencies_list
+            # Check for multiple actions
+            if self.multiple_queries and self.callbacks_count == self.callbacks_total:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
+            elif not self.multiple_queries:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
+
+    def _cb_subscription_action(self, result: SubscriptionResult) -> None:
         """
-        # Add to callbacks count
-        self.callbacks_count = self.callbacks_count + 1
-        # Debug prints
-        logger.debug(f"Subscription action callback: {args}, {kwargs}")
-        logger.debug(f"result: {args[0].result}")
-        logger.debug(f"PublishedFileId: {args[0].publishedFileId}")
-        # Uncomment to see steam client install info of the mod
-        # logger.info(
-        #     self.steamworks.Workshop.GetItemInstallInfo(args[0].publishedFileId)
-        # )
-        # Check for multiple actions
-        if self.multiple_queries and self.callbacks_count == self.callbacks_total:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
-        elif not self.multiple_queries:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
+        Callback handler for subscription action (subscribe/unsubscribe) responses.
+
+        Receives structured result from Steamworks with:
+        - result: Result code (EResult enum)
+        - publishedFileId: Workshop item ID that was subscribed/unsubscribed
+
+        :param result: SubscriptionResult containing action result
+        """
+        with self._operation_lock:
+            # Add to callbacks count
+            self.callbacks_count = self.callbacks_count + 1
+            # Debug prints
+            logger.debug("Subscription action callback")
+            logger.debug(f"result: {result.result}")
+            logger.debug(f"PublishedFileId: {result.publishedFileId}")
+            # Uncomment to see steam client install info of the mod
+            # logger.info(
+            #     self.steamworks.Workshop.GetItemInstallInfo(result.publishedFileId)
+            # )
+            # Check for multiple actions
+            if self.multiple_queries and self.callbacks_count == self.callbacks_total:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
+            elif not self.multiple_queries:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
 
     def _daemon(self) -> Thread:
         """

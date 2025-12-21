@@ -326,3 +326,65 @@ def test_run_game_steam_check_exception(
     # Game should launch (fail-open behavior)
     assert len(patch_launch) == 1
     assert patch_launch[0] == (Path("/fake/path"), ["--test"])
+
+
+def test_steamworks_concurrent_operations_blocked(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that concurrent Steamworks operations are properly blocked."""
+    import threading
+
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class to avoid needing actual Steam libraries
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr("app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class)
+
+    # Create a real SteamworksInterface instance with mocked Steamworks
+    steamworks = wrapper.SteamworksInterface.instance()
+
+    # Ensure steam_not_running is False
+    steamworks.steam_not_running = False
+
+    # Start a long-running operation in background thread
+    operation_started = threading.Event()
+    operation_finished = threading.Event()
+
+    def long_operation() -> None:
+        try:
+            steamworks._begin_callbacks("test_operation", callbacks_total=1)
+            operation_started.set()
+            # Hold the operation for a bit
+            import time
+
+            time.sleep(0.5)
+        finally:
+            steamworks._finish_callbacks(timeout=1)
+            operation_finished.set()
+
+    bg_thread = threading.Thread(target=long_operation, daemon=True)
+    bg_thread.start()
+
+    # Wait for first operation to start
+    assert operation_started.wait(timeout=2.0)
+
+    # Try to start concurrent operation - should raise RuntimeError
+    with pytest.raises(RuntimeError, match="operation already in progress"):
+        steamworks._begin_callbacks("concurrent_operation", callbacks_total=1)
+
+    # Wait for first operation to complete
+    assert operation_finished.wait(timeout=2.0)
+
+    # Now a new operation should succeed
+    steamworks._begin_callbacks("second_operation", callbacks_total=1)
+    steamworks._finish_callbacks(timeout=1)
