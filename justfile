@@ -75,11 +75,11 @@ clean:
 
 # Build RimSort executable
 build: submodules-init check
-    uv run python ./distribute.py
+    uv run python distribute.py
 
 # Build RimSort executable with specific version (e.g., "1.2.3.4")
 build-version VERSION: submodules-init check
-    uv run python ./distribute.py --product-version="{{VERSION}}"
+    uv run python distribute.py --product-version="{{VERSION}}"
 
 # Utilities
 
