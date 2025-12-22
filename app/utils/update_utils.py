@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Union, c
 
 import requests
 from loguru import logger
-from packaging import version
 from PySide6.QtCore import QEventLoop, QObject, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -31,6 +30,7 @@ from app.utils.zip_extractor import (
     validate_zip_integrity,
 )
 from app.views.task_progress_window import TaskProgressWindow
+from packaging import version
 
 # Pre-compiled regex patterns for performance
 VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
