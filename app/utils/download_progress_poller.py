@@ -100,8 +100,17 @@ def _check_downloading_item(
             bytes_total=bytes_total,
         )
 
-        # If near completion (>90%), proactively check if already installed
-        if bytes_total > 0 and bytes_downloaded / bytes_total > 0.90:
+        # Check completion in two cases:
+        # 1. bytes_total is 0 (no download needed - already up to date)
+        # 2. download near completion (>90%)
+        if bytes_total == 0:
+            # No download needed - check if already installed
+            install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(item.pfid)
+            if install_info and install_info.get("timestamp"):
+                logger.debug(f"No download needed for {item.pfid}, marking complete")
+                if item.status != DownloadStatus.COMPLETED:
+                    tracker.update_item_status(item.pfid, DownloadStatus.COMPLETED)
+        elif bytes_total > 0 and bytes_downloaded / bytes_total > 0.90:
             install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(item.pfid)
             if install_info and install_info.get("timestamp"):
                 logger.debug(

@@ -491,9 +491,6 @@ class MainContent(QObject):
             # Instantiate query runner
             self.query_runner: RunnerPanel | None = None
 
-            # Steamworks bool - use this to check any Steamworks processes you try to initialize
-            self.steamworks_in_use = False
-
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
 
@@ -2403,112 +2400,86 @@ class MainContent(QObject):
             instruction[1] is a list containing [game_folder_path: str, args: list] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        if not self.steamworks_in_use:
-            subscription_actions = [
-                "resubscribe",
-                "subscribe",
-                "unsubscribe",
-                "download",
-            ]
-            supported_actions = ["launch_game_process"]
-            supported_actions.extend(subscription_actions)
-            if (
-                instruction[0] in supported_actions
-            ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
-                if instruction[0] == "launch_game_process":  # SW API init + game launch
-                    self.steamworks_in_use = True
+        subscription_actions = [
+            "resubscribe",
+            "subscribe",
+            "unsubscribe",
+            "download",
+        ]
+        supported_actions = ["launch_game_process"]
+        supported_actions.extend(subscription_actions)
+        if (
+            instruction[0] in supported_actions
+        ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
+            if instruction[0] == "launch_game_process":  # SW API init + game launch
+                # Create Process with worker function
+                from multiprocessing import Process
 
-                    # Create Process with worker function
-                    from multiprocessing import Process
-
-                    def _launch_game() -> None:
-                        steamworks_game_launch_worker(
-                            game_install_path=instruction[1][0],
-                            args=instruction[1][1],
-                            _libs=str((AppInfo().application_folder / "libs")),
-                        )
-
-                    steamworks_api_process = Process(target=_launch_game)
-                    # Start the Steamworks API Process
-                    steamworks_api_process.start()
-                    logger.info(
-                        f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+                def _launch_game() -> None:
+                    steamworks_game_launch_worker(
+                        game_install_path=instruction[1][0],
+                        args=instruction[1][1],
+                        _libs=str((AppInfo().application_folder / "libs")),
                     )
-                    steamworks_api_process.join()
-                    logger.info(
-                        f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-                    )
-                    self.steamworks_in_use = False
-                elif (
-                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
-                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
-                    logger.info(
-                        f"Creating Steamworks subscription task with instruction {instruction}"
-                    )
-                    self.steamworks_in_use = True
 
-                    # instruction[1] already contains int pfids from EventBus
-                    pfids = instruction[1]
+                steamworks_api_process = Process(target=_launch_game)
+                # Start the Steamworks API Process
+                steamworks_api_process.start()
+                logger.info(
+                    f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+                )
+                steamworks_api_process.join()
+                logger.info(
+                    f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+                )
+            elif (
+                instruction[0] in subscription_actions and len(instruction[1]) >= 1
+            ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
+                logger.info(
+                    f"Creating Steamworks subscription task with instruction {instruction}"
+                )
 
-                    # Get mod names for display (from metadata)
-                    mod_names = {}
-                    for pfid in pfids:
-                        pfid_str = str(pfid)
-                        # Try to get name from external Steam metadata
-                        if pfid_str in self.metadata_manager.external_steam_metadata:
-                            mod_names[pfid] = (
-                                self.metadata_manager.external_steam_metadata[
-                                    pfid_str
-                                ].get("name", f"Mod {pfid}")
-                            )
+                # instruction[1] already contains int pfids from EventBus
+                pfids = instruction[1]
+
+                # Get mod names for display (from metadata)
+                mod_names = {}
+                for pfid in pfids:
+                    pfid_str = str(pfid)
+                    # Try to get name from external Steam metadata
+                    if pfid_str in self.metadata_manager.external_steam_metadata:
+                        mod_names[pfid] = self.metadata_manager.external_steam_metadata[
+                            pfid_str
+                        ].get("name", f"Mod {pfid}")
+                    else:
+                        # Fallback to internal metadata if available
+                        for (
+                            uuid,
+                            metadata,
+                        ) in self.metadata_manager.internal_local_metadata.items():
+                            if metadata.get("publishedfileid") == pfid_str:
+                                mod_names[pfid] = metadata.get("name", f"Mod {pfid}")
+                                break
                         else:
-                            # Fallback to internal metadata if available
-                            for (
-                                uuid,
-                                metadata,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if metadata.get("publishedfileid") == pfid_str:
-                                    mod_names[pfid] = metadata.get(
-                                        "name", f"Mod {pfid}"
-                                    )
-                                    break
-                            else:
-                                # Last resort: generic name
-                                mod_names[pfid] = f"Mod {pfid}"
+                            # Last resort: generic name
+                            mod_names[pfid] = f"Mod {pfid}"
 
-                    # Create and execute runnable in Qt thread pool
-                    runnable = SteamSubscriptionRunnable(
-                        instruction[0], pfids, mod_names
-                    )
+                # Create and execute runnable in Qt thread pool
+                runnable = SteamSubscriptionRunnable(instruction[0], pfids, mod_names)
 
-                    # Connect signals for error/success handling
-                    runnable.signals.error.connect(self._handle_subscription_error)
-                    runnable.signals.success.connect(self._handle_subscription_success)
-                    # Connect cleanup handler to reset steamworks_in_use flag
-                    runnable.signals.error.connect(
-                        lambda *args: setattr(self, "steamworks_in_use", False)
-                    )
-                    runnable.signals.success.connect(
-                        lambda *args: setattr(self, "steamworks_in_use", False)
-                    )
+                # Connect signals for error/success handling
+                runnable.signals.error.connect(self._handle_subscription_error)
+                runnable.signals.success.connect(self._handle_subscription_success)
 
-                    # Ensure cleanup happens even if runnable fails
-                    runnable.setAutoDelete(True)
+                # Ensure cleanup happens even if runnable fails
+                runnable.setAutoDelete(True)
 
-                    # Start in background - downloads panel will track progress
-                    logger.debug("Starting subscription operation in background...")
-                    QThreadPool.globalInstance().start(runnable)
-                else:
-                    logger.warning(
-                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
-                    )
+                # Start in background - downloads panel will track progress
+                logger.debug("Starting subscription operation in background...")
+                QThreadPool.globalInstance().start(runnable)
             else:
                 logger.error(f"Unsupported instruction {instruction}")
                 return
-        else:
-            logger.warning(
-                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
-            )
 
     def _do_steamworks_api_call_animated(
         self, instruction: list[list[str] | str]

@@ -607,6 +607,24 @@ class SteamworksInterface:
                     DownloadTracker().update_item_status(
                         pfid, DownloadStatus.DOWNLOADING
                     )
+
+                    # Check if download is actually needed
+                    # If mod is already up-to-date, Steam may not download anything
+                    download_info = self.steamworks.Workshop.GetItemDownloadInfo(pfid)
+
+                    # If no download info or 0 bytes, check if already installed
+                    if not download_info or (
+                        download_info.get("downloaded", 0) == 0
+                        and download_info.get("total", 0) == 0
+                    ):
+                        install_info = self.steamworks.Workshop.GetItemInstallInfo(pfid)
+                        if install_info and install_info.get("timestamp"):
+                            logger.info(
+                                f"Item {pfid} already up-to-date, marking COMPLETED"
+                            )
+                            DownloadTracker().update_item_status(
+                                pfid, DownloadStatus.COMPLETED
+                            )
             else:
                 logger.error(f"Download failed for pfid={pfid}, EResult={eresult}")
 
