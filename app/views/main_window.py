@@ -1150,15 +1150,6 @@ class MainWindow(QMainWindow):
                 ].workshop_folder,
             ],
         )
-        # ACF watchdog signal connection REMOVED - replaced with ItemInstalled_t callbacks
-        # This was the root cause of issue #1460 - ACF polling during resubscribe
-        # caused race conditions that marked mods as invalid
-        # See: https://github.com/RimSort/RimSort/issues/1460
-        #
-        # self.watchdog_event_handler.acf_changed.connect(
-        #     partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
-        # )
-
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation
         )
@@ -1177,10 +1168,6 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None:
-                self.watchdog_event_handler.watchdog_acf_observer.start()
-            else:
-                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
             if self.watchdog_event_handler.watchdog_mods_observer is not None:
                 self.watchdog_event_handler.watchdog_mods_observer.start()
             else:
@@ -1205,24 +1192,16 @@ class MainWindow(QMainWindow):
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
         if self.watchdog_event_handler is not None:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
-                self.watchdog_event_handler.watchdog_mods_observer is not None
-            ):
+            if self.watchdog_event_handler.watchdog_mods_observer is not None:
                 self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
             self.watchdog_event_handler is not None
-            and self.watchdog_event_handler.watchdog_acf_observer is not None
             and self.watchdog_event_handler.watchdog_mods_observer is not None
         ):
-            # Handle Steam .acf Observer shutdown
-            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
-                self.watchdog_event_handler.watchdog_acf_observer.stop()
-                self.watchdog_event_handler.watchdog_acf_observer.join()
-                self.watchdog_event_handler.watchdog_acf_observer = None
             # Handle Mod Directory Observer shutdown
-            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+            if self.watchdog_event_handler.watchdog_mods_observer.is_alive():
                 self.watchdog_event_handler.watchdog_mods_observer.stop()
                 self.watchdog_event_handler.watchdog_mods_observer.join()
                 self.watchdog_event_handler.watchdog_mods_observer = None

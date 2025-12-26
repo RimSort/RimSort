@@ -398,7 +398,6 @@ def test_subscription_operations_queue_when_busy(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that subscription operations queue instead of raising RuntimeError when busy."""
-    import threading
     import time
 
     from app.utils.steam.steamworks import wrapper
@@ -552,8 +551,6 @@ def test_queued_operation_error_handling(
     successful_operations: List[str] = []
     operation_lock = threading.Lock()
 
-    original_subscribe_impl = steamworks._subscribe_to_mods_impl
-
     call_count = [0]  # Use list to allow modification in nested function
 
     def mock_subscribe_impl(
@@ -579,7 +576,9 @@ def test_queued_operation_error_handling(
     # Start first operation in background (will fail)
     def first_operation() -> None:
         try:
-            steamworks.subscribe_to_mods(pfid_or_pfids=111111, interval=1, batch_id=None)
+            steamworks.subscribe_to_mods(
+                pfid_or_pfids=111111, interval=1, batch_id=None
+            )
         except Exception:
             pass  # Swallow exception
 
