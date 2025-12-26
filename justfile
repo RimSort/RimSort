@@ -147,7 +147,13 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
 
 # Initialize and update git submodules (run after cloning)
 submodules-init:
-    git submodule update --init --recursive
+    #!/usr/bin/env bash
+    if git submodule status | grep -q '^-'; then
+        echo "Initializing submodules..."
+        git submodule update --init --recursive
+    else
+        echo "Submodules already initialized, skipping"
+    fi
 
 # Show help for distribute.py build script
 build-help:
