@@ -1025,6 +1025,8 @@ class ModListWidget(QListWidget):
             re_git_action = None
             re_steamcmd_action = None
             re_steam_action = None
+            # Force download Steam Workshop mods
+            force_download_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
             # Change mod color
@@ -1151,6 +1153,11 @@ class ModListWidget(QListWidget):
                             re_steam_action = QAction()
                             re_steam_action.setText(
                                 self.tr("Re-subscribe mod with Steam")
+                            )
+                            # Force download Steam Workshop mods
+                            force_download_steam_action = QAction()
+                            force_download_steam_action.setText(
+                                self.tr("Force download with Steam")
                             )
                             # Unsubscribe steam mods
                             unsubscribe_mod_steam_action = QAction()
@@ -1302,6 +1309,12 @@ class ModListWidget(QListWidget):
                                     re_steam_action.setText(
                                         self.tr("Re-subscribe mod(s) with Steam")
                                     )
+                                # Force download Steam Workshop mods
+                                if not force_download_steam_action:
+                                    force_download_steam_action = QAction()
+                                    force_download_steam_action.setText(
+                                        self.tr("Force download mod(s) with Steam")
+                                    )
                                 # Unsubscribe steam mods
                                 if not unsubscribe_mod_steam_action:
                                     unsubscribe_mod_steam_action = QAction()
@@ -1369,6 +1382,8 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(re_steamcmd_action)
                 if re_steam_action:
                     workshop_actions_menu.addAction(re_steam_action)
+                if force_download_steam_action:
+                    workshop_actions_menu.addAction(force_download_steam_action)
                 if unsubscribe_mod_steam_action:
                     workshop_actions_menu.addAction(unsubscribe_mod_steam_action)
                 if (
@@ -1617,6 +1632,33 @@ class ModListWidget(QListWidget):
                         EventBus().do_steamworks_api_call.emit(
                             [
                                 "resubscribe",
+                                [int(pfid) for pfid in publishedfileids],
+                            ]
+                        )
+                    return True
+                elif (  # ACTION: Force download mod(s) with Steam
+                    action == force_download_steam_action
+                    and len(steam_publishedfileid_to_name) > 0
+                ):
+                    publishedfileids = steam_publishedfileid_to_name.keys()
+                    # Prompt user
+                    answer = show_dialogue_conditional(
+                        title=self.tr("Are you sure?"),
+                        text=self.tr(
+                            "You have selected {len} mod(s) for force download."
+                        ).format(len=len(publishedfileids)),
+                        information=self.tr(
+                            "\nThis will force Steam to revalidate and re-download the selected mods.\n\n"
+                            "Do you want to proceed?"
+                        ),
+                    )
+                    if answer == QMessageBox.StandardButton.Yes:
+                        logger.debug(
+                            f"Force downloading {len(publishedfileids)} mod(s) via DownloadItem API"
+                        )
+                        EventBus().do_steamworks_api_call.emit(
+                            [
+                                "download",
                                 [int(pfid) for pfid in publishedfileids],
                             ]
                         )

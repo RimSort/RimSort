@@ -110,7 +110,7 @@ class SteamSubscriptionRunnable(QRunnable):
         """
         Initialize the runnable.
 
-        :param action: "subscribe", "unsubscribe", or "resubscribe"
+        :param action: "subscribe", "unsubscribe", "resubscribe", or "download"
         :param pfids: List of PublishedFileIds to process
         :param mod_names: Mapping of pfid -> mod name for display
         """
@@ -168,6 +168,10 @@ class SteamSubscriptionRunnable(QRunnable):
                     )
                 elif self.action == "resubscribe":
                     steamworks_interface.resubscribe_to_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "download":
+                    steamworks_interface.download_items(
                         self.pfids, interval=1, batch_id=batch_id
                     )
                 else:
@@ -2400,7 +2404,12 @@ class MainContent(QObject):
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_in_use:
-            subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
+            subscription_actions = [
+                "resubscribe",
+                "subscribe",
+                "unsubscribe",
+                "download",
+            ]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
             if (
@@ -2475,18 +2484,20 @@ class MainContent(QObject):
                     # Connect signals for error/success handling
                     runnable.signals.error.connect(self._handle_subscription_error)
                     runnable.signals.success.connect(self._handle_subscription_success)
+                    # Connect cleanup handler to reset steamworks_in_use flag
+                    runnable.signals.error.connect(
+                        lambda *args: setattr(self, "steamworks_in_use", False)
+                    )
+                    runnable.signals.success.connect(
+                        lambda *args: setattr(self, "steamworks_in_use", False)
+                    )
 
                     # Ensure cleanup happens even if runnable fails
                     runnable.setAutoDelete(True)
 
+                    # Start in background - downloads panel will track progress
+                    logger.debug("Starting subscription operation in background...")
                     QThreadPool.globalInstance().start(runnable)
-
-                    # Wait for thread to complete
-                    logger.debug("Waiting for subscription thread to complete...")
-                    QThreadPool.globalInstance().waitForDone()
-                    logger.info("Subscription thread completed")
-
-                    self.steamworks_in_use = False
                 else:
                     logger.warning(
                         "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"

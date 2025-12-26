@@ -16,7 +16,8 @@ if "__compiled__" not in globals():
 from app.utils.generic import launch_game_process
 from steamworks import STEAMWORKS  # type: ignore
 from steamworks.structs import (  # type: ignore
-    GetAppDependenciesResult,
+    DownloadItemResult_t,
+    GetAppDependenciesResult_t,
     ItemInstalled_t,
     SubscriptionResult,
 )
@@ -68,7 +69,7 @@ class SteamworksInterface:
         # One-time initialization
         self._libs = _libs
         self.steam_not_running = False
-        self.steamworks = STEAMWORKS(_libs=_libs)
+        self.steamworks = STEAMWORKS(lib_path=self._libs)
 
         # Thread safety lock for operation state
         self._operation_lock = RLock()
@@ -227,6 +228,71 @@ class SteamworksInterface:
         self._handle_subscription_action(
             "resubscribe", pfid_or_pfids, interval, batch_id
         )
+
+    def download_items(
+        self,
+        pfid_or_pfids: Union[int, list[int]],
+        interval: int = 1,
+        batch_id: str | None = None,
+    ) -> None:
+        """
+        Force download/update Steam Workshop items using DownloadItem API.
+
+        Does NOT unsubscribe - uses native Steamworks DownloadItem() to force revalidation.
+
+        :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
+        :type pfid_or_pfids: Union[int, list[int]]
+        :param interval: Sleep interval between API calls (seconds)
+        :type interval: int
+        :param batch_id: Optional batch ID from DownloadTracker for progress tracking
+        :type batch_id: str | None
+        :return: None
+        """
+        logger.info("Forcing download of Steam Workshop items")
+
+        pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
+
+        if self.steam_not_running or not self.steamworks.loaded():
+            return
+
+        # Store batch_id for callback correlation
+        self._current_batch_id = batch_id
+
+        # Enable ItemInstalled callbacks for download tracking
+        if batch_id:
+            self.enable_item_installed_callbacks()
+
+        callbacks_total = len(pfids)
+
+        try:
+            self._begin_callbacks("download", callbacks_total=callbacks_total)
+
+            for pfid in pfids:
+                logger.debug(f"ISteamUGC/DownloadItem: {pfid}")
+
+                # Update tracker: SUBSCRIBING (reusing existing status)
+                if batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
+
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.SUBSCRIBING
+                    )
+
+                # Upstream API: callback is REQUIRED, returns bool
+                try:
+                    success = self.steamworks.Workshop.DownloadItem(
+                        pfid, high_priority=True, callback=self._cb_download_item_result
+                    )
+                    if not success:
+                        logger.warning(f"DownloadItem returned False for pfid={pfid}")
+                except ValueError as e:
+                    logger.error(f"DownloadItem failed for pfid={pfid}: {e}")
+
+                sleep(interval)
+
+        finally:
+            self._finish_callbacks()
 
     def _handle_subscription_action(
         self,
@@ -441,7 +507,7 @@ class SteamworksInterface:
             )
 
     def _cb_app_dependencies_result_callback(
-        self, result: GetAppDependenciesResult
+        self, result: GetAppDependenciesResult_t
     ) -> None:
         """
         Callback handler for GetAppDependencies Steamworks API response.
@@ -453,7 +519,7 @@ class SteamworksInterface:
         - array_num_app_dependencies: Number of dependencies in array
         - total_num_app_dependencies: Total dependencies (may be > array size)
 
-        :param result: GetAppDependenciesResult containing query results
+        :param result: GetAppDependenciesResult_t containing query results
         """
         with self._operation_lock:
             # Add to callbacks count
@@ -505,6 +571,62 @@ class SteamworksInterface:
                 # Set flag so that _callbacks cease
                 self.end_callbacks = True
 
+    def _cb_download_item_result(self, result: DownloadItemResult_t) -> None:
+        """
+        Callback for DownloadItem API result.
+
+        :param result: DownloadItemResult_t from Steamworks
+        :type result: DownloadItemResult_t
+        :return: None
+        """
+        # Use upstream field names: appID, publishedFileId, result
+        pfid = result.publishedFileId  # NOT m_nPublishedFileId
+        eresult = result.result  # NOT m_eResult
+        app_id = result.appID  # NOT m_unAppID
+
+        logger.debug(
+            f"DownloadItem callback: pfid={pfid}, result={eresult}, appID={app_id}"
+        )
+
+        # Decrement callbacks
+        with self._operation_lock:
+            self.callbacks_count += 1
+            logger.debug(
+                f"Download callbacks: {self.callbacks_count}/{self.callbacks_total}"
+            )
+
+            # Check if download initiated successfully
+            if eresult == 1:  # k_EResultOK
+                logger.info(f"Download started successfully for pfid={pfid}")
+
+                # Update tracker: DOWNLOADING
+                if self._current_batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
+
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.DOWNLOADING
+                    )
+            else:
+                logger.error(f"Download failed for pfid={pfid}, EResult={eresult}")
+
+                # Update tracker: FAILED
+                if self._current_batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
+
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.FAILED, error=f"EResult={eresult}"
+                    )
+
+            # Check for multiple actions
+            if self.multiple_queries and self.callbacks_count == self.callbacks_total:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
+            elif not self.multiple_queries:
+                # Set flag so that _callbacks cease
+                self.end_callbacks = True
+
     def _cb_item_installed(self, result: ItemInstalled_t) -> None:
         """
         Callback handler for ItemInstalled_t - fires when mod download completes.
@@ -517,7 +639,9 @@ class SteamworksInterface:
         :return: None
         """
         pfid = result.publishedFileId
-        logger.info(f"ItemInstalled_t callback fired: pfid={pfid}, appId={result.appId}")
+        logger.info(
+            f"ItemInstalled_t callback fired: pfid={pfid}, appId={result.appId}"
+        )
 
         # Update download tracker
         from app.models.download_state import DownloadStatus

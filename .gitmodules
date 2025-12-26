@@ -4,6 +4,6 @@
 	ignore = dirty
 [submodule "SteamworksPy"]
 	path = submodules/SteamworksPy
-	url = https://github.com/philippj/SteamworksPy
+	url = https://github.com/cebarks/SteamworksPy
 	ignore = dirty
-	branch = master
+	branch = duplicate-fix

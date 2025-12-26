@@ -143,6 +143,97 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
         echo "Warning: Could not find built RPM"
     fi
 
+# SteamworksPy Build
+
+# Build SteamworksPy library from source for the current platform
+build-steamworkspy: submodules-init
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    STEAMWORKSPY_DIR="submodules/SteamworksPy/library"
+
+    echo "Building SteamworksPy from source..."
+
+    # Detect platform
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        PLATFORM="linux"
+        LIB_SUFFIX="so"
+        STEAM_API="libsteam_api.so"
+        PROCESSOR=$(uname -m)
+        OUTPUT_LIB="SteamworksPy_${PROCESSOR}.so"
+        SYMLINK_NAME="SteamworksPy.so"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        PLATFORM="darwin"
+        LIB_SUFFIX="dylib"
+        STEAM_API="libsteam_api.dylib"
+        PROCESSOR=$(uname -m)
+        OUTPUT_LIB="SteamworksPy_${PROCESSOR}.dylib"
+        SYMLINK_NAME="SteamworksPy.dylib"
+    else
+        echo "Error: Unsupported platform: $OSTYPE"
+        echo "This recipe currently supports Linux and macOS only."
+        exit 1
+    fi
+
+    echo "Detected platform: $PLATFORM ($PROCESSOR)"
+
+    # Check if SDK headers exist
+    if [ ! -f "$STEAMWORKSPY_DIR/sdk/steam/steam_api.h" ]; then
+        echo "Error: Steamworks SDK headers not found in $STEAMWORKSPY_DIR/sdk/"
+        echo ""
+        echo "The Steamworks SDK must be vendored in the repository."
+        echo "Download it from: https://partner.steamgames.com/downloads/steamworks_sdk.zip"
+        echo "Then extract to: $STEAMWORKSPY_DIR/"
+        echo ""
+        echo "After extraction, run: mkdir -p $STEAMWORKSPY_DIR/sdk/steam && cp -r $STEAMWORKSPY_DIR/sdk/public/steam/* $STEAMWORKSPY_DIR/sdk/steam/"
+        exit 1
+    fi
+
+    # Check if libsteam_api exists in library directory
+    if [ ! -f "$STEAMWORKSPY_DIR/$STEAM_API" ]; then
+        echo "Error: $STEAM_API not found in $STEAMWORKSPY_DIR"
+        echo "The library should be present in the Steamworks SDK under sdk/redistributable_bin/"
+        exit 1
+    fi
+
+    # Compile SteamworksPy
+    echo "Compiling SteamworksPy..."
+    cd "$STEAMWORKSPY_DIR"
+    g++ -std=c++11 -o "$OUTPUT_LIB" -shared -fPIC SteamworksPy.cpp -l steam_api -L.
+
+    if [ ! -f "$OUTPUT_LIB" ]; then
+        echo "Error: Compilation failed - $OUTPUT_LIB not found"
+        exit 1
+    fi
+
+    echo "Compilation successful: $OUTPUT_LIB"
+
+    # Return to project root
+    cd ../../..
+
+    # Copy to libs/
+    echo "Copying $OUTPUT_LIB to libs/..."
+    mkdir -p libs
+    cp "$STEAMWORKSPY_DIR/$OUTPUT_LIB" "libs/"
+
+    # Create symlink in libs/
+    cd libs
+    ln -sf "$OUTPUT_LIB" "$SYMLINK_NAME"
+    echo "Created symlink: libs/$SYMLINK_NAME -> $OUTPUT_LIB"
+    cd ..
+
+    # Copy to project root for SteamworksPy v2.0+ compatibility
+    echo "Copying libraries to project root..."
+    cp "libs/$OUTPUT_LIB" "$SYMLINK_NAME"
+    cp "libs/$STEAM_API" "$STEAM_API"
+
+    echo ""
+    echo "✓ SteamworksPy build complete!"
+    echo "  - libs/$OUTPUT_LIB"
+    echo "  - libs/$SYMLINK_NAME -> $OUTPUT_LIB"
+    echo "  - $SYMLINK_NAME (project root)"
+    echo "  - $STEAM_API (project root)"
+
 # Utilities
 
 # Initialize and update git submodules (run after cloning)

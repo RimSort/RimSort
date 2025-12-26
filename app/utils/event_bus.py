@@ -134,11 +134,15 @@ class EventBus(QObject):
     download_batch_created = Signal(str)  # batch_id
     download_batch_completed = Signal(str)  # batch_id
     download_batch_removed = Signal(str)  # batch_id
-    download_item_updated = Signal(str, str)  # batch_id, pfid (as string to handle 64-bit Steam IDs)
+    download_item_updated = Signal(
+        str, str
+    )  # batch_id, pfid (as string to handle 64-bit Steam IDs)
     download_item_progress = Signal(str, str)  # batch_id, pfid (as string)
 
     # Steam Workshop signals
-    workshop_item_installed = Signal(str)  # pfid (as string) - emitted when mod installation completes
+    workshop_item_installed = Signal(
+        str
+    )  # pfid (as string) - emitted when mod installation completes
 
     def __new__(cls) -> "EventBus":
         """
