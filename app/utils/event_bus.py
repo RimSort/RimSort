@@ -130,6 +130,16 @@ class EventBus(QObject):
     # Loading animation signals
     do_threaded_loading_animation = Signal(str, object, str)
 
+    # Download tracking signals
+    download_batch_created = Signal(str)  # batch_id
+    download_batch_completed = Signal(str)  # batch_id
+    download_batch_removed = Signal(str)  # batch_id
+    download_item_updated = Signal(str, str)  # batch_id, pfid (as string to handle 64-bit Steam IDs)
+    download_item_progress = Signal(str, str)  # batch_id, pfid (as string)
+
+    # Steam Workshop signals
+    workshop_item_installed = Signal(str)  # pfid (as string) - emitted when mod installation completes
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.

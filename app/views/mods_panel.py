@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from shutil import copy2, copytree
+from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import Any, Optional, cast
 
@@ -76,6 +76,7 @@ from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetad
 from app.utils.custom_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    attempt_chmod,
     copy_to_clipboard_safely,
     delete_files_except_extension,
     flatten_to_list,
@@ -1041,7 +1042,15 @@ class ModListWidget(QListWidget):
                     item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
                     # Retrieve metadata
-                    mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
+                    mod_metadata = self.metadata_manager.internal_local_metadata.get(
+                        uuid
+                    )
+                    # Skip if mod was deleted (race condition with pending events)
+                    if mod_metadata is None:
+                        logger.debug(
+                            f"Skipping context menu for deleted mod UUID: {uuid}"
+                        )
+                        return True
                     mod_data_source = mod_metadata.get("data_source")
                     # Open folder action text
                     open_folder_action = QAction()
@@ -1186,9 +1195,15 @@ class ModListWidget(QListWidget):
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
-                        mod_metadata = self.metadata_manager.internal_local_metadata[
-                            uuid
-                        ]
+                        mod_metadata = (
+                            self.metadata_manager.internal_local_metadata.get(uuid)
+                        )
+                        # Skip if mod was deleted (race condition with pending events)
+                        if mod_metadata is None:
+                            logger.debug(
+                                f"Skipping context menu for deleted mod UUID: {uuid}"
+                            )
+                            continue
                         mod_data_source = mod_metadata.get("data_source")
                         # Open folder action text
                         open_folder_action = QAction()
@@ -1575,7 +1590,10 @@ class ModListWidget(QListWidget):
                             "You have selected {len} mods for unsubscribe + re-subscribe."
                         ).format(len=len(publishedfileids)),
                         information=self.tr(
-                            "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
+                            "\nThis operation will:\n"
+                            "• Delete the selected mod directories from your filesystem\n"
+                            "• Resubscribe to the Steam Workshop mods\n\n"
+                            "Do you want to proceed?"
                         ),
                     )
                     if answer == QMessageBox.StandardButton.Yes:
@@ -1583,13 +1601,23 @@ class ModListWidget(QListWidget):
                             f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
                         )
                         for path in steam_mod_paths:
-                            delete_files_except_extension(
-                                directory=path, extension=".dds"
-                            )
+                            try:
+                                rmtree(path, ignore_errors=False, onexc=attempt_chmod)
+                                logger.info(
+                                    f"Deleted mod directory for resubscription: {path}"
+                                )
+                            except FileNotFoundError:
+                                logger.debug(
+                                    f"Mod directory not found (already deleted?): {path}"
+                                )
+                            except Exception as e:
+                                logger.error(
+                                    f"Failed to delete mod directory {path}: {e}"
+                                )
                         EventBus().do_steamworks_api_call.emit(
                             [
                                 "resubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
+                                [int(pfid) for pfid in publishedfileids],
                             ]
                         )
                     return True
@@ -1702,9 +1730,13 @@ class ModListWidget(QListWidget):
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
-                        mod_metadata = self.metadata_manager.internal_local_metadata[
-                            uuid
-                        ]
+                        mod_metadata = (
+                            self.metadata_manager.internal_local_metadata.get(uuid)
+                        )
+                        # Skip if mod was deleted (race condition with pending events)
+                        if mod_metadata is None:
+                            logger.debug(f"Skipping event for deleted mod UUID: {uuid}")
+                            continue
                         mod_data_source = mod_metadata.get("data_source")
                         mod_path = mod_metadata["path"]
                         # Toggle warning action

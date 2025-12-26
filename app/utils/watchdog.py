@@ -10,7 +10,6 @@ from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
-from watchdog.observers.polling import PollingObserver
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.metadata import MetadataManager
@@ -48,38 +47,21 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             self.metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
         self.settings_controller: SettingsController = settings_controller
-        # Steam .acf file monitoring
-        self.watchdog_acf_observer: BaseObserver | None
-        self.watchdog_acf_observer = PollingObserver()
+        # Steam .acf file monitoring - DISABLED
+        # ACF polling replaced with Steamworks ItemInstalled_t callbacks
+        # See: https://github.com/RimSort/RimSort/issues/1460
+        self.watchdog_acf_observer: BaseObserver | None = None
         # Mod directory monitoring
         self.watchdog_mods_observer: BaseObserver | None
         self.watchdog_mods_observer = Observer()
         # Keep track of cooldowns for each uuid
         self.cooldown_timers: dict[str, Any] = {}
-        self.__add_acf_observers()
+        # Note: __add_acf_observers() removed - ACF polling no longer used
         self.__add_mod_observers(self.settings_controller.get_mod_paths())
 
-    def __add_acf_observers(self) -> None:
-        """Add observers to the watchdog observer for applicable Steam .acf files.
-
-        :param None:
-
-        :return: None
-        """
-        # Get all applicable Steam .acf paths if set and existing
-        acf_targets: set[str] = {
-            path
-            for path in (
-                self.workshop_acf_path,
-                self.steamcmd_appworkshop_acf_path,
-            )
-            if path and os.path.exists(path)
-        }
-        # Loop through applicable targets and schedule observers for them
-        if self.watchdog_acf_observer is not None:
-            for target in acf_targets:
-                logger.debug(f"Scheduling observer for Steam .acf metadata: {target}")
-                self.watchdog_acf_observer.schedule(self, target, recursive=False)
+    # __add_acf_observers() method removed - ACF polling replaced with callbacks
+    # ACF file monitoring disabled as part of fix for issue #1460
+    # Using Steamworks ItemInstalled_t callbacks instead
 
     def __add_mod_observers(self, targets: list[str]) -> None:
         """Add observers to the watchdog observer for all of our data source target paths.

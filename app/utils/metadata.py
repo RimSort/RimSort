@@ -29,6 +29,7 @@ from app.utils.constants import (
     DEFAULT_MISSING_PACKAGEID,
     RIMWORLD_DLC_METADATA,
 )
+from app.utils.event_bus import EventBus
 from app.utils.generic import directories, scanpath
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -1699,6 +1700,60 @@ class MetadataManager(QObject):
         self.__refresh_internal_metadata(is_initial=is_initial)
         # Compile metadata to calculate dependencies, incompatibilities, and load rules
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
+
+    def refresh_single_mod_from_steam(self, pfid_str: str) -> None:
+        """
+        Refresh metadata for a single Steam Workshop mod after installation.
+
+        Called via ItemInstalled_t callback to update internal metadata
+        without triggering full ACF refresh. This provides targeted updates
+        for newly installed/updated mods.
+
+        :param pfid_str: PublishedFileId of installed mod (as string to handle 64-bit Steam IDs)
+        :type pfid_str: str
+        :return: None
+        """
+        pfid = int(pfid_str)
+        logger.info(f"Refreshing metadata for installed mod: {pfid}")
+
+        # Query install info from Steamworks
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        steamworks = SteamworksInterface.instance()
+
+        if steamworks.steam_not_running or not steamworks.steamworks.loaded():
+            logger.warning("Cannot refresh mod metadata - Steam not running")
+            return
+
+        install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(pfid)
+        if not install_info:
+            logger.warning(f"No install info for pfid {pfid}")
+            return
+
+        # Find the mod in internal metadata by pfid
+        updated = False
+        for uuid, metadata in self.internal_local_metadata.items():
+            if metadata.get("publishedfileid") == pfid_str:
+                # Update internal_time_touched with new timestamp
+                old_timestamp = metadata.get("internal_time_touched")
+                new_timestamp = install_info.get("timestamp")
+                metadata["internal_time_touched"] = new_timestamp
+                logger.debug(
+                    f"Updated internal_time_touched for {metadata.get('name', pfid)}: "
+                    f"{old_timestamp} -> {new_timestamp}"
+                )
+                updated = True
+                break
+
+        if updated:
+            # Emit signal for UI update
+            EventBus().do_refresh_mods_lists.emit()
+            logger.info(f"Metadata refresh complete for pfid {pfid}")
+        else:
+            logger.warning(
+                f"Could not find mod with pfid {pfid} in internal metadata - "
+                f"full refresh may be needed"
+            )
 
     def get_mod_name_from_package_id(self, package_id: str) -> str:
         """Get a mod's name from its package ID"""

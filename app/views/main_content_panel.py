@@ -98,40 +98,151 @@ class SteamSubscriptionRunnable(QRunnable):
     allowing Steam client to properly receive and act on them.
     """
 
-    def __init__(self, action: str, pfids: list[int]) -> None:
+    class Signals(QObject):
+        """Signals for communicating from runnable to main thread."""
+
+        error = Signal(str, str, list)  # (action, error_msg, pfids)
+        success = Signal(str, int)  # (action, num_pfids)
+
+    def __init__(
+        self, action: str, pfids: list[int], mod_names: dict[int, str]
+    ) -> None:
         """
         Initialize the runnable.
 
         :param action: "subscribe", "unsubscribe", or "resubscribe"
         :param pfids: List of PublishedFileIds to process
+        :param mod_names: Mapping of pfid -> mod name for display
         """
         super().__init__()
         self.action = action
         self.pfids = pfids
+        self.mod_names = mod_names
+        self.signals = self.Signals()
 
     @Slot()
     def run(self) -> None:
-        """Execute the subscription action in a thread."""
+        """Execute the subscription action in a thread with error handling and retry logic."""
+        from time import sleep
+
+        from app.models.download_state import DownloadStatus
+        from app.utils.download_tracker import DownloadTracker
         from app.utils.steam.steamworks.wrapper import SteamworksInterface
 
         logger.info(
             f"[STEAM_THREAD] Executing {self.action} for {len(self.pfids)} mods"
         )
 
+        # Create download batch for tracking
+        tracker = DownloadTracker()
+        batch_id = tracker.create_batch(
+            operation=self.action,
+            pfids=self.pfids,
+            mod_names=self.mod_names,
+        )
+
         steamworks_interface = SteamworksInterface.instance()
 
-        if self.action == "subscribe":
-            steamworks_interface.subscribe_to_mods(self.pfids, interval=1)
-        elif self.action == "unsubscribe":
-            steamworks_interface.unsubscribe_from_mods(self.pfids, interval=1)
-        elif self.action == "resubscribe":
-            steamworks_interface.resubscribe_to_mods(self.pfids, interval=1)
-        else:
-            logger.error(f"Unknown subscription action: {self.action}")
+        # Retry configuration
+        MAX_RETRY_ATTEMPTS = 3
+        RETRY_DELAYS = [0.5, 1.0, 2.0]  # Exponential backoff in seconds
 
-        logger.info(
-            f"[STEAM_THREAD] Completed {self.action} for {len(self.pfids)} mods"
-        )
+        operation_successful = False
+        last_error: Exception | None = None
+
+        # Attempt operation with retry logic
+        for attempt in range(MAX_RETRY_ATTEMPTS):
+            try:
+                logger.debug(
+                    f"[STEAM_THREAD] Attempt {attempt + 1}/{MAX_RETRY_ATTEMPTS} for {self.action}"
+                )
+
+                # Execute operation with batch_id for tracking
+                if self.action == "subscribe":
+                    steamworks_interface.subscribe_to_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "unsubscribe":
+                    steamworks_interface.unsubscribe_from_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "resubscribe":
+                    steamworks_interface.resubscribe_to_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                else:
+                    error_msg = f"Unknown subscription action: {self.action}"
+                    logger.error(error_msg)
+                    self.signals.error.emit(self.action, error_msg, self.pfids)
+
+                    # Mark all items as failed
+                    for pfid in self.pfids:
+                        tracker.update_item_status(
+                            pfid, DownloadStatus.FAILED, error=error_msg
+                        )
+                    return
+
+                # Success!
+                operation_successful = True
+                logger.info(
+                    f"[STEAM_THREAD] Successfully completed {self.action} for {len(self.pfids)} mods"
+                )
+                self.signals.success.emit(self.action, len(self.pfids))
+                break
+
+            except RuntimeError as e:
+                last_error = e
+                error_str = str(e).lower()
+
+                # Check if this is a transient "operation already in progress" error
+                if "operation already in progress" in error_str:
+                    logger.warning(
+                        f"[STEAM_THREAD] Operation in progress (attempt {attempt + 1}/{MAX_RETRY_ATTEMPTS}): {e}"
+                    )
+
+                    # If we have more retries, wait and try again
+                    if attempt < MAX_RETRY_ATTEMPTS - 1:
+                        delay = RETRY_DELAYS[attempt]
+                        logger.info(f"[STEAM_THREAD] Retrying after {delay}s delay...")
+                        sleep(delay)
+                        continue
+                    else:
+                        # Max retries exceeded
+                        logger.error(
+                            f"[STEAM_THREAD] Max retry attempts exceeded for {self.action}"
+                        )
+                else:
+                    # Some other RuntimeError - don't retry
+                    logger.error(
+                        f"[STEAM_THREAD] RuntimeError during {self.action}: {e}",
+                        exc_info=True,
+                    )
+
+                # Either max retries exceeded or non-retryable error
+                break
+
+            except Exception as e:
+                # Unexpected error - log and fail immediately
+                last_error = e
+                logger.error(
+                    f"[STEAM_THREAD] Unexpected error during {self.action}: {e}",
+                    exc_info=True,
+                )
+                break
+
+        # Handle failure case
+        if not operation_successful:
+            error_msg = str(last_error) if last_error else "Unknown error"
+            logger.error(
+                f"[STEAM_THREAD] Failed {self.action} for {len(self.pfids)} mods: {error_msg}"
+            )
+
+            # Emit error signal for main thread to handle
+            self.signals.error.emit(self.action, error_msg, self.pfids)
+
+            # Mark all items as failed in tracker
+            for pfid in self.pfids:
+                tracker.update_item_status(pfid, DownloadStatus.FAILED, error=error_msg)
 
 
 class MainContent(QObject):
@@ -2330,8 +2441,44 @@ class MainContent(QObject):
                     # instruction[1] already contains int pfids from EventBus
                     pfids = instruction[1]
 
+                    # Get mod names for display (from metadata)
+                    mod_names = {}
+                    for pfid in pfids:
+                        pfid_str = str(pfid)
+                        # Try to get name from external Steam metadata
+                        if pfid_str in self.metadata_manager.external_steam_metadata:
+                            mod_names[pfid] = (
+                                self.metadata_manager.external_steam_metadata[
+                                    pfid_str
+                                ].get("name", f"Mod {pfid}")
+                            )
+                        else:
+                            # Fallback to internal metadata if available
+                            for (
+                                uuid,
+                                metadata,
+                            ) in self.metadata_manager.internal_local_metadata.items():
+                                if metadata.get("publishedfileid") == pfid_str:
+                                    mod_names[pfid] = metadata.get(
+                                        "name", f"Mod {pfid}"
+                                    )
+                                    break
+                            else:
+                                # Last resort: generic name
+                                mod_names[pfid] = f"Mod {pfid}"
+
                     # Create and execute runnable in Qt thread pool
-                    runnable = SteamSubscriptionRunnable(instruction[0], pfids)
+                    runnable = SteamSubscriptionRunnable(
+                        instruction[0], pfids, mod_names
+                    )
+
+                    # Connect signals for error/success handling
+                    runnable.signals.error.connect(self._handle_subscription_error)
+                    runnable.signals.success.connect(self._handle_subscription_success)
+
+                    # Ensure cleanup happens even if runnable fails
+                    runnable.setAutoDelete(True)
+
                     QThreadPool.globalInstance().start(runnable)
 
                     # Wait for thread to complete
@@ -2391,10 +2538,63 @@ class MainContent(QObject):
         # Do a full refresh of metadata and UI
         # self._do_refresh()
         # TODO  check if this is necessary
-        """       
+        """
         Disabled refresh since steam downloads are not instant and in the background in its own time
         Refreshing metadata and UI here could tag mods as invalid or cause crashes due to key errors etc
         """
+
+    def _handle_subscription_error(
+        self, action: str, error_msg: str, pfids: list[int]
+    ) -> None:
+        """
+        Handle subscription operation errors from worker thread.
+
+        :param action: The action that failed ("subscribe", "unsubscribe", "resubscribe")
+        :type action: str
+        :param error_msg: Error message from the operation
+        :type error_msg: str
+        :param pfids: List of affected PublishedFileIds
+        :type pfids: list[int]
+        :return: None
+        """
+        logger.error(f"Subscription operation '{action}' failed: {error_msg}")
+
+        # Determine user-friendly message
+        if "operation already in progress" in error_msg.lower():
+            title = self.tr("Operation Busy")
+            text = self.tr("Steam Workshop is currently busy with another operation.")
+            information = self.tr(
+                f"Could not complete '{action}' for {len(pfids)} mod(s) because "
+                "another Steam Workshop operation is in progress.\n\n"
+                "Please wait a moment and try again."
+            )
+        else:
+            title = self.tr("Subscription Operation Failed")
+            text = self.tr(f"Failed to {action} {len(pfids)} mod(s)")
+            information = self.tr(
+                "An error occurred while communicating with the Steam Workshop API.\n\n"
+                f"Error details: {error_msg}"
+            )
+
+        # Show warning dialog (using existing dialogue module)
+        dialogue.show_warning(
+            title=title,
+            text=text,
+            information=information,
+        )
+
+    def _handle_subscription_success(self, action: str, num_mods: int) -> None:
+        """
+        Handle successful subscription operation.
+
+        :param action: The action that succeeded
+        :type action: str
+        :param num_mods: Number of mods processed
+        :type num_mods: int
+        :return: None
+        """
+        logger.info(f"Subscription operation '{action}' succeeded for {num_mods} mods")
+        # Success is already tracked via DownloadTracker, no additional UI needed
 
         # GIT MOD ACTIONS
 
