@@ -356,6 +356,10 @@ class MainContent(QObject):
                 self._do_download_mods_with_steamcmd
             )
 
+            EventBus().do_refresh_steamcmd_acf.connect(
+                self._do_refresh_steamcmd_acf_metadata
+            )
+
             EventBus().do_steamworks_api_call.connect(
                 self._do_steamworks_api_call_animated
             )
@@ -2369,6 +2373,13 @@ class MainContent(QObject):
             self.steamcmd_runner.message(
                 f"Downloading {len(publishedfileids)} mods with SteamCMD..."
             )
+            # Refresh ACF metadata before download to capture current state
+            from app.utils.acf_utils import refresh_acf_metadata
+
+            refresh_acf_metadata(
+                self.metadata_manager, steamclient=False, steamcmd=True
+            )
+            logger.debug("Refreshed SteamCMD ACF metadata before download operation")
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids,
                 runner=self.steamcmd_runner,
@@ -2384,6 +2395,13 @@ class MainContent(QObject):
                     'Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".'
                 ),
             )
+
+    def _do_refresh_steamcmd_acf_metadata(self) -> None:
+        """Refresh SteamCMD ACF metadata after downloads."""
+        from app.utils.acf_utils import refresh_acf_metadata
+
+        refresh_acf_metadata(self.metadata_manager, steamclient=False, steamcmd=True)
+        logger.info("Refreshed SteamCMD ACF metadata after download operation")
 
     def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
