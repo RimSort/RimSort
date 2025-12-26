@@ -51,6 +51,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressDialog,
     QPushButton,
+    QSplitter,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -2860,16 +2861,22 @@ class ModsPanel(QWidget):
             tuple[str, list[str], ModsPanelSortKey, bool]
         ] = None
 
-        # Base layout horizontal, sub-layouts vertical
+        # Base layout with a splitter for resizable mod lists
         self.panel = QVBoxLayout()
-        self.lists_panel = QHBoxLayout()
+        self.lists_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.lists_splitter.setChildrenCollapsible(False)
+        self.lists_splitter.setHandleWidth(4)
         self.active_panel = QVBoxLayout()
         self.inactive_panel = QVBoxLayout()
-        # Add vertical layouts to the horizontal lists panel
-        self.lists_panel.addLayout(self.inactive_panel)
-        self.lists_panel.addLayout(self.active_panel)
-        # Add the lists panel to the main vertical panel
-        self.panel.addLayout(self.lists_panel)
+        self.inactive_container = QWidget()
+        self.inactive_container.setLayout(self.inactive_panel)
+        self.active_container = QWidget()
+        self.active_container.setLayout(self.active_panel)
+        self.lists_splitter.addWidget(self.inactive_container)
+        self.lists_splitter.addWidget(self.active_container)
+        self.lists_splitter.setStretchFactor(0, 1)
+        self.lists_splitter.setStretchFactor(1, 1)
+        self.panel.addWidget(self.lists_splitter, 1)
 
         # Create the buttons layout
         self.button_panel = QHBoxLayout()
@@ -2899,7 +2906,7 @@ class ModsPanel(QWidget):
         self.button_panel_frame.setLayout(self.button_panel)
 
         # Add the buttons frame below the lists panel
-        self.panel.addWidget(self.button_panel_frame)
+        self.panel.addWidget(self.button_panel_frame, 0)
 
         # Filter icons and tooltips
         self.data_source_filter_icons = [
