@@ -156,6 +156,7 @@ class SteamworksInterface:
         :param interval: Sleep interval between API calls (seconds)
         :return: Dict mapping PublishedFileId to app dependencies, or None
         """
+        start_time = time()
         logger.info(f"Querying PublishedFileID(s) {pfid_or_pfids} for app dependencies")
 
         # Normalize to list
@@ -182,6 +183,8 @@ class SteamworksInterface:
             return self.get_app_deps_query_result
         finally:
             self._finish_callbacks(timeout=60)
+            elapsed = time() - start_time
+            logger.info(f"query_app_dependencies operation completed in {elapsed:.2f}s")
 
     def subscribe_to_mods(
         self,
@@ -291,8 +294,13 @@ class SteamworksInterface:
         :type batch_id: str | None
         :return: None
         """
+        start_time = time()
+        logger.debug(f"Starting download operation for {len(pfids)} item(s)")
+
         # Store batch_id for callback correlation
         self._current_batch_id = batch_id
+        if batch_id:
+            logger.debug(f"Operation associated with batch_id: {batch_id}")
 
         # Enable ItemInstalled callbacks for download tracking
         if batch_id:
@@ -329,6 +337,8 @@ class SteamworksInterface:
 
         finally:
             self._finish_callbacks()
+            elapsed = time() - start_time
+            logger.info(f"download operation completed in {elapsed:.2f}s")
 
     def _handle_subscription_action(
         self,
@@ -350,6 +360,7 @@ class SteamworksInterface:
         :type batch_id: str | None
         :return: None
         """
+        start_time = time()
         logger.info(f"Handling Steam subscription action: {action}")
 
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
@@ -359,6 +370,8 @@ class SteamworksInterface:
 
         # Store batch_id for callback correlation
         self._current_batch_id = batch_id
+        if batch_id:
+            logger.debug(f"Operation associated with batch_id: {batch_id}")
 
         # Enable ItemInstalled callbacks for download tracking
         if batch_id:
@@ -440,7 +453,12 @@ class SteamworksInterface:
             self._finish_callbacks(timeout=timeout)
 
             # Clear batch_id
+            if self._current_batch_id:
+                logger.debug(f"Cleared batch_id: {self._current_batch_id}")
             self._current_batch_id = None
+
+            elapsed = time() - start_time
+            logger.info(f"{action} operation completed in {elapsed:.2f}s")
 
     def launch_game(self, game_install_path: str, args: list[str]) -> None:
         """
@@ -473,7 +491,8 @@ class SteamworksInterface:
             if self.callbacks:
                 logger.error(
                     f"Cannot start new operation '{operation_name}' - "
-                    f"operation '{self._current_operation}' already in progress!"
+                    f"operation '{self._current_operation}' already in progress! "
+                    f"(queue_size: {self._operation_queue.qsize()})"
                 )
                 raise RuntimeError(
                     f"SteamworksInterface operation already in progress: {self._current_operation}. "
@@ -511,13 +530,13 @@ class SteamworksInterface:
         with self._operation_lock:
             # Check if operation already in progress
             if self.callbacks:
-                logger.info(
-                    f"Operation '{operation_name}' queued (current: '{self._current_operation}')"
-                )
                 self._operation_queue.put(
                     QueuedOperation(
                         name=operation_name, execute=execute_fn, batch_id=batch_id
                     )
+                )
+                logger.info(
+                    f"Operation '{operation_name}' queued (current: '{self._current_operation}', queue_size: {self._operation_queue.qsize()})"
                 )
                 return
 
@@ -532,9 +551,13 @@ class SteamworksInterface:
         :return: None
         """
         if self._operation_queue.empty():
+            logger.debug("Queue empty, no operations to process")
             return
 
         if self._processing_queue:
+            logger.debug(
+                "Queue processing already in progress, skipping (re-entrancy prevention)"
+            )
             return  # Avoid re-entrancy
 
         self._processing_queue = True
@@ -542,7 +565,9 @@ class SteamworksInterface:
         try:
             # Get next operation (non-blocking)
             operation = self._operation_queue.get_nowait()
-            logger.info(f"Processing queued operation: {operation.name}")
+            logger.info(
+                f"Processing queued operation: {operation.name} (remaining: {self._operation_queue.qsize()})"
+            )
 
             # Release lock before executing (avoid deadlock)
             # The operation will re-acquire lock in _begin_callbacks
@@ -552,7 +577,9 @@ class SteamworksInterface:
             except Exception as e:
                 # Log error but continue processing queue
                 logger.error(
-                    f"Queued operation '{operation.name}' failed: {e}", exc_info=True
+                    f"Queued operation '{operation.name}' failed: {e} "
+                    f"(batch_id: {operation.batch_id}, queue_remaining: {self._operation_queue.qsize()})",
+                    exc_info=True,
                 )
             finally:
                 self._operation_lock.acquire()
@@ -598,6 +625,14 @@ class SteamworksInterface:
 
             # Process next queued operation if any
             self._process_next_queued_operation()
+
+            # Log queue state
+            if self._operation_queue.empty():
+                logger.debug("All queued operations processed")
+            else:
+                logger.info(
+                    f"Queue has {self._operation_queue.qsize()} operation(s) remaining"
+                )
 
     def shutdown(self) -> None:
         """Shutdown Steamworks API. Called at app shutdown."""
@@ -745,7 +780,10 @@ class SteamworksInterface:
                                 pfid, DownloadStatus.COMPLETED
                             )
             else:
-                logger.error(f"Download failed for pfid={pfid}, EResult={eresult}")
+                logger.error(
+                    f"Download failed for pfid={pfid}, EResult={eresult} "
+                    f"(batch_id: {self._current_batch_id})"
+                )
 
                 # Update tracker: FAILED
                 if self._current_batch_id:
