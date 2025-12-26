@@ -203,7 +203,19 @@ class SteamworksInterface:
         :type batch_id: str | None
         :return: None
         """
-        self._handle_subscription_action("subscribe", pfid_or_pfids, interval, batch_id)
+        logger.info("Subscribing to Steam Workshop mod(s)")
+
+        pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
+
+        if self.steam_not_running or not self.steamworks.loaded():
+            return
+
+        # Define execution function
+        def execute() -> None:
+            self._subscribe_to_mods_impl(pfids, interval, batch_id)
+
+        # Queue or execute
+        self._enqueue_or_execute("subscribe", execute, batch_id)
 
     def unsubscribe_from_mods(
         self,
@@ -222,9 +234,19 @@ class SteamworksInterface:
         :type batch_id: str | None
         :return: None
         """
-        self._handle_subscription_action(
-            "unsubscribe", pfid_or_pfids, interval, batch_id
-        )
+        logger.info("Unsubscribing from Steam Workshop mod(s)")
+
+        pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
+
+        if self.steam_not_running or not self.steamworks.loaded():
+            return
+
+        # Define execution function
+        def execute() -> None:
+            self._unsubscribe_from_mods_impl(pfids, interval, batch_id)
+
+        # Queue or execute
+        self._enqueue_or_execute("unsubscribe", execute, batch_id)
 
     def resubscribe_to_mods(
         self,
@@ -243,9 +265,19 @@ class SteamworksInterface:
         :type batch_id: str | None
         :return: None
         """
-        self._handle_subscription_action(
-            "resubscribe", pfid_or_pfids, interval, batch_id
-        )
+        logger.info("Resubscribing to Steam Workshop mod(s)")
+
+        pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
+
+        if self.steam_not_running or not self.steamworks.loaded():
+            return
+
+        # Define execution function
+        def execute() -> None:
+            self._resubscribe_to_mods_impl(pfids, interval, batch_id)
+
+        # Queue or execute
+        self._enqueue_or_execute("resubscribe", execute, batch_id)
 
     def download_items(
         self,
@@ -340,33 +372,22 @@ class SteamworksInterface:
             elapsed = time() - start_time
             logger.info(f"download operation completed in {elapsed:.2f}s")
 
-    def _handle_subscription_action(
-        self,
-        action: str,
-        pfid_or_pfids: Union[int, list[int]],
-        interval: int,
-        batch_id: str | None = None,
+    def _subscribe_to_mods_impl(
+        self, pfids: list[int], interval: int, batch_id: str | None
     ) -> None:
         """
-        Internal method to handle subscription actions with callback management.
+        Internal implementation of subscribe_to_mods (for queuing).
 
-        :param action: "subscribe", "unsubscribe", or "resubscribe"
-        :type action: str
-        :param pfid_or_pfids: Single pfid or list of pfids
-        :type pfid_or_pfids: Union[int, list[int]]
-        :param interval: Sleep interval between API calls
+        :param pfids: List of PublishedFileIds
+        :type pfids: list[int]
+        :param interval: Sleep interval between API calls (seconds)
         :type interval: int
-        :param batch_id: Optional batch_id from DownloadTracker for progress tracking
+        :param batch_id: Optional batch ID from DownloadTracker for progress tracking
         :type batch_id: str | None
         :return: None
         """
         start_time = time()
-        logger.info(f"Handling Steam subscription action: {action}")
-
-        pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
-
-        if self.steam_not_running or not self.steamworks.loaded():
-            return
+        logger.debug(f"Starting subscribe operation for {len(pfids)} item(s)")
 
         # Store batch_id for callback correlation
         self._current_batch_id = batch_id
@@ -377,80 +398,33 @@ class SteamworksInterface:
         if batch_id:
             self.enable_item_installed_callbacks()
 
-        callbacks_total = len(pfids) * 2 if action == "resubscribe" else len(pfids)
+        callbacks_total = len(pfids)
 
         try:
-            self._begin_callbacks(action, callbacks_total=callbacks_total)
+            self._begin_callbacks("subscribe", callbacks_total=callbacks_total)
 
-            if action == "resubscribe":
-                for pfid in pfids:
-                    logger.debug(f"ISteamUGC/UnsubscribeItem + SubscribeItem: {pfid}")
+            for pfid in pfids:
+                logger.debug(f"ISteamUGC/SubscribeItem: {pfid}")
 
-                    # Update tracker: UNSUBSCRIBING
-                    if batch_id:
-                        from app.models.download_state import DownloadStatus
-                        from app.utils.download_tracker import DownloadTracker
+                # Update tracker: SUBSCRIBING
+                if batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
 
-                        DownloadTracker().update_item_status(
-                            pfid, DownloadStatus.UNSUBSCRIBING
-                        )
-
-                    self.steamworks.Workshop.SetItemUnsubscribedCallback(
-                        self._cb_subscription_action
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.SUBSCRIBING
                     )
-                    self.steamworks.Workshop.SetItemSubscribedCallback(
-                        self._cb_subscription_action
-                    )
-                    self.steamworks.Workshop.UnsubscribeItem(pfid)
+
+                self.steamworks.Workshop.SetItemSubscribedCallback(
+                    self._cb_subscription_action
+                )
+                self.steamworks.Workshop.SubscribeItem(pfid)
+                if len(pfids) > 1:
                     sleep(interval)
 
-                    # Update tracker: SUBSCRIBING
-                    if batch_id:
-                        from app.models.download_state import DownloadStatus
-                        from app.utils.download_tracker import DownloadTracker
-
-                        DownloadTracker().update_item_status(
-                            pfid, DownloadStatus.SUBSCRIBING
-                        )
-
-                    self.steamworks.Workshop.SubscribeItem(pfid)
-                    if len(pfids) > 1:
-                        sleep(interval)
-
-            elif action == "subscribe":
-                for pfid in pfids:
-                    logger.debug(f"ISteamUGC/SubscribeItem: {pfid}")
-
-                    # Update tracker: SUBSCRIBING
-                    if batch_id:
-                        from app.models.download_state import DownloadStatus
-                        from app.utils.download_tracker import DownloadTracker
-
-                        DownloadTracker().update_item_status(
-                            pfid, DownloadStatus.SUBSCRIBING
-                        )
-
-                    self.steamworks.Workshop.SetItemSubscribedCallback(
-                        self._cb_subscription_action
-                    )
-                    self.steamworks.Workshop.SubscribeItem(pfid)
-                    if len(pfids) > 1:
-                        sleep(interval)
-
-            elif action == "unsubscribe":
-                for pfid in pfids:
-                    logger.debug(f"ISteamUGC/UnsubscribeItem: {pfid}")
-                    self.steamworks.Workshop.SetItemUnsubscribedCallback(
-                        self._cb_subscription_action
-                    )
-                    self.steamworks.Workshop.UnsubscribeItem(pfid)
-                    if len(pfids) > 1:
-                        sleep(interval)
         finally:
-            # For unsubscribe, use short timeout
-            # For subscribe/resubscribe, ItemInstalled callbacks will signal completion
-            timeout = 10 if action == "unsubscribe" else 60
-            self._finish_callbacks(timeout=timeout)
+            # ItemInstalled callbacks will signal completion
+            self._finish_callbacks(timeout=60)
 
             # Clear batch_id
             if self._current_batch_id:
@@ -458,7 +432,136 @@ class SteamworksInterface:
             self._current_batch_id = None
 
             elapsed = time() - start_time
-            logger.info(f"{action} operation completed in {elapsed:.2f}s")
+            logger.info(f"subscribe operation completed in {elapsed:.2f}s")
+
+    def _unsubscribe_from_mods_impl(
+        self, pfids: list[int], interval: int, batch_id: str | None
+    ) -> None:
+        """
+        Internal implementation of unsubscribe_from_mods (for queuing).
+
+        :param pfids: List of PublishedFileIds
+        :type pfids: list[int]
+        :param interval: Sleep interval between API calls (seconds)
+        :type interval: int
+        :param batch_id: Optional batch ID from DownloadTracker for progress tracking
+        :type batch_id: str | None
+        :return: None
+        """
+        start_time = time()
+        logger.debug(f"Starting unsubscribe operation for {len(pfids)} item(s)")
+
+        # Store batch_id for callback correlation
+        self._current_batch_id = batch_id
+        if batch_id:
+            logger.debug(f"Operation associated with batch_id: {batch_id}")
+
+        # Enable ItemInstalled callbacks for download tracking
+        if batch_id:
+            self.enable_item_installed_callbacks()
+
+        callbacks_total = len(pfids)
+
+        try:
+            self._begin_callbacks("unsubscribe", callbacks_total=callbacks_total)
+
+            for pfid in pfids:
+                logger.debug(f"ISteamUGC/UnsubscribeItem: {pfid}")
+                self.steamworks.Workshop.SetItemUnsubscribedCallback(
+                    self._cb_subscription_action
+                )
+                self.steamworks.Workshop.UnsubscribeItem(pfid)
+                if len(pfids) > 1:
+                    sleep(interval)
+
+        finally:
+            # For unsubscribe, use short timeout
+            self._finish_callbacks(timeout=10)
+
+            # Clear batch_id
+            if self._current_batch_id:
+                logger.debug(f"Cleared batch_id: {self._current_batch_id}")
+            self._current_batch_id = None
+
+            elapsed = time() - start_time
+            logger.info(f"unsubscribe operation completed in {elapsed:.2f}s")
+
+    def _resubscribe_to_mods_impl(
+        self, pfids: list[int], interval: int, batch_id: str | None
+    ) -> None:
+        """
+        Internal implementation of resubscribe_to_mods (for queuing).
+
+        :param pfids: List of PublishedFileIds
+        :type pfids: list[int]
+        :param interval: Sleep interval between API calls (seconds)
+        :type interval: int
+        :param batch_id: Optional batch ID from DownloadTracker for progress tracking
+        :type batch_id: str | None
+        :return: None
+        """
+        start_time = time()
+        logger.debug(f"Starting resubscribe operation for {len(pfids)} item(s)")
+
+        # Store batch_id for callback correlation
+        self._current_batch_id = batch_id
+        if batch_id:
+            logger.debug(f"Operation associated with batch_id: {batch_id}")
+
+        # Enable ItemInstalled callbacks for download tracking
+        if batch_id:
+            self.enable_item_installed_callbacks()
+
+        callbacks_total = len(pfids) * 2  # Unsub + sub for each item
+
+        try:
+            self._begin_callbacks("resubscribe", callbacks_total=callbacks_total)
+
+            for pfid in pfids:
+                logger.debug(f"ISteamUGC/UnsubscribeItem + SubscribeItem: {pfid}")
+
+                # Update tracker: UNSUBSCRIBING
+                if batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
+
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.UNSUBSCRIBING
+                    )
+
+                self.steamworks.Workshop.SetItemUnsubscribedCallback(
+                    self._cb_subscription_action
+                )
+                self.steamworks.Workshop.SetItemSubscribedCallback(
+                    self._cb_subscription_action
+                )
+                self.steamworks.Workshop.UnsubscribeItem(pfid)
+                sleep(interval)
+
+                # Update tracker: SUBSCRIBING
+                if batch_id:
+                    from app.models.download_state import DownloadStatus
+                    from app.utils.download_tracker import DownloadTracker
+
+                    DownloadTracker().update_item_status(
+                        pfid, DownloadStatus.SUBSCRIBING
+                    )
+
+                self.steamworks.Workshop.SubscribeItem(pfid)
+                if len(pfids) > 1:
+                    sleep(interval)
+
+        finally:
+            # ItemInstalled callbacks will signal completion
+            self._finish_callbacks(timeout=60)
+
+            # Clear batch_id
+            if self._current_batch_id:
+                logger.debug(f"Cleared batch_id: {self._current_batch_id}")
+            self._current_batch_id = None
+
+            elapsed = time() - start_time
+            logger.info(f"resubscribe operation completed in {elapsed:.2f}s")
 
     def launch_game(self, game_install_path: str, args: list[str]) -> None:
         """

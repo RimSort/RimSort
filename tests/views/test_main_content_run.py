@@ -390,3 +390,215 @@ def test_steamworks_concurrent_operations_blocked(
     # Now a new operation should succeed
     steamworks._begin_callbacks("second_operation", callbacks_total=1)
     steamworks._finish_callbacks(timeout=1)
+
+
+def test_subscription_operations_queue_when_busy(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that subscription operations queue instead of raising RuntimeError when busy."""
+    import threading
+    import time
+
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_obj.Workshop = Mock()
+    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
+
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create instance
+    steamworks = wrapper.SteamworksInterface.instance()
+    steamworks.steam_not_running = False
+
+    # Manually set operation in progress by calling _begin_callbacks directly
+    steamworks._begin_callbacks("test_operation", callbacks_total=1)
+
+    # Verify operation is in progress
+    assert steamworks.callbacks is True
+    assert steamworks._current_operation == "test_operation"
+
+    # Now try to subscribe - this should QUEUE instead of raising RuntimeError
+    steamworks.subscribe_to_mods(pfid_or_pfids=123456, interval=1, batch_id=None)
+
+    # Verify operation was queued
+    assert steamworks._operation_queue.qsize() == 1
+
+    # Finish the test operation
+    steamworks._finish_callbacks(timeout=1)
+
+    # Wait for queue processing
+    time.sleep(0.3)
+
+    # Verify queue was processed (or at least attempted)
+    # The queued operation should have been started
+    assert steamworks._operation_queue.qsize() == 0
+
+
+def test_multiple_subscription_operations_queue_in_order(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that multiple subscription operations queue properly."""
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Reset singleton instance
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_obj.Workshop = Mock()
+    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SetItemUnsubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.UnsubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.DownloadItem = Mock(return_value=True)
+
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create instance
+    steamworks = wrapper.SteamworksInterface.instance()
+    steamworks.steam_not_running = False
+
+    # Manually set operation in progress
+    steamworks._begin_callbacks("download", callbacks_total=1)
+
+    # Queue multiple operations while download is "running"
+    steamworks.subscribe_to_mods(pfid_or_pfids=222222, interval=1, batch_id=None)
+    steamworks.unsubscribe_from_mods(pfid_or_pfids=333333, interval=1, batch_id=None)
+    steamworks.resubscribe_to_mods(pfid_or_pfids=444444, interval=1, batch_id=None)
+
+    # Verify all three operations were queued
+    assert steamworks._operation_queue.qsize() == 3
+
+    # Verify operation names in queue
+    queue_items = []
+    with steamworks._operation_lock:
+        # Peek at queue without removing items
+        import queue as q
+
+        temp_queue = q.Queue()
+        while not steamworks._operation_queue.empty():
+            item = steamworks._operation_queue.get()
+            queue_items.append(item.name)
+            temp_queue.put(item)
+
+        # Restore queue
+        while not temp_queue.empty():
+            steamworks._operation_queue.put(temp_queue.get())
+
+    # Verify operations are queued in FIFO order
+    assert queue_items == ["subscribe", "unsubscribe", "resubscribe"]
+
+
+def test_queued_operation_error_handling(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that errors in queued operations don't block subsequent operations."""
+    import threading
+    import time
+
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_obj.Workshop = Mock()
+
+    # Mock Workshop methods
+    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
+
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create a real SteamworksInterface instance
+    steamworks = wrapper.SteamworksInterface.instance()
+    steamworks.steam_not_running = False
+
+    # Track successful operations
+    successful_operations: List[str] = []
+    operation_lock = threading.Lock()
+
+    original_subscribe_impl = steamworks._subscribe_to_mods_impl
+
+    call_count = [0]  # Use list to allow modification in nested function
+
+    def mock_subscribe_impl(
+        pfids: list[int], interval: int, batch_id: str | None
+    ) -> None:
+        call_count[0] += 1
+        if call_count[0] == 1:
+            # First call raises an exception
+            raise RuntimeError("Simulated error in first operation")
+        else:
+            # Second call succeeds
+            with operation_lock:
+                successful_operations.append("subscribe")
+            # Call original but mock _begin_callbacks to avoid actual callback thread
+            with steamworks._operation_lock:
+                steamworks._current_operation = "subscribe"
+                steamworks.callbacks = True
+                steamworks.end_callbacks = True
+                steamworks._reset_operation_state()
+
+    monkeypatch.setattr(steamworks, "_subscribe_to_mods_impl", mock_subscribe_impl)
+
+    # Start first operation in background (will fail)
+    def first_operation() -> None:
+        try:
+            steamworks.subscribe_to_mods(pfid_or_pfids=111111, interval=1, batch_id=None)
+        except Exception:
+            pass  # Swallow exception
+
+    bg_thread = threading.Thread(target=first_operation, daemon=True)
+    bg_thread.start()
+
+    # Wait for first operation to start
+    time.sleep(0.1)
+
+    # Queue second operation (should succeed)
+    steamworks.subscribe_to_mods(pfid_or_pfids=222222, interval=1, batch_id=None)
+
+    # Wait for both operations to complete
+    bg_thread.join(timeout=2.0)
+    time.sleep(0.5)
+
+    # Verify second operation executed successfully despite first one failing
+    assert len(successful_operations) == 1
+    assert successful_operations[0] == "subscribe"
+
+    # Verify queue is empty
+    assert steamworks._operation_queue.qsize() == 0
