@@ -1,9 +1,11 @@
 import sys
+from dataclasses import dataclass
 from os import getcwd
 from pathlib import Path
+from queue import Queue
 from threading import RLock, Thread
 from time import sleep, time
-from typing import Any, Union
+from typing import Any, Callable, Union
 
 from loguru import logger
 
@@ -21,6 +23,15 @@ from steamworks.structs import (  # type: ignore
     ItemInstalled_t,
     SubscriptionResult,
 )
+
+
+@dataclass
+class QueuedOperation:
+    """Represents a queued Steamworks operation."""
+
+    name: str  # "subscribe", "download", etc.
+    execute: Callable[[], None]  # Function to execute
+    batch_id: str | None = None
 
 
 class SteamworksInterface:
@@ -93,6 +104,10 @@ class SteamworksInterface:
         # ItemInstalled callback tracking
         self._item_installed_callback_active = False
         self._current_batch_id: str | None = None
+
+        # Operation queue for serializing concurrent requests
+        self._operation_queue: Queue[QueuedOperation] = Queue()
+        self._processing_queue = False
 
         self.initialized = True
 
@@ -255,6 +270,27 @@ class SteamworksInterface:
         if self.steam_not_running or not self.steamworks.loaded():
             return
 
+        # Define execution function
+        def execute() -> None:
+            self._download_items_impl(pfids, interval, batch_id)
+
+        # Queue or execute
+        self._enqueue_or_execute("download", execute, batch_id)
+
+    def _download_items_impl(
+        self, pfids: list[int], interval: int, batch_id: str | None
+    ) -> None:
+        """
+        Internal implementation of download_items (for queuing).
+
+        :param pfids: List of PublishedFileIds
+        :type pfids: list[int]
+        :param interval: Sleep interval between API calls (seconds)
+        :type interval: int
+        :param batch_id: Optional batch ID from DownloadTracker for progress tracking
+        :type batch_id: str | None
+        :return: None
+        """
         # Store batch_id for callback correlation
         self._current_batch_id = batch_id
 
@@ -455,6 +491,80 @@ class SteamworksInterface:
             self.steamworks_thread = self._daemon()
             self.steamworks_thread.start()
 
+    def _enqueue_or_execute(
+        self,
+        operation_name: str,
+        execute_fn: Callable[[], None],
+        batch_id: str | None = None,
+    ) -> None:
+        """
+        Queue operation if busy, otherwise execute immediately.
+
+        :param operation_name: Name of operation for logging
+        :type operation_name: str
+        :param execute_fn: Function to execute
+        :type execute_fn: Callable[[], None]
+        :param batch_id: Optional batch ID for tracking
+        :type batch_id: str | None
+        :return: None
+        """
+        with self._operation_lock:
+            # Check if operation already in progress
+            if self.callbacks:
+                logger.info(
+                    f"Operation '{operation_name}' queued (current: '{self._current_operation}')"
+                )
+                self._operation_queue.put(
+                    QueuedOperation(
+                        name=operation_name, execute=execute_fn, batch_id=batch_id
+                    )
+                )
+                return
+
+        # No operation in progress - execute immediately
+        logger.debug(f"Executing '{operation_name}' immediately")
+        execute_fn()
+
+    def _process_next_queued_operation(self) -> None:
+        """
+        Process next operation from queue if any. Must be called with lock held.
+
+        :return: None
+        """
+        if self._operation_queue.empty():
+            return
+
+        if self._processing_queue:
+            return  # Avoid re-entrancy
+
+        self._processing_queue = True
+
+        try:
+            # Get next operation (non-blocking)
+            operation = self._operation_queue.get_nowait()
+            logger.info(f"Processing queued operation: {operation.name}")
+
+            # Release lock before executing (avoid deadlock)
+            # The operation will re-acquire lock in _begin_callbacks
+            self._operation_lock.release()
+            try:
+                operation.execute()
+            except Exception as e:
+                # Log error but continue processing queue
+                logger.error(
+                    f"Queued operation '{operation.name}' failed: {e}", exc_info=True
+                )
+            finally:
+                self._operation_lock.acquire()
+        except Exception as e:
+            logger.error(f"Error in queue processing: {e}", exc_info=True)
+        finally:
+            self._processing_queue = False
+            try:
+                self._operation_queue.task_done()
+            except ValueError:
+                pass  # Queue empty
+
     def _finish_callbacks(self, timeout: int = 60) -> None:
         """
         Wait for callbacks to complete and join thread. INTERNAL USE ONLY.
@@ -462,23 +572,32 @@ class SteamworksInterface:
 
         :param timeout: Maximum time to wait for callbacks in seconds
         """
+        # Capture thread reference to avoid race condition
+        thread = self.steamworks_thread
+
         # Check without lock first (optimization)
-        if not self.callbacks or self.steamworks_thread is None:
+        if not self.callbacks or thread is None:
             return
 
         self._wait_for_callbacks(timeout)
 
-        if self.steamworks_thread.is_alive():
+        # Re-capture in case it changed during wait
+        thread = self.steamworks_thread
+        if thread is not None and thread.is_alive():
             logger.warning("Callback thread timeout, forcing end")
             with self._operation_lock:
                 self.end_callbacks = True
 
-        self.steamworks_thread.join(timeout=5)
+        if thread is not None:
+            thread.join(timeout=5)
 
         with self._operation_lock:
             operation_name = self._current_operation
             logger.info(f"Callback thread completed for operation: {operation_name}")
             self._reset_operation_state()
+
+            # Process next queued operation if any
+            self._process_next_queued_operation()
 
     def shutdown(self) -> None:
         """Shutdown Steamworks API. Called at app shutdown."""
@@ -715,12 +834,14 @@ class SteamworksInterface:
         Returns:
             None
         """
-        if self.steamworks_thread is None:
+        # Capture thread reference to avoid race condition
+        thread = self.steamworks_thread
+        if thread is None:
             return
 
         start_time = time()
         logger.debug(f"Waiting {timeout} seconds for Steamworks API callbacks...")
-        while self.steamworks_thread.is_alive():
+        while thread.is_alive():
             elapsed_time = time() - start_time
             if elapsed_time >= timeout:
                 self.end_callbacks = True
