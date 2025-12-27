@@ -168,6 +168,9 @@ class MenuBarController(QObject):
         self.menu_bar.github_action.triggered.connect(
             self._on_menu_bar_github_triggered
         )
+        self.menu_bar.check_steam_connection_action.triggered.connect(
+            self._on_check_steam_connection
+        )
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
@@ -261,6 +264,23 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_github_triggered(self) -> None:
         open_url_browser("https://github.com/RimSort/RimSort")
+
+    @Slot()
+    def _on_check_steam_connection(self) -> None:
+        """Check Steam client connection status and notify user."""
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+        from app.views.dialogue import show_information
+
+        steamworks = SteamworksInterface.instance()
+        is_available = steamworks.check_steam_availability()
+
+        if is_available:
+            show_information(
+                title="Steam Connection",
+                text="Steam client is running and available.",
+                information="RimSort can perform Steam Workshop operations.",
+            )
+        # else: Signal already emitted, warning dialog shown by SteamStatusHandler
 
     @Slot()
     def _on_refresh_started(self) -> None:

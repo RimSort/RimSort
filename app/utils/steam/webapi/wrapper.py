@@ -16,6 +16,11 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import steamworks_app_dependencies_worker
+from app.utils.steam.webapi.retry import (
+    SteamWebAPIRetryConfig,
+    retry_steam_api_call,
+    steam_api_request_with_retry,
+)
 from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
@@ -30,6 +35,12 @@ if TYPE_CHECKING:
 # Uncomment this if you want to see the full urllib3 request
 # THIS CONTAINS THE STEAM API KEY
 getLogger("urllib3").setLevel(WARNING)
+
+# Default retry configuration for Steam Web API calls
+DEFAULT_RETRY_CONFIG = SteamWebAPIRetryConfig(
+    max_retries=3,
+    backoff_factor=1.0,
+)
 
 BASE_URL = "https://steamcommunity.com"
 BASE_URL_STEAMFILES = "https://steamcommunity.com/sharedfiles/filedetails/?id="
@@ -397,6 +408,24 @@ class DynamicQuery(QObject):
         else:
             self.dq_messaging_signal.emit(msg)
 
+    @retry_steam_api_call(config=DEFAULT_RETRY_CONFIG)
+    def _api_call_with_retry(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        Wrapper for Steam Web API calls with retry logic.
+
+        Applies exponential backoff retry logic to Steam Web API calls
+        to handle transient failures like 503 errors, timeouts, and
+        connection errors.
+
+        :param args: Positional arguments to pass to api.call()
+        :param kwargs: Keyword arguments to pass to api.call()
+        :return: Response from Steam Web API
+        :raises Exception: If API call fails after max retries
+        """
+        if not self.api:
+            raise RuntimeError("WebAPI not initialized")
+        return self.api.call(*args, **kwargs)
+
     def __initialize_webapi(self) -> None:
         if self.api:
             # Make a request to GetServerInfo to check if the API is active
@@ -569,7 +598,7 @@ class DynamicQuery(QObject):
             # Uncomment to see the pfids from each chunk
             # logger.debug(f"{chunk_total} PublishedFileIds in chunk: {chunk}")
             try:
-                response = self.api.call(
+                response = self._api_call_with_retry(
                     method_path="IPublishedFileService.GetDetails",
                     key=self.apikey,
                     publishedfileids=chunk,
@@ -727,7 +756,7 @@ class DynamicQuery(QObject):
                 "Tried to query files while API was not properly initialized."
             )  # Exit query
 
-        result = self.api.call(
+        result = self._api_call_with_retry(
             method_path="IPublishedFileService.QueryFiles",
             key=self.apikey,
             query_type=1,
@@ -899,11 +928,15 @@ def ISteamRemoteStorage_GetCollectionDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
-        except Exception as e:
+        try:  # Make a request to the Steam Web API with retry logic
+            request = steam_api_request_with_retry(
+                "POST", url, data, DEFAULT_RETRY_CONFIG
+            )
+        except requests.RequestException as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
+                f"Unable to complete request after {DEFAULT_RETRY_CONFIG.max_retries} retry attempts! "
+                f"Are you connected to the internet? Check Steam API status. "
+                f"Received exception: {e.__class__.__name__}"
             )
             return None
         try:  # Parse the JSON response
@@ -943,11 +976,15 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
-        except Exception as e:
+        try:  # Make a request to the Steam Web API with retry logic
+            request = steam_api_request_with_retry(
+                "POST", url, data, DEFAULT_RETRY_CONFIG
+            )
+        except requests.RequestException as e:
             logger.debug(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
+                f"Unable to complete request after {DEFAULT_RETRY_CONFIG.max_retries} retry attempts! "
+                f"Are you connected to the internet? Check Steam API status. "
+                f"Received exception: {e.__class__.__name__}"
             )
             return None
         try:  # Parse the JSON response

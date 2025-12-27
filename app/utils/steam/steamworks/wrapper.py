@@ -98,6 +98,11 @@ class SteamworksInterface:
             )
             self.steam_not_running = True
 
+            # Notify UI that Steam is not available
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_not_running.emit()
+
         # Initialize per-operation state
         self._reset_operation_state()
 
@@ -163,6 +168,15 @@ class SteamworksInterface:
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
         if self.steam_not_running or not self.steamworks.loaded():
+            operation_name = "query app dependencies"
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
             return None
 
         try:
@@ -208,6 +222,15 @@ class SteamworksInterface:
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
         if self.steam_not_running or not self.steamworks.loaded():
+            operation_name = "subscribe to mods"
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
             return
 
         # Define execution function
@@ -239,6 +262,15 @@ class SteamworksInterface:
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
         if self.steam_not_running or not self.steamworks.loaded():
+            operation_name = "unsubscribe from mods"
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
             return
 
         # Define execution function
@@ -270,6 +302,15 @@ class SteamworksInterface:
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
         if self.steam_not_running or not self.steamworks.loaded():
+            operation_name = "resubscribe to mods"
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
             return
 
         # Define execution function
@@ -303,6 +344,15 @@ class SteamworksInterface:
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
         if self.steam_not_running or not self.steamworks.loaded():
+            operation_name = "download items"
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
             return
 
         # Define execution function
@@ -574,6 +624,43 @@ class SteamworksInterface:
 
         # API already initialized in __init__, just launch game
         launch_game_process(game_install_path=Path(game_install_path), args=args)
+
+    def check_steam_availability(self) -> bool:
+        """
+        Check if Steam client is currently available.
+
+        Verifies Steam is actually running and attempts to re-initialize
+        Steamworks if it was previously unavailable.
+        Updates internal state and emits signals as appropriate.
+
+        Use this to check if Steam state has changed since initial startup
+        (e.g., user started Steam after starting RimSort, or Steam was closed).
+
+        :return: True if Steam is available, False otherwise
+        """
+        # If we think Steam is available, verify it's actually running
+        if not self.steam_not_running and self.steamworks.IsSteamRunning():
+            logger.debug("Steam client is available")
+            return True
+
+        # Try to re-initialize
+        logger.info("Attempting to re-initialize Steamworks API...")
+        try:
+            self.steamworks.initialize()
+            logger.info("Steamworks API re-initialized successfully")
+            self.steam_not_running = False
+            return True
+        except Exception as e:
+            logger.warning(
+                f"Unable to re-initialize Steamworks API: {e.__class__.__name__}"
+            )
+            self.steam_not_running = True
+
+            # Emit signal for UI notification
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_not_running.emit()
+            return False
 
     def _begin_callbacks(
         self, operation_name: str, callbacks_total: Union[int, None] = None

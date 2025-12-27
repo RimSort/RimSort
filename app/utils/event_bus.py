@@ -145,6 +145,10 @@ class EventBus(QObject):
         str
     )  # pfid (as string) - emitted when mod installation completes
 
+    # Steam client availability signals
+    steam_not_running = Signal()  # Emitted when Steam client is not available
+    steam_operation_failed = Signal(str)  # Emitted when Steam operation fails (reason)
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
