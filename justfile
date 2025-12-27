@@ -145,6 +145,99 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
 
 # SteamworksPy Build
 
+# Cross-compile SteamworksPy Windows DLL using MinGW-w64 on Linux
+build-steamworkspy-windows: submodules-init
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    STEAMWORKSPY_PATH="submodules/SteamworksPy/library"
+    SDK_PATH="${STEAMWORKSPY_PATH}/sdk"
+    SDK_URL="https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
+
+    # Check platform
+    if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+        echo "Error: This recipe requires Linux with MinGW-w64"
+        echo "On macOS/Windows, use native Windows build tools instead"
+        exit 1
+    fi
+
+    # Check MinGW-w64 is installed
+    if ! command -v x86_64-w64-mingw32-g++ &> /dev/null; then
+        echo "Error: MinGW-w64 cross-compiler not found"
+        echo ""
+        echo "Install with:"
+        echo "  Fedora: sudo dnf install mingw64-gcc mingw64-gcc-c++ mingw64-winpthreads-static"
+        echo "  Ubuntu/Debian: sudo apt install mingw-w64"
+        exit 1
+    fi
+
+    echo "Building SteamworksPy64.dll for Windows using MinGW-w64 cross-compiler..."
+
+    # Download SDK if not present
+    if [ ! -d "$SDK_PATH" ]; then
+        echo "Downloading Steamworks SDK v155..."
+        curl -L "$SDK_URL" -o /tmp/steamworks_sdk.zip
+        echo "Extracting Steamworks SDK..."
+        unzip -q /tmp/steamworks_sdk.zip -d "$STEAMWORKSPY_PATH"
+        rm /tmp/steamworks_sdk.zip
+    else
+        echo "Steamworks SDK already present at $SDK_PATH"
+    fi
+
+    # Verify SDK structure
+    if [ ! -f "$SDK_PATH/public/steam/steam_api.h" ]; then
+        echo "ERROR: SDK headers not found at expected location"
+        exit 1
+    fi
+
+    if [ ! -f "$SDK_PATH/redistributable_bin/win64/steam_api64.lib" ]; then
+        echo "ERROR: steam_api64.lib not found at expected location"
+        exit 1
+    fi
+
+    # Cross-compile
+    echo "Cross-compiling SteamworksPy64.dll..."
+    cd "$STEAMWORKSPY_PATH"
+
+    # Create temporary source with Unix-style includes and cstdint
+    echo "Creating temporary source file with Unix-style includes..."
+    sed -e 's|#include "sdk\\steam\\steam_api.h"|#include <cstdint>\n#include "sdk/steam/steam_api.h"|g' \
+        SteamworksPy.cpp > SteamworksPy_cross.cpp
+
+    x86_64-w64-mingw32-g++ \
+        -std=c++11 \
+        -shared \
+        -o SteamworksPy64.dll \
+        SteamworksPy_cross.cpp \
+        -I./sdk/public \
+        -L./sdk/redistributable_bin/win64 \
+        -lsteam_api64 \
+        -static-libgcc \
+        -static-libstdc++ \
+        -Wl,--subsystem,windows
+
+    # Clean up temporary file
+    rm -f SteamworksPy_cross.cpp
+
+    if [ ! -f "SteamworksPy64.dll" ]; then
+        echo "ERROR: Build failed - SteamworksPy64.dll not created"
+        exit 1
+    fi
+
+    # Copy to libs
+    cd -
+    echo "Copying SteamworksPy64.dll to libs/..."
+    mkdir -p libs
+    cp "${STEAMWORKSPY_PATH}/SteamworksPy64.dll" libs/
+
+    echo ""
+    echo "✓ Windows DLL built successfully via cross-compilation"
+    echo "  Output: libs/SteamworksPy64.dll"
+    echo ""
+    echo "Verify the binary:"
+    echo "  file libs/SteamworksPy64.dll"
+    echo "  ls -lh libs/SteamworksPy64.dll"
+
 # Build SteamworksPy library from source for the current platform
 build-steamworkspy: submodules-init
     #!/usr/bin/env bash
