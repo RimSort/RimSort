@@ -1,12 +1,19 @@
+import subprocess
 import sys
 from multiprocessing import Process
 from os import getcwd
 from pathlib import Path
 from threading import Thread
 from time import sleep, time
-from typing import Any, Union
+from typing import Any, Optional, Union
 
+import psutil
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+
+from app.utils.generic import launch_game_process
+from app.views.dialogue import show_warning
 
 # If we're running from a Python interpreter, makesure steamworks module is in our sys.path ($PYTHONPATH)
 # Ensure that this is available by running `git submodule update --init --recursive`
@@ -14,8 +21,170 @@ from loguru import logger
 if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
-from app.utils.generic import launch_game_process
 from steamworks import STEAMWORKS  # type: ignore
+
+TRANSLATE = QCoreApplication.translate
+
+
+def steam_translate(text: str) -> str:
+    """
+    Translate text using the SteamworksInterface context.
+    """
+    return TRANSLATE("SteamworksInterface", text)
+
+
+def _show_warning_if_app(
+    title: str, text: str, information: str | None = None, details: str | None = None
+) -> None:
+    """
+    Show a warning dialog if a QApplication instance exists.
+    """
+    if QApplication.instance():
+        show_warning(title=title, text=text, information=information, details=details)
+
+
+def _find_steam_executable() -> Optional[Path]:
+    if sys.platform == "win32":
+        from app.utils.win_find_steam import find_steam_folder
+
+        if find_steam_folder is None:
+            return None
+        steam_path, found = find_steam_folder()
+        if not found:
+            return None
+        return Path(steam_path) / "steam.exe"
+    elif sys.platform == "darwin":
+        return Path("/Applications/Steam.app/Contents/MacOS/steam_osx")
+    elif sys.platform.startswith("linux"):
+        possible_paths = [
+            Path.home() / ".steam" / "steam" / "steam.sh",
+            Path("/usr/bin/steam"),
+            Path("/usr/local/bin/steam"),
+        ]
+        for path in possible_paths:
+            if path.exists():
+                return path
+        return None
+    else:
+        return None
+
+
+def _is_steam_running() -> bool:
+    """
+    Check if Steam is currently running by looking for Steam processes.
+
+    Returns:
+        bool: True if Steam is running, False otherwise
+    """
+    if psutil is None:
+        return False
+    try:
+        steam_processes = []
+        for process in psutil.process_iter(attrs=["name", "exe"]):
+            try:
+                name = process.info["name"]
+                exe = process.info["exe"]
+                if name and "steam" in name.lower():
+                    steam_processes.append(name)
+                # Also check executable path for steam
+                if exe and "steam" in exe.lower():
+                    steam_processes.append(f"{name} ({exe})")
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
+
+        # Check for main Steam processes based on platform
+        if sys.platform == "win32":
+            steam_indicators = [
+                "steam.exe",
+                "steamservice.exe",
+                "steamwebhelper.exe",
+            ]
+        elif sys.platform == "darwin":
+            steam_indicators = [
+                "steam_osx",
+                "steamwebhelper",
+            ]
+        elif sys.platform.startswith("linux"):
+            steam_indicators = [
+                "steam",
+                "steamwebhelper",
+            ]
+        else:
+            steam_indicators = []
+
+        for process in psutil.process_iter(attrs=["name"]):
+            try:
+                name = process.info["name"]
+                if name in steam_indicators:
+                    logger.debug(f"Found Steam process: {name}")
+                    return True
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
+
+        logger.debug(f"Steam processes found: {steam_processes}")
+        return False
+    except Exception as e:
+        logger.warning(f"Error checking if Steam is running: {e}")
+        _show_warning_if_app(
+            title=steam_translate("Steam Check Error"),
+            text=steam_translate("Failed to check if Steam is running."),
+            information=steam_translate("This may affect Steam integration features."),
+            details=str(e),
+        )
+        return False
+
+
+def _launch_steam(_libs: str | None = None) -> bool:
+    """
+    Launch Steam if it's not running and wait for it to start.
+
+    Args:
+        _libs: Path to the Steamworks library directory
+
+    Returns:
+        bool: True if Steam was launched successfully, False otherwise
+    """
+    try:
+        steam_exe = _find_steam_executable()
+        if steam_exe is None or not steam_exe.exists():
+            logger.warning("Steam executable not found")
+            return False
+
+        logger.info("Launching Steam...")
+        subprocess.Popen([str(steam_exe)], shell=True)
+        # Give Steam some initial time to start up before checking
+        sleep(15)
+
+        # Wait for Steam to start (up to 60 seconds total, including initial delay)
+        for attempt in range(45):
+            sleep(1)
+            try:
+                # Try to create a temporary Steamworks instance to test if Steam is ready
+                test_steamworks = STEAMWORKS(_libs=_libs)
+                test_steamworks.initialize()
+                test_steamworks.unload()
+                logger.info("Steam launched and API initialized successfully")
+                # Give Steam a bit more time to fully initialize
+                sleep(5)
+                return True
+            except Exception as e:
+                logger.debug(f"Steam API not ready yet (attempt {attempt + 1}/45): {e}")
+                continue
+
+        logger.warning("Steam failed to start within timeout")
+        return False
+
+    except Exception as e:
+        logger.warning(f"Error launching Steam: {e}")
+        _show_warning_if_app(
+            title=steam_translate("Steam Launch Error"),
+            text=steam_translate("Failed to launch Steam."),
+            information=steam_translate(
+                "Please ensure Steam is installed and try again."
+            ),
+            details=str(e),
+        )
+        return False
 
 
 class SteamworksInterface:
@@ -57,14 +226,65 @@ class SteamworksInterface:
         self.steamworks = STEAMWORKS(_libs=_libs)
         try:
             self.steamworks.initialize()  # Init the Steamworks API
+            self.steam_not_running = False
         except Exception as e:
             logger.warning(
                 f"Unable to initialize Steamworks API due to exception: {e.__class__.__name__}"
             )
-            logger.warning(
-                "If you are a Steam user, please check that Steam running and that you are logged in..."
+            _show_warning_if_app(
+                title=steam_translate("Steamworks Initialization Error"),
+                text=steam_translate("Failed to initialize Steamworks API."),
+                information=steam_translate(
+                    "Steam integration features may not work properly."
+                ),
+                details=str(e),
             )
-            self.steam_not_running = True
+            if not _is_steam_running():
+                logger.info("Steam not running, attempting to launch...")
+                if _launch_steam(_libs):
+                    try:
+                        self.steamworks.initialize()
+                        self.steam_not_running = False
+                        logger.info("Steamworks API initialized after launching Steam")
+                    except Exception as e2:
+                        logger.warning(
+                            f"Failed to initialize Steamworks API even after launching Steam: {e2}"
+                        )
+                        _show_warning_if_app(
+                            title=steam_translate("Steamworks Initialization Error"),
+                            text=steam_translate(
+                                "Failed to initialize Steamworks API after launching Steam."
+                            ),
+                            information=steam_translate(
+                                "Please ensure Steam is properly installed and running."
+                            ),
+                            details=str(e2),
+                        )
+                        self.steam_not_running = True
+                else:
+                    logger.warning("Failed to launch Steam")
+                    _show_warning_if_app(
+                        title=steam_translate("Steam Launch Failed"),
+                        text=steam_translate("Unable to launch Steam automatically."),
+                        information=steam_translate(
+                            "Please start Steam manually and try again."
+                        ),
+                        details="Steam executable not found or launch failed.",
+                    )
+                    self.steam_not_running = True
+            else:
+                logger.warning("Steam appears to be running but initialization failed")
+                _show_warning_if_app(
+                    title=steam_translate("Steamworks Initialization Error"),
+                    text=steam_translate(
+                        "Steam is running but API initialization failed."
+                    ),
+                    information=steam_translate(
+                        "There may be an issue with Steam or the Steamworks library."
+                    ),
+                    details="Steam is running but initialization failed.",
+                )
+                self.steam_not_running = True
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
                 # Start the thread
