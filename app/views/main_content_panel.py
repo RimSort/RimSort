@@ -2465,7 +2465,10 @@ class MainContent(QObject):
                 for pfid in pfids:
                     pfid_str = str(pfid)
                     # Try to get name from external Steam metadata
-                    if pfid_str in self.metadata_manager.external_steam_metadata:
+                    if (
+                        self.metadata_manager.external_steam_metadata
+                        and pfid_str in self.metadata_manager.external_steam_metadata
+                    ):
                         mod_names[pfid] = self.metadata_manager.external_steam_metadata[
                             pfid_str
                         ].get("name", f"Mod {pfid}")

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 import app.utils.metadata as metadata
 import app.utils.steam.steamcmd.wrapper as steamcmd_wrapper
 import app.views.dialogue as dialogue
+from app.utils.steam.steamworks.wrapper import QueuedOperation
 from app.views.main_content_panel import MainContent
 
 
@@ -498,7 +499,7 @@ def test_multiple_subscription_operations_queue_in_order(
         # Peek at queue without removing items
         import queue as q
 
-        temp_queue = q.Queue()
+        temp_queue: q.Queue[QueuedOperation] = q.Queue()
         while not steamworks._operation_queue.empty():
             item = steamworks._operation_queue.get()
             queue_items.append(item.name)

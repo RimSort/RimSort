@@ -2,16 +2,18 @@
 Tests for Steam availability notifications and signals.
 """
 
+from typing import Any, Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytestqt.qtbot import QtBot
 
 from app.utils.event_bus import EventBus
 from app.utils.steam.steamworks.wrapper import SteamworksInterface
 
 
 @pytest.fixture
-def reset_steamworks_singleton() -> None:
+def reset_steamworks_singleton() -> Generator[None, None, None]:
     """
     Reset SteamworksInterface singleton between tests.
 
@@ -26,7 +28,7 @@ class TestSteamInitializationSignals:
     """Tests for Steam initialization and signal emission."""
 
     def test_signal_emitted_on_init_failure(
-        self, qtbot, reset_steamworks_singleton
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
     ) -> None:
         """Verify steam_not_running signal emitted when Steamworks init fails."""
         # Setup signal spy
@@ -48,7 +50,7 @@ class TestSteamInitializationSignals:
                 assert steamworks.steam_not_running is True
 
     def test_no_signal_on_successful_init(
-        self, qtbot, reset_steamworks_singleton
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
     ) -> None:
         """Verify no signal emitted when Steamworks initializes successfully."""
         # Setup signal spy to ensure signal is NOT emitted
@@ -62,7 +64,9 @@ class TestSteamInitializationSignals:
         event_bus.steam_not_running.connect(mark_signal_emitted)
 
         # Mock STEAMWORKS to succeed initialization
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.return_value = None
             mock_steamworks.loaded.return_value = True
@@ -78,13 +82,17 @@ class TestSteamInitializationSignals:
 class TestSteamOperationFailureSignals:
     """Tests for Steam operation failure signals."""
 
-    def test_signal_on_subscribe_failure(self, qtbot, reset_steamworks_singleton) -> None:
+    def test_signal_on_subscribe_failure(
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
+    ) -> None:
         """Verify steam_operation_failed signal emitted when subscribe fails."""
         # Setup signal spy
         event_bus = EventBus()
 
         # Initialize with Steam not running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.side_effect = Exception("Steam not running")
             mock_steamworks.loaded.return_value = False
@@ -94,20 +102,26 @@ class TestSteamOperationFailureSignals:
             assert steamworks.steam_not_running is True
 
         # Now try to subscribe - should emit steam_operation_failed
-        with qtbot.waitSignal(event_bus.steam_operation_failed, timeout=2000) as blocker:
+        with qtbot.waitSignal(
+            event_bus.steam_operation_failed, timeout=2000
+        ) as blocker:
             steamworks.subscribe_to_mods(12345)
 
         # Verify signal carried correct reason message
         assert "subscribe to mods" in blocker.args[0]
         assert "Steam client is not running" in blocker.args[0]
 
-    def test_signal_on_download_failure(self, qtbot, reset_steamworks_singleton) -> None:
+    def test_signal_on_download_failure(
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
+    ) -> None:
         """Verify steam_operation_failed signal emitted when download fails."""
         # Setup signal spy
         event_bus = EventBus()
 
         # Initialize with Steam not running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.side_effect = Exception("Steam not running")
             mock_steamworks.loaded.return_value = False
@@ -117,7 +131,9 @@ class TestSteamOperationFailureSignals:
             assert steamworks.steam_not_running is True
 
         # Try to download - should emit steam_operation_failed
-        with qtbot.waitSignal(event_bus.steam_operation_failed, timeout=2000) as blocker:
+        with qtbot.waitSignal(
+            event_bus.steam_operation_failed, timeout=2000
+        ) as blocker:
             steamworks.download_items(12345)
 
         # Verify signal message
@@ -129,11 +145,13 @@ class TestCheckSteamAvailability:
     """Tests for check_steam_availability method."""
 
     def test_check_availability_when_already_available(
-        self, reset_steamworks_singleton
+        self, reset_steamworks_singleton: Any
     ) -> None:
         """Test check returns True when Steam already available."""
         # Initialize with Steam running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.return_value = None
             mock_steamworks.loaded.return_value = True
@@ -154,7 +172,7 @@ class TestCheckSteamAvailability:
             assert mock_steamworks.IsSteamRunning.call_count == 1
 
     def test_check_availability_steam_becomes_available(
-        self, reset_steamworks_singleton
+        self, reset_steamworks_singleton: Any
     ) -> None:
         """Test check returns True when Steam becomes available."""
         call_count = 0
@@ -167,7 +185,9 @@ class TestCheckSteamAvailability:
             # Second call succeeds
 
         # Initialize with Steam not running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.side_effect = init_side_effect
             mock_steamworks.loaded.return_value = True
@@ -184,14 +204,16 @@ class TestCheckSteamAvailability:
             assert call_count == 2
 
     def test_check_availability_steam_still_unavailable(
-        self, qtbot, reset_steamworks_singleton
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
     ) -> None:
         """Test check returns False and emits signal when Steam still unavailable."""
         # Setup signal spy
         event_bus = EventBus()
 
         # Initialize with Steam not running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.side_effect = Exception("Steam not running")
             mock_steamworks.loaded.return_value = False
@@ -210,14 +232,16 @@ class TestCheckSteamAvailability:
             assert mock_steamworks.initialize.call_count == 2
 
     def test_check_availability_detects_steam_shutdown(
-        self, qtbot, reset_steamworks_singleton
+        self, qtbot: QtBot, reset_steamworks_singleton: Any
     ) -> None:
         """Test check detects when Steam closes after being available."""
         # Setup signal spy
         event_bus = EventBus()
 
         # Initialize with Steam running
-        with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as mock_steamworks_class:
+        with patch(
+            "app.utils.steam.steamworks.wrapper.STEAMWORKS"
+        ) as mock_steamworks_class:
             mock_steamworks = Mock()
             mock_steamworks.initialize.return_value = None
             mock_steamworks.loaded.return_value = True
