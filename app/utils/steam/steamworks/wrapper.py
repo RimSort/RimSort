@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from dataclasses import dataclass
 from os import getcwd
@@ -5,7 +7,7 @@ from pathlib import Path
 from queue import Queue
 from threading import RLock, Thread
 from time import sleep, time
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 from loguru import logger
 
@@ -47,7 +49,7 @@ class SteamworksInterface:
     Thanks to Paladin for the example
     """
 
-    _instance: Union[None, "SteamworksInterface"] = None
+    _instance: "SteamworksInterface" | None = None
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SteamworksInterface":
         """
@@ -175,8 +177,8 @@ class SteamworksInterface:
         return True
 
     def query_app_dependencies(
-        self, pfid_or_pfids: Union[int, list[int]], interval: int = 1
-    ) -> Union[dict[int, Any], None]:
+        self, pfid_or_pfids: int | list[int], interval: int = 1
+    ) -> dict[int, Any] | None:
         """
         Query Steam Workshop mod(s) for DLC/AppID dependency information.
 
@@ -216,7 +218,7 @@ class SteamworksInterface:
 
     def subscribe_to_mods(
         self,
-        pfid_or_pfids: Union[int, list[int]],
+        pfid_or_pfids: int | list[int],
         interval: int = 1,
         batch_id: str | None = None,
     ) -> None:
@@ -224,7 +226,7 @@ class SteamworksInterface:
         Subscribe to Steam Workshop mod(s).
 
         :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
-        :type pfid_or_pfids: Union[int, list[int]]
+        :type pfid_or_pfids: int | list[int]
         :param interval: Sleep interval between API calls (seconds)
         :type interval: int
         :param batch_id: Optional batch ID from DownloadTracker for progress tracking
@@ -247,7 +249,7 @@ class SteamworksInterface:
 
     def unsubscribe_from_mods(
         self,
-        pfid_or_pfids: Union[int, list[int]],
+        pfid_or_pfids: int | list[int],
         interval: int = 1,
         batch_id: str | None = None,
     ) -> None:
@@ -255,7 +257,7 @@ class SteamworksInterface:
         Unsubscribe from Steam Workshop mod(s).
 
         :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
-        :type pfid_or_pfids: Union[int, list[int]]
+        :type pfid_or_pfids: int | list[int]
         :param interval: Sleep interval between API calls (seconds)
         :type interval: int
         :param batch_id: Optional batch ID from DownloadTracker for progress tracking
@@ -278,7 +280,7 @@ class SteamworksInterface:
 
     def resubscribe_to_mods(
         self,
-        pfid_or_pfids: Union[int, list[int]],
+        pfid_or_pfids: int | list[int],
         interval: int = 1,
         batch_id: str | None = None,
     ) -> None:
@@ -286,7 +288,7 @@ class SteamworksInterface:
         Resubscribe to Steam Workshop mod(s) (unsub then sub).
 
         :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
-        :type pfid_or_pfids: Union[int, list[int]]
+        :type pfid_or_pfids: int | list[int]
         :param interval: Sleep interval between API calls (seconds)
         :type interval: int
         :param batch_id: Optional batch ID from DownloadTracker for progress tracking
@@ -309,7 +311,7 @@ class SteamworksInterface:
 
     def download_items(
         self,
-        pfid_or_pfids: Union[int, list[int]],
+        pfid_or_pfids: int | list[int],
         interval: int = 1,
         batch_id: str | None = None,
     ) -> None:
@@ -319,7 +321,7 @@ class SteamworksInterface:
         Does NOT unsubscribe - uses native Steamworks DownloadItem() to force revalidation.
 
         :param pfid_or_pfids: Single PublishedFileId or list of PublishedFileIds
-        :type pfid_or_pfids: Union[int, list[int]]
+        :type pfid_or_pfids: int | list[int]
         :param interval: Sleep interval between API calls (seconds)
         :type interval: int
         :param batch_id: Optional batch ID from DownloadTracker for progress tracking
@@ -641,7 +643,7 @@ class SteamworksInterface:
             return False
 
     def _begin_callbacks(
-        self, operation_name: str, callbacks_total: Union[int, None] = None
+        self, operation_name: str, callbacks_total: int | None = None
     ) -> None:
         """
         Start callback thread for current operation. INTERNAL USE ONLY.
@@ -1059,10 +1061,10 @@ class SteamworksInterface:
 
 
 def steamworks_app_dependencies_worker(
-    pfid_or_pfids: Union[int, list[int]],
+    pfid_or_pfids: int | list[int],
     interval: int = 1,
-    _libs: Union[str, None] = None,
-) -> Union[dict[int, Any], None]:
+    _libs: str | None = None,
+) -> dict[int, Any] | None:
     """
     Worker for querying app dependencies.
 
@@ -1081,7 +1083,7 @@ def steamworks_app_dependencies_worker(
 def steamworks_game_launch_worker(
     game_install_path: str,
     args: list[str],
-    _libs: Union[str, None] = None,
+    _libs: str | None = None,
 ) -> None:
     """
     Worker for launching game in separate process.

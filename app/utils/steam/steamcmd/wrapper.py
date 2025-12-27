@@ -42,19 +42,21 @@ class SteamcmdInterface:
         return cls._instance
 
     def __init__(self, steamcmd_prefix: str, validate: bool) -> None:
-        if not hasattr(self, "initialized"):
-            self.initialized = True
-            self.setup = False
-            self.steamcmd_prefix = steamcmd_prefix
-            super(SteamcmdInterface, self).__init__()
-            logger.debug("Initializing SteamcmdInterface")
-            self.initialize_prefix(steamcmd_prefix, validate)
+        if hasattr(self, "initialized"):
+            return
 
-            EventBus().do_clear_steamcmd_depot_cache.connect(
-                lambda: self.clear_depot_cache()
-            )
-            self.translate = QCoreApplication.translate
-            logger.debug("Finished SteamcmdInterface initialization")
+        self.initialized = True
+        self.setup = False
+        self.steamcmd_prefix = steamcmd_prefix
+        super(SteamcmdInterface, self).__init__()
+        logger.debug("Initializing SteamcmdInterface")
+        self.initialize_prefix(steamcmd_prefix, validate)
+
+        EventBus().do_clear_steamcmd_depot_cache.connect(
+            lambda: self.clear_depot_cache()
+        )
+        self.translate = QCoreApplication.translate
+        logger.debug("Finished SteamcmdInterface initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
         self.steamcmd_prefix = steamcmd_prefix

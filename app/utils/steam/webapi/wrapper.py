@@ -4,7 +4,7 @@ from logging import WARNING, getLogger
 from math import ceil
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict
 
 import requests
 from loguru import logger
@@ -366,7 +366,7 @@ class DynamicQuery(QObject):
         appid: int,
         get_appid_deps: bool = False,
         life: int = 0,
-        callback: Optional[Callable[[str], None]] = None,
+        callback: Callable[[str], None] | None = None,
     ) -> None:
         QObject.__init__(self)
 
