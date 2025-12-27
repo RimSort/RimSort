@@ -250,25 +250,18 @@ build-steamworkspy: submodules-init
     # Detect platform
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         PLATFORM="linux"
-        LIB_SUFFIX="so"
         STEAM_API="libsteam_api.so"
         PROCESSOR=$(uname -m)
         OUTPUT_LIB="SteamworksPy_${PROCESSOR}.so"
         SYMLINK_NAME="SteamworksPy.so"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         PLATFORM="darwin"
-        LIB_SUFFIX="dylib"
         STEAM_API="libsteam_api.dylib"
-        PROCESSOR=$(uname -m)
-        OUTPUT_LIB="SteamworksPy_${PROCESSOR}.dylib"
-        SYMLINK_NAME="SteamworksPy.dylib"
     else
         echo "Error: Unsupported platform: $OSTYPE"
         echo "This recipe currently supports Linux and macOS only."
         exit 1
     fi
-
-    echo "Detected platform: $PLATFORM ($PROCESSOR)"
 
     # Check if SDK headers exist
     if [ ! -f "$STEAMWORKSPY_DIR/sdk/steam/steam_api.h" ]; then
@@ -289,43 +282,145 @@ build-steamworkspy: submodules-init
         exit 1
     fi
 
-    # Compile SteamworksPy
-    echo "Compiling SteamworksPy..."
-    cd "$STEAMWORKSPY_DIR"
-    g++ -std=c++11 -o "$OUTPUT_LIB" -shared -fPIC SteamworksPy.cpp -l steam_api -L.
+    # Platform-specific compilation
+    if [[ "$PLATFORM" == "linux" ]]; then
+        echo "Detected platform: Linux ($PROCESSOR)"
+        echo "Compiling SteamworksPy for Linux..."
+        cd "$STEAMWORKSPY_DIR"
+        g++ -std=c++11 -o "$OUTPUT_LIB" -shared -fPIC SteamworksPy.cpp -l steam_api -L.
 
-    if [ ! -f "$OUTPUT_LIB" ]; then
-        echo "Error: Compilation failed - $OUTPUT_LIB not found"
-        exit 1
+        if [ ! -f "$OUTPUT_LIB" ]; then
+            echo "Error: Compilation failed - $OUTPUT_LIB not found"
+            exit 1
+        fi
+
+        echo "Compilation successful: $OUTPUT_LIB"
+
+        # Return to project root
+        cd ../../..
+
+        # Copy to libs/
+        echo "Copying $OUTPUT_LIB to libs/..."
+        mkdir -p libs
+        cp "$STEAMWORKSPY_DIR/$OUTPUT_LIB" "libs/"
+
+        # Create symlink in libs/
+        cd libs
+        ln -sf "$OUTPUT_LIB" "$SYMLINK_NAME"
+        echo "Created symlink: libs/$SYMLINK_NAME -> $OUTPUT_LIB"
+        cd ..
+
+        # Copy to project root for SteamworksPy v2.0+ compatibility
+        echo "Copying libraries to project root..."
+        cp "libs/$OUTPUT_LIB" "$SYMLINK_NAME"
+        cp "libs/$STEAM_API" "$STEAM_API"
+
+        echo ""
+        echo "✓ SteamworksPy build complete!"
+        echo "  - libs/$OUTPUT_LIB"
+        echo "  - libs/$SYMLINK_NAME -> $OUTPUT_LIB"
+        echo "  - $SYMLINK_NAME (project root)"
+        echo "  - $STEAM_API (project root)"
+
+    elif [[ "$PLATFORM" == "darwin" ]]; then
+        HOST_ARCH=$(uname -m)
+        echo "Detected platform: macOS ($HOST_ARCH)"
+
+        cd "$STEAMWORKSPY_DIR"
+
+        if [[ "$HOST_ARCH" == "arm64" ]]; then
+            echo "Building for both ARM64 and x86_64 on Apple Silicon..."
+
+            # Build ARM64 version natively
+            echo "  Building ARM64..."
+            g++ -std=c++11 -o SteamworksPy_arm.dylib -shared -fPIC SteamworksPy.cpp -l steam_api -L.
+            if [ ! -f "SteamworksPy_arm.dylib" ]; then
+                echo "Error: ARM64 build failed"
+                exit 1
+            fi
+
+            # Build x86_64 version using Rosetta
+            echo "  Building x86_64 (via Rosetta)..."
+            arch -x86_64 /bin/bash -c "cd \"$STEAMWORKSPY_DIR\" && g++ -std=c++11 -o SteamworksPy_i386.dylib -shared -fPIC SteamworksPy.cpp -l steam_api -L."
+            if [ ! -f "SteamworksPy_i386.dylib" ]; then
+                echo "Error: x86_64 build failed"
+                exit 1
+            fi
+
+            # Create universal binary
+            echo "  Creating universal binary..."
+            lipo -create SteamworksPy_arm.dylib SteamworksPy_i386.dylib -output SteamworksPy.dylib
+            if [ ! -f "SteamworksPy.dylib" ]; then
+                echo "Error: Failed to create universal binary"
+                exit 1
+            fi
+
+            # Verify it contains both architectures
+            echo "  Verifying universal binary..."
+            lipo -info SteamworksPy.dylib
+
+            # Return to project root
+            cd ../../..
+
+            # Copy all three files to libs/
+            echo "Copying libraries to libs/..."
+            mkdir -p libs
+            cp "$STEAMWORKSPY_DIR/SteamworksPy_arm.dylib" "libs/"
+            cp "$STEAMWORKSPY_DIR/SteamworksPy_i386.dylib" "libs/"
+            cp "$STEAMWORKSPY_DIR/SteamworksPy.dylib" "libs/"
+
+            # Copy to project root for SteamworksPy v2.0+ compatibility
+            echo "Copying libraries to project root..."
+            cp "libs/SteamworksPy.dylib" "SteamworksPy.dylib"
+            cp "$STEAMWORKSPY_DIR/$STEAM_API" "$STEAM_API"
+
+            echo ""
+            echo "✓ SteamworksPy build complete!"
+            echo "  - libs/SteamworksPy_arm.dylib (ARM64)"
+            echo "  - libs/SteamworksPy_i386.dylib (x86_64)"
+            echo "  - libs/SteamworksPy.dylib (universal binary)"
+            echo "  - SteamworksPy.dylib (project root)"
+            echo "  - $STEAM_API (project root)"
+
+        else
+            # Intel Mac - build x86_64 only
+            echo "Building for x86_64 only on Intel Mac..."
+
+            g++ -std=c++11 -o SteamworksPy_i386.dylib -shared -fPIC SteamworksPy.cpp -l steam_api -L.
+            if [ ! -f "SteamworksPy_i386.dylib" ]; then
+                echo "Error: x86_64 build failed"
+                exit 1
+            fi
+
+            echo "Compilation successful: SteamworksPy_i386.dylib"
+
+            # Return to project root
+            cd ../../..
+
+            # Copy library to libs/
+            echo "Copying SteamworksPy_i386.dylib to libs/..."
+            mkdir -p libs
+            cp "$STEAMWORKSPY_DIR/SteamworksPy_i386.dylib" "libs/"
+
+            # Create symlink for generic name
+            cd libs
+            ln -sf SteamworksPy_i386.dylib SteamworksPy.dylib
+            echo "Created symlink: libs/SteamworksPy.dylib -> SteamworksPy_i386.dylib"
+            cd ..
+
+            # Copy to project root for SteamworksPy v2.0+ compatibility
+            echo "Copying libraries to project root..."
+            cp "libs/SteamworksPy.dylib" "SteamworksPy.dylib"
+            cp "$STEAMWORKSPY_DIR/$STEAM_API" "$STEAM_API"
+
+            echo ""
+            echo "✓ SteamworksPy build complete!"
+            echo "  - libs/SteamworksPy_i386.dylib (x86_64)"
+            echo "  - libs/SteamworksPy.dylib -> SteamworksPy_i386.dylib"
+            echo "  - SteamworksPy.dylib (project root)"
+            echo "  - $STEAM_API (project root)"
+        fi
     fi
-
-    echo "Compilation successful: $OUTPUT_LIB"
-
-    # Return to project root
-    cd ../../..
-
-    # Copy to libs/
-    echo "Copying $OUTPUT_LIB to libs/..."
-    mkdir -p libs
-    cp "$STEAMWORKSPY_DIR/$OUTPUT_LIB" "libs/"
-
-    # Create symlink in libs/
-    cd libs
-    ln -sf "$OUTPUT_LIB" "$SYMLINK_NAME"
-    echo "Created symlink: libs/$SYMLINK_NAME -> $OUTPUT_LIB"
-    cd ..
-
-    # Copy to project root for SteamworksPy v2.0+ compatibility
-    echo "Copying libraries to project root..."
-    cp "libs/$OUTPUT_LIB" "$SYMLINK_NAME"
-    cp "libs/$STEAM_API" "$STEAM_API"
-
-    echo ""
-    echo "✓ SteamworksPy build complete!"
-    echo "  - libs/$OUTPUT_LIB"
-    echo "  - libs/$SYMLINK_NAME -> $OUTPUT_LIB"
-    echo "  - $SYMLINK_NAME (project root)"
-    echo "  - $STEAM_API (project root)"
 
 # Utilities
 
