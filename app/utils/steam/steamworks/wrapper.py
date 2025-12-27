@@ -56,14 +56,7 @@ def _find_steam_executable() -> Optional[Path]:
     elif sys.platform == "darwin":
         return Path("/Applications/Steam.app/Contents/MacOS/steam_osx")
     elif sys.platform.startswith("linux"):
-        possible_paths = [
-            Path.home() / ".steam" / "steam" / "steam.sh",
-            Path("/usr/bin/steam"),
-            Path("/usr/local/bin/steam"),
-        ]
-        for path in possible_paths:
-            if path.exists():
-                return path
+        # For Linux, we are directly launching using the 'steam' command
         return None
     else:
         return None
@@ -145,13 +138,17 @@ def _launch_steam(_libs: str | None = None) -> bool:
         bool: True if Steam was launched successfully, False otherwise
     """
     try:
-        steam_exe = _find_steam_executable()
-        if steam_exe is None or not steam_exe.exists():
-            logger.warning("Steam executable not found")
-            return False
-
-        logger.info("Launching Steam...")
-        subprocess.Popen([str(steam_exe)], shell=True)
+        if sys.platform.startswith("linux"):
+            # For Linux, we can launch Steam directly using the 'steam' command
+            logger.info("Launching Steam...")
+            subprocess.Popen(["steam"], shell=True)
+        else:
+            steam_exe = _find_steam_executable()
+            if steam_exe is None or not steam_exe.exists():
+                logger.warning("Steam executable not found")
+                return False
+            logger.info("Launching Steam...")
+            subprocess.Popen([str(steam_exe)], shell=True)
         # Give Steam some initial time to start up before checking
         sleep(15)
 
