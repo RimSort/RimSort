@@ -130,6 +130,41 @@ def unsaved_main_content(
     return mc, save_calls
 
 
+@pytest.fixture
+def mocked_steamworks_instance(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """
+    Create a mocked Steamworks instance with common setup.
+
+    This fixture resets the singleton, creates comprehensive Workshop mocks,
+    and returns a configured SteamworksInterface instance ready for testing.
+    """
+    from app.utils.steam.steamworks import wrapper
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class with comprehensive Workshop methods
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_obj.Workshop = Mock()
+    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SetItemUnsubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.UnsubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.DownloadItem = Mock(return_value=True)
+
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create and return instance
+    steamworks = wrapper.SteamworksInterface.instance()
+    steamworks.steam_not_running = False
+    return steamworks
+
+
 @pytest.mark.parametrize(
     "dialogue_return, expected_save_calls, expected_launch",
     [
@@ -396,34 +431,13 @@ def test_steamworks_concurrent_operations_blocked(
 def test_subscription_operations_queue_when_busy(
     patch_launch: List[Tuple[Path, List[str]]],
     main_content: Tuple[MainContent, List[bool]],
-    monkeypatch: pytest.MonkeyPatch,
+    mocked_steamworks_instance: Any,
 ) -> None:
     """Test that subscription operations queue instead of raising RuntimeError when busy."""
     import time
 
-    from app.utils.steam.steamworks import wrapper
-
     mc, _ = main_content
-
-    # Reset singleton instance to start fresh
-    wrapper.SteamworksInterface._instance = None
-
-    # Mock STEAMWORKS class
-    mock_steamworks_obj = Mock()
-    mock_steamworks_obj.initialize = Mock()
-    mock_steamworks_obj.loaded = Mock(return_value=True)
-    mock_steamworks_obj.Workshop = Mock()
-    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
-    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
-
-    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
-    monkeypatch.setattr(
-        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
-    )
-
-    # Create instance
-    steamworks = wrapper.SteamworksInterface.instance()
-    steamworks.steam_not_running = False
+    steamworks = mocked_steamworks_instance
 
     # Manually set operation in progress by calling _begin_callbacks directly
     steamworks._begin_callbacks("test_operation", callbacks_total=1)
@@ -452,35 +466,11 @@ def test_subscription_operations_queue_when_busy(
 def test_multiple_subscription_operations_queue_in_order(
     patch_launch: List[Tuple[Path, List[str]]],
     main_content: Tuple[MainContent, List[bool]],
-    monkeypatch: pytest.MonkeyPatch,
+    mocked_steamworks_instance: Any,
 ) -> None:
     """Test that multiple subscription operations queue properly."""
-    from app.utils.steam.steamworks import wrapper
-
     mc, _ = main_content
-
-    # Reset singleton instance
-    wrapper.SteamworksInterface._instance = None
-
-    # Mock STEAMWORKS class
-    mock_steamworks_obj = Mock()
-    mock_steamworks_obj.initialize = Mock()
-    mock_steamworks_obj.loaded = Mock(return_value=True)
-    mock_steamworks_obj.Workshop = Mock()
-    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
-    mock_steamworks_obj.Workshop.SetItemUnsubscribedCallback = Mock()
-    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
-    mock_steamworks_obj.Workshop.UnsubscribeItem = Mock()
-    mock_steamworks_obj.Workshop.DownloadItem = Mock(return_value=True)
-
-    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
-    monkeypatch.setattr(
-        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
-    )
-
-    # Create instance
-    steamworks = wrapper.SteamworksInterface.instance()
-    steamworks.steam_not_running = False
+    steamworks = mocked_steamworks_instance
 
     # Manually set operation in progress
     steamworks._begin_callbacks("download", callbacks_total=1)
@@ -516,37 +506,15 @@ def test_multiple_subscription_operations_queue_in_order(
 def test_queued_operation_error_handling(
     patch_launch: List[Tuple[Path, List[str]]],
     main_content: Tuple[MainContent, List[bool]],
+    mocked_steamworks_instance: Any,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that errors in queued operations don't block subsequent operations."""
     import threading
     import time
 
-    from app.utils.steam.steamworks import wrapper
-
     mc, _ = main_content
-
-    # Reset singleton instance to start fresh
-    wrapper.SteamworksInterface._instance = None
-
-    # Mock STEAMWORKS class
-    mock_steamworks_obj = Mock()
-    mock_steamworks_obj.initialize = Mock()
-    mock_steamworks_obj.loaded = Mock(return_value=True)
-    mock_steamworks_obj.Workshop = Mock()
-
-    # Mock Workshop methods
-    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
-    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
-
-    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
-    monkeypatch.setattr(
-        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
-    )
-
-    # Create a real SteamworksInterface instance
-    steamworks = wrapper.SteamworksInterface.instance()
-    steamworks.steam_not_running = False
+    steamworks = mocked_steamworks_instance
 
     # Track successful operations
     successful_operations: List[str] = []
