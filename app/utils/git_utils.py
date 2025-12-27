@@ -1,8 +1,10 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
 import datetime
+import gc
 import os
 import threading
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -163,13 +165,134 @@ def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
     return bool(result["success"])
 
 
+def _is_repository_corrupted(repo_path: str | Path) -> bool:
+    """Check if a git repository is corrupted by looking for common error patterns.
+
+    Args:
+        repo_path: Path to the git repository.
+
+    Returns:
+        True if the repository appears to be corrupted, False otherwise.
+    """
+    repo_path_str = str(repo_path)
+    try:
+        repo = Repository(repo_path_str)
+        # Try to walk through commits to detect missing objects
+        if not repo.head_is_unborn:
+            walker = repo.walk(repo.head.target)
+            # Try to iterate to detect missing objects
+            for _ in walker:
+                pass
+        repo.free()
+        return False
+    except Exception as e:
+        error_str = str(e).lower()
+        # Check for common corruption indicators
+        corruption_indicators = [
+            "object not found",
+            "missing object",
+            "bad object",
+            "corrupted",
+            "fatal",
+            "pack corruption",
+        ]
+        return any(indicator in error_str for indicator in corruption_indicators)
+
+
+def _attempt_repository_repair(
+    repo_path: str | Path,
+    repo_url: Optional[str] = None,
+    repo: Optional[Repository] = None,
+) -> bool:
+    """Attempt to repair or re-clone a corrupted repository.
+
+    Args:
+        repo_path: Path to the corrupted repository.
+        repo_url: Optional URL to re-clone from.
+        repo: Optional repository object to clean up before repair.
+
+    Returns:
+        True if repair was successful, False otherwise.
+    """
+    repo_path_str = str(repo_path)
+    repo_path_obj = Path(repo_path_str)
+
+    logger.warning(f"Attempting to repair corrupted repository: {repo_path_str}")
+
+    try:
+        # Close and cleanup the repository object if provided
+        if repo is not None:
+            try:
+                repo.state_cleanup()
+                repo.free()
+                logger.debug(f"Cleaned up repository object: {repo_path_str}")
+            except Exception as e:
+                logger.warning(f"Failed to cleanup repository object: {e}")
+
+        # Try to delete the corrupted repository
+        if repo_path_obj.exists():
+            logger.info(f"Deleting corrupted repository directory: {repo_path_str}")
+
+            # Force garbage collection to release file handles
+            gc.collect()
+            # Small delay to allow file handles to be released
+            time.sleep(0.5)
+            # Try multiple times to delete (with exponential backoff)
+            max_retries = 3
+            for attempt in range(max_retries):
+                delete_files_with_condition(repo_path_str, lambda _: True)
+
+                if not repo_path_obj.exists():
+                    logger.info(
+                        f"Successfully deleted corrupted repository at: {repo_path_str}"
+                    )
+                    break
+
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Deletion attempt {attempt + 1} failed, retrying... ({repo_path_str})"
+                    )
+                    time.sleep(0.5 * (attempt + 1))  # Exponential backoff
+                else:
+                    logger.error(
+                        f"Failed to delete corrupted repository: {repo_path_str}"
+                    )
+                    return False
+        else:
+            logger.info(f"Repository directory already gone: {repo_path_str}")
+
+        # If a URL was provided, attempt to re-clone
+        if repo_url:
+            logger.info(f"Re-cloning repository from: {repo_url}")
+            repo_path_obj.parent.mkdir(parents=True, exist_ok=True)
+
+            config = GitOperationConfig.create_silent()
+            _, result = git_clone(repo_url, repo_path_str, config=config)
+
+            if result.is_successful():
+                logger.info(f"Successfully re-cloned repository from: {repo_url}")
+                return True
+            else:
+                logger.error(f"Failed to re-clone repository from {repo_url}: {result}")
+                return False
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to repair repository {repo_path_str}: {e}")
+        return False
+
+
 def _handle_git_error(
     operation: GitOperationType,
     error: Exception,
     config: GitOperationConfig,
     context: str = "",
+    repo_path: Optional[str | Path] = None,
+    repo_url: Optional[str] = None,
+    repo: Optional[Repository] = None,
     **kwargs: Any,
-) -> None:
+) -> bool:
     """Centralized error handling for git operations.
 
     Args:
@@ -177,12 +300,36 @@ def _handle_git_error(
         error: The exception that occurred.
         config: Configuration for error handling.
         context: Additional context about the operation.
+        repo_path: Path to the repository (used for corruption repair).
+        repo_url: URL of the repository (used for re-cloning).
+        repo: Repository object (used for cleanup before repair).
         **kwargs: Additional context for error messages.
+
+    Returns:
+        True if the error was due to corruption and repair was attempted, False otherwise.
     """
     error_msg = str(error)
     logger.error(
         f"Git {operation.value} operation failed{f' ({context})' if context else ''}: {error_msg}"
     )
+
+    # Check for repository corruption
+    corruption_indicators = [
+        "object not found",
+        "missing object",
+        "bad object",
+        "corrupted",
+        "pack corruption",
+    ]
+
+    if (
+        any(indicator in error_msg.lower() for indicator in corruption_indicators)
+        and repo_path
+    ):
+        logger.warning(f"Detected repository corruption in: {repo_path}")
+        if _attempt_repository_repair(repo_path, repo_url, repo):
+            logger.info(f"Repository corruption repair successful: {repo_path}")
+            return True
 
     if config.notify_errors:
         title_map = {
@@ -196,11 +343,17 @@ def _handle_git_error(
             GitOperationType.COMMIT_INFO: "Git Commit Info Error",
         }
 
+        message = f"Failed to {operation.value} {context}".strip()
+        if any(indicator in error_msg.lower() for indicator in corruption_indicators):
+            message += " (Repository corruption detected and repair attempted)"
+
         config.get_handler().show_error(
             title=title_map.get(operation, "Git Operation Error"),
-            message=f"Failed to {operation.value} {context}".strip(),
+            message=message,
             details=error_msg,
         )
+
+    return False
 
 
 @contextmanager
@@ -523,12 +676,63 @@ def git_clone(
             logger.warning(
                 f"Force cloning repository by deleting the local directory: {repo_path}"
             )
+
+            # Attempt deletion
             success = delete_files_with_condition(
                 repo_path_str, lambda file: not file.endswith(".dds")
             )
+
             if not success:
                 logger.error(f"Failed to delete the local directory: {repo_path}")
-                return None, GitCloneResult.PATH_DELETE_ERROR
+
+                # If deletion failed, try alternative approaches
+                # 1. Attempt corruption repair
+                logger.warning(
+                    f"Attempting automatic corruption repair due to deletion failure: {repo_path}"
+                )
+                if _attempt_repository_repair(repo_path_str, repo_url, repo=None):
+                    logger.info(
+                        f"Successfully repaired and recovered corrupted repository: {repo_path}"
+                    )
+                    # Try clone again after repair
+                    try:
+                        repo = pygit2.clone_repository(
+                            repo_url,
+                            repo_path_str,
+                            checkout_branch=checkout_branch,
+                            depth=depth,
+                        )
+                        repo = Repository(repo_path_str)
+                        return repo, GitCloneResult.CLONED
+                    except pygit2.GitError as e:
+                        logger.error(f"Clone failed after repair: {e}")
+                        return None, GitCloneResult.GIT_ERROR
+                else:
+                    # 2. If repair failed, try renaming the old directory and cloning fresh
+                    logger.warning(
+                        f"Repair failed, attempting to rename old directory and clone fresh: {repo_path}"
+                    )
+                    try:
+                        timestamp = int(time.time())
+                        backup_path = f"{repo_path_str}_backup_{timestamp}"
+                        Path(repo_path_str).rename(backup_path)
+                        logger.info(f"Renamed corrupted repo to: {backup_path}")
+
+                        # Try clone to the original path
+                        repo = pygit2.clone_repository(
+                            repo_url,
+                            repo_path_str,
+                            checkout_branch=checkout_branch,
+                            depth=depth,
+                        )
+                        repo = Repository(repo_path_str)
+                        logger.info(
+                            f"Successfully cloned after renaming backup: {repo_path}"
+                        )
+                        return repo, GitCloneResult.CLONED
+                    except Exception as e:
+                        logger.error(f"Failed to clone after renaming backup: {e}")
+                        return None, GitCloneResult.PATH_DELETE_ERROR
 
     try:
         repo = pygit2.clone_repository(
@@ -608,11 +812,22 @@ def git_check_updates(
         return walker
 
     except pygit2.GitError as e:
+        # Try to get the remote URL for re-cloning if needed
+        remote_url = None
+        try:
+            remote = repo.remotes["origin"]
+            remote_url = remote.url
+        except Exception:
+            pass
+
         _handle_git_error(
             GitOperationType.PULL,
             e,
             config,
             context=f"updates check for repository: {repo.path}",
+            repo_path=repo.path,
+            repo_url=remote_url,
+            repo=repo,
         )
         return None
 
@@ -675,6 +890,25 @@ def git_pull(
                 return GitPullResult.GIT_ERROR
         except Exception as e:
             logger.error(f"Fetch operation failed: {str(e)}")
+            # Check for corruption and attempt repair
+            error_str = str(e).lower()
+            if "object not found" in error_str or "missing object" in error_str:
+                remote_url = None
+                try:
+                    remote_url = remote.url
+                except Exception:
+                    pass
+                repaired = _handle_git_error(
+                    GitOperationType.PULL,
+                    e,
+                    config,
+                    context=f"fetch for repository: {repo.path}",
+                    repo_path=repo.path,
+                    repo_url=remote_url,
+                    repo=repo,
+                )
+                if repaired:
+                    return GitPullResult.UP_TO_DATE
             return GitPullResult.GIT_ERROR
 
         # Stash changes before pull if requested
@@ -788,9 +1022,28 @@ def git_pull(
             return GitPullResult.UNKNOWN
 
     except pygit2.GitError as e:
-        _handle_git_error(
-            GitOperationType.PULL, e, config, context=f"repository: {repo.path}"
+        # Try to get the remote URL for re-cloning if needed
+        remote_url = None
+        try:
+            if remote:
+                remote_url = remote.url
+        except Exception:
+            pass
+
+        repaired = _handle_git_error(
+            GitOperationType.PULL,
+            e,
+            config,
+            context=f"repository: {repo.path}",
+            repo_path=repo.path,
+            repo_url=remote_url,
+            repo=repo,
         )
+
+        # If corruption was repaired, return success indication
+        if repaired:
+            return GitPullResult.UP_TO_DATE
+
         return GitPullResult.GIT_ERROR
 
 
@@ -1515,6 +1768,7 @@ __all__ = [
     "git_get_status",
     "git_get_commit_info",
     "git_cleanup",
+    "git_repository",
     "git_stash",
     "git_stash_list",
     "git_stash_drop",
