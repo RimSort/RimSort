@@ -151,6 +151,29 @@ class SteamworksInterface:
             )
         return cls._instance
 
+    def _check_steam_available(self, operation_name: str) -> bool:
+        """
+        Check if Steam client is available for operations.
+
+        Emits steam_operation_failed signal if Steam is not running.
+
+        :param operation_name: Human-readable operation name for error messages
+        :type operation_name: str
+        :return: True if Steam is available, False otherwise
+        :rtype: bool
+        """
+        if self.steam_not_running or not self.steamworks.loaded():
+            logger.warning(f"Cannot {operation_name}: Steam client not running")
+
+            from app.utils.event_bus import EventBus
+
+            EventBus().steam_operation_failed.emit(
+                f"Cannot {operation_name}: Steam client is not running. "
+                f"Please start Steam and try again."
+            )
+            return False
+        return True
+
     def query_app_dependencies(
         self, pfid_or_pfids: Union[int, list[int]], interval: int = 1
     ) -> Union[dict[int, Any], None]:
@@ -167,16 +190,7 @@ class SteamworksInterface:
         # Normalize to list
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
-        if self.steam_not_running or not self.steamworks.loaded():
-            operation_name = "query app dependencies"
-            logger.warning(f"Cannot {operation_name}: Steam client not running")
-
-            from app.utils.event_bus import EventBus
-
-            EventBus().steam_operation_failed.emit(
-                f"Cannot {operation_name}: Steam client is not running. "
-                f"Please start Steam and try again."
-            )
+        if not self._check_steam_available("query app dependencies"):
             return None
 
         try:
@@ -221,16 +235,7 @@ class SteamworksInterface:
 
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
-        if self.steam_not_running or not self.steamworks.loaded():
-            operation_name = "subscribe to mods"
-            logger.warning(f"Cannot {operation_name}: Steam client not running")
-
-            from app.utils.event_bus import EventBus
-
-            EventBus().steam_operation_failed.emit(
-                f"Cannot {operation_name}: Steam client is not running. "
-                f"Please start Steam and try again."
-            )
+        if not self._check_steam_available("subscribe to mods"):
             return
 
         # Define execution function
@@ -261,16 +266,7 @@ class SteamworksInterface:
 
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
-        if self.steam_not_running or not self.steamworks.loaded():
-            operation_name = "unsubscribe from mods"
-            logger.warning(f"Cannot {operation_name}: Steam client not running")
-
-            from app.utils.event_bus import EventBus
-
-            EventBus().steam_operation_failed.emit(
-                f"Cannot {operation_name}: Steam client is not running. "
-                f"Please start Steam and try again."
-            )
+        if not self._check_steam_available("unsubscribe from mods"):
             return
 
         # Define execution function
@@ -301,16 +297,7 @@ class SteamworksInterface:
 
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
-        if self.steam_not_running or not self.steamworks.loaded():
-            operation_name = "resubscribe to mods"
-            logger.warning(f"Cannot {operation_name}: Steam client not running")
-
-            from app.utils.event_bus import EventBus
-
-            EventBus().steam_operation_failed.emit(
-                f"Cannot {operation_name}: Steam client is not running. "
-                f"Please start Steam and try again."
-            )
+        if not self._check_steam_available("resubscribe to mods"):
             return
 
         # Define execution function
@@ -343,16 +330,7 @@ class SteamworksInterface:
 
         pfids = [pfid_or_pfids] if isinstance(pfid_or_pfids, int) else pfid_or_pfids
 
-        if self.steam_not_running or not self.steamworks.loaded():
-            operation_name = "download items"
-            logger.warning(f"Cannot {operation_name}: Steam client not running")
-
-            from app.utils.event_bus import EventBus
-
-            EventBus().steam_operation_failed.emit(
-                f"Cannot {operation_name}: Steam client is not running. "
-                f"Please start Steam and try again."
-            )
+        if not self._check_steam_available("download items"):
             return
 
         # Define execution function
