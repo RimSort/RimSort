@@ -40,7 +40,7 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
 
 ### Cloning the repository
 RimSort uses submodules that are hosted in other repositories that need to be cloned. 
-- [steamfiles](https://github.com/twstagg/steamfiles): used to parse Steam client acf/appinfo/manifest information
+- [steamfiles](https://github.com/RimSort/steamfiles): used to parse Steam client acf/appinfo/manifest information
 - [SteamworksPy](https://github.com/philippj/SteamworksPy): used for interactions with the local Steam client
   - SteamworksPy is a python module built to interface directly with the [Steamworks API](https://partner.steamgames.com/doc/api)
   - This allows certain interactions with the local Steam client to be initiated through the Steamworks API via Python (such as subscribing/unsubscribing to/from Steam mods via RimSort)

@@ -51,7 +51,7 @@ RimSort 使用 [PySide6](https://pypi.org/project/PySide6/) 模块以及多个�
       - Windows (`powershell`)：`.\Scripts\Activate.ps1`
   - 确保安装构建依赖：`requirements_build.txt`
 - RimSort 还依赖以下必需子模块（执行 `git submodule update --init --recursive` 来初始化/更新）：
-  - [steamfiles](https://github.com/twstagg/steamfiles)：用于解析 Steam 客户端 acf/appinfo/manifest 文件
+  - [steamfiles](https://github.com/RimSort/steamfiles)：用于解析 Steam 客户端 acf/appinfo/manifest 文件
   - [SteamworksPy](https://github.com/philippj/SteamworksPy)：用于实现与本地 Steam 客户端的交互
     - SteamworksPy 是直接对接 [Steamworks API](https://partner.steamgames.com/doc/api) 的 Python 模块
     - 这使 RimSort 可以通过 Python 调用 Steamworks API，与本地 Steam 客户端进行交互（例如通过 RimSort 订阅/取消订阅 Steam Mod）
