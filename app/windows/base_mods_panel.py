@@ -390,7 +390,7 @@ class BaseModsPanel(QWidget):
         self,
         pfid_column: int,
         mode: str | int,
-        steamworks_cmd: str = "resubscribe",
+        steamworks_cmd: str = "download",
         completed: Callable[[], None] | None = None,
     ) -> None:
         """
@@ -640,6 +640,7 @@ class BaseModsPanel(QWidget):
                         self._update_mods_from_table,
                         pfid_column,
                         "Steam",
+                        "subscribe",
                         completed=completion_callback,
                     ),
                 )

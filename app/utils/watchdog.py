@@ -1,6 +1,5 @@
 import os
 from functools import partial
-from pathlib import Path
 from threading import Timer
 from typing import Any
 from uuid import uuid4
@@ -10,14 +9,12 @@ from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
-from watchdog.observers.polling import PollingObserver
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.metadata import MetadataManager
 
 
 class WatchdogHandler(FileSystemEventHandler, QObject):
-    acf_changed = Signal(bool, bool)
     mod_created = Signal(str, str, str)
     mod_deleted = Signal(str, str, str)
     mod_updated = Signal(bool, bool, str, str, str)
@@ -43,43 +40,13 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         super().__init__()
         logger.info("Initializing WatchdogHandler")
         self.metadata_manager: MetadataManager = MetadataManager.instance()
-        self.workshop_acf_path = self.metadata_manager.workshop_acf_path
-        self.steamcmd_appworkshop_acf_path = (
-            self.metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
         self.settings_controller: SettingsController = settings_controller
-        # Steam .acf file monitoring
-        self.watchdog_acf_observer: BaseObserver | None
-        self.watchdog_acf_observer = PollingObserver()
         # Mod directory monitoring
         self.watchdog_mods_observer: BaseObserver | None
         self.watchdog_mods_observer = Observer()
         # Keep track of cooldowns for each uuid
         self.cooldown_timers: dict[str, Any] = {}
-        self.__add_acf_observers()
         self.__add_mod_observers(self.settings_controller.get_mod_paths())
-
-    def __add_acf_observers(self) -> None:
-        """Add observers to the watchdog observer for applicable Steam .acf files.
-
-        :param None:
-
-        :return: None
-        """
-        # Get all applicable Steam .acf paths if set and existing
-        acf_targets: set[str] = {
-            path
-            for path in (
-                self.workshop_acf_path,
-                self.steamcmd_appworkshop_acf_path,
-            )
-            if path and os.path.exists(path)
-        }
-        # Loop through applicable targets and schedule observers for them
-        if self.watchdog_acf_observer is not None:
-            for target in acf_targets:
-                logger.debug(f"Scheduling observer for Steam .acf metadata: {target}")
-                self.watchdog_acf_observer.schedule(self, target, recursive=False)
 
     def __add_mod_observers(self, targets: list[str]) -> None:
         """Add observers to the watchdog observer for all of our data source target paths.
@@ -98,40 +65,6 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                         path,
                         recursive=True,
                     )
-
-    def __check_acf_file(self, event: FileSystemEvent, event_scr_path: Path) -> bool:
-        """Check if the file created is an .acf file that we track metadata from.
-
-        :param event: The event object representing the file event.
-        :type event: FileSystemEvent
-        :param event_scr_path: The path of the file created.
-        :type event_scr_path: Path
-
-        :return: True if the file is an .acf file that we track metadata from.
-        :rtype: bool
-        """
-
-        # Normalize the paths that are being compared
-        event_scr_path = event_scr_path.resolve()
-        workshop_acf_path = Path(self.workshop_acf_path).resolve()
-        steamcmd_appworkshop_acf_path = Path(
-            self.steamcmd_appworkshop_acf_path
-        ).resolve()
-        # Explicitly check if the file created is an .acf file that we track metadata from
-        if (
-            not event.is_directory
-            and event_scr_path.suffix == ".acf"
-            and event_scr_path == workshop_acf_path
-            or event_scr_path == steamcmd_appworkshop_acf_path
-        ):
-            logger.debug(f"ACF file change detected: {event_scr_path}")
-            logger.debug(f"Event: {event}")
-            # The bools that are signalled here correspond with whether it is Steam client or SteamCMD
-            steamclient = event_scr_path == workshop_acf_path
-            steamcmd = event_scr_path == steamcmd_appworkshop_acf_path
-            self.acf_changed.emit(steamclient, steamcmd)
-            return True
-        return False
 
     def __cooldown_uuid_change(
         self, callback: dict[str, str], delay: float = 3.0
@@ -197,10 +130,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         :return: None
         """
         event_scr_path_str = str(event.src_path)
-        # Explicitly check if the file created is an .acf file that we track metadata from
-        if self.__check_acf_file(event, Path(event_scr_path_str)):
-            return
-        # If we are still here, assume we need to try to resolve the mod's data source from the potential mod path
+        # Try to resolve the mod's data source from the potential mod path
         data_source = self.settings_controller.resolve_data_source(event_scr_path_str)
         # Generate a UUID after confirming we don't already have one for this path
         uuid = (
@@ -237,10 +167,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         :return: None
         """
         event_scr_path_str = str(event.src_path)
-        # Explicitly check if the file created is an .acf file that we track metadata from
-        if self.__check_acf_file(event, Path(event_scr_path_str)):
-            return
-        # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
+        # Try to resolve an existing UUID from our mod path -> UUID mapper
         uuid = (
             self.metadata_manager.mod_metadata_dir_mapper.get(event_scr_path_str)
             if event.is_directory
@@ -275,10 +202,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         :return: None
         """
         event_scr_path_str = str(event.src_path)
-        # Explicitly check if the file created is an .acf file that we track metadata from
-        if self.__check_acf_file(event, Path(event_scr_path_str)):
-            return
-        # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
+        # Try to resolve an existing UUID from our mod path -> UUID mapper
         uuid = (
             self.metadata_manager.mod_metadata_file_mapper.get(event_scr_path_str)
             if not event.is_directory

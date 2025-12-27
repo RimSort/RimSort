@@ -178,3 +178,7 @@ version.xml
 
 # Dictionaries
 ltex.dictionary*
+
+# linting stuff
+.ruff_cache
+.uv-cache

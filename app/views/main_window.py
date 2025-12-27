@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.downloads_controller import DownloadsController
 from app.controllers.file_search_controller import FileSearchController
 from app.controllers.instance_controller import (
     InstanceController,
@@ -33,7 +34,6 @@ from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils import globals
-from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DEFAULT_INSTANCE_NAME,
@@ -54,6 +54,7 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
+from app.views.downloads_panel import DownloadsPanel
 from app.views.file_search_dialog import FileSearchDialog
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
@@ -154,6 +155,15 @@ class MainWindow(QMainWindow):
             button_layout.addWidget(button)
 
         self.tab_widget.addTab(self.main_content_tab, self.tr("Main Content"))
+
+        # Create and add the Downloads tab
+        self.downloads_panel = DownloadsPanel()
+        self.downloads_controller = DownloadsController(view=self.downloads_panel)
+        self.downloads_tab = QWidget()
+        self.downloads_layout = QVBoxLayout()
+        self.downloads_tab.setLayout(self.downloads_layout)
+        self.downloads_layout.addWidget(self.downloads_panel)
+        self.tab_widget.addTab(self.downloads_tab, self.tr("Downloads"))
 
         # Create and add the ACF Data tab
         self.acf_log_reader_tab = QWidget()
@@ -1140,10 +1150,6 @@ class MainWindow(QMainWindow):
                 ].workshop_folder,
             ],
         )
-        # Connect watchdog to MetadataManager for ACF changes
-        self.watchdog_event_handler.acf_changed.connect(
-            partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
-        )
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation
         )
@@ -1153,14 +1159,15 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler.mod_updated.connect(
             self.main_content_panel.metadata_manager.process_update
         )
+
+        # Connect workshop_item_installed signal for targeted metadata refresh
+        EventBus().workshop_item_installed.connect(
+            self.main_content_panel.metadata_manager.refresh_single_mod_from_steam
+        )
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None:
-                self.watchdog_event_handler.watchdog_acf_observer.start()
-            else:
-                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
             if self.watchdog_event_handler.watchdog_mods_observer is not None:
                 self.watchdog_event_handler.watchdog_mods_observer.start()
             else:
@@ -1170,30 +1177,42 @@ class MainWindow(QMainWindow):
                 f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
             )
 
+        # Start download progress poller
+        try:
+            from app.utils.download_progress_poller import DownloadProgressPoller
+
+            self.download_poller = DownloadProgressPoller()
+            self.download_poller.start()
+            logger.info("Download progress poller started")
+        except Exception as e:
+            logger.warning(
+                f"Unable to start download progress poller due to exception: {str(e)}"
+            )
+
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
         if self.watchdog_event_handler is not None:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
-                self.watchdog_event_handler.watchdog_mods_observer is not None
-            ):
+            if self.watchdog_event_handler.watchdog_mods_observer is not None:
                 self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
             self.watchdog_event_handler is not None
-            and self.watchdog_event_handler.watchdog_acf_observer is not None
             and self.watchdog_event_handler.watchdog_mods_observer is not None
         ):
-            # Handle Steam .acf Observer shutdown
-            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
-                self.watchdog_event_handler.watchdog_acf_observer.stop()
-                self.watchdog_event_handler.watchdog_acf_observer.join()
-                self.watchdog_event_handler.watchdog_acf_observer = None
             # Handle Mod Directory Observer shutdown
-            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+            if self.watchdog_event_handler.watchdog_mods_observer.is_alive():
                 self.watchdog_event_handler.watchdog_mods_observer.stop()
                 self.watchdog_event_handler.watchdog_mods_observer.join()
                 self.watchdog_event_handler.watchdog_mods_observer = None
                 for timer in self.watchdog_event_handler.cooldown_timers.values():
                     timer.cancel()
             self.watchdog_event_handler = None
+
+        # Stop download progress poller
+        if hasattr(self, "download_poller"):
+            try:
+                self.download_poller.stop()
+                logger.info("Download progress poller stopped")
+            except Exception as e:
+                logger.warning(f"Error stopping download progress poller: {str(e)}")

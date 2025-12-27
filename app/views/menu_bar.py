@@ -358,6 +358,9 @@ class MenuBar(QObject):
         self.wiki_action = self._add_action(help_menu, self.tr("RimSort Wiki…"))
         self.github_action = self._add_action(help_menu, self.tr("RimSort GitHub…"))
         help_menu.addSeparator()
+        self.check_steam_connection_action = self._add_action(
+            help_menu, self.tr("Check Steam Connection")
+        )
         return help_menu
 
     def _create_menu_bar(self) -> None:
