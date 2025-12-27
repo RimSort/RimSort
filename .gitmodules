@@ -1,6 +1,6 @@
 [submodule "steamfiles"]
 	path = submodules/steamfiles
-	url = https://github.com/twstagg/steamfiles
+	url = https://github.com/RimSort/steamfiles
 	ignore = dirty
 [submodule "SteamworksPy"]
 	path = submodules/SteamworksPy
