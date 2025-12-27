@@ -2462,28 +2462,63 @@ class MainContent(QObject):
 
                 # Get mod names for display (from metadata)
                 mod_names = {}
+                missing_pfids = []  # Track pfids without names for Steam API lookup
+
                 for pfid in pfids:
                     pfid_str = str(pfid)
+                    name = None
+
                     # Try to get name from external Steam metadata
                     if (
                         self.metadata_manager.external_steam_metadata
                         and pfid_str in self.metadata_manager.external_steam_metadata
                     ):
-                        mod_names[pfid] = self.metadata_manager.external_steam_metadata[
+                        name = self.metadata_manager.external_steam_metadata[
                             pfid_str
-                        ].get("name", f"Mod {pfid}")
-                    else:
-                        # Fallback to internal metadata if available
+                        ].get("name")
+
+                    # Fallback to internal metadata if not found
+                    if not name:
                         for (
                             uuid,
                             metadata,
                         ) in self.metadata_manager.internal_local_metadata.items():
                             if metadata.get("publishedfileid") == pfid_str:
-                                mod_names[pfid] = metadata.get("name", f"Mod {pfid}")
-                                break
+                                name = metadata.get("name")
+                                if name:
+                                    break
+
+                    # If still no name, mark for Steam API lookup
+                    if not name:
+                        missing_pfids.append(pfid_str)
+                        mod_names[pfid] = f"Mod {pfid}"  # Temporary placeholder
+                    else:
+                        mod_names[pfid] = name
+
+                # Fetch missing mod names from Steam Web API
+                if missing_pfids:
+                    logger.debug(
+                        f"Fetching names for {len(missing_pfids)} mods from Steam Web API"
+                    )
+                    try:
+                        mod_details = ISteamRemoteStorage_GetPublishedFileDetails(
+                            missing_pfids
+                        )
+                        if mod_details:
+                            for detail in mod_details:
+                                pfid = int(detail.get("publishedfileid", 0))
+                                name = detail.get("title", f"Mod {pfid}")
+                                if pfid in mod_names:
+                                    mod_names[pfid] = name
+                                    logger.debug(f"Fetched name for {pfid}: {name}")
                         else:
-                            # Last resort: generic name
-                            mod_names[pfid] = f"Mod {pfid}"
+                            logger.warning(
+                                f"Steam API returned no details for {len(missing_pfids)} mod(s)"
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to fetch mod names from Steam Web API: {e}"
+                        )
 
                 # Create and execute runnable in Qt thread pool
                 runnable = SteamSubscriptionRunnable(instruction[0], pfids, mod_names)
