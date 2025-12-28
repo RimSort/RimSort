@@ -84,26 +84,40 @@ RimSort/
 
 #### 基本命令
 
-- **`check [language]`**：检查特定语言或所有语言（如果未指定语言）的翻译完整性
-  - 选项：`--json` 输出结构化 JSON 供程序使用
+所有基本命令都支持单个语言和批量（所有语言）两种模式：
+
+- **`check [language]`**：检查翻译完整性
+   - `check zh_CN` - 仅检查特定语言
+   - `check` - 一次检查所有语言（批量操作）
+   - 选项：`--json` 输出结构化 JSON 供程序使用
 - **`stats`**：显示所有语言的翻译统计信息
-  - 选项：`--json` 输出结构化 JSON 供程序使用
-- **`validate [language]`**：验证翻译文件格式和内容，自动修复占位符不匹配等常见问题
+   - 选项：`--json` 输出结构化 JSON 供程序使用
+- **`validate [language]`**：验证翻译文件格式和内容，自动修复常见问题
+   - `validate zh_CN` - 仅验证特定语言
+   - `validate` - 一次验证所有语言（批量操作）
 - **`update-ts [language]`**：使用源语言的新字符串更新 .ts 文件
+   - `update-ts zh_CN` - 仅更新特定语言
+   - `update-ts` - 一次更新所有语言（批量操作）
 - **`compile [language]`**：将 .ts 文件编译为二进制 .qm 格式
+   - `compile zh_CN` - 仅编译特定语言
+   - `compile` - 一次编译所有语言（批量操作）
 
 #### 高级命令
 
 - **`auto-translate [language] --service [google|deepl|openai]`**：使用各种翻译服务自动翻译未完成的字符串
-  - **Google Translate**：免费，支持所有语言，无需 API 密钥
-  - **DeepL**：高质量翻译，需要 API 密钥，支持主要欧洲语言（EN、FR、DE、ES、PT、IT、NL、PL，不支持 RU）
-  - **OpenAI GPT**：AI 驱动翻译，需要 API 密钥，支持主要语言（不支持 RU、TR、PT-BR）
-  - 选项：`--api-key` 用于服务认证，`--model` 用于 OpenAI 模型选择，`--continue-on-failure` 用于跳过失败的翻译
-  - 额外选项：`--timeout`、`--max-retries`、`--max-concurrent` 用于配置
+   - `auto-translate zh_CN --service google` - 仅自动翻译特定语言
+   - `auto-translate --service google` - 一次自动翻译所有语言（批量操作）
+   - **Google Translate**：免费，支持所有语言，无需 API 密钥
+   - **DeepL**：高质量翻译，需要 API 密钥，支持主要欧洲语言（EN、FR、DE、ES、PT、IT、NL、PL，不支持 RU）
+   - **OpenAI GPT**：AI 驱动翻译，需要 API 密钥，支持主要语言（不支持 RU、TR、PT-BR）
+   - 选项：`--api-key` 用于服务认证，`--model` 用于 OpenAI 模型选择，`--continue-on-failure` 用于跳过失败的翻译
+   - 额外选项：`--timeout`、`--max-retries`、`--max-concurrent`、`--no-cache` 用于配置
 - **`process [language] --service [google|deepl|openai]`**：一键工作流程，按顺序运行 update-ts → auto-translate → compile
-  - 使用与 auto-translate 相同的翻译服务和限制（Google：所有语言，DeepL：主要欧洲语言除 RU 外，OpenAI：主要语言除 RU/TR/PT-BR 外）
-  - 与 auto-translate 相同的选项：`--api-key`、`--model`、`--continue-on-failure`
-  - 配置选项：`--timeout`、`--max-retries`、`--max-concurrent`
+   - `process zh_CN --service google` - 仅处理特定语言的完整工作流
+   - `process --service google` - 一次处理所有语言的完整工作流（批量操作）
+   - 使用与 auto-translate 相同的翻译服务和限制（Google：所有语言，DeepL：主要欧洲语言除 RU 外，OpenAI：主要语言除 RU/TR/PT-BR 外）
+   - 与 auto-translate 相同的选项：`--api-key`、`--model`、`--continue-on-failure`
+   - 配置选项：`--timeout`、`--max-retries`、`--max-concurrent`、`--no-cache`
 
 ### 命令示例
 
@@ -146,6 +160,9 @@ python translation_helper.py auto-translate zh_CN --service openai --api-key YOU
 # 带配置选项的自动翻译
 python translation_helper.py auto-translate zh_CN --service google --timeout 30 --max-retries 5 --max-concurrent 10
 
+# 自动翻译但不使用缓存（仅获取新翻译）
+python translation_helper.py auto-translate zh_CN --service google --no-cache
+
 # 一键完整工作流程
 python translation_helper.py process zh_CN --service google
 
@@ -166,6 +183,25 @@ python translation_helper.py compile
 - **并发**：优化的并行处理以加快批量操作速度
 
 具体使用方法请参见"[测试翻译](#步骤-5测试翻译)"部分。
+
+### 高级配置选项
+
+翻译助手工具支持多个高级选项用于微调行为：
+
+- **`--timeout` (浮点数，默认：10.0)**：请求超时时间（秒）。对于较慢的网络可增加此值。
+- **`--max-retries` (整数，默认：3)**：失败请求的最大重试次数，采用指数退避策略。
+- **`--max-concurrent` (整数，默认：5)**：最大并发 API 请求数。在速度和 API 速率限制之间平衡。
+- **`--no-cache`**：跳过当前运行的翻译缓存。用于强制获取新翻译。
+- **`--continue-on-failure`**：默认启用。使用 `--no-continue-on-failure` 在首次失败时中止。
+
+**缓存管理**：
+
+翻译助手工具维护一个持久化缓存文件（`.translation_cache.json`）来减少 API 调用和成本。缓存的翻译会在多次运行中自动重用。要清除缓存并请求新翻译：
+
+```bash
+# 清除缓存并在此运行中禁用它
+python translation_helper.py auto-translate zh_CN --service google --no-cache
+```
 
 ## 快速开始
 
