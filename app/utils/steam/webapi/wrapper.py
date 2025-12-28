@@ -750,14 +750,13 @@ class DynamicQuery(QObject):
                         result["database"][publishedfileid]["url"] = (
                             f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                         )
-                        # Track time publishing created
-                        # result["database"][publishedfileid][
-                        #     "external_time_created"
-                        # ] = metadata["time_created"]
-                        # # Track time publishing last updated
-                        # result["database"][publishedfileid][
-                        #     "external_time_updated"
-                        # ] = metadata["time_updated"]
+                        # Track time publishing created and updated for incremental updates
+                        result["database"][publishedfileid]["time_created"] = metadata[
+                            "time_created"
+                        ]
+                        result["database"][publishedfileid]["time_updated"] = metadata[
+                            "time_updated"
+                        ]
                         result["database"][publishedfileid]["dependencies"] = {}
                         # If the publishing has listed mod dependencies
                         if metadata.get("children"):
@@ -825,6 +824,74 @@ class DynamicQuery(QObject):
             ):  # If there is somehow an unpublished mod in missing_children, remove it
                 missing_children.remove(missing_child)
         return result, missing_children
+
+    def get_bulk_timestamps(
+        self, publishedfileids: list[str]
+    ) -> dict[str, int]:
+        """
+        Query only time_updated for all mods (lightweight bulk query).
+
+        Uses IPublishedFileService/GetDetails with minimal field extraction
+        to get timestamps without full metadata overhead.
+
+        Args:
+            publishedfileids: List of Steam Workshop PublishedFileIds
+
+        Returns:
+            dict mapping pfid -> time_updated timestamp (0 if unpublished)
+        """
+        timestamps: dict[str, int] = {}
+        chunk_size = 213  # Steam API limit
+
+        self._emit_message("\nQuerying timestamps for all mods...")
+
+        # Process in chunks
+        for i in range(0, len(publishedfileids), chunk_size):
+            chunk = publishedfileids[i : i + chunk_size]
+            chunk_str = ",".join(chunk)
+
+            self._emit_message(
+                f"Querying timestamp chunk {i // chunk_size + 1} of {(len(publishedfileids) - 1) // chunk_size + 1}..."
+            )
+
+            # Query Steam API with retry logic
+            def query_chunk():
+                query_url = "https://api.steampowered.com/IPublishedFileService/GetDetails/v1/"
+                payload = {
+                    "key": self.apikey,
+                    "publishedfileids[0]": chunk_str,
+                    "includechildren": False,  # Don't need dependency data
+                }
+                r = requests.post(query_url, data=payload, timeout=60)
+                r.raise_for_status()
+                return r.json()
+
+            try:
+                result = self._retry_with_backoff(
+                    query_chunk,
+                    operation_name=f"Timestamp query chunk {i // chunk_size + 1}",
+                    max_retries=5,
+                )
+
+                # Extract timestamps
+                if "response" in result and "publishedfiledetails" in result["response"]:
+                    for item in result["response"]["publishedfiledetails"]:
+                        pfid = str(item.get("publishedfileid", ""))
+                        if pfid and item.get("result") == 1:  # Published
+                            timestamps[pfid] = int(item.get("time_updated", 0))
+                        elif pfid:  # Unpublished
+                            timestamps[pfid] = 0
+
+            except Exception as e:
+                logger.error(
+                    f"Failed to query timestamp chunk after retries: {e}. Marking chunk as needing update."
+                )
+                # Mark all in this chunk as needing update (safe default)
+                for pfid in chunk:
+                    timestamps[pfid] = 0
+
+        self._emit_message(f"Retrieved timestamps for {len(timestamps)} mods")
+        return timestamps
 
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """

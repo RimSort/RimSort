@@ -20,7 +20,7 @@ DB_BUILDER_PRUNE_EXCEPTIONS = [
     "database",
     "rules",
 ]
-DB_BUILDER_PURGE_KEYS = ["external_time_created", "external_time_updated"]
+DB_BUILDER_PURGE_KEYS: list[str] = []  # Keep timestamps for incremental updates
 DB_BUILDER_RECURSE_EXCEPTIONS = [
     "dependencies",
     "incompatibleWith",

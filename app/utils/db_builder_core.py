@@ -7,6 +7,7 @@ database builder, extracted from the Qt-dependent SteamDatabaseBuilder class.
 
 import json
 import os
+import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -32,6 +33,7 @@ class DBBuilderCore:
         output_database_path: Path to output JSON file
         get_appid_deps: Whether to query DLC dependencies
         update: Whether to update existing DB (merge) or overwrite
+        incremental: Whether to use incremental updates (only query changed mods)
         progress_callback: Optional callback for progress messages
     """
 
@@ -43,6 +45,7 @@ class DBBuilderCore:
         output_database_path: str,
         get_appid_deps: bool = False,
         update: bool = False,
+        incremental: bool = True,
         progress_callback: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.apikey = apikey
@@ -52,6 +55,7 @@ class DBBuilderCore:
         self.output_database_path = output_database_path
         self.publishedfileids: list[str] = []
         self.update = update
+        self.incremental = incremental
         self.progress_callback = progress_callback or (lambda msg: None)
 
     def run(self) -> bool:
@@ -91,11 +95,61 @@ class DBBuilderCore:
                 )
                 return False  # Exit operation
 
-            database = self._init_empty_db_from_publishedfileids(
-                dynamic_query.publishedfileids
-            )
+            # Load existing database if update mode
+            existing_db = self._load_existing_database() if self.update else None
+
+            # Determine which mods to query
+            mods_to_query = dynamic_query.publishedfileids
+            deleted_mods: list[str] = []
+
+            # Incremental mode: only query changed/new mods
+            if self.incremental and existing_db:
+                self.progress_callback("\nIncremental update mode enabled")
+
+                # Get timestamps for all mods (lightweight query)
+                remote_timestamps = dynamic_query.get_bulk_timestamps(
+                    dynamic_query.publishedfileids
+                )
+
+                # Detect what changed
+                new_mods, changed_mods, deleted_mods = self._detect_changes(
+                    dynamic_query.publishedfileids, remote_timestamps, existing_db
+                )
+
+                # Only query changed/new mods
+                mods_to_query = new_mods + changed_mods
+
+                self.progress_callback(
+                    f"\nIncremental analysis complete:"
+                    f"\n  - New mods: {len(new_mods)}"
+                    f"\n  - Changed mods: {len(changed_mods)}"
+                    f"\n  - Deleted mods: {len(deleted_mods)}"
+                    f"\n  - Total to query: {len(mods_to_query)}"
+                    f"\n  - Skipped (unchanged): {len(dynamic_query.publishedfileids) - len(mods_to_query)}\n"
+                )
+
+                # Handle deleted mods (soft delete with tombstone)
+                if deleted_mods:
+                    for pfid in deleted_mods:
+                        if pfid in existing_db["database"]:
+                            existing_db["database"][pfid]["deleted"] = True
+                            existing_db["database"][pfid]["deleted_at"] = int(
+                                time.time()
+                            )
+            else:
+                if not self.incremental:
+                    self.progress_callback(
+                        "\nFull rebuild mode (--full-rebuild specified)"
+                    )
+                else:
+                    self.progress_callback(
+                        "\nFull rebuild mode (no existing database or --overwrite specified)"
+                    )
+
+            # Query metadata for selected mods
+            database = self._init_empty_db_from_publishedfileids(mods_to_query)
             dynamic_query.create_steam_db(
-                database=database, publishedfileids=dynamic_query.publishedfileids
+                database=database, publishedfileids=mods_to_query
             )
             self._output_database(dynamic_query.database)
             self.progress_callback("SteamDatabasebuilder: Completed!")
@@ -203,3 +257,82 @@ class DBBuilderCore:
             )
             with open(self.output_database_path, "w", encoding="utf-8") as output:
                 json.dump(database, output, indent=4)
+
+    def _load_existing_database(self) -> dict[str, Any] | None:
+        """
+        Load and validate existing database.
+
+        Returns:
+            Existing database dict, or None if invalid/missing
+        """
+        try:
+            with open(self.output_database_path, encoding="utf-8") as f:
+                db = json.load(f)
+
+            # Validate structure
+            if not db.get("database") or not isinstance(db["database"], dict):
+                self.progress_callback(
+                    "Warning: Invalid database structure, will perform full rebuild"
+                )
+                return None
+
+            return db
+        except json.JSONDecodeError as e:
+            self.progress_callback(
+                f"Warning: Could not parse existing database ({e}), will perform full rebuild"
+            )
+            return None
+        except FileNotFoundError:
+            self.progress_callback(
+                "Warning: No existing database found, will perform full rebuild"
+            )
+            return None
+
+    def _detect_changes(
+        self,
+        all_pfids: list[str],
+        remote_timestamps: dict[str, int],
+        existing_db: dict[str, Any],
+    ) -> tuple[list[str], list[str], list[str]]:
+        """
+        Compare timestamps to detect new, changed, and deleted mods.
+
+        Args:
+            all_pfids: All current workshop mod IDs from Steam
+            remote_timestamps: Current timestamps from Steam API
+            existing_db: Current database (loaded from file)
+
+        Returns:
+            (new_mods, changed_mods, deleted_mods)
+        """
+        new_mods: list[str] = []
+        changed_mods: list[str] = []
+        deleted_mods: list[str] = []
+
+        existing_pfids = set(existing_db["database"].keys())
+        current_pfids = set(all_pfids)
+
+        # Detect new mods (in current but not in existing)
+        for pfid in current_pfids:
+            if pfid not in existing_pfids:
+                new_mods.append(pfid)
+
+        # Detect changed mods (timestamp increased)
+        for pfid in current_pfids:
+            if pfid in existing_pfids:
+                remote_time = remote_timestamps.get(pfid, 0)
+                existing_time = existing_db["database"][pfid].get("time_updated", 0)
+
+                # If existing DB has no timestamp, treat as changed (safe default)
+                if existing_time == 0 or remote_time > existing_time:
+                    changed_mods.append(pfid)
+
+        # Detect deleted mods (in existing but not in current)
+        # Skip entries that are DLC (have 'appid' flag) or already marked deleted
+        for pfid in existing_pfids:
+            if pfid not in current_pfids:
+                entry = existing_db["database"][pfid]
+                if not entry.get("appid") and not entry.get("deleted"):
+                    deleted_mods.append(pfid)
+
+        return new_mods, changed_mods, deleted_mods

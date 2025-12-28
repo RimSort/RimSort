@@ -41,6 +41,12 @@ from app.utils.db_builder_core import DBBuilderCore
     help="Update existing database (merge) or overwrite completely.",
 )
 @click.option(
+    "--incremental/--full-rebuild",
+    default=True,
+    show_default=True,
+    help="Use incremental updates (faster) or force full rebuild.",
+)
+@click.option(
     "--quiet",
     is_flag=True,
     help="Suppress progress output (errors still shown).",
@@ -50,6 +56,7 @@ def build_db(
     output: Path,
     dlc_data: bool,
     update: bool,
+    incremental: bool,
     quiet: bool,
 ) -> None:
     """Build Steam Workshop metadata database.
@@ -171,6 +178,7 @@ def build_db(
             output_database_path=str(output),
             get_appid_deps=dlc_data,
             update=update,
+            incremental=incremental,
             progress_callback=progress_callback,
         )
 
