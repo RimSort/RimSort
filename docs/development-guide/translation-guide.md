@@ -83,26 +83,40 @@ The translation helper tool provides the following commands:
 
 #### Basic Commands
 
-- **`check [language]`**: Check translation completeness for a specific language or all languages (if no language specified)
-  - Option: `--json` to output structured JSON for programmatic use
+All basic commands support both single language and batch (all languages) modes:
+
+- **`check [language]`**: Check translation completeness
+   - `check zh_CN` - Check specific language only
+   - `check` - Check all languages at once (batch operation)
+   - Option: `--json` to output structured JSON for programmatic use
 - **`stats`**: Show translation statistics for all languages
-  - Option: `--json` to output structured JSON for programmatic use
-- **`validate [language]`**: Validate translation file format and content, automatically fixing common issues like placeholder mismatches
+   - Option: `--json` to output structured JSON for programmatic use
+- **`validate [language]`**: Validate translation file format and content, automatically fixing common issues
+   - `validate zh_CN` - Validate specific language only
+   - `validate` - Validate all languages at once (batch operation)
 - **`update-ts [language]`**: Update .ts files with new strings from the source language
+   - `update-ts zh_CN` - Update specific language only
+   - `update-ts` - Update all languages at once (batch operation)
 - **`compile [language]`**: Compile .ts files into binary .qm format
+   - `compile zh_CN` - Compile specific language only
+   - `compile` - Compile all languages at once (batch operation)
 
 #### Advanced Commands
 
 - **`auto-translate [language] --service [google|deepl|openai]`**: Auto-translate unfinished strings using various translation services
-  - **Google Translate**: Free, supports all languages, no API key required
-  - **DeepL**: High-quality translations, requires API key, supports major European languages (EN, FR, DE, ES, PT, IT, NL, PL, RU not supported)
-  - **OpenAI GPT**: AI-powered translations, requires API key, supports major languages (RU, TR, PT-BR not supported)
-  - Options: `--api-key` for service authentication, `--model` for OpenAI model selection, `--continue-on-failure` to skip failed translations
-  - Additional options: `--timeout`, `--max-retries`, `--max-concurrent` for configuration
+   - `auto-translate zh_CN --service google` - Auto-translate specific language only
+   - `auto-translate --service google` - Auto-translate all languages at once (batch operation)
+   - **Google Translate**: Free, supports all languages, no API key required
+   - **DeepL**: High-quality translations, requires API key, supports major European languages (EN, FR, DE, ES, PT, IT, NL, PL, RU not supported)
+   - **OpenAI GPT**: AI-powered translations, requires API key, supports major languages (RU, TR, PT-BR not supported)
+   - Options: `--api-key` for service authentication, `--model` for OpenAI model selection, `--continue-on-failure` to skip failed translations
+   - Additional options: `--timeout`, `--max-retries`, `--max-concurrent`, `--no-cache` for configuration
 - **`process [language] --service [google|deepl|openai]`**: One-click workflow that runs update-ts → auto-translate → compile in sequence
-  - Uses the same translation services and limitations as auto-translate (Google: all languages, DeepL: major European languages except RU, OpenAI: major languages except RU/TR/PT-BR)
-  - Same options as auto-translate: `--api-key`, `--model`, `--continue-on-failure`
-  - Configuration options: `--timeout`, `--max-retries`, `--max-concurrent`
+   - `process zh_CN --service google` - Full workflow for specific language only
+   - `process --service google` - Full workflow for all languages at once (batch operation)
+   - Uses the same translation services and limitations as auto-translate (Google: all languages, DeepL: major European languages except RU, OpenAI: major languages except RU/TR/PT-BR)
+   - Same options as auto-translate: `--api-key`, `--model`, `--continue-on-failure`
+   - Configuration options: `--timeout`, `--max-retries`, `--max-concurrent`, `--no-cache`
 
 ### Command Examples
 
@@ -127,28 +141,52 @@ python translation_helper.py stats
 # View statistics as JSON
 python translation_helper.py stats --json
 
-# Validate and auto-fix all languages
+# Validate and auto-fix all languages (batch operation)
 python translation_helper.py validate
 
-# Update translation files for all languages
+# Validate specific language only
+python translation_helper.py validate zh_CN
+
+# Update translation files for all languages (batch operation)
 python translation_helper.py update-ts
 
-# Auto-translate using Google (free, no API key needed)
+# Update translation file for specific language
+python translation_helper.py update-ts zh_CN
+
+# Auto-translate specific language using Google (free, no API key needed)
 python translation_helper.py auto-translate zh_CN --service google
+
+# Auto-translate ALL languages using Google (batch operation)
+python translation_helper.py auto-translate --service google
 
 # Auto-translate using DeepL (requires API key)
 python translation_helper.py auto-translate zh_CN --service deepl --api-key YOUR_DEEPL_KEY
 
+# Auto-translate all languages using DeepL (batch operation, requires API key)
+python translation_helper.py auto-translate --service deepl --api-key YOUR_DEEPL_KEY
+
 # Auto-translate using OpenAI (requires API key)
 python translation_helper.py auto-translate zh_CN --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
+
+# Auto-translate all languages using OpenAI (batch operation, requires API key)
+python translation_helper.py auto-translate --service openai --api-key YOUR_OPENAI_KEY --model gpt-4
 
 # Auto-translate with configuration options
 python translation_helper.py auto-translate zh_CN --service google --timeout 30 --max-retries 5 --max-concurrent 10
 
-# One-click complete workflow
+# Auto-translate without using cache (fresh translations only)
+python translation_helper.py auto-translate zh_CN --service google --no-cache
+
+# One-click complete workflow for specific language
 python translation_helper.py process zh_CN --service google
 
-# Compile all languages
+# One-click complete workflow for all languages (batch operation)
+python translation_helper.py process --service google
+
+# Compile specific language
+python translation_helper.py compile zh_CN
+
+# Compile all languages (batch operation)
 python translation_helper.py compile
 ```
 
@@ -165,6 +203,25 @@ python translation_helper.py compile
 - **Concurrency**: Optimized parallel processing for faster bulk operations
 
 For specific usage methods, please refer to the "[Testing Your Translation](#step-5-testing-your-translation)" section.
+
+### Advanced Configuration Options
+
+The translation helper supports several advanced options for fine-tuning behavior:
+
+- **`--timeout` (float, default: 10.0)**: Request timeout in seconds. Increase for slower networks.
+- **`--max-retries` (int, default: 3)**: Maximum number of retry attempts for failed requests with exponential backoff.
+- **`--max-concurrent` (int, default: 5)**: Maximum concurrent API requests. Balance speed vs API rate limits.
+- **`--no-cache`**: Skip using the translation cache for the current run. Useful for forcing fresh translations.
+- **`--continue-on-failure`**: By default enabled. Disable with `--no-continue-on-failure` to abort on first failure.
+
+**Cache Management**:
+
+The translation helper maintains a persistent cache file (`.translation_cache.json`) to reduce API calls and costs. Cached translations are reused automatically across runs. To clear the cache and request fresh translations:
+
+```bash
+# Clear cache and disable it for this run
+python translation_helper.py auto-translate zh_CN --service google --no-cache
+```
 
 ## Quick Start
 
