@@ -978,6 +978,9 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+        self.settings_dialog.auto_launch_steam_checkbox.setChecked(
+            self.settings.auto_launch_steam
+        )
 
         self.settings_dialog.enable_backup_before_update_checkbox.setChecked(
             self.settings.enable_backup_before_update
@@ -1309,6 +1312,9 @@ class SettingsController(QObject):
         )
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
+        self.settings.auto_launch_steam = (
+            self.settings_dialog.auto_launch_steam_checkbox.isChecked()
         )
 
         self.settings.enable_backup_before_update = (

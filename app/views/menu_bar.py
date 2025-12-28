@@ -361,6 +361,7 @@ class MenuBar(QObject):
         self.check_steam_connection_action = self._add_action(
             help_menu, self.tr("Check Steam Connection")
         )
+        self.launch_steam_action = self._add_action(help_menu, self.tr("Launch Steam"))
         return help_menu
 
     def _create_menu_bar(self) -> None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from dataclasses import dataclass
 from os import getcwd
@@ -9,6 +10,7 @@ from threading import RLock, Thread
 from time import sleep, time
 from typing import Any, Callable
 
+import psutil
 from loguru import logger
 
 # If we're running from a Python interpreter, makesure steamworks module is in our sys.path ($PYTHONPATH)
@@ -25,6 +27,146 @@ from steamworks.structs import (  # type: ignore
     ItemInstalled_t,
     SubscriptionResult,
 )
+
+
+def _find_steam_executable() -> Path | None:
+    """
+    Find Steam executable path for current platform.
+
+    Returns platform-specific Steam executable path or None if not found.
+
+    :return: Path to Steam executable or None
+    :rtype: Path | None
+    """
+    if sys.platform == "win32":
+        try:
+            from app.utils.win_find_steam import find_steam_folder
+
+            steam_path, found = find_steam_folder()
+            if not found:
+                return None
+            return Path(steam_path) / "steam.exe"
+        except Exception as e:
+            logger.warning(f"Failed to find Steam on Windows: {e}")
+            return None
+    elif sys.platform == "darwin":
+        steam_path = Path("/Applications/Steam.app/Contents/MacOS/steam_osx")
+        return steam_path if steam_path.exists() else None
+    elif sys.platform.startswith("linux"):
+        possible_paths = [
+            Path.home() / ".steam" / "steam" / "steam.sh",
+            Path("/usr/bin/steam"),
+            Path("/usr/local/bin/steam"),
+        ]
+        for path in possible_paths:
+            if path.exists():
+                return path
+        return None
+    else:
+        logger.warning(f"Unsupported platform for Steam detection: {sys.platform}")
+        return None
+
+
+def _is_steam_running() -> bool:
+    """
+    Check if Steam is currently running by looking for Steam processes.
+
+    Uses psutil to scan for platform-specific Steam process names.
+
+    :return: True if Steam is running, False otherwise
+    :rtype: bool
+    """
+    try:
+        # Platform-specific Steam process indicators
+        if sys.platform == "win32":
+            steam_indicators = [
+                "steam.exe",
+                "steamservice.exe",
+                "steamwebhelper.exe",
+            ]
+        elif sys.platform == "darwin":
+            steam_indicators = [
+                "steam_osx",
+                "steamwebhelper",
+            ]
+        elif sys.platform.startswith("linux"):
+            steam_indicators = [
+                "steam",
+                "steamwebhelper",
+            ]
+        else:
+            logger.warning(f"Unsupported platform for Steam detection: {sys.platform}")
+            return False
+
+        # Scan for Steam processes
+        for process in psutil.process_iter(attrs=["name"]):
+            try:
+                name = process.info["name"]
+                if name and name.lower() in [s.lower() for s in steam_indicators]:
+                    logger.debug(f"Found Steam process: {name}")
+                    return True
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
+
+        logger.debug("No Steam processes found")
+        return False
+    except Exception as e:
+        logger.warning(f"Error checking if Steam is running: {e}")
+        return False
+
+
+def _launch_steam(_libs: str | None = None) -> bool:
+    """
+    Launch Steam if it's not running and wait for it to become available.
+
+    Attempts to launch Steam using platform-specific executable path,
+    then polls Steamworks API for up to 45 seconds to verify availability.
+
+    :param _libs: Optional path to Steamworks library directory
+    :type _libs: str | None
+    :return: True if Steam was launched successfully, False otherwise
+    :rtype: bool
+    """
+    try:
+        steam_exe = _find_steam_executable()
+        if steam_exe is None or not steam_exe.exists():
+            logger.warning("Steam executable not found, cannot launch")
+            return False
+
+        logger.info(f"Launching Steam from: {steam_exe}")
+
+        # Launch Steam
+        if sys.platform == "win32":
+            subprocess.Popen([str(steam_exe)], shell=True)
+        else:
+            subprocess.Popen([str(steam_exe)])
+
+        # Give Steam initial time to start up before checking
+        logger.debug("Waiting 15 seconds for initial Steam startup...")
+        sleep(15)
+
+        # Wait for Steam to start (up to 45 seconds total, including initial delay)
+        for attempt in range(45):
+            sleep(1)
+            try:
+                # Try to create a temporary Steamworks instance to test if Steam is ready
+                test_steamworks = STEAMWORKS(lib_path=_libs)
+                test_steamworks.initialize()
+                test_steamworks.unload()
+                logger.info("Steam launched and API initialized successfully")
+                # Give Steam a bit more time to fully initialize
+                sleep(5)
+                return True
+            except Exception as e:
+                logger.debug(f"Steam API not ready yet (attempt {attempt + 1}/45): {e}")
+                continue
+
+        logger.warning("Steam failed to start within timeout (45 seconds)")
+        return False
+
+    except Exception as e:
+        logger.error(f"Error launching Steam: {e}")
+        return False
 
 
 @dataclass

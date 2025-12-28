@@ -1684,6 +1684,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
 
+        self.auto_launch_steam_checkbox = QCheckBox(
+            self.tr("Automatically launch Steam if not running")
+        )
+        self.auto_launch_steam_checkbox.setToolTip(
+            self.tr(
+                "When enabled, RimSort will automatically launch the Steam client "
+                "on startup if it detects Steam is not running. This may add a "
+                "delay to application startup."
+            )
+        )
+        group_layout.addWidget(self.auto_launch_steam_checkbox)
+
         # Put checkbox, label and spinbox on the same horizontal line
         backup_layout = QHBoxLayout()
         self.enable_backup_before_update_checkbox = QCheckBox(

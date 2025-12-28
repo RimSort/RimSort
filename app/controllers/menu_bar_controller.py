@@ -171,6 +171,7 @@ class MenuBarController(QObject):
         self.menu_bar.check_steam_connection_action.triggered.connect(
             self._on_check_steam_connection
         )
+        self.menu_bar.launch_steam_action.triggered.connect(self._on_launch_steam)
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
@@ -281,6 +282,50 @@ class MenuBarController(QObject):
                 information="RimSort can perform Steam Workshop operations.",
             )
         # else: Signal already emitted, warning dialog shown by SteamStatusHandler
+
+    @Slot()
+    def _on_launch_steam(self) -> None:
+        """Manually launch Steam via menu action."""
+        from app.utils.steam.steamworks.wrapper import (
+            _find_steam_executable,
+            _is_steam_running,
+            _launch_steam,
+        )
+        from app.views.dialogue import show_information, show_warning
+
+        # Check if already running (without emitting signals)
+        if _is_steam_running():
+            show_information(
+                title="Steam Already Running",
+                text="Steam client is already running and available.",
+                information="No action needed.",
+            )
+            return
+
+        # Find executable
+        steam_exe = _find_steam_executable()
+        if not steam_exe or not steam_exe.exists():
+            show_warning(
+                title="Steam Not Found",
+                text="Could not locate Steam installation.",
+                information="Please ensure Steam is installed.",
+            )
+            return
+
+        # Launch (no dialog shown - just launch immediately)
+        success = _launch_steam()
+        if success:
+            show_information(
+                title="Steam Launched",
+                text="Steam has been launched successfully.",
+                information="Steam Workshop features are now available.",
+            )
+        else:
+            show_warning(
+                title="Steam Launch Failed",
+                text="Failed to launch Steam or timed out.",
+                information="Please try launching Steam manually.",
+            )
 
     @Slot()
     def _on_refresh_started(self) -> None:

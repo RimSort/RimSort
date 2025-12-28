@@ -188,6 +188,9 @@ class Settings(QObject):
         # Clear button behavior
         self.clear_moves_dlc: bool = False
 
+        # Steam integration
+        self.auto_launch_steam: bool = False  # Default to disabled for safety
+
         # Update backup settings
         self.enable_backup_before_update: bool = True
         self.max_backups: int = 3
