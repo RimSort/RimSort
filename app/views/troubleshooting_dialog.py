@@ -415,4 +415,16 @@ class TroubleshootingDialog(QDialog):
         utilities_layout.addLayout(repair_layout)
         utilities_layout.addStretch()
 
+        self.steam_cleanup_orphaned_workshop_button, cleanup_layout = (
+            self._create_button_with_layout(
+                self.tr("Clean Orphaned Workshop Items"),
+                self.tr(
+                    "Remove workshop item metadata for mods that are no longer installed"
+                ),
+                "primaryButton",
+            )
+        )
+        utilities_layout.addLayout(cleanup_layout)
+        utilities_layout.addStretch()
+
         content_layout.addStretch(1)

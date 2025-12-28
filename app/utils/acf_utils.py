@@ -466,6 +466,146 @@ def steamcmd_purge_mods(
                 logger.error(f"Failed to remove manifest file {manifest_path}: {e}")
 
 
+def cleanup_orphaned_workshop_items(
+    acf_path: str | Path, workshop_content_path: str | Path
+) -> list[str]:
+    """
+    Remove orphaned workshop item entries from ACF metadata file.
+
+    Scans the appworkshop_294100.acf file for workshop items that have metadata
+    entries but no corresponding mod folders in the workshop content directory.
+    These orphaned entries can cause RimWorld to throw errors about missing mods.
+    Creates a backup before modifying the ACF file.
+
+    Args:
+        acf_path: Path to the appworkshop_294100.acf file to clean up.
+        workshop_content_path: Path to workshop content directory (typically
+                              steamapps/workshop/content/294100) where mod folders
+                              are installed.
+
+    Returns:
+        List of workshop item IDs (PFIDs) that were removed from the ACF file.
+        Returns empty list if no orphaned items found or if errors occur.
+
+    Example:
+        >>> removed = cleanup_orphaned_workshop_items(
+        ...     "~/.steam/steam/steamapps/workshop/appworkshop_294100.acf",
+        ...     "~/.steam/steam/steamapps/workshop/content/294100"
+        ... )
+        >>> print(f"Removed {len(removed)} orphaned items: {removed}")
+        Removed 2 orphaned items: ['3096481956', '1234567890']
+    """
+    # Convert to Path objects
+    acf_path = Path(acf_path) if isinstance(acf_path, str) else acf_path
+    workshop_content_path = (
+        Path(workshop_content_path)
+        if isinstance(workshop_content_path, str)
+        else workshop_content_path
+    )
+
+    # Validate paths exist
+    if not acf_path.exists():
+        logger.warning(f"ACF file not found: {acf_path}")
+        return []
+
+    if not workshop_content_path.exists():
+        logger.warning(f"Workshop content directory not found: {workshop_content_path}")
+        return []
+
+    # Load ACF metadata
+    acf_metadata = load_acf_from_path(acf_path)
+    if not acf_metadata:
+        logger.warning(f"Failed to parse ACF file at: {acf_path}")
+        return []
+
+    # Get installed mod folder IDs (directories with numeric names)
+    try:
+        installed_mod_ids = {
+            item.name
+            for item in workshop_content_path.iterdir()
+            if item.is_dir() and item.name.isdigit()
+        }
+    except Exception as e:
+        logger.error(
+            f"Failed to read workshop content directory {workshop_content_path}: {e}"
+        )
+        return []
+
+    # Extract workshop sections from ACF metadata
+    workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
+        "WorkshopItemsInstalled"
+    )
+    workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
+        "WorkshopItemDetails"
+    )
+
+    # Find orphaned PFIDs (in ACF but not in filesystem)
+    orphaned_pfids = set()
+
+    if workshop_items_installed and isinstance(workshop_items_installed, dict):
+        for pfid in workshop_items_installed.keys():
+            if str(pfid) not in installed_mod_ids:
+                orphaned_pfids.add(str(pfid))
+
+    if workshop_item_details and isinstance(workshop_item_details, dict):
+        for pfid in workshop_item_details.keys():
+            if str(pfid) not in installed_mod_ids:
+                orphaned_pfids.add(str(pfid))
+
+    # If no orphaned items found, return early
+    if not orphaned_pfids:
+        logger.info("No orphaned workshop items found in ACF file")
+        return []
+
+    logger.info(
+        f"Found {len(orphaned_pfids)} orphaned workshop items: {sorted(orphaned_pfids)}"
+    )
+
+    # Create backup before modifying
+    backup_path = acf_path.with_suffix(".acf.backup")
+    try:
+        import shutil
+
+        shutil.copy2(acf_path, backup_path)
+        logger.info(f"Created ACF backup at: {backup_path}")
+    except Exception as e:
+        logger.error(f"Failed to create backup of ACF file: {e}")
+        return []
+
+    # Remove orphaned entries from both sections
+    removed_pfids = []
+    for pfid in orphaned_pfids:
+        removed = False
+        if workshop_items_installed is not None:
+            if workshop_items_installed.pop(pfid, None) is not None:
+                removed = True
+        if workshop_item_details is not None:
+            if workshop_item_details.pop(pfid, None) is not None:
+                removed = True
+        if removed:
+            removed_pfids.append(pfid)
+
+    # Write updated ACF metadata back to file
+    try:
+        dict_to_acf(data=acf_metadata, path=str(acf_path))
+        logger.info(
+            f"Successfully cleaned up {len(removed_pfids)} orphaned items from ACF file"
+        )
+    except Exception as e:
+        logger.error(f"Failed to write cleaned ACF file: {e}")
+        # Try to restore from backup
+        try:
+            import shutil
+
+            shutil.copy2(backup_path, acf_path)
+            logger.info("Restored ACF file from backup after write failure")
+        except Exception as restore_error:
+            logger.error(f"Failed to restore ACF backup: {restore_error}")
+        return []
+
+    return sorted(removed_pfids)
+
+
 def validate_acf_file_exists(steam_mods_location: str) -> bool:
     """
     Validate that the appworkshop_294100.acf file exists for the Steam Workshop location.
