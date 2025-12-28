@@ -9,11 +9,11 @@
     </message>
     <message>
         <source>Disable ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Отключить чтение журнала ACF</translation>
     </message>
     <message>
         <source>Click to disable the ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Нажмите, чтобы отключить программу чтения журнала ACF.</translation>
     </message>
     <message>
         <source>Search...</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>ACF Log Reader disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Чтение журнала ACF отключено</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -85,7 +85,7 @@
     </message>
     <message>
         <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>Вы уверены, что хотите импортировать .acf? Это работает только для SteamCMD</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
@@ -585,62 +585,62 @@ When unchecked, search all file types with standard search.</source>
     <name>IgnoreJsonEditor</name>
     <message>
         <source>RimSort - Manage Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>RimSort — Управление списком игнорирования</translation>
     </message>
     <message>
         <source>Mods checked below will be removed from the ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>Моды, отмеченные ниже, будут удалены из списка игнорирования.</translation>
     </message>
     <message>
         <source>Remove Selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Удалить выбранное</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Сохранять</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>Успех</translation>
     </message>
     <message>
         <source>Ignore list has been saved successfully.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Список игнорирования успешно сохранен.</translation>
     </message>
     <message>
         <source>Failed to save changes to ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Не удалось сохранить изменения в списке игнорирования.</translation>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
 </context>
 <context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Неверный путь к архиву</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>Указанный путь к архиву недействителен.</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>Укажите действительный путь к архиву.</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
@@ -1200,7 +1200,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+        <translation>Пожалуйста, настройте базу данных «Использовать это вместо этого» в настройках.</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -2016,14 +2016,14 @@ Error: {error}</source>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {DEFAULT_INSTANCE_NAME}</translation>
+        <translation>{DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {preview}</translation>
+        <translation>{preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2079,7 +2079,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {name}</translation>
+        <translation>{name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2091,7 +2091,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt; {existing_instance_workshop_folder}</translation>
+        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2214,7 +2214,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Ignore JSON Editor…</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Игнорировать редактор JSON…</translation>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
@@ -2401,11 +2401,11 @@ Select which missing dependencies to add to your active mods list.</source>
     <name>MissingModPropertiesPanel</name>
     <message>
         <source>RimSort - Mods with Missing Properties</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>RimSort — Моды с отсутствующими свойствами</translation>
     </message>
     <message>
         <source>Mods with Missing Properties detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Обнаружены моды с отсутствующими свойствами!</translation>
     </message>
     <message>
         <source>The following mods are missing important properties that may cause issues:
@@ -2414,15 +2414,20 @@ Select which missing dependencies to add to your active mods list.</source>
 • Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
 
 Please contact the mod authors to add these properties to their mods.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>В следующих модах отсутствуют важные свойства, которые могут вызвать проблемы:
+
+• Отсутствует идентификатор пакета: Моды без действительного идентификатора пакета в About.xml могут иметь проблемы с зависимостями и совместимостью.
+• Отсутствует идентификатор поля публикации: моды Workshop без идентификатора поля публикации могут не поддерживать повторную загрузку и проверку обновлений.
+
+Пожалуйста, свяжитесь с авторами модов, чтобы добавить эти свойства в свои моды.</translation>
     </message>
     <message>
         <source>Delete Mods</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Удалить моды</translation>
     </message>
     <message>
         <source>Add to Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Добавить в список игнорирования</translation>
     </message>
 </context>
 <context>
@@ -2645,55 +2650,55 @@ Do you want to proceed?</source>
     <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Имя:</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Краткое содержание:</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>ID пакета:</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Авторы:</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>Версия мода:</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Поддерживаемая версия:</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Размер папки:</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>Путь:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Последнее касание:</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Файловая система изменена:</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Время проведения семинара:</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Добро пожаловать в РимСорт!</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Поместите сюда свои личные заметки о моде!</translation>
     </message>
 </context>
 <context>
@@ -3100,7 +3105,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Color</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Цвет</translation>
     </message>
     <message>
         <source>Check Dependencies</source>
@@ -3781,27 +3786,27 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Steam Client Integration Disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BDDC040&gt;</translation>
+        <translation>Интеграция клиента Steam отключена</translation>
     </message>
     <message>
         <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>Интеграция клиента Steam отключена. Местоположение модов Steam будет очищено.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Требуется местоположение модов Steam</translation>
     </message>
     <message>
         <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Интеграция клиента Steam требует настройки местоположения модов Steam. Интеграция клиента Steam и расположение модов Steam отключены.</translation>
     </message>
     <message>
         <source>Steam Workshop File Not Found</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Файл мастерской Steam не найден</translation>
     </message>
     <message>
         <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Файл Мастерской Steam «appworkshop_294100.acf» не найден в ожидаемом месте. Интеграция клиента Steam и расположение модов Steam отключены. Убедитесь, что Steam установлен правильно и загрузили данные RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3884,19 +3889,19 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Instance folder location (optional)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+        <translation>Местоположение папки экземпляра (необязательно)</translation>
     </message>
     <message>
         <source>Use Default</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Использовать по умолчанию</translation>
     </message>
     <message>
         <source>Leave empty to use default location</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Оставьте пустым, чтобы использовать местоположение по умолчанию</translation>
     </message>
     <message>
         <source>Game Launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Запуск игры</translation>
     </message>
     <message>
         <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
@@ -3916,7 +3921,23 @@ Click 'Show Details' to see a list of mods that failed.</source>
    DXVK_HUD=1 mangohud %command% -popupwindow
 
  NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Введите параметры запуска, используя синтаксис в стиле Steam с необязательным заполнителем %command%:
+
+ Основные примеры (только игровые аргументы):
+
+   -файл журнала /tmp/log -popupwindow
+
+   -savedatafolder=/путь/к/сохраненным данным
+
+ Расширенные примеры (с %command%, переменными окружения, оболочками):
+
+   PROTON_LOG=1 %команда%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 мангохуд %command% -popupwindow
+
+ ПРИМЕЧАНИЕ. команды оболочки будут игнорироваться в macOS.</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3924,31 +3945,31 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Backup Settings</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Настройки резервного копирования</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Автоматическое резервное копирование сохраненных данных при первом ежедневном запуске.</translation>
     </message>
     <message>
         <source>If enabled, RimSort will automatically backup saves on the first daily launch.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Если этот параметр включен, RimSort будет автоматически создавать резервные копии сохранений при первом ежедневном запуске.</translation>
     </message>
     <message>
         <source>Number of backups to keep:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Количество резервных копий, которые необходимо сохранить:</translation>
     </message>
     <message>
         <source>The number of backups to keep. Set to -1 to keep all backups, 0 to delete all.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Количество резервных копий, которые необходимо сохранить. Установите значение -1, чтобы сохранить все резервные копии, или значение 0, чтобы удалить все.</translation>
     </message>
     <message>
         <source>Number of saves to compress:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Количество сохранений для сжатия:</translation>
     </message>
     <message>
         <source>The number of recent saves to include in the backup. Set to -1 to compress all saves, 0 to compress none.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Количество последних сохранений, которые нужно включить в резервную копию. Установите значение -1, чтобы сжимать все сохранения, или 0, чтобы не сжимать ничего.</translation>
     </message>
     <message>
         <source>None</source>
@@ -4022,44 +4043,47 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
 If a matching version tag exists but is empty, the base tag is ignored. 
 e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Если этот параметр включен, теги *ByVersion имеют приоритет над базовыми тегами. 
+Если соответствующий тег версии существует, но пуст, базовый тег игнорируется. 
+например (modDependencyByVersion, loadAfterByVersion, loadBeforeByVersion, inсовместимыйWithByVersion,descriptionsByVersion)</translation>
     </message>
     <message>
         <source>Mod list options</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Параметры списка модов</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Уведомляет о необходимости загрузки модов, которые могут отсутствовать в активном списке модов.</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Уведомляет и отображает моды с одинаковым идентификатором пакета.</translation>
     </message>
     <message>
         <source>Add icons and filtering options for easy mods identification and grouping</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Добавьте значки и параметры фильтрации для удобной идентификации и группировки модов.</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Скрывает недействительные моды, не рекомендуется включать.</translation>
     </message>
     <message>
         <source>Inactive Mods Sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Сортировка неактивных модов</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Включить сортировку неактивных модов</translation>
     </message>
     <message>
         <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
 Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Дополнительные параметры, такие как имя, автор, размер папки, дата изменения, будут доступны на панели модов для сортировки неактивных модов. 
+Отключение этого параметра может повысить производительность, избегая тяжелых вычислений.</translation>
     </message>
     <message>
         <source>Save inactive mods sort state</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Сохранить состояние сортировки неактивных модов</translation>
     </message>
     <message>
         <source>DB Builder</source>
@@ -4257,7 +4281,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+        <translation>Ограничить диалоги монитором главного окна</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -5201,11 +5225,11 @@ Do you want to update now?</source>
         <source>
 Successfully retrieved latest release.
 The update will be installed from: {update_source_path}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt; {update_source_path}</translation>
+        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
+        <translation>Создание резервной копии... (это может занять несколько минут)</translation>
     </message>
     <message>
         <source>Update downloaded</source>

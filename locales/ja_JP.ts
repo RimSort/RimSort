@@ -9,11 +9,11 @@
     </message>
     <message>
         <source>Disable ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>ACFログリーダーを無効にする</translation>
     </message>
     <message>
         <source>Click to disable the ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>クリックして ACF ログ リーダーを無効にします</translation>
     </message>
     <message>
         <source>Search...</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>ACF Log Reader disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>ACFログリーダーが無効になっています</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -85,7 +85,7 @@
     </message>
     <message>
         <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>.acf をインポートしてもよろしいですか?これはsteamcmdでのみ機能します</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
@@ -584,62 +584,62 @@ When unchecked, search all file types with standard search.</source>
     <name>IgnoreJsonEditor</name>
     <message>
         <source>RimSort - Manage Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>rimSort - 無視リストの管理</translation>
     </message>
     <message>
         <source>Mods checked below will be removed from the ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>以下でチェックされた MOD は無視リストから削除されます。</translation>
     </message>
     <message>
         <source>Remove Selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>選択したものを削除</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>保存</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>エラー</translation>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>成功</translation>
     </message>
     <message>
         <source>Ignore list has been saved successfully.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>無視リストが正常に保存されました。</translation>
     </message>
     <message>
         <source>Failed to save changes to ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>無視リストへの変更を保存できませんでした。</translation>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
 </context>
 <context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>無効なアーカイブ パス</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>指定されたアーカイブ パスが無効です。</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>有効なアーカイブ パスを指定してください。</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
@@ -1200,7 +1200,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+        <translation>設定で「代わりにこれを使用する」データベースを構成してください。</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -2016,14 +2016,14 @@ GitHubで手動でプルリクエストを作成できます。
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {DEFAULT_INSTANCE_NAME}</translation>
+        <translation>{DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt; {preview}</translation>
+        <translation>{preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2079,7 +2079,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {name}</translation>
+        <translation>{name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2091,7 +2091,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {existing_instance_workshop_folder}</translation>
+        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2214,7 +2214,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Ignore JSON Editor…</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>JSON エディターを無視します…</translation>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
@@ -2402,11 +2402,11 @@ Select which missing dependencies to add to your active mods list.</source>
     <name>MissingModPropertiesPanel</name>
     <message>
         <source>RimSort - Mods with Missing Properties</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>rimSort - プロパティが欠落している MOD</translation>
     </message>
     <message>
         <source>Mods with Missing Properties detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>プロパティが欠落している Mod が検出されました。</translation>
     </message>
     <message>
         <source>The following mods are missing important properties that may cause issues:
@@ -2415,15 +2415,20 @@ Select which missing dependencies to add to your active mods list.</source>
 • Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
 
 Please contact the mod authors to add these properties to their mods.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>次の MOD には、問題を引き起こす可能性がある重要なプロパティが欠落しています。
+
+• パッケージ ID がありません: About.xml に有効なパッケージ ID がない MOD には、依存関係や互換性の問題がある可能性があります。
+• パブリッシュ フィールド ID の欠落: パブリッシュ フィールド ID のないワークショップ MOD は、再ダウンロードと更新チェックをサポートしていない可能性があります。
+
+これらのプロパティを MOD に追加するには、MOD 作成者に問い合わせてください。</translation>
     </message>
     <message>
         <source>Delete Mods</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>MODの削除</translation>
     </message>
     <message>
         <source>Add to Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>無視リストに追加</translation>
     </message>
 </context>
 <context>
@@ -2647,55 +2652,55 @@ Do you want to proceed?</source>
     <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>名前：</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>まとめ：</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>パッケージID:</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>著者:</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>モジュールのバージョン:</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>サポートされているバージョン:</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>フォルダーのサイズ:</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>パス：</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>最後に触れた時間:</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>変更されたファイルシステム:</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>ワークショップ時間:</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>リムソートへようこそ！</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>個人的な MOD メモをここに記入してください。</translation>
     </message>
 </context>
 <context>
@@ -3103,7 +3108,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Color</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>色</translation>
     </message>
     <message>
         <source>Check Dependencies</source>
@@ -3783,27 +3788,27 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Steam Client Integration Disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>Steam クライアント統合が無効になっています</translation>
     </message>
     <message>
         <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Steam クライアント統合が無効になっています。 Steam MOD の場所はクリアされます。</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Steam Mod の場所が必要です</translation>
     </message>
     <message>
         <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Steam クライアントの統合には、Steam Mod の場所を設定する必要があります。 Steam クライアントの統合と Steam Mod の場所は無効になりました。</translation>
     </message>
     <message>
         <source>Steam Workshop File Not Found</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Steam ワークショップ ファイルが見つかりません</translation>
     </message>
     <message>
         <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Steam ワークショップ ファイル「appworkshop_294100.acf」が予期された場所に見つかりませんでした。 Steam クライアントの統合と Steam Mod の場所は無効になりました。 Steam が正しくインストールされており、RimWorld Workshop データがダウンロードされていることを確認してください。</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3886,19 +3891,19 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Instance folder location (optional)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>インスタンスフォルダーの場所 (オプション)</translation>
     </message>
     <message>
         <source>Use Default</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+        <translation>デフォルトを使用</translation>
     </message>
     <message>
         <source>Leave empty to use default location</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>デフォルトの場所を使用するには空のままにしてください</translation>
     </message>
     <message>
         <source>Game Launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>ゲームの起動</translation>
     </message>
     <message>
         <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
@@ -3918,7 +3923,23 @@ Click 'Show Details' to see a list of mods that failed.</source>
    DXVK_HUD=1 mangohud %command% -popupwindow
 
  NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>オプションの %command% プレースホルダーを使用して、Steam スタイルの構文を使用して起動オプションを入力します。
+
+ 基本的な例 (ゲーム引数のみ):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/パス/への/セーブデータ
+
+ 高度な例 (%command%、環境変数、ラッパーを使用):
+
+   PROTON_LOG=1 %コマンド%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ 注: ラッパーコマンドは macOS では無視されます。</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3926,31 +3947,31 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Backup Settings</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>バックアップ設定</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>毎日の最初の起動時に自動的にバックアップ保存</translation>
     </message>
     <message>
         <source>If enabled, RimSort will automatically backup saves on the first daily launch.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>有効にすると、RimSort は毎日の最初の起動時に自動的に保存をバックアップします。</translation>
     </message>
     <message>
         <source>Number of backups to keep:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>保持するバックアップの数:</translation>
     </message>
     <message>
         <source>The number of backups to keep. Set to -1 to keep all backups, 0 to delete all.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>保持するバックアップの数。すべてのバックアップを保持するには -1 に設定し、すべてを削除するには 0 に設定します。</translation>
     </message>
     <message>
         <source>Number of saves to compress:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>圧縮する保存の数:</translation>
     </message>
     <message>
         <source>The number of recent saves to include in the backup. Set to -1 to compress all saves, 0 to compress none.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>バックアップに含める最近の保存の数。すべての保存を圧縮するには -1 に設定し、何も圧縮しない場合は 0 に設定します。</translation>
     </message>
     <message>
         <source>None</source>
@@ -4024,44 +4045,47 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
 If a matching version tag exists but is empty, the base tag is ignored. 
 e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>有効にすると、*ByVersion タグが基本タグよりも優先されます。 
+一致するバージョン タグが存在するが空の場合、ベース タグは無視されます。 
+例: (modDependencyByVersion、loadAfterByVersion、loadBeforeByVersion、incompatibilityWithByVersion、descriptionsByVersion)</translation>
     </message>
     <message>
         <source>Mod list options</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>MODリストのオプション</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>アクティブな MOD リストにない可能性のある MOD をダウンロードするように通知します</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>同じパッケージIDを持つMODを通知して表示します</translation>
     </message>
     <message>
         <source>Add icons and filtering options for easy mods identification and grouping</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>アイコンとフィルタリング オプションを追加して、MOD の識別とグループ化を簡単にします</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>無効な MOD を非表示にします。有効にすることはお勧めしません</translation>
     </message>
     <message>
         <source>Inactive Mods Sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>非アクティブな MOD の並べ替え</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>非アクティブなMODのソートを有効にする</translation>
     </message>
     <message>
         <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
 Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>名前、作成者、フォルダーのサイズ、変更日などの追加オプションが、非アクティブな MOD を並べ替えるための MOD パネルで利用可能になります。 
+これを無効にすると、大量の計算が回避され、パフォーマンスが向上します。</translation>
     </message>
     <message>
         <source>Save inactive mods sort state</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>非アクティブなMODのソート状態を保存する</translation>
     </message>
     <message>
         <source>DB Builder</source>
@@ -4257,7 +4281,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
+        <translation>ダイアログをメイン ウィンドウ モニターに制限する</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -5202,11 +5226,11 @@ Do you want to update now?</source>
         <source>
 Successfully retrieved latest release.
 The update will be installed from: {update_source_path}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt; {update_source_path}</translation>
+        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt;</translation>
+        <translation>バックアップを作成しています... (これには数分かかる場合があります)</translation>
     </message>
     <message>
         <source>Update downloaded</source>
