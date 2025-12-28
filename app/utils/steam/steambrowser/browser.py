@@ -125,6 +125,8 @@ class SteamBrowser(QWidget):
         self.downloader_list.customContextMenuRequested.connect(
             self._downloader_item_contextmenu_event
         )
+        self.add_to_list_button = QPushButton(self.tr("Add to List"))
+        self.add_to_list_button.clicked.connect(self._add_collection_or_mod_to_list)
         self.clear_list_button = QPushButton(self.tr("Clear List"))
         self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
@@ -194,8 +196,6 @@ class SteamBrowser(QWidget):
         self.location.returnPressed.connect(self.__browse_to_location)
 
         # Nav bar
-        self.add_to_list_button = QAction(self.tr("Add to list"))
-        self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Back))
@@ -217,10 +217,11 @@ class SteamBrowser(QWidget):
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
         self.downloader_layout.addWidget(self.downloader_list)
-        self.downloader_layout.addWidget(self.clear_list_button)
+        self.downloader_layout.addWidget(self.add_to_list_button)
         self.downloader_layout.addWidget(self.download_steamcmd_button)
         self.downloader_layout.addWidget(self.download_steamworks_button)
-
+        self.downloader_layout.addWidget(self.clear_list_button)
+        
         # Build the browser layout
         self.browser_layout.addWidget(self.location)
         self.browser_layout.addWidget(self.nav_bar)
