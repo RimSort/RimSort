@@ -1,10 +1,11 @@
+import random
 import sys
 import traceback
 from logging import WARNING, getLogger
 from math import ceil
 from pathlib import Path
-from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict
+from time import sleep, time
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import requests
 from loguru import logger
@@ -426,6 +427,98 @@ class DynamicQuery(QObject):
             raise RuntimeError("WebAPI not initialized")
         return self.api.call(*args, **kwargs)
 
+    # NOTE: This method is preserved for potential future migration from decorator-based
+    # retry to inline retry logic. It is not currently used.
+    def _retry_with_backoff(
+        self,
+        func: Callable,
+        operation_name: str = "API call",
+        max_retries: int = 5,
+        initial_delay: float = 1.0,
+        max_delay: float = 60.0,
+        backoff_factor: float = 2.0,
+    ) -> Any:
+        """
+        Retry a function with exponential backoff and jitter.
+
+        Handles rate limiting (429), temporary errors (503, 502, 504),
+        timeouts, and connection errors with automatic retry.
+
+        Args:
+            func: Function to retry (should be a lambda/callable with no args)
+            operation_name: Description of operation for logging
+            max_retries: Maximum number of retry attempts (default: 5)
+            initial_delay: Initial delay in seconds (default: 1.0)
+            max_delay: Maximum delay between retries (default: 60.0)
+            backoff_factor: Multiplier for delay after each retry (default: 2.0)
+
+        Returns:
+            Result of func() if successful
+
+        Raises:
+            Exception if max retries exceeded or non-retryable error
+        """
+        for attempt in range(max_retries + 1):
+            try:
+                return func()
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None:
+                    status_code = e.response.status_code
+
+                    # Rate limiting or temporary server errors
+                    if status_code in (429, 503, 502, 504):
+                        if attempt < max_retries:
+                            delay = min(
+                                initial_delay * (backoff_factor**attempt), max_delay
+                            )
+                            # Add jitter (random 0-25% of delay) to prevent thundering herd
+                            jitter = delay * 0.25 * random.random()
+                            sleep_time = delay + jitter
+
+                            logger.warning(
+                                f"{operation_name}: HTTP {status_code} error. "
+                                f"Retrying in {sleep_time:.1f}s (attempt {attempt + 1}/{max_retries})..."
+                            )
+                            self._emit_message(
+                                f"Rate limited (HTTP {status_code}), waiting {sleep_time:.1f}s before retry..."
+                            )
+                            sleep(sleep_time)
+                            continue
+                        else:
+                            logger.error(
+                                f"{operation_name}: Max retries ({max_retries}) exceeded for HTTP {status_code}"
+                            )
+                            raise
+                # Re-raise if not a retryable status code
+                raise
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
+                if attempt < max_retries:
+                    delay = min(initial_delay * (backoff_factor**attempt), max_delay)
+                    jitter = delay * 0.25 * random.random()
+                    sleep_time = delay + jitter
+
+                    logger.warning(
+                        f"{operation_name}: Network error ({type(e).__name__}). "
+                        f"Retrying in {sleep_time:.1f}s (attempt {attempt + 1}/{max_retries})..."
+                    )
+                    self._emit_message(
+                        f"Network error, waiting {sleep_time:.1f}s before retry..."
+                    )
+                    sleep(sleep_time)
+                    continue
+                else:
+                    logger.error(
+                        f"{operation_name}: Max retries ({max_retries}) exceeded for network error"
+                    )
+                    raise
+
+        # Should not reach here, but just in case
+        raise Exception(f"{operation_name}: Max retries exceeded")
+
+
     def __initialize_webapi(self) -> None:
         if self.api:
             # Make a request to GetServerInfo to check if the API is active
@@ -615,6 +708,7 @@ class DynamicQuery(QObject):
                     strip_description_bbcode=False,
                     includereactions=False,
                     admin_query=False,
+
                 )
                 for metadata in response["response"]["publishedfiledetails"]:
                     publishedfileid = metadata[
@@ -793,6 +887,7 @@ class DynamicQuery(QObject):
             return_details=False,
             strip_description_bbcode=False,
             admin_query=False,
+
         )
         # Print total mods found we need to iter through paginations to get info for
         if (
