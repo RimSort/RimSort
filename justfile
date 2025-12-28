@@ -5,8 +5,8 @@
 # Core Development
 
 # Run the RimSort application
-run: dev-setup
-    uv run python -m app
+run *ARGS='': dev-setup
+    uv run python -m app {{ARGS}}
 
 # Run tests with coverage reporting to terminal
 test: dev-setup
