@@ -104,6 +104,7 @@ class EventBus(QObject):
     do_run_game = Signal()
     do_steamworks_api_call = Signal(list)
     do_steamcmd_download = Signal(list)
+    do_refresh_steamcmd_acf = Signal()
     do_delete_outdated_entries_in_aux_db = Signal()
     do_set_all_entries_in_aux_db_as_outdated = Signal()
 
@@ -129,6 +130,24 @@ class EventBus(QObject):
 
     # Loading animation signals
     do_threaded_loading_animation = Signal(str, object, str)
+
+    # Download tracking signals
+    download_batch_created = Signal(str)  # batch_id
+    download_batch_completed = Signal(str)  # batch_id
+    download_batch_removed = Signal(str)  # batch_id
+    download_item_updated = Signal(
+        str, str
+    )  # batch_id, pfid (as string to handle 64-bit Steam IDs)
+    download_item_progress = Signal(str, str)  # batch_id, pfid (as string)
+
+    # Steam Workshop signals
+    workshop_item_installed = Signal(
+        str
+    )  # pfid (as string) - emitted when mod installation completes
+
+    # Steam client availability signals
+    steam_not_running = Signal()  # Emitted when Steam client is not available
+    steam_operation_failed = Signal(str)  # Emitted when Steam operation fails (reason)
 
     def __new__(cls) -> "EventBus":
         """

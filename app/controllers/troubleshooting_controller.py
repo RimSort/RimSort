@@ -53,6 +53,9 @@ class TroubleshootingController:
         self.dialog.steam_repair_library_button.clicked.connect(
             self._on_steam_repair_library_clicked
         )
+        self.dialog.steam_cleanup_orphaned_workshop_button.clicked.connect(
+            self._on_steam_cleanup_orphaned_workshop_clicked
+        )
 
     @property
     def game_location(self) -> Optional[str]:
@@ -761,6 +764,82 @@ class TroubleshootingController:
                 text=self.translate(
                     "TroubleshootingController",
                     "Could not repair Steam library.\nPlease verify your games manually through Steam.\nDetails: {e}",
+                ).format(e=str(e)),
+                icon="warning",
+            )
+
+    def _on_steam_cleanup_orphaned_workshop_clicked(self) -> None:
+        """Clean up orphaned workshop item metadata from ACF file."""
+        if not self.steam_mods_location:
+            logger.warning("Steam mods location not set, skipping cleanup.")
+            self.show_steam_user_warning()
+            return
+
+        # Compute ACF file path
+        workshop_path = Path(self.steam_mods_location)
+        acf_path = workshop_path.parent.parent / "appworkshop_294100.acf"
+
+        if not acf_path.exists():
+            logger.warning(f"ACF file not found at: {acf_path}")
+            show_warning(
+                title=self.translate("TroubleshootingController", "ACF File Not Found"),
+                text=self.translate(
+                    "TroubleshootingController",
+                    "Could not find the Steam Workshop ACF file at:\n{acf_path}\n\nThis feature requires a Steam installation.",
+                ).format(acf_path=acf_path),
+            )
+            return
+
+        # Show confirmation dialog
+        if not show_dialogue_conditional(
+            title=self.translate("TroubleshootingController", "Confirm Cleanup"),
+            text=self.translate(
+                "TroubleshootingController",
+                "This will remove metadata for workshop mods that are no longer installed.\n\nA backup will be created before making changes.",
+            ),
+        ):
+            return
+
+        try:
+            from app.utils.acf_utils import cleanup_orphaned_workshop_items
+
+            # Perform cleanup
+            removed_pfids = cleanup_orphaned_workshop_items(acf_path, workshop_path)
+
+            # Display results
+            if removed_pfids:
+                pfids_list = "\n".join(f"  • {pfid}" for pfid in removed_pfids)
+                show_information(
+                    title=self.translate(
+                        "TroubleshootingController", "Cleanup Complete"
+                    ),
+                    text=self.translate(
+                        "TroubleshootingController",
+                        "Successfully removed {count} orphaned workshop item(s):\n\n{pfids_list}\n\nA backup was created at:\n{backup_path}\n\nNote: You may need to restart Steam for changes to take effect.",
+                    ).format(
+                        count=len(removed_pfids),
+                        pfids_list=pfids_list,
+                        backup_path=f"{acf_path}.backup",
+                    ),
+                )
+            else:
+                show_information(
+                    title=self.translate(
+                        "TroubleshootingController", "Cleanup Complete"
+                    ),
+                    text=self.translate(
+                        "TroubleshootingController",
+                        "No orphaned workshop items were found. Your ACF file is clean!",
+                    ),
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to clean up orphaned workshop items: {e}")
+            show_dialogue_conditional(
+                title=self.translate("TroubleshootingController", "Cleanup Failed"),
+                text=self.translate(
+                    "TroubleshootingController",
+                    "Failed to clean up orphaned workshop items.\n\nDetails: {e}",
                 ).format(e=str(e)),
                 icon="warning",
             )

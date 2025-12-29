@@ -1,7 +1,7 @@
 # tests/views/test_main_content_run.py
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Generator, List, Tuple
+from typing import Any, Generator, List, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 import app.utils.metadata as metadata
 import app.utils.steam.steamcmd.wrapper as steamcmd_wrapper
 import app.views.dialogue as dialogue
+from app.utils.steam.steamworks.wrapper import QueuedOperation
 from app.views.main_content_panel import MainContent
 
 
@@ -129,6 +130,41 @@ def unsaved_main_content(
     return mc, save_calls
 
 
+@pytest.fixture
+def mocked_steamworks_instance(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """
+    Create a mocked Steamworks instance with common setup.
+
+    This fixture resets the singleton, creates comprehensive Workshop mocks,
+    and returns a configured SteamworksInterface instance ready for testing.
+    """
+    from app.utils.steam.steamworks import wrapper
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class with comprehensive Workshop methods
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_obj.Workshop = Mock()
+    mock_steamworks_obj.Workshop.SetItemSubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SetItemUnsubscribedCallback = Mock()
+    mock_steamworks_obj.Workshop.SubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.UnsubscribeItem = Mock()
+    mock_steamworks_obj.Workshop.DownloadItem = Mock(return_value=True)
+
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create and return instance
+    steamworks = wrapper.SteamworksInterface.instance()
+    steamworks.steam_not_running = False
+    return steamworks
+
+
 @pytest.mark.parametrize(
     "dialogue_return, expected_save_calls, expected_launch",
     [
@@ -170,3 +206,367 @@ def test_run_without_unsaved(
     assert patch_dialogue.return_value is None
     assert save_calls == []
     assert patch_launch == [(Path("/fake/path"), ["--test"])]
+
+
+# Tests for Steam running check
+
+
+@pytest.fixture(autouse=True)
+def patch_steam_appid_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Mock file operations for steam_appid.txt to avoid filesystem errors."""
+    import builtins
+
+    original_open = builtins.open
+
+    def mock_open(file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        # Mock the steam_appid.txt file operations
+        if "steam_appid.txt" in str(file):
+            mock_file = Mock()
+            mock_file.__enter__ = Mock(return_value=mock_file)
+            mock_file.__exit__ = Mock(return_value=False)
+            mock_file.write = Mock()
+            return mock_file
+        return original_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", mock_open)
+
+    # Mock Path.exists() for steam_appid.txt
+    from pathlib import Path
+
+    original_exists = Path.exists
+
+    def mock_exists(self: Path) -> bool:
+        if "steam_appid.txt" in str(self):
+            return False  # Always pretend file doesn't exist for tests
+        return original_exists(self)
+
+    monkeypatch.setattr(Path, "exists", mock_exists)
+
+    # Mock Path.unlink() for steam_appid.txt
+    original_unlink = Path.unlink
+
+    def mock_unlink(self: Path, *args: Any, **kwargs: Any) -> None:
+        if "steam_appid.txt" in str(self):
+            return  # Do nothing for steam_appid.txt
+        return original_unlink(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", mock_unlink)
+
+
+@pytest.fixture
+def patch_steamworks(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Fixture to control SteamworksInterface behavior."""
+    from app.utils.steam.steamworks import wrapper
+
+    mock_steamworks = Mock()
+    mock_steamworks.steam_not_running = False  # Default: Steam running
+
+    monkeypatch.setattr(
+        wrapper.SteamworksInterface,
+        "instance",
+        classmethod(lambda cls, _libs=None: mock_steamworks),
+    )
+    return mock_steamworks
+
+
+@pytest.fixture
+def patch_binary_dialog(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Fixture to control BinaryChoiceDialog behavior."""
+    mock_dialog = Mock()
+    mock_dialog.exec_is_positive.return_value = False  # Default: cancel
+
+    from app.views import dialogue
+
+    monkeypatch.setattr(dialogue, "BinaryChoiceDialog", lambda **kwargs: mock_dialog)
+    return mock_dialog
+
+
+@pytest.mark.parametrize(
+    "steam_integration, steam_running, dialog_result, launch_expected",
+    [
+        # Steam integration disabled - no check performed
+        (False, False, None, True),
+        (False, True, None, True),
+        # Steam running - no dialog shown
+        (True, True, None, True),
+        # Steam not running, user cancels
+        (True, False, False, False),
+        # Steam not running, user launches anyway
+        (True, False, True, True),
+    ],
+)
+def test_run_game_steam_check(
+    patch_steamworks: Mock,
+    patch_binary_dialog: Mock,
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    steam_integration: bool,
+    steam_running: bool,
+    dialog_result: bool | None,
+    launch_expected: bool,
+) -> None:
+    """Test Steam running check with various scenarios."""
+    mc, _ = main_content
+
+    # Configure test scenario
+    mc.settings_controller.settings.instances[
+        "inst1"
+    ].steam_client_integration = steam_integration
+    mc.mods_panel.active_mods_list.uuids = ["a"]
+    mc.active_mods_uuids_last_save = ["a"]
+
+    patch_steamworks.steam_not_running = not steam_running
+
+    if dialog_result is not None:
+        patch_binary_dialog.exec_is_positive.return_value = dialog_result
+
+    # Run the game launch
+    mc._do_run_game()
+
+    # Verify expected behavior
+    if launch_expected:
+        assert len(patch_launch) == 1
+        assert patch_launch[0] == (Path("/fake/path"), ["--test"])
+    else:
+        assert len(patch_launch) == 0
+
+
+def test_run_game_steam_check_exception(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that game launches even if Steam check fails with exception."""
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Enable Steam integration
+    mc.settings_controller.settings.instances["inst1"].steam_client_integration = True
+    mc.mods_panel.active_mods_list.uuids = ["a"]
+    mc.active_mods_uuids_last_save = ["a"]
+
+    # Make SteamworksInterface.instance() raise an exception
+    def raise_exception(*args: Any, **kwargs: Any) -> None:
+        raise RuntimeError("Steamworks initialization failed")
+
+    monkeypatch.setattr(
+        wrapper.SteamworksInterface,
+        "instance",
+        classmethod(lambda cls, _libs=None: raise_exception()),
+    )
+
+    # Run the game launch - should proceed despite exception
+    mc._do_run_game()
+
+    # Game should launch (fail-open behavior)
+    assert len(patch_launch) == 1
+    assert patch_launch[0] == (Path("/fake/path"), ["--test"])
+
+
+def test_steamworks_concurrent_operations_blocked(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that concurrent Steamworks operations are properly blocked."""
+    import threading
+
+    from app.utils.steam.steamworks import wrapper
+
+    mc, _ = main_content
+
+    # Reset singleton instance to start fresh
+    wrapper.SteamworksInterface._instance = None
+
+    # Mock STEAMWORKS class to avoid needing actual Steam libraries
+    mock_steamworks_obj = Mock()
+    mock_steamworks_obj.initialize = Mock()
+    mock_steamworks_obj.loaded = Mock(return_value=True)
+    mock_steamworks_class = Mock(return_value=mock_steamworks_obj)
+    monkeypatch.setattr(
+        "app.utils.steam.steamworks.wrapper.STEAMWORKS", mock_steamworks_class
+    )
+
+    # Create a real SteamworksInterface instance with mocked Steamworks
+    steamworks = wrapper.SteamworksInterface.instance()
+
+    # Ensure steam_not_running is False
+    steamworks.steam_not_running = False
+
+    # Start a long-running operation in background thread
+    operation_started = threading.Event()
+    operation_finished = threading.Event()
+
+    def long_operation() -> None:
+        try:
+            steamworks._begin_callbacks("test_operation", callbacks_total=1)
+            operation_started.set()
+            # Hold the operation for a bit
+            import time
+
+            time.sleep(0.5)
+        finally:
+            steamworks._finish_callbacks(timeout=1)
+            operation_finished.set()
+
+    bg_thread = threading.Thread(target=long_operation, daemon=True)
+    bg_thread.start()
+
+    # Wait for first operation to start
+    assert operation_started.wait(timeout=2.0)
+
+    # Try to start concurrent operation - should raise RuntimeError
+    with pytest.raises(RuntimeError, match="operation already in progress"):
+        steamworks._begin_callbacks("concurrent_operation", callbacks_total=1)
+
+    # Wait for first operation to complete
+    assert operation_finished.wait(timeout=2.0)
+
+    # Now a new operation should succeed
+    steamworks._begin_callbacks("second_operation", callbacks_total=1)
+    steamworks._finish_callbacks(timeout=1)
+
+
+def test_subscription_operations_queue_when_busy(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    mocked_steamworks_instance: Any,
+) -> None:
+    """Test that subscription operations queue instead of raising RuntimeError when busy."""
+    import time
+
+    mc, _ = main_content
+    steamworks = mocked_steamworks_instance
+
+    # Manually set operation in progress by calling _begin_callbacks directly
+    steamworks._begin_callbacks("test_operation", callbacks_total=1)
+
+    # Verify operation is in progress
+    assert steamworks.callbacks is True
+    assert steamworks._current_operation == "test_operation"
+
+    # Now try to subscribe - this should QUEUE instead of raising RuntimeError
+    steamworks.subscribe_to_mods(pfid_or_pfids=123456, interval=1, batch_id=None)
+
+    # Verify operation was queued
+    assert steamworks._operation_queue.qsize() == 1
+
+    # Finish the test operation
+    steamworks._finish_callbacks(timeout=1)
+
+    # Wait for queue processing
+    time.sleep(0.3)
+
+    # Verify queue was processed (or at least attempted)
+    # The queued operation should have been started
+    assert steamworks._operation_queue.qsize() == 0
+
+
+def test_multiple_subscription_operations_queue_in_order(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    mocked_steamworks_instance: Any,
+) -> None:
+    """Test that multiple subscription operations queue properly."""
+    mc, _ = main_content
+    steamworks = mocked_steamworks_instance
+
+    # Manually set operation in progress
+    steamworks._begin_callbacks("download", callbacks_total=1)
+
+    # Queue multiple operations while download is "running"
+    steamworks.subscribe_to_mods(pfid_or_pfids=222222, interval=1, batch_id=None)
+    steamworks.unsubscribe_from_mods(pfid_or_pfids=333333, interval=1, batch_id=None)
+    steamworks.resubscribe_to_mods(pfid_or_pfids=444444, interval=1, batch_id=None)
+
+    # Verify all three operations were queued
+    assert steamworks._operation_queue.qsize() == 3
+
+    # Verify operation names in queue
+    queue_items = []
+    with steamworks._operation_lock:
+        # Peek at queue without removing items
+        import queue as q
+
+        temp_queue: q.Queue[QueuedOperation] = q.Queue()
+        while not steamworks._operation_queue.empty():
+            item = steamworks._operation_queue.get()
+            queue_items.append(item.name)
+            temp_queue.put(item)
+
+        # Restore queue
+        while not temp_queue.empty():
+            steamworks._operation_queue.put(temp_queue.get())
+
+    # Verify operations are queued in FIFO order
+    assert queue_items == ["subscribe", "unsubscribe", "resubscribe"]
+
+
+def test_queued_operation_error_handling(
+    patch_launch: List[Tuple[Path, List[str]]],
+    main_content: Tuple[MainContent, List[bool]],
+    mocked_steamworks_instance: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that errors in queued operations don't block subsequent operations."""
+    import threading
+    import time
+
+    mc, _ = main_content
+    steamworks = mocked_steamworks_instance
+
+    # Track successful operations
+    successful_operations: List[str] = []
+    operation_lock = threading.Lock()
+
+    call_count = [0]  # Use list to allow modification in nested function
+
+    def mock_subscribe_impl(
+        pfids: list[int], interval: int, batch_id: str | None
+    ) -> None:
+        call_count[0] += 1
+        if call_count[0] == 1:
+            # First call raises an exception
+            raise RuntimeError("Simulated error in first operation")
+        else:
+            # Second call succeeds
+            with operation_lock:
+                successful_operations.append("subscribe")
+            # Call original but mock _begin_callbacks to avoid actual callback thread
+            with steamworks._operation_lock:
+                steamworks._current_operation = "subscribe"
+                steamworks.callbacks = True
+                steamworks.end_callbacks = True
+                steamworks._reset_operation_state()
+
+    monkeypatch.setattr(steamworks, "_subscribe_to_mods_impl", mock_subscribe_impl)
+
+    # Start first operation in background (will fail)
+    def first_operation() -> None:
+        try:
+            steamworks.subscribe_to_mods(
+                pfid_or_pfids=111111, interval=1, batch_id=None
+            )
+        except Exception:
+            pass  # Swallow exception
+
+    bg_thread = threading.Thread(target=first_operation, daemon=True)
+    bg_thread.start()
+
+    # Wait for first operation to start
+    time.sleep(0.1)
+
+    # Queue second operation (should succeed)
+    steamworks.subscribe_to_mods(pfid_or_pfids=222222, interval=1, batch_id=None)
+
+    # Wait for both operations to complete
+    bg_thread.join(timeout=2.0)
+    time.sleep(0.5)
+
+    # Verify second operation executed successfully despite first one failing
+    assert len(successful_operations) == 1
+    assert successful_operations[0] == "subscribe"
+
+    # Verify queue is empty
+    assert steamworks._operation_queue.qsize() == 0

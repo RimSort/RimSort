@@ -2,21 +2,25 @@ import sys
 import traceback
 from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QCoreApplication, QObject, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
-from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.utils.steam.steamworks.wrapper import steamworks_app_dependencies_worker
+from app.utils.steam.webapi.retry import (
+    SteamWebAPIRetryConfig,
+    retry_steam_api_call,
+    steam_api_request_with_retry,
+)
 from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
@@ -31,6 +35,12 @@ if TYPE_CHECKING:
 # Uncomment this if you want to see the full urllib3 request
 # THIS CONTAINS THE STEAM API KEY
 getLogger("urllib3").setLevel(WARNING)
+
+# Default retry configuration for Steam Web API calls
+DEFAULT_RETRY_CONFIG = SteamWebAPIRetryConfig(
+    max_retries=3,
+    backoff_factor=1.0,
+)
 
 BASE_URL = "https://steamcommunity.com"
 BASE_URL_STEAMFILES = "https://steamcommunity.com/sharedfiles/filedetails/?id="
@@ -246,6 +256,97 @@ def _find_value_in_dict(coll: dict[str, Any], key: str) -> Any:
     return coll.get(key_found)
 
 
+class AppDependenciesWorker(QRunnable):
+    """
+    QRunnable worker for querying app dependencies sequentially.
+
+    Since SteamworksInterface enforces operation serialization (only one
+    operation at a time via lock), we process chunks sequentially rather
+    than in parallel.
+    """
+
+    class Signals(QObject):
+        """Signal container for AppDependenciesWorker."""
+
+        progress = Signal(str)  # Progress message
+        chunk_complete = Signal(int, int)  # (current_chunk, total_chunks)
+        finished = Signal(dict)  # Final results: dict[int, list[int]]
+        error = Signal(str)  # Error message
+
+    def __init__(
+        self,
+        publishedfileids: list[str],
+        libs_path: str,
+        chunk_size: int,
+    ):
+        """
+        Initialize the AppDependenciesWorker.
+
+        :param publishedfileids: List of PublishedFileIds to query
+        :param libs_path: Path to Steamworks libraries
+        :param chunk_size: Number of mods to process per chunk
+        """
+        super().__init__()
+        self.publishedfileids = publishedfileids
+        self.libs_path = libs_path
+        self.chunk_size = chunk_size
+        self.signals = self.Signals()
+        self.setAutoDelete(True)
+
+    def run(self) -> None:
+        """Process all chunks sequentially and collect results."""
+        try:
+            pfids_appid_deps: dict[int, list[int]] = {}
+
+            # Create chunks
+            chunks_list = list(
+                chunks(
+                    _list=self.publishedfileids,
+                    limit=self.chunk_size,
+                )
+            )
+            total_chunks = len(chunks_list)
+
+            # Emit initial progress
+            self.signals.progress.emit(
+                f"Processing {len(self.publishedfileids)} mods in {total_chunks} chunks"
+            )
+
+            # Process each chunk sequentially
+            for idx, chunk in enumerate(chunks_list, start=1):
+                # Convert string pfids to integers
+                int_pfids = [eval(str_pfid) for str_pfid in chunk]
+
+                # Emit progress
+                self.signals.progress.emit(
+                    f"Processing chunk {idx}/{total_chunks} ({len(int_pfids)} mods)"
+                )
+
+                # Query this chunk - SteamworksInterface handles locking
+                result = steamworks_app_dependencies_worker(
+                    pfid_or_pfids=int_pfids,
+                    interval=1,
+                    _libs=self.libs_path,
+                )
+
+                # Merge results
+                if result is not None:
+                    pfids_appid_deps.update(result)
+
+                # Emit chunk completion
+                self.signals.chunk_complete.emit(idx, total_chunks)
+
+            # Emit final results
+            self.signals.progress.emit(
+                f"Completed! Collected {len(pfids_appid_deps)} results"
+            )
+            self.signals.finished.emit(pfids_appid_deps)
+
+        except Exception as e:
+            logger.error(f"Error in AppDependenciesWorker: {e}")
+            self.signals.error.emit(str(e))
+
+
 class DynamicQuery(QObject):
     """
     Create DynamicQuery object to initialize the scraped data from Workshop
@@ -265,7 +366,7 @@ class DynamicQuery(QObject):
         appid: int,
         get_appid_deps: bool = False,
         life: int = 0,
-        callback: Optional[Callable[[str], None]] = None,
+        callback: Callable[[str], None] | None = None,
     ) -> None:
         QObject.__init__(self)
 
@@ -306,6 +407,24 @@ class DynamicQuery(QObject):
             self.callback(msg)
         else:
             self.dq_messaging_signal.emit(msg)
+
+    @retry_steam_api_call(config=DEFAULT_RETRY_CONFIG)
+    def _api_call_with_retry(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        Wrapper for Steam Web API calls with retry logic.
+
+        Applies exponential backoff retry logic to Steam Web API calls
+        to handle transient failures like 503 errors, timeouts, and
+        connection errors.
+
+        :param args: Positional arguments to pass to api.call()
+        :param kwargs: Keyword arguments to pass to api.call()
+        :return: Response from Steam Web API
+        :raises Exception: If API call fails after max retries
+        """
+        if not self.api:
+            raise RuntimeError("WebAPI not initialized")
+        return self.api.call(*args, **kwargs)
 
     def __initialize_webapi(self) -> None:
         if self.api:
@@ -479,7 +598,7 @@ class DynamicQuery(QObject):
             # Uncomment to see the pfids from each chunk
             # logger.debug(f"{chunk_total} PublishedFileIds in chunk: {chunk}")
             try:
-                response = self.api.call(
+                response = self._api_call_with_retry(
                     method_path="IPublishedFileService.GetDetails",
                     key=self.apikey,
                     publishedfileids=chunk,
@@ -637,7 +756,7 @@ class DynamicQuery(QObject):
                 "Tried to query files while API was not properly initialized."
             )  # Exit query
 
-        result = self.api.call(
+        result = self._api_call_with_retry(
             method_path="IPublishedFileService.QueryFiles",
             key=self.apikey,
             query_type=1,
@@ -718,32 +837,51 @@ class DynamicQuery(QObject):
         self._emit_message(
             f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
-        # Maximum processes
-        num_processes = cpu_count()
-        # Create a pool of worker processes
-        with Pool(processes=num_processes) as pool:
-            # Create instances of SteamworksAppDependenciesQuery for each chunk
-            queries = [
-                SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk],
-                    interval=1,
-                    _libs=str((AppInfo().application_folder / "libs")),
-                )
-                for chunk in list(
-                    chunks(
-                        _list=publishedfileids,
-                        limit=ceil(len(publishedfileids) / num_processes),
-                    )
-                )
-            ]
-            # Map the execution of the queries to the pool of processes
-            results = pool.map(SteamworksAppDependenciesQuery.run, queries)
-        # Merge the results from all processes into a single dictionary
-        self._emit_message("Processes completed!\nCollecting results")
+
+        # Determine chunk size - balance between progress granularity and overhead
+        # Process ~50-100 mods per chunk for reasonable progress updates
+        chunk_size = min(100, max(50, len(publishedfileids) // 10))
+
+        # Storage for results (accessed only after worker completes)
         pfids_appid_deps: dict[int, list[int]] = {}
-        for result in results:
-            if result is not None:
-                pfids_appid_deps.update(result)
+        worker_error: list[str] = []  # Mutable container for error capture
+
+        # Create worker
+        worker = AppDependenciesWorker(
+            publishedfileids=publishedfileids,
+            libs_path=str(AppInfo().application_folder / "libs"),
+            chunk_size=chunk_size,
+        )
+
+        # Connect signals
+        worker.signals.progress.connect(lambda msg: self._emit_message(f"\n{msg}"))
+        worker.signals.chunk_complete.connect(
+            lambda current, total: self._emit_message(
+                f"Chunk {current}/{total} complete"
+            )
+        )
+        worker.signals.finished.connect(
+            lambda results: pfids_appid_deps.update(results)
+        )
+        worker.signals.error.connect(lambda error: worker_error.append(error))
+
+        # Use global thread pool (consistent with rest of codebase)
+        thread_pool = QThreadPool.globalInstance()
+
+        # Start worker
+        thread_pool.start(worker)
+
+        # Wait for completion - QThreadPool.waitForDone() waits for all tasks
+        self._emit_message("\nWaiting for Steamworks queries to complete...")
+        thread_pool.waitForDone()
+
+        # Check for errors
+        if worker_error:
+            self._emit_message(f"\nError during processing: {worker_error[0]}")
+            logger.error(f"AppDependencies worker failed: {worker_error[0]}")
+            return
+
+        self._emit_message("\nThreads completed!\nCollecting results...")
         self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)
@@ -790,11 +928,15 @@ def ISteamRemoteStorage_GetCollectionDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
-        except Exception as e:
+        try:  # Make a request to the Steam Web API with retry logic
+            request = steam_api_request_with_retry(
+                "POST", url, data, DEFAULT_RETRY_CONFIG
+            )
+        except requests.RequestException as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
+                f"Unable to complete request after {DEFAULT_RETRY_CONFIG.max_retries} retry attempts! "
+                f"Are you connected to the internet? Check Steam API status. "
+                f"Received exception: {e.__class__.__name__}"
             )
             return None
         try:  # Parse the JSON response
@@ -834,11 +976,15 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
-        except Exception as e:
+        try:  # Make a request to the Steam Web API with retry logic
+            request = steam_api_request_with_retry(
+                "POST", url, data, DEFAULT_RETRY_CONFIG
+            )
+        except requests.RequestException as e:
             logger.debug(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
+                f"Unable to complete request after {DEFAULT_RETRY_CONFIG.max_retries} retry attempts! "
+                f"Are you connected to the internet? Check Steam API status. "
+                f"Received exception: {e.__class__.__name__}"
             )
             return None
         try:  # Parse the JSON response

@@ -29,6 +29,7 @@ from app.utils.constants import (
     DEFAULT_MISSING_PACKAGEID,
     RIMWORLD_DLC_METADATA,
 )
+from app.utils.event_bus import EventBus
 from app.utils.generic import directories, scanpath
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -1700,6 +1701,60 @@ class MetadataManager(QObject):
         # Compile metadata to calculate dependencies, incompatibilities, and load rules
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
 
+    def refresh_single_mod_from_steam(self, pfid_str: str) -> None:
+        """
+        Refresh metadata for a single Steam Workshop mod after installation.
+
+        Called via ItemInstalled_t callback to update internal metadata
+        without triggering full ACF refresh. This provides targeted updates
+        for newly installed/updated mods.
+
+        :param pfid_str: PublishedFileId of installed mod (as string to handle 64-bit Steam IDs)
+        :type pfid_str: str
+        :return: None
+        """
+        pfid = int(pfid_str)
+        logger.info(f"Refreshing metadata for installed mod: {pfid}")
+
+        # Query install info from Steamworks
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        steamworks = SteamworksInterface.instance()
+
+        if steamworks.steam_not_running or not steamworks.steamworks.loaded():
+            logger.warning("Cannot refresh mod metadata - Steam not running")
+            return
+
+        install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(pfid)
+        if not install_info:
+            logger.warning(f"No install info for pfid {pfid}")
+            return
+
+        # Find the mod in internal metadata by pfid
+        updated = False
+        for uuid, metadata in self.internal_local_metadata.items():
+            if metadata.get("publishedfileid") == pfid_str:
+                # Update internal_time_touched with new timestamp
+                old_timestamp = metadata.get("internal_time_touched")
+                new_timestamp = install_info.get("timestamp")
+                metadata["internal_time_touched"] = new_timestamp
+                logger.debug(
+                    f"Updated internal_time_touched for {metadata.get('name', pfid)}: "
+                    f"{old_timestamp} -> {new_timestamp}"
+                )
+                updated = True
+                break
+
+        if updated:
+            # Emit signal for UI update
+            EventBus().do_refresh_mods_lists.emit()
+            logger.info(f"Metadata refresh complete for pfid {pfid}")
+        else:
+            logger.warning(
+                f"Could not find mod with pfid {pfid} in internal metadata - "
+                f"full refresh may be needed"
+            )
+
     def get_mod_name_from_package_id(self, package_id: str) -> str:
         """Get a mod's name from its package ID"""
         for mod_data in self.internal_local_metadata.values():
@@ -1752,6 +1807,131 @@ class MetadataManager(QObject):
                     missing_deps[mod_id] = missing
 
         return missing_deps
+
+    def refresh_workshop_timestamps_via_steamworks(self) -> dict[str, Any]:
+        """
+        Query Steam client via Steamworks API for current installation timestamps.
+
+        This gets the authoritative "when did Steam last update this mod" timestamp
+        directly from Steam's internal state, eliminating stale ACF file issues.
+
+        TIMESTAMP SEMANTICS:
+        - Steamworks GetItemInstallInfo().timestamp: When Steam last updated the local copy
+        - ACF WorkshopItemDetails.timetouched: When Steam last "touched" the mod locally
+        - ACF WorkshopItemDetails.timeupdated: When Steam last downloaded/updated the mod
+        - WebAPI GetPublishedFileDetails.time_updated: When mod author last updated on Workshop
+
+        The comparison for update detection is:
+            external_time_updated (author's last update) > internal_time_touched (our last download)
+
+        This ensures we detect when the Workshop version is newer than our local copy.
+
+        IMPORTANT: Requires Steam client to be running. Falls back to ACF file timestamps
+        if Steam is unavailable, which may be stale if Steam recently auto-updated mods.
+
+        Returns:
+            Statistics dict with keys:
+            - total_mods: Total workshop mods checked
+            - updated: Successfully updated timestamps
+            - failed: Failed to get install info
+            - steam_unavailable: True if Steam not running
+        """
+        from datetime import datetime
+
+        from app.utils.app_info import AppInfo
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        stats = {
+            "total_mods": 0,
+            "updated": 0,
+            "failed": 0,
+            "steam_unavailable": False,
+        }
+
+        logger.info("Refreshing Workshop mod timestamps via Steamworks API...")
+
+        # Initialize Steamworks
+        steamworks = SteamworksInterface.instance(
+            _libs=str((AppInfo().application_folder / "libs"))
+        )
+
+        if steamworks.steam_not_running or not steamworks.steamworks.loaded():
+            logger.warning(
+                "Steam client not running or Steamworks API unavailable. "
+                "Falling back to ACF file timestamps, which may be stale if Steam "
+                "recently updated mods. For accurate update detection, ensure Steam is running."
+            )
+            stats["steam_unavailable"] = True
+            return stats
+
+        # Query each Workshop mod for current install timestamp
+        for uuid, metadata in self.internal_local_metadata.items():
+            # Only check Workshop mods
+            if metadata.get("data_source") != "workshop":
+                continue
+
+            pfid = metadata.get("publishedfileid")
+            if not pfid:
+                continue
+
+            stats["total_mods"] += 1
+
+            try:
+                # Query Steam for current install info
+                # Convert pfid from string to int (metadata stores as string)
+                install_info = steamworks.steamworks.Workshop.GetItemInstallInfo(
+                    int(pfid)
+                )
+
+                if install_info and install_info.get("timestamp"):
+                    old_timestamp = metadata.get("internal_time_touched")
+                    new_timestamp = install_info["timestamp"]
+
+                    # Log the update with human-readable dates
+                    mod_name = metadata.get("name", "Unknown")
+                    old_date_str = (
+                        datetime.fromtimestamp(old_timestamp).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                        if old_timestamp
+                        else "None"
+                    )
+                    new_date_str = datetime.fromtimestamp(new_timestamp).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+
+                    if old_timestamp:
+                        delta = new_timestamp - old_timestamp
+                        logger.info(
+                            f"Refreshed timestamp for {mod_name} (PFID: {pfid}): "
+                            f"old={old_timestamp} ({old_date_str}), "
+                            f"new={new_timestamp} ({new_date_str}), "
+                            f"delta={delta}s ({delta / 86400:.1f} days)"
+                        )
+                    else:
+                        logger.info(
+                            f"Set timestamp for {mod_name} (PFID: {pfid}): "
+                            f"{new_timestamp} ({new_date_str})"
+                        )
+
+                    # Update with authoritative timestamp from Steam
+                    metadata["internal_time_touched"] = new_timestamp
+                    stats["updated"] += 1
+                else:
+                    stats["failed"] += 1
+                    logger.debug(
+                        f"No timestamp in install_info for PFID {pfid}: {install_info}"
+                    )
+            except Exception as e:
+                stats["failed"] += 1
+                logger.warning(f"Failed to get install info for PFID {pfid}: {e}")
+
+        logger.info(
+            f"Steamworks timestamp refresh complete: {stats['updated']} updated, "
+            f"{stats['failed']} failed out of {stats['total_mods']} Workshop mods"
+        )
+
+        return stats
 
 
 class ModParser(QRunnable):
