@@ -348,7 +348,9 @@ class BaseModsPanel(QWidget):
         if event.type() == QEvent.Type.KeyPress:
             key_event = QKeyEvent(event)  # type: ignore
             if key_event.key() == Qt.Key.Key_Escape:
-                self.close()
+                # Don't close AcfLogReader on Escape key (it's a persistent view)
+                if self.__class__.__name__ != "AcfLogReader":
+                    self.close()
                 return True
 
         return super().eventFilter(watched, event)
@@ -425,7 +427,9 @@ class BaseModsPanel(QWidget):
             completed()
 
         # Close the panel window after triggering operations
-        self.close()
+        # Don't close AcfLogReader (it's a persistent view, not a dialog)
+        if self.__class__.__name__ != "AcfLogReader":
+            self.close()
 
     def _collect_pfids_by_mode(
         self, pfid_column: int, mode: str | int

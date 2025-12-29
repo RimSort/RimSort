@@ -206,9 +206,6 @@ class Settings(QObject):
         # Player Log
         self.auto_load_player_log_on_startup: bool = False
 
-        # ACF Log Reader
-        self.enable_acf_log_reader: bool = True
-
         # Instances
         self.current_instance: str = DEFAULT_INSTANCE_NAME
         self.current_instance_path: str = str(
