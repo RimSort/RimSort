@@ -205,11 +205,12 @@ class SteamStatusHandler:
             title="Steam Not Running",
             text="Steam client is not running or not available.",
             information=(
-                "RimSort requires Steam to be running for Workshop integration.\n\n"
-                "To resolve this:\n"
-                "1. Start the Steam client\n"
-                "2. Log in to your Steam account\n"
-                "3. Restart RimSort or check Help > Check Steam Connection"
+                "RimSort requires Steam to be running for Workshop integration.<br><br>"
+                "To resolve this:<br>"
+                "1. Launch Steam via Help > Launch Steam, <b>OR</b> start the Steam client manually<br>"
+                "2. Log in to your Steam account<br>"
+                "3. Restart RimSort or check Help > Check Steam Connection<br><br>"
+                "<i>Tip: Enable 'Automatically launch Steam if not running' in Settings > Advanced to launch Steam automatically.</i>"
             ),
             parent=self.parent_widget,
         )
@@ -240,8 +241,13 @@ class SteamStatusHandler:
             title="Steam Operation Failed",
             text=reason,
             information=(
-                "Please ensure Steam is running and you are logged in.\n\n"
-                "Check Steam status: Help > Check Steam Connection"
+                "Please ensure Steam is running and you are logged in.<br><br>"
+                "Options:<br>"
+                "• Launch Steam via Help > Launch Steam<br>"
+                "<b>OR:</b><br>"
+                "start the Steam client manually.<br>"
+                "• Check Steam status: Help > Check Steam Connection<br><br>"
+                "<i>Tip: Enable 'Automatically launch Steam if not running' in Settings > Advanced to launch Steam automatically.</i>"
             ),
             parent=self.parent_widget,
         )
