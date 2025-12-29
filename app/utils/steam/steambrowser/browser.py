@@ -196,6 +196,8 @@ class SteamBrowser(QWidget):
         self.location.returnPressed.connect(self.__browse_to_location)
 
         # Nav bar
+        self.add_to_list_button = QAction(self.tr("Add to list (Redundant)"))
+        self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Back))
@@ -513,6 +515,7 @@ class SteamBrowser(QWidget):
         # self.web_view.hide()
         # self.web_view_loading_placeholder.show()
         self.progress_bar.setTextVisible(True)
+        self.nav_bar.removeAction(self.add_to_list_button)
 
     def _web_view_load_progress(self, progress: int) -> None:
         # Progress bar progress
@@ -741,6 +744,8 @@ class SteamBrowser(QWidget):
                         self.web_view.page().runJavaScript(
                             add_installed_indicator_script, 0, lambda result: None
                         )
+                    # Show the add_to_list_button
+                    self.nav_bar.addAction(self.add_to_list_button)
 
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page
