@@ -1,1513 +1,638 @@
+"""
+ACF Log Reader for displaying workshop items from Steam ACF files.
+
+Inherits table infrastructure, column definitions, and action buttons from BaseModsPanel.
+Displays all workshop items found in SteamCMD and Steam ACF data with features including:
+- Real-time search filtering with column-specific search
+- Active mod highlighting (mods currently in the game's load order)
+- Clickable path links to open mod directories
+- Workshop page buttons to open Steam Community pages
+- CSV export functionality
+- ACF file import/export
+- Default sorting by download date (newest first)
+"""
+
 from __future__ import annotations
 
-import os
-import re
-import shutil
-from collections import OrderedDict
-from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
-from functools import partial
-from pathlib import Path
-from threading import Semaphore
+import time
 from typing import Any, Optional, cast
 
 from loguru import logger
-from PySide6.QtCore import (
-    QAbstractTableModel,
-    QModelIndex,
-    QObject,
-    QPersistentModelIndex,
-    QPoint,
-    QRunnable,
-    QSortFilterProxyModel,
-    Qt,
-    QThread,
-    QThreadPool,
-    QTimer,
-    Signal,
-)
-from PySide6.QtGui import (
-    QAction,
-    QCloseEvent,
-    QColor,
-    QFont,
-    QKeySequence,
-    QPainter,
-    QResizeEvent,
-    QShowEvent,
-)
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt, QTimer
+from PySide6.QtGui import QColor, QPainter, QStandardItem
 from PySide6.QtWidgets import (
-    QApplication,
+    QCheckBox,
+    QComboBox,
     QHBoxLayout,
-    QHeaderView,
+    QLabel,
     QLineEdit,
-    QMenu,
     QPushButton,
-    QStatusBar,
-    QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
-    QTableView,
-    QVBoxLayout,
     QWidget,
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.utils.acf_utils import load_and_merge_acf_data
 from app.utils.csv_export_utils import export_to_csv
 from app.utils.event_bus import EventBus
-from app.utils.generic import (
-    format_time_display,
-    get_relative_time,
-    platform_specific_open,
-)
+from app.utils.generic import format_time_display
 from app.utils.metadata import MetadataManager
-from app.utils.mod_utils import (
-    get_mod_name_from_pfid,
-    get_mod_path_from_pfid,
-)
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.views.dialogue import (
-    show_dialogue_conditional,
-    show_dialogue_file,
-    show_fatal_error,
-    show_information,
-    show_warning,
-)
-
-UNKNOWN_STRING = "Unknown"
+from app.utils.mod_info import ModInfo
+from app.windows.base_mods_panel import BaseModsPanel, ColumnIndex
 
 
-class ErrorMessages(str, Enum):
-    """Common error messages."""
-
-    INVALID_PFID = "Invalid PFID encountered: {pfid}"
-    INVALID_MOD_SOURCE = "Invalid mod_source encountered"
-    ACF_NOT_FOUND = "ACF file not found"
-    EXPORT_PERMISSION_DENIED = (
-        "Export failed: Permission denied - check file permissions"
-    )
-    EXPORT_FILESYSTEM_ERROR = "Export failed: File system error: {e}"
-    EXPORT_UNKNOWN_ERROR = "Export failed due to an unknown error"
-    STEAMCMD_INTERFACE_NOT_INITIALIZED = (
-        "Export failed: SteamCMD interface not properly initialized"
-    )
-    ACF_FILE_NOT_FOUND = "ACF file not found: {acf_path}"
-    ACF_FILE_NOT_FOUND_ERROR = "Export failed: ACF file not found: {acf_path}"
-    ACF_FILE_NOT_FOUND_AT = "ACF file not found at: {acf_path}"
-    INVALID_EXPORT_FILE_PATH = "Invalid file path provided for export: {file_path}"
-    EXPORT_FAILED_UNKNOWN_EXCEPTION = "Export failed unknown exception occurred"
-    LOAD_ACF_DATA_ERROR = "Error starting ACF data loading: {error}"
-    FAILED_TO_LOAD_ACF_DATA = "Failed to load any ACF data from SteamCMD or Steam paths"
-    INVALID_WORKSHOP_ITEMS_DATA_FORMAT = "Invalid workshop items data format"
-    ERROR_GETTING_MOD_NAME = "Error getting mod name for PFID {pfid}: {error}"
-    ERROR_GETTING_MOD_PATH = "Error getting mod path for PFID {pfid}: {error}"
-    ERROR_FORMATTING_TIMESTAMP = "Error formatting timestamp for PFID {pfid}: {error}"
-
-
-@dataclass
-class AcfEntry:
-    """Data class for ACF entry information."""
-
-    published_file_id: str
-    mod_source: str
-    timeupdated: Optional[int] = None
-
-
-class AcfLoadWorker(QThread):
+class AcfLogReader(BaseModsPanel):
     """
-    Background worker thread for loading and processing ACF data.
+    ACF Log Reader panel for displaying workshop items from Steam ACF files.
 
-    This worker delegates business logic to acf_utils and emits signals for
-    completion or errors. It runs on a separate thread to avoid blocking the UI.
+    Features:
+    - Displays workshop items from both SteamCMD and Steam Workshop ACF data
+    - Inherits table UI, columns, and buttons from BaseModsPanel
+    - Real-time search with debouncing (300ms delay) and column-specific filtering
+    - Active mod highlighting: cells with bold white text on dark green background
+    - Interactive widgets: clickable path links and workshop page buttons
+    - Automatic sorting by download date on initial load; user can change sort order
+    - ACF file import/export and CSV export functionality
     """
 
-    finished = Signal(list, dict, dict)  # entries, steamcmd_acf_data, steam_acf_data
-    error = Signal(str)
-
-    def __init__(
-        self, steamcmd_acf_path: Optional[Path], steam_acf_path: Optional[Path]
-    ) -> None:
-        """
-        Initialize the ACF load worker.
-
-        Args:
-            steamcmd_acf_path: Path to the SteamCMD ACF file, or None if not available.
-            steam_acf_path: Path to the Steam ACF file, or None if not available.
-        """
-        super().__init__()
-        self.steamcmd_acf_path = steamcmd_acf_path
-        self.steam_acf_path = steam_acf_path
-
-    def run(self) -> None:
-        try:
-            # Load and merge ACF data using utility function
-            entries_list, steamcmd_acf_data, steam_acf_data = load_and_merge_acf_data(
-                self.steamcmd_acf_path, self.steam_acf_path
-            )
-
-            # Convert tuple entries to AcfEntry objects for the table model
-            entries = [
-                AcfEntry(
-                    published_file_id=pfid,
-                    mod_source=source,
-                    timeupdated=timeupdated,
-                )
-                for pfid, source, timeupdated in entries_list
-            ]
-
-            self.finished.emit(entries, steamcmd_acf_data, steam_acf_data)
-
-        except (FileNotFoundError, PermissionError, ValueError, TypeError) as e:
-            logger.error(f"Error in AcfLoadWorker: {str(e)}")
-            self.error.emit(str(e))
-        except Exception as e:
-            logger.error(f"Unexpected error in AcfLoadWorker: {str(e)}")
-            self.error.emit(f"Unexpected error: {str(e)}")
-
-
-class TableResizer:
-    """Handles table width management for proportional resizing and full-width fit."""
-
-    def __init__(self, table_view: QTableView, min_column_width: int):
-        self.table_view = table_view
-        self.min_column_width = min_column_width
-        self._table_col_weights: list[float] = []
-        self._suppress_section_resize_updates = False
-        # Connect signal
-        header = self.table_view.horizontalHeader()
-        if isinstance(header, QHeaderView):
-            header.sectionResized.connect(self._on_table_section_resized)
-
-    def _viewport_width(self) -> int:
-        try:
-            return max(0, int(self.table_view.viewport().width()))
-        except Exception:
-            return max(0, int(self.table_view.width()))
-
-    def _init_or_sync_column_weights(self: "TableResizer") -> None:
-        """
-        Initialize or synchronize column weights with the current column count.
-
-        If weights don't exist or don't match the column count, initialize them
-        with equal proportional widths.
-        """
-        model = self.table_view.model()
-        if not model:
-            return
-        col_count = model.columnCount()
-        if col_count <= 0:
-            return
-        if (
-            not getattr(self, "_table_col_weights", None)
-            or len(self._table_col_weights) != col_count
-        ):
-            self._table_col_weights = [1.0 / col_count for _ in range(col_count)]
-
-    def _recalculate_weights_from_current_widths(self: "TableResizer") -> None:
-        """
-        Recalculate column weight proportions based on current widths.
-
-        Used when user manually resizes a column to maintain proportions
-        for future viewport resize events.
-        """
-        model = self.table_view.model()
-        if not model:
-            return
-        col_count = model.columnCount()
-        if col_count <= 0:
-            return
-        header = self.table_view.horizontalHeader()
-        sizes = [header.sectionSize(i) for i in range(col_count)]
-        total = sum(sizes) or 1
-        self._table_col_weights = [s / total for s in sizes]
-
-    def _apply_table_widths_to_viewport(self: "TableResizer") -> None:
-        """Apply computed column widths to fill the viewport proportionally."""
-        model = self.table_view.model()
-        if not model:
-            return
-        col_count = model.columnCount()
-        if col_count <= 0:
-            return
-        self._init_or_sync_column_weights()
-        vpw = self._viewport_width()
-        if vpw <= 0:
-            return
-        header = self.table_view.horizontalHeader()
-        # Compute widths from weights, ensuring minimum width per column
-        min_w = max(self.min_column_width, int(vpw * 0.05 / col_count))
-        widths = [max(min_w, int(round(w * vpw))) for w in self._table_col_weights]
-        # Adjust last section to fill exact viewport width (accounts for rounding)
-        diff = vpw - sum(widths)
-        widths[-1] = max(min_w, widths[-1] + diff)
-        # Suppress resize events while applying widths to avoid recursion
-        self._suppress_section_resize_updates = True
-        try:
-            for i, w in enumerate(widths):
-                header.resizeSection(i, w)
-        finally:
-            self._suppress_section_resize_updates = False
-
-    def _on_table_section_resized(
-        self: "TableResizer", index: int, old: int, new: int
-    ) -> None:
-        """
-        Handle column resize events by updating weights and applying proportional widths.
-
-        Skipped if updates are suppressed during programmatic resizing.
-        """
-        if self._suppress_section_resize_updates:
-            return
-        self._recalculate_weights_from_current_widths()
-        self._apply_table_widths_to_viewport()
-
-    def handle_resize_event(self: "TableResizer", event: QResizeEvent) -> None:
-        """Handle resize event by applying widths."""
-        self._apply_table_widths_to_viewport()
-
-    def handle_show_event(self: "TableResizer", event: QShowEvent) -> None:
-        """Handle show event by deferring width application."""
-        QTimer.singleShot(0, self._apply_table_widths_to_viewport)
-
-
-class MetadataLoadTask(QRunnable):
-    """
-    Background task for loading mod metadata asynchronously.
-
-    Fetches mod names or paths for a batch of PFIDs and updates the model's
-    caches. Runs in a thread pool to avoid blocking the UI.
-    """
-
-    def __init__(
-        self,
-        pfids: list[str],
-        data_type: str,
-        model: "AcfTableModel",
-        priority: int = 0,
-    ) -> None:
-        """
-        Initialize the metadata load task.
-
-        Args:
-            pfids: List of published file IDs to load metadata for.
-            data_type: Type of metadata to load ('name' or 'path').
-            model: Reference to AcfTableModel for updating caches.
-            priority: Task priority (unused, for future enhancement).
-        """
-        super().__init__()
-        self.pfids = pfids
-        self.data_type = data_type
-        self.model = model
-        self.priority = priority
-
-    def run(self) -> None:
-        """
-        Load metadata for all PFIDs and update model caches.
-
-        Fetches mod names or paths and stores them in the appropriate cache.
-        Triggers UI updates for affected rows via pending updates mechanism.
-        """
-        for pfid in self.pfids:
-            try:
-                if self.data_type == "name":
-                    name = get_mod_name_from_pfid(pfid)
-                    self.model._mod_name_cache[pfid] = name
-                    self.model._limit_cache_size(self.model._mod_name_cache)
-                    logger.info(f"Loaded mod name for PFID {pfid}: {name}")
-                elif self.data_type == "path":
-                    path = get_mod_path_from_pfid(pfid)
-                    self.model._mod_path_cache[pfid] = path
-                    self.model._limit_cache_size(self.model._mod_path_cache)
-                    logger.info(f"Loaded mod path for PFID {pfid}: {path}")
-                # Collect updates for batch emission
-                self.model._pending_updates.add(pfid)
-                # Schedule batch emission to UI
-                self.model.start_update_timer.emit()
-            except Exception as e:
-                logger.error(
-                    f"Error loading {self.data_type} for PFID {pfid}: {str(e)}"
-                )
-
-
-class AcfTableModel(QAbstractTableModel):
-    """Custom table model for ACF data with virtual scrolling support."""
-
-    # Signal to start timer from main thread
-    start_update_timer = Signal()
-
-    PAGE_SIZE = 1000  # Number of rows to load per page for virtual scrolling
-
-    def __init__(self, parent: Optional[QObject] = None) -> None:
-        super().__init__(parent)
-        self._parent = parent
-        self.entries: list[AcfEntry] = []
-        self._all_entries: list[AcfEntry] = []  # Full list for virtual scrolling
-        self._loaded_count = 0  # Number of rows currently loaded into display
-        self._mod_name_cache: OrderedDict[str, str] = OrderedDict()
-        self._mod_path_cache: OrderedDict[str, Optional[str]] = OrderedDict()
-        self._metadata_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
-        self.max_cache_size = 5000
-        self._thread_pool = QThreadPool.globalInstance()
-        self._thread_pool.setMaxThreadCount(min(8, os.cpu_count() or 4))
-        self._semaphore = Semaphore(10)
-        self._pending_updates: set[str] = set()
-        self._update_timer = QTimer(self)
-        self._update_timer.setSingleShot(True)
-        self._update_timer.timeout.connect(self._emit_pending_updates)
-        self.start_update_timer.connect(self._start_timer_slot)
-        self._pending_name_pfids: set[str] = set()
-        self._pending_path_pfids: set[str] = set()
-        self._batch_timer = QTimer(self)
-        self._batch_timer.setSingleShot(True)
-        self._batch_timer.timeout.connect(self._process_batch_metadata)
-
-    def _start_timer_slot(self) -> None:
-        """Slot to start the update timer from the main thread."""
-        if not self._update_timer.isActive():
-            self._update_timer.start(100)
-
-    def _limit_cache_size(self, cache: OrderedDict[str, Any]) -> None:
-        while len(cache) > self.max_cache_size:
-            cache.popitem(last=False)
-
-    def _emit_pending_updates(self) -> None:
-        """
-        Emit dataChanged for pending updates in a single batch.
-
-        Collects all pending PFID updates, identifies affected rows, and emits
-        a single dataChanged signal for the range to improve rendering efficiency.
-        """
-        if not self._pending_updates:
-            return
-        # Copy and clear immediately to avoid concurrent modification issues
-        pending = self._pending_updates.copy()
-        self._pending_updates.clear()
-        # Find all rows affected by pending updates
-        affected_rows = set()
-        for pfid in pending:
-            for row in range(len(self.entries)):
-                if str(self.entries[row].published_file_id) == pfid:
-                    affected_rows.add(row)
-                    break
-        if affected_rows:
-            min_row = min(affected_rows)
-            max_row = max(affected_rows)
-            # Emit single dataChanged for contiguous range, updates all columns
-            self.dataChanged.emit(self.index(min_row, 0), self.index(max_row, 5))
-
-    def canFetchMore(
-        self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
-    ) -> bool:
-        return self._loaded_count < len(self._all_entries)
-
-    def fetchMore(
-        self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
-    ) -> None:
-        """
-        Load next page of entries for virtual scrolling.
-
-        Fetches up to PAGE_SIZE entries from the full entry list and adds them
-        to the display list. Properly notifies Qt model of row insertions.
-        """
-        if not self.canFetchMore(parent):
-            return
-
-        # Calculate how many more rows to load
-        remaining = len(self._all_entries) - self._loaded_count
-        fetch_count = min(self.PAGE_SIZE, remaining)
-
-        # Get next batch of entries from full list
-        start_index = self._loaded_count
-        end_index = start_index + fetch_count
-        new_entries = self._all_entries[start_index:end_index]
-
-        # Notify Qt of new rows and add them to display
-        self.beginInsertRows(
-            QModelIndex(), self._loaded_count, self._loaded_count + fetch_count - 1
-        )
-        self.entries.extend(new_entries)
-        self._loaded_count += fetch_count
-        self.endInsertRows()
-
-        logger.info(
-            f"Fetched {fetch_count} more entries, total loaded: {self._loaded_count}"
-        )
-
-    def rowCount(
-        self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
-    ) -> int:
-        return len(self.entries)
-
-    def columnCount(
-        self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()
-    ) -> int:
-        return 6
-
-    def headerData(
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Any:
-        if (
-            orientation == Qt.Orientation.Horizontal
-            and role == Qt.ItemDataRole.DisplayRole
-        ):
-            headers = [
-                "Mod Name",
-                "Published File ID",
-                "Mod Source",
-                "Mod downloaded",
-                "Updated on Workshop",
-                "Mod Path",
-            ]
-            return headers[section] if section < len(headers) else ""
-        return super().headerData(section, orientation, role)
-
-    def data(
-        self,
-        index: QModelIndex | QPersistentModelIndex,
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Any:
-        if not index.isValid() or not (0 <= index.row() < len(self.entries)):
-            return None
-
-        entry = self.entries[index.row()]
-        pfid = str(entry.published_file_id)
-
-        if role == Qt.ItemDataRole.DisplayRole:
-            if index.column() == 0:  # Mod Name
-                return self._get_mod_name(pfid)
-            elif index.column() == 1:  # PFID
-                return pfid
-            elif index.column() == 2:  # Mod Source
-                return entry.mod_source
-            elif index.column() == 3:  # Mod Downloaded
-                return self._get_mod_downloaded_time(entry, pfid)
-            elif index.column() == 4:  # Updated on Workshop
-                return self._get_updated_time(entry.timeupdated, pfid)
-            elif index.column() == 5:  # Mod Path
-                return self._get_mod_path(pfid)
-
-        return None
-
-    def _get_mod_name(self, pfid: str) -> str:
-        """Get mod name with lazy loading."""
-        if pfid in self._mod_name_cache:
-            self._mod_name_cache.move_to_end(pfid)  # LRU: move to end on access
-            self._limit_cache_size(self._mod_name_cache)
-            return self._mod_name_cache[pfid]
-        # Trigger background loading if not cached
-        self._load_metadata_async(pfid, "name")
-        return UNKNOWN_STRING
-
-    def _get_mod_path(self, pfid: str) -> str:
-        """Get mod path with lazy loading."""
-        if pfid in self._mod_path_cache:
-            self._mod_path_cache.move_to_end(pfid)
-            self._limit_cache_size(self._mod_path_cache)
-            cached_path = self._mod_path_cache[pfid]
-            if cached_path is not None:
-                return cached_path
-            else:
-                return UNKNOWN_STRING
-        # Trigger background loading if not cached
-        self._load_metadata_async(pfid, "path")
-        return UNKNOWN_STRING
-
-    def _get_mod_downloaded_time(self, entry: AcfEntry, pfid: str) -> str:
-        """Get mod downloaded time."""
-        if pfid in self._metadata_cache:
-            metadata = self._metadata_cache[pfid]
-            internal_time_touched = metadata.get("internal_time_touched")
-            if internal_time_touched:
-                time_str, _ = format_time_display(internal_time_touched)
-                return time_str
-        # Fallback to ACF timeupdated
-        time_str, _ = format_time_display(entry.timeupdated)
-        return time_str
-
-    def _get_updated_time(self, timeupdated: Optional[int], pfid: str) -> str:
-        """Format updated on workshop time."""
-        if not timeupdated:
-            return ""
-        try:
-            timestamp_int = int(timeupdated)
-            dt = datetime.fromtimestamp(timestamp_int)
-            abs_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-            rel_time = get_relative_time(timestamp_int)
-            return f"{abs_time} | {rel_time}"
-        except Exception as e:
-            logger.error(f"Error formatting timestamp for PFID {pfid}: {str(e)}")
-            return UNKNOWN_STRING
-
-    def _load_metadata_async(self, pfid: str, data_type: str) -> None:
-        """
-        Queue a PFID for asynchronous metadata loading.
-
-        Collects PFIDs by type and uses a batch timer to aggregate requests
-        before processing them in the thread pool.
-        """
-        if not pfid.isdigit():
-            return
-
-        if data_type == "name":
-            self._pending_name_pfids.add(pfid)
-        elif data_type == "path":
-            self._pending_path_pfids.add(pfid)
-
-        # Start batch timer if not already running
-        if not self._batch_timer.isActive():
-            self._batch_timer.start(100)
-
-    def _process_batch_metadata(self) -> None:
-        """
-        Process pending metadata requests in batches.
-
-        Creates thread pool tasks for pending names and paths, then reschedules
-        the batch timer if more requests are pending.
-        """
-        batch_size = 20
-        name_batch = list(self._pending_name_pfids)[:batch_size]
-        path_batch = list(self._pending_path_pfids)[:batch_size]
-        self._pending_name_pfids -= set(name_batch)
-        self._pending_path_pfids -= set(path_batch)
-        if name_batch:
-            task = MetadataLoadTask(name_batch, "name", self)
-            self._thread_pool.start(task)
-        if path_batch:
-            task = MetadataLoadTask(path_batch, "path", self)
-            self._thread_pool.start(task)
-        # Reschedule if more pending
-        if self._pending_name_pfids or self._pending_path_pfids:
-            self._batch_timer.start(100)
-
-    def set_entries(self, entries: list[AcfEntry]) -> None:
-        """
-        Set new entries and reset caches.
-
-        Replaces the full entry list with new data and resets all caches.
-        Queues metadata loading for all entries, prioritizing the first page
-        for immediate display.
-        """
-        self.beginResetModel()
-        self._all_entries = entries  # Full list for virtual scrolling
-        self.entries = []  # Currently visible entries
-        self._loaded_count = 0  # Rows currently loaded into display
-        self._mod_name_cache.clear()
-        self._mod_path_cache.clear()
-        self._metadata_cache.clear()
-        self._pending_updates.clear()
-        if self._update_timer.isActive():
-            self._update_timer.stop()
-        self.endResetModel()
-        # Load first page immediately so table displays data right away
-        if self._all_entries:
-            self.fetchMore()
-        # Queue metadata loads, prioritizing first page for faster initial display
-        first_page_entries = self._all_entries[: self.PAGE_SIZE]
-        remaining_entries = self._all_entries[self.PAGE_SIZE :]
-        self._pending_name_pfids.update(
-            str(entry.published_file_id) for entry in first_page_entries
-        )
-        self._pending_path_pfids.update(
-            str(entry.published_file_id) for entry in first_page_entries
-        )
-        self._pending_name_pfids.update(
-            str(entry.published_file_id) for entry in remaining_entries
-        )
-        self._pending_path_pfids.update(
-            str(entry.published_file_id) for entry in remaining_entries
-        )
-        # Start batch processing if not already running
-        if not self._batch_timer.isActive():
-            self._batch_timer.start(100)
-
-    def update_metadata_cache(
-        self,
-        mod_name_cache: dict[str, str],
-        mod_path_cache: dict[str, str],
-        pfid_to_metadata: dict[str, dict[str, Any]],
-    ) -> None:
-        """
-        Update metadata caches and notify view of changes.
-
-        Merges new metadata into the caches and enforces size limits.
-        Emits dataChanged signal for all visible rows since metadata updates
-        may affect multiple columns.
-        """
-        self._mod_name_cache.update(mod_name_cache)
-        self._mod_path_cache.update(mod_path_cache)
-        self._metadata_cache.update(pfid_to_metadata)
-        self._limit_cache_size(self._mod_name_cache)
-        self._limit_cache_size(self._mod_path_cache)
-        self._limit_cache_size(self._metadata_cache)
-
-        # Emit dataChanged for all visible rows
-        if self.entries:
-            self.dataChanged.emit(
-                self.index(0, 0),
-                self.index(len(self.entries) - 1, self.columnCount() - 1),
-            )
-
-
-class AcfSortFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self, parent: Optional[QObject] = None) -> None:
-        super().__init__(parent)
-        self.search_text = ""
-        self.use_regex = False
-        self.pattern: Optional[re.Pattern[str]] = None
-        self._pattern_cache: dict[str, Optional[re.Pattern[str]]] = {}
-
-    def setFilterText(self, text: str) -> None:
-        """
-        Set filter text and compile regex pattern if needed.
-
-        Attempts to treat the text as regex; falls back to literal search on error.
-        Uses caching to avoid recompiling patterns for the same search text.
-        """
-        self.search_text = text
-        self.filter_disabled = False
-        if text in self._pattern_cache:
-            self.pattern = self._pattern_cache[text]
-            self.use_regex = self.pattern is not None
-        else:
-            if not text:
-                self.pattern = None
-                self.use_regex = False
-            else:
-                try:
-                    self.pattern = re.compile(text, re.IGNORECASE)
-                    self.use_regex = True
-                except re.error:
-                    # Fall back to literal search on regex error
-                    self.pattern = None
-                    self.use_regex = False
-                    self.filter_disabled = True
-            self._pattern_cache[text] = self.pattern
-        self.invalidate()
-
-    def filterAcceptsRow(
-        self, source_row: int, source_parent: QModelIndex | QPersistentModelIndex
-    ) -> bool:
-        """
-        Determine if a row matches the filter criteria.
-
-        Searches across multiple columns (mod name, PFID, path, source) using
-        either regex or literal substring matching.
-        """
-        if not self.search_text or self.filter_disabled:
-            return True
-        model = self.sourceModel()
-        # Search columns that contain user-facing searchable text
-        search_columns = {
-            AcfLogReader.COL_PFID,
-            AcfLogReader.COL_MOD_NAME,
-            AcfLogReader.COL_MOD_PATH,
-            AcfLogReader.COL_MOD_SOURCE,
-        }
-        for col in search_columns:
-            index = model.index(source_row, col, source_parent)
-            item_text = model.data(index, Qt.ItemDataRole.DisplayRole) or ""
-            if self.use_regex and self.pattern:
-                try:
-                    if self.pattern.search(item_text):
-                        return True
-                except re.error:
-                    # Fall back to literal match on regex error
-                    if self.search_text.lower() in item_text.lower():
-                        return True
-            else:
-                if self.search_text.lower() in item_text.lower():
-                    return True
-        return False
-
-
-class AcfLogReader(QWidget):
-    from enum import IntEnum
-
-    class TableColumn(IntEnum):
-        """Enumeration of table columns with descriptions."""
-
-        MOD_NAME = 0
-        PFID = 1
-        MOD_SOURCE = 2
-        MOD_DOWNLOADED = 3
-        UPDATED_ON_WORKSHOP = 4
-        MOD_PATH = 5
-
-        @property
-        def description(self) -> str:
-            """Get human-readable description of the column."""
-            return {
-                self.PFID: "Steam Workshop Published File ID",
-                self.MOD_DOWNLOADED: "Mod downloaded",
-                self.UPDATED_ON_WORKSHOP: "Last update timestamp (UTC) / Relative Time",
-                self.MOD_SOURCE: "Mod source (SteamCMD/Steam/Local)",
-                self.MOD_NAME: "Mod name from Steam metadata",
-                self.MOD_PATH: "Filesystem path to mod",
-            }[self]
-
-    class ModSource(str, Enum):
-        """Enumeration for mod sources."""
-
-        STEAMCMD = "SteamCMD"
-        STEAM = "Steam"
-        LOCAL = "Local"
-
-    # Maintain backward compatibility with old constant names
-    COL_PFID = TableColumn.PFID
-    COL_MOD_DOWNLOADED = TableColumn.MOD_DOWNLOADED
-    COL_UPDATED_ON_WORKSHOP = TableColumn.UPDATED_ON_WORKSHOP
-    COL_MOD_SOURCE = TableColumn.MOD_SOURCE
-    COL_MOD_NAME = TableColumn.MOD_NAME
-    COL_MOD_PATH = TableColumn.MOD_PATH
-
-    # Constants for performance and configuration
-    REFRESH_INTERVAL_MS = 30000  # 30 seconds
-    DEBOUNCE_DELAY_MS = 300  # Debounce delay for search
-    MIN_COLUMN_WIDTH = 40  # Minimum column width
-    CACHE_MAX_SIZE = 5000  # Maximum cache size for LRU (increased for large datasets)
-    METADATA_BATCH_SIZE = 20  # Batch size for metadata updates (reduced for batching)
-    EXPORT_BATCH_SIZE = 1000  # Batch size for CSV export
-    PAGE_SIZE = 1000  # Number of rows to load per page for virtual scrolling
+    # Columns to search in the search bar
+    SEARCHABLE_COLUMNS = [
+        ColumnIndex.NAME.value,
+        ColumnIndex.AUTHOR.value,
+        ColumnIndex.PACKAGE_ID.value,
+        ColumnIndex.PUBLISHED_FILE_ID.value,
+    ]
+
+    # Default sort column and order
+    DEFAULT_SORT_COLUMN = ColumnIndex.MOD_DOWNLOADED.value
+    DEFAULT_SORT_ORDER = Qt.SortOrder.DescendingOrder
 
     def __init__(
         self,
         settings_controller: SettingsController,
-        active_mods_list: Optional[object] = None,
+        active_mods_list: object | None = None,
     ) -> None:
-        super().__init__()
-        self.setWindowTitle("Log Reader")
+        """
+        Initialize ACF Log Reader using BaseModsPanel.
+
+        Args:
+            settings_controller: Settings controller instance
+            active_mods_list: Optional active mods list for highlighting
+        """
         self.settings_controller = settings_controller
         self.active_mods_list = active_mods_list
-
-        # Initialize SteamCMD interface and metadata manager
-        self.steamcmd_interface = SteamcmdInterface.instance()
         self.metadata_manager = MetadataManager.instance()
+        # Set of PFIDs that are currently active in the game
+        self.active_pfids: set[str] = set()
+        # Timer for debouncing search input (300ms delay)
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self._perform_search)
+        # Selected column index for filtering (-1 means all searchable columns)
+        self.search_column_index = -1
+        # Track if this is the first population (for initial sorting)
+        self._is_first_population = True
 
-        # Background workers
-        self.acf_load_worker: Optional[AcfLoadWorker] = None
+        # Initialize BaseModsPanel with standard columns
+        super().__init__(
+            object_name="AcfLogReader",
+            window_title="ACF Log Reader",
+            title_text="Workshop Items from ACF Files",
+            details_text="Displays all mods in your SteamCMD and Steam ACF data",
+            additional_columns=self._get_standard_mod_columns(),
+        )
 
-        self.entries: list[AcfEntry] = []
+        # Set up BaseModsPanel buttons (Refresh, etc.)
+        button_configs = self._get_base_button_configs()
+        self._extend_button_configs_with_steam_actions(button_configs)
+        button_configs.append(
+            self._create_delete_button_config(self.tr("Delete Selected Mods"))
+        )
+        self._setup_buttons_from_config(button_configs)
 
-        # Main layout
-        main_layout = QVBoxLayout()
+        # Set up custom ACF buttons above the table
+        acf_buttons_layout = QHBoxLayout()
 
-        # Status bar
-        self.status_bar = QStatusBar()
-        self.status_bar.setStyleSheet("QStatusBar, QStatusBar QLabel { color: white; }")
-        self.status_bar.showMessage(self.tr("Ready"))
-
-        # Top controls layout
-        controls_layout = QHBoxLayout()
-
-        # Toggle button for enabling/disabling ACF Log Reader
-        self.toggle_acf_btn = QPushButton(self.tr("Disable ACF Log Reader"))
-        self.toggle_acf_btn.setToolTip(self.tr("Click to disable the ACF Log Reader"))
-        self.toggle_acf_btn.clicked.connect(self._on_toggle_acf_clicked)
-        controls_layout.addWidget(self.toggle_acf_btn)
-
-        # Search box with debounced filtering
-        self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText(self.tr("Search..."))
-        self.search_box.textChanged.connect(self._debounced_filter_table)
-        controls_layout.addWidget(self.search_box)
-
-        # Refresh button to reload ACF data manually
-        self.refresh_btn = QPushButton(self.tr("Refresh"))
-        self.refresh_btn.clicked.connect(self._on_refresh_clicked)
-        controls_layout.addWidget(self.refresh_btn)
-
-        # Import ACF data button
         self.import_acf_btn = QPushButton(self.tr("Import ACF Data"))
         self.import_acf_btn.clicked.connect(self._on_import_acf_clicked)
-        controls_layout.addWidget(self.import_acf_btn)
+        acf_buttons_layout.addWidget(self.import_acf_btn)
 
-        # Export raw ACF file button
         self.export_acf_btn = QPushButton(self.tr("Export ACF Data"))
         self.export_acf_btn.clicked.connect(self._on_export_acf_clicked)
-        controls_layout.addWidget(self.export_acf_btn)
+        acf_buttons_layout.addWidget(self.export_acf_btn)
 
-        # Export table data to CSV button
-        self.export_btn = QPushButton(self.tr("Export to CSV"))
-        self.export_btn.clicked.connect(self._on_export_to_csv_clicked)
-        controls_layout.addWidget(self.export_btn)
+        self.export_csv_btn = QPushButton(self.tr("Export to CSV"))
+        self.export_csv_btn.clicked.connect(self._on_export_to_csv_clicked)
+        acf_buttons_layout.addWidget(self.export_csv_btn)
 
-        main_layout.addLayout(controls_layout)
+        # Add search bar
+        acf_buttons_layout.addStretch()
 
-        # Table view with columns for mod data
-        self.table_view = QTableView()
-        # No horizontal scrollbar - columns fill viewport width
-        self.table_view.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        search_label = QLabel(self.tr("Search:"))
+        acf_buttons_layout.addWidget(search_label)
+
+        # Column filter dropdown
+        self.search_column_filter = QComboBox()
+        self.search_column_filter.addItem(self.tr("All Searchable Columns"), -1)
+        for col_idx in self.SEARCHABLE_COLUMNS:
+            col_name = ColumnIndex(col_idx).name.replace("_", " ").title()
+            self.search_column_filter.addItem(col_name, col_idx)
+        self.search_column_filter.currentIndexChanged.connect(
+            self._on_search_column_changed
         )
-        header = self.table_view.horizontalHeader()
-        if isinstance(header, QHeaderView):
-            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            header.setMinimumSectionSize(self.MIN_COLUMN_WIDTH)
+        acf_buttons_layout.addWidget(self.search_column_filter)
 
-        main_layout.addWidget(self.table_view)
-
-        # Initialize table model and proxy for filtering/sorting
-        self.table_model = AcfTableModel()
-        self.proxy_model = AcfSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self.table_model)
-        self.table_view.setModel(self.proxy_model)
-        self.table_view.setItemDelegate(ActiveModDelegate(self))
-
-        # Enable sorting by clicking column headers
-        self.table_view.setSortingEnabled(True)
-        # Default sort: most recently downloaded first
-        self.table_view.sortByColumn(
-            self.COL_MOD_DOWNLOADED, Qt.SortOrder.DescendingOrder
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText(
+            self.tr(
+                "Searches selected column or all searchable columns if set to 'All'"
+            )
         )
+        self.search_input.textChanged.connect(self._on_search_text_changed)
+        acf_buttons_layout.addWidget(self.search_input, 1)
 
-        # Helper for proportional column resizing
-        self.table_resizer = TableResizer(self.table_view, self.MIN_COLUMN_WIDTH)
+        # Insert button layout above the table in editor_layout
+        self.layouts.editor_layout.insertLayout(0, acf_buttons_layout)
 
-        main_layout.addWidget(self.status_bar)
-        self.setLayout(main_layout)
+        # Set up active mod delegate for highlighting active mods
+        self.active_mod_delegate = ActiveModDelegate(parent=self)
+        self.editor_table_view.setItemDelegate(self.active_mod_delegate)
 
-        # Right-click context menu on table rows
-        self.table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.table_view.customContextMenuRequested.connect(self.show_context_menu)
+        self.start_acf_reader()
 
-        # Keyboard shortcuts for common actions
-        self.refresh_action = QAction("Refresh", self)
-        self.refresh_action.setShortcut(QKeySequence("F5"))
-        self.refresh_action.triggered.connect(self._on_refresh_clicked)
-        self.addAction(self.refresh_action)
-
-        self.import_acf_action = QAction("Import ACF Data", self)
-        self.import_acf_action.setShortcut(QKeySequence("Ctrl+I"))
-        self.import_acf_action.triggered.connect(self._on_import_acf_clicked)
-        self.addAction(self.import_acf_action)
-
-        self.export_acf_action = QAction("Export ACF Data", self)
-        self.export_acf_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
-        self.export_acf_action.triggered.connect(self._on_export_acf_clicked)
-        self.addAction(self.export_acf_action)
-
-        self.export_csv_action = QAction("Export to CSV", self)
-        self.export_csv_action.setShortcut(QKeySequence("Ctrl+E"))
-        self.export_csv_action.triggered.connect(self._on_export_to_csv_clicked)
-        self.addAction(self.export_csv_action)
-
-        self.search_action = QAction("Search", self)
-        self.search_action.setShortcut(QKeySequence("Ctrl+F"))
-        self.search_action.triggered.connect(self.search_box.setFocus)
-        self.addAction(self.search_action)
-
-        # Track file modification times to skip redundant loads
-        self._last_steamcmd_acf_mtime: Optional[float] = None
-        self._last_steam_acf_mtime: Optional[float] = None
-
-        # Listen to metadata changes to invalidate caches
-        self.metadata_manager.mod_created_signal.connect(self._clear_caches)
-        self.metadata_manager.mod_deleted_signal.connect(self._clear_caches)
-        self.metadata_manager.mod_metadata_updated_signal.connect(self._clear_caches)
-
-        # Handle application shutdown gracefully
-        self._app_quitting = False
-        app = QApplication.instance()
-        if app:
-            app.aboutToQuit.connect(self._on_app_quitting)
-
-        # Keep dialog visible while app is running
-        self.visibility_timer = QTimer(self)
-        self.visibility_timer.timeout.connect(self._check_visibility)
-        self.visibility_timer.start(1000)
-
-        # Initialize periodic refresh timer
-        self._start_refresh_timer()
-
-        # Wait for initial refresh before starting auto-refresh
-        EventBus().refresh_finished.connect(self._update_acf_reader_state)
-        logger.info("Waiting for initial refresh to complete.")
-
-    def _on_toggle_acf_clicked(self) -> None:
+    def start_acf_reader(self) -> None:
         """
-        Toggle ACF Log Reader enabled state and persist to settings.
-
-        Updates the configuration and triggers state refresh.
+        Populate ACF table when metadata refresh completes
+        Ensures both metadata and active mods list are synchronized
+        Ensures that acf reader is always refreshed when metadata is updated.
+        Triggered by do_refresh method in main_content_panel.py
         """
-        self.settings_controller.settings.enable_acf_log_reader = (
-            not self.settings_controller.settings.enable_acf_log_reader
-        )
-        self.settings_controller.settings.save()
-        self._update_acf_reader_state()
+        # TODO; need to find a better way to ensure this happens every time metadata is updated other than manual refresh
+        EventBus().refresh_finished.connect(self._populate_from_metadata)
 
-    def _update_acf_reader_state(self) -> None:
+    def _batch_add_acf_rows(
+        self,
+        acf_entries: list[tuple[str, str, int | None]],
+        pfid_to_mod: dict[str, tuple[str, dict[str, Any]]],
+    ) -> None:
         """
-        Update UI state and functionality based on enable_acf_log_reader setting.
+        Batch add multiple ACF rows directly to the model without individual widget creation.
 
-        Enables/disables controls, updates button UI, starts/stops auto-refresh,
-        and loads/clears data accordingly.
+        Adds all items to the model in one operation, then adds checkboxes in batch.
+        Also adds clickable path links and workshop page buttons.
+
+        Args:
+            acf_entries: List of (pfid, source, timeupdated) tuples
+            pfid_to_mod: Pre-built map of PFID to (UUID, metadata) tuples
         """
-        is_enabled = self.settings_controller.settings.enable_acf_log_reader
-        logger.info(f"ACF Log Reader {'enabled' if is_enabled else 'disabled'}")
+        # Prepare all rows and track metadata for widget creation
+        all_rows = []
+        row_metadata = []  # Store (path, workshop_url) for each row
 
-        # Update all controls and button UI in one call
-        self._set_all_controls_enabled(is_enabled)
+        for pfid, source, timeupdated in acf_entries:
+            try:
+                if pfid in pfid_to_mod:
+                    uuid, metadata = pfid_to_mod[pfid]
+                else:
+                    uuid = None
+                    metadata = {
+                        "name": f"Unknown (PFID: {pfid})",
+                        "authors": "",
+                        "packageid": "",
+                        "publishedfileid": pfid,
+                        "supportedversions": "",
+                        "path": "",
+                    }
 
-        if is_enabled:
-            self.status_bar.showMessage(self.tr("Ready"))
-            # Start auto-refresh timer and load fresh data
-            if hasattr(self, "refresh_timer"):
-                self.refresh_timer.start()
-            # Reset modification times to force fresh load
-            self._last_steamcmd_acf_mtime = None
-            self._last_steam_acf_mtime = None
-            self.load_acf_data()
-        else:
-            self.status_bar.showMessage(self.tr("ACF Log Reader disabled"))
-            self._stop_refresh_timer()
-            # Clear table and caches when disabled
-            self.table_model.set_entries([])
-            self._clear_caches()
-
-    def _stop_refresh_timer(self) -> None:
-        """Stop the auto-refresh timer if currently running."""
-        if hasattr(self, "refresh_timer") and self.refresh_timer.isActive():
-            self.refresh_timer.stop()
-            logger.debug("ACF Log Reader refresh timer stopped")
-
-    def _on_app_quitting(self) -> None:
-        """Handle application shutdown by stopping timers."""
-        self._app_quitting = True
-        self.visibility_timer.stop()
-
-    def _check_visibility(self) -> None:
-        """Keep dialog visible while application is running."""
-        if not self._app_quitting and not self.isVisible():
-            self.show()
-
-    def _clear_caches(self) -> None:
-        """
-        Clear all model caches (mod names, paths, and metadata).
-
-        Called when mods change or when disabling the ACF reader to ensure
-        fresh data on next load.
-        """
-        self.table_model._mod_name_cache.clear()
-        self.table_model._mod_path_cache.clear()
-        self.table_model._metadata_cache.clear()
-
-    def _start_refresh_timer(self) -> None:
-        """
-        Initialize a timer to periodically refresh the ACF data.
-
-        The actual timer start is controlled by the ACF reader enabled state.
-        When started, the timer triggers load_acf_data() at REFRESH_INTERVAL_MS
-        intervals (30 seconds).
-        """
-        self.refresh_timer = QTimer(self)
-        self.refresh_timer.setInterval(self.REFRESH_INTERVAL_MS)
-        self.refresh_timer.timeout.connect(self.load_acf_data)
-
-    def _apply_filter(self) -> None:
-        """
-        Apply search filter to the proxy model and update status.
-
-        Sets the filter text and updates the status bar with result counts.
-        """
-        self.proxy_model.setFilterText(self.search_box.text())
-        # Update status bar with search result count
-        total_rows = self.table_model.rowCount()
-        filtered_rows = self.proxy_model.rowCount()
-        if self.search_box.text():
-            self.status_bar.showMessage(
-                self.tr("Showing {filtered} of {total} items (filtered)").format(
-                    filtered=filtered_rows, total=total_rows
+                name = metadata.get("name", f"Unknown (PFID: {pfid})")
+                authors = metadata.get("authors", "")
+                packageid = metadata.get("packageid", pfid)
+                supported_versions = ModInfo._parse_supported_versions_static(
+                    metadata.get("supportedversions")
                 )
-            )
-        else:
-            self.status_bar.showMessage(
-                self.tr("Showing {total} items").format(total=total_rows)
-            )
+                path = metadata.get("path", "")
 
-    def _show_searching_status(self) -> None:
-        """Display 'Searching...' status message during debounce delay."""
-        self.status_bar.showMessage(self.tr("Searching..."))
+                # Format time displays
+                downloaded_time_raw = metadata.get("internal_time_touched")
+                downloaded_time = (
+                    format_time_display(int(downloaded_time_raw))[0]
+                    if downloaded_time_raw
+                    else ""
+                )
 
-    def _debounced_filter_table(self) -> None:
+                # Use timeupdated from ACF if provided, otherwise use metadata
+                update_time_raw = (
+                    timeupdated
+                    if timeupdated
+                    else metadata.get("external_time_updated")
+                )
+                updated_time = (
+                    format_time_display(int(update_time_raw))[0]
+                    if update_time_raw
+                    else ""
+                )
+
+                workshop_url = ModInfo._generate_workshop_url(pfid)
+
+                # Create items directly
+                # Note: Path and Workshop URL columns will be displayed via widgets,
+                # so they are created as empty items to avoid duplicate display
+                base_items = [
+                    QStandardItem(name),
+                    QStandardItem(authors),
+                    QStandardItem(packageid),
+                    QStandardItem(pfid),
+                    QStandardItem(supported_versions),
+                    QStandardItem(downloaded_time),
+                    QStandardItem(updated_time),
+                    QStandardItem(source),
+                    QStandardItem(""),  # Path will be displayed via widget
+                    QStandardItem(""),  # Workshop URL will be displayed via widget
+                ]
+
+                # Set UUID data on name item
+                if uuid:
+                    base_items[0].setData(uuid, Qt.ItemDataRole.UserRole)
+
+                all_rows.append(base_items)
+                row_metadata.append((path, workshop_url))
+            except Exception as e:
+                logger.error(f"Failed to prepare ACF entry {pfid}: {e}", exc_info=True)
+                continue
+
+        # Track starting row count before adding new rows
+        start_row = self.editor_model.rowCount()
+
+        # Add all rows to model (appendRow is called for each, which is unavoidable)
+        for items in all_rows:
+            # Add empty string to prevent "None" text from appearing when ActiveModDelegate paints active mod cells
+            checkbox_item = QStandardItem("")
+            row_items = [checkbox_item] + items
+            self.editor_model.appendRow(row_items)
+
+        # Add checkboxes and interactive widgets (path links and workshop buttons)
+        for i, row_idx in enumerate(range(start_row, self.editor_model.rowCount())):
+            # Add checkbox
+            checkbox = QCheckBox()
+            checkbox.setObjectName("selectCheckbox")
+            checkbox_index = self.editor_model.item(row_idx, 0).index()
+            self.editor_table_view.setIndexWidget(checkbox_index, checkbox)
+
+            # Add path link if path exists
+            path, workshop_url = row_metadata[i]
+            if path and path.strip():
+                path_link = self._create_path_link(path, "pathLink")
+                path_index = self.editor_model.item(
+                    row_idx, ColumnIndex.PATH.value
+                ).index()
+                self.editor_table_view.setIndexWidget(path_index, path_link)
+
+            # Add workshop button if workshop URL exists
+            if workshop_url:
+                workshop_button = self._create_workshop_button(
+                    workshop_url, "workshopButton"
+                )
+                workshop_index = self.editor_model.item(
+                    row_idx, ColumnIndex.WORKSHOP_PAGE.value
+                ).index()
+                self.editor_table_view.setIndexWidget(workshop_index, workshop_button)
+
+    def _apply_sort_and_enable(self) -> None:
         """
-        Apply filter with debouncing to avoid excessive recompilation.
+        Apply default sort indicator and enable sorting mode after initial table population.
 
-        Delays filter application by DEBOUNCE_DELAY_MS to allow user to finish
-        typing before performing expensive regex operations.
+        Sets the visual sort indicator on the "Mod Downloaded" column in descending order.
+        Actual sorting is deferred to user clicks on column headers to avoid performance
+        impact from string-based sorting of formatted timestamps.
         """
-        if hasattr(self, "_filter_timer") and self._filter_timer.isActive():
-            self._filter_timer.stop()
-        else:
-            self._filter_timer: QTimer = QTimer(self)
-            self._filter_timer.setSingleShot(True)
-            self._filter_timer.timeout.connect(self._apply_filter)
-        self._filter_timer.start(self.DEBOUNCE_DELAY_MS)
+        # Enable user-triggered sorting via column header clicks
+        self.editor_table_view.setSortingEnabled(True)
 
-    def _set_buttons_enabled(self, enabled: bool) -> None:
-        """
-        Enable/disable action buttons during operations.
-
-        Toggle button is always enabled to allow user control. Called during
-        long operations to prevent duplicate requests.
-        """
-        self.refresh_btn.setEnabled(enabled)
-        self.import_acf_btn.setEnabled(enabled)
-        self.export_acf_btn.setEnabled(enabled)
-        self.export_btn.setEnabled(enabled)
-
-    def _set_all_controls_enabled(self, enabled: bool) -> None:
-        """
-        Enable/disable all controls and update toggle button UI.
-
-        Updates button text/tooltip, enables/disables controls except toggle button
-        which always remains enabled for user control.
-        """
-        # Update toggle button text and tooltip
-        button_text = self.tr(
-            "Disable ACF Log Reader" if enabled else "Enable ACF Log Reader"
+        # Set sort indicator on the header (rows are already in correct order)
+        self.editor_table_view.horizontalHeader().setSortIndicator(
+            self.DEFAULT_SORT_COLUMN, self.DEFAULT_SORT_ORDER
         )
-        tooltip_text = self.tr(
-            "Click to disable the ACF Log Reader"
-            if enabled
-            else "Click to enable the ACF Log Reader"
-        )
-        self.toggle_acf_btn.setText(button_text)
-        self.toggle_acf_btn.setToolTip(tooltip_text)
 
-        # Enable/disable action buttons
-        self._set_buttons_enabled(enabled)
+    def _update_active_pfids(self) -> None:
+        """
+        Update the set of active PFIDs from active_mods_list.
 
-        # Enable/disable other controls
-        self.search_box.setEnabled(enabled)
-        self.table_view.setEnabled(enabled)
-        # Toggle button always enabled
-        self.toggle_acf_btn.setEnabled(True)
+        Extracts Published File IDs (PFIDs) from the UUIDs of mods currently active
+        in the game's load order. These PFIDs are used by ActiveModDelegate to highlight
+        matching rows in the table with bold white text on dark green background.
 
-    def _on_refresh_clicked(self) -> None:
-        """Handle manual refresh button click - force full ACF reload."""
-        self._set_buttons_enabled(False)
+        Repaints the table viewport after updating to apply the highlighting changes.
+        """
+        self.active_pfids.clear()
+        if not self.active_mods_list:
+            return
+
+        if not hasattr(self.active_mods_list, "uuids"):
+            return
+
+        uuids = getattr(self.active_mods_list, "uuids", [])
+        for mod_uuid in uuids:
+            metadata = self.metadata_manager.internal_local_metadata.get(mod_uuid)
+            if metadata:
+                pfid = metadata.get("publishedfileid")
+                if pfid:
+                    self.active_pfids.add(str(pfid))
+
+        # Repaint table viewport to apply active mod highlighting
+        self.editor_table_view.viewport().update()
+
+    def _populate_from_metadata(self) -> None:
+        """
+        Populate the ACF table from MetadataManager's ACF and metadata.
+
+        Reads steamcmd_acf_data and workshop_acf_data from MetadataManager and displays
+        all workshop items in the table with the following process:
+        1. Updates active PFID set for mod highlighting
+        2. Extracts workshop entries from both ACF sources
+        3. Batch adds rows with checkboxes, path links, and workshop buttons
+        4. Enables sorting (sets default sort on first load, preserves user sort on refresh)
+
+        Called automatically when EventBus().refresh_finished signal is emitted
+        (triggered on app startup and after manual refresh).
+        """
+        logger.warning("Populating ACF Log Reader")
+        overall_start = time.time()
+        # Update active PFIDs from active mods list
+        self._update_active_pfids()
+
         try:
-            # Clear all caches and reset modification times to force ACF reload
-            self.table_model._mod_name_cache.clear()
-            self.table_model._mod_path_cache.clear()
-            self.table_model._metadata_cache.clear()
-            self._last_steamcmd_acf_mtime = None
-            self._last_steam_acf_mtime = None
-            self.load_acf_data()
-        finally:
-            self._set_buttons_enabled(True)
+            self._clear_table_model()
+
+            # Get ACF data from MetadataManager
+            steamcmd_acf_data = self.metadata_manager.steamcmd_acf_data
+            workshop_acf_data = self.metadata_manager.workshop_acf_data
+
+            logger.debug(
+                f"SteamCMD ACF data loaded: {bool(steamcmd_acf_data)}, "
+                f"Workshop ACF data loaded: {bool(workshop_acf_data)}, "
+                f"Internal metadata count: {len(self.metadata_manager.internal_local_metadata)}"
+            )
+
+            # Extract workshop items from both sources
+            acf_entries = self._extract_acf_entries(
+                steamcmd_acf_data, workshop_acf_data
+            )
+
+            logger.info(f"ACF Log Reader: Populating with {len(acf_entries)} entries")
+
+            # Build PFID to mod metadata map once for fast lookups during population
+            map_start = time.time()
+            acf_pfids = {pfid for pfid, _, _ in acf_entries}
+            pfid_to_mod = self._get_acf_mods_from_metadata(acf_pfids)
+            map_elapsed = time.time() - map_start
+            logger.info(f"ACF Log Reader: PFID map built in {map_elapsed:.3f}s")
+
+            # Disable sorting while populating to improve performance
+            self.editor_table_view.setSortingEnabled(False)
+
+            # Disable updates during bulk row addition
+            self.editor_table_view.setUpdatesEnabled(False)
+
+            # Batch add all rows to the table
+            add_start = time.time()
+            self._batch_add_acf_rows(acf_entries, pfid_to_mod)
+            add_elapsed = time.time() - add_start
+            logger.info(
+                f"ACF Log Reader: Added {self.editor_model.rowCount()} rows in {add_elapsed:.3f}s"
+            )
+
+            # Re-enable updates
+            self.editor_table_view.setUpdatesEnabled(True)
+
+            total_elapsed = time.time() - overall_start
+            logger.info(f"ACF Log Reader: Population completed in {total_elapsed:.3f}s")
+
+            # Apply sorting only on initial load, then let user control sorting
+            if self._is_first_population:
+                QTimer.singleShot(0, self._apply_sort_and_enable)
+                self._is_first_population = False
+            else:
+                # Just enable sorting, don't change sort order
+                self.editor_table_view.setSortingEnabled(True)
+        except Exception as e:
+            logger.error(f"Failed to populate ACF Log Reader: {e}", exc_info=True)
+            # Re-enable updates even on error
+            self.editor_table_view.setUpdatesEnabled(True)
+            self.editor_table_view.setSortingEnabled(True)
+            raise
+
+    def _extract_acf_entries(
+        self,
+        steamcmd_acf_data: dict[str, Any],
+        workshop_acf_data: dict[str, Any],
+    ) -> list[tuple[str, str, int | None]]:
+        """
+        Extract workshop item entries from ACF data.
+
+        Args:
+            steamcmd_acf_data: SteamCMD ACF data dictionary with AppWorkshop wrapper
+            workshop_acf_data: Workshop ACF data dictionary with AppWorkshop wrapper
+
+        Returns:
+            List of (PFID, source, timeupdated) tuples
+        """
+        entries = []
+        seen_pfids = set()
+
+        # Extract from SteamCMD ACF
+        if steamcmd_acf_data:
+            steamcmd_items = (
+                steamcmd_acf_data.get("AppWorkshop", {}).get(
+                    "WorkshopItemsInstalled", {}
+                )
+                or {}
+            )
+            logger.debug(f"Found {len(steamcmd_items)} items in SteamCMD ACF")
+            for pfid, item_data in steamcmd_items.items():
+                if isinstance(item_data, dict):
+                    timeupdated = item_data.get("timeupdated")
+                    try:
+                        timeupdated = int(timeupdated) if timeupdated else None
+                    except (ValueError, TypeError):
+                        timeupdated = None
+                    entries.append((pfid, "SteamCMD", timeupdated))
+                    seen_pfids.add(pfid)
+
+        # Extract from Workshop ACF (avoid duplicates)
+        if workshop_acf_data:
+            workshop_items = (
+                workshop_acf_data.get("AppWorkshop", {}).get(
+                    "WorkshopItemsInstalled", {}
+                )
+                or {}
+            )
+            logger.debug(f"Found {len(workshop_items)} items in Workshop ACF")
+            for pfid, item_data in workshop_items.items():
+                if pfid not in seen_pfids:
+                    if isinstance(item_data, dict):
+                        timeupdated = item_data.get("timeupdated")
+                        try:
+                            timeupdated = int(timeupdated) if timeupdated else None
+                        except (ValueError, TypeError):
+                            timeupdated = None
+                        entries.append((pfid, "Steam", timeupdated))
+                        seen_pfids.add(pfid)
+
+        return entries
+
+    def _get_acf_mods_from_metadata(
+        self, acf_pfids: set[str]
+    ) -> dict[str, tuple[str, dict[str, Any]]]:
+        """
+        Extract mod metadata for ACF PFIDs.
+
+        Builds a dictionary of PFID to (UUID, metadata) for fast lookup.
+
+        Args:
+            acf_pfids: Set of PFIDs from ACF files
+
+        Returns:
+            Dictionary mapping PFID to (UUID, metadata) tuple
+        """
+        pfid_to_mod: dict[str, tuple[str, dict[str, Any]]] = {}
+        for uuid, metadata in self.metadata_manager.internal_local_metadata.items():
+            pfid = metadata.get("publishedfileid")
+            if pfid:
+                pfid_str = str(pfid)
+                if pfid_str in acf_pfids:
+                    pfid_to_mod[pfid_str] = (uuid, metadata)
+        return pfid_to_mod
 
     def _on_import_acf_clicked(self) -> None:
-        """Handle import ACF button click."""
-        self._set_buttons_enabled(False)
-        try:
-            self.import_acf_data()
-        finally:
-            self._set_buttons_enabled(True)
+        """Handle import ACF data button click."""
+        self.import_acf_data()
 
     def _on_export_acf_clicked(self) -> None:
-        """Handle export ACF button click."""
-        self._set_buttons_enabled(False)
-        try:
-            self.export_acf_data()
-        finally:
-            self._set_buttons_enabled(True)
+        """Handle export ACF data button click."""
+        self.export_acf_data()
 
     def _on_export_to_csv_clicked(self) -> None:
         """Handle export to CSV button click."""
-        self._set_buttons_enabled(False)
-        try:
-            export_to_csv(self)
-        finally:
-            self._set_buttons_enabled(True)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        """Handle window resize by updating column widths."""
-        super().resizeEvent(event)
-        self.table_resizer.handle_resize_event(event)
-
-    def showEvent(self, event: QShowEvent) -> None:
-        """Handle window show by deferring column width application."""
-        super().showEvent(event)
-        self.table_resizer.handle_show_event(event)
-
-    def _start_acf_load_worker(
-        self, steamcmd_acf_path: Optional[Path], steam_acf_path: Optional[Path]
-    ) -> None:
-        """Start background worker to load ACF data."""
-        if self.acf_load_worker is not None and self.acf_load_worker.isRunning():
-            return
-        self.acf_load_worker = AcfLoadWorker(steamcmd_acf_path, steam_acf_path)
-        self.acf_load_worker.finished.connect(self._on_acf_load_worker_finished)
-        self.acf_load_worker.error.connect(self._on_acf_load_worker_error)
-        self.acf_load_worker.start()
-
-    def _on_acf_load_worker_finished(
-        self,
-        entries: list[AcfEntry],
-        steamcmd_acf_data: dict[str, Any],
-        steam_acf_data: dict[str, Any],
-    ) -> None:
-        """
-        Handle completion of ACF load worker.
-
-        Updates both the table display and the MetadataManager cache to ensure
-        other components have access to the latest ACF data.
-        """
-        # Update MetadataManager cache with loaded ACF data
-        if steamcmd_acf_data:
-            self.metadata_manager.steamcmd_acf_data = steamcmd_acf_data
-            logger.debug("Updated MetadataManager.steamcmd_acf_data from worker")
-        if steam_acf_data:
-            self.metadata_manager.workshop_acf_data = steam_acf_data
-            logger.debug("Updated MetadataManager.workshop_acf_data from worker")
-
-        self.entries = entries
-        self.populate_table(entries)
-        self.status_bar.showMessage(
-            self.tr("Loaded {count} items | Last updated: {time}").format(
-                count=len(entries),
-                time=datetime.now().strftime("%H:%M:%S"),
-            )
-        )
-        if not self.refresh_timer.isActive():
-            self.refresh_timer.start()
-        self._set_buttons_enabled(True)
-
-    def _handle_worker_error(self, error_msg: str, title: str = "Error") -> None:
-        """Handle errors from background workers."""
-        logger.error(f"{title}: {error_msg}")
-        self.status_bar.showMessage(error_msg)
-        self._set_buttons_enabled(True)
-        # Stop auto-refresh when an error occurs
-        if hasattr(self, "refresh_timer") and self.refresh_timer.isActive():
-            self.refresh_timer.stop()
-        self._show_error_dialog(title, error_msg)
-
-    def _show_error_dialog(
-        self, title: str, message: str, details: Optional[str] = None
-    ) -> None:
-        """Show error dialog with optional details."""
-        show_warning(
-            title=self.tr(title),
-            text=message,
-            information=details,
-        )
-
-    def _on_acf_load_worker_error(self, error_msg: str) -> None:
-        """Handle error from ACF load worker."""
-        self._handle_worker_error(error_msg, "ACF Load Error")
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        """Prevent the dialog from closing since AcfLogReader should always remain open."""
-        event.ignore()
-
-    def _get_acf_info(
-        self,
-    ) -> tuple[Optional[Path], Path, Optional[float], Optional[float]]:
-        """Get paths to ACF files and their modification times."""
-        steamcmd = self.steamcmd_interface
-        steamcmd_acf_path = None
-        if (
-            steamcmd
-            and hasattr(steamcmd, "steamcmd_appworkshop_acf_path")
-            and steamcmd.steamcmd_appworkshop_acf_path
-        ):
-            steamcmd_acf_path = Path(steamcmd.steamcmd_appworkshop_acf_path)
-        current_instance = self.settings_controller.settings.current_instance
-        steam_acf_path = (
-            Path(
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].workshop_folder
-            ).parent.parent
-            / "appworkshop_294100.acf"
-        )
-        steamcmd_acf_mtime = (
-            steamcmd_acf_path.stat().st_mtime
-            if steamcmd_acf_path and steamcmd_acf_path.exists()
-            else None
-        )
-        steam_acf_mtime = (
-            steam_acf_path.stat().st_mtime if steam_acf_path.exists() else None
-        )
-        return steamcmd_acf_path, steam_acf_path, steamcmd_acf_mtime, steam_acf_mtime
-
-    def _check_skip_reload(
-        self, steamcmd_acf_mtime: Optional[float], steam_acf_mtime: Optional[float]
-    ) -> bool:
-        """Check if reload can be skipped based on modification times."""
-        # Skip only if both are None (no files) or modification times haven't changed
-        if steamcmd_acf_mtime is None and steam_acf_mtime is None:
-            return False
-        if (
-            steamcmd_acf_mtime == self._last_steamcmd_acf_mtime
-            and steam_acf_mtime == self._last_steam_acf_mtime
-        ):
-            count = len(self.entries) if hasattr(self, "entries") else 0
-            self.status_bar.showMessage(
-                self.tr("Loaded {count} items | Last updated: {time}").format(
-                    count=count,
-                    time=datetime.now().strftime("%H:%M:%S"),
-                )
-            )
-            self._set_buttons_enabled(True)
-            return True
-        return False
-
-    def _update_modification_times(
-        self, steamcmd_acf_mtime: Optional[float], steam_acf_mtime: Optional[float]
-    ) -> None:
-        """
-        Update stored modification times for ACF files.
-
-        Called after loading ACF data to cache the current modification times.
-        These are compared on subsequent loads to determine if a reload is needed.
-
-        Args:
-            steamcmd_acf_mtime: Modification time of SteamCMD ACF file, or None.
-            steam_acf_mtime: Modification time of Steam ACF file, or None.
-        """
-        self._last_steamcmd_acf_mtime = steamcmd_acf_mtime
-        self._last_steam_acf_mtime = steam_acf_mtime
-
-    def load_acf_data(self) -> None:
-        """
-        Load workshop item data from SteamCMD and Steam ACF files using background thread.
-
-        Loads fresh data via worker thread and updates MetadataManager cache with results.
-        This avoids double-reading ACF files and prevents file lock contention.
-
-        Raises:
-            RuntimeError: If neither ACF file can be loaded or data format is invalid.
-            FileNotFoundError: If the ACF files do not exist.
-            Exception: For other errors during loading or parsing.
-        """
-        logger.info("Starting ACF data loading.")
-        self.status_bar.showMessage("Loading ACF data...")
-        self._set_buttons_enabled(False)
-        logger.debug(
-            f"Buttons disabled for loading. Modification times: steamcmd={self._last_steamcmd_acf_mtime}, steam={self._last_steam_acf_mtime}"
-        )
-
-        try:
-            steamcmd_acf_path, steam_acf_path, steamcmd_acf_mtime, steam_acf_mtime = (
-                self._get_acf_info()
-            )
-
-            if self._check_skip_reload(steamcmd_acf_mtime, steam_acf_mtime):
-                return
-
-            self._update_modification_times(steamcmd_acf_mtime, steam_acf_mtime)
-            self._start_acf_load_worker(steamcmd_acf_path, steam_acf_path)
-
-        except FileNotFoundError as e:
-            logger.error(f"ACF file not found: {str(e)}")
-            self.status_bar.showMessage(f"ACF file not found: {str(e)}")
-            self._set_buttons_enabled(True)
-        except Exception as e:
-            logger.error(f"Error starting ACF data loading: {str(e)}")
-            error_msg = f"{str(e)}"
-            self.status_bar.showMessage(error_msg)
-            self._set_buttons_enabled(True)
-
-    def show_context_menu(self, position: QPoint) -> None:
-        menu = QMenu()
-
-        # Get selected row
-        index = self.table_view.indexAt(position)
-        if index.isValid():
-            # Map to source model
-            source_index = self.proxy_model.mapToSource(index)
-            row = source_index.row()
-            pfid = self.table_model.data(self.table_model.index(row, self.COL_PFID))
-
-            if pfid:
-                # Add view in Steam action
-                view_in_steam = menu.addAction(self.tr("Open Mod URL"))
-                view_in_steam.setIcon(
-                    self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
-                )
-                url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                view_in_steam.triggered.connect(partial(platform_specific_open, url))
-
-                # Add copy PFID action
-                copy_pfid = menu.addAction(self.tr("Copy PFID"))
-                copy_pfid.setIcon(
-                    self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)
-                )
-                copy_pfid.triggered.connect(
-                    partial(QApplication.clipboard().setText, pfid)
-                )
-
-                # Add view mod details action
-                view_details = menu.addAction(self.tr("View Mod Details"))
-                view_details.setIcon(
-                    self.style().standardIcon(
-                        QStyle.StandardPixmap.SP_FileDialogInfoView
-                    )
-                )
-                view_details.triggered.connect(partial(self._view_mod_details, pfid))
-
-                # Add open folder action
-                mod_path = self.table_model.data(
-                    self.table_model.index(row, self.COL_MOD_PATH)
-                )
-                if mod_path and Path(mod_path).exists():
-                    open_folder = menu.addAction(self.tr("Open Mod Folder"))
-                    open_folder.setIcon(
-                        self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon)
-                    )
-                    open_folder.triggered.connect(
-                        partial(platform_specific_open, mod_path)
-                    )
-
-        menu.exec_(self.table_view.viewport().mapToGlobal(position))
-
-    def _view_mod_details(self, pfid: str) -> None:
-        """Show mod details in a dialog."""
-        name = get_mod_name_from_pfid(pfid)
-        path = get_mod_path_from_pfid(pfid)
-        details = f"PFID: {pfid}\nName: {name}\nPath: {path}"
-        show_information(title=self.tr("Mod Details"), text=details)
-
-    def _build_active_pfids(self) -> None:
-        """
-        Build set of currently active mod PFIDs.
-
-        Extracts PFIDs from the active mods list by looking up metadata for each UUID.
-        Used to highlight active mods in the table view.
-        """
-        self.active_pfids = set()
-        if self.active_mods_list is not None:
-            uuids = getattr(self.active_mods_list, "uuids", None)
-            if uuids is not None:
-                for uuid in uuids:
-                    mod_data = self.metadata_manager.internal_local_metadata.get(uuid)
-                    if mod_data and "publishedfileid" in mod_data:
-                        self.active_pfids.add(mod_data["publishedfileid"])
-        logger.debug(f"Active PFIDs: {self.active_pfids}")
-
-    def populate_table(self, entries: list[AcfEntry]) -> None:
-        """
-        Populate the table with ACF data entries and highlight active mods.
-
-        Args:
-            entries: List of AcfEntry objects containing workshop mod metadata.
-        """
-        logger.debug(f"Populating table with {len(entries)} entries")
-        self.entries = entries
-        self.table_model.set_entries(entries)
-        self._build_active_pfids()
+        self.export_to_csv()
 
     def import_acf_data(self) -> None:
         """
-        Import an ACF file to replace the current SteamCMD ACF data.
+        Trigger ACF file import via EventBus signal.
 
-        Shows confirmation dialog and imports the file if user confirms.
+        The import dialog and logic are handled by MainContentPanel._do_import_steamcmd_acf_data.
         """
-        answer = show_dialogue_conditional(
-            title=self.tr("Confirm ACF import"),
-            text=self.tr("This will replace your current steamcmd .acf file"),
-            information=self.tr(
-                "Are you sure you want to import .acf? This only works for steamcmd"
-            ),
-            button_text_override=[
-                self.tr("Import .acf"),
-            ],
-        )
-        # Import .acf if user confirms
-        answer_str = str(answer)
-        download_text = self.tr("Import .acf")
-        if download_text in answer_str:
-            EventBus().do_import_acf.emit()
-            self.load_acf_data()
+        EventBus().do_import_acf.emit()
 
     def export_acf_data(self) -> None:
         """
-        Export the raw ACF file to a user-defined location by copying the file.
+        Trigger ACF file export via EventBus signal.
 
-        Shows status messages and error handling for file not found or permission errors.
+        The export dialog and logic are handled by MainContentPanel._do_export_steamcmd_acf_data.
         """
+        EventBus().do_export_acf.emit()
 
-        steamcmd = self.steamcmd_interface
-        if not steamcmd or not hasattr(steamcmd, "steamcmd_appworkshop_acf_path"):
-            logger.warning("Export failed: SteamCMD interface not properly initialized")
-            show_warning(
-                title=self.tr("Export Error"),
-                text=self.tr("SteamCMD interface not properly initialized"),
-            )
-            return
+    def export_to_csv(self) -> None:
+        """
+        Export table data to CSV file.
 
-        acf_path = steamcmd.steamcmd_appworkshop_acf_path
-        if not acf_path or not Path(acf_path).is_file():
-            acf_path_str = acf_path or "None"
-            self.status_bar.showMessage(
-                self.tr("ACF file not found: {acf_path}").format(acf_path=acf_path_str)
-            )
-            logger.error(f"Export failed: ACF file not found: {acf_path_str}")
-            show_warning(
-                title=self.tr("Export Error"),
-                text=self.tr("ACF file not found at: {acf_path}").format(
-                    acf_path=acf_path_str
-                ),
-            )
-            return
+        Uses csv_export_utils for consistent CSV export functionality.
+        """
+        export_to_csv(self)
 
-        file_path = show_dialogue_file(
-            mode="save",
-            caption="Export ACF File",
-            _dir="appworkshop_294100.acf",
-            _filter="ACF Files (*.acf);;All Files (*)",
-        )
-        if not file_path:
-            show_warning(
-                title=self.tr("Export Error"),
-                text=self.tr("Export canceled by user."),
-            )
-            return
+    def _on_search_column_changed(self, index: int) -> None:
+        """
+        Handle search column filter dropdown change.
 
+        Args:
+            index: The index of the selected item in the dropdown.
+        """
+        self.search_column_index = self.search_column_filter.currentData()
+        # Trigger search with current search text
+        self._perform_search()
+
+    def _on_search_text_changed(self, text: str) -> None:
+        """
+        Handle search text changes with debouncing.
+
+        Uses a timer to delay search execution while user is typing to avoid
+        performance issues with large datasets.
+
+        Args:
+            text: The search text from the search input field.
+        """
+        # Restart timer - if user types again within 300ms, this will be cancelled
+        self.search_timer.stop()
+
+        # If search is empty, clear filter immediately without delay
+        if not text.strip():
+            self._perform_search()
+        else:
+            # Start timer for delayed search (300ms)
+            self.search_timer.start(300)
+
+    def _perform_search(self) -> None:
+        """
+        Perform search filtering by reading directly from the model.
+
+        Filters the table to show only rows where searchable columns
+        (Name, Author, Package ID, Published File ID) contain the search text
+        (case-insensitive).
+        """
+        search_text = self.search_input.text()
+        self.apply_search_filter(search_text)
+
+    def apply_search_filter(self, pattern: str) -> None:
+        """
+        Apply search filter to the ACF table.
+
+        Filters rows to show only those where the selected column(s) contain the pattern
+        (case-insensitive). If search_column_index is -1, searches all searchable columns.
+        Otherwise, searches only the selected column.
+
+        Args:
+            pattern: The search pattern (empty string shows all rows)
+        """
+        pattern_lower = pattern.lower()
+
+        # Determine which columns to search
+        if self.search_column_index == -1:
+            # Search all searchable columns
+            columns_to_search = self.SEARCHABLE_COLUMNS
+        else:
+            # Search only the selected column
+            columns_to_search = [self.search_column_index]
+
+        # Disable updates during batch row hide/show operations
+        self.editor_table_view.setUpdatesEnabled(False)
         try:
-            shutil.copy(acf_path, file_path)
-            self.status_bar.showMessage(
-                self.tr("Successfully exported ACF to {file_path}").format(
-                    file_path=file_path
-                )
-            )
-            logger.debug(f"Successfully exported ACF to {file_path}")
-            show_information(
-                title=self.tr("Export Success"),
-                text=self.tr("Successfully exported ACF to {file_path}").format(
-                    file_path=file_path
-                ),
-            )
-        except PermissionError:
-            error_msg = self.tr(
-                "Export failed: Permission denied - check file permissions"
-            )
-            logger.error(f"Export failed due to Permission: {error_msg}")
-            show_warning(title=self.tr("Export Error"), text=error_msg)
-        except Exception as e:
-            error_msg = self.tr("Export failed: {e}").format(e=str(e))
-            logger.error(f"Export failed {error_msg}")
-            show_fatal_error(
-                title=self.tr("Export failed"),
-                text=self.tr("Export failed unknown exception occurred"),
-                details=error_msg,
-            )
+            row_count = self.editor_model.rowCount()
+            for row_idx in range(row_count):
+                if not pattern_lower:
+                    # Empty search shows all rows
+                    self.editor_table_view.setRowHidden(row_idx, False)
+                else:
+                    # Check if search text appears in selected column(s)
+                    row_matches = False
+                    for col_idx in columns_to_search:
+                        index = self.editor_model.index(row_idx, col_idx)
+                        cell_text = str(self.editor_model.data(index) or "")
+                        if pattern_lower in cell_text.lower():
+                            row_matches = True
+                            break
+                    self.editor_table_view.setRowHidden(row_idx, not row_matches)
+        finally:
+            self.editor_table_view.setUpdatesEnabled(True)
 
 
 class ActiveModDelegate(QStyledItemDelegate):
     """
-    Custom cell delegate to highlight active mods in the table.
+    Custom cell delegate for highlighting active mods in the ACF table.
 
-    Renders cells with bold white text on dark green background for mods
-    that are currently active in the game.
+    Renders cells with bold white text on dark green background (#006400) for any mod
+    whose Published File ID (PFID) is present in the parent AcfLogReader's active_pfids set.
+    Active mods are those currently in the game's load order.
+
+    For non-active mods, delegates to default painting.
     """
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -1518,7 +643,7 @@ class ActiveModDelegate(QStyledItemDelegate):
             parent: Parent AcfLogReader widget for accessing active_pfids set.
         """
         super().__init__(parent)
-        self.acf_log_reader: Optional["AcfLogReader"] = cast("AcfLogReader", parent)
+        self.acf_log_reader: Optional[AcfLogReader] = cast("AcfLogReader", parent)
 
     def paint(
         self,
@@ -1527,38 +652,43 @@ class ActiveModDelegate(QStyledItemDelegate):
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
         """
-        Paint cell content with highlighting for active mods.
+        Paint cell with custom styling for active mods.
 
-        Active mods are rendered with bold white text on dark green background.
+        Checks if the mod's PFID is in the active_pfids set. If so, renders with
+        bold white text (#FFFFFF) on dark green background (#006400).
+        Otherwise, delegates to the default QStyledItemDelegate painting.
         """
         acf_log_reader = self.acf_log_reader
         if acf_log_reader is None:
             super().paint(painter, option, index)
             return
 
-        pfid_index: QModelIndex = index.sibling(index.row(), acf_log_reader.COL_PFID)
-        pfid: Optional[str] = acf_log_reader.table_model.data(
-            pfid_index, Qt.ItemDataRole.DisplayRole
-        )
+        # Get PFID from model to check if mod is active
+        pfid_index = index.sibling(index.row(), ColumnIndex.PUBLISHED_FILE_ID.value)
+        pfid = acf_log_reader.editor_model.data(pfid_index, Qt.ItemDataRole.DisplayRole)
 
         # Highlight if this mod's PFID is in the active set
-        if pfid and pfid in getattr(acf_log_reader, "active_pfids", set()):
+        if pfid and pfid in acf_log_reader.active_pfids:
             painter.save()
-
             rect = option.rect  # type: ignore[attr-defined]
-            font: QFont = option.font  # type: ignore[attr-defined]
+            font = option.font  # type: ignore[attr-defined]
 
             # Dark green background for active mods
             painter.fillRect(rect, QColor(0, 100, 0))
             font.setBold(True)
             painter.setFont(font)
-            # White text for contrast
             painter.setPen(QColor(255, 255, 255))
+
+            # Get cell text
+            cell_data = acf_log_reader.editor_model.data(index)
             painter.drawText(
                 rect.adjusted(5, 0, 0, 0),
                 Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-                index.data(),
+                str(cell_data),
             )
             painter.restore()
         else:
             super().paint(painter, option, index)
+
+
+__all__ = ["AcfLogReader", "ActiveModDelegate"]

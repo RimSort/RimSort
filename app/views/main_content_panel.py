@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 import tempfile
 import time
@@ -163,6 +164,7 @@ class MainContent(QObject):
                 self._on_do_build_steam_workshop_database
             )
             EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
+            EventBus().do_export_acf.connect(self._do_export_steamcmd_acf_data)
             EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
@@ -2009,11 +2011,82 @@ class MainContent(QObject):
 
     # STEAM{CMD, WORKS} ACTIONS
     def _do_import_steamcmd_acf_data(self) -> None:
-        logger.info("Importing SteamCMD ACF data...")
-        metadata.import_steamcmd_acf_data(
-            rimsort_storage_path=str(AppInfo().app_storage_folder),
-            steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
+        """
+        Import an ACF file to replace the current SteamCMD ACF data.
+
+        Shows confirmation dialog and imports the file if user confirms.
+        """
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Confirm ACF import"),
+            text=self.tr("This will replace your current steamcmd .acf file"),
+            information=self.tr(
+                "Are you sure you want to import .acf? This only works for steamcmd"
+            ),
+            button_text_override=[
+                self.tr("Import .acf"),
+            ],
         )
+        # Import .acf if user confirms
+        answer_str = str(answer)
+        import_text = self.tr("Import .acf")
+        if import_text in answer_str:
+            logger.debug("User confirmed ACF import")
+            logger.info("Importing SteamCMD ACF data...")
+            metadata.import_steamcmd_acf_data(
+                rimsort_storage_path=str(AppInfo().app_storage_folder),
+                steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
+            )
+
+    def _do_export_steamcmd_acf_data(self) -> None:
+        """
+        Export the raw ACF file to a user-defined location by copying the file.
+
+        Shows file save dialog and status messages with error handling for file not found
+        or permission errors.
+        """
+        # Get SteamCMD ACF path from steamcmd_wrapper
+        steamcmd_acf_path = Path(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
+
+        if not steamcmd_acf_path or not steamcmd_acf_path.is_file():
+            acf_path_str = str(steamcmd_acf_path) if steamcmd_acf_path else "None"
+            logger.error(f"Export failed: ACF file not found: {acf_path_str}")
+            dialogue.show_warning(
+                title=self.tr("Export Error"),
+                text=self.tr("ACF file not found at: {acf_path}").format(
+                    acf_path=acf_path_str
+                ),
+            )
+            return
+
+        file_path = dialogue.show_dialogue_file(
+            mode="save",
+            caption="Export ACF File",
+            _dir="appworkshop_294100.acf",
+            _filter="ACF Files (*.acf);;All Files (*)",
+        )
+        if not file_path:
+            logger.debug("User canceled export ACF")
+            return
+
+        try:
+            shutil.copy(str(steamcmd_acf_path), file_path)
+            logger.debug(f"Successfully exported ACF to {file_path}")
+            dialogue.show_information(
+                title=self.tr("Export Success"),
+                text=self.tr("Successfully exported ACF to {file_path}").format(
+                    file_path=file_path
+                ),
+            )
+        except PermissionError:
+            error_msg = self.tr(
+                "Export failed: Permission denied - check file permissions"
+            )
+            logger.error(f"Export failed due to Permission: {error_msg}")
+            dialogue.show_warning(title=self.tr("Export Error"), text=error_msg)
+        except Exception as e:
+            error_msg = self.tr("Export failed: {e}").format(e=str(e))
+            logger.error(f"Export failed: {error_msg}")
+            dialogue.show_warning(title=self.tr("Export Error"), text=error_msg)
 
     def _do_reset_steamcmd_acf_data(self) -> None:
         answer = dialogue.show_dialogue_conditional(
