@@ -130,7 +130,9 @@ class AppController(QObject):
 
         # Setup Steam status notifications
         # Keep reference to prevent garbage collection
-        self.steam_status_handler = SteamStatusHandler(parent_widget=self.main_window)
+        self.steam_status_handler = SteamStatusHandler(
+            settings=self.settings, parent_widget=self.main_window
+        )
 
     def run(self) -> int:
         """Runs the main application loop after initializing the main window."""

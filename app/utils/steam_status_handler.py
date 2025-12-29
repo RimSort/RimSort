@@ -26,21 +26,25 @@ class SteamStatusHandler:
     Example usage:
         # In MainWindowController or AppController:
         self.steam_status_handler = SteamStatusHandler(
+            settings=self.settings,
             parent_widget=self.main_window
         )
         # Keep reference to prevent garbage collection
     """
 
-    def __init__(self, parent_widget: QWidget | None = None) -> None:
+    def __init__(
+        self, settings: Settings, parent_widget: QWidget | None = None
+    ) -> None:
         """
         Initialize Steam status handler.
 
         Connects to EventBus signals and sets up dialog parent.
 
+        :param settings: Application settings instance
         :param parent_widget: Parent widget for dialogs (typically main window)
         """
         self.parent_widget = parent_widget
-        self.settings = Settings()  # Access settings singleton
+        self.settings = settings
         self._connect_signals()
 
         # Check if Steam is not running and auto-launch is enabled
@@ -87,12 +91,22 @@ class SteamStatusHandler:
         from app.utils.steam.steamworks.wrapper import (
             SteamworksInterface,
             _find_steam_executable,
+            _is_steam_running,
         )
 
         # Check if Steam is already running (edge case)
-        steamworks = SteamworksInterface.instance()
-        if steamworks.check_steam_availability():
-            logger.info("Steam is actually available, false alarm")
+        # Use _is_steam_running() instead of check_steam_availability() to avoid
+        # triggering signals and potential infinite loops
+        if _is_steam_running():
+            logger.info("Steam is actually running, no need to launch")
+            # Update Steamworks state
+            steamworks = SteamworksInterface.instance()
+            try:
+                steamworks.steamworks.initialize()
+                steamworks.steam_not_running = False
+                logger.info("Steamworks API initialized successfully")
+            except Exception as e:
+                logger.warning(f"Steam running but Steamworks init failed: {e}")
             return
 
         # Find Steam executable

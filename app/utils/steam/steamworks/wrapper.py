@@ -135,6 +135,12 @@ def _launch_steam(_libs: str | None = None) -> bool:
 
         logger.info(f"Launching Steam from: {steam_exe}")
 
+        # If _libs not provided, use default path
+        if _libs is None:
+            from app.utils.app_info import AppInfo
+
+            _libs = str(AppInfo().application_folder / "libs")
+
         # Launch Steam
         if sys.platform == "win32":
             subprocess.Popen([str(steam_exe)], shell=True)
