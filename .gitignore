@@ -179,6 +179,9 @@ version.xml
 # Dictionaries
 ltex.dictionary*
 
+# Translation cache
+.translation_cache.json
+
 # linting stuff
 .ruff_cache
 .uv-cache

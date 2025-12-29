@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import os
 import re
 import shutil
@@ -56,6 +55,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.acf_utils import load_and_merge_acf_data
+from app.utils.csv_export_utils import export_to_csv
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     format_time_display,
@@ -1122,7 +1122,7 @@ class AcfLogReader(QWidget):
         """Handle export to CSV button click."""
         self._set_buttons_enabled(False)
         try:
-            self.export_to_csv()
+            export_to_csv(self)
         finally:
             self._set_buttons_enabled(True)
 
@@ -1315,198 +1315,6 @@ class AcfLogReader(QWidget):
             error_msg = f"{str(e)}"
             self.status_bar.showMessage(error_msg)
             self._set_buttons_enabled(True)
-
-    def export_to_csv(self) -> None:
-        """
-        Export table data to CSV file with enhanced error handling and metadata.
-
-        Errors are shown in the status bar and logged with full stack traces.
-        Includes detailed metadata headers in the CSV file.
-
-        Raises:
-            ValueError: If file path is invalid.
-            PermissionError: If file cannot be written due to permissions.
-            OSError: For other file system errors.
-            Exception: For unexpected errors during export.
-        """
-        self._set_buttons_enabled(False)
-        try:
-            file_path = self._prepare_csv_export()
-            if not file_path:
-                return
-
-            self._write_csv_data(file_path)
-            self._finalize_csv_export(file_path)
-        except ValueError as e:
-            self._handle_csv_export_error(str(e), "Invalid File Path")
-        except PermissionError:
-            self._handle_csv_export_error(
-                ErrorMessages.EXPORT_PERMISSION_DENIED.value,
-                "Export Permission Denied",
-            )
-        except OSError as e:
-            self._handle_csv_export_error(
-                ErrorMessages.EXPORT_FILESYSTEM_ERROR.value.format(e=str(e)),
-                "Export File System Error",
-            )
-        except Exception as e:
-            self._handle_csv_export_error(
-                ErrorMessages.EXPORT_UNKNOWN_ERROR.value,
-                "Export Unknown Error",
-                str(e),
-            )
-        finally:
-            self._set_buttons_enabled(True)
-
-    def _prepare_csv_export(self) -> Optional[str]:
-        """
-        Prepare CSV export by selecting file path and validating it.
-
-        Returns:
-            The selected file path, or None if canceled or invalid.
-        """
-        file_path = show_dialogue_file(
-            mode="save",
-            caption="Export to CSV",
-            _dir=f"workshop_items_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            _filter="CSV Files (*.csv)",
-        )
-        if not file_path:
-            self.status_bar.showMessage(self.tr("Export canceled by user."))
-            return None
-
-        # Validate user-provided path
-        try:
-            Path(file_path).resolve(strict=False)  # Check if path is valid
-        except (OSError, ValueError) as e:
-            raise ValueError(
-                ErrorMessages.INVALID_EXPORT_FILE_PATH.value.format(file_path=file_path)
-            ) from e
-
-        # Check file can be opened before proceeding
-        try:
-            with open(file_path, "w", newline="", encoding="utf-8"):
-                pass  # Just testing file opening, no need for the file object
-        except PermissionError:
-            raise
-        except OSError:
-            raise
-
-        return file_path
-
-    def _write_csv_data(self, file_path: str) -> None:
-        """
-        Write CSV data to the specified file path.
-
-        Args:
-            file_path: The path to write the CSV file to.
-        """
-        self.status_bar.showMessage(self.tr("Exporting to CSV..."))
-
-        with open(file_path, "w", newline="", encoding="utf-8-sig") as csvfile:
-            writer = csv.writer(csvfile)
-
-            self._write_csv_metadata(writer)
-            self._write_csv_headers(writer)
-
-            # Write data rows with progress feedback
-            for row in range(self.table_view.model().rowCount()):
-                row_data = []
-                for col in range(self.table_view.model().columnCount()):
-                    item = self.table_view.model().data(
-                        self.table_view.model().index(row, col),
-                        Qt.ItemDataRole.DisplayRole,
-                    )
-                    row_data.append(item if item else "")
-                writer.writerow(row_data)
-
-                if row % 50 == 0:  # Update progress every 50 rows
-                    self.status_bar.showMessage(
-                        f"Exporting row {row + 1} of {self.table_view.model().rowCount()}..."
-                    )
-
-    def _write_csv_metadata(self, writer: Any) -> None:
-        """
-        Write metadata headers to the CSV file.
-
-        Args:
-            writer: The CSV writer object.
-        """
-        writer.writerow(["RimSort Workshop Items Export"])
-        writer.writerow(
-            [f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
-        )
-        writer.writerow([f"Total Items: {self.table_view.model().rowCount()}"])
-        writer.writerow(
-            [f"Source ACF: {self.steamcmd_interface.steamcmd_appworkshop_acf_path}"]
-        )
-        writer.writerow([])
-
-    def _write_csv_headers(self, writer: Any) -> None:
-        """
-        Write column headers and descriptions to the CSV file.
-
-        Args:
-            writer: The CSV writer object.
-        """
-        headers = []
-        descriptions = []
-        for col in range(self.table_view.model().columnCount()):
-            header = (
-                self.table_model.headerData(
-                    col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
-                )
-                or ""
-            )
-            headers.append(header)
-            descriptions.append(self._get_column_description(col))
-        writer.writerow(headers)
-        writer.writerow(descriptions)
-        writer.writerow([])
-
-    def _finalize_csv_export(self, file_path: str) -> None:
-        """
-        Finalize the CSV export by updating status and showing success message.
-
-        Args:
-            file_path: The path of the exported file.
-        """
-        self.status_bar.showMessage(
-            f"Successfully exported {self.table_view.model().rowCount()} items to {file_path}"
-        )
-        show_information(
-            title=self.tr("Export Success"),
-            text=self.tr("Successfully exported {count} items to {file_path}").format(
-                count=self.table_view.model().rowCount(), file_path=file_path
-            ),
-        )
-
-    def _handle_csv_export_error(
-        self, message: str, title: str, details: Optional[str] = None
-    ) -> None:
-        """
-        Handle CSV export errors by logging, updating status, and showing dialog.
-
-        Args:
-            message: The error message.
-            title: The dialog title.
-            details: Optional additional details.
-        """
-        self.status_bar.showMessage(message)
-        logger.error(f"CSV Export error: {message}", exc_info=True)
-        show_warning(
-            title=self.tr(title),
-            text=message,
-            information=details,
-        )
-
-    def _get_column_description(self, col: int) -> str:
-        """Get description for a table column."""
-        try:
-            column = self.TableColumn(col)
-            return column.description
-        except ValueError:
-            return ""
 
     def show_context_menu(self, position: QPoint) -> None:
         menu = QMenu()

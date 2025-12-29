@@ -1046,7 +1046,7 @@ How would you like to proceed?
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+        <translation>请在设置中配置“使用此替代”数据库。</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -4273,7 +4273,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+        <translation>将对话限制到主窗口监视器</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -5240,11 +5240,11 @@ Do you want to update now?</source>
         <source>
 Successfully retrieved latest release.
 The update will be installed from: {update_source_path}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt; {update_source_path}</translation>
+        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt;</translation>
+        <translation>正在创建备份...（这可能需要几分钟）</translation>
     </message>
     <message>
         <source>Update downloaded</source>

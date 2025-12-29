@@ -1507,8 +1507,9 @@ class SettingsController(QObject):
             return
 
         # Validate Steam integration if enabled
-        if not self._validate_steam_integration():
-            return
+        if self.settings_dialog.steam_client_integration_checkbox.isChecked():
+            if not self._validate_steam_integration():
+                return
 
         self.settings_dialog.close()
         self._update_model_from_view()

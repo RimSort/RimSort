@@ -9,11 +9,11 @@
     </message>
     <message>
         <source>Disable ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>禁用 ACF 日誌讀取器</translation>
     </message>
     <message>
         <source>Click to disable the ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>單擊以禁用 ACF 日誌讀取器</translation>
     </message>
     <message>
         <source>Search...</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>ACF Log Reader disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>ACF 日誌讀取器已禁用</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -85,7 +85,7 @@
     </message>
     <message>
         <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>您確定要導入 .acf 嗎？這只適用於 steamcmd</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
@@ -585,62 +585,62 @@ When unchecked, search all file types with standard search.</source>
     <name>IgnoreJsonEditor</name>
     <message>
         <source>RimSort - Manage Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>RimSort - 管理忽略列表</translation>
     </message>
     <message>
         <source>Mods checked below will be removed from the ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>下面選中的 Mod 將從忽略列表中刪除。</translation>
     </message>
     <message>
         <source>Remove Selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>刪除所選內容</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>節省</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>取消</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>成功</translation>
     </message>
     <message>
         <source>Ignore list has been saved successfully.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>忽略列表已成功保存。</translation>
     </message>
     <message>
         <source>Failed to save changes to ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>無法保存對忽略列表的更改。</translation>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
 </context>
 <context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>存檔路徑無效</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>提供的存檔路徑無效。</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>請提供有效的存檔路徑。</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
@@ -1082,7 +1082,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+        <translation>請在設置中配置“使用此替代”數據庫。</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -2008,14 +2008,14 @@ Error: {error}</source>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {DEFAULT_INSTANCE_NAME}</translation>
+        <translation>{DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {preview}</translation>
+        <translation>{preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2071,7 +2071,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {name}</translation>
+        <translation>{name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2083,7 +2083,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt; {existing_instance_workshop_folder}</translation>
+        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2214,7 +2214,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Ignore JSON Editor…</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>忽略 JSON 編輯器...</translation>
     </message>
     <message>
         <source>Download</source>
@@ -2403,11 +2403,11 @@ Select which missing dependencies to add to your active mods list.</source>
     <name>MissingModPropertiesPanel</name>
     <message>
         <source>RimSort - Mods with Missing Properties</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>RimSort - 缺少屬性的 Mod</translation>
     </message>
     <message>
         <source>Mods with Missing Properties detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>檢測到缺少屬性的模組！</translation>
     </message>
     <message>
         <source>The following mods are missing important properties that may cause issues:
@@ -2416,15 +2416,20 @@ Select which missing dependencies to add to your active mods list.</source>
 • Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
 
 Please contact the mod authors to add these properties to their mods.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>以下模組缺少可能導致問題的重要屬性：
+
+• 缺少包ID：About.xml 中沒有有效包ID 的Mod 可能存在依賴性和兼容性問題。
+• 缺少發布字段ID：沒有發布字段ID 的創意工坊模組可能不支持重新下載和更新檢查。
+
+請聯繫模組作者將這些屬性添加到他們的模組中。</translation>
     </message>
     <message>
         <source>Delete Mods</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>刪除模組</translation>
     </message>
     <message>
         <source>Add to Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>添加到忽略列表</translation>
     </message>
 </context>
 <context>
@@ -2648,55 +2653,55 @@ Do you want to proceed?</source>
     <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>姓名：</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>概括：</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>包裹ID:</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>作者：</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>模組版本：</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>支持版本：</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>文件夾大小：</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>小路：</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>最後一次接觸：</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>文件系統修改：</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>工作坊時間：</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>歡迎來到 RimSort！</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>將您的個人修改筆記放在這裡！</translation>
     </message>
 </context>
 <context>
@@ -3046,7 +3051,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Color</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>顏色</translation>
     </message>
     <message>
         <source>Author(s)</source>
@@ -3787,27 +3792,27 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Steam Client Integration Disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Steam 客戶端集成已禁用</translation>
     </message>
     <message>
         <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>Steam 客戶端集成已禁用。 Steam 模組位置將被清除。</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Steam 模組位置要求</translation>
     </message>
     <message>
         <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Steam 客戶端集成需要配置 Steam 模組位置。 Steam 客戶端集成和 Steam mods 位置已被禁用。</translation>
     </message>
     <message>
         <source>Steam Workshop File Not Found</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>未找到 Steam 創意工坊文件</translation>
     </message>
     <message>
         <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>在預期位置找不到 Steam 創意工坊文件“appworkshop_294100.acf”。 Steam 客戶端集成和 Steam mods 位置已被禁用。請確保 Steam 已正確安裝並已下載 RimWorld 創意工坊數據。</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3890,19 +3895,19 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Instance folder location (optional)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+        <translation>實例文件夾位置（可選）</translation>
     </message>
     <message>
         <source>Use Default</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>使用默認值</translation>
     </message>
     <message>
         <source>Leave empty to use default location</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>留空以使用默認位置</translation>
     </message>
     <message>
         <source>Game Launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>遊戲發布</translation>
     </message>
     <message>
         <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
@@ -3922,7 +3927,23 @@ Click 'Show Details' to see a list of mods that failed.</source>
    DXVK_HUD=1 mangohud %command% -popupwindow
 
  NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>使用 Steam 風格的語法和可選的 %command% 佔位符輸入啟動選項：
+
+ 基本示例（僅限遊戲參數）：
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/路徑/到/savedata
+
+ 高級示例（使用 %command%、環境變量、包裝器）：
+
+   PROTON_LOG=1%命令%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ 注意：包裝命令在 macOS 上將被忽略</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4242,7 +4263,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt;</translation>
+        <translation>將對話限製到主窗口監視器</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -5209,11 +5230,11 @@ Do you want to update now?</source>
         <source>
 Successfully retrieved latest release.
 The update will be installed from: {update_source_path}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB7C0&gt; {update_source_path}</translation>
+        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+        <translation>正在創建備份...（這可能需要幾分鐘）</translation>
     </message>
     <message>
         <source>Update downloaded</source>

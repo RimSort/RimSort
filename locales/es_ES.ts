@@ -9,11 +9,11 @@
     </message>
     <message>
         <source>Disable ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Deshabilitar el lector de registros ACF</translation>
     </message>
     <message>
         <source>Click to disable the ACF Log Reader</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>Haga clic para desactivar el lector de registros ACF</translation>
     </message>
     <message>
         <source>Search...</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>ACF Log Reader disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Lector de registros ACF deshabilitado</translation>
     </message>
     <message>
         <source>Showing {filtered} of {total} items (filtered)</source>
@@ -85,7 +85,7 @@
     </message>
     <message>
         <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>¿Está seguro de que desea importar .acf? Esto solo funciona para steamcmd</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
@@ -172,11 +172,11 @@
     </message>
     <message>
         <source>Subscribe selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+        <translation>Suscríbete seleccionado</translation>
     </message>
     <message>
         <source>Unsubscribe selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335540&gt;</translation>
+        <translation>Darse de baja seleccionado</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -577,62 +577,62 @@ Cuando no está marcado, buscar todos los tipos de archivos con búsqueda están
     <name>IgnoreJsonEditor</name>
     <message>
         <source>RimSort - Manage Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>RimSort - Administrar lista de ignorados</translation>
     </message>
     <message>
         <source>Mods checked below will be removed from the ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Las modificaciones marcadas a continuación se eliminarán de la lista de ignorados.</translation>
     </message>
     <message>
         <source>Remove Selected</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Eliminar seleccionado</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Ahorrar</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Error</translation>
     </message>
     <message>
         <source>Failed to load ignored mods: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Éxito</translation>
     </message>
     <message>
         <source>Ignore list has been saved successfully.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>La lista de ignorados se ha guardado correctamente.</translation>
     </message>
     <message>
         <source>Failed to save changes to ignore list.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>No se pudieron guardar los cambios en la lista de ignorados.</translation>
     </message>
     <message>
         <source>Error saving changes: {e}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt; {e}</translation>
+        <translation>{e}</translation>
     </message>
 </context>
 <context>
     <name>InstanceController</name>
     <message>
         <source>Invalid archive path</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Ruta de archivo no válida</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>La ruta del archivo proporcionada no es válida.</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt;</translation>
+        <translation>Proporcione una ruta de archivo válida.</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
@@ -1197,7 +1197,7 @@ La base de datos resultante, C, se guarda en una ruta especificada por el usuari
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335240&gt;</translation>
+        <translation>Configure la base de datos "Usar esto en su lugar" en la configuración.</translation>
     </message>
     <message>
         <source>No suggestions were found in the "Use This Instead" database.</source>
@@ -2003,14 +2003,14 @@ Error: {error}</translation>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {DEFAULT_INSTANCE_NAME}</translation>
+        <translation>{DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
 
 Generated run arguments preview:
 {preview}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt; {preview}</translation>
+        <translation>{preview}</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -2066,7 +2066,7 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87C40&gt; {name}</translation>
+        <translation>{name}</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -2078,7 +2078,7 @@ Option 2: Keep Workshop Folder
 The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
 
 How would you like to proceed?</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87DC0&gt; {existing_instance_workshop_folder}</translation>
+        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2201,7 +2201,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Ignore JSON Editor…</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Ignorar el editor JSON...</translation>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
@@ -2387,11 +2387,11 @@ Seleccione qué dependencias faltantes se agregan a su lista de modificaciones a
     <name>MissingModPropertiesPanel</name>
     <message>
         <source>RimSort - Mods with Missing Properties</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>RimSort - Mods con propiedades faltantes</translation>
     </message>
     <message>
         <source>Mods with Missing Properties detected!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>¡Mods con propiedades faltantes detectadas!</translation>
     </message>
     <message>
         <source>The following mods are missing important properties that may cause issues:
@@ -2400,15 +2400,20 @@ Seleccione qué dependencias faltantes se agregan a su lista de modificaciones a
 • Missing Publish Field ID: Workshop mods without a Publish Field ID may not support redownloads and update checking.
 
 Please contact the mod authors to add these properties to their mods.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>A las siguientes modificaciones les faltan propiedades importantes que pueden causar problemas:
+
+• Falta ID de paquete: los mods sin un ID de paquete válido en About.xml pueden tener problemas de dependencia y compatibilidad.
+• Falta el ID del campo de publicación: Es posible que las modificaciones de Workshop sin un ID del campo de publicación no admitan las descargas repetidas ni la verificación de actualizaciones.
+
+Comuníquese con los autores de los mods para agregar estas propiedades a sus mods.</translation>
     </message>
     <message>
         <source>Delete Mods</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Eliminar modificaciones</translation>
     </message>
     <message>
         <source>Add to Ignore List</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Añadir a la lista de ignorados</translation>
     </message>
 </context>
 <context>
@@ -2628,55 +2633,55 @@ Do you want to proceed?</source>
     <name>ModInfoPanel</name>
     <message>
         <source>Name:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Nombre:</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Resumen:</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>ID del paquete:</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Autores:</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Versión modificada:</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9540&gt;</translation>
+        <translation>Versión compatible:</translation>
     </message>
     <message>
         <source>Folder Size:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Tamaño de carpeta:</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Camino:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>Último toque:</translation>
     </message>
     <message>
         <source>Filesystem Modified:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>Sistema de archivos modificado:</translation>
     </message>
     <message>
         <source>Workshop Times:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Horarios del taller:</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C96C0&gt;</translation>
+        <translation>¡Bienvenido a RimSort!</translation>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9840&gt;</translation>
+        <translation>¡Pon tus notas mod personales aquí!</translation>
     </message>
 </context>
 <context>
@@ -3045,7 +3050,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Color</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0D87AC0&gt;</translation>
+        <translation>Color</translation>
     </message>
     <message>
         <source>Check Dependencies</source>
@@ -3758,27 +3763,27 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     </message>
     <message>
         <source>Steam Client Integration Disabled</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BDDC040&gt;</translation>
+        <translation>Integración del cliente Steam deshabilitada</translation>
     </message>
     <message>
         <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBC40&gt;</translation>
+        <translation>La integración del cliente Steam está deshabilitada. Se borrará la ubicación de los mods de Steam.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBAC0&gt;</translation>
+        <translation>Ubicación de Steam Mods requerida</translation>
     </message>
     <message>
         <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BBFBDC0&gt;</translation>
+        <translation>La integración del cliente Steam requiere que se configure una ubicación de mods de Steam. La integración del cliente Steam y la ubicación de los mods de Steam se han deshabilitado.</translation>
     </message>
     <message>
         <source>Steam Workshop File Not Found</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309B9F07C0&gt;</translation>
+        <translation>Archivo de Steam Workshop no encontrado</translation>
     </message>
     <message>
         <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001309BDDC040&gt;</translation>
+        <translation>El archivo de Steam Workshop 'appworkshop_294100.acf' no se encontró en la ubicación esperada. La integración del cliente Steam y la ubicación de los mods de Steam se han deshabilitado. Asegúrese de que Steam esté instalado correctamente y haya descargado los datos de RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3861,19 +3866,19 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     </message>
     <message>
         <source>Instance folder location (optional)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Ubicación de la carpeta de instancia (opcional)</translation>
     </message>
     <message>
         <source>Use Default</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0F70040&gt;</translation>
+        <translation>Usar predeterminado</translation>
     </message>
     <message>
         <source>Leave empty to use default location</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000219E0B847C0&gt;</translation>
+        <translation>Déjelo vacío para usar la ubicación predeterminada</translation>
     </message>
     <message>
         <source>Game Launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C93C0&gt;</translation>
+        <translation>Lanzamiento del juego</translation>
     </message>
     <message>
         <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
@@ -3893,7 +3898,23 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
    DXVK_HUD=1 mangohud %command% -popupwindow
 
  NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001942D8C9240&gt;</translation>
+        <translation>Ingrese las opciones de inicio usando una sintaxis estilo Steam con un marcador de posición %command% opcional:
+
+ Ejemplos básicos (solo argumentos del juego):
+
+   -archivo de registro /tmp/log -ventana emergente
+
+   -savedatafolder=/ruta/a/savedata
+
+ Ejemplos avanzados (con %command%, env vars, contenedores):
+
+   PROTON_LOG=1 %comando%
+
+   modo de juego ejecutar %comando% -archivo de registro /tmp/log
+
+   DXVK_HUD=1 mangohud %comando% -ventana emergente
+
+ NOTA: los comandos contenedores se ignorarán en macOS</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3901,31 +3922,31 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     </message>
     <message>
         <source>Backup Settings</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Configuración de copia de seguridad</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Copia de seguridad automática de los guardados en el primer lanzamiento diario</translation>
     </message>
     <message>
         <source>If enabled, RimSort will automatically backup saves on the first daily launch.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Si está habilitado, RimSort realizará automáticamente una copia de seguridad de los archivos guardados en el primer inicio diario.</translation>
     </message>
     <message>
         <source>Number of backups to keep:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Número de copias de seguridad a conservar:</translation>
     </message>
     <message>
         <source>The number of backups to keep. Set to -1 to keep all backups, 0 to delete all.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>El número de copias de seguridad que se deben conservar. Establezca en -1 para conservar todas las copias de seguridad, 0 para eliminarlas todas.</translation>
     </message>
     <message>
         <source>Number of saves to compress:</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Número de guardados para comprimir:</translation>
     </message>
     <message>
         <source>The number of recent saves to include in the backup. Set to -1 to compress all saves, 0 to compress none.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>La cantidad de guardados recientes que se incluirán en la copia de seguridad. Establezca en -1 para comprimir todos los guardados, 0 para comprimir ninguno.</translation>
     </message>
     <message>
         <source>None</source>
@@ -3999,44 +4020,47 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
 If a matching version tag exists but is empty, the base tag is ignored. 
 e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Cuando están habilitadas, las etiquetas *ByVersion tienen prioridad sobre las etiquetas base, 
+Si existe una etiqueta de versión coincidente pero está vacía, se ignora la etiqueta base. 
+por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descripcionesByVersion)</translation>
     </message>
     <message>
         <source>Mod list options</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Opciones de lista de modificaciones</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DB40&gt;</translation>
+        <translation>Notifica para descargar mods que pueden faltar en la lista de mods activa</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Notifica y muestra los mods que tienen el mismo ID de paquete.</translation>
     </message>
     <message>
         <source>Add icons and filtering options for easy mods identification and grouping</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Agregue íconos y opciones de filtrado para identificar y agrupar mods fácilmente</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Oculta modificaciones no válidas, no se recomienda habilitarlas</translation>
     </message>
     <message>
         <source>Inactive Mods Sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000229036F2140&gt;</translation>
+        <translation>Clasificación de mods inactivos</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5DCC0&gt;</translation>
+        <translation>Habilitar la clasificación de mods inactivos</translation>
     </message>
     <message>
         <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
 Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5D9C0&gt;</translation>
+        <translation>Opciones adicionales como nombre, autor, tamaño de carpeta y fecha de modificación estarán disponibles en el panel de modificaciones para ordenar modificaciones inactivas. 
+Deshabilitar esto puede mejorar el rendimiento al evitar cálculos pesados.</translation>
     </message>
     <message>
         <source>Save inactive mods sort state</source>
-        <translation>&lt;coroutine object Translator.translate at 0x0000022903B5F7C0&gt;</translation>
+        <translation>Guardar estado de clasificación de mods inactivos</translation>
     </message>
     <message>
         <source>DB Builder</source>
@@ -4233,7 +4257,7 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB640&gt;</translation>
+        <translation>Restringir los diálogos al monitor de la ventana principal</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -5176,11 +5200,11 @@ Do you want to update now?</source>
         <source>
 Successfully retrieved latest release.
 The update will be installed from: {update_source_path}</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt; {update_source_path}</translation>
+        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
-        <translation>&lt;coroutine object Translator.translate at 0x00000240521BB340&gt;</translation>
+        <translation>Creando copia de seguridad... (esto puede tardar varios minutos)</translation>
     </message>
     <message>
         <source>Update downloaded</source>
@@ -5211,7 +5235,7 @@ The update will be installed from: {update_source_path}</source>
     </message>
     <message>
         <source>Select all Originals</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF293356C0&gt;</translation>
+        <translation>Seleccionar todos los originales</translation>
     </message>
     <message>
         <source>Select all Replacements</source>
@@ -5223,11 +5247,11 @@ The update will be installed from: {update_source_path}</source>
     </message>
     <message>
         <source>Installed</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335840&gt;</translation>
+        <translation>Instalado</translation>
     </message>
     <message>
         <source>Not Installed</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+        <translation>No instalado</translation>
     </message>
     <message>
         <source>Group {0}</source>
@@ -5271,7 +5295,7 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>Update with Steam client</source>
-        <translation>&lt;coroutine object Translator.translate at 0x000001AF29335B40&gt;</translation>
+        <translation>Actualizar con el cliente Steam</translation>
     </message>
 </context>
 <context>
