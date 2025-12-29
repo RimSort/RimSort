@@ -47,18 +47,6 @@ class SteamStatusHandler:
         self.settings = settings
         self._connect_signals()
 
-        # Check if Steam is not running and auto-launch is enabled
-        # This handles the case where steam_not_running signal was emitted
-        # before this handler was created (during app initialization)
-        from app.utils.steam.steamworks.wrapper import SteamworksInterface
-
-        steamworks = SteamworksInterface.instance()
-        if steamworks.steam_not_running and self.settings.auto_launch_steam:
-            logger.info(
-                "Steam not running detected during handler initialization, attempting auto-launch..."
-            )
-            self._attempt_auto_launch()
-
     def _connect_signals(self) -> None:
         """Connect to EventBus signals for Steam status notifications."""
         EventBus().steam_not_running.connect(self._on_steam_not_running)
