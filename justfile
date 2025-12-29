@@ -341,7 +341,7 @@ build-steamworkspy: submodules-init
 
             # Build x86_64 version using Rosetta
             echo "  Building x86_64 (via Rosetta)..."
-            arch -x86_64 /bin/bash -c "cd \"$STEAMWORKSPY_DIR\" && g++ -std=c++11 -o SteamworksPy_i386.dylib -shared -fPIC SteamworksPy.cpp -l steam_api -L."
+            arch -x86_64 /bin/bash -c "g++ -std=c++11 -o SteamworksPy_i386.dylib -shared -fPIC SteamworksPy.cpp -l steam_api -L."
             if [ ! -f "SteamworksPy_i386.dylib" ]; then
                 echo "Error: x86_64 build failed"
                 exit 1
