@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from PySide6.QtCore import QCoreApplication
 
 from app.utils.app_info import AppInfo
 from app.utils.db_builder_core import DBBuilderCore
@@ -91,6 +92,12 @@ def build_db(
       # Skip DLC data for faster builds
       rimsort build-db --output workshop.json --no-dlc-data --quiet
     """
+    # Initialize Qt application for QThreadPool signal support
+    # Use QCoreApplication (headless) instead of QApplication (GUI)
+    app = QCoreApplication.instance()
+    if app is None:
+        app = QCoreApplication(sys.argv)
+
     # API key resolution (priority order)
     if not api_key:
         # Try to read from settings.json as fallback

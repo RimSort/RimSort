@@ -9,7 +9,14 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import (
+    QCoreApplication,
+    QEventLoop,
+    QObject,
+    QRunnable,
+    QThreadPool,
+    Signal,
+)
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
@@ -1030,12 +1037,17 @@ class DynamicQuery(QObject):
         # Use global thread pool (consistent with rest of codebase)
         thread_pool = QThreadPool.globalInstance()
 
+        # Create event loop to process signals while waiting
+        loop = QEventLoop()
+        worker.signals.finished.connect(loop.quit)
+        worker.signals.error.connect(loop.quit)
+
         # Start worker
+        self._emit_message("\nWaiting for Steamworks queries to complete...")
         thread_pool.start(worker)
 
-        # Wait for completion - QThreadPool.waitForDone() waits for all tasks
-        self._emit_message("\nWaiting for Steamworks queries to complete...")
-        thread_pool.waitForDone()
+        # Process events until worker completes (allows signals to be delivered)
+        loop.exec()
 
         # Check for errors
         if worker_error:
