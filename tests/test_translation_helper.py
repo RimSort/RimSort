@@ -14,7 +14,6 @@ from translation_helper import (
     TranslationConfig,
     UnfinishedItem,
     auto_translate_file,
-    clear_translation_cache,
     create_translation_service,
     find_unfinished_translations,
     get_language_code,
@@ -470,17 +469,14 @@ class TestGlobalConfiguration:
         assert cache._cache_file == expected_path
 
     def test_clear_translation_cache(self) -> None:
-        """Test clearing global translation cache."""
-        cache = get_translation_cache()
+        """Test clearing a temporary translation cache (not global)."""
+        cache = TranslationCache()  # Create temporary cache, not global
         cache.set("test", "zh_CN", "en_US", "google", "测试")
 
         assert cache.size() > 0
 
-        clear_translation_cache()
-        # Create a new cache instance to test
-        cache_after = get_translation_cache()
-        # The global cache should be cleared
-        assert cache_after.get("test", "zh_CN", "en_US", "google") is None
+        cache.clear()  # Clear the temporary cache
+        assert cache.get("test", "zh_CN", "en_US", "google") is None
 
 
 # ============================================================================
