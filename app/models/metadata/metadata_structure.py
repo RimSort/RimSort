@@ -544,7 +544,7 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
     unpublished: bool = False
     url: str = msgspec.field(default_factory=str)
     packageId: str = msgspec.field(default_factory=str)
-    gameVersions: list[str] | str = msgspec.field(default_factory=list)
+    gameVersions: list[str | None] | str | None = msgspec.field(default_factory=list)
     steamName: str = msgspec.field(default_factory=str)
     name: str = msgspec.field(default_factory=str)
     authors: list[str] | str | None = msgspec.field(default_factory=str)
