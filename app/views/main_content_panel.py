@@ -7,8 +7,6 @@ import time
 import traceback
 import webbrowser
 from functools import partial
-from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Callable, Optional, cast
@@ -20,7 +18,9 @@ from PySide6.QtCore import (
     QEventLoop,
     QObject,
     QProcess,
+    QRunnable,
     Qt,
+    QThreadPool,
     Signal,
     Slot,
 )
@@ -47,7 +47,6 @@ from app.utils.event_bus import EventBus
 from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
     check_internet_connection,
-    chunks,
     copy_to_clipboard_safely,
     launch_game_process,
     launch_process,
@@ -61,10 +60,7 @@ from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (
-    SteamworksGameLaunch,
-    SteamworksSubscriptionHandler,
-)
+from app.utils.steam.steamworks.wrapper import steamworks_game_launch_worker
 from app.utils.steam.webapi.wrapper import (
     CollectionImport,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -93,6 +89,165 @@ from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import WorkshopModUpdaterPanel
+
+
+class SteamSubscriptionRunnable(QRunnable):
+    """
+    Runnable for executing Steam Workshop subscription operations in Qt thread pool.
+
+    This ensures subscription requests are made from the main process context,
+    allowing Steam client to properly receive and act on them.
+    """
+
+    class Signals(QObject):
+        """Signals for communicating from runnable to main thread."""
+
+        error = Signal(str, str, list)  # (action, error_msg, pfids)
+        success = Signal(str, int)  # (action, num_pfids)
+
+    def __init__(
+        self, action: str, pfids: list[int], mod_names: dict[int, str]
+    ) -> None:
+        """
+        Initialize the runnable.
+
+        :param action: "subscribe", "unsubscribe", "resubscribe", or "download"
+        :param pfids: List of PublishedFileIds to process
+        :param mod_names: Mapping of pfid -> mod name for display
+        """
+        super().__init__()
+        self.action = action
+        self.pfids = pfids
+        self.mod_names = mod_names
+        self.signals = self.Signals()
+
+    @Slot()
+    def run(self) -> None:
+        """Execute the subscription action in a thread with error handling and retry logic."""
+        from time import sleep
+
+        from app.models.download_state import DownloadStatus
+        from app.utils.download_tracker import DownloadTracker
+        from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+        logger.info(
+            f"[STEAM_THREAD] Executing {self.action} for {len(self.pfids)} mods"
+        )
+
+        # Create download batch for tracking
+        tracker = DownloadTracker()
+        batch_id = tracker.create_batch(
+            operation=self.action,
+            pfids=self.pfids,
+            mod_names=self.mod_names,
+        )
+
+        steamworks_interface = SteamworksInterface.instance()
+
+        # Retry configuration
+        MAX_RETRY_ATTEMPTS = 3
+        RETRY_DELAYS = [0.5, 1.0, 2.0]  # Exponential backoff in seconds
+
+        operation_successful = False
+        last_error: Exception | None = None
+
+        # Attempt operation with retry logic
+        for attempt in range(MAX_RETRY_ATTEMPTS):
+            try:
+                logger.debug(
+                    f"[STEAM_THREAD] Attempt {attempt + 1}/{MAX_RETRY_ATTEMPTS} for {self.action}"
+                )
+
+                # Execute operation with batch_id for tracking
+                if self.action == "subscribe":
+                    steamworks_interface.subscribe_to_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "unsubscribe":
+                    steamworks_interface.unsubscribe_from_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "resubscribe":
+                    steamworks_interface.resubscribe_to_mods(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                elif self.action == "download":
+                    steamworks_interface.download_items(
+                        self.pfids, interval=1, batch_id=batch_id
+                    )
+                else:
+                    error_msg = f"Unknown subscription action: {self.action}"
+                    logger.error(error_msg)
+                    self.signals.error.emit(self.action, error_msg, self.pfids)
+
+                    # Mark all items as failed
+                    for pfid in self.pfids:
+                        tracker.update_item_status(
+                            pfid, DownloadStatus.FAILED, error=error_msg
+                        )
+                    return
+
+                # Success!
+                operation_successful = True
+                logger.info(
+                    f"[STEAM_THREAD] Successfully completed {self.action} for {len(self.pfids)} mods"
+                )
+                self.signals.success.emit(self.action, len(self.pfids))
+                break
+
+            except RuntimeError as e:
+                last_error = e
+                error_str = str(e).lower()
+
+                # Check if this is a transient "operation already in progress" error
+                if "operation already in progress" in error_str:
+                    logger.warning(
+                        f"[STEAM_THREAD] Operation in progress (attempt {attempt + 1}/{MAX_RETRY_ATTEMPTS}): {e}"
+                    )
+
+                    # If we have more retries, wait and try again
+                    if attempt < MAX_RETRY_ATTEMPTS - 1:
+                        delay = RETRY_DELAYS[attempt]
+                        logger.info(f"[STEAM_THREAD] Retrying after {delay}s delay...")
+                        sleep(delay)
+                        continue
+                    else:
+                        # Max retries exceeded
+                        logger.error(
+                            f"[STEAM_THREAD] Max retry attempts exceeded for {self.action}"
+                        )
+                else:
+                    # Some other RuntimeError - don't retry
+                    logger.error(
+                        f"[STEAM_THREAD] RuntimeError during {self.action}: {e}",
+                        exc_info=True,
+                    )
+
+                # Either max retries exceeded or non-retryable error
+                break
+
+            except Exception as e:
+                # Unexpected error - log and fail immediately
+                last_error = e
+                logger.error(
+                    f"[STEAM_THREAD] Unexpected error during {self.action}: {e}",
+                    exc_info=True,
+                )
+                break
+
+        # Handle failure case
+        if not operation_successful:
+            error_msg = str(last_error) if last_error else "Unknown error"
+            logger.error(
+                f"[STEAM_THREAD] Failed {self.action} for {len(self.pfids)} mods: {error_msg}"
+            )
+
+            # Emit error signal for main thread to handle
+            self.signals.error.emit(self.action, error_msg, self.pfids)
+
+            # Mark all items as failed in tracker
+            for pfid in self.pfids:
+                tracker.update_item_status(pfid, DownloadStatus.FAILED, error=error_msg)
 
 
 class MainContent(QObject):
@@ -201,6 +356,10 @@ class MainContent(QObject):
 
             EventBus().do_steamcmd_download.connect(
                 self._do_download_mods_with_steamcmd
+            )
+
+            EventBus().do_refresh_steamcmd_acf.connect(
+                self._do_refresh_steamcmd_acf_metadata
             )
 
             EventBus().do_steamworks_api_call.connect(
@@ -337,9 +496,6 @@ class MainContent(QObject):
 
             # Instantiate query runner
             self.query_runner: RunnerPanel | None = None
-
-            # Steamworks bool - use this to check any Steamworks processes you try to initialize
-            self.steamworks_in_use = False
 
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
@@ -2141,6 +2297,32 @@ class MainContent(QObject):
         # Check internet connection before attempting task
         if not check_internet_connection():
             return
+        # REFRESH TIMESTAMPS: Query Steam directly for current installation timestamps
+        # This ensures we compare against Steam's live state, not stale ACF data
+        refresh_stats = (
+            self.metadata_manager.refresh_workshop_timestamps_via_steamworks()
+        )
+
+        # Warn user if Steam unavailable - update detection may have false positives
+        if refresh_stats.get("steam_unavailable"):
+            dialogue.show_information(
+                title=self.tr("Steam Client Not Available"),
+                text=self.tr(
+                    "Steam client is not running or Steamworks API is unavailable.\n\n"
+                    "Update detection will use ACF file timestamps, which may be stale "
+                    "if Steam recently updated mods.\n\n"
+                    "For best results, ensure Steam is running before checking for updates."
+                ),
+                information=self.tr(
+                    "Recently-updated mods may incorrectly show as needing updates."
+                ),
+            )
+        else:
+            logger.info(
+                f"Refreshed timestamps for {refresh_stats.get('updated', 0)} Workshop mods "
+                f"({refresh_stats.get('failed', 0)} failed)"
+            )
+
         # Query Workshop for update data
         updates_checked = self.do_threaded_loading_animation(
             gif_path=str(
@@ -2264,6 +2446,13 @@ class MainContent(QObject):
             self.steamcmd_runner.message(
                 f"Downloading {len(publishedfileids)} mods with SteamCMD..."
             )
+            # Refresh ACF metadata before download to capture current state
+            from app.utils.acf_utils import refresh_acf_metadata
+
+            refresh_acf_metadata(
+                self.metadata_manager, steamclient=False, steamcmd=True
+            )
+            logger.debug("Refreshed SteamCMD ACF metadata before download operation")
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids,
                 runner=self.steamcmd_runner,
@@ -2280,6 +2469,13 @@ class MainContent(QObject):
                 ),
             )
 
+    def _do_refresh_steamcmd_acf_metadata(self) -> None:
+        """Refresh SteamCMD ACF metadata after downloads."""
+        from app.utils.acf_utils import refresh_acf_metadata
+
+        refresh_acf_metadata(self.metadata_manager, steamclient=False, steamcmd=True)
+        logger.info("Refreshed SteamCMD ACF metadata after download operation")
+
     def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
@@ -2295,72 +2491,124 @@ class MainContent(QObject):
             instruction[1] is a list containing [game_folder_path: str, args: list] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        if not self.steamworks_in_use:
-            subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
-            supported_actions = ["launch_game_process"]
-            supported_actions.extend(subscription_actions)
-            if (
-                instruction[0] in supported_actions
-            ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
-                if instruction[0] == "launch_game_process":  # SW API init + game launch
-                    self.steamworks_in_use = True
-                    steamworks_api_process = SteamworksGameLaunch(
+        subscription_actions = [
+            "resubscribe",
+            "subscribe",
+            "unsubscribe",
+            "download",
+        ]
+        supported_actions = ["launch_game_process"]
+        supported_actions.extend(subscription_actions)
+        if (
+            instruction[0] in supported_actions
+        ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
+            if instruction[0] == "launch_game_process":  # SW API init + game launch
+                # Create Process with worker function
+                from multiprocessing import Process
+
+                def _launch_game() -> None:
+                    steamworks_game_launch_worker(
                         game_install_path=instruction[1][0],
                         args=instruction[1][1],
                         _libs=str((AppInfo().application_folder / "libs")),
                     )
-                    # Start the Steamworks API Process
-                    steamworks_api_process.start()
-                    logger.info(
-                        f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+
+                steamworks_api_process = Process(target=_launch_game)
+                # Start the Steamworks API Process
+                steamworks_api_process.start()
+                logger.info(
+                    f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+                )
+                steamworks_api_process.join()
+                logger.info(
+                    f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+                )
+            elif (
+                instruction[0] in subscription_actions and len(instruction[1]) >= 1
+            ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
+                logger.info(
+                    f"Creating Steamworks subscription task with instruction {instruction}"
+                )
+
+                # instruction[1] already contains int pfids from EventBus
+                pfids = instruction[1]
+
+                # Get mod names for display (from metadata)
+                mod_names = {}
+                missing_pfids = []  # Track pfids without names for Steam API lookup
+
+                for pfid in pfids:
+                    pfid_str = str(pfid)
+                    name = None
+
+                    # Try to get name from external Steam metadata
+                    if (
+                        self.metadata_manager.external_steam_metadata
+                        and pfid_str in self.metadata_manager.external_steam_metadata
+                    ):
+                        name = self.metadata_manager.external_steam_metadata[
+                            pfid_str
+                        ].get("name")
+
+                    # Fallback to internal metadata if not found
+                    if not name:
+                        for (
+                            uuid,
+                            metadata,
+                        ) in self.metadata_manager.internal_local_metadata.items():
+                            if metadata.get("publishedfileid") == pfid_str:
+                                name = metadata.get("name")
+                                if name:
+                                    break
+
+                    # If still no name, mark for Steam API lookup
+                    if not name:
+                        missing_pfids.append(pfid_str)
+                        mod_names[pfid] = f"Mod {pfid}"  # Temporary placeholder
+                    else:
+                        mod_names[pfid] = name
+
+                # Fetch missing mod names from Steam Web API
+                if missing_pfids:
+                    logger.debug(
+                        f"Fetching names for {len(missing_pfids)} mods from Steam Web API"
                     )
-                    steamworks_api_process.join()
-                    logger.info(
-                        f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-                    )
-                    self.steamworks_in_use = False
-                elif (
-                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
-                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
-                    logger.info(
-                        f"Creating Steamworks API process with instruction {instruction}"
-                    )
-                    self.steamworks_in_use = True
-                    # Maximum processes
-                    num_processes = cpu_count()
-                    # Chunk the publishedfileids
-                    pfids_chunked = list(
-                        chunks(
-                            _list=instruction[1],
-                            limit=ceil(len(instruction[1]) / num_processes),
+                    try:
+                        mod_details = ISteamRemoteStorage_GetPublishedFileDetails(
+                            missing_pfids
                         )
-                    )
-                    # Create a pool of worker processes
-                    with Pool(processes=num_processes) as pool:
-                        # Create instances of SteamworksSubscriptionHandler for each chunk
-                        actions = [
-                            SteamworksSubscriptionHandler(
-                                action=instruction[0],
-                                pfid_or_pfids=chunk,
-                                interval=1,
-                                _libs=str((AppInfo().application_folder / "libs")),
+                        if mod_details:
+                            for detail in mod_details:
+                                pfid = int(detail.get("publishedfileid", 0))
+                                name = detail.get("title", f"Mod {pfid}")
+                                if pfid in mod_names:
+                                    mod_names[pfid] = name
+                                    logger.debug(f"Fetched name for {pfid}: {name}")
+                        else:
+                            logger.warning(
+                                f"Steam API returned no details for {len(missing_pfids)} mod(s)"
                             )
-                            for chunk in pfids_chunked
-                        ]
-                        # Map the execution of the subscription actions to the pool of processes
-                        pool.map(SteamworksSubscriptionHandler.run, actions)
-                    self.steamworks_in_use = False
-                else:
-                    logger.warning(
-                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
-                    )
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to fetch mod names from Steam Web API: {e}"
+                        )
+
+                # Create and execute runnable in Qt thread pool
+                runnable = SteamSubscriptionRunnable(instruction[0], pfids, mod_names)
+
+                # Connect signals for error/success handling
+                runnable.signals.error.connect(self._handle_subscription_error)
+                runnable.signals.success.connect(self._handle_subscription_success)
+
+                # Ensure cleanup happens even if runnable fails
+                runnable.setAutoDelete(True)
+
+                # Start in background - downloads panel will track progress
+                logger.debug("Starting subscription operation in background...")
+                QThreadPool.globalInstance().start(runnable)
             else:
                 logger.error(f"Unsupported instruction {instruction}")
                 return
-        else:
-            logger.warning(
-                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
-            )
 
     def _do_steamworks_api_call_animated(
         self, instruction: list[list[str] | str]
@@ -2401,10 +2649,63 @@ class MainContent(QObject):
         # Do a full refresh of metadata and UI
         # self._do_refresh()
         # TODO  check if this is necessary
-        """       
+        """
         Disabled refresh since steam downloads are not instant and in the background in its own time
         Refreshing metadata and UI here could tag mods as invalid or cause crashes due to key errors etc
         """
+
+    def _handle_subscription_error(
+        self, action: str, error_msg: str, pfids: list[int]
+    ) -> None:
+        """
+        Handle subscription operation errors from worker thread.
+
+        :param action: The action that failed ("subscribe", "unsubscribe", "resubscribe")
+        :type action: str
+        :param error_msg: Error message from the operation
+        :type error_msg: str
+        :param pfids: List of affected PublishedFileIds
+        :type pfids: list[int]
+        :return: None
+        """
+        logger.error(f"Subscription operation '{action}' failed: {error_msg}")
+
+        # Determine user-friendly message
+        if "operation already in progress" in error_msg.lower():
+            title = self.tr("Operation Busy")
+            text = self.tr("Steam Workshop is currently busy with another operation.")
+            information = self.tr(
+                f"Could not complete '{action}' for {len(pfids)} mod(s) because "
+                "another Steam Workshop operation is in progress.\n\n"
+                "Please wait a moment and try again."
+            )
+        else:
+            title = self.tr("Subscription Operation Failed")
+            text = self.tr(f"Failed to {action} {len(pfids)} mod(s)")
+            information = self.tr(
+                "An error occurred while communicating with the Steam Workshop API.\n\n"
+                f"Error details: {error_msg}"
+            )
+
+        # Show warning dialog (using existing dialogue module)
+        dialogue.show_warning(
+            title=title,
+            text=text,
+            information=information,
+        )
+
+    def _handle_subscription_success(self, action: str, num_mods: int) -> None:
+        """
+        Handle successful subscription operation.
+
+        :param action: The action that succeeded
+        :type action: str
+        :param num_mods: Number of mods processed
+        :type num_mods: int
+        :return: None
+        """
+        logger.info(f"Subscription operation '{action}' succeeded for {num_mods} mods")
+        # Success is already tracked via DownloadTracker, no additional UI needed
 
         # GIT MOD ACTIONS
 
@@ -3394,6 +3695,52 @@ class MainContent(QObject):
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
         ].steam_client_integration
+
+        # Check if Steam is running when Steam integration is enabled
+        if steam_client_integration:
+            try:
+                from app.utils.steam.steamworks.wrapper import SteamworksInterface
+
+                steamworks = SteamworksInterface.instance()
+
+                if steamworks.steam_not_running:
+                    logger.warning(
+                        "Steam is not running but steam_client_integration is enabled"
+                    )
+
+                    # Show warning dialog
+                    from app.views.dialogue import BinaryChoiceDialog
+
+                    dialog = BinaryChoiceDialog(
+                        title=self.tr("Steam Not Running"),
+                        text=self.tr("Steam does not appear to be running."),
+                        information=self.tr(
+                            "Steam integration is enabled for this game instance, but Steam does not appear to be running.\n\n"
+                            "RimWorld may fail to launch or may not have access to Steam features like Workshop mods or achievements.\n\n"
+                            "Do you want to launch RimWorld anyway?"
+                        ),
+                        positive_text=self.tr("Launch Anyway"),
+                        negative_text=self.tr("Cancel"),
+                        icon=QMessageBox.Icon.Warning,
+                    )
+
+                    if not dialog.exec_is_positive():
+                        logger.info(
+                            "User cancelled game launch due to Steam not running"
+                        )
+                        return
+                    else:
+                        logger.info(
+                            "User chose to launch game anyway despite Steam not running"
+                        )
+                else:
+                    logger.info("Steam is running, proceeding with launch")
+            except Exception as e:
+                # If we can't check Steam status, log and continue
+                # Don't block the user from launching
+                logger.warning(
+                    f"Unable to check Steam status: {e}. Proceeding with launch."
+                )
 
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.

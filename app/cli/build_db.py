@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from PySide6.QtCore import QCoreApplication
 
 from app.utils.app_info import AppInfo
 from app.utils.db_builder_core import DBBuilderCore
@@ -41,6 +42,12 @@ from app.utils.db_builder_core import DBBuilderCore
     help="Update existing database (merge) or overwrite completely.",
 )
 @click.option(
+    "--incremental/--full-rebuild",
+    default=True,
+    show_default=True,
+    help="Use incremental updates (faster) or force full rebuild.",
+)
+@click.option(
     "--quiet",
     is_flag=True,
     help="Suppress progress output (errors still shown).",
@@ -50,6 +57,7 @@ def build_db(
     output: Path,
     dlc_data: bool,
     update: bool,
+    incremental: bool,
     quiet: bool,
 ) -> None:
     """Build Steam Workshop metadata database.
@@ -84,6 +92,12 @@ def build_db(
       # Skip DLC data for faster builds
       rimsort build-db --output workshop.json --no-dlc-data --quiet
     """
+    # Initialize Qt application for QThreadPool signal support
+    # Use QCoreApplication (headless) instead of QApplication (GUI)
+    app = QCoreApplication.instance()
+    if app is None:
+        app = QCoreApplication(sys.argv)
+
     # API key resolution (priority order)
     if not api_key:
         # Try to read from settings.json as fallback
@@ -171,6 +185,7 @@ def build_db(
             output_database_path=str(output),
             get_appid_deps=dlc_data,
             update=update,
+            incremental=incremental,
             progress_callback=progress_callback,
         )
 

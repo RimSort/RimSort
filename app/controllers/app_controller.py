@@ -13,6 +13,7 @@ from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.steam_status_handler import SteamStatusHandler
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
 
@@ -37,6 +38,9 @@ class AppController(QObject):
         self.set_theme()
         # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
+        # NOTE: SteamworksInterface is NOT initialized in main process
+        # It's lazily initialized when first used (typically in Qt thread pool workers)
+        # Each usage context gets the same singleton instance
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
         # Initialize the metadata manager
@@ -124,6 +128,12 @@ class AppController(QObject):
         self.main_window = MainWindow(settings_controller=self.settings_controller)
         self.main_window_controller = MainWindowController(self.main_window)
 
+        # Setup Steam status notifications
+        # Keep reference to prevent garbage collection
+        self.steam_status_handler = SteamStatusHandler(
+            settings=self.settings, parent_widget=self.main_window
+        )
+
     def run(self) -> int:
         """Runs the main application loop after initializing the main window."""
         self.main_window.show()
@@ -135,5 +145,7 @@ class AppController(QObject):
         self.main_window.shutdown_watchdog()
 
     def quit(self) -> None:
-        """Exits the application."""
+        """Exit the application."""
+        # NOTE: No need to shutdown SteamworksInterface here
+        # It's only initialized in child processes which clean up on termination
         self.app.quit()
