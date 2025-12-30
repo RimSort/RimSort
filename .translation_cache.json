@@ -1,1 +1,5 @@
-{}
+{
+  "_description": "Persistent translation cache - stores translated strings to avoid redundant API calls",
+  "_note": "This file is preserved across test runs and application sessions. Do not delete.",
+  "_format": "keys are 'text|language|source_lang|service', values are translated strings"
+}
