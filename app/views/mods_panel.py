@@ -3857,6 +3857,9 @@ class ModsPanel(QWidget):
             )
             if item is None:
                 continue
+            # Check if UUID exists in metadata before accessing
+            if uuid not in self.metadata_manager.internal_local_metadata:
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
