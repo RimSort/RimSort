@@ -18,7 +18,7 @@ from PySide6.QtWebEngineCore import (
     QWebEngineScript,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWidgets import (
+from PySide6.QtWidgets import ( # pyright: ignore[reportMissingImports]
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -125,8 +125,8 @@ class SteamBrowser(QWidget):
         self.downloader_list.customContextMenuRequested.connect(
             self._downloader_item_contextmenu_event
         )
-        self.add_to_list_button = QPushButton(self.tr("Add to List"))
-        self.add_to_list_button.clicked.connect(self._add_collection_or_mod_to_list)
+        self.add_to_list2_button = QPushButton(self.tr("Add to List"))
+        self.add_to_list2_button.clicked.connect(self._add_collection_or_mod_to_list)
         self.clear_list_button = QPushButton(self.tr("Clear List"))
         self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
@@ -219,7 +219,7 @@ class SteamBrowser(QWidget):
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
         self.downloader_layout.addWidget(self.downloader_list)
-        self.downloader_layout.addWidget(self.add_to_list_button)
+        self.downloader_layout.addWidget(self.add_to_list2_button)
         self.downloader_layout.addWidget(self.download_steamcmd_button)
         self.downloader_layout.addWidget(self.download_steamworks_button)
         self.downloader_layout.addWidget(self.clear_list_button)
