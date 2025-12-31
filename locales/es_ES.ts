@@ -4,24 +4,8 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation>Listo</translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation>Deshabilitar el lector de registros ACF</translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation>Haga clic para desactivar el lector de registros ACF</translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation>Buscar...</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Refrescar</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Eliminar modificaciones seleccionadas</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
@@ -36,112 +20,16 @@
         <translation>Exportar a CSV</translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
-        <translation>Lector de registros ACF deshabilitado</translation>
+        <source>Search:</source>
+        <translation>Buscar:</translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
-        <translation>Mostrando  de {total} elementos (filtrados) {filtered}</translation>
+        <source>All Searchable Columns</source>
+        <translation>Todas las columnas buscables</translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation>Mostrando {total} artículos</translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation>Búsqueda...</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Cargado  elementos |Última actualización:  {time} {count}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>Exportación cancelada por el usuario.</translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation>{count} elementos exportados correctamente a {file_path}</translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation>Abrir URL de modificación</translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation>Copiar PFID</translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation>Ver detalles de la modificación</translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation>Detalles de la modificación</translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation>Confirmar la importación de ACF</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>¿Está seguro de que desea importar .acf? Esto solo funciona para steamcmd</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>Exportación fallida: permiso denegado: verifique los permisos de archivo</translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation>Error en la exportación: se produjo una excepción desconocida</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>Error de exportación</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>Exportar a CSV ...</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>Abrir carpeta Mod</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>Esto reemplazará su archivo .acf de SteamCMD actual</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>Import .acf</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>Interfaz SteamCMD no inicializada correctamente</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>Archivo ACF no encontrado:  {acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>Archivo ACF no se encuentra en:  {acf_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>Exportó con éxito ACF a {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>Exportación de éxito</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>Exportar fallado: {e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>Exportación fallida</translation>
+        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <translation>Busca la columna seleccionada o todas las columnas que se pueden buscar si se establece en 'Todos'</translation>
     </message>
 </context>
 <context>
@@ -846,6 +734,46 @@ Would you like to configure them now?</source>
     <message>
         <source>Failed to save active mods to file:</source>
         <translation>Falló al guardar los mods activos en el archivo:</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>Confirmar la importación de ACF</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>Esto reemplazará su archivo steamcmd .acf actual</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>¿Está seguro de que desea importar .acf? Esto solo funciona para steamcmd</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>Importar .acf</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>Error de exportación</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>Archivo ACF no encontrado en: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>Exportación exitosa</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>ACF exportado correctamente a {file_path}</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>Error al exportar: Permiso denegado: verifique los permisos del archivo</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>Error al exportar: {e}</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
@@ -5379,6 +5307,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
         <translation>RimSort no pudo validar el ejecutable de RimWorld en la carpeta especificada: {game_install_path}.Verifique que este directorio sea correcto y contenga un ejecutable del juego RimWorld válido.</translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation>Exportación exitosa</translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} elementos exportados correctamente a {file_path}</translation>
     </message>
 </context>
 <context>

@@ -4,24 +4,8 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation>Hazır</translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation>ACF Günlük Okuyucusunu Devre Dışı Bırak</translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation>ACF Günlük Okuyucusunu devre dışı bırakmak için tıklayın</translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation>Ara...</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Yenile</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Seçilen Modları Sil</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
@@ -36,112 +20,16 @@
         <translation>CSV'ye aktar</translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
-        <translation>ACF Günlük Okuyucusu devre dışı</translation>
+        <source>Search:</source>
+        <translation>Aramak:</translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
-        <translation>{total} öğeden {filtered} tanesi gösteriliyor (filtrelendi)</translation>
+        <source>All Searchable Columns</source>
+        <translation>Tüm Aranabilir Sütunlar</translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation>{total} öğe gösteriliyor</translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation>Arama...</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>{count} öğe yüklendi | Son güncelleme: {time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>Dışa aktarma kullanıcı tarafından iptal edildi.</translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation>{count} öğe başarıyla {file_path} yoluna aktarıldı</translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation>Mod URL'sini aç</translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation>PFID'yi kopyala</translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation>Mod Ayrıntılarını Görüntüle</translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation>Mod Ayrıntıları</translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation>ACF içe aktarmayı onaylayın</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>.acf dosyasını içe aktarmak istediğinizden emin misiniz? Bu yalnızca steamcmd için çalışır</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>Dışa aktarma başarısız: İsin reddedildi - dosya izinlerini kontrol edin</translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation>Dışa aktarma başarısız oldu, bilinmeyen istisna oluştu</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>Dışa Aktarma Hatası</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>CSV'ye aktarılıyor...</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>Mod Klasörünü Aç</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>Bu işlem, kullandığınız steamcmd .acf dosyasını yenisiyle değiştirecek</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>.acf İçe Aktar</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>SteamCMD arayüzü düzgün başlatılamadı</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>ACF dosyasu bulunamadı: {acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>ACF dosyası {acf_path} yolunda bulunamadı</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>ACF başarıyla {file_path} yoluna aktarıldı</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>Dışa Aktarma Başarılı</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>Dışa aktarma başarısız: {e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>Dışa aktarma Başarısız</translation>
+        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <translation>'Tümü' olarak ayarlandıysa seçilen sütunu veya aranabilir tüm sütunları arar</translation>
     </message>
 </context>
 <context>
@@ -821,6 +709,46 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     <message>
         <source>Failed to save active mods to file:</source>
         <translation>Aktif modlar dosyaya kaydedilemedi:</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>ACF içe aktarmayı onaylayın</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>Bu, mevcut steamcmd .acf dosyanızın yerini alacak</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>.acf dosyasını içe aktarmak istediğinizden emin misiniz? Bu yalnızca steamcmd için çalışır</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>.acf'yi içe aktar</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>Dışa Aktarma Hatası</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>ACF dosyası şurada bulunamadı: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>İhracat Başarısı</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>ACF başarıyla {file_path} yoluna aktarıldı</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>Dışa aktarma başarısız oldu: İzin reddedildi - dosya izinlerini kontrol edin</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>Dışa aktarma başarısız oldu: {e}</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
@@ -5389,6 +5317,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
         <translation>Oyun klasörü boş veya geçersiz olduğu için Rimsort Rimworld'i başlatamadı: [{game_install_path}] Lütfen oyun klasörünün düzgün ayarlandığını ve Rimworld yürütülebilir dosyasının içinde bulunduğunu kontrol edin.</translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation>İhracat Başarısı</translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} öğe başarıyla {file_path} yoluna aktarıldı</translation>
     </message>
 </context>
 <context>

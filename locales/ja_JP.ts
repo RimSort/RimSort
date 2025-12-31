@@ -4,24 +4,8 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation>準備ができて</translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation>ACFログリーダーを無効にする</translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation>クリックして ACF ログ リーダーを無効にします</translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation>検索...</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>リフレッシュします</translation>
+        <source>Delete Selected Mods</source>
+        <translation>選択したMODを削除</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
@@ -36,112 +20,16 @@
         <translation>CSVへのエクスポート</translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
-        <translation>ACFログリーダーが無効になっています</translation>
+        <source>Search:</source>
+        <translation>検索：</translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
-        <translation>{total} 個中 {filtered} 個のアイテムを表示しています (フィルタリング済み)</translation>
+        <source>All Searchable Columns</source>
+        <translation>検索可能なすべての列</translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation>個のアイテムを表示しています {total}</translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation>検索中...</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>ロード{count}アイテム|最終更新： {time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>ユーザーがキャンセルしたエクスポート。</translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation>{count} 個のアイテムを {file_path} に正常にエクスポートしました</translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation>Mod URLを開く</translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation>PFIDをコピーする</translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation>MODの詳細を表示</translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation>MODの詳細</translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation>ACFインポートを確認する</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>.acf をインポートしてもよろしいですか?これはsteamcmdでのみ機能します</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>エクスポートの失敗：許可拒否 - ファイル許可を確認します</translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation>エクスポートに失敗しました 不明な例外が発生しました</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>エクスポートエラー</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>CSVへのエクスポート...</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>MODフォルダーを開きます</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>これにより、現在のSteamCMD .ACFファイルが置き換えられます</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>インポート.acf</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>STEAMCMDインターフェイスは適切に初期化されていません</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>ACFファイルが見つかりません：{acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>ACFファイルが見つかりません：{acf_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>ACFを{file_path}に正常にエクスポートしました</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>エクスポートの成功</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>エクスポート失敗：{e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>エクスポートは失敗しました</translation>
+        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <translation>選択した列、または「すべて」に設定されている場合はすべての検索可能な列を検索します。</translation>
     </message>
 </context>
 <context>
@@ -855,6 +743,46 @@ Would you like to configure them now?</source>
     <message>
         <source>Failed to save active mods to file:</source>
         <translation>アクティブなモッドをファイルに保存できませんでした:</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>ACFインポートを確認する</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>これにより、現在の steamcmd .acf ファイルが置き換えられます。</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>.acf をインポートしてもよろしいですか?これはsteamcmdでのみ機能します</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>.acf をインポートする</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>エクスポートエラー</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>ACF ファイルが次の場所に見つかりません: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>エクスポートの成功</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>ACF が {file_path} に正常にエクスポートされました</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>エクスポートに失敗しました: アクセス許可が拒否されました - ファイルのアクセス許可を確認してください</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>エクスポートに失敗しました: {e}</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
@@ -5405,6 +5333,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
         <translation>rimSort は、指定されたフォルダー {game_install_path} にあるrimWorld 実行可能ファイルを検証できませんでした。このディレクトリが正しく、有効なRimWorld ゲーム実行可能ファイルが含まれていることを確認してください。</translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation>エクスポートの成功</translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>{count} 個のアイテムを {file_path} に正常にエクスポートしました</translation>
     </message>
 </context>
 <context>
