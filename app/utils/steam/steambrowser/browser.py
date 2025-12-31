@@ -18,7 +18,7 @@ from PySide6.QtWebEngineCore import (
     QWebEngineScript,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWidgets import ( # pyright: ignore[reportMissingImports]
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
