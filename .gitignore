@@ -178,3 +178,6 @@ version.xml
 
 # Dictionaries
 ltex.dictionary*
+
+# Translation cache
+.translation_cache.json
