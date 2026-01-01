@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any
 
 from loguru import logger
@@ -10,8 +9,6 @@ from PySide6.QtWidgets import (
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.windows.base_mods_panel import (
     BaseModsPanel,
-    ButtonConfig,
-    ButtonType,
 )
 
 
@@ -61,40 +58,8 @@ class MissingModsPrompt(BaseModsPanel):
         # Validate and filter package IDs
         self.packageids = self._validate_packageids(packageids)
         self.packageid_to_row: dict[str, int] = {}
-
-        # Check if Steam client integration is enabled
-        steam_client_integration_enabled = self._get_steam_client_integration_enabled()
-
-        # Set up buttons using standardized configuration
-        button_configs = [
-            ButtonConfig(
-                button_type=ButtonType.REFRESH,
-                custom_callback=self._refresh_metadata_and_panel,
-            ),
-            ButtonConfig(
-                button_type=ButtonType.CUSTOM,
-                text=self.tr("Download with SteamCMD"),
-                custom_callback=partial(
-                    self._update_mods_from_table,
-                    pfid_column=5,
-                    mode="SteamCMD",
-                ),
-            ),
-        ]
-
-        # Only add Steam client download button if Steam client integration is enabled
-        if steam_client_integration_enabled:
-            button_configs.append(
-                ButtonConfig(
-                    button_type=ButtonType.CUSTOM,
-                    text=self.tr("Download with Steam client"),
-                    custom_callback=partial(
-                        self._update_mods_from_table,
-                        pfid_column=5,
-                        mode="Steam",
-                    ),
-                )
-            )
+        button_configs = self._get_base_button_configs()
+        self._extend_button_configs_with_steam_actions(button_configs)
         self._setup_buttons_from_config(button_configs)
 
         # Configure table settings
