@@ -196,7 +196,7 @@ class SteamBrowser(QWidget):
         self.location.returnPressed.connect(self.__browse_to_location)
 
         # Nav bar
-        self.add_to_list_button = QAction(self.tr("Add to list (Redundant)"))
+        self.add_to_list_button = QAction(self.tr("Add to list"))
         self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
