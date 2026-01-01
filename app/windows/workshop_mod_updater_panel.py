@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any
 
 from loguru import logger
@@ -11,6 +10,7 @@ from app.windows.base_mods_panel import (
     ButtonConfig,
     ButtonType,
     ColumnIndex,
+    OperationMode,
 )
 
 
@@ -44,10 +44,9 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             ButtonConfig(
                 button_type=ButtonType.CUSTOM,
                 text=self.tr("Update with SteamCMD"),
-                custom_callback=partial(
-                    self._update_mods_from_table,
-                    pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                    mode="SteamCMD",
+                custom_callback=self._create_update_callback(
+                    ColumnIndex.PUBLISHED_FILE_ID.value,
+                    OperationMode.STEAMCMD,
                 ),
             ),
         ]
@@ -58,10 +57,10 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                 ButtonConfig(
                     button_type=ButtonType.CUSTOM,
                     text=self.tr("Update with Steam client"),
-                    custom_callback=partial(
-                        self._update_mods_from_table,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                        mode="Steam",
+                    custom_callback=self._create_update_callback(
+                        ColumnIndex.PUBLISHED_FILE_ID.value,
+                        OperationMode.STEAM,
+                        "resubscribe",
                     ),
                 )
             )
@@ -70,8 +69,8 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         # Populate the table with mods that have updates available
         self._populate_from_metadata()
 
-        # Configure table settings
-        self._setup_table_configuration(sorting_enabled=True)
+        # Enable table sorting
+        self._reconfigure_table_sorting(sorting_enabled=True)
 
         # Show the panel only if there are mods with updates available
         if self.eligible_metadata and len(self.eligible_metadata) > 0:

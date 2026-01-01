@@ -83,9 +83,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
 
         # Populate the table with missing properties mod data
         self._populate_from_metadata()
-
-        # Configure table settings
-        self._setup_table_configuration(sorting_enabled=False)
+        # Sorting is disabled by default in _setup_table_and_model
 
         # TODO: let user configure window launch state and size from settings controller
         self.showNormal()
