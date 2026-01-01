@@ -1572,15 +1572,15 @@ class ModListWidget(QListWidget):
                     answer = show_dialogue_conditional(
                         title=self.tr("Are you sure?"),
                         text=self.tr(
-                            "You have selected {len} mods for unsubscribe + re-subscribe."
+                            "You have selected {len} mods for resubscribe:(unsubscribe + subscribe)."
                         ).format(len=len(publishedfileids)),
                         information=self.tr(
                             "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
                         ),
                     )
                     if answer == QMessageBox.StandardButton.Yes:
-                        logger.debug(
-                            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
+                        logger.warning(
+                            f"re-subscribing: (Unsubscribing + subscribing) to {len(publishedfileids)} mod(s)"
                         )
                         for path in steam_mod_paths:
                             delete_files_except_extension(
@@ -3856,6 +3856,9 @@ class ModsPanel(QWidget):
                 else self.inactive_mods_list.item(uuid_to_index[uuid])
             )
             if item is None:
+                continue
+            # Check if UUID exists in metadata before accessing
+            if uuid not in self.metadata_manager.internal_local_metadata:
                 continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]

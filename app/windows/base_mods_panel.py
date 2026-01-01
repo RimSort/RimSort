@@ -93,6 +93,13 @@ class ButtonType(Enum):
     CUSTOM = "custom"
 
 
+class OperationMode(Enum):
+    """Enumeration for mod update operation modes."""
+
+    STEAMCMD = "SteamCMD"
+    STEAM = "Steam"
+
+
 @dataclass
 class ButtonConfig:
     """Configuration for creating standardized buttons."""
@@ -180,19 +187,32 @@ class BaseModsPanel(QWidget):
         self.layouts.details_layout.addWidget(self.ui_elements.details_label)
         self.layouts.upper_layout.addLayout(self.layouts.details_layout)
 
-    def _setup_model(self, additional_columns: Sequence[HeaderColumn]) -> None:
-        """Set up the table model."""
+    def _setup_table_and_model(
+        self,
+        additional_columns: Sequence[HeaderColumn],
+        sorting_enabled: bool = False,
+    ) -> None:
+        """
+        Set up the complete table model and view with headers.
+
+        This unified method initializes the QStandardItemModel, QTableView, and all headers
+        in one consistent operation, preventing configuration conflicts or partial initialization.
+
+        Args:
+            additional_columns: List of column definitions (names or tuples of name/ResizeMode)
+            sorting_enabled: Whether column sorting is enabled (default: False)
+        """
+        # Set up model with header labels
         self.editor_model = QStandardItemModel(0, len(additional_columns) + 1)
-        editor_header_labels = [
-            "✔",
-        ] + list(map(lambda x: x[0] if isinstance(x, tuple) else x, additional_columns))
+        editor_header_labels = ["✔"] + [
+            col[0] if isinstance(col, tuple) else col for col in additional_columns
+        ]
         self.editor_model.setHorizontalHeaderLabels(editor_header_labels)
 
-    def _setup_table_view(self) -> None:
-        """Set up the table view."""
+        # Set up table view
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
-        self.editor_table_view.setSortingEnabled(False)
+        self.editor_table_view.setSortingEnabled(sorting_enabled)
         self.editor_table_view.setEditTriggers(
             QAbstractItemView.EditTrigger.NoEditTriggers
         )
@@ -203,30 +223,26 @@ class BaseModsPanel(QWidget):
             Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
 
-    def _setup_headers(self, additional_columns: Sequence[HeaderColumn]) -> None:
-        """Set up table headers."""
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.ResizeToContents
+        # Set up headers - checkbox column resizes to contents
+        header = self.editor_table_view.horizontalHeader()
+        header.setSectionResizeMode(
+            ColumnIndex.CHECKBOX.value, QHeaderView.ResizeMode.ResizeToContents
         )
 
+        # Additional columns: use specified ResizeMode or default to Stretch
         for column_index, column in enumerate(additional_columns):
-            self.editor_table_view.horizontalHeader().setSectionResizeMode(
-                column_index + 1,
-                QHeaderView.ResizeMode.Stretch,
+            if isinstance(column, tuple):
+                resize_mode = column[1]
+            else:
+                resize_mode = QHeaderView.ResizeMode.Stretch
+            header.setSectionResizeMode(
+                ColumnIndex.CHECKBOX.value + column_index + 1, resize_mode
             )
 
         # Set vertical header to resize to contents
         self.editor_table_view.verticalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
         )
-
-    def _setup_table_and_model(
-        self, additional_columns: Sequence[HeaderColumn]
-    ) -> None:
-        """Set up the table configuration."""
-        self._setup_model(additional_columns)
-        self._setup_table_view()
-        self._setup_headers(additional_columns)
 
     def _setup_action_buttons(self) -> None:
         """Set up the action buttons layout."""
@@ -348,7 +364,9 @@ class BaseModsPanel(QWidget):
         if event.type() == QEvent.Type.KeyPress:
             key_event = QKeyEvent(event)  # type: ignore
             if key_event.key() == Qt.Key.Key_Escape:
-                self.close()
+                # Don't close AcfLogReader on Escape key (it's a persistent view)
+                if self.__class__.__name__ != "AcfLogReader":
+                    self.close()
                 return True
 
         return super().eventFilter(watched, event)
@@ -389,68 +407,122 @@ class BaseModsPanel(QWidget):
     def _update_mods_from_table(
         self,
         pfid_column: int,
-        mode: str | int,
-        steamworks_cmd: str = "resubscribe",
+        mode: OperationMode,
+        steamworks_cmd: str = "",
         completed: Callable[[], None] | None = None,
     ) -> None:
         """
-        filter out empty strings using
-        len(str_pfid) > 0
-        happens when MissingModsPrompt does not have published_file_id for mods in the table
-        passes empty string to steamcmd download command
-        causes crash in steamworks api call when passing empty string
-        this approach works because it will just skip over any missing published_file_ids
+        Update mods from table by collecting PFIDs and triggering appropriate operations.
+
+        Filters out empty Publish File IDs which can occur when MissingModsPrompt
+        doesn't have published_file_id for mods in the table. This prevents crashes
+        in steamworks API calls.
+
+        Args:
+            pfid_column: Column index for Publish File IDs
+            mode: Operation mode (OperationMode.STEAMCMD or OperationMode.STEAM)
+            steamworks_cmd: Steamworks command to execute (only used when mode is STEAM).
+                Valid values: "subscribe", "resubscribe", "unsubscribe".
+                Ignored for OperationMode.STEAMCMD.
+            completed: Optional callback to run on completion
         """
-        # Check for mods without Publish Field ID in missing_publishfieldid_mods (if attribute exists)
+        # Check for mods without Publish Field ID and notify user if needed
         self._check_missing_publish_field_id_notification()
 
         steamcmd_pfids, steam_pfids = self._collect_pfids_by_mode(pfid_column, mode)
-        # filter out empty strings happens when MissingModsPrompt does not have published_file_id for mods in the table
-        filtered_steamcmd_pfids = [
-            str_pfid for str_pfid in steamcmd_pfids if len(str_pfid) > 0
-        ]
+        filtered_steamcmd_pfids = self._filter_empty_pfids(steamcmd_pfids)
+
         if filtered_steamcmd_pfids:
-            self._delete_selected_mods(pfid_column, "SteamCMD")
+            self._delete_selected_mods(pfid_column, OperationMode.STEAMCMD)
             EventBus().do_steamcmd_download.emit(filtered_steamcmd_pfids)
 
         if steam_pfids:
-            EventBus().do_steamworks_api_call.emit(
-                [
-                    steamworks_cmd,
-                    [eval(str_pfid) for str_pfid in steam_pfids if len(str_pfid) > 0],
-                ]
-            )
+            self._emit_steamworks_api_call(steamworks_cmd, steam_pfids)
 
         if completed:
             completed()
 
         # Close the panel window after triggering operations
-        self.close()
+        # Don't close AcfLogReader (it's a persistent view, not a dialog)
+        if self.__class__.__name__ != "AcfLogReader":
+            self.close()
 
     def _collect_pfids_by_mode(
-        self, pfid_column: int, mode: str | int
+        self, pfid_column: int, mode: OperationMode
     ) -> tuple[list[str], list[str]]:
         pfid_fn = self._get_selected_text_by_column(pfid_column)
-        if isinstance(mode, str):
-            pfids = [(pfid, mode) for pfid in self._run_for_selected_rows(pfid_fn)]
-        else:
-            mode_fn = self._get_selected_text_by_column(mode)
-            pfids = self._run_for_selected_rows(
-                lambda row: (pfid_fn(row), mode_fn(row))
-            )
+        pfids = [(pfid, mode) for pfid in self._run_for_selected_rows(pfid_fn)]
 
-        steamcmd_pfids = [pfid for pfid, m in pfids if m == "SteamCMD"]
-        steam_pfids = [pfid for pfid, m in pfids if m == "Steam"]
+        steamcmd_pfids = [pfid for pfid, m in pfids if m == OperationMode.STEAMCMD]
+        steam_pfids = [pfid for pfid, m in pfids if m == OperationMode.STEAM]
         return steamcmd_pfids, steam_pfids
 
-    def _steamworks_cmd_for_all(
+    def _filter_empty_pfids(self, pfids: list[str]) -> list[str]:
+        """
+        Filter out empty Publish File IDs from the list.
+
+        Args:
+            pfids: List of PFID strings to filter
+
+        Returns:
+            List of non-empty PFID strings
+        """
+        return [pfid for pfid in pfids if pfid.strip()]
+
+    def _emit_steamworks_api_call(self, command: str, steam_pfids: list[str]) -> None:
+        """
+        Emit steamworks API call with the given command and PFIDs.
+
+        Converts PFIDs to integers and filters out empty values. All calls are routed
+        through the animated handler for consistent UI feedback, validation, and safety checks.
+
+        Args:
+            command: Steamworks command to execute (subscribe, resubscribe, unsubscribe, launch_game_process, etc.)
+            steam_pfids: List of Publish File ID strings to process
+        """
+        if not command:
+            logger.warning("Attempted to emit steamworks API call with empty command")
+            return
+
+        filtered_pfids = [int(pfid) for pfid in steam_pfids if pfid.strip()]
+
+        if not filtered_pfids:
+            return
+
+        logger.warning(
+            f"Queuing '{command}' action for {len(filtered_pfids)} mods via Steamworks API"
+        )
+        EventBus().do_steamworks_api_call.emit([command, filtered_pfids])
+
+    def _create_update_callback(
         self,
         pfid_column: int,
-        steamworks_cmd: str = "resubscribe",
-        completed: Callable[[], None] | None = None,
-    ) -> None:
-        self._set_all_checkbox_rows(True)
-        self._update_mods_from_table(pfid_column, "Steam", steamworks_cmd, completed)
+        mode: OperationMode,
+        steamworks_cmd: str | None = None,
+        completion_callback: Callable[[], None] | None = None,
+    ) -> Callable[[], None]:
+        """
+        Factory method for creating mod update operation callbacks.
+
+        Args:
+            pfid_column: Column index for Publish File IDs
+            mode: Operation mode (OperationMode.STEAMCMD or OperationMode.STEAM)
+            steamworks_cmd: Steamworks command to execute (only used for STEAM mode).
+                Valid values: "subscribe", "resubscribe", "unsubscribe"
+            completion_callback: Optional callback to run after completion
+
+        Returns:
+            Callback function for update button
+        """
+        # Use provided steamworks_cmd or empty string (only used for STEAM mode)
+        cmd = steamworks_cmd or ""
+        return partial(
+            self._update_mods_from_table,
+            pfid_column,
+            mode,
+            cmd,
+            completed=completion_callback,
+        )
 
     def clear_layout(self, layout: QLayout) -> None:
         while layout.count():
@@ -496,22 +568,47 @@ class BaseModsPanel(QWidget):
 
         return __selected_text_by_column
 
-    def _delete_selected_mods(self, pfid_column: int, mode: str | int) -> None:
+    def _resolve_mode_getter(
+        self, mode: OperationMode | str | int
+    ) -> Callable[[int], str]:
+        """
+        Resolve a mode value getter function for the given mode parameter.
+
+        Handles multiple mode type representations (enum, string, int) and returns
+        a callable that provides the mode value for any given row.
+
+        Args:
+            mode: Operation mode as OperationMode enum, string, or column index (int).
+
+        Returns:
+            A callable that takes a row index and returns the mode string value.
+        """
+        if isinstance(mode, OperationMode):
+            # Return constant function for enum mode
+            mode_value = mode.value
+            return lambda _: mode_value
+        elif isinstance(mode, int):
+            # Return column text getter for int (column index)
+            return self._get_selected_text_by_column(mode)
+        else:
+            # Return constant function for string mode
+            return lambda _: mode
+
+    def _delete_selected_mods(
+        self, pfid_column: int, mode: OperationMode | str | int
+    ) -> None:
         delete_before_update_state = (
             self.settings_controller.settings.steamcmd_delete_before_update
         )
         if delete_before_update_state:
             pfid_fn = self._get_selected_text_by_column(pfid_column)
-            mode_fn = (
-                self._get_selected_text_by_column(mode)
-                if isinstance(mode, int)
-                else lambda _: mode
-            )
+            get_mode = self._resolve_mode_getter(mode)
+
             pfid_mode_pairs = self._run_for_selected_rows(
-                lambda row: (pfid_fn(row), mode_fn(row))
+                lambda row: (pfid_fn(row), get_mode(row))
             )
             for pfid, mod_mode in pfid_mode_pairs:
-                if mod_mode == "SteamCMD":
+                if mod_mode == OperationMode.STEAMCMD.value:
                     mod_path = get_mod_path_from_pfid(pfid)
                     if mod_path and os.path.exists(mod_path):
                         try:
@@ -630,29 +727,28 @@ class BaseModsPanel(QWidget):
             if pfid_column is not None:
                 return self._create_button(
                     self.tr("Download selected with SteamCMD"),
-                    partial(self._update_mods_from_table, pfid_column, "SteamCMD"),
+                    self._create_update_callback(pfid_column, OperationMode.STEAMCMD),
                 )
         elif button_type == ButtonType.SUBSCRIBE:
             if pfid_column is not None:
                 return self._create_button(
                     self.tr("Subscribe selected"),
-                    partial(
-                        self._update_mods_from_table,
+                    self._create_update_callback(
                         pfid_column,
-                        "Steam",
-                        completed=completion_callback,
+                        OperationMode.STEAM,
+                        "subscribe",
+                        completion_callback,
                     ),
                 )
         elif button_type == ButtonType.UNSUBSCRIBE:
             if pfid_column is not None:
                 return self._create_button(
                     self.tr("Unsubscribe selected"),
-                    partial(
-                        self._update_mods_from_table,
+                    self._create_update_callback(
                         pfid_column,
-                        "Steam",
+                        OperationMode.STEAM,
                         "unsubscribe",
-                        completed=completion_callback,
+                        completion_callback,
                     ),
                 )
         elif button_type == ButtonType.CUSTOM:
@@ -1125,32 +1221,16 @@ class BaseModsPanel(QWidget):
         """
         return self.metadata_manager.mod_metadata_dir_mapper.get(path)
 
-    def _setup_table_configuration(
-        self,
-        sorting_enabled: bool = True,
-        stretch_columns: list[int] | None = None,
-        resize_to_contents_columns: list[int] | None = None,
-    ) -> None:
+    def _reconfigure_table_sorting(self, sorting_enabled: bool) -> None:
         """
-        Configure table settings.
+        Reconfigure table sorting after initialization (if needed).
+
+        Most cases should configure sorting in _setup_table_and_model() instead.
 
         Args:
             sorting_enabled: Whether sorting is enabled
-            stretch_columns: List of column indices to set to Stretch mode
-            resize_to_contents_columns: List of column indices to resize to contents
         """
         self.editor_table_view.setSortingEnabled(sorting_enabled)
-
-        # Set Stretch for specified columns
-        if stretch_columns is not None:
-            for col in stretch_columns:
-                self.editor_table_view.horizontalHeader().setSectionResizeMode(
-                    col, QHeaderView.ResizeMode.Stretch
-                )
-
-        # Default all columns to ResizeToContents if not specified
-        if resize_to_contents_columns is None:
-            resize_to_contents_columns = list(range(self.editor_model.columnCount()))
 
     def _populate_from_metadata(self) -> None:
         """Populate the table from metadata. Must be implemented by subclasses."""

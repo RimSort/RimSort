@@ -4,24 +4,8 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation>準備</translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation>禁用 ACF 日誌讀取器</translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation>單擊以禁用 ACF 日誌讀取器</translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation>搜索...</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>重新整理</translation>
+        <source>Delete Selected Mods</source>
+        <translation>刪除選定的模組</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
@@ -36,112 +20,16 @@
         <translation>導出為 CSV</translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
-        <translation>ACF 日誌讀取器已禁用</translation>
+        <source>Search:</source>
+        <translation>搜尋:</translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
-        <translation>顯示 {filtered} 項，共 {total} 項（已過濾）</translation>
+        <source>All Searchable Columns</source>
+        <translation>所有可搜索列</translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation>顯示 {total} 項</translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation>正在尋找...</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>加載 {count} 項，最後更新時間：{time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>導出被用戶取消。</translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation>已成功將 {count} 個項目導出到 {file_path}</translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation>打開模組網址</translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation>複製 PFID</translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation>查看模組詳細信息</translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation>模組詳情</translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation>確認 ACF 導入</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>您確定要導入 .acf 嗎？這只適用於 steamcmd</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>導出失敗：權限不足 - 請檢查文件權限</translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation>導出失敗發生未知異常</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>導出錯誤</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>導出到 CSV...</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>開啟模組資料夾</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>這將替換你目前的 steamcmd .acf 文件</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>導入 .acf</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>SteamCMD 接口未正確初始化</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>未找到 ACF 文件：{acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>ACF 文件在此路徑未找到：{acf_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>成功導出 ACF 到 {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>導出成功</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>導出失敗：{e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>導出失敗</translation>
+        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <translation>搜索選定列或所有可搜索列（如果設置為“全部”）</translation>
     </message>
 </context>
 <context>
@@ -857,6 +745,46 @@ Would you like to configure them now?</source>
     <message>
         <source>Failed to save active mods to file:</source>
         <translation>無法將啟用模組保存到文件：</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>確認 ACF 導入</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>這將替換您當前的 steamcmd .acf 文件</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>您確定要導入 .acf 嗎？這只適用於 steamcmd</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>導入.acf</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>導出錯誤</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>在以下位置找不到 ACF 文件：{acf_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>導出成功</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>已成功將 ACF 導出到 {file_path}</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>導出失敗：權限被拒絕 - 檢查文件權限</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>導出失敗：{e}</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
@@ -5409,6 +5337,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
         <translation>RimSort 無法驗證指定文件夾中的 RimWorld 可執行文件：{game_install_path}。請檢查該目錄是否正確並包含有效的 RimWorld 遊戲可執行文件。</translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation>導出成功</translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>已成功將 {count} 個項目導出到 {file_path}</translation>
     </message>
 </context>
 <context>

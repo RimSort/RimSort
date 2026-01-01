@@ -4,24 +4,8 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation>Готовый</translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation>Отключить чтение журнала ACF</translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation>Нажмите, чтобы отключить программу чтения журнала ACF.</translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation>Поиск...</translation>
-    </message>
-    <message>
-        <source>Refresh</source>
-        <translation>Обновлять</translation>
+        <source>Delete Selected Mods</source>
+        <translation>Удалить выбранные моды</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
@@ -36,112 +20,16 @@
         <translation>Экспорт в CSV</translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
-        <translation>Чтение журнала ACF отключено</translation>
+        <source>Search:</source>
+        <translation>Поиск:</translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
-        <translation>Показаны элементы: {filtered} из {total} (отфильтровано)</translation>
+        <source>All Searchable Columns</source>
+        <translation>Все столбцы, доступные для поиска</translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation>Показаны элементы: {total}</translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation>Идет поиск...</translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation>Загружен {count} элементы |Последнее обновление:  {time}</translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation>Экспорт отменен пользователем.</translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation>Успешно экспортировано элементов: {count} в {file_path}.</translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation>Открыть URL-адрес мода</translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation>Копировать PFID</translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation>Посмотреть детали мода</translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation>Подробности мода</translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation>Подтвердить импорт ACF</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation>Вы уверены, что хотите импортировать .acf? Это работает только для SteamCMD</translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation>Ошибка экспорта: разрешение отказано - проверьте разрешения на файл</translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation>Ошибка экспорта, произошло неизвестное исключение</translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation>Экспортная ошибка</translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation>Экспорт в CSV ...</translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation>Открыть папку мода</translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation>Это заменит ваш текущий файл SteamCmd .acf</translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation>Импорт .acf</translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation>Интерфейс SteamCmd не инициализирован должным образом</translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation>Файл ACF не найден: {acf_path}</translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation>Файл ACF не найден по адресу: {acf_path}</translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation>Успешно экспортирован ACF в {file_path}</translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation>Экспортный успех</translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation>Экспорт не удался: {e}</translation>
-    </message>
-    <message>
-        <source>Export failed</source>
-        <translation>Экспорт не удался</translation>
+        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <translation>Ищет выбранный столбец или все столбцы, доступные для поиска, если установлено значение «Все».</translation>
     </message>
 </context>
 <context>
@@ -857,6 +745,46 @@ Would you like to configure them now?</source>
     <message>
         <source>Failed to save active mods to file:</source>
         <translation>Не удалось сохранить активные моды в файл:</translation>
+    </message>
+    <message>
+        <source>Confirm ACF import</source>
+        <translation>Подтвердить импорт ACF</translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation>Это заменит ваш текущий файл steamcmd .acf.</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation>Вы уверены, что хотите импортировать .acf? Это работает только для SteamCMD</translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation>Импортировать .acf</translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation>Ошибка экспорта</translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation>Файл ACF не найден по адресу: {acf_path}</translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation>Успех экспорта</translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation>ACF успешно экспортирован в {file_path}.</translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation>Не удалось экспортировать: разрешение отклонено: проверьте права доступа к файлу.</translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation>Не удалось экспортировать: {e}</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
@@ -5404,6 +5332,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
         <translation>RimSort не удалось проверить исполняемый файл RimWorld в указанной папке: {game_install_path}.Пожалуйста, убедитесь, что этот каталог правильный и содержит действительный исполняемый файл игры RimWorld.</translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation>Успех экспорта</translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
+        <translation>Успешно экспортировано элементов: {count} в {file_path}.</translation>
     </message>
 </context>
 <context>

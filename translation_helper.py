@@ -71,6 +71,7 @@ import argparse
 import asyncio
 import hashlib
 import importlib
+import inspect
 import json
 import re
 import shutil
@@ -774,10 +775,15 @@ class GoogleTranslateService(TranslationService):
         for attempt in range(self.config.retry_config.max_retries):
             try:
                 # The googletrans 4.0.0rc1 library has an async translate method
-                result: Any = await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    lambda: self.translator.translate(text, dest=target, src=source),
+                result_or_coro = self.translator.translate(
+                    text, dest=target, src=source
                 )
+
+                # Handle both sync and async versions of googletrans
+                if inspect.iscoroutine(result_or_coro):
+                    result = await result_or_coro
+                else:  # It's a regular result object
+                    result = result_or_coro
 
                 translation = result.text if hasattr(result, "text") else str(result)
 

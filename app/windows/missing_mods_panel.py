@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any
 
 from loguru import logger
@@ -12,6 +11,7 @@ from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
+    OperationMode,
 )
 
 
@@ -74,11 +74,7 @@ class MissingModsPrompt(BaseModsPanel):
             ButtonConfig(
                 button_type=ButtonType.CUSTOM,
                 text=self.tr("Download with SteamCMD"),
-                custom_callback=partial(
-                    self._update_mods_from_table,
-                    pfid_column=5,
-                    mode="SteamCMD",
-                ),
+                custom_callback=self._create_update_callback(5, OperationMode.STEAMCMD),
             ),
         ]
 
@@ -88,17 +84,15 @@ class MissingModsPrompt(BaseModsPanel):
                 ButtonConfig(
                     button_type=ButtonType.CUSTOM,
                     text=self.tr("Download with Steam client"),
-                    custom_callback=partial(
-                        self._update_mods_from_table,
-                        pfid_column=5,
-                        mode="Steam",
+                    custom_callback=self._create_update_callback(
+                        5, OperationMode.STEAM, "subscribe"
                     ),
                 )
             )
         self._setup_buttons_from_config(button_configs)
 
-        # Configure table settings
-        self._setup_table_configuration(sorting_enabled=True)
+        # Enable table sorting
+        self._reconfigure_table_sorting(sorting_enabled=True)
 
         # TODO: let user configure window launch state and size from settings controller
         self.showNormal()

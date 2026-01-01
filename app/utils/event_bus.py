@@ -88,6 +88,7 @@ class EventBus(QObject):
     do_build_steam_workshop_database = Signal()
     do_clear_steamcmd_depot_cache = Signal()
     do_import_acf = Signal()
+    do_export_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
     do_change_mod_coloring_mode = Signal()
