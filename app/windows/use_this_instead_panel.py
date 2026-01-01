@@ -146,7 +146,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             True if alternatives were found and panel was shown, False otherwise.
         """
         self._populate_from_metadata()
-        self._setup_table_configuration(sorting_enabled=False)
+        # Sorting is disabled by default in _setup_table_and_model
 
         if self.editor_model.rowCount() > 0:
             self.showNormal()
