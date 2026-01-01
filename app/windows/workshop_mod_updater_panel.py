@@ -26,14 +26,18 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
     def __init__(self) -> None:
         """
         Initialize the WorkshopModUpdaterPanel.
+
+        Sets up the panel with mods eligible for update and configures buttons
+        for updating via SteamCMD or Steam client (if enabled).
         """
         logger.debug("Initializing WorkshopModUpdaterPanel")
         self.metadata_manager = MetadataManager.instance()
+        self.eligible_metadata: list[tuple[str, dict[str, Any]]] = []
 
         super().__init__(
             object_name="updateModsPanel",
             window_title=self.tr("RimSort - Updates found for Workshop mods"),
-            title_text=self.tr("There updates available for Workshop mods!"),
+            title_text=self.tr("There are updates available for Workshop mods!"),
             details_text=self.tr(
                 "\nThe following table displays Workshop mods available for update from Steam."
             ),
@@ -43,7 +47,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         button_configs = [
             ButtonConfig(
                 button_type=ButtonType.CUSTOM,
-                text=self.tr("Update with SteamCMD"),
+                text=self.tr("Update Mods with SteamCMD"),
                 custom_callback=self._create_update_callback(
                     ColumnIndex.PUBLISHED_FILE_ID.value,
                     OperationMode.STEAMCMD,
@@ -51,12 +55,14 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             ),
         ]
 
+        # Check if Steam client integration is enabled
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()
+        # Only add Steam client download button if Steam client integration is enabled
         if steam_client_integration_enabled:
             button_configs.append(
                 ButtonConfig(
                     button_type=ButtonType.CUSTOM,
-                    text=self.tr("Update with Steam client"),
+                    text=self.tr("Update Mods with Steam"),
                     custom_callback=self._create_update_callback(
                         ColumnIndex.PUBLISHED_FILE_ID.value,
                         OperationMode.STEAM,
@@ -64,6 +70,8 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                     ),
                 )
             )
+
+        # Set up buttons based on configurations
         self._setup_buttons_from_config(button_configs)
 
         # Populate the table with mods that have updates available
@@ -72,23 +80,22 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         # Enable table sorting
         self._reconfigure_table_sorting(sorting_enabled=True)
 
-        # Show the panel only if there are mods with updates available
-        if self.eligible_metadata and len(self.eligible_metadata) > 0:
-            logger.info("Showing WorkshopModUpdaterPanel")
-            self.showNormal()
-        else:  # If no mods have updates available, log a warning message
-            logger.warning("No mods with updates available.")
-
-    def _filter_eligible_mods(self) -> list[dict[str, Any]]:
+    def _filter_eligible_mods(self) -> list[tuple[str, dict[str, Any]]]:
         """
         Filter mods that are eligible for update.
 
         Returns:
-            List of metadata dictionaries for mods eligible for update.
+            List of (uuid, metadata) tuples for mods eligible for update.
         """
-        return filter_eligible_mods_for_update(
+        eligible_mods = filter_eligible_mods_for_update(
             self.metadata_manager.internal_local_metadata
         )
+        # Return tuples of (uuid, metadata) by looking up UUIDs from internal_local_metadata
+        return [
+            (uuid, metadata)
+            for uuid, metadata in self.metadata_manager.internal_local_metadata.items()
+            if metadata in eligible_mods
+        ]
 
     def _populate_from_metadata(self) -> None:
         """
@@ -107,26 +114,13 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                 f"Found {len(self.eligible_metadata)} eligible mods for update"
             )
 
-            for metadata in self.eligible_metadata:
-                self._add_update_mod_row(metadata)
+            if not self.eligible_metadata:
+                logger.info("No mods with updates available")
+                return
+
+            # Add each eligible mod as a row in the table
+            for uuid, metadata in self.eligible_metadata:
+                mod_info = ModInfo.from_metadata(uuid, metadata)
+                self._add_mod_row(mod_info)
         except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")
-
-    def _add_update_mod_row(self, metadata: dict[str, Any]) -> None:
-        """
-        Add a mod row to the table.
-
-        Args:
-            metadata: Metadata dictionary for the mod.
-        """
-        # Get UUID for the mod
-        uuid = None
-        path = metadata.get("path")
-        if isinstance(path, str):
-            uuid = self.metadata_manager.mod_metadata_dir_mapper.get(path)
-
-        # Create ModInfo from metadata
-        mod_info = ModInfo.from_metadata(uuid, metadata)
-
-        # Use the base class method to add the mod row
-        self._add_mod_row(mod_info)

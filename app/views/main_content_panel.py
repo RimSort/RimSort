@@ -2163,7 +2163,6 @@ class MainContent(QObject):
             )
             return
         workshop_mod_updater = WorkshopModUpdaterPanel()
-        workshop_mod_updater._populate_from_metadata()
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
