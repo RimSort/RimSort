@@ -2809,10 +2809,6 @@ This operation will recursively delete all mod files, except for .dds textures f
 Эта операция рекурсивно удалит все файлы модов, за исключением найденных текстур .dds, и попытается повторно загрузить моды через SteamCMD. Вы хотите продолжить?</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation>Вы выбрали {len} модов для отмены подписки + повторной подписки.</translation>
-    </message>
-    <message>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
@@ -2878,6 +2874,10 @@ Should be Loaded Before:</source>
     <message>
         <source>Reset mod color</source>
         <translation>Сбросить цвет мода</translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>Вы выбрали {len} модов для повторной подписки:(отписаться + подписаться).</translation>
     </message>
     <message>
         <source>
@@ -4528,6 +4528,10 @@ Please choose one of the following options to proceed.</source>
         <translation>Загрузчик модов</translation>
     </message>
     <message>
+        <source>Add to List</source>
+        <translation>Добавить в список</translation>
+    </message>
+    <message>
         <source>Clear List</source>
         <translation>Очистить список</translation>
     </message>
@@ -5234,21 +5238,21 @@ The update will be installed from: {update_source_path}</source>
         <translation>RimSort — обнаружены обновления для модов Мастерской.</translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
+        <source>There are updates available for Workshop mods!</source>
         <translation>Доступны обновления для модов Мастерской!</translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation>Обновите моды с помощью SteamCMD</translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
+        <translation>Обновите моды через Steam</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
         <translation>В следующей таблице показаны моды Мастерской, доступные для обновления из Steam.</translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation>Обновление с помощью SteamCMD</translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
-        <translation>Обновление с помощью клиента Steam</translation>
     </message>
 </context>
 <context>
