@@ -223,7 +223,7 @@ class SteamBrowser(QWidget):
         self.downloader_layout.addWidget(self.download_steamcmd_button)
         self.downloader_layout.addWidget(self.download_steamworks_button)
         self.downloader_layout.addWidget(self.clear_list_button)
-        
+
         # Build the browser layout
         self.browser_layout.addWidget(self.location)
         self.browser_layout.addWidget(self.nav_bar)

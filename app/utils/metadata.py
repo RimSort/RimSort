@@ -781,7 +781,7 @@ class MetadataManager(QObject):
             self.settings_controller.settings.external_steam_metadata_source
         )
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
+        self.user_rules_file_path = str(AppInfo().user_rules_file)
 
     def supplement_dlc_metadata(self, uuid: str) -> None:
         """
