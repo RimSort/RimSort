@@ -2822,10 +2822,6 @@ This operation will recursively delete all mod files, except for .dds textures f
 此操作将递归删除所有模组文件，除了找到的 .dds 纹理，并尝试通过 SteamCMD 重新下载模组。你想要继续吗？</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation>你选择了 {len} 个模组进行取消订阅和重新订阅。</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>你选择了 {len} 个模组进行取消订阅。</translation>
     </message>
@@ -2834,6 +2830,10 @@ This operation will recursively delete all mod files, except for .dds textures f
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 此操作可能会删除残留的 .dds 纹理。Steam 对此不可靠。你想要继续吗？</translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>您已选择 {len} 个 mod 进行重新订阅：（取消订阅 + 订阅）。</translation>
     </message>
     <message>
         <source>
@@ -4544,6 +4544,10 @@ Please choose one of the following options to proceed.</source>
         <translation>模组下载器</translation>
     </message>
     <message>
+        <source>Add to List</source>
+        <translation>添加到列表</translation>
+    </message>
+    <message>
         <source>Clear List</source>
         <translation>清空列表</translation>
     </message>
@@ -5249,21 +5253,21 @@ The update will be installed from: {update_source_path}</source>
         <translation>RimSort - 找到创意工坊模组的更新</translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
-        <translation>创意工坊模组有可用更新！</translation>
+        <source>There are updates available for Workshop mods!</source>
+        <translation>创意工坊模组有更新！</translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation>使用 SteamCMD 更新模组</translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
+        <translation>使用 Steam 更新模组</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
         <translation>下表显示了可从 Steam 更新的创意工坊模组。</translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation>使用 SteamCMD 更新</translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
-        <translation>使用 Steam 客户端更新</translation>
     </message>
 </context>
 <context>

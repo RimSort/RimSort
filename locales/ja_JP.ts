@@ -2811,10 +2811,6 @@ This operation will recursively delete all mod files, except for .dds textures f
 この操作は再帰的にモッドファイルを削除し、.ddsテクスチャを除くすべてのモッドファイルを削除し、SteamCMDを使用してモッドを再ダウンロードしようとします。続行しますか？</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation>購読解除して再購読するモッドを{len}個選択しました。</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>購読解除するモッドを{len}個選択しました。</translation>
     </message>
@@ -2823,6 +2819,10 @@ This operation will recursively delete all mod files, except for .dds textures f
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 この操作は潜在的に.ddsテクスチャを削除します。Steamはこれに不安定です。続行しますか？</translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>再購読するために {len} 個の MOD を選択しました:(購読解除 + 購読)。</translation>
     </message>
     <message>
         <source>
@@ -4528,6 +4528,10 @@ Please choose one of the following options to proceed.</source>
         <translation>MODダウンローダー</translation>
     </message>
     <message>
+        <source>Add to List</source>
+        <translation>リストに追加</translation>
+    </message>
+    <message>
         <source>Clear List</source>
         <translation>リストをクリア</translation>
     </message>
@@ -5235,21 +5239,21 @@ The update will be installed from: {update_source_path}</source>
         <translation>rimSort - ワークショップ MOD のアップデートが見つかりました</translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
+        <source>There are updates available for Workshop mods!</source>
         <translation>ワークショップ MOD のアップデートが利用可能です!</translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation>SteamCMD を使用して Mod を更新する</translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
+        <translation>Steam で Mod を更新する</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
         <translation>次の表に、Steam からアップデートできるワークショップ MOD を示します。</translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation>SteamCMD でアップデートする</translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
-        <translation>Steamクライアントでアップデートする</translation>
     </message>
 </context>
 <context>

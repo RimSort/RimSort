@@ -2795,10 +2795,6 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Silinme + Yeniden Download için  Mods seçtiniz. {len}</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation>Abonelikten çıkma + yeniden abone olmak için {len} modlarını seçtiniz.</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>Abonelikten çıkma için {len} modlarını seçtiniz.</translation>
     </message>
@@ -2826,6 +2822,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
         <translation>Bu işlem, bulunan .DDS dokuları hariç, tüm MOD dosyalarını tekrarlı olarak silecek ve MOD'ları Steamcmd üzerinden yeniden indirmeye çalışacaktır. Devam etmek ister misin?</translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>Yeniden abone olmak için {len} mod seçtiniz:(abonelikten çık + abone ol).</translation>
     </message>
     <message>
         <source>
@@ -4513,6 +4513,10 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Mod İndirici</translation>
     </message>
     <message>
+        <source>Add to List</source>
+        <translation>Listeye Ekle</translation>
+    </message>
+    <message>
         <source>Clear List</source>
         <translation>Liste</translation>
     </message>
@@ -5219,21 +5223,21 @@ The update will be installed from: {update_source_path}</source>
         <translation>RimSort - Atölye modları için güncellemeler bulundu</translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
+        <source>There are updates available for Workshop mods!</source>
         <translation>Atölye modları için güncellemeler mevcut!</translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation>Modları SteamCMD ile Güncelleyin</translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
+        <translation>Modları Steam ile Güncelleyin</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
         <translation>Aşağıdaki tabloda Steam'den güncellenebilecek Atölye modları gösterilmektedir.</translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation>SteamCMD ile güncelleme</translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
-        <translation>Steam istemcisi ile güncelleme</translation>
     </message>
 </context>
 <context>

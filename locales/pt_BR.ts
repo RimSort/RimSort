@@ -2811,10 +2811,6 @@ This operation will recursively delete all mod files, except for .dds textures f
 Esta operação irá excluir recursivamente todos os arquivos do mod, exceto as texturas .dds encontradas, e tentará baixar novamente os mods via SteamCMD. Deseja continuar?</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation>Você selecionou {len} mod(s) para cancelar inscrição + reinscrever.</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>Você selecionou {len} mod(s) para cancelar inscrição.</translation>
     </message>
@@ -2823,6 +2819,10 @@ Esta operação irá excluir recursivamente todos os arquivos do mod, exceto as 
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 Esta operação pode excluir texturas .dds remanescentes. A Steam é pouco confiável para isso. Deseja continuar?</translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>Você selecionou {len} mods para assinar novamente:(cancelar + assinar).</translation>
     </message>
     <message>
         <source>
@@ -4534,6 +4534,10 @@ Escolha uma das opções a seguir para continuar.</translation>
         <translation>Baixador de Mod</translation>
     </message>
     <message>
+        <source>Add to List</source>
+        <translation>Adicionar à lista</translation>
+    </message>
+    <message>
         <source>Clear List</source>
         <translation>Limpar Lista</translation>
     </message>
@@ -5240,21 +5244,21 @@ The update will be installed from: {update_source_path}</source>
         <translation>RimSort – Atualizações encontradas para mods do Workshop</translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
+        <source>There are updates available for Workshop mods!</source>
         <translation>Existem atualizações disponíveis para mods do Workshop!</translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation>Atualizar mods com SteamCMD</translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
+        <translation>Atualizar mods com Steam</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
         <translation>A tabela a seguir exibe os mods do Workshop disponíveis para atualização no Steam.</translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation>Atualizar com SteamCMD</translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
-        <translation>Atualizar com cliente Steam</translation>
     </message>
 </context>
 <context>
