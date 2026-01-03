@@ -168,6 +168,11 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
 def delete_files_with_condition(
     directory: Path | str, condition: Callable[[str], bool]
 ) -> bool:
+    # Check if directory exists
+    if not os.path.exists(directory):
+        logger.warning(f"Directory does not exist: {directory}")
+        return False
+
     for root, dirs, files in os.walk(directory):
         for file in files:
             if condition(file):
