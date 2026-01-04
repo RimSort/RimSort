@@ -138,7 +138,7 @@ def build_steamworkspy() -> None:
         "exit",
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
-    STEAMWORKS_SDK_URL = "https://github.com/LionelColaso/RimSort/raw/steamworks-sdk/steamworks_sdk_157.zip"
+    STEAMWORKS_SDK_URL = "https://github.com/LionelColaso/RimSort/raw/steamworks-sdk/steamworks_sdk_163.zip"
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
