@@ -72,7 +72,7 @@ def setup_uv() -> None:
         _execute([PY_CMD, "-m", "pip", "install", "uv"])
 
 
-def build_steamworkspy() -> None:
+def build_steamworkspy(sdk_url: str | None = None, sdk_zip: str | None = None) -> None:
     # Setup environment
     print("Setting up environment...")
     STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{_PROCESSOR}.dylib"
@@ -138,7 +138,11 @@ def build_steamworkspy() -> None:
         "exit",
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
-    STEAMWORKS_SDK_URL = "https://github.com/LionelColaso/RimSort/raw/steamworks-sdk/steamworks_sdk_163.zip"
+    STEAMWORKS_SDK_URL = (
+        sdk_url
+        if sdk_url
+        else "https://partner.steamgames.com/downloads/steamworks_sdk_163.zip"
+    )
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
@@ -260,11 +264,27 @@ def build_steamworkspy() -> None:
     os.chdir(_CWD)
 
     print("Getting Steamworks SDK...")
-    if os.path.exists(STEAMWORKS_SDK_PATH):
-        print("Existing SDK found. Removing, and re-downloading fresh copy.")
-        shutil.rmtree(STEAMWORKS_SDK_PATH)
-    with ZipFile(BytesIO(handle_request(STEAMWORKS_SDK_URL).content)) as zipobj:
-        zipobj.extractall(STEAMWORKS_PY_PATH)
+    if sdk_url:
+        if os.path.exists(STEAMWORKS_SDK_PATH):
+            print("Existing SDK found. Removing, and re-downloading fresh copy.")
+            shutil.rmtree(STEAMWORKS_SDK_PATH)
+        with ZipFile(BytesIO(handle_request(STEAMWORKS_SDK_URL).content)) as zipobj:
+            zipobj.extractall(STEAMWORKS_PY_PATH)
+    elif sdk_zip:
+        if os.path.exists(STEAMWORKS_SDK_PATH):
+            print("Existing SDK found. Removing, and extracting fresh copy from zip.")
+            shutil.rmtree(STEAMWORKS_SDK_PATH)
+        if not os.path.exists(sdk_zip):
+            print(f"Specified zip file not found: {sdk_zip}")
+            sys.exit(1)
+        with ZipFile(sdk_zip, "r") as zipobj:
+            zipobj.extractall(STEAMWORKS_PY_PATH)
+    else:
+        if not os.path.exists(STEAMWORKS_SDK_PATH):
+            print(
+                f"Steamworks SDK not found at {STEAMWORKS_SDK_PATH}. Please ensure the SDK is available or use --sdk-url to download or --sdk-zip to extract from local zip."
+            )
+            sys.exit(1)
 
     print("Getting Steam headers...")
     shutil.copytree(STEAMWORKS_SDK_HEADER_PATH, STEAMWORKS_SDK_HEADER_DEST_PATH)
@@ -522,7 +542,21 @@ def make_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--build-steamworkspy",
         action="store_true",
-        help="build SteamworksPy instead of copying it",
+        help="build SteamworksPy instead of copying it, optionally using --sdk-url or --sdk-zip for SDK source or extract the sdk from the provided zip file to submodules\SteamworksPy\library",
+    )
+
+    # Force download Steamworks SDK from URL
+    parser.add_argument(
+        "--sdk-url",
+        type=str,
+        help="URL to download Steamworks SDK from (optional, defaults to hardcoded URL)",
+    )
+
+    # Extract Steamworks SDK from local zip file
+    parser.add_argument(
+        "--sdk-zip",
+        type=str,
+        help="Path to local zip file containing Steamworks SDK to extract (optional)",
     )
 
     # Skip todds
@@ -567,7 +601,7 @@ def main() -> None:
             "Warning: Building the SteamworksPy library requires Python 11, and may need to be done in a separate environment."
         )
         setup_uv()
-        build_steamworkspy()
+        build_steamworkspy(sdk_url=args.sdk_url, sdk_zip=args.sdk_zip)
     elif not args.skip_steamworkspy:
         print("Copying SteamworksPy library")
         copy_swp_libs()
