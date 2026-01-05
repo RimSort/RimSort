@@ -8,7 +8,7 @@ requires-python = "==3.12.*"
 dependencies = [
     "aiohttp==3.13.2",
     "beautifulsoup4==4.14.3",
-    "certifi==2025.11.12",
+    "certifi==2026.1.4",
     "chardet==5.2.0",
     "click==8.3.1",
     "imageio==2.37.2",
