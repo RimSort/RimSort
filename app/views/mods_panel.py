@@ -1179,9 +1179,14 @@ class ModListWidget(QListWidget):
                     # Ignore error action
                     toggle_warning_action = QAction()
                     toggle_warning_action.setText(self.tr("Toggle warning"))
+                    package_id = mod_metadata.get("packageid")
+                    if package_id and package_id in self.ignore_warning_list:
+                        toggle_warning_action.setCheckable(True)
+                        toggle_warning_action.setChecked(True)
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
-                for source_item in selected_items:
+                all_warnings_toggled = True
+                for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
@@ -1189,6 +1194,10 @@ class ModListWidget(QListWidget):
                         mod_metadata = self.metadata_manager.internal_local_metadata[
                             uuid
                         ]
+                        if all_warnings_toggled:
+                            package_id = mod_metadata.get("packageid")
+                            if package_id and package_id not in self.ignore_warning_list:
+                                all_warnings_toggled = False
                         mod_data_source = mod_metadata.get("data_source")
                         # Open folder action text
                         open_folder_action = QAction()
@@ -1259,9 +1268,11 @@ class ModListWidget(QListWidget):
                                     )
                         # No "Edit mod rules" when multiple selected
                         # Toggle warning
-                        if not toggle_warning_action:
+                        if item_idx == len(selected_items) - 1:
                             toggle_warning_action = QAction()
                             toggle_warning_action.setText(self.tr("Toggle warning(s)"))
+                            toggle_warning_action.setCheckable(True)
+                            toggle_warning_action.setChecked(all_warnings_toggled)
                         # If Workshop, and pfid, allow Steam actions
                         if mod_data_source == "workshop" and mod_metadata.get(
                             "publishedfileid"
@@ -1709,7 +1720,16 @@ class ModListWidget(QListWidget):
                         mod_path = mod_metadata["path"]
                         # Toggle warning action
                         if action == toggle_warning_action:
-                            self.toggle_warning(mod_metadata["packageid"], uuid)
+                            if len(selected_items) > 1:
+                                # If toggling multiple items, if all of them are already toggled off then toggle back on.
+                                # Otherwise if they are all off or a mix, toggled them all on.
+                                if all_warnings_toggled:
+                                    self.toggle_warning(mod_metadata["packageid"], uuid)
+                                else:
+                                    if not item_data["warning_toggled"]:
+                                        self.toggle_warning(mod_metadata["packageid"], uuid)
+                            else:
+                                self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_color_action and not invalid_color:
                             self.change_mod_color(uuid, new_color)
                         elif action == reset_mod_color_action:
