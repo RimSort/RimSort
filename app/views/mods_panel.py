@@ -233,13 +233,7 @@ class ModListItemInner(QWidget):
             )
         # Warning icon hidden by default
         self.warning_icon_label = ClickableQLabel()
-        self.warning_icon_label.clicked.connect(
-            partial(
-                self.toggle_warning_signal.emit,
-                self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
-                self.uuid,
-            )
-        )
+        self.warning_icon_label.clicked.connect(self.__on_warning_icon_clicked)
         self.warning_icon_label.setPixmap(
             ModListIcons.warning_icon().pixmap(QSize(20, 20))
         )
@@ -260,13 +254,7 @@ class ModListItemInner(QWidget):
         self.in_save_icon_label.setHidden(True)
         # Error icon hidden by default
         self.error_icon_label = ClickableQLabel()
-        self.error_icon_label.clicked.connect(
-            partial(
-                self.toggle_error_signal.emit,
-                self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
-                self.uuid,
-            )
-        )
+        self.error_icon_label.clicked.connect(self.__on_error_icon_clicked)
         self.error_icon_label.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         # Default to hidden to avoid showing early
         self.error_icon_label.setHidden(True)
@@ -352,6 +340,24 @@ class ModListItemInner(QWidget):
             self.error_icon_label.setToolTip(self.errors)
             self.error_icon_label.setHidden(False)
 
+        self._last_icon_count = self.count_icons(self)
+
+    def __on_error_icon_clicked(self) -> None:
+        self.toggle_error_signal.emit(
+            self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
+            self.uuid,
+        )
+
+    def __on_warning_icon_clicked(self) -> None:
+        self.toggle_warning_signal.emit(
+            self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
+            self.uuid,
+        )
+
+    def _resize_text_after_icon_toggle(self, icon_count: int = -1) -> None:
+        event = QResizeEvent(self.size(), self.size())
+        self.resizeEvent(event, icon_count=icon_count)
+
     def enterEvent(self, event: QEnterEvent) -> None:
         self._hovered = True
         if self._selected:
@@ -385,6 +391,11 @@ class ModListItemInner(QWidget):
     def count_icons(self, widget: QObject) -> int:
         count = 0
         if isinstance(widget, QLabel):
+            try:
+                if widget.isHidden():
+                    return 0
+            except Exception:
+                pass
             pixmap = widget.pixmap()
             if pixmap and not pixmap.isNull():
                 count += 1
@@ -494,25 +505,28 @@ class ModListItemInner(QWidget):
             )
             return ModListIcons.local_icon()
 
-    def resizeEvent(self, event: QResizeEvent) -> None:
+    def resizeEvent(self, event: QResizeEvent, icon_count: int = -1) -> None:
         """
         When the label is resized (as the window is resized),
         also elide the label if needed.
 
         :param event: the resize event
+        :param icon_count: int, the number of icons to consider for width calculation. If -1, icon count will be calculated
         """
-
-        # Count the number of QLabel widgets with QIcon and calculate total icon width
-        icon_count = self.count_icons(self)
+        if icon_count == -1:
+            # Count the number of QLabel widgets with QIcon and calculate total icon width
+            icon_count = self.count_icons(self)
         icon_width = icon_count * 20
+        # If only 2 icons (On the left, eg. c#/xml/steam/local etc.) No need for padding.
+        padding = 6 if icon_count > 2 else 0
         self.item_width = super().width()
         text_width_needed = QRectF(
             self.font_metrics.boundingRect(self.list_item_name)
         ).width()
-        if text_width_needed > self.item_width - icon_width:
-            available_width = self.item_width - icon_width
+        if text_width_needed > self.item_width - icon_width - padding:
+            available_width = max(0, int(self.item_width - icon_width - padding))
             shortened_text = self.font_metrics.elidedText(
-                self.list_item_name, Qt.TextElideMode.ElideRight, int(available_width)
+                self.list_item_name, Qt.TextElideMode.ElideRight, available_width
             )
             self.main_label.setText(str(shortened_text))
         else:
@@ -580,6 +594,11 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName(new_widget_object_name)
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
+
+        new_icon_count = self.count_icons(self)
+        if new_icon_count != self._last_icon_count:
+            self._resize_text_after_icon_toggle(icon_count=new_icon_count)
+            self._last_icon_count = new_icon_count
 
     def handle_mod_color_change(
         self, item: CustomListWidgetItem | None = None, init: bool = False
@@ -1936,7 +1955,7 @@ class ModListWidget(QListWidget):
                 mod_list_items.append(widget)
         return mod_list_items
 
-    def get_all_loaded_and_toggled_mod_list_items(self) -> list[CustomListWidgetItem]:
+    def get_all_toggled_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
         This returns all modlist items that have their warnings toggled.
 
@@ -1948,6 +1967,23 @@ class ModListWidget(QListWidget):
             item_data = item.data(Qt.ItemDataRole.UserRole)
             if item_data["warning_toggled"]:
                 mod_list_items.append(item)
+        return mod_list_items
+    
+    def get_all_loaded_and_toggled_mod_list_items(self) -> list[ModListItemInner]:
+        """
+        This returns all modlist items that have their warnings toggled.
+        Mods that have not been loaded or lazy loaded will not be returned.
+
+        :return: List of all toggled modlist items as ModListItemInner
+        """
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if item_data["warning_toggled"]:
+                widget = self.itemWidget(item)
+                if isinstance(widget, ModListItemInner):
+                    mod_list_items.append(widget)
         return mod_list_items
 
     def check_item_visible(self, item: CustomListWidgetItem) -> bool:

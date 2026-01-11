@@ -92,13 +92,23 @@ class ModsPanelController(QObject):
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
         """Resets all warning and error toggles for active and inactive mods."""
+        # Do visible mods first to resize the visible widgets
+        loaded_active_mods = self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
+        loaded_inactive_mods = self.mods_panel.inactive_mods_list.get_all_loaded_and_toggled_mod_list_items()
+        mods_done = set()
+        for loaded_mod in loaded_active_mods + loaded_inactive_mods:
+            package_id = loaded_mod.metadata_manager.internal_local_metadata.get(loaded_mod.uuid, {}).get("packageid")
+            loaded_mod.toggle_warning_signal.emit(package_id, loaded_mod.uuid)
+            mods_done.add(loaded_mod.uuid)
 
-        active_mods = (
-            self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
-        )
-        inactive_mods = self.mods_panel.inactive_mods_list.get_all_loaded_and_toggled_mod_list_items()
+        active_mods = self.mods_panel.active_mods_list.get_all_toggled_mod_list_items()
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_toggled_mod_list_items()
         for mod in active_mods + inactive_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            uuid = mod_data["uuid"]
+            if uuid in mods_done:
+                continue
+
             if mod_data["warning_toggled"]:
                 mod_data["warning_toggled"] = False
                 mod.setData(Qt.ItemDataRole.UserRole, mod_data)
@@ -115,7 +125,6 @@ class ModsPanelController(QObject):
                             self.settings_controller.settings.aux_db_path
                         )
                     )
-                    uuid = mod_data["uuid"]
                     if not uuid:
                         logger.error(
                             "Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset."
