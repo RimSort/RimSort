@@ -542,7 +542,7 @@ def make_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--build-steamworkspy",
         action="store_true",
-        help="build SteamworksPy instead of copying it, optionally using --sdk-url or --sdk-zip for SDK source or extract the sdk from the provided zip file to submodules\SteamworksPy\library",
+        help=r"build SteamworksPy instead of copying it, optionally using --sdk-url or --sdk-zip for SDK source or extract the sdk from the provided zip file to submodules\SteamworksPy\library",
     )
 
     # Force download Steamworks SDK from URL
