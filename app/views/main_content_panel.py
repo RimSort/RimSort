@@ -1990,6 +1990,51 @@ class MainContent(QObject):
 
         todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
+    def _run_todds_blocking(self) -> tuple[bool, int]:
+        """
+        Run todds optimization synchronously and wait for completion.
+
+        Returns:
+            tuple[bool, int]: (success, exit_code)
+        """
+        logger.info("Running todds optimization before game launch...")
+
+        # Generate todds target file
+        todds_txt_path = self._do_generate_todds_txt()
+
+        # Initialize todds interface with current settings
+        todds_interface = ToddsInterface(
+            preset=self.settings_controller.settings.todds_preset,
+            dry_run=self.settings_controller.settings.todds_dry_run,
+            overwrite=self.settings_controller.settings.todds_overwrite,
+        )
+
+        # Create RunnerPanel for process output
+        todds_runner = RunnerPanel(
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
+        )
+        todds_runner.setWindowTitle("RimSort - todds texture encoder (pre-launch)")
+        todds_runner.show()
+
+        # Execute todds command
+        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+
+        # Block until todds process completes using QEventLoop
+        loop = QEventLoop()
+        todds_runner.process.finished.connect(loop.quit)
+        loop.exec_()
+
+        # Get exit code from process
+        exit_code = todds_runner.process.exitCode()
+        success = exit_code == 0
+
+        if success:
+            logger.info("todds optimization completed successfully")
+        else:
+            logger.warning(f"todds optimization completed with exit code: {exit_code}")
+
+        return success, exit_code
+
     def _do_delete_dds_textures(self) -> None:
         logger.info("Deleting .dds textures with todds...")
         todds_txt_path = self._do_generate_todds_txt()
@@ -3380,6 +3425,23 @@ class MainContent(QObject):
             elif answer == QMessageBox.StandardButton.Cancel:
                 logger.info("User chose to cancel.")
                 return
+
+        # Run todds before launch if auto-run is enabled
+        if self.settings_controller.settings.auto_run_todds_before_launch:
+            success, exit_code = self._run_todds_blocking()
+
+            # Show error message if todds failed, but continue to launch game
+            if not success:
+                dialogue.show_warning(
+                    title=self.tr("todds Optimization Failed"),
+                    text=self.tr(
+                        "todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway."
+                    ).format(exit_code=exit_code),
+                    information=self.tr(
+                        "You may experience longer loading times or higher memory usage. "
+                        "Check the todds output window for details."
+                    ),
+                )
 
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
