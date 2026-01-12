@@ -1049,7 +1049,8 @@ class ModListWidget(QListWidget):
             change_mod_color_action = None
             # Reset mod color
             reset_mod_color_action = None
-
+            # Disable all warnings by default
+            all_warnings_toggled = False
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
             # Single item selected
@@ -1215,7 +1216,10 @@ class ModListWidget(QListWidget):
                         ]
                         if all_warnings_toggled:
                             package_id = mod_metadata.get("packageid")
-                            if package_id and package_id not in self.ignore_warning_list:
+                            if (
+                                package_id
+                                and package_id not in self.ignore_warning_list
+                            ):
                                 all_warnings_toggled = False
                         mod_data_source = mod_metadata.get("data_source")
                         # Open folder action text
@@ -1746,7 +1750,9 @@ class ModListWidget(QListWidget):
                                     self.toggle_warning(mod_metadata["packageid"], uuid)
                                 else:
                                     if not item_data["warning_toggled"]:
-                                        self.toggle_warning(mod_metadata["packageid"], uuid)
+                                        self.toggle_warning(
+                                            mod_metadata["packageid"], uuid
+                                        )
                             else:
                                 self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_color_action and not invalid_color:
@@ -1968,7 +1974,7 @@ class ModListWidget(QListWidget):
             if item_data["warning_toggled"]:
                 mod_list_items.append(item)
         return mod_list_items
-    
+
     def get_all_loaded_and_toggled_mod_list_items(self) -> list[ModListItemInner]:
         """
         This returns all modlist items that have their warnings toggled.
