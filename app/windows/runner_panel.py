@@ -43,6 +43,7 @@ class RunnerPanel(QWidget):
         todds_dry_run_support: bool = False,
         steamcmd_download_tracking: Optional[list[str]] = None,
         steam_db: Optional[dict[str, Any]] = None,
+        auto_close_on_complete: bool = False,
     ):
         """
         Initialize the RunnerPanel widget.
@@ -51,6 +52,7 @@ class RunnerPanel(QWidget):
             todds_dry_run_support: Whether to support TODDS dry run mode
             steamcmd_download_tracking: List of Steam Workshop IDs to track
             steam_db: Dictionary of Steam mod information
+            auto_close_on_complete: If True, automatically close window after process completes
         """
         super().__init__()
         logger.debug("Initializing RunnerPanel")
@@ -63,6 +65,7 @@ class RunnerPanel(QWidget):
         self.steamcmd_download_tracking = steamcmd_download_tracking or []
         self.steam_db = steam_db or {}
         self.todds_dry_run_support = todds_dry_run_support
+        self.auto_close_on_complete = auto_close_on_complete
 
         # Process-related variables
         self.process = QProcess()
@@ -602,14 +605,17 @@ class RunnerPanel(QWidget):
         self.change_progress_bar_color("success")
 
     def process_complete(self) -> None:
-        diag = BinaryChoiceDialog(
-            title=self.tr("Process Complete"),
-            text=self.tr("Process complete, you can close the window."),
-            positive_text=self.tr("Close Window"),
-            negative_text=self.tr("Ok"),
-        )
-        if diag.exec_is_positive():
+        if self.auto_close_on_complete:
             self.exit_window()
+        else:
+            diag = BinaryChoiceDialog(
+                title=self.tr("Process Complete"),
+                text=self.tr("Process complete, you can close the window."),
+                positive_text=self.tr("Close Window"),
+                negative_text=self.tr("Ok"),
+            )
+            if diag.exec_is_positive():
+                self.exit_window()
 
     def exit_window(self) -> None:
         """Clean up resources when the process window is closed."""

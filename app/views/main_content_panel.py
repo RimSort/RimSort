@@ -1971,93 +1971,136 @@ class MainContent(QObject):
         logger.info(f"Generated todds.txt at: {todds_txt_path}")
         return todds_txt_path
 
-    @overload
+    def _create_todds_runner(self, is_pre_launch: bool) -> RunnerPanel:
+        """
+        Create and configure the todds runner UI panel.
+
+        Args:
+            is_pre_launch: If True, panel auto-closes on completion and shows "(pre-launch)"
+                          suffix. If False, panel shows completion dialog and is stored
+                          as self.todds_runner for manual access.
+
+        Returns:
+            RunnerPanel: Configured and visible runner panel for todds output display.
+        """
+        runner = RunnerPanel(
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run,
+            auto_close_on_complete=is_pre_launch,
+        )
+
+        base_title = "RimSort - todds texture encoder"
+        suffix = " (pre-launch)" if is_pre_launch else ""
+        runner.setWindowTitle(f"{base_title}{suffix}")
+
+        if not is_pre_launch:
+            self.todds_runner = runner  # Store for manual runs
+
+        runner.show()
+        return runner
+
+    def _wait_for_todds_completion(self, runner: RunnerPanel) -> tuple[bool, int]:
+        """
+        Block execution until todds process completes and return exit status.
+
+        Creates an event loop that waits for the todds process to finish, then logs
+        the result and returns the status. This is used for synchronous operations
+        like pre-launch optimization where we need to wait before starting the game.
+
+        Args:
+            runner: RunnerPanel instance with an active todds process.
+
+        Returns:
+            tuple[bool, int]: (success, exit_code) where success is True if exit_code == 0.
+        """
+        loop = QEventLoop()
+        runner.process.finished.connect(loop.quit)
+        loop.exec_()
+
+        exit_code = runner.process.exitCode()
+        success = exit_code == 0
+
+        if success:
+            logger.info("todds process completed successfully")
+        else:
+            logger.warning(f"todds process failed with exit code: {exit_code}")
+
+        return success, exit_code
+
+    @overload  # Blocking call: returns (success, exit_code)
     def _do_optimize_textures(
         self, block_until_complete: Literal[True]
     ) -> tuple[bool, int]: ...
 
-    @overload
-    def _do_optimize_textures(
-        self, block_until_complete: Literal[False] = False
-    ) -> None: ...
+    @overload  # Async call (default): returns None immediately
+    def _do_optimize_textures(self) -> None: ...
 
     def _do_optimize_textures(
         self, block_until_complete: bool = False
     ) -> tuple[bool, int] | None:
         """
-        Run todds texture optimization.
+        Run todds texture optimization with optional blocking.
+
+        Generates a todds configuration file, executes the optimization process
+        in the UI, and optionally blocks until completion. Useful for automatic
+        texture optimization before game launch or manual optimization runs.
 
         Args:
-            block_until_complete: If True, blocks until todds completes and returns status.
-                                If False, launches async and returns None immediately.
+            block_until_complete: If True, blocks execution until todds finishes
+                                 and returns (success, exit_code). If False (default),
+                                 launches asynchronously and returns None immediately.
 
         Returns:
-            tuple[bool, int] | None: (success, exit_code) if blocking, None if non-blocking
+            tuple[bool, int] | None: (success, exit_code) when blocking=True,
+                                    None when blocking=False (async execution).
         """
         logger.info("Optimizing textures with todds...")
-        todds_txt_path = self._do_generate_todds_txt()
-        # Initialize todds interface
+
+        # Initialize todds interface with current user settings
         todds_interface = ToddsInterface(
             preset=self.settings_controller.settings.todds_preset,
             dry_run=self.settings_controller.settings.todds_dry_run,
             overwrite=self.settings_controller.settings.todds_overwrite,
         )
 
-        # UI
-        todds_runner = RunnerPanel(
-            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
-        )
+        # Create and display runner UI (auto-closes if pre-launch, shows dialog if manual)
+        todds_runner = self._create_todds_runner(block_until_complete)
+        todds_txt_path = self._do_generate_todds_txt()
 
-        # Set window title and store reference based on context
-        if block_until_complete:
-            todds_runner.setWindowTitle("RimSort - todds texture encoder (pre-launch)")
-        else:
-            todds_runner.setWindowTitle("RimSort - todds texture encoder")
-            # Store as instance variable for manual runs
-            self.todds_runner = todds_runner
-
-        todds_runner.show()
-
+        # Execute the todds command
         todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
 
-        # If blocking, wait for completion
-        if block_until_complete:
-            loop = QEventLoop()
-            todds_runner.process.finished.connect(loop.quit)
-            loop.exec_()
-
-            exit_code = todds_runner.process.exitCode()
-            success = exit_code == 0
-
-            if success:
-                logger.info("todds optimization completed successfully")
-            else:
-                logger.warning(
-                    f"todds optimization completed with exit code: {exit_code}"
-                )
-
-            return success, exit_code
-
-        return None
+        # Block and return status if needed, otherwise return immediately
+        return (
+            self._wait_for_todds_completion(todds_runner)
+            if block_until_complete
+            else None
+        )
 
     def _do_delete_dds_textures(self) -> None:
+        """
+        Delete all .dds texture files using todds clean preset.
+
+        Generates a todds configuration file for the active mods and executes
+        the clean operation to remove compiled .dds textures. This is useful
+        when texture optimization is no longer needed or you want to reset
+        to original texture sources.
+
+        The operation runs asynchronously in a UI panel showing progress.
+        """
         logger.info("Deleting .dds textures with todds...")
-        todds_txt_path = self._do_generate_todds_txt()
-        # Initialize todds interface
+
+        # Create todds interface with clean preset (removes .dds files)
         todds_interface = ToddsInterface(
             preset="clean",
             dry_run=self.settings_controller.settings.todds_dry_run,
         )
 
-        # UI
-        self.todds_runner = RunnerPanel(
-            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
-        )
-        self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
-        self.todds_runner.show()
+        # Create and display runner UI (shows completion dialog after finishing)
+        todds_runner = self._create_todds_runner(is_pre_launch=False)
+        todds_txt_path = self._do_generate_todds_txt()
 
-        # Delete all .dds textures using todds
-        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
+        # Execute the todds command
+        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
 
     # STEAM{CMD, WORKS} ACTIONS
     def _do_import_steamcmd_acf_data(self) -> None:
