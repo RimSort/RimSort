@@ -11,7 +11,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Literal, Optional, cast, overload
 from urllib.parse import urlparse
 
 import requests
@@ -1971,7 +1971,29 @@ class MainContent(QObject):
         logger.info(f"Generated todds.txt at: {todds_txt_path}")
         return todds_txt_path
 
-    def _do_optimize_textures(self) -> None:
+    @overload
+    def _do_optimize_textures(
+        self, block_until_complete: Literal[True]
+    ) -> tuple[bool, int]: ...
+
+    @overload
+    def _do_optimize_textures(
+        self, block_until_complete: Literal[False] = False
+    ) -> None: ...
+
+    def _do_optimize_textures(
+        self, block_until_complete: bool = False
+    ) -> tuple[bool, int] | None:
+        """
+        Run todds texture optimization.
+
+        Args:
+            block_until_complete: If True, blocks until todds completes and returns status.
+                                If False, launches async and returns None immediately.
+
+        Returns:
+            tuple[bool, int] | None: (success, exit_code) if blocking, None if non-blocking
+        """
         logger.info("Optimizing textures with todds...")
         todds_txt_path = self._do_generate_todds_txt()
         # Initialize todds interface
@@ -1982,13 +2004,41 @@ class MainContent(QObject):
         )
 
         # UI
-        self.todds_runner = RunnerPanel(
+        todds_runner = RunnerPanel(
             todds_dry_run_support=self.settings_controller.settings.todds_dry_run
         )
-        self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
-        self.todds_runner.show()
 
-        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
+        # Set window title and store reference based on context
+        if block_until_complete:
+            todds_runner.setWindowTitle("RimSort - todds texture encoder (pre-launch)")
+        else:
+            todds_runner.setWindowTitle("RimSort - todds texture encoder")
+            # Store as instance variable for manual runs
+            self.todds_runner = todds_runner
+
+        todds_runner.show()
+
+        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+
+        # If blocking, wait for completion
+        if block_until_complete:
+            loop = QEventLoop()
+            todds_runner.process.finished.connect(loop.quit)
+            loop.exec_()
+
+            exit_code = todds_runner.process.exitCode()
+            success = exit_code == 0
+
+            if success:
+                logger.info("todds optimization completed successfully")
+            else:
+                logger.warning(
+                    f"todds optimization completed with exit code: {exit_code}"
+                )
+
+            return success, exit_code
+
+        return None
 
     def _do_delete_dds_textures(self) -> None:
         logger.info("Deleting .dds textures with todds...")
@@ -3380,6 +3430,23 @@ class MainContent(QObject):
             elif answer == QMessageBox.StandardButton.Cancel:
                 logger.info("User chose to cancel.")
                 return
+
+        # Run todds before launch if auto-run is enabled
+        if self.settings_controller.settings.auto_run_todds_before_launch:
+            success, exit_code = self._do_optimize_textures(block_until_complete=True)
+
+            # Show error message if todds failed, but continue to launch game
+            if not success:
+                dialogue.show_warning(
+                    title=self.tr("todds Optimization Failed"),
+                    text=self.tr(
+                        "todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway."
+                    ).format(exit_code=exit_code),
+                    information=self.tr(
+                        "You may experience longer loading times or higher memory usage. "
+                        "Check the todds output window for details."
+                    ),
+                )
 
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(

@@ -1195,6 +1195,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.auto_delete_orphaned_dds_checkbox)
 
+        self.auto_run_todds_before_launch_checkbox = QCheckBox(
+            self.tr("Automatically run todds before launching the game")
+        )
+        group_layout.addWidget(self.auto_run_todds_before_launch_checkbox)
+
         # Connect radio buttons to enable/disable custom command input
         self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
         self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
