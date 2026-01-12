@@ -11,7 +11,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Literal, Optional, cast, overload
 from urllib.parse import urlparse
 
 import requests
@@ -1970,6 +1970,16 @@ class MainContent(QObject):
                     )
         logger.info(f"Generated todds.txt at: {todds_txt_path}")
         return todds_txt_path
+
+    @overload
+    def _do_optimize_textures(
+        self, block_until_complete: Literal[True]
+    ) -> tuple[bool, int]: ...
+
+    @overload
+    def _do_optimize_textures(
+        self, block_until_complete: Literal[False] = False
+    ) -> None: ...
 
     def _do_optimize_textures(
         self, block_until_complete: bool = False
