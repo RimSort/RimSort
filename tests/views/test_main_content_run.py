@@ -23,6 +23,7 @@ class DummySettings:
         self.mod_type_filter = True
         self.hide_invalid_mods_when_filtering = False
         self.backup_saves_on_launch = False
+        self.auto_run_todds_before_launch = False
         # Inactive mods sort settings
         self.inactive_mods_sorting = True
         self.save_inactive_mods_sort_state = False
