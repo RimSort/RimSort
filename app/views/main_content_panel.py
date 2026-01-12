@@ -1971,7 +1971,9 @@ class MainContent(QObject):
         logger.info(f"Generated todds.txt at: {todds_txt_path}")
         return todds_txt_path
 
-    def _do_optimize_textures(self, block_until_complete: bool = False) -> tuple[bool, int] | None:
+    def _do_optimize_textures(
+        self, block_until_complete: bool = False
+    ) -> tuple[bool, int] | None:
         """
         Run todds texture optimization.
 
@@ -2020,7 +2022,9 @@ class MainContent(QObject):
             if success:
                 logger.info("todds optimization completed successfully")
             else:
-                logger.warning(f"todds optimization completed with exit code: {exit_code}")
+                logger.warning(
+                    f"todds optimization completed with exit code: {exit_code}"
+                )
 
             return success, exit_code
 
