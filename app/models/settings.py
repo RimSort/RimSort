@@ -134,6 +134,7 @@ class Settings(QObject):
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
         self.auto_delete_orphaned_dds: bool = False
+        self.auto_run_todds_before_launch: bool = False
 
         # External Tools
         self.text_editor_location: str = ""

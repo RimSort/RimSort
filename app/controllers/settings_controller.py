@@ -850,6 +850,9 @@ class SettingsController(QObject):
         self.settings_dialog.auto_delete_orphaned_dds_checkbox.setChecked(
             self.settings.auto_delete_orphaned_dds
         )
+        self.settings_dialog.auto_run_todds_before_launch_checkbox.setChecked(
+            self.settings.auto_run_todds_before_launch
+        )
 
         # External Tools Tab
         self.settings_dialog.text_editor_location.setText(
@@ -1209,6 +1212,9 @@ class SettingsController(QObject):
         )
         self.settings.auto_delete_orphaned_dds = (
             self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
+        )
+        self.settings.auto_run_todds_before_launch = (
+            self.settings_dialog.auto_run_todds_before_launch_checkbox.isChecked()
         )
 
         # Other External Tools Tab
