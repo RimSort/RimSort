@@ -629,6 +629,10 @@ class TroubleshootingController:
 
         return steam_path
 
+    def _on_steam_verify_game_clicked(self) -> None:
+        """Verify RimWorld game files through Steam."""
+        EventBus().do_steam_verify_game_files.emit()
+
     def _on_steam_clear_cache_clicked(self) -> None:
         """Clear Steam download cache."""
         try:
@@ -664,24 +668,6 @@ class TroubleshootingController:
                 text=self.translate(
                     "TroubleshootingController",
                     "Could not delete Steam's downloading folder.\nPlease delete it manually: Steam/steamapps/downloading\nDetails: {e}",
-                ).format(e=str(e)),
-                icon="warning",
-                buttons=["Ok"],
-            )
-
-    def _on_steam_verify_game_clicked(self) -> None:
-        """Verify game files through Steam."""
-        try:
-            platform_specific_open("steam://validate/294100")  # RimWorld steam app id
-        except Exception as e:
-            logger.error(f"Failed to verify game files: {e}")
-            show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Steam Action Failed"
-                ),
-                text=self.translate(
-                    "TroubleshootingController",
-                    "Could not open Steam to verify game files.\nPlease verify game files manually through Steam's game properties.\nDetails: {e}",
                 ).format(e=str(e)),
                 icon="warning",
                 buttons=["Ok"],
