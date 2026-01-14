@@ -319,6 +319,25 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # Steam protocol launch option
+        steam_protocol_group = QGroupBox()
+        tab_layout.addWidget(steam_protocol_group)
+
+        steam_protocol_layout = QVBoxLayout(steam_protocol_group)
+
+        self.launch_via_steam_protocol_checkbox = QCheckBox(
+            self.tr("Launch game via Steam protocol (enables Steam overlay)")
+        )
+        self.launch_via_steam_protocol_checkbox.setToolTip(
+            self.tr(
+                "If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) "
+                "instead of directly running the executable. This enables the Steam overlay. "
+                "Note: This requires Steam to be running and will ignore custom launch arguments."
+            )
+        )
+        steam_protocol_layout.addWidget(self.launch_via_steam_protocol_checkbox)
+
+        # Game arguments group
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)
 
@@ -337,10 +356,11 @@ class SettingsDialog(QDialog):
                 "\n   PROTON_LOG=1 %command%\n"
                 "\n   gamemoderun %command% -logfile /tmp/log\n"
                 "\n   DXVK_HUD=1 mangohud %command% -popupwindow\n"
-                "\n NOTE: wrapper commands will be ignored on macOS"
+                "\n NOTE: wrapper commands will be ignored on macOS\n"
+                "\n NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled"
             )
         )
-        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 17)
+        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 18)
         run_args_info_layout.addWidget(self.run_args_info_label, 0)
         self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 

@@ -36,6 +36,7 @@ class DummySettings:
                 config_folder="/fake/config",
                 run_args=["--test"],
                 steam_client_integration=False,
+                launch_via_steam_protocol=False,
             )
         }
 
@@ -66,6 +67,8 @@ def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, List[str]]
     monkeypatch.setattr(
         main_content_panel, "launch_game_process", fake_launch_game_process
     )
+    # Also patch platform_specific_open to avoid trying to open Steam protocol
+    monkeypatch.setattr(main_content_panel, "platform_specific_open", Mock())
     return calls
 
 

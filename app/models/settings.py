@@ -456,6 +456,7 @@ class Settings(QObject):
         - If steam_client_integration is enabled but workshop_folder is not set, disable it.
         - If workshop_folder is set but the appworkshop_294100.acf file is missing,
           disable steam_client_integration and clear workshop_folder.
+        - If launch_via_steam_protocol is enabled but steam_client_integration is disabled, disable it.
 
         Invalid configurations are silently fixed without user interaction.
 
@@ -464,10 +465,23 @@ class Settings(QObject):
         active_instance = self.instances[self.current_instance]
         steam_client_integration = active_instance.steam_client_integration
         workshop_folder = active_instance.workshop_folder
+        launch_via_steam_protocol = active_instance.launch_via_steam_protocol
 
         # If neither is enabled, no validation needed
-        if not steam_client_integration and not workshop_folder:
+        if (
+            not steam_client_integration
+            and not workshop_folder
+            and not launch_via_steam_protocol
+        ):
             return False
+
+        # If launch_via_steam_protocol is enabled but steam_client_integration is not, disable it
+        if launch_via_steam_protocol and not steam_client_integration:
+            logger.warning(
+                "Steam protocol launch is enabled but Steam client integration is disabled. Disabling..."
+            )
+            active_instance.launch_via_steam_protocol = False
+            return True
 
         # If steam_client_integration is enabled but workshop_folder is not set, disable it
         if steam_client_integration and not workshop_folder:
