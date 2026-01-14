@@ -3507,11 +3507,31 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        """
+        Prepare and launch the RimWorld game process.
+
+        This method handles the complete game launch workflow:
+        1. Validates essential paths are configured
+        2. Creates backup of settings and mod list
+        3. Prompts user about unsaved mod list changes
+        4. Optionally runs todds texture optimization
+        5. Manages steam_appid.txt for Steam integration
+        6. Launches game via Steam protocol (with overlay) or direct executable
+
+        The launch method depends on user configuration:
+        - If "launch_via_steam_protocol" is enabled: uses steam://rungameid/294100 URI
+          (requires Steam Client Integration enabled, ignores custom run arguments)
+        - Otherwise: launches executable directly with custom run arguments
+
+        Note: Steam_appid.txt is created/removed based on steam_client_integration setting
+        regardless of launch method, for compatibility.
+        """
         if not self.check_if_essential_paths_are_set(prompt=True):
             return
 
         create_backup_in_thread(self.settings_controller.settings)
 
+        # Check for unsaved mod list changes and prompt user
         if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Unsaved Changes"),
@@ -3549,6 +3569,7 @@ class MainContent(QObject):
                     ),
                 )
 
+        # Retrieve instance configuration
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder
@@ -3560,18 +3581,23 @@ class MainContent(QObject):
 
         run_args = [run_args] if isinstance(run_args, str) else run_args
 
+        # Retrieve Steam-related settings for this instance
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
         ].steam_client_integration
 
-        # If integration is enabled, check for file called "steam_appid.txt" in game folder.
-        # in the game folder. If not, create one and add the Steam App ID to it.
+        launch_via_steam_protocol = self.settings_controller.settings.instances[
+            current_instance
+        ].launch_via_steam_protocol
+
+        # Manage steam_appid.txt file for Steam integration
+        # If Steam integration is enabled, Steam requires this file with the app ID in the game folder
         # The Steam App ID is "294100" for RimWorld.
         steam_appid_path = (
-            # Checks if the platform is darwin(macOS) and moves us up one directory to get out of the app bundle.
+            # On macOS, steam_appid.txt should be outside the app bundle
             game_install_path.parent / "steam_appid.txt"
             if sys.platform == "darwin"
-            # Else we go directly to the game install path.
+            # On Windows and Linux, place it directly in the game folder
             else game_install_path / "steam_appid.txt"
         )
         if steam_client_integration and not steam_appid_path.exists():
@@ -3580,9 +3606,36 @@ class MainContent(QObject):
         elif not steam_client_integration and steam_appid_path.exists():
             steam_appid_path.unlink()
 
-        # Launch independent game process without Steamworks API
-        logger.info("Launching game process without Steamworks API...")
-        launch_game_process(game_install_path=game_install_path, args=run_args)
+        # Launch the game using the configured method
+        if launch_via_steam_protocol:
+            # Validate Steam Client Integration is enabled before using Steam protocol
+            if not steam_client_integration:
+                logger.warning(
+                    "Steam protocol launch requested but Steam Client Integration is disabled."
+                )
+                dialogue.show_warning(
+                    title=self.tr("Steam Client Integration is disabled"),
+                    text=self.tr(
+                        "Steam protocol launch requires Steam Client Integration to be enabled."
+                    ),
+                    information=self.tr(
+                        "Please enable Steam Client Integration in Settings → Steam to use this feature."
+                    ),
+                )
+                return
+
+            # Launch via Steam protocol URI
+            # This allows Steam to manage the game launch and enables the Steam overlay
+            # Custom run arguments are ignored when using this method
+            logger.info(
+                "Launching game via Steam protocol URI (steam://rungameid/294100)..."
+            )
+            platform_specific_open("steam://rungameid/294100")
+        else:
+            # Launch game executable directly
+            # This method ignores Steam overlay but respects custom run arguments
+            logger.info("Launching game process without Steamworks API...")
+            launch_game_process(game_install_path=game_install_path, args=run_args)
 
     @Slot()
     def _use_this_instead_clicked(self) -> None:

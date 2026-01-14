@@ -28,6 +28,8 @@ class Instance(msgspec.Struct):
     )
     steamcmd_ignore: bool = False
     steam_client_integration: bool = False
+    # Launch game via Steam protocol to enable Steam overlay
+    launch_via_steam_protocol: bool = False
     instance_folder_override: str = (
         ""  # Custom instance folder path, empty = use default
     )

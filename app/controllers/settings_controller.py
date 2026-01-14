@@ -535,6 +535,13 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_mods_folder_location_clear_button.setEnabled(checked)
 
+        # Load Steam protocol launch option
+        self.settings_dialog.launch_via_steam_protocol_checkbox.setChecked(
+            self.settings.instances[
+                self.settings.current_instance
+            ].launch_via_steam_protocol
+        )
+
         # Instance folder location (custom override)
         # Only enable for Default instance
         is_default_instance = self.settings.current_instance == DEFAULT_INSTANCE_NAME
@@ -1043,6 +1050,13 @@ class SettingsController(QObject):
             self.settings_dialog.steam_client_integration_checkbox.isChecked()
         )
 
+        # Save Steam protocol launch option
+        self.settings.instances[
+            self.settings.current_instance
+        ].launch_via_steam_protocol = (
+            self.settings_dialog.launch_via_steam_protocol_checkbox.isChecked()
+        )
+
         # Databases tab
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
             self.settings.external_community_rules_metadata_source = "None"
@@ -1428,10 +1442,21 @@ class SettingsController(QObject):
 
         return True
 
+    def _disable_steam_integration_ui(self) -> None:
+        """
+        Clear all Steam integration dependent UI settings.
+        Disables Steam client integration, clears workshop folder, and disables Steam protocol launch.
+        """
+        self.settings_dialog.steam_client_integration_checkbox.setChecked(False)
+        self.settings_dialog.steam_mods_folder_location.setText("")
+        self.settings_dialog.launch_via_steam_protocol_checkbox.setChecked(False)
+
     def _validate_steam_integration(self) -> bool:
         """
         Validate Steam client integration and Steam mods location configuration.
         Shows appropriate warnings if validation fails and prevents saving.
+
+        Ensures that Steam protocol launch is only enabled when Steam integration is enabled.
 
         :return: True if valid configuration, False if invalid.
         """
@@ -1442,25 +1467,27 @@ class SettingsController(QObject):
             self.settings_dialog.steam_mods_folder_location.text().strip()
         )
 
+        # Handle user explicitly disabling Steam integration
         if not steam_client_integration:
             QMessageBox.warning(
                 self.settings_dialog,
                 self.tr("Steam Client Integration Disabled"),
                 self.tr(
-                    "Steam client integration is disabled. Steam mods location will be cleared."
+                    "Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared."
                 ),
             )
-            # If integration disabled, clear the steam mods location
+            # Clear dependent settings when integration is disabled
             self.settings_dialog.steam_mods_folder_location.setText("")
+            self.settings_dialog.launch_via_steam_protocol_checkbox.setChecked(False)
 
+        # Validate Steam integration configuration
         is_valid = self._check_steam_integration_validity(
             steam_client_integration, steam_mods_location
         )
 
         if not is_valid:
-            # Disable integration checkbox and clear the mods location
-            self.settings_dialog.steam_client_integration_checkbox.setChecked(False)
-            self.settings_dialog.steam_mods_folder_location.setText("")
+            # Disable all Steam integration settings if validation fails
+            self._disable_steam_integration_ui()
 
             # Determine which validation failed for appropriate error message
             if steam_client_integration and not steam_mods_location:
@@ -1469,7 +1496,7 @@ class SettingsController(QObject):
                     self.tr("Steam Mods Location Required"),
                     self.tr(
                         "Steam client integration requires a Steam mods location to be configured. "
-                        "Steam client integration and Steam mods location have been disabled."
+                        "Steam client integration, Steam mods location, and Steam protocol launch have been disabled."
                     ),
                 )
             elif steam_mods_location and not validate_acf_file_exists(
@@ -1480,12 +1507,10 @@ class SettingsController(QObject):
                     self.tr("Steam Workshop File Not Found"),
                     self.tr(
                         "The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. "
-                        "Steam client integration and Steam mods location have been disabled. "
+                        "Steam client integration, Steam mods location, and Steam protocol launch have been disabled. "
                         "Please ensure Steam is properly installed and has downloaded RimWorld Workshop data."
                     ),
                 )
-                # Clear location since ACF is missing
-                self.settings_dialog.steam_mods_folder_location.setText("")
 
         return is_valid
 
