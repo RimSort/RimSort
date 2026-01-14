@@ -2372,6 +2372,23 @@ class MainContent(QObject):
                 ),
             )
 
+    def _handle_steamworks_resubscribe(self, instruction: list[Any]) -> None:
+        """
+        Handle mod revalidation by forcing Steam to validate and redownload mods.
+
+        This bypasses the Steamworks API because the native resubscribe process is broken.
+        Instead, we use the Steam URI protocol to trigger validation directly.
+        This approach is more efficient than the Steamworks API implementation, which
+        would unsubscribe then subscribe again.
+
+        :param instruction: List where instruction[0] = "resubscribe" and
+                           instruction[1] = list of PublishedFileIds (int)
+        """
+        logger.info(f"Validating mods with instruction: {instruction}")
+        # Steam URI protocol: steam://validate/{APP_ID}/{PublishedFileIds}
+        # APP_ID 294100 is RimWorld
+        platform_specific_open(f"steam://validate/294100/{instruction[1]}")
+
     def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
@@ -2413,6 +2430,9 @@ class MainContent(QObject):
                         f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
                     )
                     self.steamworks_in_use = False
+                # Handle resubscribe via dedicated method
+                if instruction[0] == "resubscribe":
+                    self._handle_steamworks_resubscribe(instruction)
                 elif (
                     instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
