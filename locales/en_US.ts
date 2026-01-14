@@ -4,23 +4,7 @@
 <context>
     <name>AcfLogReader</name>
     <message>
-        <source>Ready</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Disable ACF Log Reader</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Click to disable the ACF Log Reader</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Search...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Refresh</source>
+        <source>Delete Selected Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -36,111 +20,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>ACF Log Reader disabled</source>
+        <source>Search:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Showing {filtered} of {total} items (filtered)</source>
+        <source>All Searchable Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Showing {total} items</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Searching...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export canceled by user.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully exported {count} items to {file_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Mod URL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy PFID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>View Mod Details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod Details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Confirm ACF import</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed unknown exception occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Exporting to CSV...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Mod Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import .acf</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export Success</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Export failed</source>
+        <source>Searches selected column or all searchable columns if set to &apos;All&apos;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -837,6 +725,46 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Confirm ACF import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will replace your current steamcmd .acf file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? This only works for steamcmd</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import .acf</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF file not found at: {acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully exported ACF to {file_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: Permission denied - check file permissions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Checking Steam Workshop mods for updates...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1009,6 +937,18 @@ How would you like to proceed?
     </message>
     <message>
         <source>Steam DB comparison report: {len} found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>todds Optimization Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2779,16 +2719,16 @@ This operation will recursively delete all mod files, except for .dds textures f
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4085,6 +4025,10 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4447,6 +4391,10 @@ Please choose one of the following options to proceed.</source>
     <name>SteamBrowser</name>
     <message>
         <source>Mod Downloader</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5122,20 +5070,20 @@ The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>There updates available for Workshop mods!</source>
+        <source>There are updates available for Workshop mods!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update Mods with SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update Mods with Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods available for update from Steam.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update with SteamCMD</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Update with Steam client</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5219,6 +5167,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>RimSort could not validate the RimWorld executable in the specified folder: {game_install_path}. Please check that this directory is correct and contains a valid RimWorld game executable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>panel</name>
+    <message>
+        <source>Export Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully exported {count} items to {file_path}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

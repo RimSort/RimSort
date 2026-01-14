@@ -973,6 +973,18 @@ Como você gostaria de prosseguir?
         <translation>Relatório de comparação do Steam DB: {len} encontrado</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>Falha na otimização do todds</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>a otimização da textura todds falhou (código de saída: {exit_code}), mas o jogo será iniciado mesmo assim.</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>Você pode enfrentar tempos de carregamento mais longos ou maior uso de memória. Verifique a janela de saída do Todds para obter detalhes.</translation>
+    </message>
+    <message>
         <source>Please configure "Use This Instead" database in settings.</source>
         <translation>Configure o banco de dados "Usar isto em vez disso" nas configurações.</translation>
     </message>
@@ -4148,6 +4160,10 @@ Isso pode potencialmente evitar alguns problemas ao baixar mods, como falhas no 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>Sobrescrever texturas otimizadas existentes</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>Execute todds automaticamente antes de iniciar o jogo</translation>
     </message>
     <message>
         <source>Theme</source>

@@ -1123,6 +1123,18 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>クエリの有効期限を切れるまでのエポックからの秒数を整数で再構成してください。</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>toddsの最適化に失敗しました</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>todds テクスチャの最適化に失敗しました (終了コード: {exit_code}) が、ゲームは起動します。</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>読み込み時間が長くなったり、メモリ使用量が増加したりする場合があります。詳細については、todds 出力ウィンドウを確認してください。</translation>
+    </message>
+    <message>
         <source>Use This Instead</source>
         <translation>これを代わりに使用</translation>
     </message>
@@ -4143,6 +4155,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>既存の最適化されたテクスチャを上書き</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>ゲームを起動する前に自動的に todds を実行します</translation>
     </message>
     <message>
         <source>Theme</source>

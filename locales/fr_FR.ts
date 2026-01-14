@@ -1127,6 +1127,18 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
         <translation>Essayé de configurer la requête dynamique avec une valeur qui n'est pas un entier.</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>Échec de l'optimisation de Todds</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>L'optimisation de la texture Todds a échoué (code de sortie : {exit_code}), mais le jeu se lancera quand même.</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>Vous pourriez rencontrer des temps de chargement plus longs ou une utilisation de la mémoire plus élevée. Consultez la fenêtre de sortie de Todds pour plus de détails.</translation>
+    </message>
+    <message>
         <source>Use This Instead</source>
         <translation>Utilisez-le à la place</translation>
     </message>
@@ -4153,6 +4165,10 @@ La désactivation de cette option peut améliorer les performances en évitant d
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>Écraser les textures optimisées existantes</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>Exécuter automatiquement Todds avant de lancer le jeu</translation>
     </message>
     <message>
         <source>Theme</source>

@@ -1123,6 +1123,18 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <translation>Пожалуйста, перенастройте значение истечения срока действия с целым числом в секундах с начала эпохи, когда вы хотите, чтобы ваш запрос истек.</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>Тоддс: Оптимизация не удалась</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>Не удалось оптимизировать текстуру Тодда (код выхода: {exit_code}), но игра все равно запустится.</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>Вы можете столкнуться с более длительным временем загрузки или более высоким использованием памяти. Подробности смотрите в окне вывода todds.</translation>
+    </message>
+    <message>
         <source>Use This Instead</source>
         <translation>Используйте это вместо этого</translation>
     </message>
@@ -4142,6 +4154,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>Перезаписать существующие оптимизированные текстуры</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>Автоматически запускать тодды перед запуском игры</translation>
     </message>
     <message>
         <source>Theme</source>
