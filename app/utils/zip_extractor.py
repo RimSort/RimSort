@@ -229,7 +229,11 @@ def create_zip_backup(
     with ZipFile(backup_file, "w", ZIP_DEFLATED) as zipf:
         for current_file, (file_path, arcname) in enumerate(file_list, 1):
             try:
-                zipf.write(file_path, arcname)
+                # Read file into memory first, then write to ZIP
+                # This avoids file lock issues when the file is in use
+                with open(file_path, "rb") as f:
+                    file_data = f.read()
+                zipf.writestr(str(arcname), file_data)
                 # Update progress
                 if progress_callback:
                     progress_callback(current_file, total_files)
