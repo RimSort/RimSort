@@ -272,17 +272,11 @@ class TestSteamUtilities:
             controller._on_steam_clear_cache_clicked()
 
         mock_open.reset_mock()
-        with (
-            patch(
-                "app.controllers.troubleshooting_controller.platform_specific_open"
-            ) as mock_open,
-            patch(
-                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
-                return_value=True,
-            ),
-        ):
+        with patch(
+            "app.controllers.troubleshooting_controller.EventBus"
+        ) as mock_eventbus:
             controller._on_steam_verify_game_clicked()
-            mock_open.assert_called_with("steam://validate/294100")
+            mock_eventbus.return_value.do_steam_verify_game_files.emit.assert_called_once()
 
         with (
             patch(
