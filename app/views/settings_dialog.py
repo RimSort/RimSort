@@ -335,14 +335,18 @@ class SettingsDialog(QDialog):
                 "Note: This requires Steam to be running and will ignore custom launch arguments."
             )
         )
+        # Connect checkbox to disable/enable run_args group
+        self.launch_via_steam_protocol_checkbox.stateChanged.connect(
+            self._on_steam_protocol_toggled
+        )
         steam_protocol_layout.addWidget(self.launch_via_steam_protocol_checkbox)
 
         # Game arguments group
-        run_args_group = QGroupBox()
-        tab_layout.addWidget(run_args_group)
+        self.run_args_group = QGroupBox()
+        tab_layout.addWidget(self.run_args_group)
 
         run_args_layout = QGridLayout()
-        run_args_group.setLayout(run_args_layout)
+        self.run_args_group.setLayout(run_args_layout)
 
         run_args_info_layout = QHBoxLayout()
 
@@ -1281,6 +1285,12 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.steam_mods_folder_location_open_button.setEnabled(checked)
         self.steam_mods_folder_location_choose_button.setEnabled(checked)
         self.steam_mods_folder_location_clear_button.setEnabled(checked)
+
+    def _on_steam_protocol_toggled(self) -> None:
+        # Disable run_args group when Steam protocol launch is enabled
+        # since run_args are ignored when using Steam protocol
+        checked = self.launch_via_steam_protocol_checkbox.isChecked()
+        self.run_args_group.setEnabled(not checked)
 
     def _do_themes_tab(self) -> None:
         tab = QWidget()

@@ -541,6 +541,11 @@ class SettingsController(QObject):
                 self.settings.current_instance
             ].launch_via_steam_protocol
         )
+        # Update run_args group enabled state based on Steam protocol setting
+        launch_via_steam_protocol = self.settings.instances[
+            self.settings.current_instance
+        ].launch_via_steam_protocol
+        self.settings_dialog.run_args_group.setEnabled(not launch_via_steam_protocol)
 
         # Instance folder location (custom override)
         # Only enable for Default instance
