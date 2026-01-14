@@ -895,6 +895,18 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Steam DB karşılaştırma raporu: {len} bulundu</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>todds Optimizasyonu Başarısız</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>todds doku optimizasyonu başarısız oldu (çıkış kodu: {exit_code}), ancak oyun yine de başlayacak.</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>Daha uzun yükleme süreleri veya daha yüksek bellek kullanımıyla karşılaşabilirsiniz. Ayrıntılar için todds çıktı penceresini kontrol edin.</translation>
+    </message>
+    <message>
         <source>Please configure "Use This Instead" database in settings.</source>
         <translation>Lütfen ayarlarda "Bunun Yerine Bunu Kullan" veritabanını yapılandırın.</translation>
     </message>
@@ -4106,6 +4118,10 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>Mevcut optimize edilmiş dokuların üzerine yazın</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>Oyunu başlatmadan önce todds'u otomatik olarak çalıştır</translation>
     </message>
     <message>
         <source>Theme</source>

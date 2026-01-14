@@ -1120,6 +1120,18 @@ La base de datos resultante, C, se guarda en una ruta especificada por el usuari
         <translation>Por favor, reconfigura el valor de expiración con un entero en términos de los segundos desde la época en que te gustaría que tu consulta expirara.</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>Error de optimización de Todds</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>La optimización de la textura de Todds falló (código de salida: {exit_code}), pero el juego se iniciará de todos modos.</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>Es posible que experimente tiempos de carga más prolongados o un mayor uso de memoria. Consulte la ventana de salida de Todds para obtener más detalles.</translation>
+    </message>
+    <message>
         <source>Use This Instead</source>
         <translation>Usa esto en su lugar</translation>
     </message>
@@ -4118,6 +4130,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>Sobrescribir texturas optimizadas existentes</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>Ejecute todds automáticamente antes de iniciar el juego</translation>
     </message>
     <message>
         <source>Theme</source>

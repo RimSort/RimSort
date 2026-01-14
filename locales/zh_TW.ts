@@ -1009,6 +1009,18 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
 3) 選擇輸出C（結果db）</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>todds 優化失敗</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>todds 紋理優化失敗（退出代碼：{exit_code}），但遊戲仍會啟動。</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>您可能會遇到更長的加載時間或更高的內存使用量。檢查 todds 輸出窗口以獲取詳細信息。</translation>
+    </message>
+    <message>
         <source>Please configure "Use This Instead" database in settings.</source>
         <translation>請在設置中配置“使用此替代”數據庫。</translation>
     </message>
@@ -4148,6 +4160,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>覆蓋已經優化的紋理</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>啟動遊戲前自動運行 todds</translation>
     </message>
     <message>
         <source>Theme</source>

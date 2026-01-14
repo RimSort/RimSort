@@ -973,6 +973,18 @@ How would you like to proceed?
         <translation>Steam 数据库比较报告：{len} 发现</translation>
     </message>
     <message>
+        <source>todds Optimization Failed</source>
+        <translation>todds 优化失败</translation>
+    </message>
+    <message>
+        <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
+        <translation>todds 纹理优化失败（退出代码：{exit_code}），但游戏仍会启动。</translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation>您可能会遇到更长的加载时间或更高的内存使用量。检查 todds 输出窗口以获取详细信息。</translation>
+    </message>
+    <message>
         <source>Please configure "Use This Instead" database in settings.</source>
         <translation>请在设置中配置“使用此替代”数据库。</translation>
     </message>
@@ -4158,6 +4170,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Overwrite existing optimized textures</source>
         <translation>覆盖已经优化的纹理</translation>
+    </message>
+    <message>
+        <source>Automatically run todds before launching the game</source>
+        <translation>启动游戏前自动运行 todds</translation>
     </message>
     <message>
         <source>Theme</source>
