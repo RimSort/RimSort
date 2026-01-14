@@ -191,6 +191,7 @@ class ScriptConfig:
             log_path: Path to the update log file
             needs_elevation: Whether elevated privileges are required
             install_dir: Installation directory (required for Linux)
+            update_manager: UpdateManager instance (for backwards compatibility, not used)
 
         Returns:
             Arguments string or list for subprocess
@@ -206,14 +207,34 @@ class ScriptConfig:
         )
 
     @staticmethod
+    def _build_bash_command(base_args: List[str], needs_elevation: bool) -> str:
+        """
+        Build a bash command string for launching update script directly.
+        Used as primary method for modern terminal emulators and standalone execution.
+
+        Args:
+            base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
+            needs_elevation: Whether to use sudo
+
+        Returns:
+            Command string for executing the update script
+        """
+        quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
+        if needs_elevation:
+            return f"sudo {quoted_args}"
+        else:
+            return quoted_args
+
+    @staticmethod
     def _build_terminal_command(
         terminal: str, base_args: List[str], needs_elevation: bool
     ) -> str:
         """
         Build terminal-specific command string for launching update script.
+        Used as fallback if direct bash execution is not available.
 
         Args:
-            terminal: Name of the terminal emulator (e.g., "gnome-terminal")
+            terminal: Name of the terminal emulator (e.g., "gnome-terminal", "kitty")
             base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
             needs_elevation: Whether to use sudo
 
@@ -224,27 +245,28 @@ class ScriptConfig:
             ValueError: If terminal emulator is unknown
         """
         quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
+        cmd_with_pause = f'{quoted_args}; read -p \\"Press enter to close\\"'
 
         # gnome-terminal uses -- instead of -e
         if terminal == "gnome-terminal":
             if needs_elevation:
                 return f'gnome-terminal -- bash -c "sudo {quoted_args}"'
             else:
-                return f'gnome-terminal -- bash -c "{quoted_args}; read -p \\"Press enter to close\\""'
+                return f'gnome-terminal -- bash -c "{cmd_with_pause}"'
 
-        # konsole, xterm, and x-terminal-emulator use -e
-        elif terminal in ["konsole", "xterm", "x-terminal-emulator"]:
+        # konsole, xterm, x-terminal-emulator, and kitty use -e or equivalent
+        elif terminal in ["konsole", "xterm", "x-terminal-emulator", "kitty"]:
             if needs_elevation:
                 return f'{terminal} -e bash -c "sudo {quoted_args}"'
             else:
-                return f'{terminal} -e bash -c "{quoted_args}; read -p \\"Press enter to close\\""'
+                return f'{terminal} -e bash -c "{cmd_with_pause}"'
 
         # xfce4-terminal and mate-terminal need nested quoting
         elif terminal in ["xfce4-terminal", "mate-terminal"]:
             if needs_elevation:
                 return f"{terminal} -e \"bash -c 'sudo {quoted_args}'\""
             else:
-                return f'{terminal} -e "bash -c \'{quoted_args}; read -p \\"Press enter to close\\"\'"'
+                return f"{terminal} -e \"bash -c '{cmd_with_pause}'\""
 
         else:
             raise ValueError(f"Unknown terminal emulator: {terminal}")
@@ -259,17 +281,21 @@ class ScriptConfig:
         """
         Build platform-specific arguments for launching the update script.
 
+        For Linux: Uses a two-phase approach:
+        1. Primary: Direct bash execution (works with all modern terminal emulators)
+        2. Fallback: Terminal emulator detection if primary method fails
+
         Args:
             base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
             script_path: Path to the update script
             needs_elevation: Whether elevated privileges are required
-            update_manager: UpdateManager instance (required for Linux platform)
+            update_manager: UpdateManager instance (required for Linux fallback detection)
 
         Returns:
             Arguments string or list for subprocess
 
         Raises:
-            ValueError: If platform is unsupported or update_manager is None for Linux
+            ValueError: If platform is unsupported
         """
         if self.platform == "Darwin":
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
@@ -280,12 +306,27 @@ class ScriptConfig:
             return f'osascript -e \'tell app "Terminal" to do script "{script_cmd}"\''
         elif self.platform == "Windows":
             if needs_elevation:
+                # Properly escape paths for PowerShell with special characters and spaces
+                # Paths need to be quoted for cmd.exe which is the actual executor
+                script_dir = str(script_path.parent)
+                script_file = str(script_path)
+                temp_path = str(base_args[1])
+                log_path = str(base_args[2])
+
+                # Build the cmd command with properly quoted arguments
+                # Using double quotes for cmd.exe path arguments
+                cmd_command = f'cd /d "{script_dir}" && "{script_file}" "{temp_path}" "{log_path}"'
+
+                # Escape single quotes in cmd_command for PowerShell (double them)
+                cmd_command_escaped = cmd_command.replace("'", "''")
+
                 return (
                     f"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Start-Process cmd -ArgumentList @('/k', "
-                    f'\'cd /d \\"{script_path.parent}\\" && \\"{script_path}\\" \\"{base_args[1]}\\" \\"{base_args[2]}\\"\') '
-                    '-Verb RunAs -WindowStyle Normal"'
+                    f"'{cmd_command_escaped}') "
+                    f'-Verb RunAs -WindowStyle Normal"'
                 )
             else:
+                # Return as list - subprocess will handle proper quoting
                 return [
                     "cmd",
                     "/k",
@@ -294,12 +335,9 @@ class ScriptConfig:
                     str(base_args[2]),
                 ]
         elif self.platform == "Linux":
-            if update_manager is None:
-                raise ValueError("update_manager required for Linux platform")
-
-            terminal = update_manager._detect_terminal_emulator()
-            cmd = self._build_terminal_command(terminal, base_args, needs_elevation)
-            logger.debug(f"Built terminal command using {terminal}")
+            # Linux: Try direct bash execution first (primary method)
+            cmd = self._build_bash_command(base_args, needs_elevation)
+            logger.debug("Linux: Using direct bash command (primary method)")
             return cmd
         else:
             raise ValueError(f"Unsupported platform: {self.platform}")
@@ -377,7 +415,7 @@ class UpdateManager(QObject):
         )
         self._download_cancelled = False
         self._detected_terminal: Optional[str] = (
-            None  # Cache detected terminal emulator
+            None  # Cache detected terminal emulator (for fallback only)
         )
         # Progress window for update operations
         self._progress_widget: Optional[TaskProgressWindow] = None
@@ -442,6 +480,7 @@ class UpdateManager(QObject):
         """
         Detect available terminal emulator on Linux systems.
         Caches the result to avoid redundant filesystem checks.
+        Used as fallback if direct bash execution fails.
 
         Returns:
             str: Name of the detected terminal emulator
@@ -452,8 +491,9 @@ class UpdateManager(QObject):
         if self._detected_terminal is not None:
             return self._detected_terminal
 
-        # Priority order: desktop environment terminals first, then universal fallback
+        # Priority order: modern terminals first, then legacy options
         terminal_candidates = [
+            "kitty",  # Modern GPU-accelerated terminal
             "gnome-terminal",
             "konsole",
             "xfce4-terminal",
@@ -464,14 +504,15 @@ class UpdateManager(QObject):
 
         for terminal in terminal_candidates:
             if shutil.which(terminal) is not None:
-                logger.debug(f"Detected terminal emulator: {terminal}")
+                logger.debug(f"Detected terminal emulator for fallback: {terminal}")
                 self._detected_terminal = terminal
                 return terminal
 
         # No terminal found - provide helpful error
         raise UpdateScriptLaunchError(
-            "No terminal emulator found on system. Please install one of: "
-            "gnome-terminal, konsole, xfce4-terminal, mate-terminal, or xterm"
+            "No terminal emulator found on system. Tried: "
+            "kitty, gnome-terminal, konsole, xfce4-terminal, mate-terminal, xterm, x-terminal-emulator. "
+            "Please install one of these or ensure the update script is executable."
         )
 
     def do_check_for_update(self) -> None:
@@ -1528,12 +1569,11 @@ class UpdateManager(QObject):
                         shutil.rmtree(dest)
                     else:
                         dest.unlink()
-                shutil.move(str(item), str(dest_dir))
+                # Move item to the specific destination path (not just to the directory)
+                shutil.move(str(item), str(dest))
                 moved_items += 1
             except (OSError, IOError, FileNotFoundError) as e:
-                logger.warning(
-                    f"Failed to move {item} to {dest_dir}: {e}. Skipping item."
-                )
+                logger.warning(f"Failed to move {item} to {dest}: {e}. Skipping item.")
                 continue
         return moved_items
 
@@ -1802,15 +1842,19 @@ class UpdateManager(QObject):
         else:
             # Convert list args to string command for proper window display and argument passing
             if isinstance(args_repr, list):
-                # Build command string with proper quoting for paths with spaces
+                # Build command string with proper quoting for Windows batch execution
+                # Always quote path arguments to handle spaces and special characters
                 cmd_parts = []
-                for arg in args_repr:
+                for i, arg in enumerate(args_repr):
                     arg_str = str(arg)
-                    # Quote arguments that contain spaces
-                    if " " in arg_str:
-                        cmd_parts.append(f'"{arg_str}"')
-                    else:
+
+                    # First two items are 'cmd' and '/k' flags, don't quote them
+                    if i < 2:
                         cmd_parts.append(arg_str)
+                    else:
+                        # Quote all remaining arguments (paths) to ensure proper handling
+                        # of spaces and special characters in usernames/paths
+                        cmd_parts.append(f'"{arg_str}"')
                 cmd_str = " ".join(cmd_parts)
             else:
                 cmd_str = args_repr
@@ -1818,6 +1862,7 @@ class UpdateManager(QObject):
             logger.debug(f"Launching update script with command: {cmd_str}")
 
             # Use 'start' command to ensure visible console window
+            # Quote the working directory for paths with spaces
             start_cmd = f'start "RimSort Update" /D "{cwd}" {cmd_str}'
             logger.debug(f"Using start command: {start_cmd}")
 
@@ -1839,6 +1884,10 @@ class UpdateManager(QObject):
     ) -> subprocess.Popen[Any]:
         """
         Launch the update script on POSIX systems (Linux/macOS).
+
+        For Linux: Uses hybrid approach:
+        1. Primary: Direct bash execution (works with all terminal emulators)
+        2. Fallback: Terminal emulator if direct execution fails
 
         Args:
             script_path: Path to the update script
@@ -1879,13 +1928,62 @@ class UpdateManager(QObject):
                 update_manager=self,
             )
 
-        # Launch in terminal emulator
-        p = subprocess.Popen(
-            args_repr,
-            shell=True,
-            cwd=str(AppInfo().application_folder),
-        )
-        return p
+        # Try primary method first (direct bash for Linux, osascript for macOS)
+        try:
+            logger.debug(f"Attempting primary launch method on {self._system}")
+            p = subprocess.Popen(
+                args_repr,
+                shell=True,
+                cwd=str(AppInfo().application_folder),
+            )
+            logger.info(
+                f"Successfully launched update script with primary method (PID: {p.pid})"
+            )
+            return p
+        except Exception as e:
+            # Fallback for Linux only - try terminal emulator if direct bash fails
+            if self._system == "Linux":
+                logger.warning(
+                    f"Primary method failed on Linux ({e}), attempting terminal emulator fallback..."
+                )
+                try:
+                    terminal = self._detect_terminal_emulator()
+                    base_args = [
+                        str(script_path),
+                        str(update_source_path),
+                        str(log_path),
+                    ]
+                    if install_dir:
+                        base_args.append(str(install_dir))
+
+                    config = self._script_configs["Linux"]
+                    fallback_cmd = config._build_terminal_command(
+                        terminal, base_args, needs_elevation
+                    )
+                    logger.info(f"Using terminal emulator fallback: {terminal}")
+
+                    p = subprocess.Popen(
+                        fallback_cmd,
+                        shell=True,
+                        cwd=str(AppInfo().application_folder),
+                    )
+                    logger.info(
+                        f"Successfully launched update script with terminal fallback (PID: {p.pid})"
+                    )
+                    return p
+                except Exception as fallback_err:
+                    logger.error(
+                        f"Both primary and fallback methods failed: {e} -> {fallback_err}"
+                    )
+                    raise UpdateScriptLaunchError(
+                        f"Failed to launch update script. Primary method: {e}. Fallback: {fallback_err}"
+                    ) from fallback_err
+            else:
+                # For macOS, no fallback - just raise the error
+                logger.error(f"Failed to launch update script on {self._system}: {e}")
+                raise UpdateScriptLaunchError(
+                    f"Failed to launch update script on {self._system}: {e}"
+                ) from e
 
     def _launch_msi_installer(
         self, msi_path: Path, log_path: Path, needs_elevation: bool
