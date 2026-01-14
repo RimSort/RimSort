@@ -9,6 +9,8 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
 from app.models.settings import Settings
+from app.utils.event_bus import EventBus
+from app.utils.generic import platform_specific_open
 from app.utils.gui_info import (
     show_dialogue_conditional,
     show_dialogue_file,
@@ -128,8 +130,6 @@ class TroubleshootingController:
 
         # Try to trigger Steam installation
         try:
-            from app.utils.generic import platform_specific_open
-
             platform_specific_open("steam://install/294100")  # RimWorld's Steam
             logger.info("Triggered Steam installation for game ID 294100.")
             show_information(
@@ -186,8 +186,6 @@ class TroubleshootingController:
 
         # try to trigger redownload for each mod
         try:
-            from app.utils.generic import platform_specific_open
-
             # first verify/repair game files
             platform_specific_open("steam://validate/294100")
 
@@ -397,9 +395,7 @@ class TroubleshootingController:
                 )
                 return
 
-        # refresh mod list
-        from app.utils.event_bus import EventBus
-
+        # refresh mod list so user dont need to click refresh button in main window
         EventBus().do_refresh_mods_lists.emit()
 
     def _on_mod_export_list_button_clicked(self) -> None:
@@ -570,8 +566,6 @@ class TroubleshootingController:
             tree.write(mods_config, encoding="utf-8", xml_declaration=True)
 
             # refresh mod list so user dont need to click refresh button in main window
-            from app.utils.event_bus import EventBus
-
             EventBus().do_refresh_mods_lists.emit()
 
         except (json.JSONDecodeError, ValueError, KeyError) as e:
@@ -678,9 +672,7 @@ class TroubleshootingController:
     def _on_steam_verify_game_clicked(self) -> None:
         """Verify game files through Steam."""
         try:
-            from app.utils.generic import platform_specific_open
-
-            platform_specific_open("steam://validate/294100")  # rim steam app id
+            platform_specific_open("steam://validate/294100")  # RimWorld steam app id
         except Exception as e:
             logger.error(f"Failed to verify game files: {e}")
             show_dialogue_conditional(
@@ -736,8 +728,6 @@ class TroubleshootingController:
                 return
 
             # validate each game
-            from app.utils.generic import platform_specific_open
-
             for app_id in app_ids:
                 platform_specific_open(f"steam://validate/{app_id}")
 

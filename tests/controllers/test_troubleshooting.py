@@ -172,7 +172,9 @@ class TestUIInteractions:
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("app.utils.event_bus.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.troubleshooting_controller.EventBus"
+            ) as mock_event_bus,
         ):
             mock_event_bus_instance = mock_event_bus.return_value
             mock_event_bus_instance.do_refresh_mods_lists = mock_event_bus_instance
@@ -253,7 +255,9 @@ class TestSteamUtilities:
 
         steam_path = Path("C:/Program Files (x86)/Steam")
         with (
-            patch("app.utils.generic.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.platform_specific_open"
+            ) as mock_open,
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
@@ -269,7 +273,9 @@ class TestSteamUtilities:
 
         mock_open.reset_mock()
         with (
-            patch("app.utils.generic.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.platform_specific_open"
+            ) as mock_open,
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
@@ -315,7 +321,9 @@ class TestSteamUtilities:
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("app.utils.generic.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.platform_specific_open"
+            ) as mock_open,
         ):
             controller._on_steam_repair_library_clicked()
             assert mock_open.call_count == 2
@@ -414,7 +422,9 @@ class TestModListImportExport:
             ),
             patch("builtins.open", create=True) as mock_open,
             patch("json.load", return_value=import_data),
-            patch("app.utils.event_bus.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.troubleshooting_controller.EventBus"
+            ) as mock_event_bus,
         ):
             controller._on_mod_import_list_button_clicked()
             mock_open.assert_called()
