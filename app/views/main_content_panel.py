@@ -435,7 +435,10 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            item = iml.selectedItems()[0]
+            selected_items = iml.selectedItems()
+            if not selected_items:
+                return
+            item = selected_items[0]
             data = item.data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
             self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
