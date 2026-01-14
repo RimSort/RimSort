@@ -54,6 +54,7 @@ class EventBus(QObject):
     do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
     do_check_for_workshop_updates = Signal()
+    do_steam_verify_game_files = Signal()
 
     # Instances Menu bar signals
     do_activate_current_instance = Signal(str)
