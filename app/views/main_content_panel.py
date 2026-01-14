@@ -224,6 +224,9 @@ class MainContent(QObject):
             EventBus().do_check_for_workshop_updates.connect(
                 self._do_check_for_workshop_updates
             )
+            EventBus().do_steam_verify_game_files.connect(
+                self.do_steam_verify_game_files
+            )
 
             # Textures Menu bar Eventbus
             EventBus().do_optimize_textures.connect(self._do_optimize_textures)
@@ -2263,6 +2266,38 @@ class MainContent(QObject):
             self.status_signal.emit(
                 self.tr("All Workshop mods appear to be up to date!")
             )
+
+    def do_steam_verify_game_files(self) -> None:
+        """Verify RimWorld game files through Steam."""
+        # Retrieve settings for the current RimWorld instance
+        steam_client_integration_enabled = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ].steam_client_integration
+
+        # Check if Steam Client Integration is enabled
+        if not steam_client_integration_enabled:
+            # Inform user that feature requires Steam Client Integration
+            logger.warning(
+                "Steam Client Integration is disabled. Cannot verify game files."
+            )
+            dialogue.show_warning(
+                title=self.tr("Steam Client Integration is disabled"),
+                text=self.tr(
+                    "This feature requires Steam Client Integration to be enabled in Settings. "
+                    "Please enable Steam Client Integration if you own the game on Steam."
+                ),
+            )
+            return
+
+        # Validate internet connectivity before proceeding
+        if not check_internet_connection():
+            return
+
+        logger.info("Verifying game files through Steam.")
+        logger.info("Steam Client Integration enabled. Opening Steam URI protocol.")
+        # Open Steam's game file verification dialog using URI protocol
+        # RimWorld's Steam app ID is 294100
+        platform_specific_open("steam://validate/294100")
 
     def _do_setup_steamcmd(self) -> None:
         if (
