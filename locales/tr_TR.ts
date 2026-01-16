@@ -767,6 +767,14 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Tüm Atölye modları güncel!</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>Steam İstemcisi Entegrasyonu devre dışı bırakıldı</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>Bu özellik, Steam İstemcisi Entegrasyonunun Ayarlar'da etkinleştirilmesini gerektirir. Oyunun Steam'de sahibiyseniz lütfen Steam İstemci Entegrasyonunu etkinleştirin.</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>RimSort - SteamCMD Kurulumu</translation>
     </message>
@@ -905,6 +913,14 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>Daha uzun yükleme süreleri veya daha yüksek bellek kullanımıyla karşılaşabilirsiniz. Ayrıntılar için todds çıktı penceresini kontrol edin.</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>Steam protokolünün başlatılması Steam İstemci Entegrasyonunun etkinleştirilmesini gerektirir.</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>Bu özelliği kullanmak için lütfen Ayarlar → Steam'de Steam İstemci Entegrasyonunu etkinleştirin.</translation>
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
@@ -2175,6 +2191,10 @@ Generated run arguments preview:
     <message>
         <source>Update Workshop Mods</source>
         <translation>Atöyle Modlarını Güncelle</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>Oyun Dosyalarını Doğrulayın</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3715,24 +3735,24 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>Steam İstemcisi Entegrasyonu Devre Dışı</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>Steam istemci entegrasyonu devre dışı bırakıldı. Steam modlarının konumu temizlenecek.</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>Steam istemci entegrasyonu devre dışı bırakıldı. Steam modlarının konumu ve Steam protokolünün başlatılması temizlenecektir.</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>Steam istemci entegrasyonu, bir Steam mod konumunun yapılandırılmasını gerektirir. Steam istemci entegrasyonu, Steam modlarının konumu ve Steam protokolünün başlatılması devre dışı bırakıldı.</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>Steam Atölyesi dosyası 'appworkshop_294100.acf' beklenen konumda bulunamadı. Steam istemci entegrasyonu, Steam modlarının konumu ve Steam protokolünün başlatılması devre dışı bırakıldı. Lütfen Steam'in düzgün kurulduğundan ve RimWorld Workshop verilerini indirdiğinden emin olun.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>Steam Modlarının Konumu Gerekli</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>Steam istemci entegrasyonu, bir Steam mod konumunun yapılandırılmasını gerektirir. Steam istemci entegrasyonu ve Steam modlarının konumu devre dışı bırakıldı.</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>Steam Atölye Dosyası Bulunamadı</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Steam Atölyesi dosyası 'appworkshop_294100.acf' beklenen konumda bulunamadı. Steam istemci entegrasyonu ve Steam modlarının konumu devre dışı bırakıldı. Lütfen Steam'in düzgün kurulduğundan ve RimWorld Workshop verilerini indirdiğinden emin olun.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3828,42 +3848,6 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     <message>
         <source>Game Launch</source>
         <translation>Oyun Başlatma</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>İsteğe bağlı %command% yer tutucusu ile Steam stili sözdizimini kullanarak başlatma seçeneklerini girin:
-
- Temel örnekler (yalnızca oyun argümanları):
-
-   -log dosyası /tmp/log -açılır pencere
-
-   -savedataklasörü=/yol/giden/kaydedilenveri
-
- Gelişmiş örnekler (%command%, env değişkenleri, sarmalayıcılarla):
-
-   PROTON_LOG=1 %komut%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %komut% -açılır pencere
-
- NOT: sarmalayıcı komutları macOS'ta göz ardı edilecektir</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4306,6 +4290,54 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
     <message>
         <source>Only if you use steam should be like: C:\Program Files (x86)\Steam\steamapps\workshop\content\294100</source>
         <translation>Yalnızca Steam kullanıyorsanız: C: \ Program Files (x86) \ Steam \ SteamApps \ Workshop \ Content \ 294100</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>Oyunu Steam protokolü aracılığıyla başlatın (Steam katmanını etkinleştirir)</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>Etkinleştirilirse, RimSort oyunu doğrudan yürütülebilir dosyayı çalıştırmak yerine Steam protokolünü (steam://rungameid/294100) kullanarak başlatacaktır. Bu, Steam katmanını etkinleştirir. Not: Bu, Steam'in çalışıyor olmasını gerektirir ve özel başlatma argümanlarını göz ardı eder.</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>İsteğe bağlı %command% yer tutucusu ile Steam stili sözdizimini kullanarak başlatma seçeneklerini girin:
+
+ Temel örnekler (yalnızca oyun argümanları):
+
+   -log dosyası /tmp/log -açılır pencere
+
+   -savedataklasörü=/yol/giden/kaydedilenveri
+
+ Gelişmiş örnekler (%command%, env değişkenleri, sarmalayıcılarla):
+
+   PROTON_LOG=1 %komut%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %komut% -açılır pencere
+
+ NOT: sarmalayıcı komutları macOS'ta göz ardı edilecektir
+
+ NOT: 'Oyunu Steam protokolü aracılığıyla başlat' seçeneği etkinse bu argümanlar göz ardı edilir</translation>
     </message>
     <message>
         <source>Auxiliary DB</source>
@@ -4949,14 +4981,6 @@ Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
         <translation>Steam'in indirme klasörünü silemedi.
 Lütfen manuel olarak silin: Steam/SteamApps/İndirme
-Ayrıntılar: {e}</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>Oyun dosyalarını doğrulamak için Steam açılamadı.
-Lütfen oyun dosyalarını Steam'in oyun özellikleri aracılığıyla manuel olarak doğrulayın.
 Ayrıntılar: {e}</translation>
     </message>
     <message>

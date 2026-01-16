@@ -807,6 +807,14 @@ Would you like to configure them now?</source>
         <translation>すべてのワークショップモッドは最新の状態です！</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>Steam クライアント統合が無効になっています</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>この機能を使用するには、設定で Steam クライアント統合を有効にする必要があります。 Steam でゲームを所有している場合は、Steam クライアント統合を有効にしてください。</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>RimSort - SteamCMDの設定</translation>
     </message>
@@ -1133,6 +1141,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>読み込み時間が長くなったり、メモリ使用量が増加したりする場合があります。詳細については、todds 出力ウィンドウを確認してください。</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>Steam プロトコルを起動するには、Steam クライアント統合を有効にする必要があります。</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>この機能を使用するには、「設定」→「Steam」で Steam クライアント統合を有効にしてください。</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -2179,6 +2195,10 @@ How would you like to proceed?</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>クリエイティブワークショップを更新</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>ゲームファイルの検証</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3731,24 +3751,24 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Steam クライアント統合が無効になっています</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>Steam クライアント統合が無効になっています。 Steam MOD の場所はクリアされます。</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>Steam クライアント統合が無効になっています。 Steam MOD の場所と Steam プロトコルの起動はクリアされます。</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>Steam クライアントの統合には、Steam Mod の場所を設定する必要があります。 Steam クライアントの統合、Steam Mod の場所、Steam プロトコルの起動は無効になりました。</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>Steam ワークショップ ファイル「appworkshop_294100.acf」が予期された場所に見つかりませんでした。 Steam クライアントの統合、Steam Mod の場所、Steam プロトコルの起動は無効になりました。 Steam が正しくインストールされており、RimWorld Workshop データがダウンロードされていることを確認してください。</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>Steam Mod の場所が必要です</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>Steam クライアントの統合には、Steam Mod の場所を設定する必要があります。 Steam クライアントの統合と Steam Mod の場所は無効になりました。</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>Steam ワークショップ ファイルが見つかりません</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Steam ワークショップ ファイル「appworkshop_294100.acf」が予期された場所に見つかりませんでした。 Steam クライアントの統合と Steam Mod の場所は無効になりました。 Steam が正しくインストールされており、RimWorld Workshop データがダウンロードされていることを確認してください。</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3844,42 +3864,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Game Launch</source>
         <translation>ゲームの起動</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>オプションの %command% プレースホルダーを使用して、Steam スタイルの構文を使用して起動オプションを入力します。
-
- 基本的な例 (ゲーム引数のみ):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/パス/への/セーブデータ
-
- 高度な例 (%command%、環境変数、ラッパーを使用):
-
-   PROTON_LOG=1 %コマンド%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- 注: ラッパーコマンドは macOS では無視されます。</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4330,6 +4314,54 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation>C：\ Program Files（x86）\ Steam \ SteamApps \ common \ rimworld \ modsのようなものです</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>Steam プロトコル経由でゲームを起動します (Steam オーバーレイを有効にします)</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>有効にすると、RimSort は実行可能ファイルを直接実行するのではなく、Steam プロトコル (steam://rungameid/294100) を使用してゲームを起動します。これにより、Steam オーバーレイが有効になります。注: これには Steam が実行されている必要があり、カスタム起動引数は無視されます。</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>オプションの %command% プレースホルダーを使用して、Steam スタイルの構文を使用して起動オプションを入力します。
+
+ 基本的な例 (ゲーム引数のみ):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/パス/への/セーブデータ
+
+ 高度な例 (%command%、環境変数、ラッパーを使用):
+
+   PROTON_LOG=1 %コマンド%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ 注: ラッパーコマンドは macOS では無視されます。
+
+ 注: 「Steam プロトコル経由でゲームを起動」が有効になっている場合、これらの引数は無視されます。</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
@@ -4926,14 +4958,6 @@ Details: {e}</source>
     <message>
         <source>Steam Action Failed</source>
         <translation>Steamのアクションに失敗しました</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>Steamのゲームファイルを確認できませんでした。
-手動でSteamのゲームファイルを確認してください。
-詳細: {e}</translation>
     </message>
     <message>
         <source>No Games Found</source>
