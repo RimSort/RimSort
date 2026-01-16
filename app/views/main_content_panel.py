@@ -7,8 +7,6 @@ import time
 import traceback
 import webbrowser
 from functools import partial
-from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Callable, Literal, Optional, cast, overload
@@ -47,7 +45,6 @@ from app.utils.event_bus import EventBus
 from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
     check_internet_connection,
-    chunks,
     copy_to_clipboard_safely,
     launch_game_process,
     launch_process,
@@ -2468,9 +2465,6 @@ class MainContent(QObject):
                         f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
                     )
                     self.steamworks_in_use = False
-                # Handle resubscribe via dedicated method
-                if instruction[0] == "resubscribe":
-                    self._handle_steamworks_resubscribe(instruction)
                 elif (
                     instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
@@ -2478,29 +2472,17 @@ class MainContent(QObject):
                         f"Creating Steamworks API process with instruction {instruction}"
                     )
                     self.steamworks_in_use = True
-                    # Maximum processes
-                    num_processes = cpu_count()
-                    # Chunk the publishedfileids
-                    pfids_chunked = list(
-                        chunks(
-                            _list=instruction[1],
-                            limit=ceil(len(instruction[1]) / num_processes),
-                        )
+                    # Process all mods in a single handler to ensure proper sequencing and avoid parallel processing issues
+                    logger.debug(
+                        f"Processing {instruction[0]} sequentially for {len(instruction[1])} mod(s)"
                     )
-                    # Create a pool of worker processes
-                    with Pool(processes=num_processes) as pool:
-                        # Create instances of SteamworksSubscriptionHandler for each chunk
-                        actions = [
-                            SteamworksSubscriptionHandler(
-                                action=instruction[0],
-                                pfid_or_pfids=chunk,
-                                interval=1,
-                                _libs=libs_path,
-                            )
-                            for chunk in pfids_chunked
-                        ]
-                        # Map the execution of the subscription actions to the pool of processes
-                        pool.map(SteamworksSubscriptionHandler.run, actions)
+                    handler = SteamworksSubscriptionHandler(
+                        action=instruction[0],
+                        pfid_or_pfids=instruction[1],
+                        _libs=libs_path,
+                    )
+                    handler.run()
+                    # Clean up after processing
                     self.steamworks_in_use = False
                 else:
                     logger.warning(
