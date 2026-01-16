@@ -809,6 +809,14 @@ Would you like to configure them now?</source>
         <translation>Все моды Workshop, похоже, обновлены!</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>Интеграция клиента Steam отключена.</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>Для этой функции требуется, чтобы в настройках была включена интеграция клиента Steam. Пожалуйста, включите интеграцию клиента Steam, если у вас есть игра в Steam.</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>RimSort - Настройка SteamCMD</translation>
     </message>
@@ -1133,6 +1141,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>Вы можете столкнуться с более длительным временем загрузки или более высоким использованием памяти. Подробности смотрите в окне вывода todds.</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>Для запуска протокола Steam требуется включить интеграцию клиента Steam.</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>Пожалуйста, включите интеграцию клиента Steam в настройках → Steam, чтобы использовать эту функцию.</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -2179,6 +2195,10 @@ How would you like to proceed?</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>Обновить моды Workshop</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>Проверьте файлы игры</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3729,24 +3749,24 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Интеграция клиента Steam отключена</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>Интеграция клиента Steam отключена. Местоположение модов Steam будет очищено.</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>Интеграция клиента Steam отключена. Местоположение модов Steam и запуск протокола Steam будут очищены.</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>Интеграция клиента Steam требует настройки местоположения модов Steam. Интеграция клиента Steam, расположение модов Steam и запуск протокола Steam отключены.</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>Файл Мастерской Steam «appworkshop_294100.acf» не найден в ожидаемом месте. Интеграция клиента Steam, расположение модов Steam и запуск протокола Steam отключены. Убедитесь, что Steam установлен правильно и загрузили данные RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>Требуется местоположение модов Steam</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>Интеграция клиента Steam требует настройки местоположения модов Steam. Интеграция клиента Steam и расположение модов Steam отключены.</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>Файл мастерской Steam не найден</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Файл Мастерской Steam «appworkshop_294100.acf» не найден в ожидаемом месте. Интеграция клиента Steam и расположение модов Steam отключены. Убедитесь, что Steam установлен правильно и загрузили данные RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3842,42 +3862,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Game Launch</source>
         <translation>Запуск игры</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>Введите параметры запуска, используя синтаксис в стиле Steam с необязательным заполнителем %command%:
-
- Основные примеры (только игровые аргументы):
-
-   -файл журнала /tmp/log -popupwindow
-
-   -savedatafolder=/путь/к/сохраненным данным
-
- Расширенные примеры (с %command%, переменными окружения, оболочками):
-
-   PROTON_LOG=1 %команда%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 мангохуд %command% -popupwindow
-
- ПРИМЕЧАНИЕ. команды оболочки будут игнорироваться в macOS.</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4330,6 +4314,54 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation>должно быть похоже на: C: \ Program Files (x86) \ Steam \ Steamapps \ common \ rimworld \ mods</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>Запустить игру через протокол Steam (включает оверлей Steam)</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>Если этот параметр включен, RimSort запустит игру, используя протокол Steam (steam://rungameid/294100), вместо прямого запуска исполняемого файла. Это активирует оверлей Steam. Примечание. Для этого требуется, чтобы Steam был запущен, и пользовательские аргументы запуска будут игнорироваться.</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>Введите параметры запуска, используя синтаксис в стиле Steam с необязательным заполнителем %command%:
+
+ Основные примеры (только игровые аргументы):
+
+   -файл журнала /tmp/log -popupwindow
+
+   -savedatafolder=/путь/к/сохраненным данным
+
+ Расширенные примеры (с %command%, переменными окружения, оболочками):
+
+   PROTON_LOG=1 %команда%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 мангохуд %command% -popupwindow
+
+ ПРИМЕЧАНИЕ. команды оболочки будут игнорироваться в macOS.
+
+ ПРИМЕЧАНИЕ. Эти аргументы игнорируются, если включен параметр «Запускать игру через протокол Steam».</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
@@ -4926,14 +4958,6 @@ Details: {e}</source>
     <message>
         <source>Steam Action Failed</source>
         <translation>Не удалось выполнить действие Steam</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>Не удалось открыть Steam для проверки файлов игры.
-Пожалуйста, проверьте файлы игры вручную через свойства игры в Steam.
-Подробности: {e}</translation>
     </message>
     <message>
         <source>No Games Found</source>

@@ -999,6 +999,14 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
         <translation>Tous les mods d'atelier semblent être à jour!</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>L'intégration du client Steam est désactivée</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>Cette fonctionnalité nécessite que l'intégration du client Steam soit activée dans les paramètres. Veuillez activer l'intégration du client Steam si vous possédez le jeu sur Steam.</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>Rimsort - Configuration SteamCMD</translation>
     </message>
@@ -1137,6 +1145,14 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>Vous pourriez rencontrer des temps de chargement plus longs ou une utilisation de la mémoire plus élevée. Consultez la fenêtre de sortie de Todds pour plus de détails.</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>Le lancement du protocole Steam nécessite l'activation de l'intégration du client Steam.</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>Veuillez activer l'intégration du client Steam dans Paramètres → Steam pour utiliser cette fonctionnalité.</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -2173,6 +2189,10 @@ How would you like to proceed?</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>Mettre à jour les mods Workshop</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>Vérifier les fichiers du jeu</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3713,24 +3733,24 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
         <translation>Intégration du client Steam désactivée</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>L'intégration du client Steam est désactivée. L'emplacement des mods Steam sera effacé.</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>L'intégration du client Steam est désactivée. L'emplacement des mods Steam et le lancement du protocole Steam seront effacés.</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>L'intégration du client Steam nécessite la configuration d'un emplacement de mods Steam. L'intégration du client Steam, l'emplacement des mods Steam et le lancement du protocole Steam ont été désactivés.</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>Le fichier Steam Workshop « appworkshop_294100.acf » n'a pas été trouvé à l'emplacement prévu. L'intégration du client Steam, l'emplacement des mods Steam et le lancement du protocole Steam ont été désactivés. Veuillez vous assurer que Steam est correctement installé et a téléchargé les données de RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>Emplacement des mods Steam requis</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>L'intégration du client Steam nécessite la configuration d'un emplacement de mods Steam. L'intégration du client Steam et l'emplacement des mods Steam ont été désactivés.</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>Fichier de l'atelier Steam introuvable</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Le fichier Steam Workshop « appworkshop_294100.acf » n'a pas été trouvé à l'emplacement prévu. L'intégration du client Steam et l'emplacement des mods Steam ont été désactivés. Veuillez vous assurer que Steam est correctement installé et a téléchargé les données de RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3810,6 +3830,54 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
     <message>
         <source>Local mods location</source>
         <translation>Emplacement des mods locaux</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>Lancer le jeu via le protocole Steam (active la superposition Steam)</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>S'il est activé, RimSort lancera le jeu en utilisant le protocole Steam (steam://rungameid/294100) au lieu d'exécuter directement l'exécutable. Cela active la superposition Steam. Remarque : Cela nécessite que Steam soit en cours d'exécution et ignorera les arguments de lancement personnalisés.</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>Entrez les options de lancement en utilisant la syntaxe de style Steam avec l'espace réservé facultatif %command% :
+
+ Exemples de base (arguments du jeu uniquement) :
+
+   -fichier journal /tmp/log -popupwindow
+
+   -savedatafolder=/chemin/vers/savedata
+
+ Exemples avancés (avec %command%, variables d'environnement, wrappers) :
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ REMARQUE : les commandes du wrapper seront ignorées sur macOS
+
+ REMARQUE : ces arguments sont ignorés si « Lancer le jeu via le protocole Steam » est activé.</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -3915,42 +3983,6 @@ Le nom du dossier sera utilisé comme nom du thème et tout thème non valide se
     <message>
         <source>Game Launch</source>
         <translation>Lancement du jeu</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>Entrez les options de lancement en utilisant la syntaxe de style Steam avec l'espace réservé facultatif %command% :
-
- Exemples de base (arguments du jeu uniquement) :
-
-   -fichier journal /tmp/log -popupwindow
-
-   -savedatafolder=/chemin/vers/savedata
-
- Exemples avancés (avec %command%, variables d'environnement, wrappers) :
-
-   PROTON_LOG=1 %commande%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- REMARQUE : les commandes du wrapper seront ignorées sur macOS</translation>
     </message>
     <message>
         <source>Backup Settings</source>
@@ -4887,14 +4919,6 @@ Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
         <translation>Impossible de supprimer le dossier de téléchargement de Steam.
 Veuillez le supprimer manuellement: Steam / Steamapps / Downloading
-Détails: {e}</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>Impossible d'ouvrir Steam pour vérifier les fichiers de jeu.
-Veuillez vérifier les fichiers de jeu manuellement via les propriétés du jeu de Steam.
 Détails: {e}</translation>
     </message>
     <message>

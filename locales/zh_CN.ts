@@ -809,6 +809,14 @@ Would you like to configure them now?</source>
         <translation>所有创意工坊模组似乎都是最新的！</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>Steam 客户端集成已禁用</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>此功能需要在“设置”中启用 Steam 客户端集成。如果您在 Steam 上拥有该游戏，请启用 Steam 客户端集成。</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>RimSort - SteamCMD 安装</translation>
     </message>
@@ -983,6 +991,14 @@ How would you like to proceed?
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>您可能会遇到更长的加载时间或更高的内存使用量。检查 todds 输出窗口以获取详细信息。</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>Steam 协议启动需要启用 Steam 客户端集成。</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>请在“设置”→“Steam”中启用“Steam 客户端集成”才能使用此功能。</translation>
     </message>
     <message>
         <source>Please configure "Use This Instead" database in settings.</source>
@@ -2186,6 +2202,10 @@ RimSort 将会把所有创意工坊模组复制到新实例的本地模组文件
     <message>
         <source>Update Workshop Mods</source>
         <translation>更新创意工坊模组</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>验证游戏文件</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3745,24 +3765,24 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Steam 客户端集成已禁用</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>Steam 客户端集成已禁用。Steam 模组所在路径将被清除。</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>Steam 客户端集成已禁用。 Steam 模组位置和 Steam 协议启动将被清除。</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>Steam 客户端集成需要配置 Steam 模组位置。 Steam 客户端集成、Steam mods 位置和 Steam 协议启动已被禁用。</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>在预期位置找不到 Steam 创意工坊文件“appworkshop_294100.acf”。 Steam 客户端集成、Steam mods 位置和 Steam 协议启动已被禁用。请确保 Steam 已正确安装并已下载 RimWorld 创意工坊数据。</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>需要配置 Steam 模组所在路径</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>Steam 客户端集成需要配置 Steam 模组所在路径。Steam 客户端集成和 Steam 模组所在路径已被禁用。</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>未找到 Steam 创意工坊文件</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>未在预期位置找到 Steam 创意工坊文件 'appworkshop_294100.acf'。Steam 客户端集成和 Steam 模组所在路径已被禁用。请确保 Steam 已正确安装并已订阅 RimWorld 创意工坊模组。</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3858,42 +3878,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Game Launch</source>
         <translation>游戏启动</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>使用 Steam 风格的语法 输入启动选项，可选使用 %command% 占位符：
-        
-基础示例（仅游戏参数）：
-
-    -logfile /tmp/log -popupwindow
-
-    -savedatafolder=/path/to/savedata
-
-高级示例（使用 %command%，环境变量，包装命令）：
-
-    PROTON_LOG=1 %command%
-
-    gamemoderun %command% -logfile /tmp/log
-
-    DXVK_HUD=1 mangohud %command% -popupwindow
-
-注意：在 macOS 上将忽略包装命令 </translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4366,6 +4350,54 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation>路径应类似于：C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>通过 Steam 协议启动游戏（启用 Steam 覆盖）</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>如果启用，RimSort 将使用 Steam 协议 (steam://rungameid/294100) 启动游戏，而不是直接运行可执行文件。这将启用 Steam 覆盖。注意：这需要 Steam 正在运行，并且将忽略自定义启动参数。</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>使用 Steam 风格的语法和可选的 %command% 占位符输入启动选项：
+
+ 基本示例（仅限游戏参数）：
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/路径/到/savedata
+
+ 高级示例（使用 %command%、环境变量、包装器）：
+
+   PROTON_LOG=1%命令%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ 注意：包装命令在 macOS 上将被忽略
+
+ 注意：如果启用“通过 Steam 协议启动游戏”，这些参数将被忽略</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
@@ -4914,14 +4946,6 @@ Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
         <translation>无法删除 Steam 的下载文件夹。
 请手动删除：Steam/steamapps/downloading
-详细信息：{e}</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>无法打开 Steam 以验证游戏文件。
-请通过 Steam 的游戏属性手动验证游戏文件。
 详细信息：{e}</translation>
     </message>
     <message>

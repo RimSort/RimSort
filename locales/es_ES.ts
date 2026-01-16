@@ -798,6 +798,14 @@ Would you like to configure them now?</source>
         <translation>¡Todos los mods del Workshop parecen estar actualizados!</translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation>La integración del cliente Steam está deshabilitada</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>Esta función requiere que la integración del cliente Steam esté habilitada en Configuración. Habilite la integración del cliente Steam si posee el juego en Steam.</translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>RimSort - Configuración de SteamCMD</translation>
     </message>
@@ -1130,6 +1138,14 @@ La base de datos resultante, C, se guarda en una ruta especificada por el usuari
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation>Es posible que experimente tiempos de carga más prolongados o un mayor uso de memoria. Consulte la ventana de salida de Todds para obtener más detalles.</translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation>El inicio del protocolo Steam requiere que la integración del cliente Steam esté habilitada.</translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
+        <translation>Habilite la integración del cliente Steam en Configuración → Steam para usar esta función.</translation>
     </message>
     <message>
         <source>Use This Instead</source>
@@ -2166,6 +2182,10 @@ How would you like to proceed?</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>Actualizar módulos de Workshop</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>Verificar archivos de juego</translation>
     </message>
     <message>
         <source>Instances</source>
@@ -3706,24 +3726,24 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
         <translation>Integración del cliente Steam deshabilitada</translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
-        <translation>La integración del cliente Steam está deshabilitada. Se borrará la ubicación de los mods de Steam.</translation>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation>Steam client integration is disabled. Se borrarán la ubicación de los mods de Steam y el inicio del protocolo de Steam.</translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation>La integración del cliente Steam requiere que se configure una ubicación de mods de Steam. La integración del cliente Steam, la ubicación de los mods de Steam y el inicio del protocolo Steam se han deshabilitado.</translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
+        <translation>El archivo de Steam Workshop 'appworkshop_294100.acf' no se encontró en la ubicación esperada. La integración del cliente Steam, la ubicación de los mods de Steam y el inicio del protocolo Steam se han deshabilitado. Asegúrese de que Steam esté instalado correctamente y haya descargado los datos de RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Steam Mods Location Required</source>
         <translation>Ubicación de Steam Mods requerida</translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation>La integración del cliente Steam requiere que se configure una ubicación de mods de Steam. La integración del cliente Steam y la ubicación de los mods de Steam se han deshabilitado.</translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
         <translation>Archivo de Steam Workshop no encontrado</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>El archivo de Steam Workshop 'appworkshop_294100.acf' no se encontró en la ubicación esperada. La integración del cliente Steam y la ubicación de los mods de Steam se han deshabilitado. Asegúrese de que Steam esté instalado correctamente y haya descargado los datos de RimWorld Workshop.</translation>
     </message>
     <message>
         <source>Clear all locations</source>
@@ -3819,42 +3839,6 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     <message>
         <source>Game Launch</source>
         <translation>Lanzamiento del juego</translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
-        <translation>Ingrese las opciones de inicio usando una sintaxis estilo Steam con un marcador de posición %command% opcional:
-
- Ejemplos básicos (solo argumentos del juego):
-
-   -archivo de registro /tmp/log -ventana emergente
-
-   -savedatafolder=/ruta/a/savedata
-
- Ejemplos avanzados (con %command%, env vars, contenedores):
-
-   PROTON_LOG=1 %comando%
-
-   modo de juego ejecutar %comando% -archivo de registro /tmp/log
-
-   DXVK_HUD=1 mangohud %comando% -ventana emergente
-
- NOTA: los comandos contenedores se ignorarán en macOS</translation>
     </message>
     <message>
         <source>Databases</source>
@@ -4306,6 +4290,54 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation>Debe ser como: C: \ Archivos de programa (x86) \ Steam \ Steamapps \ Common \ Rimworld \ Mods</translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation>Inicie el juego a través del protocolo Steam (habilita la superposición de Steam)</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation>Si está habilitado, RimSort iniciará el juego usando el protocolo Steam (steam://rungameid/294100) en lugar de ejecutar directamente el ejecutable. Esto habilita la superposición de Steam. Nota: Esto requiere que Steam esté ejecutándose e ignorará los argumentos de inicio personalizados.</translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+        <translation>Ingrese las opciones de inicio usando una sintaxis estilo Steam con un marcador de posición %command% opcional:
+
+ Ejemplos básicos (solo argumentos del juego):
+
+   -archivo de registro /tmp/log -ventana emergente
+
+   -savedatafolder=/ruta/a/savedata
+
+ Ejemplos avanzados (con %command%, env vars, contenedores):
+
+   PROTON_LOG=1 %comando%
+
+   modo de juego ejecutar %comando% -archivo de registro /tmp/log
+
+   DXVK_HUD=1 mangohud %comando% -ventana emergente
+
+ NOTA: los comandos contenedores se ignorarán en macOS
+
+ NOTA: Estos argumentos se ignoran si "Iniciar juego mediante el protocolo Steam" está habilitado</translation>
     </message>
     <message>
         <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
@@ -4901,14 +4933,6 @@ Detalles:  {e}</translation>
     <message>
         <source>Steam Action Failed</source>
         <translation>Falló la acción de vapor</translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam's game properties.
-Details: {e}</source>
-        <translation>No pudo abrir Steam para verificar los archivos de juego.
-Verifique los archivos de juego manualmente a través de las propiedades del juego de Steam.
-Detalles:  {e}</translation>
     </message>
     <message>
         <source>No Games Found</source>

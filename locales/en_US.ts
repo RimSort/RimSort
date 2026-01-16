@@ -786,6 +786,14 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Steam Client Integration is disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>RimSort - SteamCMD setup</source>
         <translation type="unfinished"></translation>
     </message>
@@ -949,6 +957,14 @@ How would you like to proceed?
     </message>
     <message>
         <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2107,6 +2123,10 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Update Workshop Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3618,7 +3638,15 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Steam client integration is disabled. Steam mods location will be cleared.</source>
+        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Steam Workshop file &apos;appworkshop_294100.acf&apos; was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3626,15 +3654,7 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration and Steam mods location have been disabled.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Steam Workshop File Not Found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file &apos;appworkshop_294100.acf&apos; was not found at the expected location. Steam client integration and Steam mods location have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3730,26 +3750,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Game Launch</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
-
- Basic examples (game arguments only):
-
-   -logfile /tmp/log -popupwindow
-
-   -savedatafolder=/path/to/savedata
-
- Advanced examples (with %command%, env vars, wrappers):
-
-   PROTON_LOG=1 %command%
-
-   gamemoderun %command% -logfile /tmp/log
-
-   DXVK_HUD=1 mangohud %command% -popupwindow
-
- NOTE: wrapper commands will be ignored on macOS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4188,6 +4188,36 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Launch game via Steam protocol (enables Steam overlay)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
+
+ Basic examples (game arguments only):
+
+   -logfile /tmp/log -popupwindow
+
+   -savedatafolder=/path/to/savedata
+
+ Advanced examples (with %command%, env vars, wrappers):
+
+   PROTON_LOG=1 %command%
+
+   gamemoderun %command% -logfile /tmp/log
+
+   DXVK_HUD=1 mangohud %command% -popupwindow
+
+ NOTE: wrapper commands will be ignored on macOS
+
+ NOTE: These arguments are ignored if &apos;Launch game via Steam protocol&apos; is enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4749,12 +4779,6 @@ Details: {e}</source>
     </message>
     <message>
         <source>Steam Action Failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not open Steam to verify game files.
-Please verify game files manually through Steam&apos;s game properties.
-Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
