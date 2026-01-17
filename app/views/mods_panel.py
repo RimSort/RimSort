@@ -3769,71 +3769,80 @@ class ModsPanel(QWidget):
             self.inactive_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
 
     def recalculate_list_errors_warnings(self, list_type: str) -> None:
+        """
+        Update the errors/warnings summary frame with current mod list status.
+
+        For Active mods: displays errors, warnings, and new mods count.
+        For Inactive mods: only recalculates internal state (no display update).
+
+        Args:
+            list_type: "Active" or "Inactive" to specify which list to process
+        """
         if list_type == "Active":
-            # Check if all visible items have their widgets loaded
+            # Ensure all visible items have their widgets properly loaded
             self.active_mods_list.check_widgets_visible()
-            # Calculate internal errors and warnings for all mods in the respective mod list
+            
+            # Calculate internal errors and warnings for all mods in the list
             total_error_text, total_warning_text, num_errors, num_warnings = (
                 self.active_mods_list.recalculate_internal_errors_warnings()
             )
-            # Calculate total errors and warnings and set the text and tool tip for the summary
-            if total_error_text or total_warning_text or num_errors or num_warnings:
-                self.errors_summary_frame.setHidden(False)
-                padding = " "
-                self.warnings_text.setText(
-                    self.tr("{padding}{num_warnings} warning(s)").format(
-                        padding=padding, num_warnings=num_warnings
-                    )
+
+            # Count new mods (not in latest save). Only if save comparison is enabled
+            new_count = 0
+            if self.settings_controller.settings.show_save_comparison_indicators:
+                try:
+                    for item in self.active_mods_list.get_all_mod_list_items():
+                        if item.data(Qt.ItemDataRole.UserRole).__dict__.get(
+                            "is_new", False
+                        ):
+                            new_count += 1
+                except Exception:
+                    pass
+
+            padding = " "
+            has_errors_warnings = (
+                total_error_text or total_warning_text or num_errors or num_warnings
+            )
+
+            # Show summary frame only if there are errors, warnings, or new mods to display
+            self.errors_summary_frame.setHidden(
+                not (has_errors_warnings or new_count > 0)
+            )
+
+            # Update error and warning counts/tooltips (show 0 if none exist)
+            self.warnings_text.setText(
+                self.tr("{padding}{num} warning(s)").format(
+                    padding=padding, num=num_warnings
                 )
-                self.errors_text.setText(
-                    self.tr("{padding}{num_errors} error(s)").format(
-                        padding=padding, num_errors=num_errors
-                    )
+            )
+            self.errors_text.setText(
+                self.tr("{padding}{num} error(s)").format(
+                    padding=padding, num=num_errors
                 )
-                self.errors_icon.setToolTip(
-                    total_error_text.lstrip() if total_error_text else ""
-                )
-                self.warnings_icon.setToolTip(
-                    total_warning_text.lstrip() if total_warning_text else ""
-                )
-                # Show/Hide the "is new" filter UI based on setting
-                if self.settings_controller.settings.show_save_comparison_indicators:
-                    self.new_icon.setHidden(False)
-                    self.new_text.setHidden(False)
-                else:
-                    self.new_icon.setHidden(True)
-                    self.new_text.setHidden(True)
-                # Count "new" mods (only when save-comparison feature enabled)
-                if self.settings_controller.settings.show_save_comparison_indicators:
-                    try:
-                        new_count = 0
-                        for item in self.active_mods_list.get_all_mod_list_items():
-                            data = item.data(Qt.ItemDataRole.UserRole)
-                            if bool(data.__dict__.get("is_new", False)):
-                                new_count += 1
-                        self.new_text.setText(
-                            self.tr("{padding}{count} new").format(
-                                padding=padding, count=new_count
-                            )
-                        )
-                    except Exception:
-                        self.new_text.setText(self.tr("0 new"))
-                else:
-                    self.new_text.setText(self.tr("0 new"))
-            else:  # Hide the summary if there are no errors or warnings
-                self.errors_summary_frame.setHidden(True)
-                self.warnings_text.setText(self.tr("0 warnings"))
-                self.errors_text.setText(self.tr("0 errors"))
-                self.errors_icon.setToolTip("")
-                self.warnings_icon.setToolTip("")
-                self.new_text.setText(self.tr("0 new"))
-            # First time, and when Refreshing, the slot will evaluate false and do nothing.
-            # The purpose of this is for the _do_save_animation slot in the main_content_panel
+            )
+            self.errors_icon.setToolTip(
+                total_error_text.lstrip() if total_error_text else ""
+            )
+            self.warnings_icon.setToolTip(
+                total_warning_text.lstrip() if total_warning_text else ""
+            )
+
+            # Update new mods display (icon and count)
+            # Hide icon and text if no new mods, otherwise show with count
+            self.new_icon.setHidden(new_count == 0)
+            self.new_text.setHidden(new_count == 0)
+            self.new_text.setText(
+                self.tr("{padding}{count} new").format(padding=padding, count=new_count)
+                if new_count > 0
+                else self.tr("0 new")
+            )
+
+            # First time and refresh: the slot will evaluate false and do nothing.
+            # Purpose: triggers the _do_save_animation slot in main_content_panel
             EventBus().list_updated_signal.emit()
         else:
-            # Check if all visible items have their widgets loaded
+            # For Inactive list: only update internal state, no display updates
             self.inactive_mods_list.check_widgets_visible()
-            # Calculate internal errors and warnings for all mods in the respective mod list
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
     def signal_clear_search(
