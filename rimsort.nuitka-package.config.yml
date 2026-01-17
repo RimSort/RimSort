@@ -11,7 +11,7 @@
     - patterns:
         - "../update.sh"
         - "../update.bat"
-        - "../app/utils/steam/steambrowser/setup_web_channel_script.js"
+        - "../setup_web_channel_script.js"
 
   dlls:
     - from_filenames:

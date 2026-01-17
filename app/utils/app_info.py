@@ -92,6 +92,9 @@ class AppInfo:
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
         self._backup_folder: Path = self._app_storage_folder / "backup"
+        self._setup_web_channel_script_file: Path = (
+            self._application_folder / "setup_web_channel_script.js"
+        )
 
         # Make sure important directories exist
 
@@ -251,3 +254,10 @@ class AppInfo:
         Get the path to the folder where application backups are stored.
         """
         return self._backup_folder
+
+    @property
+    def setup_web_channel_script_file(self) -> Path:
+        """
+        Get the path to the file where _setup_web_channel_script_file exists
+        """
+        return self._setup_web_channel_script_file

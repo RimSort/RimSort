@@ -591,7 +591,7 @@ class SteamBrowser(QWidget):
             added_mods_list = self._get_added_mods_list()
 
             # Setup QWebChannel bridge
-            template_path = Path(__file__).parent / "setup_web_channel_script.js"
+            template_path = Path(AppInfo().setup_web_channel_script_file)
             raw_script = Template(template_path.read_text(encoding="utf-8"))
             js_badge_state = {member.name: member.value for member in BadgeState}
             setup_web_channel_script = raw_script.substitute(
