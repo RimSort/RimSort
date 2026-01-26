@@ -112,7 +112,7 @@ jobs:
 
       - name: Get semantic version
         id: sem_version
-        uses: PaulHatch/semantic-version@v6.0.0
+        uses: PaulHatch/semantic-version@v6.0.1
         with:
           version_format: "${{ inputs.version_format }}"
           change_path: "app libs submodules themes"
