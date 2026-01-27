@@ -228,13 +228,13 @@ jobs:
         shell: powershell
 
       - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v3.1.0
+        uses: actions/attest-build-provenance@v3.2.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
 
       - name: Generate MSI attestation
-        uses: actions/attest-build-provenance@v3.1.0
+        uses: actions/attest-build-provenance@v3.2.0
         if: ${{ inputs.attest && matrix.platform == 'Windows' }}
         with:
           subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
@@ -282,7 +282,7 @@ jobs:
         shell: bash
 
       - name: Generate RPM attestation
-        uses: actions/attest-build-provenance@v3.1.0
+        uses: actions/attest-build-provenance@v3.2.0
         if: ${{ inputs.attest && matrix.env.BUILD_RPM == 'true' }}
         with:
           subject-path: ${{ steps.find_rpm.outputs.RPM_FILE }}
@@ -296,7 +296,7 @@ jobs:
           if-no-files-found: error
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v3.1.0
+        uses: actions/attest-build-provenance@v3.2.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
