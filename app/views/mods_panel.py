@@ -5,7 +5,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import Any, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 from loguru import logger
 from platformdirs import PlatformDirs
@@ -67,6 +67,7 @@ from app.sort.mod_sorting import (
 )
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.app_info import AppInfo
+from app.utils.aux_db_utils import auxdb_update_all_mod_colors, auxdb_update_mod_color
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -604,7 +605,7 @@ class ModListItemInner(QWidget):
         self, item: CustomListWidgetItem | None = None, init: bool = False
     ) -> None:
         """
-        Handle mod color change (Background or Text).
+        Handle mod color change (Background or Text) for *ModListItemInner*.
 
         :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
 
@@ -639,40 +640,15 @@ class ModListItemInner(QWidget):
                 ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
-        # Update Aux DB
-        if not init and new_mod_color_name is not None:
-            aux_metadata_controller = (
-                AuxMetadataController.get_or_create_cached_instance(
-                    self.settings_controller.settings.aux_db_path
-                )
-            )
-            with aux_metadata_controller.Session() as aux_metadata_session:
-                mod_path = self.metadata_manager.internal_local_metadata[self.uuid][
-                    "path"
-                ]
-                aux_metadata_controller.update(
-                    aux_metadata_session,
-                    mod_path,
-                    color_hex=new_mod_color_name,
-                )
-
     def handle_mod_color_reset(self) -> None:
+        """
+        Reset mod color to default (Background or Text) for *ModListItemInner*.
+        """
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update Aux DB
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
-        with aux_metadata_controller.Session() as aux_metadata_session:
-            mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
-            aux_metadata_controller.update(
-                aux_metadata_session,
-                mod_path,
-                color_hex=None,
-            )
 
 
 class ModListIcons:
@@ -1018,7 +994,7 @@ class ModListWidget(QListWidget):
             # Open folder action
             open_folder_action = None
             # Open folder in text editor action
-            open_folder_text_editor_action = None
+            open_folder_text_editor_action = None 
             # Open URL in browser action
             open_url_browser_action = None
             # Open URL in Steam
@@ -1053,6 +1029,8 @@ class ModListWidget(QListWidget):
             all_warnings_toggled = False
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
+            # Track all uuids selected
+            all_selected_uuids: Dict[int, str] = {}
             # Single item selected
             if len(selected_items) == 1:
                 logger.debug(f"{len(selected_items)} items selected")
@@ -1060,6 +1038,7 @@ class ModListWidget(QListWidget):
                 if type(source_item) is CustomListWidgetItem:
                     item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
+                    all_selected_uuids[0] = uuid
                     # Retrieve metadata
                     mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
                     mod_data_source = mod_metadata.get("data_source")
@@ -1210,6 +1189,7 @@ class ModListWidget(QListWidget):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
+                        all_selected_uuids[item_idx] = uuid
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
                             uuid
@@ -1731,10 +1711,10 @@ class ModListWidget(QListWidget):
                     self.SaveUserCustomColors(color_dlg)
                     invalid_color = not new_color.isValid()
                 # Execute action for each selected mod
-                for source_item in selected_items:
+                for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                        uuid = item_data["uuid"]
+                        uuid = all_selected_uuids[item_idx]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
                             uuid
@@ -1756,9 +1736,15 @@ class ModListWidget(QListWidget):
                             else:
                                 self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_color_action and not invalid_color:
-                            self.change_mod_color(uuid, new_color)
+                            if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
+                                self.change_all_mod_colors(list(all_selected_uuids.values()), new_color)
+                            elif len(selected_items) == 1:
+                                self.change_mod_color(uuid, new_color)
                         elif action == reset_mod_color_action:
-                            self.reset_mod_color(uuid)
+                            if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
+                                self.reset_all_mod_colors(list(all_selected_uuids.values()))
+                            elif len(selected_items) == 1:
+                                self.reset_mod_color(uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -2786,6 +2772,18 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_color(self.settings_controller, uuid, new_color)
+
+    def change_all_mod_colors(self, uuids: list[str], new_color: QColor) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_color"] = new_color
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = new_color
+        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
 
     def reset_mod_color(self, uuid: str) -> None:
         current_mod_index = self.uuids.index(uuid)
@@ -2793,6 +2791,18 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = None
         item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_color(self.settings_controller, uuid, None)
+
+    def reset_all_mod_colors(self, uuids: list[str]) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_color"] = None
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = None
+        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
