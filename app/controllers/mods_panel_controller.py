@@ -9,6 +9,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.event_bus import EventBus
+from app.views.dialogue import BinaryChoiceDialog
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
@@ -92,6 +93,14 @@ class ModsPanelController(QObject):
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
         """Resets all warning and error toggles for active and inactive mods."""
+        binary_diag = BinaryChoiceDialog(
+            title=self.tr("Confirm Resetting Warning Toggles"),
+            text=self.tr("Are you sure you want to reset all warning/error toggles?"),
+            positive_text=self.tr("Reset All"),
+            negative_text=self.tr("Cancel"),
+        )
+        if not binary_diag.exec_is_positive():
+            return
         # Do visible mods first to resize the visible widgets
         loaded_active_mods = (
             self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
@@ -161,16 +170,20 @@ class ModsPanelController(QObject):
         """
         Resets all mod colors to the default color.
         """
+        binary_diag = BinaryChoiceDialog(
+            title=self.tr("Confirm Resetting Mod Colors"),
+            text=self.tr("Are you sure you want to reset all mod colors?"),
+            positive_text=self.tr("Reset All"),
+            negative_text=self.tr("Cancel"),
+        )
+        if not binary_diag.exec_is_positive():
+            return
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
-        for mod in active_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
-            self.mods_panel.active_mods_list.reset_mod_color(uuid)
-        for mod in inactive_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
-            self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
+        active_uuids = [mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in active_mods]
+        inactive_uuids = [mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in inactive_mods]
+        self.mods_panel.active_mods_list.reset_all_mod_colors(active_uuids)
+        self.mods_panel.inactive_mods_list.reset_all_mod_colors(inactive_uuids)
 
     def _on_change_mod_coloring_mode(self) -> None:
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
