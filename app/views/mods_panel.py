@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from difflib import SequenceMatcher
 from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
@@ -41,12 +42,14 @@ from PySide6.QtWidgets import (
     QApplication,
     QColorDialog,
     QComboBox,
+    QDialog,
     QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QMessageBox,
     QProgressDialog,
@@ -928,6 +931,251 @@ class ModListWidget(QListWidget):
                 )
         return metadata
 
+    def _calculate_translation_similarity(self, mod_name: str, trans_name: str) -> float:
+        """
+        Calculate similarity score between original mod name and translation mod name.
+        
+        Uses multiple heuristics:
+        1. Direct substring matching (original mod name in translation)
+        2. Sequence matching ratio (difflib)
+        3. Keyword matching (translation keywords presence)
+        
+        :param mod_name: Original mod name
+        :param trans_name: Translation mod name
+        :return: Similarity score between 0.0 and 1.0
+        """
+        if not mod_name or not trans_name:
+            return 0.0
+        
+        # Normalize names for comparison
+        mod_lower = mod_name.lower().strip()
+        trans_lower = trans_name.lower().strip()
+        
+        # Check for common translation keywords
+        translation_keywords = [
+            "translation", "translate", "中文", "chinese", "简体", "繁體",
+            "한국어", "korean", "日本語", "japanese", "русский", "russian",
+            "français", "french", "deutsch", "german", "español", "spanish",
+            "português", "portuguese", "italiano", "italian", "polski", "polish",
+            "türkçe", "turkish", "中文翻译", "汉化", "翻译"
+        ]
+        
+        has_translation_keyword = any(keyword in trans_lower for keyword in translation_keywords)
+        
+        # Bonus if translation keywords are present
+        keyword_bonus = 0.2 if has_translation_keyword else 0.0
+        
+        # Check if original mod name is a substring of translation name
+        if mod_lower in trans_lower:
+            substring_score = 0.8
+        else:
+            # Try removing common prefixes/suffixes and check again
+            cleaned_mod = mod_lower.replace("[", "").replace("]", "").replace("(", "").replace(")", "").strip()
+            cleaned_trans = trans_lower.replace("[", "").replace("]", "").replace("(", "").replace(")", "").strip()
+            
+            if cleaned_mod in cleaned_trans:
+                substring_score = 0.7
+            else:
+                # Use sequence matcher for partial matching
+                substring_score = SequenceMatcher(None, mod_lower, trans_lower).ratio() * 0.6
+        
+        # Combine scores
+        final_score = min(1.0, substring_score + keyword_bonus)
+        
+        return final_score
+
+    def _find_and_open_translations(
+        self, package_id: str, mod_metadata: dict[str, Any]
+    ) -> None:
+        """
+        Find and open translation mods for the specified mod.
+        
+        Searches the Steam Workshop metadata database for mods that:
+        1. Depend on the target mod OR have the target mod in their loadAfter
+        2. Have a "Translation" tag
+        3. Match the same game version tag (e.g., "1.6")
+        4. Have sufficient name similarity to the original mod
+        
+        Opens found translation mods in the browser.
+        
+        :param package_id: The packageId of the mod to find translations for
+        :param mod_metadata: The metadata of the mod
+        """
+        if not self.metadata_manager.external_steam_metadata:
+            logger.warning("Steam Workshop metadata database is not loaded")
+            show_warning(
+                title=self.tr("Database not available"),
+                text=self.tr(
+                    "Steam Workshop metadata database is not loaded. "
+                    "Please build the database first using the Database Builder."
+                ),
+            )
+            return
+
+        # Get the mod's version tags from Steam metadata
+        mod_pfid = mod_metadata.get("publishedfileid")
+        current_pfid = mod_pfid  # Store for dependency checking
+        mod_version_tags = set()
+        
+        if mod_pfid and mod_pfid in self.metadata_manager.external_steam_metadata:
+            steam_data = self.metadata_manager.external_steam_metadata[mod_pfid]
+            tags = steam_data.get("tags", [])
+            for tag_item in tags:
+                tag = tag_item.get("tag", "")
+                # Version tags are typically like "1.6", "1.5", etc.
+                if tag and tag.replace(".", "").isdigit():
+                    mod_version_tags.add(tag)
+
+        logger.info(
+            f"Searching for translations of mod with packageId: {package_id}, "
+            f"version tags: {mod_version_tags}"
+        )
+
+        # Search for translation mods
+        translation_mods = []
+        
+        # Optimized: iterate through Steam metadata only once and extract all needed data
+        for pfid, steam_mod_data in self.metadata_manager.external_steam_metadata.items():
+            tags = steam_mod_data.get("tags", [])
+            if not tags:
+                continue
+            
+            # Build tag set once for faster lookups - O(n) instead of O(n*m)
+            tag_set = {tag_item.get("tag", "").lower() for tag_item in tags}
+            
+            # Fast check: must have "translation" tag
+            if "translation" not in tag_set:
+                continue
+            
+            # Extract version tags in a single pass
+            translation_version_tags = set()
+            for tag_item in tags:
+                tag = tag_item.get("tag", "")
+                # Cache the string processing result
+                if tag and tag.replace(".", "").isdigit():
+                    translation_version_tags.add(tag)
+            
+            # Check if version tags match (if we have version tags)
+            if mod_version_tags and translation_version_tags:
+                if not mod_version_tags.intersection(translation_version_tags):
+                    continue
+            
+            # Check if this mod has the target mod as a dependency
+            # Fast check with 'in' operator on dict instead of .get()
+            dependencies = steam_mod_data.get("dependencies", {})
+            if current_pfid not in dependencies:
+                continue
+            
+            # Calculate name similarity to filter out false positives
+            trans_name = steam_mod_data.get("steamName", "")
+            mod_name = mod_metadata.get("name", "")
+            
+            # Calculate similarity score
+            similarity = self._calculate_translation_similarity(mod_name, trans_name)
+            
+            # Only build the result dict if all checks pass
+            translation_mods.append(
+                {
+                    "pfid": pfid,
+                    "name": trans_name or f"Unknown ({pfid})",
+                    "url": steam_mod_data.get("url", f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"),
+                    "similarity": similarity,
+                }
+            )
+
+        if not translation_mods:
+            logger.info(f"No translations found for mod: {package_id}")
+            show_warning(
+                title=self.tr("No translations found"),
+                text=self.tr(
+                    "No translation mods were found for this mod in the Steam Workshop database."
+                ),
+            )
+            return
+
+        # Sort by similarity score (highest first) to show most relevant translations first
+        translation_mods.sort(key=lambda x: x["similarity"], reverse=True)
+        
+        # Filter out translations with very low similarity (likely false positives)
+        # Keep at least one result even if similarity is low
+        SIMILARITY_THRESHOLD = 0.3
+        filtered_mods = [m for m in translation_mods if m["similarity"] >= SIMILARITY_THRESHOLD]
+        if not filtered_mods and translation_mods:
+            # If all mods filtered out, keep the best match
+            filtered_mods = [translation_mods[0]]
+        translation_mods = filtered_mods
+        
+        # Log found translations
+        logger.info(
+            f"Found {len(translation_mods)} translation(s) for {package_id} "
+            f"(filtered by similarity >= {SIMILARITY_THRESHOLD})"
+        )
+        
+        # If only one translation, open it directly
+        if len(translation_mods) == 1:
+            trans_mod = translation_mods[0]
+            logger.info(f"Opening translation: {trans_mod['name']} - {trans_mod['url']}")
+            open_url_browser(trans_mod["url"])
+            return
+        
+        # If multiple translations, let user choose
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr("Select Translation"))
+        dialog.setMinimumWidth(600)
+        dialog.setMinimumHeight(400)
+        
+        layout = QVBoxLayout()
+        
+        # Add label
+        label = QLabel(self.tr(f"Found {len(translation_mods)} translation(s). Select one to open:"))
+        layout.addWidget(label)
+        
+        # Add list widget
+        list_widget = QListWidget()
+        list_widget.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        
+        for trans_mod in translation_mods:
+            item = QListWidgetItem(trans_mod['name'])
+            item.setData(Qt.ItemDataRole.UserRole, trans_mod['url'])
+            list_widget.addItem(item)
+        
+        # Select first item by default
+        list_widget.setCurrentRow(0)
+        
+        # Enable double-click to open
+        def on_double_click(item):
+            url = item.data(Qt.ItemDataRole.UserRole)
+            logger.info(f"Opening translation: {item.text()} - {url}")
+            open_url_browser(url)
+            dialog.accept()
+        
+        list_widget.itemDoubleClicked.connect(on_double_click)
+        layout.addWidget(list_widget)
+        
+        # Add buttons
+        button_layout = QHBoxLayout()
+        open_button = QPushButton(self.tr("Open"))
+        cancel_button = QPushButton(self.tr("Cancel"))
+        
+        def on_open():
+            current_item = list_widget.currentItem()
+            if current_item:
+                url = current_item.data(Qt.ItemDataRole.UserRole)
+                logger.info(f"Opening translation: {current_item.text()} - {url}")
+                open_url_browser(url)
+                dialog.accept()
+        
+        open_button.clicked.connect(on_open)
+        cancel_button.clicked.connect(dialog.reject)
+        
+        button_layout.addStretch()
+        button_layout.addWidget(open_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+        
+        dialog.setLayout(layout)
+        dialog.exec()
+
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
         """
         https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
@@ -1015,6 +1263,8 @@ class ModListWidget(QListWidget):
             change_mod_color_action = None
             # Reset mod color
             reset_mod_color_action = None
+            # Find translation mods
+            find_translation_action = None
             # Disable all warnings by default
             all_warnings_toggled = False
             # Get all selected CustomListWidgetItems
@@ -1172,6 +1422,10 @@ class ModListWidget(QListWidget):
                     if package_id and package_id in self.ignore_warning_list:
                         toggle_warning_action.setCheckable(True)
                         toggle_warning_action.setChecked(True)
+                    # Find translation action (only for single mod selection)
+                    if package_id:
+                        find_translation_action = QAction()
+                        find_translation_action.setText(self.tr("Find translations"))
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 all_warnings_toggled = True
@@ -1311,6 +1565,8 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
                 context_menu.addAction(open_mod_steam_action)
+            if find_translation_action:
+                context_menu.addAction(find_translation_action)
             if toggle_warning_action:
                 context_menu.addAction(toggle_warning_action)
 
@@ -1791,6 +2047,13 @@ class ModListWidget(QListWidget):
                         ):  # ACTION: Open steam:// uri in Steam
                             if mod_metadata.get("steam_uri"):  # If we have steam_uri
                                 platform_specific_open(mod_metadata["steam_uri"])
+                        # Find translation mods action
+                        elif (
+                            action == find_translation_action
+                        ):  # ACTION: Find translation mods
+                            package_id = mod_metadata.get("packageid")
+                            if package_id:
+                                self._find_and_open_translations(package_id, mod_metadata)
                         # Copy to clipboard actions
                         elif (
                             action == copy_packageid_to_clipboard_action

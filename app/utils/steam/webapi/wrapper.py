@@ -483,7 +483,7 @@ class DynamicQuery(QObject):
                     method_path="IPublishedFileService.GetDetails",
                     key=self.apikey,
                     publishedfileids=chunk,
-                    includetags=False,
+                    includetags=True,
                     includeadditionalpreviews=False,
                     includechildren=True,
                     includekvtags=True,
@@ -537,6 +537,9 @@ class DynamicQuery(QObject):
                         result["database"][publishedfileid]["url"] = (
                             f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                         )
+                        # Save tags information
+                        if metadata.get("tags"):
+                            result["database"][publishedfileid]["tags"] = metadata["tags"]
                         # Track time publishing created
                         # result["database"][publishedfileid][
                         #     "external_time_created"
