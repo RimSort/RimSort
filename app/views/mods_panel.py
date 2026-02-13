@@ -858,14 +858,10 @@ class ModListWidget(QListWidget):
         self.itemChanged.connect(self.handle_item_data_changed)
 
         # Allow inserting custom list items
-        self.model().rowsInserted.connect(
-            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
 
         # Handle removing items to update count
-        self.model().rowsAboutToBeRemoved.connect(
-            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
 
         # Lazy load ModListItemInner
         self.verticalScrollBar().valueChanged.connect(self.check_widgets_visible)
@@ -916,14 +912,6 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
-        # Find the newly dropped items and convert to CustomListWidgetItem
-        # TODO: Optimize this by only converting the dropped items (Figure out how to get their indexes)
-        for i in range(self.count()):
-            item = self.item(i)
-            if not isinstance(item, CustomListWidgetItem):
-                # Convert to CustomListWidgetItem
-                item = CustomListWidgetItem(item)
-                self.replaceItemAtIndex(i, item)
         # Get source widget of dropEvent
         source_widget = event.source()
         # Get the drop action
@@ -2121,6 +2109,10 @@ class ModListWidget(QListWidget):
         # already loaded. Each item index corresponds to a UUID index.
         for idx in range(first, last + 1):
             item = self.item(idx)
+            if not isinstance(item, CustomListWidgetItem):
+                # Convert to CustomListWidgetItem
+                item = CustomListWidgetItem(item)
+                self.replaceItemAtIndex(idx, item)
             if item:
                 data = item.data(Qt.ItemDataRole.UserRole)
                 if data is None:
@@ -2726,21 +2718,13 @@ class ModListWidget(QListWidget):
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
             # Reconnect model signals
-            self.model().rowsInserted.connect(
-                self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-            )
-            self.model().rowsAboutToBeRemoved.connect(
-                self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-            )
+            self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
+            self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
             return
 
         # Reconnect model signals
-        self.model().rowsInserted.connect(
-            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-        )
-        self.model().rowsAboutToBeRemoved.connect(
-            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
+        self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
         # Enable updates and repaint
         self.setUpdatesEnabled(True)
         self.repaint()
@@ -2796,8 +2780,7 @@ class ModListWidget(QListWidget):
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
-        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal.
-
+        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal and rowsAboutToBeRemoved signal.
         :param index: The index of the item to replace.
         :param item: The new item that will replace the old one.
         """
@@ -2807,6 +2790,10 @@ class ModListWidget(QListWidget):
         # Check if the signal is connected before disconnecting
         try:
             self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass  # Signal was not connected
+        try:
+            self.model().rowsAboutToBeRemoved.disconnect(self.handle_rows_removed)
         except TypeError:
             pass  # Signal was not connected
 
@@ -2825,6 +2812,9 @@ class ModListWidget(QListWidget):
         # Reconnect to ALL slots
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+        self.model().rowsAboutToBeRemoved.connect(
+            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
         )
 
 
@@ -3880,7 +3870,6 @@ class ModsPanel(QWidget):
             pattern (str): The pattern to search for.
             filters_active (bool): If any filter is active (inc. pattern search).
         """
-
         _filter = None
         filter_state = None  # The 'Hide Filter' state
         source_filter = None
@@ -3919,12 +3908,11 @@ class ModsPanel(QWidget):
         # Filter the list using any search and filter state
         num_filtered = 0
         num_unfiltered = 0
-        uuid_to_index = {u: i for i, u in enumerate(uuids)}
-        for uuid in uuids:
+        for idx, uuid in enumerate(uuids):
             item = (
-                self.active_mods_list.item(uuid_to_index[uuid])
+                self.active_mods_list.item(idx)
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuid_to_index[uuid])
+                else self.inactive_mods_list.item(idx)
             )
             if item is None:
                 continue
@@ -4146,11 +4134,11 @@ class ModsPanel(QWidget):
         )
         num_filtered = 0
         num_unfiltered = 0
-        for uuid in uuids:
+        for idx in range(len(uuids)):
             item = (
-                self.active_mods_list.item(uuids.index(uuid))
+                self.active_mods_list.item(idx)
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
+                else self.inactive_mods_list.item(idx)
             )
             if item is None:
                 continue
