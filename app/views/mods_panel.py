@@ -1043,7 +1043,7 @@ class ModListWidget(QListWidget):
             re_git_action = None
             re_steamcmd_action = None
             re_steam_action = None
-            # Unsubscribe + delete mod
+            # Unsubscribe mod
             unsubscribe_mod_steam_action = None
             # Change mod color
             change_mod_color_action = None
@@ -1627,7 +1627,7 @@ class ModListWidget(QListWidget):
                             ]
                         )
                     return True
-                elif (  # ACTION: Unsubscribe & delete mod(s) with steam
+                elif (  # ACTION: Unsubscribe mod(s) with steam
                     action == unsubscribe_mod_steam_action
                     and len(steam_publishedfileid_to_name) > 0
                 ):
@@ -1730,6 +1730,9 @@ class ModListWidget(QListWidget):
                     new_color = color_dlg.getColor()
                     self.SaveUserCustomColors(color_dlg)
                     invalid_color = not new_color.isValid()
+                if action in self.deletion_sub_menu.actions():
+                    # Deletion menu handles whatever action it was, exit now
+                    return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is CustomListWidgetItem:
