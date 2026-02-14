@@ -1719,6 +1719,16 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
 
+        self.include_mod_notes_in_mod_name_filter_checkbox = QCheckBox(
+            self.tr("Include mod notes in mod name search filter")
+        )
+        self.include_mod_notes_in_mod_name_filter_checkbox.setToolTip(
+            self.tr(
+                "This option will include searching mod notes when searching by mod name."
+            )
+        )
+        group_layout.addWidget(self.include_mod_notes_in_mod_name_filter_checkbox)
+
         # Put checkbox, label and spinbox on the same horizontal line
         backup_layout = QHBoxLayout()
         self.enable_backup_before_update_checkbox = QCheckBox(

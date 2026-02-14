@@ -56,6 +56,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from rapidfuzz import fuzz
+from sqlalchemy import text
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
@@ -3121,6 +3123,7 @@ class ModsPanel(QWidget):
         self.active_mods_search_filter.addItems(
             [
                 self.tr("Name"),
+                self.tr("Notes"),
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
@@ -3264,6 +3267,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter.addItems(
             [
                 self.tr("Name"),
+                self.tr("Notes"),
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
@@ -3867,6 +3871,39 @@ class ModsPanel(QWidget):
             )
             self.inactive_mods_search.clearFocus()
 
+    def search_mod_notes(self, pattern: str, limit: int = 5000) -> set[str]:
+        """Searches mod notes using fuzzy search, returning mod paths matching search pattern."""
+        if not pattern.strip():
+            return set()
+
+        pattern = pattern.strip().lower()
+        SEARCH_SQL = text("""
+            SELECT path, user_notes
+            FROM auxiliary_metadata
+            LIMIT :limit;
+        """)
+
+        aux_metadata_controller = (
+            AuxMetadataController.get_or_create_cached_instance(
+                self.settings_controller.settings.aux_db_path
+            )
+        )
+        with aux_metadata_controller.engine.connect() as conn:
+            result = conn.execute(SEARCH_SQL, {"limit": limit})
+            rows = result.fetchall()
+
+        #TODO: Allow user to set fuzzy threshold?
+        fuzz_threshold = 80 if len(pattern) > 5 else 70
+        matching_paths = set()
+        for path, note in rows:
+            note = (note or "").lower()
+
+            score = fuzz.partial_ratio(pattern, note)
+            if score >= fuzz_threshold:
+                matching_paths.add(path)
+
+        return matching_paths
+
     def signal_search_and_filters(
         self,
         list_type: str,
@@ -3910,6 +3947,8 @@ class ModsPanel(QWidget):
         search_filter = None
         if _filter.currentText() == self.tr("Name"):
             search_filter = "name"
+        if _filter.currentText() == self.tr("Notes"):
+            search_filter = "notes"
         elif _filter.currentText() == self.tr("PackageId"):
             search_filter = "packageid"
         elif _filter.currentText() == self.tr("Author(s)"):
@@ -3921,6 +3960,10 @@ class ModsPanel(QWidget):
         # Filter the list using any search and filter state
         num_filtered = 0
         num_unfiltered = 0
+        if pattern.strip() and (
+            search_filter == "notes" or
+            (search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter)):
+            matches = self.search_mod_notes(pattern)
         for idx, uuid in enumerate(uuids):
             item = (
                 self.active_mods_list.item(idx)
@@ -3939,7 +3982,6 @@ class ModsPanel(QWidget):
             # Hide invalid items if enabled in settings
             if self.settings_controller.settings.hide_invalid_mods_when_filtering:
                 invalid = item_data["invalid"]
-                # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
                 if invalid and filters_active:
                     item_data["filtered"] = True
                     item.setHidden(True)
@@ -3958,6 +4000,25 @@ class ModsPanel(QWidget):
                     pattern.lower() in v.lower() for v in versions
                 ):
                     item_filtered = True
+            elif search_filter == "notes":
+                if not pattern.strip():
+                    item_filtered = False
+                else:
+                    mod_path = metadata.get("path", "")
+                    item_filtered = mod_path not in matches
+            # Filter by name and mod notes
+            elif search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter:
+                if not pattern.strip():
+                    item_filtered = False
+                elif (
+                    pattern
+                    and metadata.get(search_filter)
+                    and pattern.lower() in str(metadata.get(search_filter)).lower()
+                ):
+                    item_filtered = False
+                else:
+                    mod_path = metadata.get("path", "")
+                    item_filtered = mod_path not in matches
             elif (
                 pattern
                 and metadata.get(search_filter)

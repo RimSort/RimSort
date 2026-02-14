@@ -343,6 +343,10 @@ class SettingsController(QObject):
             self._on_use_background_coloring_checkbox_changed
         )
 
+        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
+            self._on_include_mod_notes_in_mod_name_filter_changed
+        )
+
         # Performance tab
         self._enable_aux_db_performance_mode()
         self.settings_dialog.aux_db_performance_mode.stateChanged.connect(
@@ -993,6 +997,9 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.setChecked(
+            self.settings.include_mod_notes_in_mod_name_filter
+        )
 
         self.settings_dialog.enable_backup_before_update_checkbox.setChecked(
             self.settings.enable_backup_before_update
@@ -1334,6 +1341,9 @@ class SettingsController(QObject):
         )
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
+        )
+        self.settings.include_mod_notes_in_mod_name_filter = (
+            self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
         )
 
         self.settings.enable_backup_before_update = (
@@ -2454,6 +2464,12 @@ class SettingsController(QObject):
     @Slot()
     def _on_use_background_coloring_checkbox_changed(self) -> None:
         self.change_mod_coloring_mode = not self.change_mod_coloring_mode
+
+    @Slot()
+    def _on_include_mod_notes_in_mod_name_filter_changed(self) -> None:
+        self.settings.include_mod_notes_in_mod_name_filter = (
+            self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
+        )
 
     @Slot()
     def _enable_aux_db_performance_mode(self) -> None:
