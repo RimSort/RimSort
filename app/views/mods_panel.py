@@ -3958,7 +3958,9 @@ class ModsPanel(QWidget):
         # Filter the list using any search and filter state
         num_filtered = 0
         num_unfiltered = 0
-        if search_filter == "notes" and pattern.strip():
+        if pattern.strip() and (
+            search_filter == "notes" or
+            (search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter)):
             matches = self.search_mod_notes(pattern)
         for idx, uuid in enumerate(uuids):
             item = (
@@ -3978,7 +3980,6 @@ class ModsPanel(QWidget):
             # Hide invalid items if enabled in settings
             if self.settings_controller.settings.hide_invalid_mods_when_filtering:
                 invalid = item_data["invalid"]
-                # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
                 if invalid and filters_active:
                     item_data["filtered"] = True
                     item.setHidden(True)
@@ -3999,6 +4000,19 @@ class ModsPanel(QWidget):
                     item_filtered = True
             elif search_filter == "notes":
                 if not pattern.strip():
+                    item_filtered = False
+                else:
+                    mod_path = metadata.get("path", "")
+                    item_filtered = mod_path not in matches
+            # Filter by name and mod notes
+            elif search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter:
+                if not pattern.strip():
+                    item_filtered = False
+                elif (
+                    pattern
+                    and metadata.get(search_filter)
+                    and pattern.lower() in str(metadata.get(search_filter)).lower()
+                ):
                     item_filtered = False
                 else:
                     mod_path = metadata.get("path", "")

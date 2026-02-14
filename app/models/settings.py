@@ -184,6 +184,7 @@ class Settings(QObject):
         self.steam_mods_update_check: bool = False
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
+        self.include_mod_notes_in_mod_name_filter: bool = False
         # UI: Save-comparison labels and icons
         self.show_save_comparison_indicators: bool = True
         # Clear button behavior
