@@ -202,9 +202,6 @@ class Settings(QObject):
         # Auxiliary Metadata DB
         self.enable_aux_db_behavior_editing: bool = False
 
-        # Performance Settings
-        self.enable_aux_db_performance_mode: bool = False
-
         # Player Log
         self.auto_load_player_log_on_startup: bool = False
 

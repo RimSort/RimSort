@@ -414,7 +414,6 @@ class SettingsDialog(QDialog):
         tab.setLayout(tab_layout)
 
         self._do_aux_db_time_limit_group(tab_layout)
-        self._do_aux_db_performance_group(tab_layout)
         # New section for save-comparison feature
         self._do_recent_save_integration_group(tab_layout)
         self._do_backup_settings_group(tab_layout)
@@ -682,7 +681,7 @@ class SettingsDialog(QDialog):
                 "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
             )
         )
-        aux_db_tooltip = self.tr("""To enable editing of this time limit, check the relevant checkbox in Advanced settings.
+        aux_db_tooltip = self.tr("""To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
 After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
@@ -713,22 +712,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         tab_layout.addLayout(label_layout)
         tab_layout.addWidget(self.aux_db_time_limit)
-
-    def _do_aux_db_performance_group(self, tab_layout: QBoxLayout) -> None:
-        self.aux_db_performance_mode = QCheckBox(
-            self.tr("Enable Auxiliary Metadata DB performance mode")
-        )
-        self.aux_db_performance_mode.setToolTip(
-            self.tr(
-                "This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes."
-                "\nImproves performance by ~50%."
-            )
-        )
-
-        aux_db_group = QHBoxLayout()
-        aux_db_group.addWidget(self.aux_db_performance_mode)
-
-        tab_layout.addLayout(aux_db_group)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
