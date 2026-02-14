@@ -203,8 +203,8 @@ jobs:
         if: matrix.platform == 'Windows'
         run: |
           dotnet tool install --global wix --version 6.0.0
-          wix extension add WixToolset.UI.wixext
-          wix extension add WixToolset.Util.wixext
+          wix extension add WixToolset.UI.wixext/6.0.0
+          wix extension add WixToolset.Util.wixext/6.0.0
 
           # Absolute paths for license and build output
           $AbsoluteLicensePath = Resolve-Path "data\EULA.rtf" -ErrorAction Stop
