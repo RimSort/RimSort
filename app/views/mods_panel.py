@@ -5,7 +5,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import Any, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 from loguru import logger
 from platformdirs import PlatformDirs
@@ -69,6 +69,7 @@ from app.sort.mod_sorting import (
 )
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.app_info import AppInfo
+from app.utils.aux_db_utils import auxdb_update_all_mod_colors, auxdb_update_mod_color
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -606,7 +607,7 @@ class ModListItemInner(QWidget):
         self, item: CustomListWidgetItem | None = None, init: bool = False
     ) -> None:
         """
-        Handle mod color change (Background or Text).
+        Handle mod color change (Background or Text) for *ModListItemInner*.
 
         :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
 
@@ -641,40 +642,15 @@ class ModListItemInner(QWidget):
                 ]  # Update mod color in ModListItemInner
                 self.setStyleSheet(f"color: {new_mod_color_name};")
 
-        # Update Aux DB
-        if not init and new_mod_color_name is not None:
-            aux_metadata_controller = (
-                AuxMetadataController.get_or_create_cached_instance(
-                    self.settings_controller.settings.aux_db_path
-                )
-            )
-            with aux_metadata_controller.Session() as aux_metadata_session:
-                mod_path = self.metadata_manager.internal_local_metadata[self.uuid][
-                    "path"
-                ]
-                aux_metadata_controller.update(
-                    aux_metadata_session,
-                    mod_path,
-                    color_hex=new_mod_color_name,
-                )
-
     def handle_mod_color_reset(self) -> None:
+        """
+        Reset mod color to default (Background or Text) for *ModListItemInner*.
+        """
         # Need to reset custom colors this way because the color is set using setStyleSheet
         # After reseting, the behavior for unpolish() and polish() works as expected
         self.setStyleSheet("")
         # Update ModListItemInner color
         self.mod_color = None
-        # Update Aux DB
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
-        with aux_metadata_controller.Session() as aux_metadata_session:
-            mod_path = self.metadata_manager.internal_local_metadata[self.uuid]["path"]
-            aux_metadata_controller.update(
-                aux_metadata_session,
-                mod_path,
-                color_hex=None,
-            )
 
 
 class ModListIcons:
@@ -860,14 +836,10 @@ class ModListWidget(QListWidget):
         self.itemChanged.connect(self.handle_item_data_changed)
 
         # Allow inserting custom list items
-        self.model().rowsInserted.connect(
-            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
 
         # Handle removing items to update count
-        self.model().rowsAboutToBeRemoved.connect(
-            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
 
         # Lazy load ModListItemInner
         self.verticalScrollBar().valueChanged.connect(self.check_widgets_visible)
@@ -918,14 +890,6 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
-        # Find the newly dropped items and convert to CustomListWidgetItem
-        # TODO: Optimize this by only converting the dropped items (Figure out how to get their indexes)
-        for i in range(self.count()):
-            item = self.item(i)
-            if not isinstance(item, CustomListWidgetItem):
-                # Convert to CustomListWidgetItem
-                item = CustomListWidgetItem(item)
-                self.replaceItemAtIndex(i, item)
         # Get source widget of dropEvent
         source_widget = event.source()
         # Get the drop action
@@ -1020,7 +984,7 @@ class ModListWidget(QListWidget):
             # Open folder action
             open_folder_action = None
             # Open folder in text editor action
-            open_folder_text_editor_action = None
+            open_folder_text_editor_action = None 
             # Open URL in browser action
             open_url_browser_action = None
             # Open URL in Steam
@@ -1045,7 +1009,7 @@ class ModListWidget(QListWidget):
             re_git_action = None
             re_steamcmd_action = None
             re_steam_action = None
-            # Unsubscribe + delete mod
+            # Unsubscribe mod
             unsubscribe_mod_steam_action = None
             # Change mod color
             change_mod_color_action = None
@@ -1055,6 +1019,8 @@ class ModListWidget(QListWidget):
             all_warnings_toggled = False
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
+            # Track all uuids selected
+            all_selected_uuids: Dict[int, str] = {}
             # Single item selected
             if len(selected_items) == 1:
                 logger.debug(f"{len(selected_items)} items selected")
@@ -1062,6 +1028,7 @@ class ModListWidget(QListWidget):
                 if type(source_item) is CustomListWidgetItem:
                     item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
+                    all_selected_uuids[0] = uuid
                     # Retrieve metadata
                     mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
                     mod_data_source = mod_metadata.get("data_source")
@@ -1212,6 +1179,7 @@ class ModListWidget(QListWidget):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
+                        all_selected_uuids[item_idx] = uuid
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
                             uuid
@@ -1629,7 +1597,7 @@ class ModListWidget(QListWidget):
                             ]
                         )
                     return True
-                elif (  # ACTION: Unsubscribe & delete mod(s) with steam
+                elif (  # ACTION: Unsubscribe mod(s) with steam
                     action == unsubscribe_mod_steam_action
                     and len(steam_publishedfileid_to_name) > 0
                 ):
@@ -1732,11 +1700,14 @@ class ModListWidget(QListWidget):
                     new_color = color_dlg.getColor()
                     self.SaveUserCustomColors(color_dlg)
                     invalid_color = not new_color.isValid()
+                if action in self.deletion_sub_menu.actions():
+                    # Deletion menu handles whatever action it was, exit now
+                    return True
                 # Execute action for each selected mod
-                for source_item in selected_items:
+                for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                        uuid = item_data["uuid"]
+                        uuid = all_selected_uuids[item_idx]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
                             uuid
@@ -1758,9 +1729,15 @@ class ModListWidget(QListWidget):
                             else:
                                 self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_color_action and not invalid_color:
-                            self.change_mod_color(uuid, new_color)
+                            if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
+                                self.change_all_mod_colors(list(all_selected_uuids.values()), new_color)
+                            elif len(selected_items) == 1:
+                                self.change_mod_color(uuid, new_color)
                         elif action == reset_mod_color_action:
-                            self.reset_mod_color(uuid)
+                            if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
+                                self.reset_all_mod_colors(list(all_selected_uuids.values()))
+                            elif len(selected_items) == 1:
+                                self.reset_mod_color(uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -2123,6 +2100,10 @@ class ModListWidget(QListWidget):
         # already loaded. Each item index corresponds to a UUID index.
         for idx in range(first, last + 1):
             item = self.item(idx)
+            if not isinstance(item, CustomListWidgetItem):
+                # Convert to CustomListWidgetItem
+                item = CustomListWidgetItem(item)
+                self.replaceItemAtIndex(idx, item)
             if item:
                 data = item.data(Qt.ItemDataRole.UserRole)
                 if data is None:
@@ -2728,21 +2709,13 @@ class ModListWidget(QListWidget):
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
             # Reconnect model signals
-            self.model().rowsInserted.connect(
-                self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-            )
-            self.model().rowsAboutToBeRemoved.connect(
-                self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-            )
+            self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
+            self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
             return
 
         # Reconnect model signals
-        self.model().rowsInserted.connect(
-            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-        )
-        self.model().rowsAboutToBeRemoved.connect(
-            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
-        )
+        self.model().rowsInserted.connect(self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection)
+        self.model().rowsAboutToBeRemoved.connect(self.handle_rows_removed, Qt.ConnectionType.QueuedConnection)
         # Enable updates and repaint
         self.setUpdatesEnabled(True)
         self.repaint()
@@ -2788,6 +2761,18 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_color(self.settings_controller, uuid, new_color)
+
+    def change_all_mod_colors(self, uuids: list[str], new_color: QColor) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_color"] = new_color
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = new_color
+        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
 
     def reset_mod_color(self, uuid: str) -> None:
         current_mod_index = self.uuids.index(uuid)
@@ -2795,11 +2780,22 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = None
         item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_color(self.settings_controller, uuid, None)
+
+    def reset_all_mod_colors(self, uuids: list[str]) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_color"] = None
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = None
+        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
-        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal.
-
+        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal and rowsAboutToBeRemoved signal.
         :param index: The index of the item to replace.
         :param item: The new item that will replace the old one.
         """
@@ -2809,6 +2805,10 @@ class ModListWidget(QListWidget):
         # Check if the signal is connected before disconnecting
         try:
             self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass  # Signal was not connected
+        try:
+            self.model().rowsAboutToBeRemoved.disconnect(self.handle_rows_removed)
         except TypeError:
             pass  # Signal was not connected
 
@@ -2827,6 +2827,9 @@ class ModListWidget(QListWidget):
         # Reconnect to ALL slots
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+        self.model().rowsAboutToBeRemoved.connect(
+            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
         )
 
 
@@ -3917,7 +3920,6 @@ class ModsPanel(QWidget):
             pattern (str): The pattern to search for.
             filters_active (bool): If any filter is active (inc. pattern search).
         """
-
         _filter = None
         filter_state = None  # The 'Hide Filter' state
         source_filter = None
@@ -4206,11 +4208,11 @@ class ModsPanel(QWidget):
         )
         num_filtered = 0
         num_unfiltered = 0
-        for uuid in uuids:
+        for idx in range(len(uuids)):
             item = (
-                self.active_mods_list.item(uuids.index(uuid))
+                self.active_mods_list.item(idx)
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
+                else self.inactive_mods_list.item(idx)
             )
             if item is None:
                 continue
