@@ -6,11 +6,9 @@ from pathlib import Path
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
-from sqlalchemy import text
 
 from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
-from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.acf_utils import validate_acf_file_exists
