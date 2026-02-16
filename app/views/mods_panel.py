@@ -264,6 +264,9 @@ class ModListItemInner(QWidget):
         self.error_icon_label.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         # Default to hidden to avoid showing early
         self.error_icon_label.setHidden(True)
+        # Translation status label
+        self.translation_status_label = QLabel()
+        self.translation_status_label.setHidden(True)
         # Icons by mod source
         self.mod_source_icon = None
         if not self.git_icon and not self.steamcmd_icon:
@@ -329,6 +332,10 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(
                 self.new_icon_label, Qt.AlignmentFlag.AlignRight
             )
+
+        self.main_item_layout.addWidget(
+            self.translation_status_label, Qt.AlignmentFlag.AlignRight
+        )
         self.main_item_layout.addWidget(
             self.warning_icon_label, Qt.AlignmentFlag.AlignRight
         )
@@ -363,6 +370,20 @@ class ModListItemInner(QWidget):
     def _resize_text_after_icon_toggle(self, icon_count: int = -1) -> None:
         event = QResizeEvent(self.size(), self.size())
         self.resizeEvent(event, icon_count=icon_count)
+
+    def update_translation_status(self, is_translated: bool) -> None:
+        if is_translated:
+            self.translation_status_label.setText("🟢")
+            self.translation_status_label.setToolTip(self.tr("Translation available - This mod has a translation or is already localized"))
+        else:
+            self.translation_status_label.setText("🔴")
+            self.translation_status_label.setToolTip(self.tr("No translation found - This mod does not have a translation installed"))
+        self.translation_status_label.setHidden(False)
+        self._resize_text_after_icon_toggle()
+
+    def hide_translation_status(self) -> None:
+        self.translation_status_label.setHidden(True)
+        self._resize_text_after_icon_toggle()
 
     def enterEvent(self, event: QEnterEvent) -> None:
         self._hovered = True
@@ -523,6 +544,8 @@ class ModListItemInner(QWidget):
             # Count the number of QLabel widgets with QIcon and calculate total icon width
             icon_count = self.count_icons(self)
         icon_width = icon_count * 20
+        if not self.translation_status_label.isHidden():
+            icon_width += self.translation_status_label.fontMetrics().boundingRect(self.translation_status_label.text()).width() + 6
         # If only 2 icons (On the left, eg. c#/xml/steam/local etc.) No need for padding.
         padding = 6 if icon_count > 2 else 0
         self.item_width = super().width()
@@ -853,6 +876,10 @@ class ModListWidget(QListWidget):
         self.ignore_warning_list: list[str] = []
         # Cache of latest save package ids to check new mods
         self._latest_save_package_ids: set[str] | None = None
+        
+        # Translation status
+        self.show_translation_status: bool = False
+        self.translation_lookup: set[str] = set()
 
         self.deletion_sub_menu = ModDeletionMenu(
             self.settings_controller,
@@ -2270,6 +2297,13 @@ class ModListWidget(QListWidget):
             widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
+            
+            # Apply translation status if enabled
+            if self.show_translation_status:
+                pkg_id = self.metadata_manager.internal_local_metadata[uuid].get("packageid")
+                has_translation = pkg_id in self.translation_lookup
+                widget.update_translation_status(has_translation)
+
             # Ensure initial icon states reflect current item data
             widget.repolish(item)
 
@@ -4497,3 +4531,252 @@ class ModsPanel(QWidget):
             )
         else:
             label.setText(f"{list_type_label} [{num_filtered + num_unfiltered}]")
+
+    def _on_toggle_translation_status(self, enabled: bool) -> None:
+        """
+        Toggle the visibility of translation status indicators on mod list items.
+
+        Args:
+            enabled (bool): Whether to show or hide the indicators.
+        """
+        logger.info(f"Toggling translation status: {enabled}")
+
+        # Update state on list widgets
+        self.active_mods_list.show_translation_status = enabled
+        self.inactive_mods_list.show_translation_status = enabled
+
+        if enabled:
+            # Build translation lookup table (packageId -> bool)
+            # Find which mods have translations installed
+            translation_lookup = self._build_translation_lookup()
+            self.active_mods_list.translation_lookup = translation_lookup
+            self.inactive_mods_list.translation_lookup = translation_lookup
+        else:
+            self.active_mods_list.translation_lookup = set()
+            self.inactive_mods_list.translation_lookup = set()
+
+        # Update visible items
+        for mod_list in [self.active_mods_list, self.inactive_mods_list]:
+            for i in range(mod_list.count()):
+                item = mod_list.item(i)
+                widget = mod_list.itemWidget(item)
+                if isinstance(widget, ModListItemInner):
+                    if enabled:
+                        uuid = widget.uuid  # widget has uuid
+                        meta = self.metadata_manager.internal_local_metadata[uuid]
+                        pkg_id = meta.get("packageid")
+                        data_source = meta.get("data_source")
+                        
+                        # Official expansions/DLCs have multilingual support built-in
+                        is_official_expansion = data_source == "expansion"
+                        
+                        # Check if this mod itself is a translation mod
+                        is_translation_mod = False
+                        pfid = meta.get("publishedfileid")
+                        if pfid and self.metadata_manager.external_steam_metadata:
+                            steam_data = self.metadata_manager.external_steam_metadata.get(pfid, {})
+                            tags = steam_data.get("tags", [])
+                            tag_set = {tag_item.get("tag", "").lower() for tag_item in tags}
+                            is_translation_mod = "translation" in tag_set
+                        
+                        # Mark as localized if:
+                        # 1. Official expansion/DLC (has built-in multilingual support)
+                        # 2. Translation mod itself
+                        # 3. Has an installed translation
+                        has_translation = (
+                            is_official_expansion 
+                            or is_translation_mod 
+                            or (pkg_id in self.active_mods_list.translation_lookup)
+                        )
+                        widget.update_translation_status(has_translation)
+                    else:
+                        widget.hide_translation_status()
+
+    def _build_translation_lookup(self) -> set[str]:
+        """
+        Identify mods that have installed translations.
+        
+        Uses the same logic as _find_and_open_translations to check Steam Workshop metadata
+        for installed translation mods based on:
+        1. Translation tag in steamDB
+        2. Dependency relationship via publishedfileid
+
+        Returns:
+            set[str]: A set of packageIds that have at least one translation mod installed.
+        """
+        translated_pkg_ids: set[str] = set()
+
+        # Check if Steam metadata is available
+        if not self.metadata_manager.external_steam_metadata:
+            logger.warning("Steam Workshop metadata database is not loaded for translation lookup")
+            return translated_pkg_ids
+
+        # Get all installed mods' publishedfileids
+        all_local_metadata = self.metadata_manager.internal_local_metadata
+        
+        # Build a mapping: pfid -> packageId for all installed mods
+        pfid_to_packageid: dict[str, str] = {}
+        for uuid, meta in all_local_metadata.items():
+            pfid = meta.get("publishedfileid")
+            packageid = meta.get("packageid", "")
+            if pfid and packageid:
+                pfid_to_packageid[pfid] = packageid.lower()
+        
+        # Iterate through all installed mods to find translations
+        for uuid, meta in all_local_metadata.items():
+            pfid = meta.get("publishedfileid")
+            
+            # Skip if this mod doesn't have a publishedfileid (local-only mod)
+            if not pfid:
+                continue
+                
+            # Check if this mod exists in Steam metadata
+            if pfid not in self.metadata_manager.external_steam_metadata:
+                continue
+            
+            steam_data = self.metadata_manager.external_steam_metadata[pfid]
+            tags = steam_data.get("tags", [])
+            
+            # Build tag set for fast lookups
+            tag_set = {tag_item.get("tag", "").lower() for tag_item in tags}
+            
+            # Check if this mod has "translation" tag
+            if "translation" not in tag_set:
+                continue
+            
+            # Check dependencies to find target mods
+            dependencies = steam_data.get("dependencies", {})
+            
+            # For each dependency, if it's an installed mod, mark it as having a translation
+            for dep_pfid in dependencies.keys():
+                # Check if the dependency is an installed mod
+                if dep_pfid in pfid_to_packageid:
+                    target_packageid = pfid_to_packageid[dep_pfid]
+                    translated_pkg_ids.add(target_packageid)
+                    logger.debug(f"Found translation {meta.get('name')} for mod with packageId {target_packageid}")
+                
+        return translated_pkg_ids
+
+    def _on_auto_add_translations(self) -> None:
+        """
+        Automatically find and add translation mods for active mods.
+        Uses Steam Workshop metadata to reliably identify translations.
+        """
+        logger.info("Auto-adding translation mods...")
+        
+        # Check if Steam metadata is available
+        if not self.metadata_manager.external_steam_metadata:
+            logger.warning("Steam Workshop metadata database is not loaded for auto-add translations")
+            show_warning(
+                self.tr("Database not available"),
+                self.tr(
+                    "Steam Workshop metadata database is not loaded. "
+                    "Please build the database first using the Database Builder."
+                ),
+            )
+            return
+        
+        active_uuids = self.active_mods_list.uuids
+        all_local_metadata = self.metadata_manager.internal_local_metadata
+        
+        # Build a mapping: pfid -> uuid for all installed mods
+        pfid_to_uuid: dict[str, str] = {}
+        for uuid, meta in all_local_metadata.items():
+            pfid = meta.get("publishedfileid")
+            if pfid:
+                pfid_to_uuid[pfid] = uuid
+        
+        # Get active mods' publishedfileids
+        active_pfids = set()
+        for uuid in active_uuids:
+            pfid = all_local_metadata[uuid].get("publishedfileid")
+            if pfid:
+                active_pfids.add(pfid)
+        
+        mods_to_add: list[str] = []
+        
+        # Find translations for active mods
+        for uuid, meta in all_local_metadata.items():
+            if uuid in active_uuids:
+                continue  # Already active
+            
+            pfid = meta.get("publishedfileid")
+            
+            # Skip if this mod doesn't have a publishedfileid (local-only mod)
+            if not pfid:
+                continue
+            
+            # Check if this mod exists in Steam metadata
+            if pfid not in self.metadata_manager.external_steam_metadata:
+                continue
+            
+            steam_data = self.metadata_manager.external_steam_metadata[pfid]
+            tags = steam_data.get("tags", [])
+            
+            # Build tag set for fast lookups
+            tag_set = {tag_item.get("tag", "").lower() for tag_item in tags}
+            
+            # Check if this mod has "translation" tag
+            if "translation" not in tag_set:
+                continue
+            
+            # Check if any of its dependencies are active mods
+            dependencies = steam_data.get("dependencies", {})
+            
+            # Check if this translation targets any active mod
+            targets_active_mod = False
+            for dep_pfid in dependencies.keys():
+                if dep_pfid in active_pfids:
+                    targets_active_mod = True
+                    logger.debug(f"Found translation {meta.get('name')} for active mod with pfid {dep_pfid}")
+                    break
+            
+            if targets_active_mod:
+                mods_to_add.append(uuid)
+        
+        if not mods_to_add:
+            show_warning(
+                self.tr("No Translations Found"), 
+                self.tr("No applicable translation mods were found for your active mod list.")
+            )
+            return
+        
+        # Add found mods to active list
+        count = 0
+        added_uuids: list[str] = []
+        for uuid in mods_to_add:
+            if uuid not in self.active_mods_list.uuids:
+                # Need to find the item in inactive list
+                if uuid in self.inactive_mods_list.uuids:
+                    index = self.inactive_mods_list.uuids.index(uuid)
+                    item = self.inactive_mods_list.takeItem(index)  # This removes from list widget
+                    self.inactive_mods_list.uuids.pop(index)
+                    
+                    self.active_mods_list.addItem(item)
+                    # self.active_mods_list.uuids is updated via handle_rows_inserted signal
+                    
+                    # Ensure item data is updated (list_type)
+                    data = item.data(Qt.ItemDataRole.UserRole)
+                    if data:
+                        data["list_type"] = "Active"
+                        item.setData(Qt.ItemDataRole.UserRole, data)
+                    
+                    count += 1
+                    added_uuids.append(uuid)
+        
+        if count > 0:
+            logger.info(f"Added {count} translation mods.")
+            show_warning(
+                self.tr("Translations Added"), 
+                self.tr(f"Successfully added {count} translation mods to the active list.")
+            )
+            
+            # Also update translation status indicators if enabled
+            if self.active_mods_list.show_translation_status:
+                self._on_toggle_translation_status(True)
+        else:
+            logger.info("No new translation mods added (maybe already active).")
+            show_warning(
+                self.tr("No New Translations"), 
+                self.tr("All found translation mods are already active.")
+            )

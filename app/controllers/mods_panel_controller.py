@@ -63,6 +63,13 @@ class ModsPanelController(QObject):
         EventBus().do_set_all_entries_in_aux_db_as_outdated.connect(
             self.do_all_entries_in_aux_db_as_outdated
         )
+        # Translation signals
+        EventBus().do_toggle_translation_status.connect(
+            self.mods_panel._on_toggle_translation_status
+        )
+        EventBus().do_auto_add_translations.connect(
+            self.mods_panel._on_auto_add_translations
+        )
 
     def _reemit_active_filter_signal(self) -> None:
         """Re-emit the active filter label's click signal to reapply filtering."""

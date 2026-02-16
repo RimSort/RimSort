@@ -142,6 +142,14 @@ class MenuBarController(QObject):
             EventBus().do_steam_verify_game_files
         )
 
+        # View menu
+        self.menu_bar.show_translation_status_action.toggled.connect(
+            EventBus().do_toggle_translation_status.emit
+        )
+        self.menu_bar.auto_add_translations_action.triggered.connect(
+            EventBus().do_auto_add_translations.emit
+        )
+
         # Instances menu
         self.menu_bar.backup_instance_action.triggered.connect(
             self._on_do_backup_current_instance

@@ -129,6 +129,10 @@ class EventBus(QObject):
     # Loading animation signals
     do_threaded_loading_animation = Signal(str, object, str)
 
+    # Translation signals
+    do_toggle_translation_status = Signal(bool)
+    do_auto_add_translations = Signal()
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
