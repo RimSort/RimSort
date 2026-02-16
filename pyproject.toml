@@ -18,7 +18,7 @@ dependencies = [
     "natsort==8.4.0",
     "networkx==3.6.1",
     "packaging==26.0",
-    "platformdirs==4.5.1",
+    "platformdirs==4.9.2",
     "psutil==7.2.2",
     "pygit2==1.19.1",
     "pygithub==2.8.1",
@@ -62,7 +62,7 @@ dev = [
 ]
 
 build = [
-    "nuitka==4.0",
+    "nuitka==4.0.1",
 ]
 
 [tool.uv]

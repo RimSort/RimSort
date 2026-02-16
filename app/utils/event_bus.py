@@ -126,9 +126,6 @@ class EventBus(QObject):
     # Help Menu bar signals
     do_check_for_application_update = Signal()
 
-    # Performance settings signals
-    enable_aux_db_performance_mode = Signal()
-
     # Loading animation signals
     do_threaded_loading_animation = Signal(str, object, str)
 
