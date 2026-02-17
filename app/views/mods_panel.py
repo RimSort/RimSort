@@ -4725,14 +4725,36 @@ class ModsPanel(QWidget):
             
             # Check if this translation targets any active mod
             targets_active_mod = False
+            target_mod_name = ""
             for dep_pfid in dependencies.keys():
                 if dep_pfid in active_pfids:
                     targets_active_mod = True
+                    # Get the target mod's name for similarity check
+                    target_uuid = pfid_to_uuid.get(dep_pfid)
+                    if target_uuid and target_uuid in all_local_metadata:
+                        target_mod_name = all_local_metadata[target_uuid].get("name", "")
                     logger.debug(f"Found translation {meta.get('name')} for active mod with pfid {dep_pfid}")
                     break
             
             if targets_active_mod:
-                mods_to_add.append(uuid)
+                # Calculate similarity score to filter out false positives
+                trans_name = meta.get("name", "")
+                similarity = self.active_mods_list._calculate_translation_similarity(
+                    target_mod_name, trans_name
+                )
+                
+                SIMILARITY_THRESHOLD = 0.5
+                if similarity >= SIMILARITY_THRESHOLD:
+                    mods_to_add.append(uuid)
+                    logger.debug(
+                        f"Translation '{trans_name}' passed similarity check "
+                        f"(score: {similarity:.2f}) for mod '{target_mod_name}'"
+                    )
+                else:
+                    logger.debug(
+                        f"Filtered out translation '{trans_name}' due to low similarity "
+                        f"(score: {similarity:.2f}) with mod '{target_mod_name}'"
+                    )
         
         if not mods_to_add:
             show_warning(
