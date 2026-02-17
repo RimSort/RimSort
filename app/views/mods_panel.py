@@ -1170,7 +1170,7 @@ class ModListWidget(QListWidget):
         list_widget.setCurrentRow(0)
         
         # Enable double-click to open
-        def on_double_click(item):
+        def on_double_click(item: QListWidgetItem) -> None:
             url = item.data(Qt.ItemDataRole.UserRole)
             logger.info(f"Opening translation: {item.text()} - {url}")
             open_url_browser(url)
@@ -1184,7 +1184,7 @@ class ModListWidget(QListWidget):
         open_button = QPushButton(self.tr("Open"))
         cancel_button = QPushButton(self.tr("Cancel"))
         
-        def on_open():
+        def on_open() -> None:
             current_item = list_widget.currentItem()
             if current_item:
                 url = current_item.data(Qt.ItemDataRole.UserRole)
