@@ -1856,6 +1856,11 @@ class UpdateManager(QObject):
                         # of spaces and special characters in usernames/paths
                         cmd_parts.append(f'"{arg_str}"')
                 cmd_str = " ".join(cmd_parts)
+
+                # Need to enclose script and its args in quotes
+                # cmd /k ""update.bat" "temp_update_path" "log_path""
+                cmd_str = cmd_str.replace("/k ", "/k \"", 1)
+                cmd_str = cmd_str + "\""
             else:
                 cmd_str = args_repr
 
