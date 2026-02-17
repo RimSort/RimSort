@@ -1216,7 +1216,7 @@ wheels = [
 
 [[package]]
 name = "types-lxml"
-version = "2026.1.1"
+version = "2026.2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
@@ -1224,9 +1224,9 @@ dependencies = [
     { name = "types-html5lib", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/4a/06a169bd65a7570d107216200b61f4f81c0833d7d9c5410fd0166f2ac776/types_lxml-2026.1.1.tar.gz", hash = "sha256:b1066ab033bab6c046e4c9e6f0368ab5713fe0a2e30ffe8f92ff449e07662d2d", size = 159838, upload-time = "2025-12-31T18:13:41.403Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/ad/c70ac8cbdc28eb58a17301c69b4925af54b614e47f9b2ebc9de5cc10f786/types_lxml-2026.2.16.tar.gz", hash = "sha256:b3a1340cc06db98d541c785732f6f68bea438daff4e2b7809ef748d545d01406", size = 161204, upload-time = "2026-02-17T02:34:50.855Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/95/d28c06c43eb4a9fe6fff630c9ceb820214b9f01e93f8297449a646a28b54/types_lxml-2026.1.1-py3-none-any.whl", hash = "sha256:b01dc6f6547713642ce3c44c77218501d7ae4a66a01b977d9df97825e8ec7f13", size = 98550, upload-time = "2025-12-31T18:13:39.834Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/5c/03ec9befbf4bb5309bfd576c6a5ac1c75633f78f6b64cf1f594e97cd3d23/types_lxml-2026.2.16-py3-none-any.whl", hash = "sha256:5dd81ffa54830e5f361988737c5f1d6a0ae48b2742790637ec560df790ea0401", size = 97040, upload-time = "2026-02-17T02:34:49.286Z" },
 ]
 
 [[package]]
