@@ -56,7 +56,6 @@ class AppInfo:
         )
 
         # Application metadata
-
         self._app_name = "RimSort"
         self._app_copyright = ""
 
@@ -75,13 +74,11 @@ class AppInfo:
                     self._app_version += f"+{commit[:7]}"
 
         # Define important directories using platformdirs
-
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
         self._app_storage_folder: Path = Path(platform_dirs.user_data_dir)
         self._user_log_folder: Path = Path(platform_dirs.user_log_dir)
 
         # Derive some secondary directory paths
-
         self._databases_folder: Path = self._app_storage_folder / "dbs"
         self._saved_modlists_folder: Path = self._app_storage_folder / "modlists"
         self._theme_storage_folder: Path = self._app_storage_folder / "themes"
@@ -91,20 +88,29 @@ class AppInfo:
         self._ignore_mods_file: Path = self.databases_folder / "ignore.json"
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
-        self._backup_folder: Path = self._app_storage_folder / "backup"
         self._setup_web_channel_script_file: Path = (
             self._application_folder / "setup_web_channel_script.js"
         )
 
-        # Make sure important directories exist
+        # Backup directories
+        self._backups_folder: Path = self._app_storage_folder / "backups"
+        self._game_saves_backups_folder: Path = self._backups_folder / "saves"
+        self._settings_backups_folder: Path = self._backups_folder / "settings"
+        self._application_backups_folder: Path = self._backups_folder / "rimsort_installation"
 
+        # Make sure important directories exist
         self._app_storage_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
         self._saved_modlists_folder.mkdir(parents=True, exist_ok=True)
 
         self._databases_folder.mkdir(parents=True, exist_ok=True)
         self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
-        self._backup_folder.mkdir(parents=True, exist_ok=True)
+
+        # Create backup directories
+        self._backups_folder.mkdir(parents=True, exist_ok=True)
+        self._game_saves_backups_folder.mkdir(parents=True, exist_ok=True)
+        self._settings_backups_folder.mkdir(parents=True, exist_ok=True)
+        self._application_backups_folder.mkdir(parents=True, exist_ok=True)
 
         # Initialize user rules file if it does not exist
         if not self._user_rules_file.exists():
@@ -249,15 +255,38 @@ class AppInfo:
         return self._language_data_folder
 
     @property
-    def backup_folder(self) -> Path:
-        """
-        Get the path to the folder where application backups are stored.
-        """
-        return self._backup_folder
-
-    @property
     def setup_web_channel_script_file(self) -> Path:
         """
         Get the path to the file where _setup_web_channel_script_file exists
         """
         return self._setup_web_channel_script_file
+
+    @property
+    def backups_folder(self) -> Path:
+        """
+        Get the path to the folder where various backups are stored.
+
+        This is the main backups folder, which contains subfolders for different types of backups (e.g., saves, settings, installation).
+        """
+        return self._backups_folder
+
+    @property
+    def settings_backups_folder(self) -> Path:
+        """
+        Get the path to the folder where settings backups are stored.
+        """
+        return self._settings_backups_folder
+    
+    @property
+    def game_saves_backups_folder(self) -> Path:
+        """
+        Get the path to the folder where game save backups are stored.
+        """
+        return self._game_saves_backups_folder
+    
+    @property
+    def application_backups_folder(self) -> Path:
+        """
+        Get the path to the folder where application backups are stored.
+        """
+        return self._application_backups_folder
