@@ -15,7 +15,6 @@ from PySide6.QtCore import (
     QItemSelection,
     QModelIndex,
     QObject,
-    QPoint,
     QRectF,
     QSize,
     Qt,
