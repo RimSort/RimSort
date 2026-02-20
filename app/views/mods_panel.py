@@ -2313,34 +2313,32 @@ class ModListWidget(QListWidget):
         for idx in indexes:
             item = self.item(idx)
             # Check for visible item without a widget set
-            if item and self.check_item_visible(item) and self.itemWidget(item) is None:
+            if item and self.itemWidget(item) is None:
                 self.create_widget_for_item(item)
 
     def get_visible_indexes(self) -> set[int]:
-        """
-        Tries to go through the viewport and find the indexes for all visible items.
-        """
+        """This function returns the set of indexes for items that are currently visible in the viewport."""
         indexes: set[int] = set()
-        model = self.model()
-        if not model:
+
+        top_index = self.indexAt(self.viewport().rect().topLeft())
+        if not top_index.isValid():
             return indexes
 
-        viewport_rect = self.viewport().rect()
+        row = top_index.row()
+        model = self.model()
 
-        y = viewport_rect.top()
-        while y <= viewport_rect.bottom():
-            idx = self.indexAt(QPoint(0, y))
-            if not idx.isValid():
-                break
-
-            indexes.add(idx.row())
+        while row < model.rowCount():
+            idx = model.index(row, 0)
             rect = self.visualRect(idx)
-            if rect.height() <= 0:
-                break  # This shouldn't happen
-            y += rect.height()
+            if rect.top() > self.viewport().height():
+                break
+            elif rect.bottom() >= 0:
+                indexes.add(row)
+
+            row += 1
 
         return indexes
-
+    
     def handle_item_data_changed(self, item: CustomListWidgetItem) -> None:
         """
         This slot is called when an item's data changes
