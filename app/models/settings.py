@@ -1,8 +1,9 @@
 import json
+import sys
 from json import JSONDecodeError
 from os import path, rename
 from pathlib import Path
-from shutil import copytree, rmtree
+from shutil import copy2, copytree, rmtree
 from time import time
 from typing import Any, Dict
 
@@ -24,6 +25,7 @@ from app.utils.constants import (
 )
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
+from app.views.dialogue import BinaryChoiceDialog, InformationBox
 
 
 class Settings(QObject):
@@ -384,10 +386,15 @@ class Settings(QObject):
                 # Save the model to the file if there were mitigations or config fixes
                 if mitigations or config_fixed:
                     self.save()
+                else:
+                    # Update .backup only if no mitigations/config fixing took place
+                    # This might prevent overwriting a good/better backup
+                    self.update_backup()
+
         except FileNotFoundError:
             self.save()
         except JSONDecodeError:
-            raise
+            self.handle_corrupted_settings()
 
     def save(self) -> None:
         if self.debug_logging_enabled:
@@ -397,6 +404,85 @@ class Settings(QObject):
 
         with open(str(self._settings_file), "w") as file:
             json.dump(self._to_dict(), file, indent=4)
+
+    def handle_corrupted_settings(self) -> None:
+        use_old_backup = False
+        msg = "Your settings file seems to be corrupted and cannot be loaded. "
+        if (AppInfo().settings_backups_folder / "settings.json.backup").exists():
+            msg += (
+                f"RimSort found a backup at {AppInfo().settings_backups_folder / "settings.json.backup"}. "
+                "Do you want to attempt to recover your settings from this backup?"
+            )
+        elif (AppInfo().settings_backups_folder / "settings.json.backup.old").exists():
+            msg += (
+                f"RimSort found an old backup at {AppInfo().settings_backups_folder / "settings.json.backup.old"}. "
+                "Do you want to attempt to recover your settings from this backup?"
+            )
+            use_old_backup = True
+        else:
+            msg += "No backup file was found, RimSort will reset your settings to defaults."
+
+        dlg = BinaryChoiceDialog(
+            title=self.tr("Settings Load Error"),
+            text=self.tr(msg),
+            information=self.tr(f"If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / "settings.json.corrupted"}."),
+            positive_text=self.tr("Proceed"),
+            negative_text=self.tr("Exit RimSort"),
+        )
+        if dlg.exec_is_positive():
+            try:
+                self.recover_backup(use_old_backup=use_old_backup)
+            except Exception as e:
+                logger.error(f"Failed to recover settings from backup: {e}")
+                InformationBox(
+                    title=self.tr("Settings Recovery Failed"),
+                    text=self.tr(
+                        "RimSort failed to recover your settings from the backup. "
+                        f"You may be able to manually recover your settings by restoring \"settings.json.backup\" or \"settings.json.backup.old\" from {AppInfo().settings_backups_folder} to {self._settings_file}."
+                        ),
+                ).exec()
+        else:
+            sys.exit(0)
+
+    def update_backup(self) -> bool:
+        backups_dir = AppInfo().settings_backups_folder
+
+        backup_path = backups_dir / f"{self._settings_file.name}.backup"
+        backup_old_path = backups_dir / f"{self._settings_file.name}.backup.old"
+        try:
+            copy2(backup_path, backup_old_path)
+            copy2(self._settings_file, backup_path)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update settings backup: {e}")
+            return False
+        
+    def recover_backup(self, use_old_backup: bool = False) -> bool:
+        logger.info("Attempting to recover settings from backup...")
+        try:
+            backups_dir = AppInfo().settings_backups_folder
+
+            backup_path = backups_dir / f"{self._settings_file.name}.backup"
+            backup_old_path = backups_dir / f"{self._settings_file.name}.backup.old"
+            corrupted_path = backups_dir / f"{self._settings_file.name}.corrupted"
+
+            if self._settings_file.exists():
+                copy2(self._settings_file, corrupted_path)
+
+            if backup_path.exists():
+                copy2(backup_path, self._settings_file)
+            elif use_old_backup and backup_old_path.exists():
+                copy2(backup_old_path, self._settings_file)
+            else:
+                logger.info("No backup settings file found. Resetting to defaults.")
+                self._settings_file.unlink()
+                return False
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to recover settings from backup: {e}")
+            return False
 
     def _from_dict(self, data: Dict[str, Any]) -> None:
         special_attributes = ["instances"]
