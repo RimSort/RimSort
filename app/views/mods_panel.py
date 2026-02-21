@@ -63,6 +63,7 @@ from sqlalchemy import text
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.divider import DividerData, generate_divider_uuid, is_divider_uuid
 from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
@@ -93,6 +94,7 @@ from app.utils.generic import (
 from app.utils.metadata import MetadataManager, ModMetadata
 from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
+from app.views.divider_widget import DividerItemInner
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_warning,
@@ -896,14 +898,14 @@ class ModListWidget(QListWidget):
         for index in selected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget:
-                widget.set_selected(True)  # type: ignore
+            if widget and hasattr(widget, "set_selected"):
+                widget.set_selected(True)
 
         for index in deselected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget:
-                widget.set_selected(False)  # type: ignore
+            if widget and hasattr(widget, "set_selected"):
+                widget.set_selected(False)
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -938,6 +940,8 @@ class ModListWidget(QListWidget):
                     self.uuids.remove(uuid)
                 # Reinsert uuid at it's new index
                 self.uuids.insert(idx, uuid)
+        # Re-apply divider collapse states after reorder
+        self.apply_collapse_states()
         # Update list signal
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
@@ -952,6 +956,8 @@ class ModListWidget(QListWidget):
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                if getattr(item_data, "is_divider", False):
+                    continue
                 metadata.append(
                     self.metadata_manager.internal_local_metadata[item_data["uuid"]]
                 )
@@ -1223,6 +1229,11 @@ class ModListWidget(QListWidget):
                 logger.debug("Mod list right-click non-QListWidgetItem")
                 return super().eventFilter(object, event)
 
+            # Handle divider-specific context menu
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                return self._show_divider_context_menu(item, item_data, pos_local)
+
             # Otherwise, begin calculation
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
 
@@ -1458,6 +1469,8 @@ class ModListWidget(QListWidget):
                 for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                        if getattr(item_data, "is_divider", False):
+                            continue
                         uuid = item_data["uuid"]
                         all_selected_uuids[item_idx] = uuid
                         # Retrieve metadata
@@ -1654,9 +1667,26 @@ class ModListWidget(QListWidget):
                         remove_from_steamdb_blacklist_action
                     )
                 context_menu.addMenu(workshop_actions_menu)
+            # Divider option (active list only)
+            add_divider_action = None
+            if self.list_type == "Active":
+                context_menu.addSeparator()
+                add_divider_action = QAction()
+                add_divider_action.setText(self.tr("Add divider here"))
+                context_menu.addAction(add_divider_action)
             # Execute QMenu and return it's ACTION
             action = context_menu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
+                if action == add_divider_action:
+                    row = self.row(item)
+                    name, ok = QInputDialog.getText(
+                        self,
+                        self.tr("Add Divider"),
+                        self.tr("Divider name:"),
+                    )
+                    if ok and name.strip():
+                        self.add_divider(row, name.strip())
+                    return True
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
                 ):
@@ -1989,6 +2019,8 @@ class ModListWidget(QListWidget):
                 for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                        if getattr(item_data, "is_divider", False):
+                            continue
                         uuid = all_selected_uuids[item_idx]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
@@ -2204,13 +2236,16 @@ class ModListWidget(QListWidget):
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
-        This gets all modlist items.
+        This gets all modlist items (excludes dividers).
 
         :return: List of all modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
             item = self.item(index)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                continue
             mod_list_items.append(item)
         return mod_list_items
 
@@ -2239,6 +2274,8 @@ class ModListWidget(QListWidget):
         for index in range(self.count()):
             item = self.item(index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             if item_data["warning_toggled"]:
                 mod_list_items.append(item)
         return mod_list_items
@@ -2254,6 +2291,8 @@ class ModListWidget(QListWidget):
         for index in range(self.count()):
             item = self.item(index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             if item_data["warning_toggled"]:
                 widget = self.itemWidget(item)
                 if isinstance(widget, ModListItemInner):
@@ -2270,6 +2309,17 @@ class ModListWidget(QListWidget):
         if data is None:
             logger.debug("Attempted to create widget for item with None data")
             return
+
+        if getattr(data, "is_divider", False):
+            widget = DividerItemInner(
+                uuid=data.uuid, name=data.name, collapsed=data.collapsed
+            )
+            widget.toggle_signal.connect(self.toggle_divider_collapse)
+            item.setSizeHint(widget.sizeHint())
+            self.setItemWidget(item, widget)
+            self._update_single_divider_mod_count(item)
+            return
+
         errors_warnings = data["errors_warnings"]
         errors = data["errors"]
         warnings = data["warnings"]
@@ -2403,6 +2453,11 @@ class ModListWidget(QListWidget):
                 if data is None:
                     logger.debug(f"Attempted to insert item with None data. Idx: {idx}")
                     continue
+                if getattr(data, "is_divider", False):
+                    uuid = data["uuid"]
+                    self.uuids.insert(idx, uuid)
+                    self.create_widget_for_item(item)
+                    continue
                 # Ensure the item's persisted list_type matches the destination list after insertion
                 try:
                     data["list_type"] = self.list_type
@@ -2451,6 +2506,169 @@ class ModListWidget(QListWidget):
             return self.itemWidget(item)
         return None
 
+    # ── Divider helpers ──────────────────────────────────────────────
+
+    def _show_divider_context_menu(
+        self,
+        item: CustomListWidgetItem,
+        data: DividerData,
+        pos_local: Any,
+    ) -> bool:
+        menu = QMenu()
+        rename_action = menu.addAction(self.tr("Rename divider"))
+        toggle_action = menu.addAction(
+            self.tr("Expand") if data.collapsed else self.tr("Collapse")
+        )
+        menu.addSeparator()
+        delete_action = menu.addAction(self.tr("Delete divider"))
+        action = menu.exec_(self.mapToGlobal(pos_local))
+        if action == rename_action:
+            new_name, ok = QInputDialog.getText(
+                self,
+                self.tr("Rename Divider"),
+                self.tr("New name:"),
+                text=data.name,
+            )
+            if ok and new_name.strip():
+                self.rename_divider(data.uuid, new_name.strip())
+        elif action == toggle_action:
+            self.toggle_divider_collapse(data.uuid)
+        elif action == delete_action:
+            self.remove_divider(data.uuid)
+        return True
+
+    def add_divider(self, index: int, name: str) -> None:
+        uuid = generate_divider_uuid()
+        data = DividerData(uuid=uuid, name=name)
+        item = CustomListWidgetItem()
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        self.insertItem(index, item)
+        self.uuids.insert(index, uuid)
+        self.create_widget_for_item(item)
+        self.apply_collapse_states()
+        self.list_update_signal.emit(str(self.count()))
+
+    def remove_divider(self, uuid: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        # Expand hidden items first so they become visible
+        next_div = self._find_next_divider_index(idx + 1)
+        for i in range(idx + 1, next_div):
+            self.item(i).setHidden(False)
+        self.uuids.pop(idx)
+        self.takeItem(idx)
+        self._update_divider_mod_counts()
+        self.list_update_signal.emit(str(self.count()))
+
+    def rename_divider(self, uuid: str, new_name: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        item = self.item(idx)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        data.name = new_name
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_name(new_name)
+
+    def toggle_divider_collapse(self, uuid: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        item = self.item(idx)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        data.collapsed = not data.collapsed
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_collapsed(data.collapsed)
+        next_div = self._find_next_divider_index(idx + 1)
+        for i in range(idx + 1, next_div):
+            self.item(i).setHidden(data.collapsed)
+        self._update_single_divider_mod_count(item)
+
+    def _find_next_divider_index(self, start: int) -> int:
+        for i in range(start, self.count()):
+            d = self.item(i).data(Qt.ItemDataRole.UserRole)
+            if getattr(d, "is_divider", False):
+                return i
+        return self.count()
+
+    def _update_single_divider_mod_count(self, item: CustomListWidgetItem) -> None:
+        idx = self.row(item)
+        if idx < 0:
+            return
+        next_div = self._find_next_divider_index(idx + 1)
+        count = next_div - idx - 1
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_mod_count(count)
+
+    def _update_divider_mod_counts(self) -> None:
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                self._update_single_divider_mod_count(item)
+
+    def apply_collapse_states(self) -> None:
+        """Hide/show items according to their preceding divider's collapsed state."""
+        collapsed = False
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                collapsed = data.collapsed
+                widget = self.itemWidget(item)
+                if isinstance(widget, DividerItemInner):
+                    widget.set_collapsed(collapsed)
+            else:
+                item.setHidden(collapsed)
+        self._update_divider_mod_counts()
+
+    def get_dividers_data(self) -> list[dict]:
+        """Return serialisable divider info for persistence."""
+        result = []
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                result.append(
+                    {
+                        "uuid": data.uuid,
+                        "name": data.name,
+                        "collapsed": data.collapsed,
+                        "index": i,
+                    }
+                )
+        return result
+
+    def restore_dividers(self, dividers: list[dict]) -> None:
+        """Re-insert dividers at saved positions after a list rebuild."""
+        if not dividers:
+            return
+        sorted_dividers = sorted(dividers, key=lambda d: d.get("index", 0))
+        offset = 0
+        for div in sorted_dividers:
+            idx = min(div.get("index", 0) + offset, self.count())
+            uuid = div.get("uuid", generate_divider_uuid())
+            data = DividerData(
+                uuid=uuid,
+                name=div.get("name", ""),
+                collapsed=div.get("collapsed", False),
+            )
+            item = CustomListWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+            self.insertItem(idx, item)
+            self.uuids.insert(idx, uuid)
+            offset += 1
+        self.check_widgets_visible()
+        self.apply_collapse_states()
+
+    # ── End divider helpers ──────────────────────────────────────────
+
     def mod_changed_to(
         self, current: CustomListWidgetItem, previous: CustomListWidgetItem
     ) -> None:
@@ -2460,6 +2678,8 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                return
             self.mod_info_signal.emit(data["uuid"], current)
 
     def mod_clicked(self, current: CustomListWidgetItem) -> None:
@@ -2472,6 +2692,8 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                return
             self.mod_info_signal.emit(data["uuid"], current)
             mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
             mod_info = flatten_to_list(mod_info)
@@ -2484,10 +2706,15 @@ class ModListWidget(QListWidget):
         """
         Method to handle double clicking on a row.
         """
-        # widget = ModListItemInner = self.itemWidget(item)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if getattr(data, "is_divider", False):
+            self.toggle_divider_collapse(data.uuid)
+            return
         self.key_press_signal.emit("DoubleClick")
 
     def rebuild_item_widget_from_uuid(self, uuid: str) -> None:
+        if is_divider_uuid(uuid):
+            return
         item_index = self.uuids.index(uuid)
         item = self.item(item_index)
         logger.debug(f"Rebuilding widget for item {uuid} at index {item_index}")
@@ -2594,8 +2821,9 @@ class ModListWidget(QListWidget):
 
         internal_local_metadata = self.metadata_manager.internal_local_metadata
 
+        mod_uuids = [u for u in self.uuids if not is_divider_uuid(u)]
         packageid_to_uuid = {
-            internal_local_metadata[uuid]["packageid"]: uuid for uuid in self.uuids
+            internal_local_metadata[uuid]["packageid"]: uuid for uuid in mod_uuids
         }
         package_ids_set = set(packageid_to_uuid.keys())
 
@@ -2616,7 +2844,7 @@ class ModListWidget(QListWidget):
                 != "None"
                 else None,
             }
-            for uuid in self.uuids
+            for uuid in mod_uuids
         }
 
         num_warnings = 0
@@ -2971,6 +3199,8 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
+                if is_divider_uuid(uuid_key):
+                    continue
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
@@ -2998,7 +3228,7 @@ class ModListWidget(QListWidget):
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
             # Set uuids list to match the widget after all items are added
-            self.uuids = uuids
+            self.uuids = list(uuids)
 
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -4025,8 +4255,10 @@ class ModsPanel(QWidget):
         )
 
         # Apply filtering based on the selected type
-        for uuid in mod_list.uuids:
-            item = mod_list.item(mod_list.uuids.index(uuid))
+        for idx, uuid in enumerate(mod_list.uuids):
+            if is_divider_uuid(uuid):
+                continue
+            item = mod_list.item(idx)
             item_data = item.data(Qt.ItemDataRole.UserRole)
 
             # Determine the mod type
@@ -4266,6 +4498,8 @@ class ModsPanel(QWidget):
             )
             if item is None:
                 continue
+            if is_divider_uuid(uuid):
+                continue
             # Check if UUID exists in metadata before accessing
             if uuid not in self.metadata_manager.internal_local_metadata:
                 continue
@@ -4362,6 +4596,7 @@ class ModsPanel(QWidget):
         self.direct_update_count(list_type, num_filtered, num_unfiltered)
         if list_type == "Active":
             self.active_mods_list.check_widgets_visible()
+            self.active_mods_list.apply_collapse_states()
         else:
             self.inactive_mods_list.check_widgets_visible()
 
@@ -4503,6 +4738,8 @@ class ModsPanel(QWidget):
         num_filtered = 0
         num_unfiltered = 0
         for idx in range(len(uuids)):
+            if is_divider_uuid(uuids[idx]):
+                continue
             item = (
                 self.active_mods_list.item(idx)
                 if list_type == "Active"
@@ -4673,7 +4910,9 @@ class ModsPanel(QWidget):
             )
             return
         
-        active_uuids = self.active_mods_list.uuids
+        active_uuids = [
+            u for u in self.active_mods_list.uuids if not is_divider_uuid(u)
+        ]
         all_local_metadata = self.metadata_manager.internal_local_metadata
         
         # Build a mapping: pfid -> uuid for all installed mods

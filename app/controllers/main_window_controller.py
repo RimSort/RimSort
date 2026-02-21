@@ -5,6 +5,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QPushButton
 
+from app.models.divider import is_divider_uuid
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.views.main_window import MainWindow
@@ -96,10 +97,11 @@ class MainWindowController(QObject):
         return None
 
     def check_dependencies(self) -> None:
-        # Get the active mods list
-        active_mods = set(
-            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
-        )
+        # Get the active mods list (exclude dividers)
+        active_mods = {
+            u for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        }
 
         # Create a dictionary to store missing dependencies
         missing_deps: dict[str, set[str]] = {}
@@ -388,9 +390,12 @@ class MainWindowController(QObject):
         logger.debug(
             "Active mods list has been updated. Managing save button animation state."
         )
+        current_mod_uuids = [
+            u for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        ]
         if (
-            # Compare current active list with last save to see if the list has changed
-            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            current_mod_uuids
             != self.main_window.main_content_panel.active_mods_uuids_last_save
         ):
             if not self.main_window.save_button_flashing_animation.isActive():

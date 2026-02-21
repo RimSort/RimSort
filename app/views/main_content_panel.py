@@ -38,6 +38,7 @@ import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
+from app.models.divider import is_divider_uuid
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
@@ -444,7 +445,10 @@ class MainContent(QObject):
             # TODO: graphical bug where if you hold down the key, items are
             # inserted too quickly and become empty items
 
-            items_to_move = aml.selectedItems().copy()
+            items_to_move = [
+                i for i in aml.selectedItems().copy()
+                if not getattr(i.data(Qt.ItemDataRole.UserRole), "is_divider", False)
+            ]
             if items_to_move:
                 first_selected = sorted(aml.row(i) for i in items_to_move)[0]
 
@@ -539,6 +543,10 @@ class MainContent(QObject):
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
+        # Restore saved dividers into the active list
+        saved_dividers = self.settings_controller.settings.active_mods_dividers
+        if saved_dividers:
+            self.mods_panel.active_mods_list.restore_dividers(saved_dividers)
         # Determine sort key and descending for inactive mods
         if self.settings_controller.settings.inactive_mods_sorting:
             # Use current UI state from the combobox and button
@@ -952,6 +960,9 @@ class MainContent(QObject):
             for uuid in self.metadata_manager.internal_local_metadata.keys()
             if uuid not in active_mods_uuids
         )
+        # Clear dividers on list clear
+        self.settings_controller.settings.active_mods_dividers = []
+        self.settings_controller.settings.save()
         # Disable widgets while inserting
         self.disable_enable_widgets_signal.emit(False)
         # Insert data into lists
@@ -978,8 +989,11 @@ class MainContent(QObject):
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
 
-        # Get active mods
-        active_mods = set(self.mods_panel.active_mods_list.uuids)
+        # Get active mods (exclude dividers)
+        active_mods = {
+            u for u in self.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        }
 
         # Compile metadata for active mods so newly-added ones have dependency info
         self.metadata_manager.compile_metadata(uuids=list(active_mods))
@@ -1047,6 +1061,19 @@ class MainContent(QObject):
             logger.info(
                 "Finished combining all tiers of mods. Inserting into mod lists!"
             )
+            # Move all dividers to the bottom after sort so the user
+            # can reposition them.  Reset collapsed state so they are visible.
+            saved_dividers = (
+                self.mods_panel.active_mods_list.get_dividers_data()
+            )
+            bottom = len(new_order)
+            for i, div in enumerate(saved_dividers):
+                div["index"] = bottom + i
+                div["collapsed"] = False
+            self.settings_controller.settings.active_mods_dividers = (
+                saved_dividers
+            )
+            self.settings_controller.settings.save()
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
@@ -1129,6 +1156,8 @@ class MainContent(QObject):
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods = []
             for uuid in self.mods_panel.active_mods_list.uuids:
+                if is_divider_uuid(uuid):
+                    continue
                 package_id = self.metadata_manager.internal_local_metadata[uuid][
                     "packageid"
                 ]
@@ -1386,6 +1415,8 @@ class MainContent(QObject):
         active_mods = []
         active_mods_packageid_to_uuid = {}
         for uuid in self.mods_panel.active_mods_list.uuids:
+            if is_divider_uuid(uuid):
+                continue
             package_id = self.metadata_manager.internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1531,6 +1562,8 @@ class MainContent(QObject):
         pfids = []
         # Build our lists
         for uuid in self.mods_panel.active_mods_list.uuids:
+            if is_divider_uuid(uuid):
+                continue
             package_id = MetadataManager.instance().internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1849,8 +1882,15 @@ class MainContent(QObject):
         Method to save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
+        # Persist divider data before saving
+        self.settings_controller.settings.active_mods_dividers = (
+            self.mods_panel.active_mods_list.get_dividers_data()
+        )
+        self.settings_controller.settings.save()
         active_mods = []
         for uuid in self.mods_panel.active_mods_list.uuids:
+            if is_divider_uuid(uuid):
+                continue
             package_id = self.metadata_manager.internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1965,6 +2005,8 @@ class MainContent(QObject):
         else:
             with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                 for uuid in self.mods_panel.active_mods_list.uuids:
+                    if is_divider_uuid(uuid):
+                        continue
                     todds_txt_file.write(
                         os.path.abspath(
                             self.metadata_manager.internal_local_metadata[uuid]["path"]
@@ -3514,7 +3556,11 @@ class MainContent(QObject):
         create_backup_in_thread(self.settings_controller.settings)
 
         # Check for unsaved mod list changes and prompt user
-        if self.mods_panel.active_mods_list.uuids != self.active_mods_uuids_last_save:
+        current_mod_uuids = [
+            u for u in self.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        ]
+        if current_mod_uuids != self.active_mods_uuids_last_save:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Unsaved Changes"),
                 text=self.tr("You have unsaved changes. What would you like to do?"),
