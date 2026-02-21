@@ -2802,9 +2802,8 @@ class ModListWidget(QListWidget):
         except TypeError:
             pass
         sorted_dividers = sorted(dividers, key=lambda d: d.get("index", 0))
-        offset = 0
         for div in sorted_dividers:
-            idx = min(div.get("index", 0) + offset, self.count())
+            idx = min(div.get("index", 0), self.count())
             uuid = div.get("uuid", generate_divider_uuid())
             data = DividerData(
                 uuid=uuid,
@@ -2815,7 +2814,6 @@ class ModListWidget(QListWidget):
             item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
             self.insertItem(idx, item)
             self.uuids.insert(idx, uuid)
-            offset += 1
         # Reconnect model signals
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
