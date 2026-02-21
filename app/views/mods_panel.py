@@ -2796,6 +2796,11 @@ class ModListWidget(QListWidget):
         """Re-insert dividers at saved positions after a list rebuild."""
         if not dividers:
             return
+        # Disconnect model signals to avoid handle_rows_inserted duplicating uuids
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass
         sorted_dividers = sorted(dividers, key=lambda d: d.get("index", 0))
         offset = 0
         for div in sorted_dividers:
@@ -2811,6 +2816,10 @@ class ModListWidget(QListWidget):
             self.insertItem(idx, item)
             self.uuids.insert(idx, uuid)
             offset += 1
+        # Reconnect model signals
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
         self.check_widgets_visible()
         self.apply_collapse_states()
 
@@ -2991,6 +3000,8 @@ class ModListWidget(QListWidget):
             if current_item is None:
                 continue
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
+            if getattr(current_item_data, "is_divider", False):
+                continue
             current_item_data["mismatch"] = False
             current_item_data["errors"] = ""
             current_item_data["warnings"] = ""
