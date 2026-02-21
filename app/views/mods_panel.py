@@ -4511,10 +4511,12 @@ class ModsPanel(QWidget):
                 continue
             if is_divider_uuid(uuid):
                 continue
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             # Check if UUID exists in metadata before accessing
             if uuid not in self.metadata_manager.internal_local_metadata:
                 continue
-            item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
                 filters_active = True
@@ -4759,6 +4761,8 @@ class ModsPanel(QWidget):
             if item is None:
                 continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             item_filtered = item_data["filtered"]
 
             if item.isHidden() or item_filtered:
