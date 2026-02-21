@@ -450,9 +450,12 @@ class Settings(QObject):
         backup_path = backups_dir / f"{self._settings_file.name}.backup"
         backup_old_path = backups_dir / f"{self._settings_file.name}.backup.old"
         try:
-            copy2(backup_path, backup_old_path)
-            copy2(self._settings_file, backup_path)
-            return True
+            if backup_path.exists():
+                copy2(backup_path, backup_old_path)
+            if self._settings_file.exists():
+                copy2(self._settings_file, backup_path)
+                return True
+            return False
         except Exception as e:
             logger.error(f"Failed to update settings backup: {e}")
             return False
