@@ -540,11 +540,15 @@ class MainContent(QObject):
         logger.info(
             f"Inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
+        # Snapshot live divider state before the list is cleared
+        live_dividers = self.mods_panel.active_mods_list.get_dividers_data()
+        if live_dividers:
+            self.settings_controller.settings.active_mods_dividers = live_dividers
+        saved_dividers = self.settings_controller.settings.active_mods_dividers
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
-        # Restore saved dividers into the active list
-        saved_dividers = self.settings_controller.settings.active_mods_dividers
+        # Restore dividers into the active list
         if saved_dividers:
             self.mods_panel.active_mods_list.restore_dividers(saved_dividers)
         # Determine sort key and descending for inactive mods
