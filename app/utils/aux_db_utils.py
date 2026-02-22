@@ -66,6 +66,21 @@ def auxdb_get_mod_color(
     return mod_color
 
 
+def auxdb_get_mod_font_color(
+    settings_controller: SettingsController,
+    uuid: str,
+    aux_db_controller: AuxMetadataController | None = None,
+    session: Session | None = None,
+) -> QColor | None:
+    """Get the mod font color from Aux Metadata DB."""
+    entry = auxdb_get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
+    if entry:
+        color_text = entry.font_color_hex
+        if color_text is not None:
+            return QColor(color_text)
+    return None
+
+
 def auxdb_get_mod_user_notes(
     settings_controller: SettingsController,
     uuid: str,
@@ -144,6 +159,64 @@ def auxdb_update_mod_color(
             mod_path,
             color_hex=color.name() if color else None,
         )
+    finally:
+        if not session:
+            local_session.close()
+
+
+def auxdb_update_mod_font_color(
+    settings_controller: SettingsController,
+    uuid: str,
+    color: QColor | None,
+    aux_db_controller: AuxMetadataController | None = None,
+    session: Session | None = None,
+) -> None:
+    """Update the mod font color in the Aux Metadata DB."""
+    metadata_manager = MetadataManager.instance()
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
+    )
+    local_session = session or local_controller.Session()
+    try:
+        mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
+        local_controller.update(
+            local_session,
+            mod_path,
+            font_color_hex=color.name() if color else None,
+        )
+    finally:
+        if not session:
+            local_session.close()
+
+
+def auxdb_update_all_mod_font_colors(
+    settings_controller: SettingsController,
+    uuid_color_mapping: dict[str, QColor | None],
+    aux_db_controller: AuxMetadataController | None = None,
+    session: Session | None = None,
+) -> None:
+    """Update the mod font colors in the Aux Metadata DB for multiple mods."""
+    metadata_manager = MetadataManager.instance()
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
+    )
+    local_session = session or local_controller.Session()
+    try:
+        updates = [
+            {
+                "path": metadata_manager.internal_local_metadata[uuid]["path"],
+                "font_color_hex": color.name() if color else None,
+            }
+            for uuid, color in uuid_color_mapping.items()
+        ]
+        local_session.bulk_update_mappings(AuxMetadataEntry.__mapper__, updates)
+        local_session.commit()
     finally:
         if not session:
             local_session.close()

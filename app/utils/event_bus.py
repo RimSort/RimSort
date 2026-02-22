@@ -92,7 +92,6 @@ class EventBus(QObject):
     do_export_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
-    do_change_mod_coloring_mode = Signal()
 
     # MainWindow signals
     do_button_animation = Signal(QPushButton)

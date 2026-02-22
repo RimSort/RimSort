@@ -48,9 +48,6 @@ class ModsPanelController(QObject):
         EventBus().reset_mod_colors_signal.connect(
             self._on_menu_bar_reset_mod_colors_triggered
         )
-        EventBus().do_change_mod_coloring_mode.connect(
-            self._on_change_mod_coloring_mode
-        )
         EventBus().filters_changed_in_active_modlist.connect(
             self._on_filters_changed_in_active_modlist
         )
@@ -191,23 +188,8 @@ class ModsPanelController(QObject):
         inactive_uuids = [mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in inactive_mods]
         self.mods_panel.active_mods_list.reset_all_mod_colors(active_uuids)
         self.mods_panel.inactive_mods_list.reset_all_mod_colors(inactive_uuids)
-
-    def _on_change_mod_coloring_mode(self) -> None:
-        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
-        inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
-        for mod in active_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
-            mod_color = mod_data["mod_color"]
-            if mod_color:
-                self.mods_panel.active_mods_list.change_mod_color(uuid, mod_color)
-
-        for mod in inactive_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
-            mod_color = mod_data["mod_color"]
-            if mod_color:
-                self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)
+        self.mods_panel.active_mods_list.reset_all_mod_font_colors(active_uuids)
+        self.mods_panel.inactive_mods_list.reset_all_mod_font_colors(inactive_uuids)
 
     @Slot()
     def _change_visibility_of_mods_with_warnings_errors(self, type: str) -> None:

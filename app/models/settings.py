@@ -186,7 +186,6 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-        self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True

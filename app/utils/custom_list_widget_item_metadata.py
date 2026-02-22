@@ -8,6 +8,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.aux_db_utils import (
     auxdb_get_mod_color,
+    auxdb_get_mod_font_color,
     auxdb_get_mod_user_notes,
     auxdb_get_mod_warning_toggled,
 )
@@ -33,6 +34,7 @@ class CustomListWidgetItemMetadata:
         invalid: bool | None = None,
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
+        mod_font_color: QColor | None = None,
         alternative: Optional[str] = None,
         list_type: str | None = None,
         aux_metadata_controller: AuxMetadataController | None = None,
@@ -87,6 +89,12 @@ class CustomListWidgetItemMetadata:
             )
         else:
             self.mod_color = mod_color
+        if mod_font_color is None:
+            self.mod_font_color = auxdb_get_mod_font_color(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+        else:
+            self.mod_font_color = mod_font_color
         self.alternative = (
             alternative
             if alternative is not None
