@@ -330,7 +330,7 @@ class MainContent(QObject):
 
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
-            self.active_mods_dividers_last_save: list[dict] = []
+            self.active_mods_dividers_last_save: list[dict[str, Any]] = []
             self.active_mods_uuids_restore_state: list[str] = []
             self.inactive_mods_uuids_restore_state: list[str] = []
 

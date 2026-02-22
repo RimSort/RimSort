@@ -2296,12 +2296,12 @@ class ModListWidget(QListWidget):
             return
 
         if getattr(data, "is_divider", False):
-            widget = DividerItemInner(
+            divider_widget = DividerItemInner(
                 uuid=data.uuid, name=data.name, collapsed=data.collapsed
             )
-            widget.toggle_signal.connect(self.toggle_divider_collapse)
-            item.setSizeHint(widget.sizeHint())
-            self.setItemWidget(item, widget)
+            divider_widget.toggle_signal.connect(self.toggle_divider_collapse)
+            item.setSizeHint(divider_widget.sizeHint())
+            self.setItemWidget(item, divider_widget)
             self._update_single_divider_mod_count(item)
             return
 
@@ -2626,7 +2626,7 @@ class ModListWidget(QListWidget):
                 item.setHidden(collapsed)
         self._update_divider_mod_counts()
 
-    def get_dividers_data(self) -> list[dict]:
+    def get_dividers_data(self) -> list[dict[str, Any]]:
         """Return serialisable divider info for persistence."""
         result = []
         for i in range(self.count()):
@@ -2643,7 +2643,7 @@ class ModListWidget(QListWidget):
                 )
         return result
 
-    def restore_dividers(self, dividers: list[dict]) -> None:
+    def restore_dividers(self, dividers: list[dict[str, Any]]) -> None:
         """Re-insert dividers at saved positions after a list rebuild."""
         if not dividers:
             return

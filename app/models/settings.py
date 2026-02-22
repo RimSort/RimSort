@@ -223,7 +223,7 @@ class Settings(QObject):
         self.color_picker_custom_colors: list[str] = []
 
         # Active mod list dividers: list of {uuid, name, collapsed, index}
-        self.active_mods_dividers: list[dict] = []
+        self.active_mods_dividers: list[dict[str, Any]] = []
 
     @property
     def aux_db_path(self) -> Path:

@@ -31,7 +31,7 @@ class DummySettings:
         self.inactive_mods_sort_descending = True
         self.active_mods_data_source_filter_index = 0
         self.inactive_mods_data_source_filter_index = 0
-        self.active_mods_dividers: list[dict] = []
+        self.active_mods_dividers: list[dict[str, object]] = []
         # Instance data with dummy game_folder, config_folder and run_args
         self.instances = {
             "inst1": SimpleNamespace(

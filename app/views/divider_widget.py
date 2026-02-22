@@ -14,7 +14,7 @@ class _ClickableArrow(QLabel):
 
     clicked = Signal()
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
             return
