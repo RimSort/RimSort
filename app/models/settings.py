@@ -119,6 +119,10 @@ class Settings(QObject):
         self.inactive_mods_sort_key: str = "FILESYSTEM_MODIFIED_TIME"
         self.inactive_mods_sort_descending: bool = True
 
+        # Data source filter state (0 = All)
+        self.active_mods_data_source_filter_index: int = 0
+        self.inactive_mods_data_source_filter_index: int = 0
+
         # DB Builder
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True

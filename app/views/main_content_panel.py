@@ -330,6 +330,7 @@ class MainContent(QObject):
 
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
+            self.active_mods_dividers_last_save: list[dict] = []
             self.active_mods_uuids_restore_state: list[str] = []
             self.inactive_mods_uuids_restore_state: list[str] = []
 
@@ -756,6 +757,9 @@ class MainContent(QObject):
             )
         )
         self.active_mods_uuids_last_save = active_mods_uuids
+        self.active_mods_dividers_last_save = list(
+            self.settings_controller.settings.active_mods_dividers
+        )
         if is_initial:
             logger.info("Caching initial active/inactive mod lists")
             self.active_mods_uuids_restore_state = active_mods_uuids
@@ -846,23 +850,12 @@ class MainContent(QObject):
         EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
-            # Reset the data source filters to default and clear searches
-            # Avoid recalculating warnings/errors when clearing search
-            # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
+            # Clear search text but preserve data source filter preferences
             self.mods_panel.signal_clear_search(
                 list_type="Active",
             )
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
             self.mods_panel.signal_clear_search(
                 list_type="Inactive",
-            )
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
             )
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
@@ -1920,6 +1913,9 @@ class MainContent(QObject):
             mod_list=active_mods
         )
         self.active_mods_uuids_last_save = active_mods_uuids
+        self.active_mods_dividers_last_save = list(
+            self.settings_controller.settings.active_mods_dividers
+        )
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
         mods_config_data = generate_rimworld_mods_list(

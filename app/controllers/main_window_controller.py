@@ -24,7 +24,6 @@ class MainWindowController(QObject):
             self.main_window.refresh_button,
             self.main_window.clear_button,
             self.main_window.restore_button,
-            self.main_window.sort_button,
             self.main_window.save_button,
             self.main_window.run_button,
         ]
@@ -40,7 +39,6 @@ class MainWindowController(QObject):
                 EventBus().do_refresh_mods_lists,
                 EventBus().do_clear_active_mods_list,
                 EventBus().do_restore_active_mods_list,
-                EventBus().do_sort_active_mods_list,
                 EventBus().do_save_active_mods_list,
                 EventBus().do_run_game,
             ],
@@ -394,10 +392,18 @@ class MainWindowController(QObject):
             u for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
             if not is_divider_uuid(u)
         ]
-        if (
+        current_dividers = (
+            self.main_window.main_content_panel.mods_panel.active_mods_list.get_dividers_data()
+        )
+        mods_changed = (
             current_mod_uuids
             != self.main_window.main_content_panel.active_mods_uuids_last_save
-        ):
+        )
+        dividers_changed = (
+            current_dividers
+            != self.main_window.main_content_panel.active_mods_dividers_last_save
+        )
+        if mods_changed or dividers_changed:
             if not self.main_window.save_button_flashing_animation.isActive():
                 logger.debug("Starting save button animation")
                 self.main_window.save_button_flashing_animation.start(

@@ -2542,9 +2542,16 @@ class ModListWidget(QListWidget):
         data = DividerData(uuid=uuid, name=name)
         item = CustomListWidgetItem()
         item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass
         self.insertItem(index, item)
         self.uuids.insert(index, uuid)
         self.create_widget_for_item(item)
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
         self.apply_collapse_states()
         self.list_update_signal.emit(str(self.count()))
 
@@ -3166,10 +3173,8 @@ class ModListWidget(QListWidget):
         logger.info(f"Internally recreating {list_type} mod list")
         # Skip sorting if UUIDs are already filtered/sorted (filtering=True)
         if not filtering:
-            # Sort inactive mods using saved settings if enabled
             if (
                 list_type == "Inactive"
-                and self.settings_controller.settings.save_inactive_mods_sort_state
                 and self.settings_controller.settings.inactive_mods_sorting
             ):
                 sort_key = ModsPanelSortKey[
@@ -3184,14 +3189,13 @@ class ModListWidget(QListWidget):
                     descending=descending,
                     settings_controller=self.settings_controller,
                 )
-            else:
-                if list_type == "Inactive":
-                    uuids = sort_uuids(
-                        uuids,
-                        key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
-                        descending=True,
-                        settings_controller=self.settings_controller,
-                    )
+            elif list_type == "Inactive":
+                uuids = sort_uuids(
+                    uuids,
+                    key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+                    descending=True,
+                    settings_controller=self.settings_controller,
+                )
         # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
         # Temporarily disconnect model signals to avoid cascading updates and duplicate items
@@ -3433,19 +3437,12 @@ class ModsPanel(QWidget):
         self.settings_controller = settings_controller
 
         # Load inactive mods sort settings
-        if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
-        ):
-            self.inactive_mods_sort_key = (
-                self.settings_controller.settings.inactive_mods_sort_key
-            )
-            self.inactive_mods_sort_descending = (
-                self.settings_controller.settings.inactive_mods_sort_descending
-            )
-        else:
-            self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
-            self.inactive_mods_sort_descending = True
+        self.inactive_mods_sort_key = (
+            self.settings_controller.settings.inactive_mods_sort_key
+        )
+        self.inactive_mods_sort_descending = (
+            self.settings_controller.settings.inactive_mods_sort_descending
+        )
 
         # Background folder-size sorting state
         self._size_progress_dialog: Optional[QProgressDialog] = None
@@ -3574,8 +3571,8 @@ class ModsPanel(QWidget):
             settings_controller=self.settings_controller,
         )
 
-        # Inactive mods search layout
-        self.inactive_mods_search_layout = QHBoxLayout()
+        self.inactive_mods_search_layout = QVBoxLayout()
+        self.inactive_mods_search_layout.setSpacing(2)
         self.initialize_inactive_mods_search_widgets()
 
         # Add inactive mods widgets to layout
@@ -3596,7 +3593,9 @@ class ModsPanel(QWidget):
 
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
-        self.active_mods_filter_data_source_index = 0
+        self.active_mods_filter_data_source_index = (
+            self.settings_controller.settings.active_mods_data_source_filter_index
+        )
         self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.active_mods_filter_data_source_index
         ]
@@ -3640,6 +3639,7 @@ class ModsPanel(QWidget):
         self.active_mods_search.textChanged.connect(self.on_active_mods_search)
         self.active_mods_search.inputRejected.connect(self.on_active_mods_search_clear)
         self.active_mods_search.setPlaceholderText(self.tr("Search by..."))
+        self.active_mods_search.setMaximumWidth(150)
         # Add explicit type annotation to help mypy
         self.active_mods_search_clear_button = cast(
             QToolButton, self.active_mods_search.findChild(QToolButton)
@@ -3652,7 +3652,9 @@ class ModsPanel(QWidget):
         )
         self.active_mods_search_filter: QComboBox = QComboBox()
         self.active_mods_search_filter.setObjectName("MainUI")
-        self.active_mods_search_filter.setMaximumWidth(125)
+        self.active_mods_search_filter.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.active_mods_search_filter.addItems(
             [
                 self.tr("Name"),
@@ -3663,7 +3665,7 @@ class ModsPanel(QWidget):
                 self.tr("Version"),
             ]
         )
-        # Active mods search layouts
+        # Active mods toolbar: search on left, Sort button on right
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
         )
@@ -3674,8 +3676,9 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
-        self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
-        self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
+        self.active_mods_search_layout.addWidget(self.active_mods_search, 0)
+        self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 0)
+        self.active_mods_search_layout.addStretch(1)
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
@@ -3733,7 +3736,9 @@ class ModsPanel(QWidget):
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
-        self.inactive_mods_filter_data_source_index = 0
+        self.inactive_mods_filter_data_source_index = (
+            self.settings_controller.settings.inactive_mods_data_source_filter_index
+        )
         self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.inactive_mods_filter_data_source_index
         ]
@@ -3783,6 +3788,7 @@ class ModsPanel(QWidget):
             self.on_inactive_mods_search_clear
         )
         self.inactive_mods_search.setPlaceholderText(self.tr("Search by..."))
+        self.inactive_mods_search.setMaximumWidth(150)
         # Add explicit type annotation to help mypy
         self.inactive_mods_search_clear_button = cast(
             QToolButton, self.inactive_mods_search.findChild(QToolButton)
@@ -3796,7 +3802,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter: QComboBox = QComboBox()
         self.inactive_mods_search_filter.setParent(self)
         self.inactive_mods_search_filter.setObjectName("MainUI")
-        self.inactive_mods_search_filter.setMaximumWidth(140)
+        self.inactive_mods_search_filter.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.inactive_mods_search_filter.addItems(
             [
                 self.tr("Name"),
@@ -3810,7 +3818,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
         self.inactive_mods_sort_combobox.setObjectName("MainUI")
-        self.inactive_mods_sort_combobox.setMaximumWidth(120)
+        self.inactive_mods_sort_combobox.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.inactive_mods_sort_combobox.setToolTip(self.tr("Sort inactive mods by"))
         self.inactive_mods_sort_combobox.addItems(
             [
@@ -3847,27 +3857,21 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_order_button.setText(
             self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
         )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_filter_data_source_button
-        )
+        # Single row: search on the left, sort on the right
+        toolbar_row = QHBoxLayout()
+        toolbar_row.addWidget(self.inactive_mods_filter_data_source_button)
         if self.settings_controller.settings.mod_type_filter:
-            self.inactive_mods_search_layout.addWidget(
-                self.inactive_data_source_filter_type_button
-            )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_search_mode_filter_button
-        )
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_sort_combobox, 120
-        )
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
-
-        # Set initial visibility based on settings
-        if self.settings_controller.settings.inactive_mods_sorting:
-            self.inactive_mods_sort_combobox.setVisible(True)
-            self.inactive_mods_sort_order_button.setVisible(True)
+            toolbar_row.addWidget(self.inactive_data_source_filter_type_button)
+        toolbar_row.addWidget(self.inactive_mods_search_mode_filter_button)
+        toolbar_row.addWidget(self.inactive_mods_search, 0)
+        toolbar_row.addWidget(self.inactive_mods_search_filter, 0)
+        toolbar_row.addStretch(1)
+        sort_label = QLabel(self.tr("Sort by:"))
+        sort_label.setObjectName("MainUI")
+        toolbar_row.addWidget(sort_label)
+        toolbar_row.addWidget(self.inactive_mods_sort_combobox)
+        toolbar_row.addWidget(self.inactive_mods_sort_order_button)
+        self.inactive_mods_search_layout.addLayout(toolbar_row)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -3910,15 +3914,11 @@ class ModsPanel(QWidget):
             self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
         )
 
-        # Save if enabled
-        if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
-        ):
-            self.settings_controller.settings.inactive_mods_sort_descending = (
-                self.inactive_sort_descending
-            )
-            self.settings_controller.settings.save()
+        # Always persist the sort direction
+        self.settings_controller.settings.inactive_mods_sort_descending = (
+            self.inactive_sort_descending
+        )
+        self.settings_controller.settings.save()
 
         # Apply updated sort direction - re-sort with new descending flag
         if self.settings_controller.settings.inactive_mods_sorting:
@@ -4146,15 +4146,11 @@ class ModsPanel(QWidget):
                 self._sort_debounce_timer.stop()
                 self._sort_debounce_timer.start(200)
 
-                # Save the sort key immediately if enabled
-                if (
-                    self.settings_controller.settings.inactive_mods_sorting
-                    and self.settings_controller.settings.save_inactive_mods_sort_state
-                ):
-                    self.settings_controller.settings.inactive_mods_sort_key = (
-                        sort_key.name
-                    )
-                    self.settings_controller.settings.save()
+                # Always persist the sort key
+                self.settings_controller.settings.inactive_mods_sort_key = (
+                    sort_key.name
+                )
+                self.settings_controller.settings.save()
                 self.inactive_mods_sort_key = sort_key.name
 
     def mod_list_updated(
@@ -4682,11 +4678,18 @@ class ModsPanel(QWidget):
             self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+            self.settings_controller.settings.active_mods_data_source_filter_index = (
+                source_index
+            )
         elif list_type == "Inactive":
             self.inactive_mods_filter_data_source_index = source_index
             self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+            self.settings_controller.settings.inactive_mods_data_source_filter_index = (
+                source_index
+            )
+        self.settings_controller.settings.save()
         if source_index == 0:
             filters_active = False
         else:
