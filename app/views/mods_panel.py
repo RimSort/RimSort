@@ -3149,6 +3149,19 @@ class ModsPanel(QWidget):
         "Color": ModsPanelSortKey.MOD_COLOR,
     }
 
+    # OPTIMIZATION: Index-based sort key list to support all languages
+    # Maps combobox index (0-6) directly to ModsPanelSortKey enum
+    # This avoids translation problems when mapping text to keys
+    SORT_KEY_BY_INDEX = [
+        ModsPanelSortKey.MODNAME,  # 0: Name
+        ModsPanelSortKey.AUTHOR,  # 1: Author
+        ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,  # 2: Modified Time
+        ModsPanelSortKey.FOLDER_SIZE,  # 3: Folder Size
+        ModsPanelSortKey.VERSION,  # 4: Version
+        ModsPanelSortKey.PACKAGEID,  # 5: PackageId
+        ModsPanelSortKey.MOD_COLOR,  # 6: Color
+    ]
+
     def update_sort_ui_from_settings(self) -> None:
         """
         Update the inactive mods sort UI elements from settings.
@@ -3858,8 +3871,14 @@ class ModsPanel(QWidget):
         if not self.settings_controller.settings.inactive_mods_sorting:
             return
 
-        # Convert combobox text to sort key enum
-        sort_key = self._text_to_sort_key(text)
+        # Get current index and use SORT_KEY_BY_INDEX to avoid translation issues
+        # This ensures all languages work correctly by using index-based mapping
+        current_index = self.inactive_mods_sort_combobox.currentIndex()
+        if 0 <= current_index < len(self.SORT_KEY_BY_INDEX):
+            sort_key = self.SORT_KEY_BY_INDEX[current_index]
+        else:
+            # Fallback to default if index is out of bounds
+            sort_key = ModsPanelSortKey.MODNAME
 
         # Get current list of UUIDs to sort
         current_uuids = self.inactive_mods_list.uuids.copy()
@@ -4082,7 +4101,7 @@ class ModsPanel(QWidget):
         if list_type == "Active":
             # Ensure all visible items have their widgets properly loaded
             self.active_mods_list.check_widgets_visible()
-            
+
             # Calculate internal errors and warnings for all mods in the list
             total_error_text, total_warning_text, num_errors, num_warnings = (
                 self.active_mods_list.recalculate_internal_errors_warnings()
