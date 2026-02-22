@@ -63,6 +63,7 @@ from sqlalchemy import text
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.divider import DividerData, generate_divider_uuid, is_divider_uuid
 from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
@@ -71,7 +72,12 @@ from app.sort.mod_sorting import (
 )
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.app_info import AppInfo
-from app.utils.aux_db_utils import auxdb_update_all_mod_colors, auxdb_update_mod_color
+from app.utils.aux_db_utils import (
+    auxdb_update_all_mod_colors,
+    auxdb_update_all_mod_font_colors,
+    auxdb_update_mod_color,
+    auxdb_update_mod_font_color,
+)
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -97,6 +103,7 @@ from app.views.dialogue import (
     show_dialogue_conditional,
     show_warning,
 )
+from app.views.divider_widget import DividerItemInner
 
 
 class ModListItemInner(QWidget):
@@ -120,6 +127,7 @@ class ModListItemInner(QWidget):
         settings_controller: SettingsController,
         uuid: str,
         mod_color: QColor,
+        mod_font_color: QColor | None = None,
     ) -> None:
         """
         Initialize the QWidget with mod uuid. Metadata can be accessed via MetadataManager.
@@ -127,17 +135,6 @@ class ModListItemInner(QWidget):
         All metadata tags are set to the corresponding field if it
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
-
-        :param errors_warnings: a string of errors and warnings
-        :param errors: a string of errors for the notification tooltip
-        :param warnings: a string of warnings for the notification tooltip
-        :param filtered: a bool representing whether the widget's item is filtered
-        :param invalid: a bool representing whether the widget's item is an invalid mod
-        :param mismatch: a bool representing whether the widget's item has a version mismatch
-        :param alternative: a bool representing whether the widget's item has a recommended alternative mod
-        :param settings_controller: an instance of SettingsController for accessing settings
-        :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        :param mod_color: QColor, the color of the mod's text/background in the modlist
         """
 
         super(ModListItemInner, self).__init__()
@@ -164,8 +161,8 @@ class ModListItemInner(QWidget):
         self.alternative = alternative
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
-        # Cache the mod color
         self.mod_color: QColor | None = mod_color
+        self.mod_font_color: QColor | None = mod_font_color
 
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
@@ -295,8 +292,7 @@ class ModListItemInner(QWidget):
             elif data_source == "workshop":
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip(self.tr("Subscribed via Steam"))
-        # Set label color if mod has errors/warnings
-        if self.mod_color is not None:
+        if self.mod_color is not None or self.mod_font_color is not None:
             self.main_label.setObjectName("ListItemLabelCustomColor")
             self.handle_mod_color_change(init=True)
         elif self.filtered:
@@ -395,7 +391,7 @@ class ModListItemInner(QWidget):
         self._hovered = False
         if self._selected:
             return
-        if self.mod_color is None:
+        if self.mod_color is None and self.mod_font_color is None:
             self.setStyleSheet("")
         else:
             self.handle_mod_color_change(init=True)
@@ -409,7 +405,7 @@ class ModListItemInner(QWidget):
         if self._selected:
             self.setStyleSheet("")
         elif not self._selected:
-            if self.mod_color:
+            if self.mod_color or self.mod_font_color:
                 self.handle_mod_color_change(init=True)
             else:
                 self.setStyleSheet("")
@@ -605,7 +601,7 @@ class ModListItemInner(QWidget):
             self.in_save_icon_label.setHidden(True)
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
-        if item_data["mod_color"] is not None:
+        if item_data["mod_color"] is not None or item_data["mod_font_color"] is not None:
             self.handle_mod_color_change(item)
             new_widget_object_name = "ListItemLabelCustomColor"
         elif item_data["filtered"]:
@@ -631,51 +627,22 @@ class ModListItemInner(QWidget):
     def handle_mod_color_change(
         self, item: CustomListWidgetItem | None = None, init: bool = False
     ) -> None:
-        """
-        Handle mod color change (Background or Text) for *ModListItemInner*.
-
-        :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
-
-        :param init: bool, if running inside __init__ method, uses class attribute.
-
-        """
-        new_mod_color_name: Optional[str] = None
-        if self.settings_controller.settings.color_background_instead_of_text_toggle:
-            # Color background
-            if init:
-                if self.mod_color:
-                    new_mod_color_name = self.mod_color.name()
-                    self.setStyleSheet(f"background: {new_mod_color_name};")
-            elif item:
-                item_data = item.data(Qt.ItemDataRole.UserRole)
-                new_mod_color_name = item_data["mod_color"].name()
-                self.mod_color = item_data[
-                    "mod_color"
-                ]  # Update mod color in ModListItemInner
-                self.setStyleSheet(f"background: {new_mod_color_name};")
-        else:
-            # Color text
-            if init:
-                if self.mod_color:
-                    new_mod_color_name = self.mod_color.name()
-                    self.setStyleSheet(f"color: {new_mod_color_name};")
-            elif item:
-                item_data = item.data(Qt.ItemDataRole.UserRole)
-                new_mod_color_name = item_data["mod_color"].name()
-                self.mod_color = item_data[
-                    "mod_color"
-                ]  # Update mod color in ModListItemInner
-                self.setStyleSheet(f"color: {new_mod_color_name};")
+        """Apply background and/or font color to this widget."""
+        if not init and item:
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            self.mod_color = item_data["mod_color"]
+            self.mod_font_color = item_data["mod_font_color"]
+        parts: list[str] = []
+        if self.mod_color:
+            parts.append(f"background: {self.mod_color.name()};")
+        if self.mod_font_color:
+            parts.append(f"color: {self.mod_font_color.name()};")
+        self.setStyleSheet(" ".join(parts))
 
     def handle_mod_color_reset(self) -> None:
-        """
-        Reset mod color to default (Background or Text) for *ModListItemInner*.
-        """
-        # Need to reset custom colors this way because the color is set using setStyleSheet
-        # After reseting, the behavior for unpolish() and polish() works as expected
         self.setStyleSheet("")
-        # Update ModListItemInner color
         self.mod_color = None
+        self.mod_font_color = None
 
 
 class ModListIcons:
@@ -896,14 +863,14 @@ class ModListWidget(QListWidget):
         for index in selected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget:
-                widget.set_selected(True)  # type: ignore
+            if widget and hasattr(widget, "set_selected"):
+                widget.set_selected(True)
 
         for index in deselected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget:
-                widget.set_selected(False)  # type: ignore
+            if widget and hasattr(widget, "set_selected"):
+                widget.set_selected(False)
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -938,6 +905,8 @@ class ModListWidget(QListWidget):
                     self.uuids.remove(uuid)
                 # Reinsert uuid at it's new index
                 self.uuids.insert(idx, uuid)
+        # Re-apply divider collapse states after reorder
+        self.apply_collapse_states()
         # Update list signal
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
@@ -952,6 +921,8 @@ class ModListWidget(QListWidget):
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                if getattr(item_data, "is_divider", False):
+                    continue
                 metadata.append(
                     self.metadata_manager.internal_local_metadata[item_data["uuid"]]
                 )
@@ -1223,6 +1194,11 @@ class ModListWidget(QListWidget):
                 logger.debug("Mod list right-click non-QListWidgetItem")
                 return super().eventFilter(object, event)
 
+            # Handle divider-specific context menu
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                return self._show_divider_context_menu(item, item_data, pos_local)
+
             # Otherwise, begin calculation
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
 
@@ -1285,10 +1261,9 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe mod
             unsubscribe_mod_steam_action = None
-            # Change mod color
             change_mod_color_action = None
-            # Reset mod color
-            reset_mod_color_action = None
+            change_mod_font_color_action = None
+            reset_mod_colors_action = None
             # Find translation mods
             find_translation_action = None
             # Disable all warnings by default
@@ -1317,11 +1292,12 @@ class ModListWidget(QListWidget):
                         open_folder_text_editor_action.setText(
                             self.tr("Open folder in text editor")
                         )
-                    # Change mod color action
                     change_mod_color_action = QAction()
-                    change_mod_color_action.setText(self.tr("Change mod color"))
-                    reset_mod_color_action = QAction()
-                    reset_mod_color_action.setText(self.tr("Reset mod color"))
+                    change_mod_color_action.setText(self.tr("Change background color"))
+                    change_mod_font_color_action = QAction()
+                    change_mod_font_color_action.setText(self.tr("Change font color"))
+                    reset_mod_colors_action = QAction()
+                    reset_mod_colors_action.setText(self.tr("Reset mod colors"))
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -1458,6 +1434,8 @@ class ModListWidget(QListWidget):
                 for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                        if getattr(item_data, "is_divider", False):
+                            continue
                         uuid = item_data["uuid"]
                         all_selected_uuids[item_idx] = uuid
                         # Retrieve metadata
@@ -1480,11 +1458,12 @@ class ModListWidget(QListWidget):
                             open_folder_text_editor_action.setText(
                                 self.tr("Open folder(s) in text editor")
                             )
-                        # Change mod color action
                         change_mod_color_action = QAction()
-                        change_mod_color_action.setText("Change mod colors")
-                        reset_mod_color_action = QAction()
-                        reset_mod_color_action.setText("Reset mod colors")
+                        change_mod_color_action.setText("Change background colors")
+                        change_mod_font_color_action = QAction()
+                        change_mod_font_color_action.setText("Change font colors")
+                        reset_mod_colors_action = QAction()
+                        reset_mod_colors_action.setText("Reset mod colors")
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
@@ -1585,8 +1564,10 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(open_folder_text_editor_action)
             if change_mod_color_action:
                 context_menu.addAction(change_mod_color_action)
-            if reset_mod_color_action:
-                context_menu.addAction(reset_mod_color_action)
+            if change_mod_font_color_action:
+                context_menu.addAction(change_mod_font_color_action)
+            if reset_mod_colors_action:
+                context_menu.addAction(reset_mod_colors_action)
             if open_url_browser_action:
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
@@ -1654,9 +1635,26 @@ class ModListWidget(QListWidget):
                         remove_from_steamdb_blacklist_action
                     )
                 context_menu.addMenu(workshop_actions_menu)
+            # Divider option (active list only)
+            add_divider_action = None
+            if self.list_type == "Active":
+                context_menu.addSeparator()
+                add_divider_action = QAction()
+                add_divider_action.setText(self.tr("Add divider here"))
+                context_menu.addAction(add_divider_action)
             # Execute QMenu and return it's ACTION
             action = context_menu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
+                if action == add_divider_action:
+                    row = self.row(item)
+                    name, ok = QInputDialog.getText(
+                        self,
+                        self.tr("Add Divider"),
+                        self.tr("Divider name:"),
+                    )
+                    if ok and name.strip():
+                        self.add_divider(row, name.strip())
+                    return True
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
                 ):
@@ -1982,6 +1980,16 @@ class ModListWidget(QListWidget):
                     new_color = color_dlg.getColor()
                     self.SaveUserCustomColors(color_dlg)
                     invalid_color = not new_color.isValid()
+                invalid_font_color = True
+                new_font_color = QColor()
+                if action == change_mod_font_color_action:
+                    color_dlg = QColorDialog(
+                        options=QColorDialog.ColorDialogOption.DontUseNativeDialog
+                    )
+                    self.SetUserCustomColors(color_dlg)
+                    new_font_color = color_dlg.getColor()
+                    self.SaveUserCustomColors(color_dlg)
+                    invalid_font_color = not new_font_color.isValid()
                 if action in self.deletion_sub_menu.actions():
                     # Deletion menu handles whatever action it was, exit now
                     return True
@@ -1989,6 +1997,8 @@ class ModListWidget(QListWidget):
                 for item_idx, source_item in enumerate(selected_items):
                     if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                        if getattr(item_data, "is_divider", False):
+                            continue
                         uuid = all_selected_uuids[item_idx]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
@@ -2015,12 +2025,19 @@ class ModListWidget(QListWidget):
                                 self.change_all_mod_colors(list(all_selected_uuids.values()), new_color)
                             elif len(selected_items) == 1:
                                 self.change_mod_color(uuid, new_color)
-                        elif action == reset_mod_color_action:
+                        elif action == change_mod_font_color_action and not invalid_font_color:
                             if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
-                                self.reset_all_mod_colors(list(all_selected_uuids.values()))
+                                self.change_all_mod_font_colors(list(all_selected_uuids.values()), new_font_color)
+                            elif len(selected_items) == 1:
+                                self.change_mod_font_color(uuid, new_font_color)
+                        elif action == reset_mod_colors_action:
+                            if len(selected_items) > 1 and item_idx == len(selected_items) - 1:
+                                all_uuids = list(all_selected_uuids.values())
+                                self.reset_all_mod_colors(all_uuids)
+                                self.reset_all_mod_font_colors(all_uuids)
                             elif len(selected_items) == 1:
                                 self.reset_mod_color(uuid)
-                        # Open folder action
+                                self.reset_mod_font_color(uuid)
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
                                 logger.info(f"Opening folder: {mod_path}")
@@ -2204,13 +2221,16 @@ class ModListWidget(QListWidget):
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
-        This gets all modlist items.
+        This gets all modlist items (excludes dividers).
 
         :return: List of all modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
             item = self.item(index)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                continue
             mod_list_items.append(item)
         return mod_list_items
 
@@ -2239,6 +2259,8 @@ class ModListWidget(QListWidget):
         for index in range(self.count()):
             item = self.item(index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             if item_data["warning_toggled"]:
                 mod_list_items.append(item)
         return mod_list_items
@@ -2254,6 +2276,8 @@ class ModListWidget(QListWidget):
         for index in range(self.count()):
             item = self.item(index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             if item_data["warning_toggled"]:
                 widget = self.itemWidget(item)
                 if isinstance(widget, ModListItemInner):
@@ -2270,6 +2294,17 @@ class ModListWidget(QListWidget):
         if data is None:
             logger.debug("Attempted to create widget for item with None data")
             return
+
+        if getattr(data, "is_divider", False):
+            divider_widget = DividerItemInner(
+                uuid=data.uuid, name=data.name, collapsed=data.collapsed
+            )
+            divider_widget.toggle_signal.connect(self.toggle_divider_collapse)
+            item.setSizeHint(divider_widget.sizeHint())
+            self.setItemWidget(item, divider_widget)
+            self._update_single_divider_mod_count(item)
+            return
+
         errors_warnings = data["errors_warnings"]
         errors = data["errors"]
         warnings = data["warnings"]
@@ -2279,6 +2314,7 @@ class ModListWidget(QListWidget):
         alternative = data["alternative"]
         uuid = data["uuid"]
         mod_color = data["mod_color"]
+        mod_font_color = data["mod_font_color"]
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
@@ -2291,6 +2327,7 @@ class ModListWidget(QListWidget):
                 settings_controller=self.settings_controller,
                 uuid=uuid,
                 mod_color=mod_color,
+                mod_font_color=mod_font_color,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -2403,6 +2440,13 @@ class ModListWidget(QListWidget):
                 if data is None:
                     logger.debug(f"Attempted to insert item with None data. Idx: {idx}")
                     continue
+                if getattr(data, "is_divider", False):
+                    uuid = data["uuid"]
+                    if uuid in self.uuids:
+                        self.uuids.remove(uuid)
+                    self.uuids.insert(idx, uuid)
+                    self.create_widget_for_item(item)
+                    continue
                 # Ensure the item's persisted list_type matches the destination list after insertion
                 try:
                     data["list_type"] = self.list_type
@@ -2451,6 +2495,185 @@ class ModListWidget(QListWidget):
             return self.itemWidget(item)
         return None
 
+    # ── Divider helpers ──────────────────────────────────────────────
+
+    def _show_divider_context_menu(
+        self,
+        item: CustomListWidgetItem,
+        data: DividerData,
+        pos_local: Any,
+    ) -> bool:
+        menu = QMenu()
+        rename_action = menu.addAction(self.tr("Rename divider"))
+        toggle_action = menu.addAction(
+            self.tr("Expand") if data.collapsed else self.tr("Collapse")
+        )
+        menu.addSeparator()
+        delete_action = menu.addAction(self.tr("Delete divider"))
+        action = menu.exec_(self.mapToGlobal(pos_local))
+        if action == rename_action:
+            new_name, ok = QInputDialog.getText(
+                self,
+                self.tr("Rename Divider"),
+                self.tr("New name:"),
+                text=data.name,
+            )
+            if ok and new_name.strip():
+                self.rename_divider(data.uuid, new_name.strip())
+        elif action == toggle_action:
+            self.toggle_divider_collapse(data.uuid)
+        elif action == delete_action:
+            self.remove_divider(data.uuid)
+        return True
+
+    def add_divider(self, index: int, name: str) -> None:
+        uuid = generate_divider_uuid()
+        data = DividerData(uuid=uuid, name=name)
+        item = CustomListWidgetItem()
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass
+        self.insertItem(index, item)
+        self.uuids.insert(index, uuid)
+        self.create_widget_for_item(item)
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+        self.apply_collapse_states()
+        self.list_update_signal.emit(str(self.count()))
+
+    def remove_divider(self, uuid: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        # Expand hidden items first so they become visible
+        next_div = self._find_next_divider_index(idx + 1)
+        for i in range(idx + 1, next_div):
+            self.item(i).setHidden(False)
+        self.uuids.pop(idx)
+        self.takeItem(idx)
+        self._update_divider_mod_counts()
+        self.list_update_signal.emit(str(self.count()))
+
+    def rename_divider(self, uuid: str, new_name: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        item = self.item(idx)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        data.name = new_name
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_name(new_name)
+
+    def toggle_divider_collapse(self, uuid: str) -> None:
+        if uuid not in self.uuids:
+            return
+        idx = self.uuids.index(uuid)
+        item = self.item(idx)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if not getattr(data, "is_divider", False):
+            return
+        data.collapsed = not data.collapsed
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_collapsed(data.collapsed)
+        next_div = self._find_next_divider_index(idx + 1)
+        for i in range(idx + 1, next_div):
+            self.item(i).setHidden(data.collapsed)
+        self._update_single_divider_mod_count(item)
+
+    def _find_next_divider_index(self, start: int) -> int:
+        for i in range(start, self.count()):
+            d = self.item(i).data(Qt.ItemDataRole.UserRole)
+            if getattr(d, "is_divider", False):
+                return i
+        return self.count()
+
+    def _update_single_divider_mod_count(self, item: CustomListWidgetItem) -> None:
+        idx = self.row(item)
+        if idx < 0:
+            return
+        next_div = self._find_next_divider_index(idx + 1)
+        count = next_div - idx - 1
+        widget = self.itemWidget(item)
+        if isinstance(widget, DividerItemInner):
+            widget.set_mod_count(count)
+
+    def _update_divider_mod_counts(self) -> None:
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                self._update_single_divider_mod_count(item)
+
+    def apply_collapse_states(self) -> None:
+        """Hide/show items according to their preceding divider's collapsed state."""
+        collapsed = False
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                collapsed = data.collapsed
+                widget = self.itemWidget(item)
+                if isinstance(widget, DividerItemInner):
+                    widget.set_collapsed(collapsed)
+            else:
+                item.setHidden(collapsed)
+        self._update_divider_mod_counts()
+
+    def get_dividers_data(self) -> list[dict[str, Any]]:
+        """Return serialisable divider info for persistence."""
+        result = []
+        for i in range(self.count()):
+            item = self.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                result.append(
+                    {
+                        "uuid": data.uuid,
+                        "name": data.name,
+                        "collapsed": data.collapsed,
+                        "index": i,
+                    }
+                )
+        return result
+
+    def restore_dividers(self, dividers: list[dict[str, Any]]) -> None:
+        """Re-insert dividers at saved positions after a list rebuild."""
+        if not dividers:
+            return
+        # Disconnect model signals to avoid handle_rows_inserted duplicating uuids
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass
+        sorted_dividers = sorted(dividers, key=lambda d: d.get("index", 0))
+        for div in sorted_dividers:
+            idx = min(div.get("index", 0), self.count())
+            uuid = div.get("uuid", generate_divider_uuid())
+            data = DividerData(
+                uuid=uuid,
+                name=div.get("name", ""),
+                collapsed=div.get("collapsed", False),
+            )
+            item = CustomListWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+            self.insertItem(idx, item)
+            self.uuids.insert(idx, uuid)
+        # Reconnect model signals
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+        self.check_widgets_visible()
+        self.apply_collapse_states()
+
+    # ── End divider helpers ──────────────────────────────────────────
+
     def mod_changed_to(
         self, current: CustomListWidgetItem, previous: CustomListWidgetItem
     ) -> None:
@@ -2460,6 +2683,8 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                return
             self.mod_info_signal.emit(data["uuid"], current)
 
     def mod_clicked(self, current: CustomListWidgetItem) -> None:
@@ -2472,6 +2697,8 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             data = current.data(Qt.ItemDataRole.UserRole)
+            if getattr(data, "is_divider", False):
+                return
             self.mod_info_signal.emit(data["uuid"], current)
             mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
             mod_info = flatten_to_list(mod_info)
@@ -2484,10 +2711,15 @@ class ModListWidget(QListWidget):
         """
         Method to handle double clicking on a row.
         """
-        # widget = ModListItemInner = self.itemWidget(item)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if getattr(data, "is_divider", False):
+            self.toggle_divider_collapse(data.uuid)
+            return
         self.key_press_signal.emit("DoubleClick")
 
     def rebuild_item_widget_from_uuid(self, uuid: str) -> None:
+        if is_divider_uuid(uuid):
+            return
         item_index = self.uuids.index(uuid)
         item = self.item(item_index)
         logger.debug(f"Rebuilding widget for item {uuid} at index {item_index}")
@@ -2594,8 +2826,9 @@ class ModListWidget(QListWidget):
 
         internal_local_metadata = self.metadata_manager.internal_local_metadata
 
+        mod_uuids = [u for u in self.uuids if not is_divider_uuid(u)]
         packageid_to_uuid = {
-            internal_local_metadata[uuid]["packageid"]: uuid for uuid in self.uuids
+            internal_local_metadata[uuid]["packageid"]: uuid for uuid in mod_uuids
         }
         package_ids_set = set(packageid_to_uuid.keys())
 
@@ -2616,7 +2849,7 @@ class ModListWidget(QListWidget):
                 != "None"
                 else None,
             }
-            for uuid in self.uuids
+            for uuid in mod_uuids
         }
 
         num_warnings = 0
@@ -2639,6 +2872,8 @@ class ModListWidget(QListWidget):
             if current_item is None:
                 continue
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
+            if getattr(current_item_data, "is_divider", False):
+                continue
             current_item_data["mismatch"] = False
             current_item_data["errors"] = ""
             current_item_data["warnings"] = ""
@@ -2929,10 +3164,8 @@ class ModListWidget(QListWidget):
         logger.info(f"Internally recreating {list_type} mod list")
         # Skip sorting if UUIDs are already filtered/sorted (filtering=True)
         if not filtering:
-            # Sort inactive mods using saved settings if enabled
             if (
                 list_type == "Inactive"
-                and self.settings_controller.settings.save_inactive_mods_sort_state
                 and self.settings_controller.settings.inactive_mods_sorting
             ):
                 sort_key = ModsPanelSortKey[
@@ -2947,14 +3180,13 @@ class ModListWidget(QListWidget):
                     descending=descending,
                     settings_controller=self.settings_controller,
                 )
-            else:
-                if list_type == "Inactive":
-                    uuids = sort_uuids(
-                        uuids,
-                        key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
-                        descending=True,
-                        settings_controller=self.settings_controller,
-                    )
+            elif list_type == "Inactive":
+                uuids = sort_uuids(
+                    uuids,
+                    key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
+                    descending=True,
+                    settings_controller=self.settings_controller,
+                )
         # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
         # Temporarily disconnect model signals to avoid cascading updates and duplicate items
@@ -2971,6 +3203,8 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
+                if is_divider_uuid(uuid_key):
+                    continue
                 mod_path = self.metadata_manager.internal_local_metadata[uuid_key][
                     "path"
                 ]
@@ -2998,7 +3232,7 @@ class ModListWidget(QListWidget):
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
             # Set uuids list to match the widget after all items are added
-            self.uuids = uuids
+            self.uuids = list(uuids)
 
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -3086,6 +3320,44 @@ class ModListWidget(QListWidget):
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = None
         auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
+
+    def change_mod_font_color(self, uuid: str, new_color: QColor) -> None:
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_font_color"] = new_color
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_font_color(self.settings_controller, uuid, new_color)
+
+    def change_all_mod_font_colors(self, uuids: list[str], new_color: QColor) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_font_color"] = new_color
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = new_color
+        auxdb_update_all_mod_font_colors(self.settings_controller, uuid_to_color)
+
+    def reset_mod_font_color(self, uuid: str) -> None:
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_font_color"] = None
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
+        auxdb_update_mod_font_color(self.settings_controller, uuid, None)
+
+    def reset_all_mod_font_colors(self, uuids: list[str]) -> None:
+        uuid_to_color: dict[str, QColor | None] = {}
+        for uuid in uuids:
+            current_mod_index = self.uuids.index(uuid)
+            item = self.item(current_mod_index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            item_data["mod_font_color"] = None
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+            uuid_to_color[uuid] = None
+        auxdb_update_all_mod_font_colors(self.settings_controller, uuid_to_color)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
@@ -3194,19 +3466,12 @@ class ModsPanel(QWidget):
         self.settings_controller = settings_controller
 
         # Load inactive mods sort settings
-        if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
-        ):
-            self.inactive_mods_sort_key = (
-                self.settings_controller.settings.inactive_mods_sort_key
-            )
-            self.inactive_mods_sort_descending = (
-                self.settings_controller.settings.inactive_mods_sort_descending
-            )
-        else:
-            self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
-            self.inactive_mods_sort_descending = True
+        self.inactive_mods_sort_key = (
+            self.settings_controller.settings.inactive_mods_sort_key
+        )
+        self.inactive_mods_sort_descending = (
+            self.settings_controller.settings.inactive_mods_sort_descending
+        )
 
         # Background folder-size sorting state
         self._size_progress_dialog: Optional[QProgressDialog] = None
@@ -3335,8 +3600,8 @@ class ModsPanel(QWidget):
             settings_controller=self.settings_controller,
         )
 
-        # Inactive mods search layout
-        self.inactive_mods_search_layout = QHBoxLayout()
+        self.inactive_mods_search_layout = QVBoxLayout()
+        self.inactive_mods_search_layout.setSpacing(2)
         self.initialize_inactive_mods_search_widgets()
 
         # Add inactive mods widgets to layout
@@ -3357,7 +3622,9 @@ class ModsPanel(QWidget):
 
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
-        self.active_mods_filter_data_source_index = 0
+        self.active_mods_filter_data_source_index = (
+            self.settings_controller.settings.active_mods_data_source_filter_index
+        )
         self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.active_mods_filter_data_source_index
         ]
@@ -3401,6 +3668,7 @@ class ModsPanel(QWidget):
         self.active_mods_search.textChanged.connect(self.on_active_mods_search)
         self.active_mods_search.inputRejected.connect(self.on_active_mods_search_clear)
         self.active_mods_search.setPlaceholderText(self.tr("Search by..."))
+        self.active_mods_search.setMaximumWidth(150)
         # Add explicit type annotation to help mypy
         self.active_mods_search_clear_button = cast(
             QToolButton, self.active_mods_search.findChild(QToolButton)
@@ -3413,7 +3681,9 @@ class ModsPanel(QWidget):
         )
         self.active_mods_search_filter: QComboBox = QComboBox()
         self.active_mods_search_filter.setObjectName("MainUI")
-        self.active_mods_search_filter.setMaximumWidth(125)
+        self.active_mods_search_filter.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.active_mods_search_filter.addItems(
             [
                 self.tr("Name"),
@@ -3424,7 +3694,7 @@ class ModsPanel(QWidget):
                 self.tr("Version"),
             ]
         )
-        # Active mods search layouts
+        # Active mods toolbar: search on left, Sort button on right
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
         )
@@ -3435,8 +3705,9 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
-        self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
-        self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
+        self.active_mods_search_layout.addWidget(self.active_mods_search, 0)
+        self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 0)
+        self.active_mods_search_layout.addStretch(1)
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
@@ -3494,7 +3765,9 @@ class ModsPanel(QWidget):
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
-        self.inactive_mods_filter_data_source_index = 0
+        self.inactive_mods_filter_data_source_index = (
+            self.settings_controller.settings.inactive_mods_data_source_filter_index
+        )
         self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.inactive_mods_filter_data_source_index
         ]
@@ -3544,6 +3817,7 @@ class ModsPanel(QWidget):
             self.on_inactive_mods_search_clear
         )
         self.inactive_mods_search.setPlaceholderText(self.tr("Search by..."))
+        self.inactive_mods_search.setMaximumWidth(150)
         # Add explicit type annotation to help mypy
         self.inactive_mods_search_clear_button = cast(
             QToolButton, self.inactive_mods_search.findChild(QToolButton)
@@ -3557,7 +3831,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter: QComboBox = QComboBox()
         self.inactive_mods_search_filter.setParent(self)
         self.inactive_mods_search_filter.setObjectName("MainUI")
-        self.inactive_mods_search_filter.setMaximumWidth(140)
+        self.inactive_mods_search_filter.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.inactive_mods_search_filter.addItems(
             [
                 self.tr("Name"),
@@ -3571,7 +3847,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
         self.inactive_mods_sort_combobox.setObjectName("MainUI")
-        self.inactive_mods_sort_combobox.setMaximumWidth(120)
+        self.inactive_mods_sort_combobox.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.inactive_mods_sort_combobox.setToolTip(self.tr("Sort inactive mods by"))
         self.inactive_mods_sort_combobox.addItems(
             [
@@ -3608,27 +3886,21 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_order_button.setText(
             self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
         )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_filter_data_source_button
-        )
+        # Single row: search on the left, sort on the right
+        toolbar_row = QHBoxLayout()
+        toolbar_row.addWidget(self.inactive_mods_filter_data_source_button)
         if self.settings_controller.settings.mod_type_filter:
-            self.inactive_mods_search_layout.addWidget(
-                self.inactive_data_source_filter_type_button
-            )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_search_mode_filter_button
-        )
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_mods_sort_combobox, 120
-        )
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
-
-        # Set initial visibility based on settings
-        if self.settings_controller.settings.inactive_mods_sorting:
-            self.inactive_mods_sort_combobox.setVisible(True)
-            self.inactive_mods_sort_order_button.setVisible(True)
+            toolbar_row.addWidget(self.inactive_data_source_filter_type_button)
+        toolbar_row.addWidget(self.inactive_mods_search_mode_filter_button)
+        toolbar_row.addWidget(self.inactive_mods_search, 0)
+        toolbar_row.addWidget(self.inactive_mods_search_filter, 0)
+        toolbar_row.addStretch(1)
+        sort_label = QLabel(self.tr("Sort by:"))
+        sort_label.setObjectName("MainUI")
+        toolbar_row.addWidget(sort_label)
+        toolbar_row.addWidget(self.inactive_mods_sort_combobox)
+        toolbar_row.addWidget(self.inactive_mods_sort_order_button)
+        self.inactive_mods_search_layout.addLayout(toolbar_row)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -3671,15 +3943,11 @@ class ModsPanel(QWidget):
             self.tr("Desc") if self.inactive_sort_descending else self.tr("Asc")
         )
 
-        # Save if enabled
-        if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
-        ):
-            self.settings_controller.settings.inactive_mods_sort_descending = (
-                self.inactive_sort_descending
-            )
-            self.settings_controller.settings.save()
+        # Always persist the sort direction
+        self.settings_controller.settings.inactive_mods_sort_descending = (
+            self.inactive_sort_descending
+        )
+        self.settings_controller.settings.save()
 
         # Apply updated sort direction - re-sort with new descending flag
         if self.settings_controller.settings.inactive_mods_sorting:
@@ -3907,15 +4175,11 @@ class ModsPanel(QWidget):
                 self._sort_debounce_timer.stop()
                 self._sort_debounce_timer.start(200)
 
-                # Save the sort key immediately if enabled
-                if (
-                    self.settings_controller.settings.inactive_mods_sorting
-                    and self.settings_controller.settings.save_inactive_mods_sort_state
-                ):
-                    self.settings_controller.settings.inactive_mods_sort_key = (
-                        sort_key.name
-                    )
-                    self.settings_controller.settings.save()
+                # Always persist the sort key
+                self.settings_controller.settings.inactive_mods_sort_key = (
+                    sort_key.name
+                )
+                self.settings_controller.settings.save()
                 self.inactive_mods_sort_key = sort_key.name
 
     def mod_list_updated(
@@ -4025,8 +4289,10 @@ class ModsPanel(QWidget):
         )
 
         # Apply filtering based on the selected type
-        for uuid in mod_list.uuids:
-            item = mod_list.item(mod_list.uuids.index(uuid))
+        for idx, uuid in enumerate(mod_list.uuids):
+            if is_divider_uuid(uuid):
+                continue
+            item = mod_list.item(idx)
             item_data = item.data(Qt.ItemDataRole.UserRole)
 
             # Determine the mod type
@@ -4266,10 +4532,14 @@ class ModsPanel(QWidget):
             )
             if item is None:
                 continue
+            if is_divider_uuid(uuid):
+                continue
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             # Check if UUID exists in metadata before accessing
             if uuid not in self.metadata_manager.internal_local_metadata:
                 continue
-            item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
                 filters_active = True
@@ -4362,6 +4632,7 @@ class ModsPanel(QWidget):
         self.direct_update_count(list_type, num_filtered, num_unfiltered)
         if list_type == "Active":
             self.active_mods_list.check_widgets_visible()
+            self.active_mods_list.apply_collapse_states()
         else:
             self.inactive_mods_list.check_widgets_visible()
 
@@ -4436,11 +4707,18 @@ class ModsPanel(QWidget):
             self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+            self.settings_controller.settings.active_mods_data_source_filter_index = (
+                source_index
+            )
         elif list_type == "Inactive":
             self.inactive_mods_filter_data_source_index = source_index
             self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+            self.settings_controller.settings.inactive_mods_data_source_filter_index = (
+                source_index
+            )
+        self.settings_controller.settings.save()
         if source_index == 0:
             filters_active = False
         else:
@@ -4503,6 +4781,8 @@ class ModsPanel(QWidget):
         num_filtered = 0
         num_unfiltered = 0
         for idx in range(len(uuids)):
+            if is_divider_uuid(uuids[idx]):
+                continue
             item = (
                 self.active_mods_list.item(idx)
                 if list_type == "Active"
@@ -4511,6 +4791,8 @@ class ModsPanel(QWidget):
             if item is None:
                 continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
+            if getattr(item_data, "is_divider", False):
+                continue
             item_filtered = item_data["filtered"]
 
             if item.isHidden() or item_filtered:
@@ -4673,7 +4955,9 @@ class ModsPanel(QWidget):
             )
             return
         
-        active_uuids = self.active_mods_list.uuids
+        active_uuids = [
+            u for u in self.active_mods_list.uuids if not is_divider_uuid(u)
+        ]
         all_local_metadata = self.metadata_manager.internal_local_metadata
         
         # Build a mapping: pfid -> uuid for all installed mods

@@ -136,7 +136,6 @@ class MainWindow(QMainWindow):
         self.refresh_button = QPushButton(self.tr("Refresh"))
         self.clear_button = QPushButton(self.tr("Clear"))
         self.restore_button = QPushButton(self.tr("Restore"))
-        self.sort_button = QPushButton(self.tr("Sort"))
         self.save_button = QPushButton(self.tr("Save"))
         self.run_button = QPushButton(self.tr("Run"))
 
@@ -144,7 +143,6 @@ class MainWindow(QMainWindow):
             self.refresh_button,
             self.clear_button,
             self.restore_button,
-            self.sort_button,
             self.save_button,
             self.run_button,
         ]

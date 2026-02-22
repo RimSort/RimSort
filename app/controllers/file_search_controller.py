@@ -11,6 +11,7 @@ from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
 import app.utils.metadata as metadata
 from app.controllers.settings_controller import SettingsController
+from app.models.divider import is_divider_uuid
 from app.models.search_result import SearchResult
 from app.models.settings import Settings
 from app.utils.file_search import FileSearch
@@ -791,10 +792,11 @@ class FileSearchController(QObject):
                 mod_ids_for_search.add(mod_id)
 
         if scope == "all mods":
-            # Get all mod IDs by combining active and inactive mods
-            all_uuids = set(self.mods_panel.active_mods_list.uuids) | set(
-                self.mods_panel.inactive_mods_list.uuids
-            )
+            # Get all mod IDs by combining active and inactive mods (exclude dividers)
+            all_uuids = {
+                u for u in self.mods_panel.active_mods_list.uuids
+                if not is_divider_uuid(u)
+            } | set(self.mods_panel.inactive_mods_list.uuids)
             # Use our helper method to get paths and extract IDs
             all_paths = self._get_mod_paths_from_uuids(list(all_uuids))
             for path in all_paths:
