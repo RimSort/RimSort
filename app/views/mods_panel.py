@@ -2689,9 +2689,16 @@ class ModListWidget(QListWidget):
         data = DividerData(uuid=uuid, name=name)
         item = CustomListWidgetItem()
         item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass
         self.insertItem(index, item)
         self.uuids.insert(index, uuid)
         self.create_widget_for_item(item)
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
         self.apply_collapse_states()
         self.list_update_signal.emit(str(self.count()))
 
