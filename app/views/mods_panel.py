@@ -4285,7 +4285,8 @@ class ModsPanel(QWidget):
                     item.setHidden(False)
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
-            # Check if the item should be filtered or not based on search filter
+
+            # Search pattern filtering
             if search_filter == "version" and pattern:
                 versions = metadata.get("supportedversions", {}).get("li", [])
                 if isinstance(versions, str):
@@ -4301,7 +4302,7 @@ class ModsPanel(QWidget):
                     mod_path = metadata.get("path", "")
                     item_filtered = mod_path not in matches
             # Filter by name and mod notes
-            elif search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter:
+            elif pattern.strip() and search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter:
                 if not pattern.strip():
                     item_filtered = False
                 elif (
@@ -4319,15 +4320,19 @@ class ModsPanel(QWidget):
                 and pattern.lower() not in str(metadata.get(search_filter)).lower()
             ):
                 item_filtered = True
-            elif source_filter == "all":  # or data source
-                item_filtered = False
-            elif source_filter == "git_repo":
-                item_filtered = not metadata.get("git_repo")
-            elif source_filter == "steamcmd":
-                item_filtered = not metadata.get("steamcmd")
-            elif source_filter != metadata.get("data_source"):
-                item_filtered = True
 
+            # Source filtering
+            if not item_filtered:
+                if source_filter == "all":
+                    pass
+                elif source_filter == "git_repo":
+                    item_filtered = not metadata.get("git_repo")
+                elif source_filter == "steamcmd":
+                    item_filtered = not metadata.get("steamcmd")
+                elif source_filter != metadata.get("data_source"):
+                    item_filtered = True
+
+            # Type filtering
             type_filter_index = (
                 self.active_data_source_filter_type_index
                 if list_type == "Active"
