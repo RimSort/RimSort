@@ -2782,7 +2782,7 @@ class MainContent(QObject):
                 ),
                 button_text_override=["Overwrite All", "Skip Existing"],
             )
-            if answer == "Cancel":
+            if answer == QMessageBox.StandardButton.Cancel:
                 return
             overwrite = answer == "Overwrite All"
 
