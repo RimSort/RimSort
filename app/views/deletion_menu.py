@@ -1,5 +1,4 @@
 import errno
-import os
 from pathlib import Path
 from shutil import rmtree
 from typing import Callable
@@ -168,14 +167,12 @@ class ModDeletionMenu(QMenu):
         selected_mods = self.get_selected_mod_metadata()
         for mod in selected_mods:
             mod_path = mod.get("path")
+            # Only look in Textures dir (I think that's the only relevant location for .dds files)
+            mod_path = Path(mod_path) / "Textures" if mod_path else None
             if mod_path:
                 try:
-                    for root, dirs, files in os.walk(mod_path):
-                        if any(file.endswith(self.DDS_EXTENSION) for file in files):
-                            return True
-                        # Limit depth to avoid performance issues
-                        if root != mod_path:
-                            break
+                    if any(Path(mod_path).rglob(f"*{self.DDS_EXTENSION}")):
+                        return True
                 except (OSError, PermissionError):
                     continue
         return False
