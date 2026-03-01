@@ -885,7 +885,7 @@ class ModListWidget(QListWidget):
             self._get_selected_metadata,
             self.uuids,
         )  # TODO: should we enable items conditionally? For now use all
-        logger.debug("Finished ModListW`idget initialization")
+        logger.debug("Finished ModListWidget initialization")
 
     def on_selection_changed(
         self, selected: QItemSelection, deselected: QItemSelection
@@ -2130,7 +2130,15 @@ class ModListWidget(QListWidget):
         This event occurs when the user presses a key while the mod
         list is in focus.
         """
-        if (
+        if event.key() == Qt.Key.Key_Delete:
+            if len(self.selectedItems()) > 0:
+                # Let deletion menu handle options and actual removal of mods
+                menu = QMenu(self)
+                for action in self.deletion_sub_menu.actions():
+                    menu.addAction(action)
+                self.deletion_sub_menu._refresh_actions()
+                menu.exec_(QCursor.pos())
+        elif (
             event.modifiers() & Qt.KeyboardModifier.ControlModifier
             and event.key() == Qt.Key.Key_Return
         ):
