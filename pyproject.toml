@@ -9,7 +9,7 @@ dependencies = [
     "aiohttp==3.13.3",
     "beautifulsoup4==4.14.3",
     "certifi==2026.2.25",
-    "chardet==6.0.0.post1",
+    "chardet==7.0.0",
     "click==8.3.1",
     "imageio==2.37.2",
     "loguru==0.7.3",
