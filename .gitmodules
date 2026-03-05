@@ -6,4 +6,4 @@
 	path = submodules/SteamworksPy
 	url = https://github.com/RimSort/SteamworksPy
 	ignore = dirty
-	branch = steamworks
+	branch = master

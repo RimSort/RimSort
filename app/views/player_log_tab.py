@@ -17,6 +17,7 @@ from PySide6.QtGui import (
     QTextCursor,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QColorDialog,
     QComboBox,
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
+    QProgressBar,
     QPushButton,
     QSizePolicy,
     QSplitter,
@@ -334,8 +336,6 @@ class PlayerLogTab(QWidget):
         self.log_display: QTextEdit
         self.current_match_index: int = -1
         self.matches = []
-        self.filter_combo: Optional[QComboBox] = None
-        self.mod_filter_input: Optional[QLineEdit] = None
         self.last_log_size: int = 0
         self._last_nav_pattern: Optional[str] = None
         self._pattern_matches_cache: dict[str, List[QTextCursor]] = {}
@@ -679,6 +679,10 @@ class PlayerLogTab(QWidget):
         load_buttons_layout.addWidget(self.load_link_button)
 
         controls_layout.addLayout(load_buttons_layout)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        controls_layout.addWidget(self.progress_bar)
         controls_group.setLayout(controls_layout)
 
         self.left_layout.addWidget(controls_group)
@@ -725,12 +729,12 @@ class PlayerLogTab(QWidget):
                 self.tr("All Issues"),
             ]
         )
-        self.filter_combo.currentIndexChanged.connect(self.apply_filter)
+        self.filter_combo.currentIndexChanged.connect(lambda _: self.apply_filter(clear_log=True, filter_type="Type"))
         filter_layout.addWidget(self.filter_combo)
 
         self.mod_filter_input = QLineEdit()
         self.mod_filter_input.setPlaceholderText(self.tr("Filter by mod name..."))
-        self.mod_filter_input.textChanged.connect(self.apply_filter)
+        self.mod_filter_input.textChanged.connect(lambda _: self.apply_filter(clear_log=True, filter_type="Search"))
         filter_layout.addWidget(self.mod_filter_input)
         search_filter_layout.addLayout(filter_layout)
 
@@ -780,9 +784,9 @@ class PlayerLogTab(QWidget):
             btn.setMaximumWidth(30)
             return btn
 
-        nav_group = QGroupBox(self.tr("Quick Navigation"))
+        self.nav_group = QGroupBox(self.tr("Quick Navigation"))
         nav_layout = QGridLayout()
-        nav_group.setLayout(nav_layout)
+        self.nav_group.setLayout(nav_layout)
         nav_layout.setSpacing(4)
         nav_layout.setContentsMargins(4, 4, 4, 4)
 
@@ -828,7 +832,7 @@ class PlayerLogTab(QWidget):
         )
         nav_layout.addWidget(scroll_to_end_btn, len(log_types), 0, 1, 3)
 
-        self.left_layout.addWidget(nav_group)
+        self.left_layout.addWidget(self.nav_group)
 
     def on_file_changed(self) -> None:
         """Handle file changed signal by starting debounce timer."""
@@ -893,8 +897,7 @@ class PlayerLogTab(QWidget):
             self._analyze_log_content(new_content)  # Analyze only the new content
             self._update_file_info()
             self._update_statistics()
-            self.apply_filter()
-            self.scroll_to_end()
+            self.apply_filter(new_content)
         except Exception as e:
             logger.error(f"Error reading appended log content: {str(e)}")
             self._file_change_debounce_timer.start()  # Restart the debounce timer on error
@@ -957,12 +960,43 @@ class PlayerLogTab(QWidget):
                 self._observer.join()
                 logger.info("Stopped real-time monitoring of Player.log.")
 
+    def disable_options(self, skip_mod_filter_input: bool = False) -> None:
+        """Disable options that require a loaded log."""
+        self.load_default_button.setEnabled(False)
+        self.load_file_button.setEnabled(False)
+        self.load_link_button.setEnabled(False)
+        self.filter_combo.setEnabled(False)
+        if not skip_mod_filter_input:
+            self.mod_filter_input.setEnabled(False)
+        self.search_input.setEnabled(False)
+        self.prev_button.setEnabled(False)
+        self.next_button.setEnabled(False)
+        self.color_picker_button.setEnabled(False)
+        self.nav_group.setEnabled(False)
+
+    def enable_options(self) -> None:
+        """Enable options that require a loaded log."""
+        self.load_default_button.setEnabled(True)
+        self.load_file_button.setEnabled(True)
+        self.load_link_button.setEnabled(True)
+        self.filter_combo.setEnabled(True)
+        self.mod_filter_input.setEnabled(True)
+        self.search_input.setEnabled(True)
+        self.prev_button.setEnabled(True)
+        self.next_button.setEnabled(True)
+        self.color_picker_button.setEnabled(True)
+        self.nav_group.setEnabled(True)
+
     def load_log(self, chunk_size: int = 1024) -> None:
         """Load the player log file content in chunks for lazy loading."""
         if self.player_log_path is None or not self.player_log_path.exists():
             show_warning("Player log file does not exist.")
             return
         try:
+            self.clear_log()
+            self.progress_bar.setValue(0)
+            self.progress_bar.show()
+            self.disable_options()
             self.log_storage.clear()  # Clear previous content
             self.log_stats = {
                 "total_lines": 0,
@@ -976,12 +1010,21 @@ class PlayerLogTab(QWidget):
             with open(
                 self.player_log_path, "r", encoding="utf-8", errors="ignore"
             ) as f:
+                total_chunks = max(1, (self.player_log_path.stat().st_size + chunk_size - 1) // chunk_size)
+                chunk_cnt = 0
+                self.progress_bar.setTextVisible(True)
+                self.progress_bar.setFormat(self.tr("Reading file... %p%"))
                 while True:
                     chunk = f.read(chunk_size)
                     if not chunk:
                         break
                     self.log_storage.append(chunk)  # Use new storage method
-                    self._analyze_log_content(chunk)  # Analyze each chunk as it's read
+                    self._analyze_log_content(chunk)
+                    chunk_cnt += 1
+                    progress = (chunk_cnt / total_chunks) * 100
+                    self.progress_bar.setValue(int(progress))
+                    QApplication.processEvents()
+            
             self.last_log_size = len(self.log_storage)  # Update based on new storage
             self.current_log_content = str(
                 self.log_storage
@@ -989,12 +1032,14 @@ class PlayerLogTab(QWidget):
             self._update_file_info()
             self._update_statistics()
             self.apply_filter()
-            self.scroll_to_end()
+            self.enable_options()
             logger.info(
                 "Loaded player log file in chunks using memory-efficient storage."
             )
         except Exception as e:
             logger.error(f"Failed to load player log file: {e}")
+            self.progress_bar.hide()
+            self.enable_options()
 
     def _update_file_info(self) -> None:
         """Update the file info labels with path, size, and last modified date."""
@@ -1247,21 +1292,47 @@ class PlayerLogTab(QWidget):
             self.load_log()
 
     def load_log_from_link(self) -> None:
+        def load_log_from_link_in_chunks() -> None:
+            self.progress_bar.setFormat(self.tr("Reading log from URL... %p%"))
+            self.progress_bar.setValue(0)
+            self.progress_bar.setTextVisible(True)
+            self.progress_bar.show()
+
+            resp = requests.get(url, timeout=10, stream=True)
+            resp.raise_for_status()
+            total_size = len(resp.content)
+            downloaded = 0
+            chunks = []
+
+            for chunk in resp.iter_content(chunk_size=1024):
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                downloaded += len(chunk)
+                self._analyze_log_content(chunk.decode("utf-8", errors="ignore"))
+
+                if total_size:
+                    progress = int((downloaded / total_size) * 100)
+                    self.progress_bar.setValue(progress)
+                QApplication.processEvents()
+
+            self.current_log_content = b"".join(chunks).decode("utf-8", errors="ignore")
+            self.progress_bar.setValue(100)
+
         url, ok = QInputDialog.getText(
             self, self.tr("Load Log from Link"), self.tr("Enter URL:")
         )
         if ok and url:
             try:
-                resp = requests.get(url, timeout=10)
-                resp.raise_for_status()
-                self.current_log_content = resp.text
+                self.clear_log()
+                self.disable_options()
+                load_log_from_link_in_chunks()
                 self.player_log_path = None  # Not a file
                 self.url = url
-                self._analyze_log_content(self.log_storage.get_full_content())
                 self._update_file_info()
                 self._update_statistics()
                 self.apply_filter()
-                self.scroll_to_end()
+                self.enable_options()
                 show_information(
                     title=self.tr("Log loaded successfully from URL"),
                     text=f"{url}",
@@ -1349,6 +1420,7 @@ class PlayerLogTab(QWidget):
 
     def _analyze_log_content(self, new_content: str) -> None:
         """Analyze the log content and update statistics more efficiently."""
+        # NOTE: Gets increasingly slower with chunks over 1024/2048
         lines = new_content.splitlines()
         self.log_stats["total_lines"] += len(lines)
 
@@ -1367,15 +1439,24 @@ class PlayerLogTab(QWidget):
             if LogPatternManager.EXCEPTION_FILTER_PATTERN.search(line):
                 self.log_stats["exceptions"] += 1
 
-    def apply_filter(self) -> None:
+    def apply_filter(self, new_content: str = "", clear_log: bool = False, chunk_size: int = 1024, filter_type: str = "") -> None:
         """Apply the selected filter and mod name filter to the log content more efficiently."""
+        if clear_log:
+            self.clear_log()
+        self.progress_bar.setFormat(self.tr("Loading file... %p%"))
+        self.progress_bar.show()
         filter_text = (
             self.filter_combo.currentText() if self.filter_combo else "All Entries"
         )
         mod_filter = self.mod_filter_input.text() if self.mod_filter_input else ""
-        lines = self.current_log_content.splitlines()
-        filtered_lines = []
+        lines = new_content.splitlines() or self.current_log_content.splitlines()
 
+        if filter_type == "Search":
+            self.disable_options(skip_mod_filter_input=True)
+        elif filter_type == "Type":
+            self.disable_options()
+
+        filtered_lines = []
         # Precompile combined patterns for filters
         keybind_pattern = self._keybind_pattern
         mod_issue_pattern = self._mod_issue_pattern
@@ -1421,11 +1502,29 @@ class PlayerLogTab(QWidget):
         # Collapse repeated lines before displaying
         collapsed_lines = self._collapse_repeated_lines(filtered_lines)
         self.filtered_content = "\n".join(collapsed_lines)
-        self.log_display.setPlainText(self.filtered_content)
+        scroll_bar = self.log_display.verticalScrollBar()
+        total_chunks = max(1, (len(self.filtered_content) + chunk_size - 1) // chunk_size)
+        chunk_cnt = 0
+        for i in range(0, len(self.filtered_content), chunk_size):
+            old_value = scroll_bar.value()
+            chunk = self.filtered_content[i : i + chunk_size]
+            self.log_display.append(chunk)
+            scroll_bar.setValue(old_value)
+            chunk_cnt += 1
+            progress = (chunk_cnt / total_chunks) * 100
+            self.progress_bar.setValue(int(progress))
+            QApplication.processEvents()
+
+        self.progress_bar.setValue(100)
+        self.progress_bar.hide()
+
         self._update_match_count()
 
         # Optimize the statistics update
         self._update_statistics()
+
+        if filter_type:
+            self.enable_options()
 
     def _update_statistics(self) -> None:
         """Update the statistics labels in the UI (consolidated)."""

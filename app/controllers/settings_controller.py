@@ -6,11 +6,9 @@ from pathlib import Path
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
-from sqlalchemy import text
 
 from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
-from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.acf_utils import validate_acf_file_exists
@@ -343,12 +341,10 @@ class SettingsController(QObject):
             self._on_use_background_coloring_checkbox_changed
         )
 
-        # Performance tab
-        self._enable_aux_db_performance_mode()
-        self.settings_dialog.aux_db_performance_mode.stateChanged.connect(
-            self._enable_aux_db_performance_mode
+        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
+            self._on_include_mod_notes_in_mod_name_filter_changed
         )
-
+        
         EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
 
         # Connect signals from dialogs
@@ -993,6 +989,9 @@ class SettingsController(QObject):
         self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
+        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.setChecked(
+            self.settings.include_mod_notes_in_mod_name_filter
+        )
 
         self.settings_dialog.enable_backup_before_update_checkbox.setChecked(
             self.settings.enable_backup_before_update
@@ -1000,9 +999,6 @@ class SettingsController(QObject):
         self.settings_dialog.max_backups_spinbox.setValue(self.settings.max_backups)
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
-        )
-        self.settings_dialog.aux_db_performance_mode.setChecked(
-            self.settings.enable_aux_db_performance_mode
         )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
@@ -1335,6 +1331,9 @@ class SettingsController(QObject):
         self.settings.update_databases_on_startup = (
             self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
+        self.settings.include_mod_notes_in_mod_name_filter = (
+            self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
+        )
 
         self.settings.enable_backup_before_update = (
             self.settings_dialog.enable_backup_before_update_checkbox.isChecked()
@@ -1342,9 +1341,6 @@ class SettingsController(QObject):
         self.settings.max_backups = self.settings_dialog.max_backups_spinbox.value()
         self.settings.enable_aux_db_behavior_editing = (
             self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
-        )
-        self.settings.enable_aux_db_performance_mode = (
-            self.settings_dialog.aux_db_performance_mode.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
@@ -2456,23 +2452,10 @@ class SettingsController(QObject):
         self.change_mod_coloring_mode = not self.change_mod_coloring_mode
 
     @Slot()
-    def _enable_aux_db_performance_mode(self) -> None:
-        """
-        Enable/disable the auxiliary metadata database performance mode based on the checkbox state.
-        """
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings.aux_db_path
+    def _on_include_mod_notes_in_mod_name_filter_changed(self) -> None:
+        self.settings.include_mod_notes_in_mod_name_filter = (
+            self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
         )
-        with aux_metadata_controller.Session() as session:
-            if self.settings_dialog.aux_db_performance_mode.isChecked():
-                session.execute(text("PRAGMA synchronous = OFF"))
-                session.execute(text("PRAGMA journal_mode = MEMORY"))
-            else:
-                session.execute(text("PRAGMA synchronous = FULL"))
-                session.execute(text("PRAGMA journal_mode = DELETE"))
-
-            session.commit()
-            session.close()
 
     @Slot()
     def _handle_mod_coloring_mode_changed(self) -> None:

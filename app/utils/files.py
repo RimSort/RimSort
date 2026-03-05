@@ -175,7 +175,7 @@ def create_backup_in_thread(settings: Settings) -> None:
 
     config_path = Path(current_instance.config_folder)
     saves_path = config_path.parent / "Saves"
-    backup_dir = Path(AppInfo().app_storage_folder) / "backups"
+    backup_dir = AppInfo().game_saves_backups_folder
 
     def backup_task() -> None:
         backup_path = create_saves_backup(saves_path, backup_dir, settings)

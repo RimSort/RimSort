@@ -8,8 +8,8 @@ requires-python = "==3.12.*"
 dependencies = [
     "aiohttp==3.13.3",
     "beautifulsoup4==4.14.3",
-    "certifi==2026.1.4",
-    "chardet==5.2.0",
+    "certifi==2026.2.25",
+    "chardet==7.0.1",
     "click==8.3.1",
     "imageio==2.37.2",
     "loguru==0.7.3",
@@ -18,18 +18,18 @@ dependencies = [
     "natsort==8.4.0",
     "networkx==3.6.1",
     "packaging==26.0",
-    "platformdirs==4.5.1",
+    "platformdirs==4.9.2",
     "psutil==7.2.2",
     "pygit2==1.19.1",
     "pygithub==2.8.1",
     "pyside6==6.10.1",
+    "rapidfuzz>=3.14.3",
     "requests==2.32.5",
-    "sqlalchemy==2.0.46",
+    "sqlalchemy==2.0.48",
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
     "watchdog==6.0.0",
-
     "zstandard==0.25.0",
 ]
 
@@ -62,7 +62,7 @@ dev = [
 ]
 
 build = [
-    "nuitka==4.0",
+    "nuitka==4.0.2",
 ]
 
 [tool.uv]

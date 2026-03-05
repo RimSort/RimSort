@@ -1856,6 +1856,11 @@ class UpdateManager(QObject):
                         # of spaces and special characters in usernames/paths
                         cmd_parts.append(f'"{arg_str}"')
                 cmd_str = " ".join(cmd_parts)
+
+                # Need to enclose script and its args in quotes
+                # cmd /k ""update.bat" "temp_update_path" "log_path""
+                cmd_str = cmd_str.replace("/k ", "/k \"", 1)
+                cmd_str = cmd_str + "\""
             else:
                 cmd_str = args_repr
 
@@ -2178,12 +2183,12 @@ class UpdateManager(QObject):
         Updates progress widget during backup.
         """
         app_folder = AppInfo().application_folder
-        backup_folder = AppInfo().backup_folder
+        app_backup_folder = AppInfo().application_backups_folder
 
         # Generate backup ZIP filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filename = f"RimSort_Backup_{timestamp}.zip"
-        backup_path = backup_folder / backup_filename
+        backup_path = app_backup_folder / backup_filename
 
         logger.info("Creating backup of RimSort installation")
 
@@ -2231,12 +2236,12 @@ class UpdateManager(QObject):
         """
         Clean up old backups, keeping only the most recent ones based on max_backups setting.
         """
-        backup_folder = AppInfo().backup_folder
+        app_backup_folder = AppInfo().application_backups_folder
         max_backups = self.settings_controller.settings.max_backups
 
         try:
             # Get all backup files
-            backup_files = list(backup_folder.glob("RimSort_Backup_*.zip"))
+            backup_files = list(app_backup_folder.glob("RimSort_Backup_*.zip"))
             if len(backup_files) <= max_backups:
                 logger.debug(
                     f"Backup count ({len(backup_files)}) is within limit ({max_backups})"

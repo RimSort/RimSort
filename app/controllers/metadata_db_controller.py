@@ -191,6 +191,7 @@ class AuxMetadataController(MetadataDbController):
             session.add(item)
         else:
             session.add_all(item)
+
         session.commit()
 
     @staticmethod

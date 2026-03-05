@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -1876,7 +1877,23 @@ class ModParser(QRunnable):
                     data_malformed = True
         if (
             (invalid_about_file_path_found and not scenario_rsc_found) or data_malformed
-        ):  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
+        ):  
+            # Final simple check to see if the leftover dir contains ONLY .dds files.
+            # This is likely after a steam unsubscribe and is safe to delete to prevent invalid items
+            if directory_path.is_dir():
+                has_non_dds = any(
+                    f.is_file() and f.suffix != ".dds"
+                    for f in directory_path.rglob("*")
+                )
+
+                if not has_non_dds:
+                    logger.debug(
+                        f"Directory {mod_directory} contains only .dds files. Skipping invalid mod population and removing this directory."
+                    )
+                    shutil.rmtree(mod_directory)
+                    return {}
+
+            # If we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(
                 f"Invalid dir. Populating invalid mod for path: {mod_directory}"
             )
@@ -1918,6 +1935,11 @@ class ModParser(QRunnable):
             mod_metadata = self.__parse_mod_metadata(
                 self.data_source, self.mod_directory, self.metadata_manager, self.uuid
             )
+            if not mod_metadata:
+                logger.debug(
+                    f"No metadata parsed for {self.mod_directory}, skipping update."
+                )
+                return
             packageid = mod_metadata[self.uuid].get("packageid")
             self.metadata_manager.internal_local_metadata.update(mod_metadata)
             # Track packageid -> uuid relationships for future uses

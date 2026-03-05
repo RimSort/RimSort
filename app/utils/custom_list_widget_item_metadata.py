@@ -7,9 +7,9 @@ from sqlalchemy.orm.session import Session
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.aux_db_utils import (
-    get_mod_color,
-    get_mod_user_notes,
-    get_mod_warning_toggled,
+    auxdb_get_mod_color,
+    auxdb_get_mod_user_notes,
+    auxdb_get_mod_warning_toggled,
 )
 from app.utils.metadata import MetadataManager
 
@@ -70,7 +70,7 @@ class CustomListWidgetItemMetadata:
         self.filtered = filtered
         self.hidden_by_filter = hidden_by_filter
         if not warning_toggled:
-            self.warning_toggled = get_mod_warning_toggled(
+            self.warning_toggled = auxdb_get_mod_warning_toggled(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:
@@ -82,7 +82,7 @@ class CustomListWidgetItemMetadata:
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
         if mod_color is None:
-            self.mod_color = get_mod_color(
+            self.mod_color = auxdb_get_mod_color(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:
@@ -99,7 +99,7 @@ class CustomListWidgetItemMetadata:
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
         if user_notes == "":
-            self.user_notes = get_mod_user_notes(
+            self.user_notes = auxdb_get_mod_user_notes(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:

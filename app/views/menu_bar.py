@@ -72,6 +72,8 @@ class MenuBar(QObject):
         self.delete_dds_textures_action: QAction
         self.wiki_action: QAction
         self.github_action: QAction
+        self.show_translation_status_action: QAction
+        self.auto_add_translations_action: QAction
         self.check_for_updates_action: QAction | None = None
         self.check_for_updates_on_startup_action: QAction | None = None
 
@@ -266,7 +268,24 @@ class MenuBar(QObject):
         self.reset_all_mod_colors_action = self._add_action(
             edit_menu, self.tr("Reset Mod Colors")
         )
+        edit_menu.addSeparator()
+        self.auto_add_translations_action = self._add_action(
+            edit_menu, self.tr("Auto-add Translations")
+        )
         return edit_menu
+
+    def _create_view_menu(self) -> QMenu:
+        """
+        Create the "View" menu and add its actions.
+
+        Returns:
+            QMenu: The created "View" menu.
+        """
+        view_menu = self.menu_bar.addMenu(self.tr("View"))
+        self.show_translation_status_action = self._add_action(
+            view_menu, self.tr("Show Translation Status"), checkable=True
+        )
+        return view_menu
 
     def _create_download_menu(self) -> QMenu:
         """
@@ -382,6 +401,7 @@ class MenuBar(QObject):
             self.quit_action = self._add_action(app_menu, "Quit")
         self._create_file_menu()
         self._create_edit_menu()
+        self._create_view_menu()
         self._create_download_menu()
         self._create_instances_menu()
         self._create_texture_menu()
