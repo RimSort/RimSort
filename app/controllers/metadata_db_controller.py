@@ -35,6 +35,25 @@ class AuxMetadataController(MetadataDbController):
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
         Base.metadata.create_all(self.engine)
+        self._run_migrations()
+
+    def _run_migrations(self) -> None:
+        """Add any missing columns to existing databases."""
+        with self.engine.connect() as conn:
+            columns = {
+                row[1]
+                for row in conn.execute(
+                    text("PRAGMA table_info('auxiliary_metadata')")
+                )
+            }
+            if "font_color_hex" not in columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE auxiliary_metadata ADD COLUMN font_color_hex TEXT DEFAULT NULL"
+                    )
+                )
+                conn.commit()
+                logger.info("Migrated DB: added font_color_hex column")
 
     @classmethod
     def get_or_create_cached_instance(cls, db_path: Path) -> "AuxMetadataController":

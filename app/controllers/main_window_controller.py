@@ -5,6 +5,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QPushButton
 
+from app.models.divider import is_divider_uuid
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.views.main_window import MainWindow
@@ -23,7 +24,6 @@ class MainWindowController(QObject):
             self.main_window.refresh_button,
             self.main_window.clear_button,
             self.main_window.restore_button,
-            self.main_window.sort_button,
             self.main_window.save_button,
             self.main_window.run_button,
         ]
@@ -39,7 +39,6 @@ class MainWindowController(QObject):
                 EventBus().do_refresh_mods_lists,
                 EventBus().do_clear_active_mods_list,
                 EventBus().do_restore_active_mods_list,
-                EventBus().do_sort_active_mods_list,
                 EventBus().do_save_active_mods_list,
                 EventBus().do_run_game,
             ],
@@ -96,10 +95,11 @@ class MainWindowController(QObject):
         return None
 
     def check_dependencies(self) -> None:
-        # Get the active mods list
-        active_mods = set(
-            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
-        )
+        # Get the active mods list (exclude dividers)
+        active_mods = {
+            u for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        }
 
         # Create a dictionary to store missing dependencies
         missing_deps: dict[str, set[str]] = {}
@@ -388,11 +388,22 @@ class MainWindowController(QObject):
         logger.debug(
             "Active mods list has been updated. Managing save button animation state."
         )
-        if (
-            # Compare current active list with last save to see if the list has changed
-            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+        current_mod_uuids = [
+            u for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            if not is_divider_uuid(u)
+        ]
+        current_dividers = (
+            self.main_window.main_content_panel.mods_panel.active_mods_list.get_dividers_data()
+        )
+        mods_changed = (
+            current_mod_uuids
             != self.main_window.main_content_panel.active_mods_uuids_last_save
-        ):
+        )
+        dividers_changed = (
+            current_dividers
+            != self.main_window.main_content_panel.active_mods_dividers_last_save
+        )
+        if mods_changed or dividers_changed:
             if not self.main_window.save_button_flashing_animation.isActive():
                 logger.debug("Starting save button animation")
                 self.main_window.save_button_flashing_animation.start(

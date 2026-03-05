@@ -592,14 +592,15 @@ class ModInfoPanel:
         """Set the mod description with version-specific handling."""
         self.description.setText("")
         if "description" in mod_metadata:
-            if mod_metadata["description"] is not None:
-                if isinstance(mod_metadata["description"], str):
-                    self.description.setText(
-                        mod_metadata["description"], render_unity_rt
-                    )
+            desc = mod_metadata["description"]
+            if desc is not None:
+                if isinstance(desc, str):
+                    self.description.setText(desc, render_unity_rt)
+                elif isinstance(desc, dict) and not desc:
+                    pass
                 else:
                     logger.error(
-                        f"[description] tag is not a string: {mod_metadata['description']}"
+                        f"[description] tag is not a string: {desc}"
                     )
         elif "descriptionsbyversion" in mod_metadata and isinstance(
             mod_metadata["descriptionsbyversion"], dict

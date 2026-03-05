@@ -37,6 +37,9 @@ class AuxMetadataEntry(Base):
     color_hex: Mapped[str] = mapped_column(
         String, default=None, nullable=True
     )  # None/NULL means use theme default
+    font_color_hex: Mapped[str] = mapped_column(
+        String, default=None, nullable=True
+    )
     ignore_warnings: Mapped[bool] = mapped_column(Boolean, default=False)
 
     outdated: Mapped[bool] = mapped_column(Boolean, default=False)

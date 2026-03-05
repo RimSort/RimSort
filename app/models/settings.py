@@ -119,6 +119,10 @@ class Settings(QObject):
         self.inactive_mods_sort_key: str = "FILESYSTEM_MODIFIED_TIME"
         self.inactive_mods_sort_descending: bool = True
 
+        # Data source filter state (0 = All)
+        self.active_mods_data_source_filter_index: int = 0
+        self.inactive_mods_data_source_filter_index: int = 0
+
         # DB Builder
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True
@@ -182,7 +186,6 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-        self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
@@ -218,6 +221,9 @@ class Settings(QObject):
 
         # Color Picker Custom Colors (Store as hex)
         self.color_picker_custom_colors: list[str] = []
+
+        # Active mod list dividers: list of {uuid, name, collapsed, index}
+        self.active_mods_dividers: list[dict[str, Any]] = []
 
     @property
     def aux_db_path(self) -> Path:
