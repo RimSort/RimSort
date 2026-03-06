@@ -88,17 +88,13 @@ class AppInfo:
         self._ignore_mods_file: Path = self.databases_folder / "ignore.json"
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
-        self._setup_web_channel_script_file: Path = (
-            self._application_folder / "setup_web_channel_script.js"
-        )
+        self._setup_web_channel_script_file: Path = self._application_folder / "setup_web_channel_script.js"
 
         # Backup directories
         self._backups_folder: Path = self._app_storage_folder / "backups"
         self._game_saves_backups_folder: Path = self._backups_folder / "saves"
         self._settings_backups_folder: Path = self._backups_folder / "settings"
-        self._application_backups_folder: Path = (
-            self._backups_folder / "rimsort_installation"
-        )
+        self._application_backups_folder: Path = self._backups_folder / "rimsort_installation"
 
         # Make sure important directories exist
         self._app_storage_folder.mkdir(parents=True, exist_ok=True)

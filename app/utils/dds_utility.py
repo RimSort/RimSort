@@ -17,9 +17,7 @@ class DDSUtility:
 
     def delete_dds_files_without_png(self) -> None:
         """Deletes all DDS files that do not have a corresponding PNG file."""
-        logger.info(
-            "Running checks for deleting DDS files without corresponding PNG files..."
-        )
+        logger.info("Running checks for deleting DDS files without corresponding PNG files...")
         local_mods_target = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
         ].local_folder
@@ -29,9 +27,7 @@ class DDSUtility:
 
         # Combine both paths to search for DDS files
         combined_paths = [local_mods_target, workshop_mods_target]
-        combined_paths = [
-            path for path in combined_paths if path and os.path.exists(path)
-        ]
+        combined_paths = [path for path in combined_paths if path and os.path.exists(path)]
 
         dds_files = []
         for path in combined_paths:
@@ -49,6 +45,4 @@ class DDSUtility:
                 except OSError as e:
                     logger.error(f"Failed to delete {dds_file}: {e}")
 
-        logger.info(
-            f"Deleted {deleted_count} DDS files without corresponding PNG files"
-        )
+        logger.info(f"Deleted {deleted_count} DDS files without corresponding PNG files")

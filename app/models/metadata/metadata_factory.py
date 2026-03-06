@@ -96,19 +96,11 @@ def read_mods_config(path: Path) -> ModsConfig | None:
             logger.error("Error reading mods config: Required fields not found.")
             return None
 
-        if (
-            not isinstance(version, str)
-            or not isinstance(activeMods, list)
-            or not isinstance(knownExpansions, list)
-        ):
-            logger.error(
-                "Error reading mods config: Required fields have invalid types."
-            )
+        if not isinstance(version, str) or not isinstance(activeMods, list) or not isinstance(knownExpansions, list):
+            logger.error("Error reading mods config: Required fields have invalid types.")
             return None
 
-        return ModsConfig(
-            version=version, activeMods=activeMods, knownExpansions=knownExpansions
-        )
+        return ModsConfig(version=version, activeMods=activeMods, knownExpansions=knownExpansions)
     except Exception as e:
         logger.error(f"Failed to read mods config: {e}")
         return None
@@ -122,9 +114,7 @@ def write_mods_config(path: Path, mods_config: ModsConfig) -> bool:
     :param mods_config: The ModsConfig object.
     """
     try:
-        json_to_xml_write(
-            {"ModsConfigData": mods_config.to_dict()}, str(path), raise_errs=True
-        )
+        json_to_xml_write({"ModsConfigData": mods_config.to_dict()}, str(path), raise_errs=True)
         return True
     except Exception as e:
         logger.error(f"Failed to write mods config: {e}")
@@ -183,9 +173,7 @@ def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMo
         elif isinstance(game_version, list):
             mod.supported_versions = set(game_version)
     else:
-        _set_mod_invalid(
-            mod, "No metadata found for scenario. This scenario may be invalid."
-        )
+        _set_mod_invalid(mod, "No metadata found for scenario. This scenario may be invalid.")
         return False, mod
 
     if "scenario" in scenario_data:
@@ -198,23 +186,17 @@ def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMo
         if isinstance(name, str):
             mod.name = name
         else:
-            _set_mod_invalid(
-                mod, "Couldn't parse a valid name. This scenario may be invalid."
-            )
+            _set_mod_invalid(mod, "Couldn't parse a valid name. This scenario may be invalid.")
 
         if isinstance(summary, str):
             mod.summary = summary
         else:
-            _set_mod_invalid(
-                mod, "Summary parsed seems invalid. This scenario may be invalid."
-            )
+            _set_mod_invalid(mod, "Summary parsed seems invalid. This scenario may be invalid.")
 
         if isinstance(description, str):
             mod.description = description
         else:
-            _set_mod_invalid(
-                mod, "Description parsed seems invalid. This scenario may be invalid."
-            )
+            _set_mod_invalid(mod, "Description parsed seems invalid. This scenario may be invalid.")
     else:
         _set_mod_invalid(mod, "No scenario data found. This scenario may be invalid.")
         return False, mod
@@ -222,9 +204,7 @@ def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMo
     return mod.valid, mod
 
 
-def create_about_mod(
-    mod_data: dict[str, Any], target_version: str
-) -> tuple[bool, AboutXmlMod]:
+def create_about_mod(mod_data: dict[str, Any], target_version: str) -> tuple[bool, AboutXmlMod]:
     """Factory method for creating a ListedMod object.
 
     :param mod_data: The dictionary containing the mod data.
@@ -322,9 +302,7 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     return mod
 
 
-def _parse_optional(
-    mod_data: dict[str, Any], mod: AboutXmlMod, target_version: str
-) -> AboutXmlMod:
+def _parse_optional(mod_data: dict[str, Any], mod: AboutXmlMod, target_version: str) -> AboutXmlMod:
     """
     Parse the optional fields from the mod_data and set them on the mod object.
     """
@@ -343,9 +321,7 @@ def _parse_optional(
 
     mod.about_rules = create_base_rules(mod_data, target_version)
 
-    descriptions_by_version: bool | dict[str, str] = mod_data.get(
-        "descriptionsByVersion", False
-    )
+    descriptions_by_version: bool | dict[str, str] = mod_data.get("descriptionsByVersion", False)
     if isinstance(descriptions_by_version, dict):
         _, description = match_version(descriptions_by_version, target_version)
         if description and isinstance(description, str):
@@ -354,9 +330,7 @@ def _parse_optional(
     return mod
 
 
-def _set_mod_type(
-    mod: ListedMod, local_path: Path, rimworld_path: Path, workshop_path: Path | None
-) -> ListedMod:
+def _set_mod_type(mod: ListedMod, local_path: Path, rimworld_path: Path, workshop_path: Path | None) -> ListedMod:
     """
     Set the mod type based on the paths given.
 
@@ -380,17 +354,11 @@ def _set_mod_type(
         try:
             repo = pygit2.discover_repository(str(mod.mod_path))
 
-            if (
-                repo is not None
-                and Path(repo).exists()
-                and Path(repo).parent == mod.mod_path
-            ):
+            if repo is not None and Path(repo).exists() and Path(repo).parent == mod.mod_path:
                 mod.mod_type = ModType.GIT
                 return mod
         except pygit2.GitError as e:
-            logger.error(
-                f"Encountered git error while trying to discover git repository at: {mod.mod_path}"
-            )
+            logger.error(f"Encountered git error while trying to discover git repository at: {mod.mod_path}")
             logger.error(e)
 
         if (mod.mod_path / Path("About/PublishedFileId.txt")).exists():
@@ -401,19 +369,13 @@ def _set_mod_type(
     return mod
 
 
-def create_base_rules(
-    mod_data: dict[str, Any], target_version: str
-) -> BaseRules | Rules:
+def create_base_rules(mod_data: dict[str, Any], target_version: str) -> BaseRules | Rules:
     rules = BaseRules()
 
     # Dependencies
     mod_dependencies = value_extractor(mod_data.get("modDependencies", []))
-    mod_dependencies = (
-        mod_dependencies if isinstance(mod_dependencies, list) else [mod_dependencies]
-    )
-    versioned_mod_dependencies = value_extractor(
-        mod_data.get("modDependenciesByVersion", {})
-    )
+    mod_dependencies = mod_dependencies if isinstance(mod_dependencies, list) else [mod_dependencies]
+    versioned_mod_dependencies = value_extractor(mod_data.get("modDependenciesByVersion", {}))
 
     if isinstance(versioned_mod_dependencies, dict):
         _, dependencies = match_version(versioned_mod_dependencies, target_version)
@@ -434,11 +396,7 @@ def create_base_rules(
                         for v in alt_li:
                             if isinstance(v, str):
                                 alt_list.append(v)
-                            elif (
-                                isinstance(v, dict)
-                                and "#text" in v
-                                and isinstance(v["#text"], str)
-                            ):
+                            elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
                                 alt_list.append(v["#text"])  # MayRequire-like form
                     elif isinstance(alt_li, str):
                         alt_list.append(alt_li)
@@ -446,26 +404,18 @@ def create_base_rules(
                     if alt_list:
                         deps["alternativePackageIds"] = alt_list
                 else:
-                    logger.warning(
-                        f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
-                    )
+                    logger.warning(f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid.")
 
             dep = create_mod_dependency(deps)
 
             if dep.package_id in rules.dependencies:
-                logger.warning(
-                    f"Duplicate dependency found: {dep.package_id}. Skipping."
-                )
+                logger.warning(f"Duplicate dependency found: {dep.package_id}. Skipping.")
             else:
                 rules.dependencies[dep.package_id] = dep
         else:
-            logger.warning(
-                f"Skipping invalid dependency: {dependency}. This mod may be invalid."
-            )
+            logger.warning(f"Skipping invalid dependency: {dependency}. This mod may be invalid.")
 
-    def load_operations(
-        mod_data: dict[str, Any], key: str, force_key: str, target_version: str
-    ) -> CaseInsensitiveSet:
+    def load_operations(mod_data: dict[str, Any], key: str, force_key: str, target_version: str) -> CaseInsensitiveSet:
         load = value_extractor(mod_data.get(key, []))
         load = load if isinstance(load, list) else [load]
 
@@ -484,36 +434,22 @@ def create_base_rules(
         return CaseInsensitiveSet(load)
 
     # Load Before
-    rules.load_before = load_operations(
-        mod_data, "loadBefore", "forceLoadBefore", target_version
-    )
+    rules.load_before = load_operations(mod_data, "loadBefore", "forceLoadBefore", target_version)
 
     # Load After
-    rules.load_after = load_operations(
-        mod_data, "loadAfter", "forceLoadAfter", target_version
-    )
+    rules.load_after = load_operations(mod_data, "loadAfter", "forceLoadAfter", target_version)
 
     # incompatibleWith
     incompatible_with = value_extractor(mod_data.get("incompatibleWith", []))
-    incompatible_with = (
-        incompatible_with
-        if isinstance(incompatible_with, list)
-        else [incompatible_with]
-    )
+    incompatible_with = incompatible_with if isinstance(incompatible_with, list) else [incompatible_with]
 
-    incompatible_withByVersion = value_extractor(
-        mod_data.get("incompatibleWithByVersion", {})
-    )
+    incompatible_withByVersion = value_extractor(mod_data.get("incompatibleWithByVersion", {}))
     if isinstance(incompatible_withByVersion, dict):
         _, incompatibles = match_version(incompatible_withByVersion, target_version)
         if incompatibles:
             incompatible_with.extend(incompatibles)
 
-    incompatible_with = [
-        item
-        for item in incompatible_with
-        if isinstance(item, (str, CaseInsensitiveStr))
-    ]
+    incompatible_with = [item for item in incompatible_with if isinstance(item, (str, CaseInsensitiveStr))]
     rules.incompatible_with = CaseInsensitiveSet(incompatible_with)
 
     return rules
@@ -549,15 +485,11 @@ def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
     return mod
 
 
-def _create_about_mod_from_xml(
-    base_path: Path, mod_xml_path: Path, target_version: str
-) -> tuple[bool, AboutXmlMod]:
+def _create_about_mod_from_xml(base_path: Path, mod_xml_path: Path, target_version: str) -> tuple[bool, AboutXmlMod]:
     try:
         mod_data = xml_path_to_json(str(mod_xml_path))
     except Exception:
-        logger.error(
-            f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}"
-        )
+        logger.error(f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}")
         return False, AboutXmlMod(valid=False)
 
     mod_data = {k.lower(): v for k, v in mod_data.items()}
@@ -573,15 +505,11 @@ def _create_about_mod_from_xml(
     return valid, mod
 
 
-def _create_scenario_mod_from_rsc(
-    base_path: Path, mod_rsc_path: Path
-) -> tuple[bool, ScenarioMod]:
+def _create_scenario_mod_from_rsc(base_path: Path, mod_rsc_path: Path) -> tuple[bool, ScenarioMod]:
     try:
         mod_data = xml_path_to_json(str(mod_rsc_path))
     except Exception:
-        logger.error(
-            f"Unable to parse {mod_rsc_path} with the exception: {traceback.format_exc()}"
-        )
+        logger.error(f"Unable to parse {mod_rsc_path} with the exception: {traceback.format_exc()}")
         return False, ScenarioMod(valid=False)
 
     mod_data = {k.lower(): v for k, v in mod_data.items()}
@@ -633,12 +561,8 @@ def create_listed_mod_from_path(
         # Check if About.xml exists
         about_xml_path = path / Path("About/About.xml")
         if about_xml_path.exists():
-            success, about_mod = _create_about_mod_from_xml(
-                path, about_xml_path, target_version
-            )
-            return success, _set_mod_type(
-                about_mod, local_path, rimworld_path, workshop_path
-            )
+            success, about_mod = _create_about_mod_from_xml(path, about_xml_path, target_version)
+            return success, _set_mod_type(about_mod, local_path, rimworld_path, workshop_path)
 
         # Check for any file with .rsc extension
         generator = path.glob("*.rsc")
@@ -662,9 +586,7 @@ def create_listed_mod_from_path(
             )
         elif gen1 is not None:
             success, scenario_mod = _create_scenario_mod_from_rsc(path, rsc_files[0])
-            return success, _set_mod_type(
-                scenario_mod, local_path, rimworld_path, workshop_path
-            )
+            return success, _set_mod_type(scenario_mod, local_path, rimworld_path, workshop_path)
 
         logger.warning(f"No About.xml or .rsc file found in directory: {path}")
         return False, _set_mod_type(
@@ -740,9 +662,7 @@ def read_steam_db(path: Path) -> SteamDbSchema | None:
             json_string = f.read()
             logger.info("Reading info from SteamDB")
             steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
-            logger.info(
-                f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
-            )
+            logger.info(f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}")
             return steam_db
     else:  # Assume db_data_missing
         logger.warning("SteamDB not found at specified path.")
