@@ -127,11 +127,7 @@ class MetadataManager(QObject):
             self.workshop_acf_path: str = str(
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
-                Path(
-                    self.settings_controller.settings.instances[
-                        current_instance
-                    ].workshop_folder
-                ).parent.parent
+                Path(self.settings_controller.settings.instances[current_instance].workshop_folder).parent.parent
                 / "appworkshop_294100.acf",
             )
             self.workshop_acf_data: dict[str, Any] = {}
@@ -158,20 +154,12 @@ class MetadataManager(QObject):
 
         if version_file_path.exists():
             try:
-                self.game_version = version_file_path.read_text(
-                    encoding="utf-8"
-                ).strip()
-                logger.info(
-                    f"Retrieved game version from Version.txt: {self.game_version}"
-                )
+                self.game_version = version_file_path.read_text(encoding="utf-8").strip()
+                logger.info(f"Retrieved game version from Version.txt: {self.game_version}")
             except Exception as e:
-                logger.error(
-                    f"Unable to parse Version.txt from game folder: {version_file_path}: {e}"
-                )
+                logger.error(f"Unable to parse Version.txt from game folder: {version_file_path}: {e}")
         else:
-            logger.error(
-                f"The provided Version.txt path does not exist: {version_file_path}"
-            )
+            logger.error(f"The provided Version.txt path does not exist: {version_file_path}")
             self.show_warning_signal.emit(
                 self.tr("Missing Version.txt"),
                 self.tr(
@@ -196,24 +184,10 @@ class MetadataManager(QObject):
         futures = []
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures.append(executor.submit(self.external_loader._load_user_rules))
-            futures.append(
-                executor.submit(self.external_loader._load_steam_metadata, settings)
-            )
-            futures.append(
-                executor.submit(
-                    self.external_loader._load_community_rules_metadata, settings
-                )
-            )
-            futures.append(
-                executor.submit(
-                    self.external_loader._load_no_version_warning_metadata, settings
-                )
-            )
-            futures.append(
-                executor.submit(
-                    self.external_loader._load_use_this_instead_metadata, settings
-                )
-            )
+            futures.append(executor.submit(self.external_loader._load_steam_metadata, settings))
+            futures.append(executor.submit(self.external_loader._load_community_rules_metadata, settings))
+            futures.append(executor.submit(self.external_loader._load_no_version_warning_metadata, settings))
+            futures.append(executor.submit(self.external_loader._load_use_this_instead_metadata, settings))
 
         # Wait for all threads to complete with error handling
         loader_names = [
@@ -232,13 +206,9 @@ class MetadataManager(QObject):
             except TimeoutError:
                 logger.error(f"External metadata loader timed out: {loader_names[idx]}")
             except Exception as e:
-                logger.error(
-                    f"External metadata loader failed ({loader_names[idx]}): {e}"
-                )
+                logger.error(f"External metadata loader failed ({loader_names[idx]}): {e}")
 
-        logger.info(
-            f"External metadata refresh completed ({completed_count}/{len(futures)} loaders successful)"
-        )
+        logger.info(f"External metadata refresh completed ({completed_count}/{len(futures)} loaders successful)")
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         """
@@ -264,9 +234,7 @@ class MetadataManager(QObject):
                               If False (default), purge metadata for mods no longer present on disk.
         """
 
-        def batch_by_data_source(
-            data_source: str, mod_directories: list[str]
-        ) -> dict[str, str]:
+        def batch_by_data_source(data_source: str, mod_directories: list[str]) -> dict[str, str]:
             """
             Create a batch of mod path <-> uuid mappings for discovered directories.
 
@@ -286,9 +254,7 @@ class MetadataManager(QObject):
             mapper = self.mod_metadata_dir_mapper
             return {path: mapper.get(path, str(uuid4())) for path in mod_directories}
 
-        def purge_by_data_source(
-            data_source: str, batch: dict[str, str] | None = None
-        ) -> None:
+        def purge_by_data_source(data_source: str, batch: dict[str, str] | None = None) -> None:
             """
             Remove metadata for mods that no longer exist in the file system.
 
@@ -320,26 +286,21 @@ class MetadataManager(QObject):
             if batch_uuids is None:
                 # Full purge: remove all metadata for this data_source
                 uuids_to_remove = [
-                    uuid
-                    for uuid, metadata in internal_meta.items()
-                    if metadata.get("data_source") == data_source
+                    uuid for uuid, metadata in internal_meta.items() if metadata.get("data_source") == data_source
                 ]
             else:
                 # Selective purge: remove only metadata NOT in current batch (file system state)
                 uuids_to_remove = [
                     uuid
                     for uuid, metadata in internal_meta.items()
-                    if metadata.get("data_source") == data_source
-                    and uuid not in batch_uuids
+                    if metadata.get("data_source") == data_source and uuid not in batch_uuids
                 ]
 
             # Early return if nothing to purge
             if not uuids_to_remove:
                 return
 
-            logger.debug(
-                f"[{data_source}] Purging {len(uuids_to_remove)} leftover metadata entries"
-            )
+            logger.debug(f"[{data_source}] Purging {len(uuids_to_remove)} leftover metadata entries")
 
             # Remove metadata entries and update reverse indices
             packageid_to_uuids = self.packageid_to_uuids
@@ -347,9 +308,7 @@ class MetadataManager(QObject):
                 deleted_mod = internal_meta.pop(uuid, None)
                 if deleted_mod is None:
                     # Race condition: another thread may have already deleted this entry
-                    logger.warning(
-                        f"Unable to find metadata for {uuid} in internal metadata. Possible race condition!"
-                    )
+                    logger.warning(f"Unable to find metadata for {uuid} in internal metadata. Possible race condition!")
                     continue
 
                 # Maintain packageid_to_uuids reverse index consistency
@@ -368,9 +327,7 @@ class MetadataManager(QObject):
         # Game version is already loaded by __read_game_version() before this method is called.
         # This ensures external metadata loaders can use it for path construction (e.g., No Version Warning).
 
-        def process_data_source_folder(
-            data_source: str, folder_path: Path | str | None, subfolder: str = ""
-        ) -> None:
+        def process_data_source_folder(data_source: str, folder_path: Path | str | None, subfolder: str = "") -> None:
             """
             Scan a data source folder and update metadata for all discovered mods.
 
@@ -398,9 +355,7 @@ class MetadataManager(QObject):
             # Check if folder path is empty
             if not folder_path or folder_path == Path():
                 log_func = logger.error if data_source == "expansion" else logger.debug
-                log_func(
-                    f"Skipping parsing data from empty {data_source} path. Is the {data_source} path configured?"
-                )
+                log_func(f"Skipping parsing data from empty {data_source} path. Is the {data_source} path configured?")
                 purge_by_data_source(data_source)
                 return
 
@@ -457,22 +412,14 @@ class MetadataManager(QObject):
         self.mod_metadata_dir_mapper = dir_mapper
 
     def __update_from_settings(self) -> None:
-        self.community_rules_repo = (
-            self.settings_controller.settings.external_community_rules_repo
-        )
+        self.community_rules_repo = self.settings_controller.settings.external_community_rules_repo
         self.dbs_path = AppInfo().databases_folder
         self.external_community_rules_metadata_source = (
             self.settings_controller.settings.external_community_rules_metadata_source
         )
-        self.external_community_rules_file_path = (
-            self.settings_controller.settings.external_community_rules_file_path
-        )
-        self.external_steam_metadata_file_path = (
-            self.settings_controller.settings.external_steam_metadata_file_path
-        )
-        self.external_steam_metadata_source = (
-            self.settings_controller.settings.external_steam_metadata_source
-        )
+        self.external_community_rules_file_path = self.settings_controller.settings.external_community_rules_file_path
+        self.external_steam_metadata_file_path = self.settings_controller.settings.external_steam_metadata_file_path
+        self.external_steam_metadata_source = self.settings_controller.settings.external_steam_metadata_source
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         self.user_rules_file_path = str(AppInfo().user_rules_file)
 
@@ -493,20 +440,14 @@ class MetadataManager(QObject):
         if not isinstance(package_id, str):
             return
         # Map packageId -> appid
-        package_to_app = {
-            v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()
-        }
+        package_to_app = {v["packageid"]: appid for appid, v in RIMWORLD_DLC_METADATA.items()}
         appid = package_to_app.get(package_id)
         if not appid:
             return
         dlc_meta = RIMWORLD_DLC_METADATA[appid]
         # Ensure supportedversions exists and is sane
         if not isinstance(mod.get("supportedversions"), dict):
-            version = (
-                ".".join(self.game_version.split(".")[:2])
-                if self.game_version
-                else None
-            )
+            version = ".".join(self.game_version.split(".")[:2]) if self.game_version else None
             if version:
                 mod["supportedversions"] = {"li": version}
             else:
@@ -554,9 +495,7 @@ class MetadataManager(QObject):
             # Toggle: prefer versioned About.xml tags over base tags
             prefer_versioned = False
             try:
-                prefer_versioned = (
-                    self.settings_controller.settings.prefer_versioned_about_tags
-                )
+                prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
             except Exception:
                 prefer_versioned = False
             # Normalize DLC/base game entries so they always show canonical names
@@ -564,31 +503,20 @@ class MetadataManager(QObject):
                 self.supplement_dlc_metadata(uuid)
             except Exception as e:
                 logger.debug(f"supplement_dlc_metadata failed for {uuid}: {e}")
-            logger.debug(
-                f"UUID: {uuid} packageid: "
-                + self.internal_local_metadata[uuid].get("packageid")
-            )
+            logger.debug(f"UUID: {uuid} packageid: " + self.internal_local_metadata[uuid].get("packageid"))
             # Prefer descriptionsByVersion over base description if enabled
-            if prefer_versioned and self.internal_local_metadata[uuid].get(
-                "descriptionsbyversion"
-            ):
+            if prefer_versioned and self.internal_local_metadata[uuid].get("descriptionsbyversion"):
                 try:
                     major, minor = self.game_version.split(".")[:2]
                     version_regex = rf"v{major}\.{minor}"
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, desc_by_ver in self.internal_local_metadata[uuid][
-                        "descriptionsbyversion"
-                    ].items():
+                    for version, desc_by_ver in self.internal_local_metadata[uuid]["descriptionsbyversion"].items():
                         if match(version_regex, version):
                             if isinstance(desc_by_ver, str):
-                                self.internal_local_metadata[uuid]["description"] = (
-                                    desc_by_ver
-                                )
-                                logger.debug(
-                                    "Prefer versioned tags: using descriptionsByVersion over base description"
-                                )
+                                self.internal_local_metadata[uuid]["description"] = desc_by_ver
+                                logger.debug("Prefer versioned tags: using descriptionsByVersion over base description")
                             else:
                                 # Empty or invalid means override to empty description
                                 self.internal_local_metadata[uuid]["description"] = ""
@@ -599,18 +527,10 @@ class MetadataManager(QObject):
             # modDependencies and modDependenciesByVersion with precedence
             base_deps = None
             if self.internal_local_metadata[uuid].get("moddependencies"):
-                if isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], dict
-                ):
-                    base_deps = self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ].get("li")
-                elif isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], list
-                ):
-                    for potential_dependencies in self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ]:
+                if isinstance(self.internal_local_metadata[uuid]["moddependencies"], dict):
+                    base_deps = self.internal_local_metadata[uuid]["moddependencies"].get("li")
+                elif isinstance(self.internal_local_metadata[uuid]["moddependencies"], list):
+                    for potential_dependencies in self.internal_local_metadata[uuid]["moddependencies"]:
                         if (
                             potential_dependencies
                             and isinstance(potential_dependencies, dict)
@@ -627,16 +547,10 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, deps_by_ver in self.internal_local_metadata[uuid][
-                        "moddependenciesbyversion"
-                    ].items():
+                    for version, deps_by_ver in self.internal_local_metadata[uuid]["moddependenciesbyversion"].items():
                         if match(version_regex, version):
                             version_key_matched = True
-                            if (
-                                deps_by_ver
-                                and isinstance(deps_by_ver, dict)
-                                and deps_by_ver.get("li")
-                            ):
+                            if deps_by_ver and isinstance(deps_by_ver, dict) and deps_by_ver.get("li"):
                                 matched_versioned_deps = deps_by_ver.get("li")
                             else:
                                 matched_versioned_deps = []
@@ -644,9 +558,7 @@ class MetadataManager(QObject):
 
             if prefer_versioned and version_key_matched:
                 if matched_versioned_deps:
-                    logger.debug(
-                        f"Current mod requires these mods by version to work: {matched_versioned_deps}"
-                    )
+                    logger.debug(f"Current mod requires these mods by version to work: {matched_versioned_deps}")
                     add_dependency_to_mod(
                         self.internal_local_metadata[uuid],
                         matched_versioned_deps,
@@ -658,9 +570,7 @@ class MetadataManager(QObject):
                     )
             else:
                 if base_deps:
-                    logger.debug(
-                        f"Current mod requires these mods to work: {base_deps}"
-                    )
+                    logger.debug(f"Current mod requires these mods to work: {base_deps}")
                     add_dependency_to_mod(
                         self.internal_local_metadata[uuid],
                         base_deps,
@@ -670,14 +580,10 @@ class MetadataManager(QObject):
             # incompatibleWith + incompatibleWithByVersion precedence
             # Found an example: 'incompatiblewith': {'li': ['majorhoff.rimthreaded', 'nova.rimworldtogether']}
             base_incompat = None
-            if self.internal_local_metadata[uuid].get(
-                "incompatiblewith"
-            ) and isinstance(
+            if self.internal_local_metadata[uuid].get("incompatiblewith") and isinstance(
                 self.internal_local_metadata[uuid].get("incompatiblewith"), dict
             ):
-                base_incompat = self.internal_local_metadata[uuid][
-                    "incompatiblewith"
-                ].get("li")
+                base_incompat = self.internal_local_metadata[uuid]["incompatiblewith"].get("li")
 
             matched_versioned_incompat = None
             version_key_matched_incompat = False
@@ -688,16 +594,10 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, inc_by_ver in self.internal_local_metadata[uuid][
-                        "incompatiblewithbyversion"
-                    ].items():
+                    for version, inc_by_ver in self.internal_local_metadata[uuid]["incompatiblewithbyversion"].items():
                         if match(version_regex, version):
                             version_key_matched_incompat = True
-                            if (
-                                inc_by_ver
-                                and isinstance(inc_by_ver, dict)
-                                and inc_by_ver.get("li")
-                            ):
+                            if inc_by_ver and isinstance(inc_by_ver, dict) and inc_by_ver.get("li"):
                                 matched_versioned_incompat = inc_by_ver.get("li")
                             else:
                                 matched_versioned_incompat = []
@@ -719,9 +619,7 @@ class MetadataManager(QObject):
                     )
             else:
                 if base_incompat:
-                    logger.debug(
-                        f"Current mod is incompatible with these mods: {base_incompat}"
-                    )
+                    logger.debug(f"Current mod is incompatible with these mods: {base_incompat}")
                     add_incompatibility_to_mod(
                         self.internal_local_metadata[uuid],
                         base_incompat,
@@ -733,13 +631,9 @@ class MetadataManager(QObject):
             base_after = None
             if self.internal_local_metadata[uuid].get("loadafter"):
                 try:
-                    base_after = self.internal_local_metadata[uuid]["loadafter"].get(
-                        "li"
-                    )
+                    base_after = self.internal_local_metadata[uuid]["loadafter"].get("li")
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_metadata_path}"
                     )
@@ -757,9 +651,7 @@ class MetadataManager(QObject):
                     for (
                         version,
                         load_these_before_by_ver,
-                    ) in self.internal_local_metadata[uuid][
-                        "loadafterbyversion"
-                    ].items():
+                    ) in self.internal_local_metadata[uuid]["loadafterbyversion"].items():
                         if match(version_regex, version):
                             version_key_matched_after = True
                             if (
@@ -774,9 +666,7 @@ class MetadataManager(QObject):
 
             if prefer_versioned and version_key_matched_after:
                 if matched_after:
-                    logger.debug(
-                        f"Current mod should load after these mods by version: {matched_after}"
-                    )
+                    logger.debug(f"Current mod should load after these mods by version: {matched_after}")
                     add_load_rule_to_mod(
                         self.internal_local_metadata[uuid],
                         matched_after,
@@ -791,9 +681,7 @@ class MetadataManager(QObject):
                     )
             else:
                 if base_after:
-                    logger.debug(
-                        f"Current mod should load after these mods: {base_after}"
-                    )
+                    logger.debug(f"Current mod should load after these mods: {base_after}")
                     add_load_rule_to_mod(
                         self.internal_local_metadata[uuid],
                         base_after,
@@ -807,13 +695,9 @@ class MetadataManager(QObject):
             # Always respect forceloadafter regardless of precedence flag
             if self.internal_local_metadata[uuid].get("forceloadafter"):
                 try:
-                    force_load_these_before = self.internal_local_metadata[uuid][
-                        "forceloadafter"
-                    ].get("li")
+                    force_load_these_before = self.internal_local_metadata[uuid]["forceloadafter"].get("li")
                     if force_load_these_before:
-                        logger.debug(
-                            f"Current mod should force load after these mods: {force_load_these_before}"
-                        )
+                        logger.debug(f"Current mod should force load after these mods: {force_load_these_before}")
                         add_load_rule_to_mod(
                             self.internal_local_metadata[uuid],
                             force_load_these_before,
@@ -823,9 +707,7 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid].get(
-                        "metadata_file_path"
-                    )
+                    mod_metadata_path = self.internal_local_metadata[uuid].get("metadata_file_path")
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_metadata_path}"
                     )
@@ -836,13 +718,9 @@ class MetadataManager(QObject):
             base_before = None
             if self.internal_local_metadata[uuid].get("loadbefore"):
                 try:
-                    base_before = self.internal_local_metadata[uuid]["loadbefore"].get(
-                        "li"
-                    )
+                    base_before = self.internal_local_metadata[uuid]["loadbefore"].get("li")
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_metadata_path}"
                     )
@@ -850,13 +728,9 @@ class MetadataManager(QObject):
 
             if self.internal_local_metadata[uuid].get("forceloadbefore"):
                 try:
-                    force_load_these_after = self.internal_local_metadata[uuid][
-                        "forceloadbefore"
-                    ].get("li")
+                    force_load_these_after = self.internal_local_metadata[uuid]["forceloadbefore"].get("li")
                     if force_load_these_after:
-                        logger.debug(
-                            f"Current mod should force load before these mods: {force_load_these_after}"
-                        )
+                        logger.debug(f"Current mod should force load before these mods: {force_load_these_after}")
                         add_load_rule_to_mod(
                             self.internal_local_metadata[uuid],
                             force_load_these_after,
@@ -866,9 +740,7 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
+                    mod_metadata_path = self.internal_local_metadata[uuid]["metadata_file_path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_metadata_path}"
                     )
@@ -883,9 +755,7 @@ class MetadataManager(QObject):
                 except Exception:
                     version_regex = None
                 if version_regex:
-                    for version, loadbefore_by_ver in self.internal_local_metadata[
-                        uuid
-                    ]["loadbeforebyversion"].items():
+                    for version, loadbefore_by_ver in self.internal_local_metadata[uuid]["loadbeforebyversion"].items():
                         if match(version_regex, version):
                             version_key_matched_before = True
                             if (
@@ -900,9 +770,7 @@ class MetadataManager(QObject):
 
             if prefer_versioned and version_key_matched_before:
                 if matched_before:
-                    logger.debug(
-                        f"Current mod should load before these mods by version: {matched_before}"
-                    )
+                    logger.debug(f"Current mod should load before these mods by version: {matched_before}")
                     add_load_rule_to_mod(
                         self.internal_local_metadata[uuid],
                         matched_before,
@@ -917,9 +785,7 @@ class MetadataManager(QObject):
                     )
             else:
                 if base_before:
-                    logger.debug(
-                        f"Current mod should load before these mods: {base_before}"
-                    )
+                    logger.debug(f"Current mod should load before these mods: {base_before}")
                     add_load_rule_to_mod(
                         self.internal_local_metadata[uuid],
                         base_before,
@@ -948,24 +814,12 @@ class MetadataManager(QObject):
                     potential_uuids = self.packageid_to_uuids.get(db_packageid)
                     if potential_uuids:  # Potential uuids is a set
                         for uuid in potential_uuids:
-                            if (
-                                uuid
-                                and self.internal_local_metadata[uuid].get(
-                                    "publishedfileid"
-                                )
-                                == publishedfileid
-                            ):
+                            if uuid and self.internal_local_metadata[uuid].get("publishedfileid") == publishedfileid:
                                 dependencies = mod_data.get("dependencies")
                                 if dependencies:
-                                    tracking_dict.setdefault(uuid, set()).update(
-                                        dependencies.keys()
-                                    )
-            logger.debug(
-                f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup"
-            )
-            logger.debug(
-                f"Tracking Steam dependency data for {len(tracking_dict)} installed mods"
-            )
+                                    tracking_dict.setdefault(uuid, set()).update(dependencies.keys())
+            logger.debug(f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup")
+            logger.debug(f"Tracking Steam dependency data for {len(tracking_dict)} installed mods")
             # For each mod that exists in self.internal_local_metadata -> dependencies (in Steam ID form)
             for (
                 installed_mod_uuid,
@@ -1001,58 +855,40 @@ class MetadataManager(QObject):
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
                 if package_id.lower() in self.packageid_to_uuids:
-                    potential_uuids = self.packageid_to_uuids.get(
-                        package_id.lower(), set()
-                    )
-                    load_these_after = self.external_community_rules[package_id].get(
-                        "loadBefore"
-                    )
+                    potential_uuids = self.packageid_to_uuids.get(package_id.lower(), set())
+                    load_these_after = self.external_community_rules[package_id].get("loadBefore")
                     if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
+                        logger.debug(f"Current mod should load before these mods: {load_these_after}")
                         # In Alphabetical, load_these_after is at least an empty dict
                         # Cannot call add_load_rule_to_mod outside of this for loop,
                         # as that expects a list
                         for load_this_after in load_these_after:
                             for uuid in potential_uuids:
                                 add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
+                                    self.internal_local_metadata[uuid],  # Already checked above
                                     load_this_after,  # Lower() done in call
                                     "loadTheseAfter",
                                     "loadTheseBefore",
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
-                    load_these_before = self.external_community_rules[package_id].get(
-                        "loadAfter"
-                    )
+                    load_these_before = self.external_community_rules[package_id].get("loadAfter")
                     if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
+                        logger.debug(f"Current mod should load after these mods: {load_these_before}")
                         # In Alphabetical, load_these_before is at least an empty dict
                         for load_this_before in load_these_before:
                             for uuid in potential_uuids:
                                 add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
+                                    self.internal_local_metadata[uuid],  # Already checked above
                                     load_this_before,  # lower() done in call
                                     "loadTheseBefore",
                                     "loadTheseAfter",
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
-                    incompatibilities = self.external_community_rules[package_id].get(
-                        "incompatibleWith"
-                    )
+                    incompatibilities = self.external_community_rules[package_id].get("incompatibleWith")
                     if incompatibilities:
-                        logger.debug(
-                            f"Current mod is incompatible with these mods: {incompatibilities}"
-                        )
+                        logger.debug(f"Current mod is incompatible with these mods: {incompatibilities}")
                         for incompatibilities in incompatibilities:
                             for uuid in potential_uuids:
                                 add_incompatibility_to_mod(
@@ -1060,18 +896,14 @@ class MetadataManager(QObject):
                                     incompatibilities,
                                     self.internal_local_metadata,
                                 )
-                    load_this_top = self.external_community_rules[package_id].get(
-                        "loadTop"
-                    )
+                    load_this_top = self.external_community_rules[package_id].get("loadTop")
                     if load_this_top:
                         logger.debug(
                             "Current mod should load at the top of a mods list, and will be considered a 'tier 1' mod"
                         )
                         for uuid in potential_uuids:
                             self.internal_local_metadata[uuid]["loadTop"] = True
-                    load_this_bottom = self.external_community_rules[package_id].get(
-                        "loadBottom"
-                    )
+                    load_this_bottom = self.external_community_rules[package_id].get("loadBottom")
                     if load_this_bottom:
                         logger.debug(
                             'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
@@ -1081,9 +913,7 @@ class MetadataManager(QObject):
             logger.info("Finished adding dependencies from Community Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
-            logger.info(
-                "No Community Rules database supplied from external metadata. skipping."
-            )
+            logger.info("No Community Rules database supplied from external metadata. skipping.")
         # Add load order rules to installed mods based on rules from user rules
         if self.external_user_rules:
             logger.info("Started compiling metadata from User Rules")
@@ -1092,25 +922,17 @@ class MetadataManager(QObject):
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
                 if package_id.lower() in self.packageid_to_uuids:
-                    potential_uuids = self.packageid_to_uuids.get(
-                        package_id.lower(), set()
-                    )
-                    load_these_after = self.external_user_rules[package_id].get(
-                        "loadBefore"
-                    )
+                    potential_uuids = self.packageid_to_uuids.get(package_id.lower(), set())
+                    load_these_after = self.external_user_rules[package_id].get("loadBefore")
                     if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
+                        logger.debug(f"Current mod should load before these mods: {load_these_after}")
                         # In Alphabetical, load_these_after is at least an empty dict
                         # Cannot call add_load_rule_to_mod outside of this for loop,
                         # as that expects a list
                         for load_this_after in load_these_after:
                             for uuid in potential_uuids:
                                 add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
+                                    self.internal_local_metadata[uuid],  # Already checked above
                                     load_this_after,  # lower() done in call
                                     "loadTheseAfter",
                                     "loadTheseBefore",
@@ -1118,33 +940,23 @@ class MetadataManager(QObject):
                                     self.packageid_to_uuids,
                                 )
 
-                    load_these_before = self.external_user_rules[package_id].get(
-                        "loadAfter"
-                    )
+                    load_these_before = self.external_user_rules[package_id].get("loadAfter")
                     if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
+                        logger.debug(f"Current mod should load after these mods: {load_these_before}")
                         # In Alphabetical, load_these_before is at least an empty dict
                         for load_this_before in load_these_before:
                             for uuid in potential_uuids:
                                 add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
+                                    self.internal_local_metadata[uuid],  # Already checked above
                                     load_this_before,  # lower() done in call
                                     "loadTheseBefore",
                                     "loadTheseAfter",
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
-                    incompatibilities = self.external_user_rules[package_id].get(
-                        "incompatibleWith"
-                    )
+                    incompatibilities = self.external_user_rules[package_id].get("incompatibleWith")
                     if incompatibilities:
-                        logger.debug(
-                            f"Current mod is incompatible with these mods: {incompatibilities}"
-                        )
+                        logger.debug(f"Current mod is incompatible with these mods: {incompatibilities}")
                         for incompatibilities in incompatibilities:
                             for uuid in potential_uuids:
                                 add_incompatibility_to_mod(
@@ -1159,9 +971,7 @@ class MetadataManager(QObject):
                         )
                         for uuid in potential_uuids:
                             self.internal_local_metadata[uuid]["loadTop"] = True
-                    load_this_bottom = self.external_user_rules[package_id].get(
-                        "loadBottom"
-                    )
+                    load_this_bottom = self.external_user_rules[package_id].get("loadBottom")
                     if load_this_bottom:
                         logger.debug(
                             'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
@@ -1171,9 +981,7 @@ class MetadataManager(QObject):
             logger.info("Finished adding dependencies from User Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
-            logger.info(
-                "No User Rules database supplied from external metadata. skipping."
-            )
+            logger.info("No User Rules database supplied from external metadata. skipping.")
 
         if self.external_use_this_instead_replacements:
             logger.info("Flagging obsoleted mods from the Use This Instead database")
@@ -1197,24 +1005,16 @@ class MetadataManager(QObject):
         mod_data = self.internal_local_metadata.get(uuid, {})
 
         # check if mod_data exists and packageid is included in the external "No Version Warning" list
-        if (
-            mod_data
-            and self.external_no_version_warning
-            and mod_data["packageid"] in self.external_no_version_warning
-        ):
+        if mod_data and self.external_no_version_warning and mod_data["packageid"] in self.external_no_version_warning:
             logger.info(
                 f'mod with id "{mod_data["packageid"]}" was found on the "No Version Warning" list. Skipping version mismatch check!'
             )
             return False
         elif (  # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
-            self.game_version
-            and mod_data
-            and mod_data.get("supportedversions", {}).get("li")
+            self.game_version and mod_data and mod_data.get("supportedversions", {}).get("li")
         ):
             # Get supported versions
-            supported_versions = self.internal_local_metadata[uuid][
-                "supportedversions"
-            ]["li"]
+            supported_versions = self.internal_local_metadata[uuid]["supportedversions"]["li"]
 
             # Check if supported versions is a string or a list
             if isinstance(supported_versions, str):
@@ -1223,18 +1023,10 @@ class MetadataManager(QObject):
                     result = False
             elif isinstance(supported_versions, list):
                 # If any version from supported_versions starts with game_version, result is False
-                result = not any(
-                    [
-                        ver
-                        for ver in supported_versions
-                        if self.game_version.startswith(ver)
-                    ]
-                )
+                result = not any([ver for ver in supported_versions if self.game_version.startswith(ver)])
             else:
                 # If supported_versions is not a string or a list, log error and return True
-                logger.error(
-                    f"supportedversions value not str or list: {supported_versions}"
-                )
+                logger.error(f"supportedversions value not str or list: {supported_versions}")
                 result = True
 
         # Return result
@@ -1311,9 +1103,7 @@ class MetadataManager(QObject):
         )
         deleted_mod = self.internal_local_metadata.get(uuid)
         if deleted_mod is None:
-            logger.debug(
-                f"Mod {uuid} not found in metadata, skipping deletion. Possible race condition!"
-            )
+            logger.debug(f"Mod {uuid} not found in metadata, skipping deletion. Possible race condition!")
             return
 
         deleted_mod_packageid = deleted_mod.get("packageid")
@@ -1400,18 +1190,13 @@ class MetadataManager(QObject):
                 return mod_data.get("name", package_id)
         return package_id
 
-    def get_missing_dependencies(
-        self, active_mods_uuids: set[str]
-    ) -> dict[str, set[str]]:
+    def get_missing_dependencies(self, active_mods_uuids: set[str]) -> dict[str, set[str]]:
         """
         Check for missing dependencies among active mods
         Returns a dict mapping mod package IDs to sets of missing dependency package IDs
         """
         missing_deps = {}
-        active_mod_ids = {
-            self.internal_local_metadata[uuid]["packageid"]
-            for uuid in active_mods_uuids
-        }
+        active_mod_ids = {self.internal_local_metadata[uuid]["packageid"] for uuid in active_mods_uuids}
 
         # check each active mod's dependencies
         for uuid in active_mods_uuids:
@@ -1435,7 +1220,9 @@ class MetadataManager(QObject):
                     else:
                         dep_id = dep_entry
 
-                    consider_alternatives = self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
+                    consider_alternatives = (
+                        self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
+                    )
                     satisfied = dep_id in active_mod_ids
                     if not satisfied and consider_alternatives:
                         satisfied = any(alt in active_mod_ids for alt in alt_ids)
@@ -1496,20 +1283,14 @@ class ModParser(QRunnable):
         about_file_name = "About.xml"
         # Look for a case-insensitive "About" folder
         for temp_file in scanpath(mod_directory):
-            if (
-                temp_file.name.lower() == about_folder_name.lower()
-                and temp_file.is_dir()
-            ):
+            if temp_file.name.lower() == about_folder_name.lower() and temp_file.is_dir():
                 about_folder_name = temp_file.name
                 invalid_about_folder_path_found = False
                 break
             # Look for a case-insensitive "About.xml" file
         if not invalid_about_folder_path_found:
             for temp_file in scanpath(str((directory_path / about_folder_name))):
-                if (
-                    temp_file.name.lower() == about_file_name.lower()
-                    and temp_file.is_file()
-                ):
+                if temp_file.name.lower() == about_file_name.lower() and temp_file.is_file():
                     about_file_name = temp_file.name
                     invalid_about_file_path_found = False
                     break
@@ -1530,14 +1311,9 @@ class ModParser(QRunnable):
         elif not pfid and not invalid_about_folder_path_found:
             pfid_file_name = "PublishedFileId.txt"
             for temp_file in scanpath(str((directory_path / about_folder_name))):
-                if (
-                    temp_file.name.lower() == pfid_file_name.lower()
-                    and temp_file.is_file()
-                ):
+                if temp_file.name.lower() == pfid_file_name.lower() and temp_file.is_file():
                     pfid_file_name = temp_file.name
-                    pfid_path = str(
-                        (directory_path / about_folder_name / pfid_file_name)
-                    )
+                    pfid_path = str((directory_path / about_folder_name / pfid_file_name))
                     try:
                         with open(pfid_path, encoding="utf-8-sig") as pfid_file:
                             pfid = pfid_file.read()
@@ -1555,9 +1331,7 @@ class ModParser(QRunnable):
                 mod_data = xml_path_to_json(mod_data_path)
             except Exception:
                 # If there was an issue parsing the .xml, track and exit
-                logger.error(
-                    f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}"
-                )
+                logger.error(f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}")
                 data_malformed = True
             else:
                 # Case-insensitive `ModMetaData` key.
@@ -1571,15 +1345,11 @@ class ModParser(QRunnable):
                         not mod_metadata.get("name")
                         and self.metadata_manager.external_steam_metadata  # ... try to find it in Steam DB
                         and pfid
-                        and self.metadata_manager.external_steam_metadata.get(
-                            pfid, {}
-                        ).get("steamName")
+                        and self.metadata_manager.external_steam_metadata.get(pfid, {}).get("steamName")
                     ):
                         mod_metadata.setdefault(
                             "name",
-                            self.metadata_manager.external_steam_metadata[pfid][
-                                "steamName"
-                            ],
+                            self.metadata_manager.external_steam_metadata[pfid]["steamName"],
                         )
                         # This is so that DB builder shows we do not have local metadata
                         mod_metadata.setdefault("DB_BUILDER_NO_NAME", True)
@@ -1587,8 +1357,7 @@ class ModParser(QRunnable):
                         mod_metadata.setdefault("name", "Missing XML: <name>")
                     # Rename author tag appropriately to normalize it in usage and lookups
                     mod_metadata = {
-                        ("authors" if key.lower() == "author" else key): value
-                        for key, value in mod_metadata.items()
+                        ("authors" if key.lower() == "author" else key): value for key, value in mod_metadata.items()
                     }
                     # Normalize authors to a string
                     authors = mod_metadata.get("authors")
@@ -1611,24 +1380,18 @@ class ModParser(QRunnable):
                     elif mod_data.get("supportedversions", {}).get("li"):
                         if isinstance(mod_data["supportedversions"]["li"], str):
                             mod_data["supportedversions"]["li"] = (
-                                ".".join(
-                                    mod_data["supportedversions"]["li"].split(".")[:2]
-                                )
+                                ".".join(mod_data["supportedversions"]["li"].split(".")[:2])
                                 if mod_data["supportedversions"]["li"].count(".") > 1
                                 else mod_data["supportedversions"]["li"]
                             )
                         elif isinstance(mod_data["supportedversions"]["li"], list):
-                            for mod_data["supportedversions"]["li"] in mod_data[
-                                "supportedversions"
-                            ]["li"]:
+                            for mod_data["supportedversions"]["li"] in mod_data["supportedversions"]["li"]:
                                 li = mod_data["supportedversions"]["li"]
                                 if not isinstance(li, str):
                                     logger.error(f"Failed to parse {li} as a string")
                                     continue
                                 mod_data["supportedversions"]["li"] = (
-                                    ".".join(li.split(".")[:2])
-                                    if li.count(".") > 1 and isinstance(li, str)
-                                    else li
+                                    ".".join(li.split(".")[:2]) if li.count(".") > 1 and isinstance(li, str) else li
                                 )
 
                     if mod_metadata.get("supportedversions", {}).get("li"):
@@ -1638,9 +1401,7 @@ class ModParser(QRunnable):
                         elif isinstance(li, list):
                             for i, version in enumerate(li):
                                 if not isinstance(version, str):
-                                    logger.error(
-                                        f"Failed to parse {version} as a string"
-                                    )
+                                    logger.error(f"Failed to parse {version} as a string")
                                     continue
                                 li[i] = version.strip()
 
@@ -1658,36 +1419,26 @@ class ModParser(QRunnable):
                         if isinstance(mod_metadata["packageid"], list):
                             # Loop through the list and find str. If we find one, use it.
                             for potential_packageid in mod_metadata["packageid"]:
-                                if potential_packageid and isinstance(
-                                    potential_packageid, str
-                                ):
+                                if potential_packageid and isinstance(potential_packageid, str):
                                     mod_metadata["packageid"] = potential_packageid
                                     break
                         # Normalize package ID in metadata
                         if isinstance(mod_metadata["packageid"], str):
-                            mod_metadata["packageid"] = mod_metadata[
-                                "packageid"
-                            ].lower()
+                            mod_metadata["packageid"] = mod_metadata["packageid"].lower()
                         elif isinstance(mod_metadata["packageid"], dict):
                             # Handle dict packageid (from malformed XML), try to extract text
                             if mod_metadata["packageid"].get("#text"):
-                                mod_metadata["packageid"] = mod_metadata["packageid"][
-                                    "#text"
-                                ].lower()
+                                mod_metadata["packageid"] = mod_metadata["packageid"]["#text"].lower()
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (
                             pfid
                             and self.metadata_manager.external_steam_metadata
-                            and self.metadata_manager.external_steam_metadata.get(
-                                pfid, {}
-                            ).get("packageId")
+                            and self.metadata_manager.external_steam_metadata.get(pfid, {}).get("packageId")
                         ):
-                            mod_metadata["packageid"] = (
-                                self.metadata_manager.external_steam_metadata[pfid][
-                                    "packageId"
-                                ].lower()
-                            )
+                            mod_metadata["packageid"] = self.metadata_manager.external_steam_metadata[pfid][
+                                "packageId"
+                            ].lower()
                     # Log warning if packageid is missing and assign DEFAULT_MISSING_PACKAGEID
                     if not mod_metadata.get("packageid"):
                         mod_metadata["packageid"] = DEFAULT_MISSING_PACKAGEID
@@ -1695,31 +1446,18 @@ class ModParser(QRunnable):
                     # Track pfid if we parsed one earlier
                     if pfid:  # Make some assumptions if we have a pfid
                         mod_metadata["publishedfileid"] = pfid
-                        mod_metadata["steam_uri"] = (
-                            f"steam://url/CommunityFilePage/{pfid}"
-                        )
-                        mod_metadata["steam_url"] = (
-                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                        )
+                        mod_metadata["steam_uri"] = f"steam://url/CommunityFilePage/{pfid}"
+                        mod_metadata["steam_url"] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                     # If a mod contains C# assemblies, we want to tag the mod
                     assemblies_path = str(directory_path / "Assemblies")
                     # Check if the 'Assemblies' directory exists and is a directory
-                    if os.path.exists(assemblies_path) and os.path.isdir(
-                        assemblies_path
-                    ):
+                    if os.path.exists(assemblies_path) and os.path.isdir(assemblies_path):
                         try:
                             # Check if there are any .dll files in the 'Assemblies' directory
-                            if any(
-                                filename.endswith((".dll", ".DLL"))
-                                for filename in os.listdir(assemblies_path)
-                            ):
-                                mod_metadata["csharp"] = (
-                                    True  # Tag the mod as containing C# code
-                                )
+                            if any(filename.endswith((".dll", ".DLL")) for filename in os.listdir(assemblies_path)):
+                                mod_metadata["csharp"] = True  # Tag the mod as containing C# code
                         except Exception as e:
-                            logger.error(
-                                f"Failed to list directory {assemblies_path}: {e}"
-                            )
+                            logger.error(f"Failed to list directory {assemblies_path}: {e}")
                     else:
                         # If no 'Assemblies' directory in the main folder, check in subfolders
                         subfolder_paths = [
@@ -1732,24 +1470,15 @@ class ModParser(QRunnable):
                             # Check if the 'Assemblies' directory exists in the subfolder
                             if os.path.exists(assemblies_path):
                                 # Check if there are any .dll files in this 'Assemblies' directory
-                                if any(
-                                    filename.endswith((".dll", ".DLL"))
-                                    for filename in os.listdir(assemblies_path)
-                                ):
-                                    mod_metadata["csharp"] = (
-                                        True  # Tag the mod as containing C# code
-                                    )
+                                if any(filename.endswith((".dll", ".DLL")) for filename in os.listdir(assemblies_path)):
+                                    mod_metadata["csharp"] = True  # Tag the mod as containing C# code
                     # data_source will be used with setIcon later
                     mod_metadata["data_source"] = data_source
                     mod_metadata["folder"] = directory_name
                     # This is overwritten if acf data is parsed for Steam/SteamCMD mods
-                    mod_metadata["internal_time_touched"] = int(
-                        os.path.getmtime(mod_directory)
-                    )
+                    mod_metadata["internal_time_touched"] = int(os.path.getmtime(mod_directory))
                     mod_metadata["path"] = mod_directory
-                    mod_metadata["metadata_file_mtime"] = int(
-                        os.path.getmtime(mod_data_path)
-                    )
+                    mod_metadata["metadata_file_mtime"] = int(os.path.getmtime(mod_data_path))
                     mod_metadata["metadata_file_path"] = mod_data_path
                     # Grab our mod's publishedfileid
                     publishedfileid = mod_metadata.get("publishedfileid")
@@ -1760,36 +1489,25 @@ class ModParser(QRunnable):
                             if data_source == "workshop"
                             else self.metadata_manager.steamcmd_acf_data
                         )
-                        workshop_item_details = workshop_acf_data.get(
-                            "AppWorkshop", {}
-                        ).get("WorkshopItemDetails", {})
-                        workshop_items_installed = workshop_acf_data.get(
-                            "AppWorkshop", {}
-                        ).get("WorkshopItemsInstalled", {})
+                        workshop_item_details = workshop_acf_data.get("AppWorkshop", {}).get("WorkshopItemDetails", {})
+                        workshop_items_installed = workshop_acf_data.get("AppWorkshop", {}).get(
+                            "WorkshopItemsInstalled", {}
+                        )
                         # Edit our metadata, append values
                         if (
-                            workshop_item_details.get(publishedfileid, {}).get(
-                                "timetouched"
-                            )
-                            and workshop_item_details.get(publishedfileid, {}).get(
-                                "timetouched"
-                            )
-                            != "0"
+                            workshop_item_details.get(publishedfileid, {}).get("timetouched")
+                            and workshop_item_details.get(publishedfileid, {}).get("timetouched") != "0"
                         ):
                             # The last time SteamCMD/Steam client touched a mod according to its entry
                             mod_metadata["internal_time_touched"] = int(
                                 workshop_item_details[publishedfileid]["timetouched"]
                             )
-                        if publishedfileid and workshop_item_details.get(
-                            publishedfileid, {}
-                        ).get("timeupdated"):
+                        if publishedfileid and workshop_item_details.get(publishedfileid, {}).get("timeupdated"):
                             # The last time SteamCMD/Steam client updated a mod according to its entry
                             mod_metadata["internal_time_updated"] = int(
                                 workshop_item_details[publishedfileid]["timeupdated"]
                             )
-                        if publishedfileid and workshop_items_installed.get(
-                            publishedfileid, {}
-                        ).get("timeupdated"):
+                        if publishedfileid and workshop_items_installed.get(publishedfileid, {}).get("timeupdated"):
                             # The last time SteamCMD/Steam client updated a mod according to its entry
                             mod_metadata["internal_time_updated"] = int(
                                 workshop_items_installed[publishedfileid]["timeupdated"]
@@ -1797,9 +1515,7 @@ class ModParser(QRunnable):
                     # Assign our metadata to the UUID
                     metadata[uuid] = mod_metadata
                 else:
-                    logger.error(
-                        f"Key <modmetadata> does not exist in this data: {mod_data}"
-                    )
+                    logger.error(f"Key <modmetadata> does not exist in this data: {mod_data}")
                     data_malformed = True
         # ...or, if we didn't find an About.xml, but we have a RimWorld scenario .rsc to parse...
         elif invalid_about_file_path_found and scenario_rsc_found:
@@ -1810,47 +1526,31 @@ class ModParser(QRunnable):
                 scenario_data = xml_path_to_json(scenario_data_path)
             except Exception:
                 # If there was an issue parsing the .rsc, track and exit
-                logger.error(
-                    f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}"
-                )
+                logger.error(f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}")
                 data_malformed = True
             else:
                 # Case-insensitive `savedscenario` key.
                 scenario_data = {k.lower(): v for k, v in scenario_data.items()}
-                if scenario_data.get("savedscenario", {}).get(
-                    "scenario"
-                ):  # If our .rsc metadata has a packageid key
+                if scenario_data.get("savedscenario", {}).get("scenario"):  # If our .rsc metadata has a packageid key
                     # Initialize our dict from the formatted .rsc metadata
                     scenario_metadata = scenario_data["savedscenario"]["scenario"]
                     # Case-insensitive keys.
-                    scenario_metadata = {
-                        k.lower(): v for k, v in scenario_metadata.items()
-                    }
+                    scenario_metadata = {k.lower(): v for k, v in scenario_metadata.items()}
                     scenario_metadata.setdefault("packageid", "scenario.rsc")
                     scenario_metadata["scenario"] = True
                     scenario_metadata.pop("playerfaction", None)
                     scenario_metadata.pop("parts", None)
-                    if (
-                        scenario_data["savedscenario"]
-                        .get("meta", {})
-                        .get("gameVersion")
-                    ):
+                    if scenario_data["savedscenario"].get("meta", {}).get("gameVersion"):
                         scenario_metadata["supportedversions"] = {
                             "li": scenario_data["savedscenario"]["meta"]["gameVersion"]
                         }
                     else:
-                        logger.warning(
-                            f"Unable to parse [gameversion] from this scenario [meta] tag: {scenario_data}"
-                        )
+                        logger.warning(f"Unable to parse [gameversion] from this scenario [meta] tag: {scenario_data}")
                     # Track pfid if we parsed one earlier and don't already have one from metadata
                     if pfid and not scenario_data.get("publishedfileid"):
                         scenario_data["publishedfileid"] = pfid
-                    if scenario_metadata.get(
-                        "publishedfileid"
-                    ):  # Make some assumptions if we have a pfid
-                        scenario_metadata["steam_uri"] = (
-                            f"steam://url/CommunityFilePage/{pfid}"
-                        )
+                    if scenario_metadata.get("publishedfileid"):  # Make some assumptions if we have a pfid
+                        scenario_metadata["steam_uri"] = f"steam://url/CommunityFilePage/{pfid}"
                         scenario_metadata["steam_url"] = (
                             f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                         )
@@ -1859,32 +1559,21 @@ class ModParser(QRunnable):
                     scenario_metadata["folder"] = directory_name
                     scenario_metadata["path"] = mod_directory
                     # This is overwritten if acf data is parsed for Steam/SteamCMD mods
-                    scenario_metadata["internal_time_touched"] = int(
-                        os.path.getmtime(mod_directory)
-                    )
+                    scenario_metadata["internal_time_touched"] = int(os.path.getmtime(mod_directory))
                     scenario_metadata["metadata_file_path"] = scenario_data_path
-                    scenario_metadata["metadata_file_mtime"] = int(
-                        os.path.getmtime(scenario_data_path)
-                    )
+                    scenario_metadata["metadata_file_mtime"] = int(os.path.getmtime(scenario_data_path))
                     # Track source & uuid in case metadata becomes detached
                     scenario_metadata["uuid"] = uuid
                     # Assign our metadata to the UUID
                     metadata[uuid] = scenario_metadata
                 else:
-                    logger.error(
-                        f"Key <savedscenario><scenario> does not exist in this data: {scenario_metadata}"
-                    )
+                    logger.error(f"Key <savedscenario><scenario> does not exist in this data: {scenario_metadata}")
                     data_malformed = True
-        if (
-            (invalid_about_file_path_found and not scenario_rsc_found) or data_malformed
-        ):  
+        if (invalid_about_file_path_found and not scenario_rsc_found) or data_malformed:
             # Final simple check to see if the leftover dir contains ONLY .dds files.
             # This is likely after a steam unsubscribe and is safe to delete to prevent invalid items
             if directory_path.is_dir():
-                has_non_dds = any(
-                    f.is_file() and f.suffix != ".dds"
-                    for f in directory_path.rglob("*")
-                )
+                has_non_dds = any(f.is_file() and f.suffix != ".dds" for f in directory_path.rglob("*"))
 
                 if not has_non_dds:
                     logger.debug(
@@ -1894,9 +1583,7 @@ class ModParser(QRunnable):
                     return {}
 
             # If we don't have any metadata parsed, populate invalid mod entry for visibility
-            logger.debug(
-                f"Invalid dir. Populating invalid mod for path: {mod_directory}"
-            )
+            logger.debug(f"Invalid dir. Populating invalid mod for path: {mod_directory}")
             # Assign our metadata to the UUID
             metadata[uuid] = {
                 "invalid": True,
@@ -1924,9 +1611,7 @@ class ModParser(QRunnable):
             if os.path.exists(str((directory_path / ".git"))):
                 local_mod_metadata["git_repo"] = True
             # Check for local mods that are SteamCMD mods, tag appropriately
-            if local_mod_metadata.get("folder") == local_mod_metadata.get(
-                "publishedfileid"
-            ):
+            if local_mod_metadata.get("folder") == local_mod_metadata.get("publishedfileid"):
                 local_mod_metadata["steamcmd"] = True
         return metadata
 
@@ -1936,16 +1621,12 @@ class ModParser(QRunnable):
                 self.data_source, self.mod_directory, self.metadata_manager, self.uuid
             )
             if not mod_metadata:
-                logger.debug(
-                    f"No metadata parsed for {self.mod_directory}, skipping update."
-                )
+                logger.debug(f"No metadata parsed for {self.mod_directory}, skipping update.")
                 return
             packageid = mod_metadata[self.uuid].get("packageid")
             self.metadata_manager.internal_local_metadata.update(mod_metadata)
             # Track packageid -> uuid relationships for future uses
-            self.metadata_manager.packageid_to_uuids.setdefault(packageid, set()).add(
-                self.uuid
-            )
+            self.metadata_manager.packageid_to_uuids.setdefault(packageid, set()).add(self.uuid)
         except Exception as e:
             error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"ERROR: Unable to initialize ModParser {error_message}")
@@ -1978,9 +1659,7 @@ def add_dependency_to_mod(
         # - If a tuple for the same dep already exists, merge the alternatives into it.
         # - If only a plain string exists for that dep, upgrade it to the tuple form.
         # - Otherwise append a new tuple entry.
-        def _ensure_dep_with_alts(
-            dep_list: list[Any], dep_id: str, alt_ids: set[str]
-        ) -> None:
+        def _ensure_dep_with_alts(dep_list: list[Any], dep_id: str, alt_ids: set[str]) -> None:
             """Add or merge a dependency with alternatives into dep_list.
 
             Typical sources that may converge here:
@@ -1992,11 +1671,7 @@ def add_dependency_to_mod(
             for i, existing in enumerate(dep_list):
                 if isinstance(existing, tuple) and existing and existing[0] == dep_id:
                     # Merge alternatives into existing set if present
-                    alt = (
-                        existing[1].get("alternatives")
-                        if isinstance(existing[1], dict)
-                        else None
-                    )
+                    alt = existing[1].get("alternatives") if isinstance(existing[1], dict) else None
                     if isinstance(alt, set):
                         alt.update(alt_ids)
                     else:
@@ -2027,11 +1702,7 @@ def add_dependency_to_mod(
                     for v in li:
                         if isinstance(v, str):
                             alt_ids.add(v.lower())
-                        elif (
-                            isinstance(v, dict)
-                            and "#text" in v
-                            and isinstance(v["#text"], str)
-                        ):
+                        elif isinstance(v, dict) and "#text" in v and isinstance(v["#text"], str):
                             alt_ids.add(v["#text"].lower())
                 elif isinstance(li, str):
                     alt_ids.add(li.lower())
@@ -2048,9 +1719,7 @@ def add_dependency_to_mod(
             pkg = dependency_or_dependency_ids.get("packageId")
             if pkg and not isinstance(pkg, (list, dict)):
                 dep_id = str(pkg).lower()
-                alt_ids = _parse_alt_ids(
-                    dependency_or_dependency_ids.get("alternativePackageIds")
-                )
+                alt_ids = _parse_alt_ids(dependency_or_dependency_ids.get("alternativePackageIds"))
                 if alt_ids:
                     _ensure_dep_with_alts(mod_data["dependencies"], dep_id, alt_ids)
                 else:
@@ -2061,45 +1730,27 @@ def add_dependency_to_mod(
                 )
         # If the value is a LIST of dicts
         elif isinstance(dependency_or_dependency_ids, list):
-            if dependency_or_dependency_ids and isinstance(
-                dependency_or_dependency_ids[0], dict
-            ):
+            if dependency_or_dependency_ids and isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    pkg = (
-                        dependency.get("packageId")
-                        if isinstance(dependency, dict)
-                        else None
-                    )
+                    pkg = dependency.get("packageId") if isinstance(dependency, dict) else None
                     if pkg:
                         dep_id = str(pkg).lower()
                         alt_ids = set()
                         if isinstance(dependency, dict):
-                            alt_ids = _parse_alt_ids(
-                                dependency.get("alternativePackageIds")
-                            )
+                            alt_ids = _parse_alt_ids(dependency.get("alternativePackageIds"))
                         if alt_ids:
-                            _ensure_dep_with_alts(
-                                mod_data["dependencies"], dep_id, alt_ids
-                            )
+                            _ensure_dep_with_alts(mod_data["dependencies"], dep_id, alt_ids)
                         else:
                             _ensure_plain_dep(mod_data["dependencies"], dep_id)
                     else:
-                        logger.error(
-                            f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
-                        )
+                        logger.error(f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]")
             else:
-                logger.error(
-                    f"List of dependencies does not contain dicts: [{dependency_or_dependency_ids}]"
-                )
+                logger.error(f"List of dependencies does not contain dicts: [{dependency_or_dependency_ids}]")
         else:
-            logger.error(
-                f"Dependencies is not a single dict or a list of dicts: [{dependency_or_dependency_ids}]"
-            )
+            logger.error(f"Dependencies is not a single dict or a list of dicts: [{dependency_or_dependency_ids}]")
 
 
-def add_dependency_to_mod_from_steamdb(
-    mod_data: dict[str, Any], dependency_id: Any, all_mods: dict[str, Any]
-) -> None:
+def add_dependency_to_mod_from_steamdb(mod_data: dict[str, Any], dependency_id: Any, all_mods: dict[str, Any]) -> None:
     mod_name = mod_data.get("name")
     # Store dependencies as a list to support rich entries
     mod_data.setdefault("dependencies", [])
@@ -2110,12 +1761,7 @@ def add_dependency_to_mod_from_steamdb(
         dep_list = mod_data["dependencies"]
         if all(
             not (
-                existing == dependency_id
-                or (
-                    isinstance(existing, tuple)
-                    and existing
-                    and existing[0] == dependency_id
-                )
+                existing == dependency_id or (isinstance(existing, tuple) and existing and existing[0] == dependency_id)
             )
             for existing in dep_list
         ):
@@ -2167,9 +1813,7 @@ def add_incompatibility_to_mod(
                         if dependency_id in all_package_ids:
                             mod_data["incompatibilities"].add(dependency_id)
             else:
-                logger.error(
-                    f"List of incompatibilities does not contain strings: [{dependency_or_dependency_ids}]"
-                )
+                logger.error(f"List of incompatibilities does not contain strings: [{dependency_or_dependency_ids}]")
         else:
             logger.error(
                 f"Incompatibilities is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
@@ -2233,9 +1877,7 @@ def add_load_rule_to_mod(
             mod_data[explicit_key].add((dep, True))
             potential_dep_uuids = packageid_to_uuids[dep]
             for dep_uuid in potential_dep_uuids:
-                all_mods[dep_uuid].setdefault(indirect_key, set()).add(
-                    (mod_data["packageid"], False)
-                )
+                all_mods[dep_uuid].setdefault(indirect_key, set()).add((mod_data["packageid"], False))
 
 
 def get_mods_from_list(
@@ -2277,9 +1919,7 @@ def get_mods_from_list(
             logger.debug("Creating an empty list with available expansions...")
             metadata_manager = MetadataManager.instance()
             game_version = metadata_manager.game_version
-            generated_xml = generate_rimworld_mods_list(
-                game_version, ["Ludeon.RimWorld"]
-            )
+            generated_xml = generate_rimworld_mods_list(game_version, ["Ludeon.RimWorld"])
             logger.debug(f"Saving new mods list to: {mod_list}")
             json_to_xml_write(generated_xml, mod_list)
         # Parse the ModsConfig.xml activeMods list
@@ -2291,14 +1931,10 @@ def get_mods_from_list(
         package_ids_to_import = mod_list
     # Parse the ModsConfig.xml data
     logger.info("Generating active mod list")
-    for (
-        package_id
-    ) in package_ids_to_import:  # Go through active mods, handle packageids
+    for package_id in package_ids_to_import:  # Go through active mods, handle packageids
         package_id_normalized = package_id.lower()
         package_id_steam_suffix = "_steam"
-        package_id_normalized_stripped = package_id_normalized.replace(
-            package_id_steam_suffix, ""
-        )
+        package_id_normalized_stripped = package_id_normalized.replace(package_id_steam_suffix, "")
         # bool to determine whether or not _steam suffix present in ModsConfig entry
         is_steam = package_id_steam_suffix in package_id_normalized
         # Determine target_id based on whether suffix exists
@@ -2319,25 +1955,18 @@ def get_mods_from_list(
         # Loop through all mods
         for uuid, metadata in all_mods.items():
             metadata_package_id = metadata["packageid"]
-            if (
-                metadata_package_id
-                in [  # If we have a match with or without _steam present
-                    package_id_normalized,
-                    package_id_normalized_stripped,
-                ]
-            ):
+            if metadata_package_id in [  # If we have a match with or without _steam present
+                package_id_normalized,
+                package_id_normalized_stripped,
+            ]:
                 # Add non-duplicates to active mods
                 if target_id not in duplicate_mods.keys():
                     populated_mods.append(target_id)
                     active_mods_uuids.append(uuid)
                 else:  # Otherwise, duplicate needs calculated
-                    if (
-                        target_id in duplicates_processed
-                    ):  # Skip duplicates that have already been processed
+                    if target_id in duplicates_processed:  # Skip duplicates that have already been processed
                         continue
-                    logger.info(
-                        f"Found duplicate mod present in active mods list: {target_id}"
-                    )
+                    logger.info(f"Found duplicate mod present in active mods list: {target_id}")
                     # Loop through sorted paths and determine which duplicate to used based on priority
                     for source in sources_order:
                         logger.debug(f"Checking for duplicate with source: {source}")
@@ -2345,16 +1974,12 @@ def get_mods_from_list(
                         paths_to_uuid = {}
                         for duplicate_uuid in duplicate_mods[target_id]:
                             if source in all_mods[duplicate_uuid]["data_source"]:
-                                paths_to_uuid[all_mods[duplicate_uuid]["path"]] = (
-                                    duplicate_uuid
-                                )
+                                paths_to_uuid[all_mods[duplicate_uuid]["path"]] = duplicate_uuid
                         # Sort duplicate mod paths from current source priority using natsort
                         source_paths_sorted = natsorted(paths_to_uuid.keys())
                         if source_paths_sorted:  # If we have paths returned
                             # If we are here, we've found our calculated duplicate, log and use this mod
-                            calculated_duplicate_uuid = paths_to_uuid[
-                                source_paths_sorted[0]
-                            ]
+                            calculated_duplicate_uuid = paths_to_uuid[source_paths_sorted[0]]
                             logger.debug(
                                 f"Using duplicate {source} mod for {target_id}: {all_mods[calculated_duplicate_uuid]['path']}"
                             )
@@ -2370,9 +1995,7 @@ def get_mods_from_list(
     logger.debug(f"Generated active mods dict with {len(active_mods_uuids)} mods")
     # Get the inactive mods by subtracting active mods from workshop + expansions
     logger.info("Generating inactive mod list")
-    inactive_mods_uuids = [
-        uuid for uuid in all_mods.keys() if uuid not in active_mods_uuids
-    ]
+    inactive_mods_uuids = [uuid for uuid in all_mods.keys() if uuid not in active_mods_uuids]
     logger.info(f"# active mods: {len(active_mods_uuids)}")
     logger.info(f"# inactive mods: {len(inactive_mods_uuids)}")
     logger.info(f"# duplicate mods: {len(duplicate_mods)}")
@@ -2382,18 +2005,10 @@ def get_mods_from_list(
 
 def log_deps_order_info(all_mods: dict[str, Any]) -> None:
     """This block is used quite a bit - deserves own function"""
-    logger.info(
-        f"Total number of loadTheseBefore rules: {get_num_dependencies(all_mods, 'loadTheseBefore')}"
-    )
-    logger.info(
-        f"Total number of loadTheseAfter rules: {get_num_dependencies(all_mods, 'loadTheseAfter')}"
-    )
-    logger.info(
-        f"Total number of dependencies: {get_num_dependencies(all_mods, 'dependencies')}"
-    )
-    logger.info(
-        f"Total number of incompatibilities: {get_num_dependencies(all_mods, 'incompatibilities')}"
-    )
+    logger.info(f"Total number of loadTheseBefore rules: {get_num_dependencies(all_mods, 'loadTheseBefore')}")
+    logger.info(f"Total number of loadTheseAfter rules: {get_num_dependencies(all_mods, 'loadTheseAfter')}")
+    logger.info(f"Total number of dependencies: {get_num_dependencies(all_mods, 'dependencies')}")
+    logger.info(f"Total number of incompatibilities: {get_num_dependencies(all_mods, 'incompatibilities')}")
 
 
 # DB Builder
@@ -2456,9 +2071,7 @@ class SteamDatabaseBuilder(QThread):
             f"\nInitiating RimSort Steam Database Builder with mode : {self.mode}\n"
         )
         if len(self.apikey) == 32:  # If supplied WebAPI key is 32 characters
-            self.db_builder_message_output_signal.emit(
-                "Received valid Steam WebAPI key from settings"
-            )
+            self.db_builder_message_output_signal.emit("Received valid Steam WebAPI key from settings")
             # Since the key is valid, we try to launch a live query
             if self.mode == "all_mods":
                 if not self.mods:
@@ -2476,23 +2089,17 @@ class SteamDatabaseBuilder(QThread):
                         publishedfileids = []
                         for publishedfileid, metadata in database["database"].items():
                             if not metadata.get("appid"):  # If it's not an appid
-                                publishedfileids.append(
-                                    publishedfileid
-                                )  # Add it to our list
+                                publishedfileids.append(publishedfileid)  # Add it to our list
                         dynamic_query = DynamicQuery(
                             apikey=self.apikey,
                             appid=self.appid,
                             life=self.database_expiry,
                             get_appid_deps=self.get_appid_deps,
                         )
-                        dynamic_query.dq_messaging_signal.connect(
-                            self.db_builder_message_output_signal.emit
-                        )
+                        dynamic_query.dq_messaging_signal.connect(self.db_builder_message_output_signal.emit)
                         dynamic_query.create_steam_db(database, publishedfileids)
                         self._output_database(dynamic_query.database)
-                        self.db_builder_message_output_signal.emit(
-                            "SteamDatabasebuilder: Completed!"
-                        )
+                        self.db_builder_message_output_signal.emit("SteamDatabasebuilder: Completed!")
                     else:
                         self.db_builder_message_output_signal.emit(
                             "Tried to generate DynamicQuery with 0 mods...? Unable to initialize DynamicQuery for live metadata..."
@@ -2505,26 +2112,16 @@ class SteamDatabaseBuilder(QThread):
                 # Create query
                 dynamic_query = DynamicQuery(self.apikey, self.appid)
                 # Connect messaging signal
-                dynamic_query.dq_messaging_signal.connect(
-                    self.db_builder_message_output_signal.emit
-                )
+                dynamic_query.dq_messaging_signal.connect(self.db_builder_message_output_signal.emit)
                 # Compile PublishedFileIds
                 dynamic_query.pfids_by_appid()
                 self.publishedfileids = dynamic_query.publishedfileids.copy()
-                self.db_builder_message_output_signal.emit(
-                    "SteamDatabasebuilder: Completed!"
-                )
+                self.db_builder_message_output_signal.emit("SteamDatabasebuilder: Completed!")
             else:
-                self.db_builder_message_output_signal.emit(
-                    "SteamDatabaseBuilder: Invalid mode specified."
-                )
+                self.db_builder_message_output_signal.emit("SteamDatabaseBuilder: Invalid mode specified.")
         else:  # Otherwise, API key is not valid
-            self.db_builder_message_output_signal.emit(
-                f"SteamDatabaseBuilder ({self.mode}): Invalid Steam WebAPI key!"
-            )
-            self.db_builder_message_output_signal.emit(
-                f"SteamDatabaseBuilder ({self.mode}): Exiting..."
-            )
+            self.db_builder_message_output_signal.emit(f"SteamDatabaseBuilder ({self.mode}): Invalid Steam WebAPI key!")
+            self.db_builder_message_output_signal.emit(f"SteamDatabaseBuilder ({self.mode}): Exiting...")
 
     def _init_db_from_local_metadata(self) -> dict[str, Any]:
         db_from_local_metadata = {
@@ -2538,9 +2135,7 @@ class SteamDatabaseBuilder(QThread):
                         "name": v.get("name"),
                         "authors": (
                             ", ".join(v.get("authors").get("li"))
-                            if v.get("authors")
-                            and isinstance(v.get("authors"), dict)
-                            and v.get("authors").get("li")
+                            if v.get("authors") and isinstance(v.get("authors"), dict) and v.get("authors").get("li")
                             else v.get("authors", "Missing XML: <author(s)>")
                         ),
                     }
@@ -2551,23 +2146,15 @@ class SteamDatabaseBuilder(QThread):
                     v["publishedfileid"]: {
                         "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={v['publishedfileid']}",
                         "packageId": v.get("packageid"),
-                        "name": (
-                            v.get("name")
-                            if not v.get("DB_BUILDER_NO_NAME")
-                            else "Missing XML: <name>"
-                        ),
+                        "name": (v.get("name") if not v.get("DB_BUILDER_NO_NAME") else "Missing XML: <name>"),
                         "authors": (
                             ", ".join(v.get("authors").get("li"))
-                            if v.get("authors")
-                            and isinstance(v.get("authors"), dict)
-                            and v.get("authors").get("li")
+                            if v.get("authors") and isinstance(v.get("authors"), dict) and v.get("authors").get("li")
                             else v.get("authors", "Missing XML: <author(s)>")
                         ),
                         "gameVersions": (
                             v.get("supportedversions").get("li")
-                            if isinstance(
-                                v.get("supportedversions", {}).get("li"), list
-                            )
+                            if isinstance(v.get("supportedversions", {}).get("li"), list)
                             else [
                                 (
                                     v.get("supportedversions", {}).get(
@@ -2593,14 +2180,11 @@ class SteamDatabaseBuilder(QThread):
             else 0
         )
         self.db_builder_message_output_signal.emit(
-            f"Populated {total} items from locally found metadata into initial database for "
-            + f"{self.appid}"
+            f"Populated {total} items from locally found metadata into initial database for " + f"{self.appid}"
         )
         return db_from_local_metadata
 
-    def _init_empty_db_from_publishedfileids(
-        self, publishedfileids: list[str]
-    ) -> dict[str, Any]:
+    def _init_empty_db_from_publishedfileids(self, publishedfileids: list[str]) -> dict[str, Any]:
         database: dict[str, int | dict[str, Any]] = {
             "version": 0,
             "database": {
@@ -2621,11 +2205,7 @@ class SteamDatabaseBuilder(QThread):
                 },
             },
         }
-        total = (
-            len(database["database"].keys())
-            if isinstance(database["database"], dict)
-            else 0
-        )
+        total = len(database["database"].keys()) if isinstance(database["database"], dict) else 0
         self.db_builder_message_output_signal.emit(
             f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
         )
@@ -2640,13 +2220,9 @@ class SteamDatabaseBuilder(QThread):
             if self.output_database_path and os.path.exists(self.output_database_path):
                 with open(self.output_database_path, encoding="utf-8") as f:
                     json_string = f.read()
-                    self.db_builder_message_output_signal.emit(
-                        "\nReading info from file..."
-                    )
+                    self.db_builder_message_output_signal.emit("\nReading info from file...")
                     db_to_update = json.loads(json_string)
-                    self.db_builder_message_output_signal.emit(
-                        "Retrieved cached database!\n"
-                    )
+                    self.db_builder_message_output_signal.emit("Retrieved cached database!\n")
                 self.db_builder_message_output_signal.emit(
                     "Recursively updating previous database with new metadata...\n"
                 )
@@ -2663,18 +2239,13 @@ class SteamDatabaseBuilder(QThread):
                     "Unable to load database from specified path! Does the file exist...?"
                 )
                 appended_path = str(
-                    Path(self.output_database_path).parent
-                    / ("NEW_" + Path(self.output_database_path).name)
+                    Path(self.output_database_path).parent / ("NEW_" + Path(self.output_database_path).name)
                 )
-                self.db_builder_message_output_signal.emit(
-                    f"\nCaching DynamicQuery result:\n\n{appended_path}"
-                )
+                self.db_builder_message_output_signal.emit(f"\nCaching DynamicQuery result:\n\n{appended_path}")
                 with open(appended_path, "w", encoding="utf-8") as output:
                     json.dump(database, output, indent=4)
         else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
-            self.db_builder_message_output_signal.emit(
-                f"\nCaching DynamicQuery result:\n{self.output_database_path}"
-            )
+            self.db_builder_message_output_signal.emit(f"\nCaching DynamicQuery result:\n{self.output_database_path}")
             with open(self.output_database_path, "w", encoding="utf-8") as output:
                 json.dump(database, output, indent=4)
 
@@ -2682,9 +2253,7 @@ class SteamDatabaseBuilder(QThread):
 # Misc helper functions
 
 
-def check_if_pfids_blacklisted(
-    publishedfileids: list[str], steamdb: dict[str, Any]
-) -> list[str]:
+def check_if_pfids_blacklisted(publishedfileids: list[str], steamdb: dict[str, Any]) -> list[str]:
     # None-check for steamdb
     if not steamdb:
         show_warning(
@@ -2702,9 +2271,7 @@ def check_if_pfids_blacklisted(
                 "name": steamdb[publishedfileid]["steamName"],
                 "comment": steamdb[publishedfileid]["blacklist"]["comment"],
             }
-        elif steamdb.get(str(publishedfileid), {}).get(
-            "blacklist"
-        ):  # TODO: Is this needed?
+        elif steamdb.get(str(publishedfileid), {}).get("blacklist"):  # TODO: Is this needed?
             blacklisted_mods[publishedfileid] = {
                 "name": steamdb[str(publishedfileid)]["steamName"],
                 "comment": steamdb[str(publishedfileid)]["blacklist"]["comment"],
@@ -2713,9 +2280,7 @@ def check_if_pfids_blacklisted(
     if blacklisted_mods:
         blacklisted_mods_report = ""
         for publishedfileid in blacklisted_mods:
-            blacklisted_mods_report += (
-                f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})\n"
-            )
+            blacklisted_mods_report += f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})\n"
             blacklisted_mods_report += f"Reason for blacklisting: {blacklisted_mods[publishedfileid]['comment']}"
         answer = show_dialogue_conditional(
             title="Blacklisted mods found",
@@ -2723,31 +2288,21 @@ def check_if_pfids_blacklisted(
             information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
             details=blacklisted_mods_report,
             button_text_override=[
-                QCoreApplication.translate(
-                    "check_if_pfids_blacklisted", "Download blacklisted mods"
-                ),
-                QCoreApplication.translate(
-                    "check_if_pfids_blacklisted", "Skip blacklisted mods"
-                ),
+                QCoreApplication.translate("check_if_pfids_blacklisted", "Download blacklisted mods"),
+                QCoreApplication.translate("check_if_pfids_blacklisted", "Skip blacklisted mods"),
             ],
         )
         # Remove blacklisted mods from list if user wants to download them still
         answer_str = str(answer)
-        download_text = QCoreApplication.translate(
-            "check_if_pfids_blacklisted", "Download blacklisted mods"
-        )
+        download_text = QCoreApplication.translate("check_if_pfids_blacklisted", "Download blacklisted mods")
         if download_text in answer_str:
             publishedfileids.remove(publishedfileid)
-            logger.debug(
-                f"Skipping download of blacklisted Workshop mod: {publishedfileid}"
-            )
+            logger.debug(f"Skipping download of blacklisted Workshop mod: {publishedfileid}")
 
     return publishedfileids
 
 
-def import_steamcmd_acf_data(
-    rimsort_storage_path: str, steamcmd_appworkshop_acf_path: str
-) -> None:
+def import_steamcmd_acf_data(rimsort_storage_path: str, steamcmd_appworkshop_acf_path: str) -> None:
     logger.info(f"SteamCMD acf data path to update: {steamcmd_appworkshop_acf_path}")
     if os.path.exists(steamcmd_appworkshop_acf_path):
         logger.debug("Reading info...")
@@ -2772,13 +2327,9 @@ def import_steamcmd_acf_data(
         logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
         return
     # Output
-    items_installed_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-    )
+    items_installed_before = len(steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys())
     logger.debug(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
-    item_details_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
+    item_details_before = len(steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys())
     logger.debug(f"WorkshopItemDetails beforehand: {item_details_before}")
     recursively_update_dict(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"],
@@ -2788,13 +2339,9 @@ def import_steamcmd_acf_data(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"],
         acf_to_import["AppWorkshop"]["WorkshopItemDetails"],
     )
-    items_installed_after = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-    )
+    items_installed_after = len(steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys())
     logger.debug(f"WorkshopItemsInstalled after: {items_installed_after}")
-    item_details_after = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
+    item_details_after = len(steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys())
     logger.debug(f"WorkshopItemDetails after: {item_details_after}")
     logger.info("Successfully imported data!")
     logger.info(f"Writing updated data back to path: {steamcmd_appworkshop_acf_path}")
@@ -2816,24 +2363,17 @@ def query_workshop_update_data(mods: dict[str, Any]) -> str | None:
     workshop_mods_pfid_to_uuid = {
         metadata["publishedfileid"]: uuid
         for uuid, metadata in mods.items()
-        if (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
-        and metadata.get("publishedfileid")
+        if (metadata.get("steamcmd") or metadata.get("data_source") == "workshop") and metadata.get("publishedfileid")
     }
 
-    workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(
-        list(workshop_mods_pfid_to_uuid.keys())
-    )
+    workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(list(workshop_mods_pfid_to_uuid.keys()))
     if workshop_mods_query_updates and len(workshop_mods_query_updates) > 0:
         for workshop_mod_metadata in workshop_mods_query_updates:
             uuid = workshop_mods_pfid_to_uuid[workshop_mod_metadata["publishedfileid"]]
             if workshop_mod_metadata.get("time_created"):
-                mods[uuid]["external_time_created"] = workshop_mod_metadata[
-                    "time_created"
-                ]
+                mods[uuid]["external_time_created"] = workshop_mod_metadata["time_created"]
             if workshop_mod_metadata.get("time_updated"):
-                mods[uuid]["external_time_updated"] = workshop_mod_metadata[
-                    "time_updated"
-                ]
+                mods[uuid]["external_time_updated"] = workshop_mod_metadata["time_updated"]
     else:
         return "failed"
 
@@ -2856,9 +2396,7 @@ def recursively_update_dict(
         if recurse_exceptions and key in recurse_exceptions:
             # If the key is an exception, update its value directly from B
             a_dict[key] = value
-        elif (
-            key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict)
-        ):
+        elif key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict):
             # If the key exists in both dictionaries and the values are dictionaries,
             # recursively update the nested dictionaries except for the recurse exceptions list
             recursively_update_dict(
@@ -2875,9 +2413,7 @@ def recursively_update_dict(
     keys_to_delete = [
         key
         for key, value in a_dict.items()
-        if isinstance(value, dict)
-        and not value
-        and (prune_exceptions is None or key not in prune_exceptions)
+        if isinstance(value, dict) and not value and (prune_exceptions is None or key not in prune_exceptions)
     ]
     for key in keys_to_delete:
         del a_dict[key]
