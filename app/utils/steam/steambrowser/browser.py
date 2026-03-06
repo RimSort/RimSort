@@ -86,9 +86,7 @@ class SteamBrowser(QWidget):
         # Create persistent profile (persists cookies, localStorage, indexedDB, service workers)
         self.web_profile = QWebEngineProfile("SteamBrowserProfile", self)
         self.web_profile.setPersistentStoragePath(self._web_profile_storage)
-        self.web_profile.setPersistentCookiesPolicy(
-            QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies
-        )
+        self.web_profile.setPersistentCookiesPolicy(QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies)
         self.current_html = ""
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
@@ -99,12 +97,8 @@ class SteamBrowser(QWidget):
 
         self.searchtext_string = "&searchtext="
         self.url_prefix_steam = "https://steamcommunity.com"
-        self.url_prefix_sharedfiles = (
-            "https://steamcommunity.com/sharedfiles/filedetails/?id="
-        )
-        self.url_prefix_workshop = (
-            "https://steamcommunity.com/workshop/filedetails/?id="
-        )
+        self.url_prefix_sharedfiles = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+        self.url_prefix_workshop = "https://steamcommunity.com/workshop/filedetails/?id="
         self.section_readytouseitems = "section=readytouseitems"
         self.section_collections = "section=collections"
 
@@ -119,44 +113,30 @@ class SteamBrowser(QWidget):
         self.downloader_list = QListWidget()
         self.downloader_list.setFixedWidth(200)
         self.downloader_list.setItemAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.downloader_list.setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu
-        )
-        self.downloader_list.customContextMenuRequested.connect(
-            self._downloader_item_contextmenu_event
-        )
+        self.downloader_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.downloader_list.customContextMenuRequested.connect(self._downloader_item_contextmenu_event)
         self.add_to_list2_button = QPushButton(self.tr("Add to List"))
         self.add_to_list2_button.clicked.connect(self._add_collection_or_mod_to_list)
         self.clear_list_button = QPushButton(self.tr("Clear List"))
         self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
-        self.download_steamcmd_button = QPushButton(
-            self.tr("Download mod(s) (SteamCMD)")
-        )
+        self.download_steamcmd_button = QPushButton(self.tr("Download mod(s) (SteamCMD)"))
         self.download_steamcmd_button.clicked.connect(
             partial(
                 EventBus().do_steamcmd_download.emit,
                 self.downloader_list_mods_tracking,
             )
         )
-        self.download_steamworks_button = QPushButton(
-            self.tr("Download mod(s) (Steam app)")
-        )
-        self.download_steamworks_button.clicked.connect(
-            self._subscribe_to_mods_from_list
-        )
+        self.download_steamworks_button = QPushButton(self.tr("Download mod(s) (Steam app)"))
+        self.download_steamworks_button.clicked.connect(self._subscribe_to_mods_from_list)
 
         # BROWSER WIDGETS
         # "Loading..." placeholder
         self.web_view_loading_placeholder = ImageLabel()
         self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.web_view_loading_placeholder.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.web_view_loading_placeholder.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.web_view_loading_placeholder.setPixmap(
-            QPixmap(
-                str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")
-            )
+            QPixmap(str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png"))
         )
         # WebEngineView
         self.web_view = QWebEngineView()
@@ -189,9 +169,7 @@ class SteamBrowser(QWidget):
 
         # Location box
         self.location = QLineEdit()
-        self.location.setSizePolicy(
-            QSizePolicy.Policy.Expanding, self.location.sizePolicy().verticalPolicy()
-        )
+        self.location.setSizePolicy(QSizePolicy.Policy.Expanding, self.location.sizePolicy().verticalPolicy())
         self.location.setText(self.startpage.url())
         self.location.returnPressed.connect(self.__browse_to_location)
 
@@ -201,13 +179,9 @@ class SteamBrowser(QWidget):
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Back))
-        self.nav_bar.addAction(
-            self.web_view.pageAction(QWebEnginePage.WebAction.Forward)
-        )
+        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Forward))
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Stop))
-        self.nav_bar.addAction(
-            self.web_view.pageAction(QWebEnginePage.WebAction.Reload)
-        )
+        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Reload))
         # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
         self.progress_bar.setObjectName("browser")
@@ -248,18 +222,12 @@ class SteamBrowser(QWidget):
         """Apply browser window launch state from settings"""
         from app.utils.window_launch_state import apply_window_launch_state
 
-        browser_window_launch_state = (
-            self.settings_controller.settings.browser_window_launch_state
-        )
+        browser_window_launch_state = self.settings_controller.settings.browser_window_launch_state
         custom_width = self.settings_controller.settings.browser_window_custom_width
         custom_height = self.settings_controller.settings.browser_window_custom_height
 
-        apply_window_launch_state(
-            self, browser_window_launch_state, custom_width, custom_height
-        )
-        logger.info(
-            f"Browser window started with launch state: {browser_window_launch_state}"
-        )
+        apply_window_launch_state(self, browser_window_launch_state, custom_width, custom_height)
+        logger.info(f"Browser window started with launch state: {browser_window_launch_state}")
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
@@ -273,14 +241,10 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(
-                f"Unable to parse publishedfileid from url: {self.current_url}"
-            )
+            logger.error(f"Unable to parse publishedfileid from url: {self.current_url}")
             show_warning(
                 title=self.tr("No publishedfileid found"),
-                text=self.tr(
-                    "Unable to parse publishedfileid from url, Please check if url is in the correct format"
-                ),
+                text=self.tr("Unable to parse publishedfileid from url, Please check if url is in the correct format"),
                 information=f"Url: {self.current_url}",
             )
             return None
@@ -292,14 +256,10 @@ class SteamBrowser(QWidget):
             self._add_mod_to_list(publishedfileid)
         else:
             # Use WebAPI to get titles for all the mods
-            collection_mods_pfid_to_title = self.__compile_collection_datas(
-                publishedfileid
-            )
+            collection_mods_pfid_to_title = self.__compile_collection_datas(publishedfileid)
             if len(collection_mods_pfid_to_title) == 0:
                 # Fallback to scraping HTML if WebAPI returns empty
-                collection_mods_pfid_to_title = self.__scrape_collection_mods_from_html(
-                    self.current_html
-                )
+                collection_mods_pfid_to_title = self.__scrape_collection_mods_from_html(self.current_html)
             if len(collection_mods_pfid_to_title) > 0:
                 # ask user whether to add all mods or only missing ones
                 answer = show_dialogue_conditional(
@@ -324,14 +284,10 @@ class SteamBrowser(QWidget):
                         if not self._is_mod_installed(pfid):
                             self._add_mod_to_list(publishedfileid=pfid, title=title)
             else:
-                logger.warning(
-                    "Empty list of mods returned, unable to add collection to list!"
-                )
+                logger.warning("Empty list of mods returned, unable to add collection to list!")
                 show_warning(
                     title=self.tr("SteamCMD downloader"),
-                    text=self.tr(
-                        "Empty list of mods returned, unable to add collection to list!"
-                    ),
+                    text=self.tr("Empty list of mods returned, unable to add collection to list!"),
                     information=self.tr(
                         "Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord"
                     ),
@@ -345,18 +301,14 @@ class SteamBrowser(QWidget):
             show_warning(
                 title=self.tr("SteamCMD downloader"),
                 text=self.tr("You already have these mods in your download list!"),
-                information=self.tr(
-                    "Skipping the following mods which are already present in your download list!"
-                ),
+                information=self.tr("Skipping the following mods which are already present in your download list!"),
                 details=dupe_report,
             )
             self.downloader_list_dupe_tracking = {}
 
     def __compile_collection_datas(self, publishedfileid: str) -> dict[str, Any]:
         collection_mods_pfid_to_title: dict[str, Any] = {}
-        collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
-            [publishedfileid]
-        )
+        collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails([publishedfileid])
         collection_pfids = []
 
         if collection_webapi_result is not None and len(collection_webapi_result) > 0:
@@ -364,9 +316,7 @@ class SteamBrowser(QWidget):
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
-                collection_mods_webapi_response = (
-                    ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids)
-                )
+                collection_mods_webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids)
             else:
                 return collection_mods_pfid_to_title
 
@@ -392,17 +342,13 @@ class SteamBrowser(QWidget):
             re.DOTALL | re.IGNORECASE,
         )
         matches = pattern.findall(html)
-        logger.debug(
-            f"Found {len(matches)} matches in fallback HTML scraping for collection mods"
-        )
+        logger.debug(f"Found {len(matches)} matches in fallback HTML scraping for collection mods")
         if matches:
             for pfid, title in matches:
                 logger.debug(f"Scraped mod: {pfid} - {title}")
                 collection_mods_pfid_to_title[pfid] = title
         else:
-            logger.warning(
-                "No matches found in fallback HTML scraping for collection mods"
-            )
+            logger.warning("No matches found in fallback HTML scraping for collection mods")
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(
@@ -412,9 +358,7 @@ class SteamBrowser(QWidget):
     ) -> None:
         # Try to extract the mod name from the page title, fallback to current_title
         extracted_page_title = extract_page_title_steam_browser(self.current_title)
-        page_title = (
-            extracted_page_title if extracted_page_title else self.current_title
-        )
+        page_title = extracted_page_title if extracted_page_title else self.current_title
         # Check if the mod is already in the list
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
@@ -429,9 +373,7 @@ class SteamBrowser(QWidget):
                 item.setToolTip(f"{label.text()}\n--> {self.current_url}")
             else:  # If the title passed, use it
                 label = QLabel(title)
-                item.setToolTip(
-                    f"{label.text()}\n--> {self.url_prefix_sharedfiles}{publishedfileid}"
-                )
+                item.setToolTip(f"{label.text()}\n--> {self.url_prefix_sharedfiles}{publishedfileid}")
             label.setObjectName("ListItemLabel")
             # Set the size hint of the item to be the size of the label
             item.setSizeHint(label.sizeHint())
@@ -439,9 +381,7 @@ class SteamBrowser(QWidget):
             self.downloader_list.setItemWidget(item, label)
             self._update_badge_js(publishedfileid, BadgeState.ADDED)
         else:
-            logger.debug(
-                f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
-            )
+            logger.debug(f"Tried to add duplicate PFID to downloader list: {publishedfileid}")
             if publishedfileid not in self.downloader_list_dupe_tracking.keys():
                 if not title:
                     self.downloader_list_dupe_tracking[publishedfileid] = page_title
@@ -465,9 +405,7 @@ class SteamBrowser(QWidget):
 
             context_menu = QMenu(self)  # Downloader item context menu event
             remove_item = context_menu.addAction(self.tr("Remove mod from list"))
-            remove_item.triggered.connect(
-                partial(self._remove_mod_from_list, publishedfileid)
-            )
+            remove_item.triggered.connect(partial(self._remove_mod_from_list, publishedfileid))
             context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
     def _remove_mod_from_list(self, publishedfileid: str) -> None:
@@ -488,20 +426,14 @@ class SteamBrowser(QWidget):
                     break
 
             if not item_found_in_ui:
-                logger.warning(
-                    f"Mod {publishedfileid} removed from tracking, but corresponding UI item was not found."
-                )
+                logger.warning(f"Mod {publishedfileid} removed from tracking, but corresponding UI item was not found.")
 
             self._update_badge_js(publishedfileid, BadgeState.DEFAULT)
         else:
-            logger.warning(
-                f"Mod {publishedfileid} not found in download tracking list, cannot remove."
-            )
+            logger.warning(f"Mod {publishedfileid} not found in download tracking list, cannot remove.")
 
     def _subscribe_to_mods_from_list(self) -> None:
-        logger.debug(
-            f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
-        )
+        logger.debug(f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods")
         EventBus().do_steamworks_api_call.emit(
             [
                 "subscribe",
@@ -549,9 +481,7 @@ class SteamBrowser(QWidget):
                 elements[0].parentNode.removeChild(elements[0]);
             }
             """
-            self.web_view.page().runJavaScript(
-                install_button_removal_script, 0, lambda result: None
-            )
+            self.web_view.page().runJavaScript(install_button_removal_script, 0, lambda result: None)
             # remove_top_banner = """
             # var element = document.getElementById("global_header");
             # var elements = document.getElementsByClassName("responsive_header")
@@ -576,9 +506,7 @@ class SteamBrowser(QWidget):
                 elements[i].target = "_self";
             }
             """
-            self.web_view.page().runJavaScript(
-                change_target_a_script, 0, lambda result: None
-            )
+            self.web_view.page().runJavaScript(change_target_a_script, 0, lambda result: None)
             # Remove "Login" button
             # login_button_removal_script = """
             # var elements = document.getElementsByClassName("global_action_link");
@@ -599,9 +527,7 @@ class SteamBrowser(QWidget):
                 added_mods=json.dumps(added_mods_list),
                 badge_state_js=json.dumps(js_badge_state),
             )
-            self.web_view.page().runJavaScript(
-                setup_web_channel_script, 0, lambda result: None
-            )
+            self.web_view.page().runJavaScript(setup_web_channel_script, 0, lambda result: None)
 
             is_item_page = self.url_prefix_sharedfiles in self.current_url
             is_collection_page = self.url_prefix_workshop in self.current_url
@@ -614,17 +540,11 @@ class SteamBrowser(QWidget):
                 if is_item_page or is_collection_page:
                     # get mod id from steam workshop url
                     if self.url_prefix_sharedfiles in self.current_url:
-                        publishedfileid = self.current_url.split(
-                            self.url_prefix_sharedfiles, 1
-                        )[1]
+                        publishedfileid = self.current_url.split(self.url_prefix_sharedfiles, 1)[1]
                     else:
-                        publishedfileid = self.current_url.split(
-                            self.url_prefix_workshop, 1
-                        )[1]
+                        publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
                     if self.searchtext_string in publishedfileid:
-                        publishedfileid = publishedfileid.split(self.searchtext_string)[
-                            0
-                        ]
+                        publishedfileid = publishedfileid.split(self.searchtext_string)[0]
                     # check if mod is installed
                     is_installed = self._is_mod_installed(publishedfileid)
                     # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
@@ -634,9 +554,7 @@ class SteamBrowser(QWidget):
                         elements[0].parentNode.removeChild(elements[0]);
                     }
                     """
-                    self.web_view.page().runJavaScript(
-                        mod_subscribe_area_removal_script, 0, lambda result: None
-                    )
+                    self.web_view.page().runJavaScript(mod_subscribe_area_removal_script, 0, lambda result: None)
                     # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons for collections
                     mod_unsubscribe_button_removal_script = """
                     var elements = document.getElementsByClassName("subscribeCollection");
@@ -644,9 +562,7 @@ class SteamBrowser(QWidget):
                         elements[0].parentNode.removeChild(elements[0]);
                     }
                     """
-                    self.web_view.page().runJavaScript(
-                        mod_unsubscribe_button_removal_script, 0, lambda result: None
-                    )
+                    self.web_view.page().runJavaScript(mod_unsubscribe_button_removal_script, 0, lambda result: None)
                     # Remove "Subscribe" buttons from any mods shown in a collection
                     subscribe_buttons_removal_script = """
                     var elements = document.getElementsByClassName("general_btn subscribe");
@@ -654,9 +570,7 @@ class SteamBrowser(QWidget):
                         elements[0].parentNode.removeChild(elements[0]);
                     }
                     """
-                    self.web_view.page().runJavaScript(
-                        subscribe_buttons_removal_script, 0, lambda result: None
-                    )
+                    self.web_view.page().runJavaScript(subscribe_buttons_removal_script, 0, lambda result: None)
                     # add buttons for collection items
                     add_collection_buttons_script = """
                     // find all collection items
@@ -719,9 +633,7 @@ class SteamBrowser(QWidget):
                         }
                     }
                     """
-                    self.web_view.page().runJavaScript(
-                        add_collection_buttons_script, 0, lambda result: None
-                    )
+                    self.web_view.page().runJavaScript(add_collection_buttons_script, 0, lambda result: None)
                     # add installed indicator if mod is installed
                     if is_installed:
                         add_installed_indicator_script = """
@@ -741,9 +653,7 @@ class SteamBrowser(QWidget):
                             contentDiv.parentNode.insertBefore(installedDiv, contentDiv);
                         }
                         """
-                        self.web_view.page().runJavaScript(
-                            add_installed_indicator_script, 0, lambda result: None
-                        )
+                        self.web_view.page().runJavaScript(add_installed_indicator_script, 0, lambda result: None)
                     # Show the add_to_list_button
                     self.nav_bar.addAction(self.add_to_list_button)
 

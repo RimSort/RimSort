@@ -319,9 +319,7 @@ class ListedMod(BaseMod):
         return self._uuid
 
     @functools.cached_property
-    def published_file_id(
-        self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
-    ) -> int:
+    def published_file_id(self, expected_sub_path: Path = Path("About/PublishedFileId.txt")) -> int:
         """Cached property to return the published file id from the mod's path. If the file does not exist, returns
         the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
         if self.mod_path is None:
@@ -442,16 +440,12 @@ class AboutXmlMod(ListedMod, PackageIdMod):
 
         # Load before
         overall_rules.load_before = (
-            self.about_rules.load_before
-            | self.community_rules.load_before
-            | self.user_rules.load_before
+            self.about_rules.load_before | self.community_rules.load_before | self.user_rules.load_before
         )
 
         # Load after
         overall_rules.load_after = (
-            self.about_rules.load_after
-            | self.community_rules.load_after
-            | self.user_rules.load_after
+            self.about_rules.load_after | self.community_rules.load_after | self.user_rules.load_after
         )
 
         # Incompatible with
@@ -469,12 +463,8 @@ class AboutXmlMod(ListedMod, PackageIdMod):
         }
 
         # Load first / last
-        overall_rules.load_first = (
-            self.community_rules.load_first or self.user_rules.load_first
-        )
-        overall_rules.load_last = (
-            self.community_rules.load_last or self.user_rules.load_last
-        )
+        overall_rules.load_first = self.community_rules.load_first or self.user_rules.load_first
+        overall_rules.load_last = self.community_rules.load_last or self.user_rules.load_last
 
         return overall_rules
 
@@ -548,12 +538,8 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
     steamName: str = msgspec.field(default_factory=str)
     name: str = msgspec.field(default_factory=str)
     authors: list[str] | str | None = msgspec.field(default_factory=str)
-    dependencies: dict[str, list[str] | SteamDbEntryDependency] = msgspec.field(
-        default_factory=dict
-    )
-    blacklist: SteamDbEntryBlacklist = msgspec.field(
-        default_factory=SteamDbEntryBlacklist
-    )
+    dependencies: dict[str, list[str] | SteamDbEntryDependency] = msgspec.field(default_factory=dict)
+    blacklist: SteamDbEntryBlacklist = msgspec.field(default_factory=SteamDbEntryBlacklist)
 
 
 class SteamDbSchema(msgspec.Struct):

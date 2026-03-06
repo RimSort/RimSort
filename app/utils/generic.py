@@ -116,12 +116,8 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
         logger.error(f"Tried to delete directory that does not exist: {path}")
         dialogue.show_warning(
             title=translate("rmtree", "Failed to remove directory"),
-            text=translate(
-                "rmtree", "RimSort tried to remove a directory that does not exist."
-            ),
-            details=translate("rmtree", "Directory does not exist: {path}").format(
-                path=path
-            ),
+            text=translate("rmtree", "RimSort tried to remove a directory that does not exist."),
+            details=translate("rmtree", "Directory does not exist: {path}").format(path=path),
         )
         return False
 
@@ -129,12 +125,8 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
         logger.error(f"rmtree path is not a directory: {path}")
         dialogue.show_warning(
             title=translate("rmtree", "Failed to remove directory"),
-            text=translate(
-                "rmtree", "RimSort tried to remove a directory that is not a directory."
-            ),
-            details=translate("rmtree", "Path is not a directory: {path}").format(
-                path=path
-            ),
+            text=translate("rmtree", "RimSort tried to remove a directory that is not a directory."),
+            details=translate("rmtree", "Path is not a directory: {path}").format(path=path),
         )
         return False
 
@@ -148,9 +140,7 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
         logger.error(f"Failed to remove directory: {e}")
         dialogue.show_warning(
             title=translate("rmtree", "Failed to remove directory"),
-            text=translate(
-                "rmtree", "An OSError occurred while trying to remove a directory."
-            ),
+            text=translate("rmtree", "An OSError occurred while trying to remove a directory."),
             information=translate(
                 "rmtree",
                 "{e.strerror} occurred at {e.filename} with error code {error_code}.",
@@ -165,9 +155,7 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
     return True
 
 
-def delete_files_with_condition(
-    directory: Path | str, condition: Callable[[str], bool]
-) -> bool:
+def delete_files_with_condition(directory: Path | str, condition: Callable[[str], bool]) -> bool:
     # Check if directory exists
     if not os.path.exists(directory):
         logger.warning(f"Directory does not exist: {directory}")
@@ -207,9 +195,7 @@ def delete_files_with_condition(
 
 
 def delete_files_except_extension(directory: Path | str, extension: str) -> bool:
-    return delete_files_with_condition(
-        directory, lambda file: not file.endswith(extension)
-    )
+    return delete_files_with_condition(directory, lambda file: not file.endswith(extension))
 
 
 def delete_files_only_extension(directory: Path | str, extension: str) -> bool:
@@ -280,22 +266,15 @@ def directories(mods_path: Path | str) -> list[str]:
         return []
 
 
-def attempt_chmod(
-    func: Callable[[str], Any], path: str, excinfo: BaseException
-) -> bool:
+def attempt_chmod(func: Callable[[str], Any], path: str, excinfo: BaseException) -> bool:
     if excinfo is not None and isinstance(excinfo, OSError):
-        if (
-            func in (os.rmdir, os.remove, os.unlink, os.listdir)
-            and excinfo.errno == EACCES
-        ):
+        if func in (os.rmdir, os.remove, os.unlink, os.listdir) and excinfo.errno == EACCES:
             os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
             try:
                 func(path)
                 return True
             except Exception as e:
-                logger.warning(
-                    f"attempt_chmod for {func.__name__} double failure at {path}: {e}"
-                )
+                logger.warning(f"attempt_chmod for {func.__name__} double failure at {path}: {e}")
                 return False
 
     return False
@@ -337,17 +316,12 @@ def get_executable_path(game_install_path: Path) -> str | None:
                     p / "RimWorldWin64.exe",
                     p / "RimWorldWin.exe",
                 ]
-                if exe.exists()
-                and (exe.name != "RimWorldLinux" or os.access(exe, os.X_OK))
+                if exe.exists() and (exe.name != "RimWorldLinux" or os.access(exe, os.X_OK))
             ),
             None,
         ),
         "Windows": lambda p: next(
-            (
-                str(exe)
-                for exe in [p / "RimWorldWin64.exe", p / "RimWorldWin.exe"]
-                if exe.exists()
-            ),
+            (str(exe) for exe in [p / "RimWorldWin64.exe", p / "RimWorldWin.exe"] if exe.exists()),
             None,
         ),
     }
@@ -431,9 +405,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         env_vars=env_vars,
         wrapper_commands=wrapper_commands,
     )
-    logger.info(
-        f"Launched independent RimWorld game process with PID {pid} using args {popen_args}"
-    )
+    logger.info(f"Launched independent RimWorld game process with PID {pid} using args {popen_args}")
 
 
 def validate_game_executable(game_folder: str) -> bool:
@@ -449,9 +421,7 @@ def validate_game_executable(game_folder: str) -> bool:
 
     game_install_path = Path(game_folder)
     if not game_install_path.exists() or not game_install_path.is_dir():
-        logger.info(
-            f"Game folder does not exist or is not a directory: {game_install_path}"
-        )
+        logger.info(f"Game folder does not exist or is not a directory: {game_install_path}")
         return False
 
     # Use the new get_executable_path function for validation
@@ -461,9 +431,7 @@ def validate_game_executable(game_folder: str) -> bool:
         return True
 
     system_name = platform.system()
-    logger.info(
-        f"No valid RimWorld executable found for {system_name} in: {game_install_path}"
-    )
+    logger.info(f"No valid RimWorld executable found for {system_name} in: {game_install_path}")
     return False
 
 
@@ -573,9 +541,7 @@ def platform_specific_open(path: str | Path) -> None:
         except OSError as e:
             # Handle cases where no default application is associated
             if e.winerror == -2147221003:  # Application not found
-                logger.warning(
-                    f"No default application found for {path}, trying notepad"
-                )
+                logger.warning(f"No default application found for {path}, trying notepad")
                 # Try to open with notepad as fallback
                 try:
                     subprocess.Popen(["notepad.exe", path])
@@ -721,9 +687,7 @@ def check_valid_http_git_url(url: str) -> bool:
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
 
 
-def get_path_up_to_string(
-    path: Path, stop_string: str, exclude: bool = False
-) -> Path | str:
+def get_path_up_to_string(path: Path, stop_string: str, exclude: bool = False) -> Path | str:
     """
     Returns a Path up to the stop_string.
 
@@ -819,9 +783,7 @@ def check_internet_connection(timeout: float = 10) -> bool:
             logger.debug(f"Connection to {url} failed: {e}")
             failed_urls.append(url)
 
-    logger.error(
-        f"No internet connection detected. Failed to reach: {', '.join(failed_urls)}"
-    )
+    logger.error(f"No internet connection detected. Failed to reach: {', '.join(failed_urls)}")
     dialogue.show_internet_connection_error(failed_urls=failed_urls)
     return False
 

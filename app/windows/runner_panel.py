@@ -112,50 +112,34 @@ class RunnerPanel(QWidget):
         self.setObjectName("RunnerPanel")
 
         # Clear button
-        self.clear_runner_icon = QIcon(
-            str(AppInfo().theme_data_folder / "default-icons" / "clear.png")
-        )
+        self.clear_runner_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "clear.png"))
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
         self.clear_runner_button.clicked.connect(self._do_clear_runner)
-        self.clear_runner_button.setToolTip(
-            self.tr("Clear the text currently displayed by the runner")
-        )
+        self.clear_runner_button.setToolTip(self.tr("Clear the text currently displayed by the runner"))
 
         # Restart button
-        self.restart_process_icon = QIcon(
-            str(AppInfo().theme_data_folder / "default-icons" / "restart_process.png")
-        )
+        self.restart_process_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "restart_process.png"))
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
         self.restart_process_button.clicked.connect(self._do_restart_process)
-        self.restart_process_button.setToolTip(
-            self.tr("Re-run the process last used by the runner")
-        )
+        self.restart_process_button.setToolTip(self.tr("Re-run the process last used by the runner"))
         self.restart_process_button.hide()  # Hidden until execute() is called
 
         # Kill button
-        self.kill_process_icon = QIcon(
-            str(AppInfo().theme_data_folder / "default-icons" / "kill_process.png")
-        )
+        self.kill_process_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "kill_process.png"))
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
         self.kill_process_button.clicked.connect(self._do_kill_process)
-        self.kill_process_button.setToolTip(
-            self.tr("Kill a process currently being executed by the runner")
-        )
+        self.kill_process_button.setToolTip(self.tr("Kill a process currently being executed by the runner"))
         self.kill_process_button.hide()  # Hidden until execute() is called
 
         # Save output button
-        self.save_runner_icon = QIcon(
-            str(AppInfo().theme_data_folder / "default-icons" / "save_output.png")
-        )
+        self.save_runner_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "save_output.png"))
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)
         self.save_runner_output_button.clicked.connect(self._do_save_runner_output)
-        self.save_runner_output_button.setToolTip(
-            self.tr("Save the current output to a file")
-        )
+        self.save_runner_output_button.setToolTip(self.tr("Save the current output to a file"))
 
     def _setup_progress_bar(self) -> None:
         """Set up the progress bar."""
@@ -498,9 +482,7 @@ class RunnerPanel(QWidget):
         # Skip detailed output in dry run mode
         if not self.todds_dry_run_support:
             # Show completion status
-            status_message = (
-                "Subprocess killed!" if self.process_killed else "Subprocess completed."
-            )
+            status_message = "Subprocess killed!" if self.process_killed else "Subprocess completed."
             self.message(status_message)
             self.process_killed = False  # Reset the kill flag
 
@@ -540,8 +522,7 @@ class RunnerPanel(QWidget):
 
         # Compile details of failed mods for the report
         details = "\n".join(
-            f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
-            for pfid in self.steamcmd_download_tracking
+            f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}" for pfid in self.steamcmd_download_tracking
         )
         # Prompt user for action on failed mods
         answer = show_dialogue_conditional(
@@ -587,9 +568,7 @@ class RunnerPanel(QWidget):
         # For mods not found in local DB, try Steam API
         if failed_mods_no_names:
             try:
-                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(
-                    failed_mods_no_names
-                )
+                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(failed_mods_no_names)
                 if mod_details_lookup:
                     for mod_metadata in mod_details_lookup:
                         mod_title = mod_metadata.get("title")

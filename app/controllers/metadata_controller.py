@@ -52,8 +52,7 @@ class MetadataController(QObject):
             if self.metadata_mediator.workshop_mods_path is not None:
                 self.metadata_db_controller.update_from_acf(
                     session,
-                    self.metadata_mediator.workshop_mods_path.parent.parent
-                    / "appworkshop_294100.acf",
+                    self.metadata_mediator.workshop_mods_path.parent.parent / "appworkshop_294100.acf",
                     ModType.STEAM_WORKSHOP,
                 )
 
@@ -94,9 +93,7 @@ class MetadataController(QObject):
         self.metadata_mediator.local_mods_path = local_mods_path
         self.metadata_mediator.game_path = game_path
 
-    def get_metadata_with_path(
-        self, path: str | Path
-    ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
+    def get_metadata_with_path(self, path: str | Path) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
         mod_data = self.metadata_mediator.mods_metadata.get(str(path), None)
         if mod_data is None:
             return None, None

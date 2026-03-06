@@ -103,14 +103,10 @@ class RentryUpload:
             RentryError().show_request_exception(e)
         except Exception as e:
             # Handle any other exceptions that occur during the process
-            logger.error(
-                f"An error occurred while Uploading rentry.co content: {str(e)}"
-            )
+            logger.error(f"An error occurred while Uploading rentry.co content: {str(e)}")
             show_fatal_error(
                 title=translate("RentryUpload", "Error"),
-                text=translate("RentryUpload", "An error occurred: {e}").format(
-                    e=str(e)
-                ),
+                text=translate("RentryUpload", "An error occurred: {e}").format(e=str(e)),
             )
 
     def handle_response(self, response: dict[str, Any]) -> None:
@@ -159,16 +155,10 @@ class RentryUpload:
 class RentryImport:
     """Class to handle importing Rentry.co links and extracting package IDs."""
 
-    def __init__(
-        self, settings_controller: SettingsController, rentry_auth_code: bool = False
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController, rentry_auth_code: bool = False) -> None:
         """Initialize the Rentry Import instance and prompt for a link."""
-        self.package_ids: list[
-            str
-        ] = []  # Initialize an empty list to store package IDs
-        self.publishedfileids: list[
-            str
-        ] = []  # Initialize an empty list for publishedfileids
+        self.package_ids: list[str] = []  # Initialize an empty list to store package IDs
+        self.publishedfileids: list[str] = []  # Initialize an empty list for publishedfileids
         self.settings_controller = settings_controller
         self.rentry_auth_code = rentry_auth_code
 
@@ -179,9 +169,7 @@ class RentryImport:
             self.input_dialog()  # Call the input_dialog method to set up the UI
         else:
             # Retrieve auth code from user settings
-            _HEADERS.update(
-                {"rentry-auth": settings_controller.settings.rentry_auth_code}
-            )
+            _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})
             self.rentry_auth_code = True
             self.input_dialog()  # Call the input_dialog method to set up the UI
 
@@ -232,55 +220,31 @@ class RentryImport:
             # Determine the raw URL based on the provided link
             if self.rentry_auth_code:
                 logger.debug("Using rentry-auth code to fetch rentry.co content.")
-                raw_url = (
-                    rentry_link
-                    if rentry_link.endswith("/raw")
-                    else f"{rentry_link}/raw"
-                )
-                response = requests.get(
-                    raw_url, headers=_HEADERS
-                )  # Fetch the content from the raw URL
+                raw_url = rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
+                response = requests.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
             else:
                 logger.debug("Fetching rentry.co content without rentry-auth.")
-                raw_url = (
-                    rentry_link
-                    if rentry_link.endswith("/edit")
-                    else f"{rentry_link}/edit"
-                )
+                raw_url = rentry_link if rentry_link.endswith("/edit") else f"{rentry_link}/edit"
                 response = requests.get(raw_url)  # Fetch the content from the edit URL
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
-                logger.debug(
-                    f"Fetched rentry.co content successfully. Content: {page_content}"
-                )
+                logger.debug(f"Fetched rentry.co content successfully. Content: {page_content}")
 
                 # Define regex pattern for both variations of 'packageid' and 'packageId'
-                packageid_pattern = (
-                    r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
-                )
+                packageid_pattern = r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
                 matches = re.findall(packageid_pattern, page_content)
                 # Find all matches in the content
-                self.package_ids = [
-                    match[0] if match[0] else match[1]
-                    for match in matches
-                    if match[0] or match[1]
-                ]
+                self.package_ids = [match[0] if match[0] else match[1] for match in matches if match[0] or match[1]]
                 logger.info("Parsed package_ids successfully.")
-                logger.debug(
-                    f"Number of package_ids found: {str(len(self.package_ids))}"
-                )
+                logger.debug(f"Number of package_ids found: {str(len(self.package_ids))}")
                 # Define regex pattern for publishedfileid in format '?id=digits'
                 publishedfileid_pattern = r"\?id=(\d+)"
                 # Find all publishedfileid matches in the content
-                self.publishedfileids = re.findall(
-                    publishedfileid_pattern, page_content
-                )
+                self.publishedfileids = re.findall(publishedfileid_pattern, page_content)
                 logger.info("Parsed publishedfileid successfully.")
-                logger.debug(
-                    f"Number of publishedfileid found: {str(len(self.publishedfileids))}"
-                )
+                logger.debug(f"Number of publishedfileid found: {str(len(self.publishedfileids))}")
             else:
                 # Handle non-200 responses
                 RentryError().show_response_error(response)
@@ -290,14 +254,10 @@ class RentryImport:
             RentryError().show_request_exception(e)
         except Exception as e:
             # Handle any other exceptions that occur during the process
-            logger.error(
-                f"An error occurred while fetching rentry.co content: {str(e)}"
-            )
+            logger.error(f"An error occurred while fetching rentry.co content: {str(e)}")
             show_fatal_error(
                 title=translate("RentryImport", "Error"),
-                text=translate("RentryImport", "An error occurred: {e}").format(
-                    e=str(e)
-                ),
+                text=translate("RentryImport", "An error occurred: {e}").format(e=str(e)),
             )
 
 
@@ -312,15 +272,9 @@ class RentryError:
             response (dict[str, Any]): A dictionary containing the response details from the upload attempt.
         """
         error_content = response.get("content", "Unknown")  # Extract error content
-        errors = [
-            error.strip()
-            for error in response.get("errors", "").split(".")
-            if error.strip()
-        ]
+        errors = [error.strip() for error in response.get("errors", "").split(".") if error.strip()]
 
-        logger.error(
-            f"Rentry upload process failed with Error: {error_content}"
-        )  # Log main error
+        logger.error(f"Rentry upload process failed with Error: {error_content}")  # Log main error
 
         if errors:
             for error in errors:
@@ -339,14 +293,10 @@ class RentryError:
         Args:
             response (requests.Response): The response object containing status code and reason.
         """
-        logger.warning(
-            f"Rentry returned status code: {response.status_code}. Reason: {response.reason}"
-        )
+        logger.warning(f"Rentry returned status code: {response.status_code}. Reason: {response.reason}")
         InformationBox(
             title=translate("RentryError", "Failed to fetch Rentry Content"),
-            text=translate("RentryError", "Rentry returned status code: {code}").format(
-                code=response.status_code
-            ),
+            text=translate("RentryError", "Rentry returned status code: {code}").format(code=response.status_code),
             information=translate(
                 "RentryError",
                 "RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.",
