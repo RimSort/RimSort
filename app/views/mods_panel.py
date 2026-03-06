@@ -1008,7 +1008,10 @@ class ModListWidget(QListWidget):
         translation_mods = []
 
         # Optimized: iterate through Steam metadata only once and extract all needed data
-        for pfid, steam_mod_data in self.metadata_manager.external_steam_metadata.items():
+        for (
+            pfid,
+            steam_mod_data,
+        ) in self.metadata_manager.external_steam_metadata.items():
             tags = steam_mod_data.get("tags", [])
             if not tags:
                 continue
@@ -1051,7 +1054,10 @@ class ModListWidget(QListWidget):
                 {
                     "pfid": pfid,
                     "name": trans_name or f"Unknown ({pfid})",
-                    "url": steam_mod_data.get("url", f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"),
+                    "url": steam_mod_data.get(
+                        "url",
+                        f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}",
+                    ),
                     "similarity": similarity,
                 }
             )
@@ -4299,4 +4305,7 @@ class ModsPanel(QWidget):
                 self._on_toggle_translation_status(True)
         else:
             logger.info("No new translation mods added (maybe already active).")
-            show_warning(self.tr("No New Translations"), self.tr("All found translation mods are already active."))
+            show_warning(
+                self.tr("No New Translations"),
+                self.tr("All found translation mods are already active."),
+            )

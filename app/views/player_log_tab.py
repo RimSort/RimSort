@@ -907,7 +907,10 @@ class PlayerLogTab(QWidget):
                 "exceptions": 0,
             }
             with open(self.player_log_path, "r", encoding="utf-8", errors="ignore") as f:
-                total_chunks = max(1, (self.player_log_path.stat().st_size + chunk_size - 1) // chunk_size)
+                total_chunks = max(
+                    1,
+                    (self.player_log_path.stat().st_size + chunk_size - 1) // chunk_size,
+                )
                 chunk_cnt = 0
                 self.progress_bar.setTextVisible(True)
                 self.progress_bar.setFormat(self.tr("Reading file... %p%"))
@@ -1296,7 +1299,11 @@ class PlayerLogTab(QWidget):
                 self.log_stats["exceptions"] += 1
 
     def apply_filter(
-        self, new_content: str = "", clear_log: bool = False, chunk_size: int = 1024, filter_type: str = ""
+        self,
+        new_content: str = "",
+        clear_log: bool = False,
+        chunk_size: int = 1024,
+        filter_type: str = "",
     ) -> None:
         """Apply the selected filter and mod name filter to the log content more efficiently."""
         if clear_log:
