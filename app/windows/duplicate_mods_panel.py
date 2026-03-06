@@ -52,7 +52,9 @@ class DuplicateModsPanel(BaseModsPanel):
 
         button_configs = self._get_base_button_configs()
         self._extend_button_configs_with_steam_actions(button_configs)
-        button_configs.append(self._create_delete_button_config(self.tr("Delete Selected Mods")))
+        button_configs.append(
+            self._create_delete_button_config(self.tr("Delete Selected Mods"))
+        )
         self._setup_buttons_from_config(button_configs)
 
         # Populate the table with duplicate mod data
@@ -76,7 +78,9 @@ class DuplicateModsPanel(BaseModsPanel):
                     if metadata:
                         mod_list.append((uuid, metadata))
                     else:
-                        logger.warning(f"Metadata not found for UUID: {uuid} in package group {packageid}")
+                        logger.warning(
+                            f"Metadata not found for UUID: {uuid} in package group {packageid}"
+                        )
                 if mod_list:  # Only add groups that have mods
                     groups[packageid] = mod_list
 

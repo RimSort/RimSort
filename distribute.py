@@ -138,13 +138,21 @@ def build_steamworkspy(sdk_url: str | None = None, sdk_zip: str | None = None) -
         "exit",
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
-    STEAMWORKS_SDK_URL = sdk_url if sdk_url else "https://partner.steamgames.com/downloads/steamworks_sdk_163.zip"
+    STEAMWORKS_SDK_URL = (
+        sdk_url
+        if sdk_url
+        else "https://partner.steamgames.com/downloads/steamworks_sdk_163.zip"
+    )
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
     STEAMWORKS_SDK_HEADER_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk", "steam")
-    STEAMWORKS_SDK_REDIST_BIN_PATH = os.path.join(STEAMWORKS_SDK_PATH, "redistributable_bin")
-    STEAMWORKS_SDK_APILIB_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.lib")
+    STEAMWORKS_SDK_REDIST_BIN_PATH = os.path.join(
+        STEAMWORKS_SDK_PATH, "redistributable_bin"
+    )
+    STEAMWORKS_SDK_APILIB_PATH = os.path.join(
+        STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.lib"
+    )
     STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api.lib")
     STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "libs", "steam_api.lib")
 
@@ -152,50 +160,94 @@ def build_steamworkspy(sdk_url: str | None = None, sdk_zip: str | None = None) -
 
     if _SYSTEM == "Darwin":
         if _ARCH == "64bit":
-            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "osx", "libsteam_api.dylib")
+            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "osx", "libsteam_api.dylib"
+            )
         else:
             print(f"Unsupported ARCH: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
             sys.exit()
-        STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "libsteam_api.dylib")
-        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libs", "libsteam_api.dylib")
+        STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
+            STEAMWORKS_PY_PATH, "libsteam_api.dylib"
+        )
+        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+            _CWD, "libs", "libsteam_api.dylib"
+        )
         COMPILE_CMD = DARWIN_COMPILE_CMD
-        STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_DARWIN)
+        STEAMWORKSPY_BIN_PATH = os.path.join(
+            STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_DARWIN
+        )
         STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_DARWIN)
     elif _SYSTEM == "Linux":
         if _ARCH == "32bit":
-            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "linux32", "libsteam_api.so")
+            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "linux32", "libsteam_api.so"
+            )
 
         elif _ARCH == "64bit":
-            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "linux64", "libsteam_api.so")
+            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "linux64", "libsteam_api.so"
+            )
         else:
             print(f"Unsupported ARCH: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
             sys.exit()
-        STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "libsteam_api.so")
+        STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
+            STEAMWORKS_PY_PATH, "libsteam_api.so"
+        )
         STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libs", "libsteam_api.so")
         COMPILE_CMD = LINUX_COMPILE_CMD
         STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_LINUX)
         STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_LINUX)
     elif _SYSTEM == "Windows":
         if _ARCH == "32bit":
-            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.dll")
-            STEAMWORKS_SDK_APILIB_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.lib")
-            STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api.dll")
-            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libs", "steam_api.dll")
-            STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api.lib")
+            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.dll"
+            )
+            STEAMWORKS_SDK_APILIB_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.lib"
+            )
+            STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, "steam_api.dll"
+            )
+            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api.dll"
+            )
+            STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, "steam_api.lib"
+            )
             STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "libs", "steam_api.lib")
             COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN32
-            STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN32)
-            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_WIN32)
+            STEAMWORKSPY_BIN_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN32
+            )
+            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(
+                _CWD, "libs", STEAMWORKSPY_BIN_WIN32
+            )
         elif _ARCH == "64bit":
-            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.dll")
-            STEAMWORKS_SDK_APILIB_PATH = os.path.join(STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.lib")
-            STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api64.dll")
-            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libs", "steam_api64.dll")
-            STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api64.lib")
-            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "libs", "steam_api64.lib")
+            STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.dll"
+            )
+            STEAMWORKS_SDK_APILIB_PATH = os.path.join(
+                STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.lib"
+            )
+            STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, "steam_api64.dll"
+            )
+            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api64.dll"
+            )
+            STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, "steam_api64.lib"
+            )
+            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api64.lib"
+            )
             COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN64
-            STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN64)
-            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_WIN64)
+            STEAMWORKSPY_BIN_PATH = os.path.join(
+                STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN64
+            )
+            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(
+                _CWD, "libs", STEAMWORKSPY_BIN_WIN64
+            )
         else:
             print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
             sys.exit()
@@ -257,21 +309,29 @@ def build_steamworkspy(sdk_url: str | None = None, sdk_zip: str | None = None) -
     os.chdir(_CWD)
 
     # APILIB
-    print(f"Copying file {STEAMWORKS_SDK_APILIB_DEST_PATH} to: {STEAMWORKS_SDK_APILIB_FIN_PATH}")
+    print(
+        f"Copying file {STEAMWORKS_SDK_APILIB_DEST_PATH} to: {STEAMWORKS_SDK_APILIB_FIN_PATH}"
+    )
     shutil.copyfile(STEAMWORKS_SDK_APILIB_DEST_PATH, STEAMWORKS_SDK_APILIB_FIN_PATH)
 
     # LIBSTEAM
-    print(f"Copying file {STEAMWORKS_SDK_LIBSTEAM_DEST_PATH} to: {STEAMWORKS_SDK_LIBSTEAM_FIN_PATH}")
+    print(
+        f"Copying file {STEAMWORKS_SDK_LIBSTEAM_DEST_PATH} to: {STEAMWORKS_SDK_LIBSTEAM_FIN_PATH}"
+    )
     shutil.copyfile(STEAMWORKS_SDK_LIBSTEAM_DEST_PATH, STEAMWORKS_SDK_LIBSTEAM_FIN_PATH)
 
     # STEAMWORKSPY
     print(f"Copying file {STEAMWORKSPY_BIN_PATH} to: {STEAMWORKSPY_BIN_FIN_PATH}")
     shutil.copyfile(STEAMWORKSPY_BIN_PATH, STEAMWORKSPY_BIN_FIN_PATH)
     if _SYSTEM == "Darwin":
-        print(f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_DARWIN_LINK_PATH}")
+        print(
+            f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_DARWIN_LINK_PATH}"
+        )
         shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_DARWIN_LINK_PATH)
     elif _SYSTEM == "Linux":
-        print(f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_LINUX_LINK_PATH}")
+        print(
+            f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_LINUX_LINK_PATH}"
+        )
         shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_LINUX_LINK_PATH)
 
 
@@ -281,10 +341,14 @@ def copy_swp_libs() -> None:
     # Copy libs
     if _SYSTEM != "Windows":
         if _SYSTEM == "Darwin":
-            STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, "libs", f"SteamworksPy_{_PROCESSOR}.dylib")
+            STEAMWORKSPY_BUILT_LIB = os.path.join(
+                _CWD, "libs", f"SteamworksPy_{_PROCESSOR}.dylib"
+            )
             STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "libs", "SteamworksPy.dylib")
         elif _SYSTEM == "Linux":
-            STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, "libs", f"SteamworksPy_{_PROCESSOR}.so")
+            STEAMWORKSPY_BUILT_LIB = os.path.join(
+                _CWD, "libs", f"SteamworksPy_{_PROCESSOR}.so"
+            )
             STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "libs", "SteamworksPy.so")
         print("Copying libs for non-Windows platform")
         shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
@@ -297,7 +361,9 @@ def get_latest_todds_release() -> None:
     # If GITHUB_TOKEN is set, use it to authenticate the request
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
-    raw = handle_request("https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers)
+    raw = handle_request(
+        "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
+    )
 
     json_response = raw.json()
     tag_name = json_response["tag_name"]
@@ -317,14 +383,18 @@ def get_latest_todds_release() -> None:
         todds_executable_name = "todds.exe"
     else:
         print(f"Unsupported system {_SYSTEM} {_ARCH} {_PROCESSOR}")
-        print("Skipping todds download. The resultant RimSort build will not include todds!")
+        print(
+            "Skipping todds download. The resultant RimSort build will not include todds!"
+        )
         return
     # Try to find a valid release
     for asset in json_response["assets"]:
         if asset["name"] == target_archive:
             browser_download_url = asset["browser_download_url"]
     if "browser_download_url" not in locals():
-        print(f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}")
+        print(
+            f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}"
+        )
         return
 
     # Try to download & extract todds release from browser_download_url
@@ -339,7 +409,9 @@ def get_latest_todds_release() -> None:
             os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
     except Exception as e:
         print(f"Failed to download: {browser_download_url}")
-        print("Did the file/url change?\nDoes your environment have access to the Internet?")
+        print(
+            "Did the file/url change?\nDoes your environment have access to the Internet?"
+        )
         print(f"Error: {e}")
 
 
@@ -423,10 +495,14 @@ def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
         sys.exit(p.returncode)
 
 
-def handle_request(url: str, headers: dict[str, str] | None = None) -> requests.Response:
+def handle_request(
+    url: str, headers: dict[str, str] | None = None
+) -> requests.Response:
     raw = requests.get(url, headers=headers)
     if raw.status_code != 200:
-        raise Exception(f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}")
+        raise Exception(
+            f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}"
+        )
     return raw
 
 

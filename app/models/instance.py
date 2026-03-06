@@ -21,10 +21,16 @@ class Instance(msgspec.Struct):
     workshop_folder: str = ""
     run_args: list[str] = msgspec.field(default_factory=list)
     steamcmd_auto_clear_depot_cache: bool = True
-    steamcmd_install_path: str = str(Path(AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / DEFAULT_INSTANCE_NAME))
+    steamcmd_install_path: str = str(
+        Path(
+            AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / DEFAULT_INSTANCE_NAME
+        )
+    )
     steamcmd_ignore: bool = False
     steam_client_integration: bool = False
     # Launch game via Steam protocol to enable Steam overlay
     launch_via_steam_protocol: bool = False
-    instance_folder_override: str = ""  # Custom instance folder path, empty = use default
+    instance_folder_override: str = (
+        ""  # Custom instance folder path, empty = use default
+    )
     initial_setup: bool = True

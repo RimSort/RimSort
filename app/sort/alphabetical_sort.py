@@ -3,7 +3,9 @@ from loguru import logger
 from app.utils.metadata import MetadataManager
 
 
-def do_alphabetical_sort(dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]) -> list[str]:
+def do_alphabetical_sort(
+    dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
+) -> list[str]:
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
@@ -30,11 +32,15 @@ def do_alphabetical_sort(dependency_graph: dict[str, set[str]], active_mods_uuid
         else:
             return "name error in mod about.xml"
 
-    active_mods_alphabetized = sorted(active_mods_id_to_name.items(), key=lambda x: safe_name(x[1]), reverse=False)
+    active_mods_alphabetized = sorted(
+        active_mods_id_to_name.items(), key=lambda x: safe_name(x[1]), reverse=False
+    )
     dependencies_alphabetized = {}
     for tuple_id_name in active_mods_alphabetized:
         if tuple_id_name[0] in dependency_graph:
-            dependencies_alphabetized[tuple_id_name[0]] = dependency_graph[tuple_id_name[0]]
+            dependencies_alphabetized[tuple_id_name[0]] = dependency_graph[
+                tuple_id_name[0]
+            ]
     mods_load_order = []
     for package_id in dependencies_alphabetized:
         # Avoid repeating adding packages that have already been added
@@ -77,8 +83,12 @@ def recursively_force_insert(
         for uuid in active_mods_uuids:
             mod_package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
             if dependency_id == mod_package_id:
-                deps_id_to_name[dependency_id] = metadata_manager.internal_local_metadata[uuid]["name"]
-    deps_of_package_alphabetized = sorted(deps_id_to_name.items(), key=lambda x: x[1], reverse=False)
+                deps_id_to_name[dependency_id] = (
+                    metadata_manager.internal_local_metadata[uuid]["name"]
+                )
+    deps_of_package_alphabetized = sorted(
+        deps_id_to_name.items(), key=lambda x: x[1], reverse=False
+    )
 
     # Iterate through the list of reverse alphabetized dependencies
     # The idea is to insert at the list index so that e.g.
@@ -98,7 +108,9 @@ def recursively_force_insert(
             # want to shift that dep back. Otherwise, if no dep of dep is found, then we insert
             # at the original index normally.
             index_to_insert_at = index_just_appended
-            for e in reversed(mods_load_order[index_just_appended : mods_load_order.index(package_id)]):
+            for e in reversed(
+                mods_load_order[index_just_appended : mods_load_order.index(package_id)]
+            ):
                 if e in dependency_graph[dep_id]:
                     index_to_insert_at = mods_load_order.index(e) + 1
                     break

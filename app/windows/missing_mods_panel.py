@@ -84,7 +84,9 @@ class MissingModsPrompt(BaseModsPanel):
                 ButtonConfig(
                     button_type=ButtonType.CUSTOM,
                     text=self.tr("Download with Steam client"),
-                    custom_callback=self._create_update_callback(5, OperationMode.STEAM, "subscribe"),
+                    custom_callback=self._create_update_callback(
+                        5, OperationMode.STEAM, "subscribe"
+                    ),
                 )
             )
         self._setup_buttons_from_config(button_configs)
@@ -139,7 +141,9 @@ class MissingModsPrompt(BaseModsPanel):
             return  # Return here to exit function
 
         # If we're still here, we need to actually create a new row
-        self._create_new_missing_mod_row(name, packageid, game_versions, mod_variants, published_file_id)
+        self._create_new_missing_mod_row(
+            name, packageid, game_versions, mod_variants, published_file_id
+        )
 
     def _filter_eligible_mods(self) -> list[str]:
         """
@@ -162,14 +166,20 @@ class MissingModsPrompt(BaseModsPanel):
 
         steam_metadata = self._cached_steam_metadata
         if steam_metadata and len(steam_metadata) > 500:
-            logger.info(f"Processing large Steam metadata set with {len(steam_metadata)} items")
+            logger.info(
+                f"Processing large Steam metadata set with {len(steam_metadata)} items"
+            )
 
         variants_by_packageid: dict[str, dict[str, Any]] = {}
         if steam_metadata:
             for published_file_id, metadata in steam_metadata.items():
-                name = metadata.get("steamName", metadata.get("name", "Not found in steam database"))
+                name = metadata.get(
+                    "steamName", metadata.get("name", "Not found in steam database")
+                )
                 packageid = metadata.get("packageId", "").lower()
-                game_versions = metadata.get("gameVersions", ["Not found in steam database"])
+                game_versions = metadata.get(
+                    "gameVersions", ["Not found in steam database"]
+                )
 
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
@@ -188,7 +198,9 @@ class MissingModsPrompt(BaseModsPanel):
                     }
         return variants_by_packageid
 
-    def _add_default_entries_for_missing_packageids(self, variants_by_packageid: dict[str, dict[str, Any]]) -> None:
+    def _add_default_entries_for_missing_packageids(
+        self, variants_by_packageid: dict[str, dict[str, Any]]
+    ) -> None:
         """
         Add default entries for package IDs not found in Steam metadata.
 
@@ -204,7 +216,9 @@ class MissingModsPrompt(BaseModsPanel):
                     }
                 }
 
-    def _populate_table_from_variants(self, variants_by_packageid: dict[str, dict[str, Any]]) -> None:
+    def _populate_table_from_variants(
+        self, variants_by_packageid: dict[str, dict[str, Any]]
+    ) -> None:
         """
         Populate the table with mod variants.
 
@@ -248,7 +262,9 @@ class MissingModsPrompt(BaseModsPanel):
 
         combo_box = self.editor_table_view.indexWidget(existing_item.index())
         if not isinstance(combo_box, QComboBox):
-            logger.error(f"Expected QComboBox at row {row}, column 5, but found {type(combo_box)}")
+            logger.error(
+                f"Expected QComboBox at row {row}, column 5, but found {type(combo_box)}"
+            )
             return
 
         combo_box.addItem(published_file_id)
@@ -295,7 +311,9 @@ class MissingModsPrompt(BaseModsPanel):
         # Track the row index for this packageid
         self.packageid_to_row[packageid] = self.editor_model.rowCount() - 1
 
-    def _setup_variant_combo_box(self, items: list[QStandardItem], published_file_id: str) -> None:
+    def _setup_variant_combo_box(
+        self, items: list[QStandardItem], published_file_id: str
+    ) -> None:
         """
         Set up the combo box for variant selection.
 
@@ -319,7 +337,10 @@ class MissingModsPrompt(BaseModsPanel):
         try:
             # Cache Steam metadata to avoid repeated access
             self._cached_steam_metadata = self.metadata_manager.external_steam_metadata
-            if self._cached_steam_metadata and len(self._cached_steam_metadata.keys()) > 0:
+            if (
+                self._cached_steam_metadata
+                and len(self._cached_steam_metadata.keys()) > 0
+            ):
                 # Group mods by package ID from Steam metadata
                 variants_by_packageid = self._build_variant_data_from_steam_metadata()
 
@@ -348,6 +369,12 @@ class MissingModsPrompt(BaseModsPanel):
         if index.isValid():
             row = index.row()
             packageid = self.editor_model.item(row, 1).text()
-            variant_data = self.data_by_variants.get(packageid, {}).get(published_file_id, {})
-            self.editor_model.item(row, 0).setText(variant_data.get("name", self.DEFAULT_NOT_FOUND))
-            self.editor_model.item(row, 2).setText(str(variant_data.get("gameVersions", self.DEFAULT_NOT_FOUND)))
+            variant_data = self.data_by_variants.get(packageid, {}).get(
+                published_file_id, {}
+            )
+            self.editor_model.item(row, 0).setText(
+                variant_data.get("name", self.DEFAULT_NOT_FOUND)
+            )
+            self.editor_model.item(row, 2).setText(
+                str(variant_data.get("gameVersions", self.DEFAULT_NOT_FOUND))
+            )
