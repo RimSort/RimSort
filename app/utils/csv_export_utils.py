@@ -189,7 +189,9 @@ def _write_csv_metadata(panel: BaseModsPanel, writer: Any) -> None:
 
     # Add SteamCMD ACF path if available (AcfLogReader has this)
     acf_path = None
-    if hasattr(panel, "metadata_manager") and hasattr(panel.metadata_manager, "steamcmd_wrapper"):
+    if hasattr(panel, "metadata_manager") and hasattr(
+        panel.metadata_manager, "steamcmd_wrapper"
+    ):
         acf_path = getattr(
             panel.metadata_manager.steamcmd_wrapper,
             "steamcmd_appworkshop_acf_path",
@@ -216,7 +218,12 @@ def _write_csv_headers(panel: BaseModsPanel, writer: Any) -> None:
     headers = []
     descriptions = []
     for col in range(model.columnCount()):
-        header = model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole) or ""
+        header = (
+            model.headerData(
+                col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
+            )
+            or ""
+        )
         headers.append(header)
         descriptions.append(_get_column_description(panel, col))
 
@@ -284,7 +291,9 @@ def _get_table_model(panel: BaseModsPanel) -> Any:
         The table model object.
     """
     return (
-        panel.editor_model if hasattr(panel, "editor_model") else panel.table_view.model()  # type: ignore[attr-defined]
+        panel.editor_model
+        if hasattr(panel, "editor_model")
+        else panel.table_view.model()  # type: ignore[attr-defined]
     )
 
 
@@ -303,5 +312,8 @@ def _get_column_description(panel: BaseModsPanel, col: int) -> str:
         The column header/description string.
     """
     model = _get_table_model(panel)
-    header = model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole) or ""
+    header = (
+        model.headerData(col, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+        or ""
+    )
     return header

@@ -36,7 +36,9 @@ from app.views.dialogue import show_warning
 
 
 class EditableDelegate(QItemDelegate):
-    comment_edited_signal = Signal(list)  # signal connects to _do_update_rules_database in main_content_panel.py
+    comment_edited_signal = Signal(
+        list
+    )  # signal connects to _do_update_rules_database in main_content_panel.py
 
     def createEditor(
         self,
@@ -46,10 +48,14 @@ class EditableDelegate(QItemDelegate):
     ) -> QWidget:
         if index.column() == 4:  # Check if it's the 5th column
             model = index.model()
-            column3_value = model.index(index.row(), 2).data()  # Get the value of the 3rd column
+            column3_value = model.index(
+                index.row(), 2
+            ).data()  # Get the value of the 3rd column
 
             # Add detailed logging for debugging
-            logger.debug(f"Attempting to create editor for row {index.row()}, column {index.column()}")
+            logger.debug(
+                f"Attempting to create editor for row {index.row()}, column {index.column()}"
+            )
             logger.debug(f"Column 3 value: {column3_value}")
 
             if column3_value in [
@@ -61,13 +67,17 @@ class EditableDelegate(QItemDelegate):
 
             # Provide more informative error message if editor creation fails
             if column3_value not in ["About.xml"]:
-                error_msg = f"Editor creation failed! for Column 3 value '{column3_value}' "
+                error_msg = (
+                    f"Editor creation failed! for Column 3 value '{column3_value}' "
+                )
                 logger.error(error_msg)
 
         # Handle case where wrong column is being edited
         return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
 
-    def setEditorData(self, editor: QWidget, index: QModelIndex | QPersistentModelIndex) -> None:
+    def setEditorData(
+        self, editor: QWidget, index: QModelIndex | QPersistentModelIndex
+    ) -> None:
         if index.column() == 4:  # Only set data for the 5th column
             super().setEditorData(editor, index)
 
@@ -82,11 +92,15 @@ class EditableDelegate(QItemDelegate):
             # Send the column data back to the editor so we can update the metadata
             # edited_data = model.data(index, Qt.DisplayRole)  # Get the edited data
             column_values = [
-                model.data(model.index(index.row(), column), Qt.ItemDataRole.DisplayRole)
+                model.data(
+                    model.index(index.row(), column), Qt.ItemDataRole.DisplayRole
+                )
                 for column in range(model.columnCount())
             ]  # Get the values of all columns in the edited row
 
-            self.comment_edited_signal.emit(column_values)  # Emit the signal with column values and edited data
+            self.comment_edited_signal.emit(
+                column_values
+            )  # Emit the signal with column values and edited data
 
 
 class RuleEditor(QWidget):
@@ -118,7 +132,9 @@ class RuleEditor(QWidget):
         self.setObjectName("RuleEditor")
 
         # LAUNCH OPTIONS
-        self.block_comment_prompt = False  # Used to block comment prompt when metadata is being populated
+        self.block_comment_prompt = (
+            False  # Used to block comment prompt when metadata is being populated
+        )
         self.compact = compact
         self.edit_packageid = edit_packageid
         self.initial_mode = initial_mode
@@ -131,7 +147,9 @@ class RuleEditor(QWidget):
         )
         self.community_rules_hidden: bool = False
         self.user_rules = (
-            self.metadata_manager.external_user_rules.copy() if self.metadata_manager.external_user_rules else {}
+            self.metadata_manager.external_user_rules.copy()
+            if self.metadata_manager.external_user_rules
+            else {}
         )
         self.user_rules_hidden: bool = False
         # Can be used to get proper names for mods found in list
@@ -142,7 +160,9 @@ class RuleEditor(QWidget):
             for metadata in external_steam_metadata.values():
                 package_id = metadata.get("packageId") or metadata.get("packageid")
                 if package_id:
-                    self.steam_workshop_metadata_packageids_to_name[package_id] = metadata["name"]
+                    self.steam_workshop_metadata_packageids_to_name[package_id] = (
+                        metadata["name"]
+                    )
 
         # MOD LABEL
         self.mod_label = QLabel(self.tr("No mod currently being edited"))
@@ -169,19 +189,27 @@ class RuleEditor(QWidget):
         # local metadata
         self.local_metadata_loadAfter_label = QLabel(self.tr("About.xml (loadAfter)"))
         self.local_metadata_loadBefore_label = QLabel(self.tr("About.xml (loadBefore)"))
-        self.local_metadata_incompatibilities_label = QLabel(self.tr("About.xml (incompatibilitiesWith)"))
+        self.local_metadata_incompatibilities_label = QLabel(
+            self.tr("About.xml (incompatibilitiesWith)")
+        )
         self.local_metadata_loadAfter_list = QListWidget()
         self.local_metadata_loadBefore_list = QListWidget()
         self.local_metadata_incompatibilities_list = QListWidget()
 
         # community rules
-        self.external_community_rules_loadAfter_label = QLabel(self.tr("Community Rules (loadAfter)"))
-        self.external_community_rules_loadBefore_label = QLabel(self.tr("Community Rules (loadBefore)"))
+        self.external_community_rules_loadAfter_label = QLabel(
+            self.tr("Community Rules (loadAfter)")
+        )
+        self.external_community_rules_loadBefore_label = QLabel(
+            self.tr("Community Rules (loadBefore)")
+        )
         self.external_community_rules_incompatibilities_label = QLabel(
             self.tr("Community Rules (incompatibilitiesWith)")
         )
         self.external_community_rules_loadAfter_list = QListWidget()
-        self.external_community_rules_loadAfter_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.external_community_rules_loadAfter_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.external_community_rules_loadAfter_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
@@ -189,12 +217,16 @@ class RuleEditor(QWidget):
             )
         )
         self.external_community_rules_loadAfter_list.setAcceptDrops(True)
-        self.external_community_rules_loadAfter_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_community_rules_loadAfter_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_community_rules_loadAfter_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_community_rules_loadAfter_list
         )
         self.external_community_rules_loadBefore_list = QListWidget()
-        self.external_community_rules_loadBefore_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.external_community_rules_loadBefore_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.external_community_rules_loadBefore_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
@@ -202,13 +234,19 @@ class RuleEditor(QWidget):
             )
         )
         self.external_community_rules_loadBefore_list.setAcceptDrops(True)
-        self.external_community_rules_loadBefore_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_community_rules_loadBefore_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_community_rules_loadBefore_list
         )
-        self.external_community_rules_loadTop_checkbox = QCheckBox(self.tr("Force load at top of list"))
+        self.external_community_rules_loadTop_checkbox = QCheckBox(
+            self.tr("Force load at top of list")
+        )
         self.external_community_rules_loadTop_checkbox.setObjectName("summaryValue")
-        self.external_community_rules_loadBottom_checkbox = QCheckBox(self.tr("Force load at bottom of list"))
+        self.external_community_rules_loadBottom_checkbox = QCheckBox(
+            self.tr("Force load at bottom of list")
+        )
         self.external_community_rules_loadBottom_checkbox.setObjectName("summaryValue")
         self.external_community_rules_incompatibilities_list = QListWidget()
         self.external_community_rules_incompatibilities_list.setContextMenuPolicy(
@@ -221,16 +259,26 @@ class RuleEditor(QWidget):
             )
         )
         self.external_community_rules_incompatibilities_list.setAcceptDrops(True)
-        self.external_community_rules_incompatibilities_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_community_rules_incompatibilities_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_community_rules_incompatibilities_list.dropEvent = (  # type: ignore
             self.createDropEvent(self.external_community_rules_incompatibilities_list)
         )
         # user rules
-        self.external_user_rules_loadAfter_label = QLabel(self.tr("User Rules (loadAfter)"))
-        self.external_user_rules_loadBefore_label = QLabel(self.tr("User Rules (loadBefore)"))
-        self.external_user_rules_incompatibilities_label = QLabel(self.tr("User Rules (incompatibilitiesWith)"))
+        self.external_user_rules_loadAfter_label = QLabel(
+            self.tr("User Rules (loadAfter)")
+        )
+        self.external_user_rules_loadBefore_label = QLabel(
+            self.tr("User Rules (loadBefore)")
+        )
+        self.external_user_rules_incompatibilities_label = QLabel(
+            self.tr("User Rules (incompatibilitiesWith)")
+        )
         self.external_user_rules_loadAfter_list = QListWidget()
-        self.external_user_rules_loadAfter_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.external_user_rules_loadAfter_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.external_user_rules_loadAfter_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
@@ -238,12 +286,16 @@ class RuleEditor(QWidget):
             )
         )
         self.external_user_rules_loadAfter_list.setAcceptDrops(True)
-        self.external_user_rules_loadAfter_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_user_rules_loadAfter_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_user_rules_loadAfter_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_user_rules_loadAfter_list
         )
         self.external_user_rules_loadBefore_list = QListWidget()
-        self.external_user_rules_loadBefore_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.external_user_rules_loadBefore_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.external_user_rules_loadBefore_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
@@ -251,16 +303,24 @@ class RuleEditor(QWidget):
             )
         )
         self.external_user_rules_loadBefore_list.setAcceptDrops(True)
-        self.external_user_rules_loadBefore_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_user_rules_loadBefore_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_user_rules_loadBefore_list
         )
-        self.external_user_rules_loadTop_checkbox = QCheckBox(self.tr("Force load at top of list"))
+        self.external_user_rules_loadTop_checkbox = QCheckBox(
+            self.tr("Force load at top of list")
+        )
         self.external_user_rules_loadTop_checkbox.setObjectName("summaryValue")
-        self.external_user_rules_loadBottom_checkbox = QCheckBox(self.tr("Force load at bottom of list"))
+        self.external_user_rules_loadBottom_checkbox = QCheckBox(
+            self.tr("Force load at bottom of list")
+        )
         self.external_user_rules_loadBottom_checkbox.setObjectName("summaryValue")
         self.external_user_rules_incompatibilities_list = QListWidget()
-        self.external_user_rules_incompatibilities_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.external_user_rules_incompatibilities_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.external_user_rules_incompatibilities_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
@@ -268,7 +328,9 @@ class RuleEditor(QWidget):
             )
         )
         self.external_user_rules_incompatibilities_list.setAcceptDrops(True)
-        self.external_user_rules_incompatibilities_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
+        self.external_user_rules_incompatibilities_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_user_rules_incompatibilities_list.dropEvent = (  # type: ignore
             self.createDropEvent(self.external_user_rules_incompatibilities_list)
         )
@@ -286,29 +348,51 @@ class RuleEditor(QWidget):
         )
         # Create the table view and set the model
         self.editor_delegate = EditableDelegate()
-        self.editor_delegate.comment_edited_signal.connect(self._comment_edited)  # Connect the signal to the slot
+        self.editor_delegate.comment_edited_signal.connect(
+            self._comment_edited
+        )  # Connect the signal to the slot
         self.editor_table_view = QTableView()
         self.editor_table_view.setCornerButtonEnabled(False)
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setItemDelegate(self.editor_delegate)  # Set the delegate for editing
+        self.editor_table_view.setItemDelegate(
+            self.editor_delegate
+        )  # Set the delegate for editing
         self.editor_table_view.setEditTriggers(
             QTableView.EditTrigger.DoubleClicked | QTableView.EditTrigger.EditKeyPressed
         )  # Enable editing
         # Set default stretch for each column
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        self.editor_table_view.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
+        self.editor_table_view.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.editor_table_view.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.editor_table_view.horizontalHeader().setSectionResizeMode(
+            3, QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.editor_table_view.horizontalHeader().setSectionResizeMode(
+            4, QHeaderView.ResizeMode.Stretch
+        )
         # Editor actions
         # community rules
         self.editor_save_community_rules_icon = QIcon(
-            str(AppInfo().theme_data_folder / "default-icons" / "save_community_rules.png")
+            str(
+                AppInfo().theme_data_folder
+                / "default-icons"
+                / "save_community_rules.png"
+            )
         )
         self.editor_save_community_rules_button = QToolButton()
-        self.editor_save_community_rules_button.setToolTip(self.tr("Save rules to communityRules.json"))
-        self.editor_save_community_rules_button.setIcon(self.editor_save_community_rules_icon)
+        self.editor_save_community_rules_button.setToolTip(
+            self.tr("Save rules to communityRules.json")
+        )
+        self.editor_save_community_rules_button.setIcon(
+            self.editor_save_community_rules_icon
+        )
         self.editor_save_community_rules_button.clicked.connect(
             partial(self._save_editor_rules, rules_source="Community Rules")
         )
@@ -317,16 +401,22 @@ class RuleEditor(QWidget):
             str(AppInfo().theme_data_folder / "default-icons" / "save_user_rules.png")
         )
         self.editor_save_user_rules_button = QToolButton()
-        self.editor_save_user_rules_button.setToolTip(self.tr("Save rules to userRules.json"))
+        self.editor_save_user_rules_button.setToolTip(
+            self.tr("Save rules to userRules.json")
+        )
         self.editor_save_user_rules_button.setIcon(self.editor_save_user_rules_icon)
-        self.editor_save_user_rules_button.clicked.connect(partial(self._save_editor_rules, rules_source="User Rules"))
+        self.editor_save_user_rules_button.clicked.connect(
+            partial(self._save_editor_rules, rules_source="User Rules")
+        )
         # MODS WIDGETS
         # Mods search
         self.mods_search = QLineEdit()
         self.mods_search.setClearButtonEnabled(True)
         self.mods_search.textChanged.connect(self.signal_mods_search)
         self.mods_search.setPlaceholderText(self.tr("Search mods by name"))
-        self.mods_search_clear_button: object | QToolButton | None = self.mods_search.findChild(QToolButton)
+        self.mods_search_clear_button: object | QToolButton | None = (
+            self.mods_search.findChild(QToolButton)
+        )
         if type(self.mods_search_clear_button) is not QToolButton:
             raise Exception("Failed to find clear button in QLineEdit")
         if self.mods_search_clear_button is not None:
@@ -361,28 +451,72 @@ class RuleEditor(QWidget):
             )
         )
         # Build the details layout
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_loadAfter_label)
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_loadAfter_list)
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_loadBefore_label)
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_loadBefore_list)
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_incompatibilities_label)
-        self.internal_local_metadata_layout.addWidget(self.local_metadata_incompatibilities_list)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadAfter_label)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadAfter_list)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadBefore_label)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadBefore_list)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadTop_checkbox)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_loadBottom_checkbox)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_incompatibilities_label)
-        self.external_community_rules_layout.addWidget(self.external_community_rules_incompatibilities_list)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadAfter_label)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadAfter_list)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadBefore_label)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadBefore_list)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadTop_checkbox)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_loadBottom_checkbox)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_incompatibilities_label)
-        self.external_user_rules_layout.addWidget(self.external_user_rules_incompatibilities_list)
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_loadAfter_label
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_loadAfter_list
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_loadBefore_label
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_loadBefore_list
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_incompatibilities_label
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_incompatibilities_list
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadAfter_label
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadAfter_list
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadBefore_label
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadBefore_list
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadTop_checkbox
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadBottom_checkbox
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_incompatibilities_label
+        )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_incompatibilities_list
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadAfter_label
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadAfter_list
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBefore_label
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBefore_list
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadTop_checkbox
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBottom_checkbox
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_incompatibilities_label
+        )
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_incompatibilities_list
+        )
         self.details_layout.addLayout(self.internal_local_metadata_layout)
         self.details_layout.addLayout(self.external_community_rules_layout)
         self.details_layout.addLayout(self.external_user_rules_layout)
@@ -413,9 +547,13 @@ class RuleEditor(QWidget):
 
         # Allow toggle layouts based on context
         if self.compact:
-            self._toggle_details_layout_widgets(layout=self.internal_local_metadata_layout, override=True)
+            self._toggle_details_layout_widgets(
+                layout=self.internal_local_metadata_layout, override=True
+            )
         else:
-            self._toggle_details_layout_widgets(layout=self.internal_local_metadata_layout, override=False)
+            self._toggle_details_layout_widgets(
+                layout=self.internal_local_metadata_layout, override=False
+            )
         # If no initial packageid supplied, lock checkboxes
         if not self.edit_packageid:
             self.external_community_rules_loadTop_checkbox.setCheckable(False)
@@ -424,11 +562,19 @@ class RuleEditor(QWidget):
             self.external_user_rules_loadBottom_checkbox.setCheckable(False)
         # Initial mode
         if self.initial_mode == "community_rules":
-            self._toggle_details_layout_widgets(layout=self.external_community_rules_layout, override=False)
-            self._toggle_details_layout_widgets(layout=self.external_user_rules_layout, override=False)
+            self._toggle_details_layout_widgets(
+                layout=self.external_community_rules_layout, override=False
+            )
+            self._toggle_details_layout_widgets(
+                layout=self.external_user_rules_layout, override=False
+            )
         elif self.initial_mode == "user_rules":
-            self._toggle_details_layout_widgets(layout=self.external_community_rules_layout, override=False)
-            self._toggle_details_layout_widgets(layout=self.external_user_rules_layout, override=False)
+            self._toggle_details_layout_widgets(
+                layout=self.external_community_rules_layout, override=False
+            )
+            self._toggle_details_layout_widgets(
+                layout=self.external_user_rules_layout, override=False
+            )
         # Connect these after metadata population
         self.external_community_rules_loadTop_checkbox.stateChanged.connect(
             partial(self._toggle_loadTop_rule, "Community Rules")
@@ -436,7 +582,9 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "Community Rules")
         )
-        self.external_user_rules_loadTop_checkbox.stateChanged.connect(partial(self._toggle_loadTop_rule, "User Rules"))
+        self.external_user_rules_loadTop_checkbox.stateChanged.connect(
+            partial(self._toggle_loadTop_rule, "User Rules")
+        )
         self.external_user_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "User Rules")
         )
@@ -446,7 +594,9 @@ class RuleEditor(QWidget):
         # Set the window size
         self.resize(900, 600)
 
-    def createDropEvent(self, destination_list: QListWidget) -> Callable[[QDropEvent], None]:
+    def createDropEvent(
+        self, destination_list: QListWidget
+    ) -> Callable[[QDropEvent], None]:
         def dropEvent(event: QDropEvent) -> None:
             # If the item was sourced from mods list
             if event.source() == self.mods_list and self.edit_packageid:
@@ -470,7 +620,10 @@ class RuleEditor(QWidget):
                 elif destination_list is self.external_community_rules_loadBefore_list:
                     mode = ["Community Rules", "loadBefore"]
 
-                elif destination_list is self.external_community_rules_incompatibilities_list:
+                elif (
+                    destination_list
+                    is self.external_community_rules_incompatibilities_list
+                ):
                     mode = ["Community Rules", "incompatibleWith"]
 
                 elif destination_list is self.external_user_rules_loadAfter_list:
@@ -479,7 +632,9 @@ class RuleEditor(QWidget):
                 elif destination_list is self.external_user_rules_loadBefore_list:
                     mode = ["User Rules", "loadBefore"]
 
-                elif destination_list is self.external_user_rules_incompatibilities_list:
+                elif (
+                    destination_list is self.external_user_rules_incompatibilities_list
+                ):
                     mode = ["User Rules", "incompatibleWith"]
 
                 else:
@@ -490,9 +645,15 @@ class RuleEditor(QWidget):
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
-                    packageid_value = self.editor_model.item(row, 1)  # Get the item in column 2 (index 1)
-                    rule_source_value = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
-                    rule_type_value = self.editor_model.item(row, 3)  # Get the item in column 4 (index 3)
+                    packageid_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
                     # Search table for rows that match.
                     if (
                         (packageid_value and rule_data == packageid_value.text())
@@ -545,7 +706,9 @@ class RuleEditor(QWidget):
                     metadata[self.edit_packageid][mode[1]] = {}
                 if not metadata[self.edit_packageid][mode[1]].get(rule_data):
                     metadata[self.edit_packageid][mode[1]][rule_data] = {}
-                metadata[self.edit_packageid][mode[1]][rule_data]["name"] = item_label_text
+                metadata[self.edit_packageid][mode[1]][rule_data]["name"] = (
+                    item_label_text
+                )
                 metadata[self.edit_packageid][mode[1]][rule_data]["comment"] = comment
             else:
                 event.ignore()
@@ -565,7 +728,9 @@ class RuleEditor(QWidget):
     ) -> None:
         if not self.edit_packageid:
             return
-        logger.debug(f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageid} with comment: {comment}")
+        logger.debug(
+            f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageid} with comment: {comment}"
+        )
         # Create the standard items for each column
         items = [
             QStandardItem(name),
@@ -625,14 +790,26 @@ class RuleEditor(QWidget):
                 logger.error(f"Invalid rule source!: {instruction[2]}")
                 return
             # Edit based on type of rule
-            if instruction[3] == "loadAfter" or instruction[3] == "loadBefore" or instruction[3] == "incompatibleWith":
-                metadata[self.edit_packageid][instruction[3]][instruction[1]]["comment"] = instruction[4]
+            if (
+                instruction[3] == "loadAfter"
+                or instruction[3] == "loadBefore"
+                or instruction[3] == "incompatibleWith"
+            ):
+                metadata[self.edit_packageid][instruction[3]][instruction[1]][
+                    "comment"
+                ] = instruction[4]
             elif instruction[3] == "loadTop":
-                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[4]
+                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
+                    4
+                ]
             elif instruction[3] == "loadBottom":
-                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[4]
+                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
+                    4
+                ]
 
-    def _create_list_item(self, _list: QListWidget, title: str, metadata: str | None = None) -> None:
+    def _create_list_item(
+        self, _list: QListWidget, title: str, metadata: str | None = None
+    ) -> None:
         # Create our list item
         item = QListWidgetItem()
         if metadata:
@@ -678,7 +855,9 @@ class RuleEditor(QWidget):
                     and metadata["packageid"].lower() == self.edit_packageid.lower()
                 ):
                     self.edit_name = metadata["name"]
-                    self.mod_label.setText(self.tr("Editing rules for: {name}").format(name=self.edit_name))
+                    self.mod_label.setText(
+                        self.tr("Editing rules for: {name}").format(name=self.edit_name)
+                    )
                     # All Lowercase!!!
                     # cSpell:enableCompoundWords
                     rule_types = {
@@ -694,7 +873,9 @@ class RuleEditor(QWidget):
                                 rules = [rules]
                             if isinstance(rules, list):
                                 for rule in rules:
-                                    name = self.steam_workshop_metadata_packageids_to_name.get(rule.lower(), rule)
+                                    name = self.steam_workshop_metadata_packageids_to_name.get(
+                                        rule.lower(), rule
+                                    )
                                     # Ensure name is a string
                                     name_str = str(name) if name is not None else rule
                                     self._create_list_item(_list=_list, title=name_str)
@@ -757,7 +938,9 @@ class RuleEditor(QWidget):
                         continue
                     for rule_id, rule_data in metadata[rule_type].items():
                         rule_name = _get_first_item_or_value(rule_data.get("name", ""))
-                        rule_comment = _get_first_item_or_value(rule_data.get("comment", ""))
+                        rule_comment = _get_first_item_or_value(
+                            rule_data.get("comment", "")
+                        )
 
                         if not rule_name:
                             # Set rule name to the packageid if it's empty
@@ -798,7 +981,9 @@ class RuleEditor(QWidget):
                             packageid=self.edit_packageid,
                             rule_source=rule_source,
                             rule_type="loadTop",
-                            comment=_get_first_item_or_value(rule_data.get("comment", "")),
+                            comment=_get_first_item_or_value(
+                                rule_data.get("comment", "")
+                            ),
                             hidden=hidden,
                         )
 
@@ -813,7 +998,9 @@ class RuleEditor(QWidget):
                             packageid=self.edit_packageid,
                             rule_source=rule_source,
                             rule_type="loadBottom",
-                            comment=_get_first_item_or_value(rule_data.get("comment", "")),
+                            comment=_get_first_item_or_value(
+                                rule_data.get("comment", "")
+                            ),
                             hidden=hidden,
                         )
 
@@ -881,9 +1068,15 @@ class RuleEditor(QWidget):
         # Search for & remove the rule's row entry from the editor table
         for row in range(self.editor_model.rowCount()):
             # Define criteria
-            packageid_value = self.editor_model.item(row, 1)  # Get the item in column 2 (index 1)
-            rule_source_value = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
-            rule_type_value = self.editor_model.item(row, 3)  # Get the item in column 4 (index 3)
+            packageid_value = self.editor_model.item(
+                row, 1
+            )  # Get the item in column 2 (index 1)
+            rule_source_value = self.editor_model.item(
+                row, 2
+            )  # Get the item in column 3 (index 2)
+            rule_type_value = self.editor_model.item(
+                row, 3
+            )  # Get the item in column 4 (index 3)
             # Search table for rows that match
             if (
                 (packageid_value and rule_data in packageid_value.text())
@@ -892,7 +1085,9 @@ class RuleEditor(QWidget):
             ):  # Remove row if criteria matches search
                 self.editor_model.removeRow(row)
         # Remove rule from the database
-        if self.edit_packageid is not None and metadata.get(self.edit_packageid, {}).get(mode[1], {}).get(rule_data):
+        if self.edit_packageid is not None and metadata.get(
+            self.edit_packageid, {}
+        ).get(mode[1], {}).get(rule_data):
             metadata[self.edit_packageid][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
@@ -910,7 +1105,9 @@ class RuleEditor(QWidget):
         self._clear_widget()
         self._populate_from_metadata()
 
-    def _toggle_details_layout_widgets(self, layout: QVBoxLayout, override: bool = False) -> None:
+    def _toggle_details_layout_widgets(
+        self, layout: QVBoxLayout, override: bool = False
+    ) -> None:
         visibility = None
         # Iterate through all widgets in layout
         for i in range(layout.count()):
@@ -934,33 +1131,47 @@ class RuleEditor(QWidget):
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = True
                 self.local_metadata_button.setText(self.tr("Show About.xml rules"))
-                self._toggle_editor_table_rows(rule_type="About.xml", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="About.xml", visibility=visibility
+                )
             elif layout is self.external_community_rules_layout:
                 self.community_rules_hidden = True
                 self.community_rules_button.setText(self.tr("Edit Community Rules"))
-                self._toggle_editor_table_rows(rule_type="Community Rules", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="Community Rules", visibility=visibility
+                )
             elif layout is self.external_user_rules_layout:
                 self.user_rules_hidden = True
                 self.user_rules_button.setText(self.tr("Edit User Rules"))
-                self._toggle_editor_table_rows(rule_type="User Rules", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="User Rules", visibility=visibility
+                )
         else:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = False
                 self.local_metadata_button.setText(self.tr("Hide About.xml rules"))
-                self._toggle_editor_table_rows(rule_type="About.xml", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="About.xml", visibility=visibility
+                )
             elif layout is self.external_community_rules_layout:
                 self.community_rules_hidden = False
                 self.community_rules_button.setText(self.tr("Lock Community Rules"))
-                self._toggle_editor_table_rows(rule_type="Community Rules", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="Community Rules", visibility=visibility
+                )
             elif layout is self.external_user_rules_layout:
                 self.user_rules_hidden = False
                 self.user_rules_button.setText(self.tr("Lock User Rules"))
-                self._toggle_editor_table_rows(rule_type="User Rules", visibility=visibility)
+                self._toggle_editor_table_rows(
+                    rule_type="User Rules", visibility=visibility
+                )
 
     def _toggle_editor_table_rows(self, rule_type: str, visibility: bool) -> None:
         for row in range(self.editor_model.rowCount()):
             item = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
-            if item and item.text() == rule_type:  # Toggle row visibility based on the value
+            if (
+                item and item.text() == rule_type
+            ):  # Toggle row visibility based on the value
                 self.editor_table_view.setRowHidden(row, visibility)
 
     def _toggle_loadTop_rule(self, rule_source: str, state: int) -> None:
@@ -1008,18 +1219,34 @@ class RuleEditor(QWidget):
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
-                    packageid_value = self.editor_model.item(row, 1)  # Get the item in column 2 (index 1)
-                    rule_source_value = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
-                    rule_type_value = self.editor_model.item(row, 3)  # Get the item in column 4 (index 3)
+                    packageid_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
                     # Search table for rows that match
                     if (
-                        (packageid_value and self.edit_packageid in packageid_value.text())
-                        and (rule_source_value and rule_source in rule_source_value.text())
+                        (
+                            packageid_value
+                            and self.edit_packageid in packageid_value.text()
+                        )
+                        and (
+                            rule_source_value
+                            and rule_source in rule_source_value.text()
+                        )
                         and (rule_type_value and "loadTop" in rule_type_value.text())
                     ):  # Remove row if criteria matches search
                         self.editor_model.removeRow(row)
                 # Remove rule from the database
-                if metadata.get(self.edit_packageid, {}).get("loadTop", {}).get("value"):
+                if (
+                    metadata.get(self.edit_packageid, {})
+                    .get("loadTop", {})
+                    .get("value")
+                ):
                     metadata[self.edit_packageid].pop("loadTop")
 
     def _toggle_loadBottom_rule(self, rule_source: str, state: int) -> None:
@@ -1067,18 +1294,34 @@ class RuleEditor(QWidget):
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
-                    packageid_value = self.editor_model.item(row, 1)  # Get the item in column 2 (index 1)
-                    rule_source_value = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
-                    rule_type_value = self.editor_model.item(row, 3)  # Get the item in column 4 (index 3)
+                    packageid_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
                     # Search table for rows that match
                     if (
-                        (packageid_value and self.edit_packageid in packageid_value.text())
-                        and (rule_source_value and rule_source in rule_source_value.text())
+                        (
+                            packageid_value
+                            and self.edit_packageid in packageid_value.text()
+                        )
+                        and (
+                            rule_source_value
+                            and rule_source in rule_source_value.text()
+                        )
                         and (rule_type_value and "loadBottom" in rule_type_value.text())
                     ):  # Remove row if criteria matches search
                         self.editor_model.removeRow(row)
                 # Remove rule from the database
-                if metadata.get(self.edit_packageid, {}).get("loadBottom", {}).get("value"):
+                if (
+                    metadata.get(self.edit_packageid, {})
+                    .get("loadBottom", {})
+                    .get("value")
+                ):
                     metadata[self.edit_packageid].pop("loadBottom")
 
     def _show_comment_input(self) -> str:
@@ -1103,8 +1346,12 @@ class RuleEditor(QWidget):
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
         context_item = self.mods_list.itemAt(point)
-        open_mod = context_menu.addAction(self.tr("Open this mod in the editor"))  # open mod in editor
-        open_mod.triggered.connect(partial(self._open_mod_in_editor, context_item=context_item))
+        open_mod = context_menu.addAction(
+            self.tr("Open this mod in the editor")
+        )  # open mod in editor
+        open_mod.triggered.connect(
+            partial(self._open_mod_in_editor, context_item=context_item)
+        )
         _ = context_menu.exec_(self.mods_list.mapToGlobal(point))
 
     def ruleItemContextMenuEvent(self, point: QPoint, _list: QListWidget) -> None:
@@ -1112,7 +1359,9 @@ class RuleEditor(QWidget):
         if context_item is None:
             return
         context_menu = QMenu(self)  # Rule item context menu event
-        remove_rule = context_menu.addAction(self.tr("Remove this rule"))  # remove this rule
+        remove_rule = context_menu.addAction(
+            self.tr("Remove this rule")
+        )  # remove this rule
         remove_rule.triggered.connect(
             partial(
                 self._remove_rule,

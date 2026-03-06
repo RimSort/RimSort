@@ -43,7 +43,12 @@ class TestBinaryChoiceDialog:
             try:
                 dialog_args: dict[
                     str,
-                    str | QMessageBox.StandardButton | bool | QMessageBox.Icon | QWidget | None,
+                    str
+                    | QMessageBox.StandardButton
+                    | bool
+                    | QMessageBox.Icon
+                    | QWidget
+                    | None,
                 ] = {
                     "title": title,
                     "text": text,
@@ -85,9 +90,15 @@ class TestBinaryChoiceDialog:
             if negative_btn is not None:
                 assert dialog.button(negative_btn)
             if default_negative:
-                assert dialog.defaultButton().text() == dialog.button(dialog.negative_btn).text()
+                assert (
+                    dialog.defaultButton().text()
+                    == dialog.button(dialog.negative_btn).text()
+                )
             else:
-                assert dialog.defaultButton().text() == dialog.button(dialog.positive_btn).text()
+                assert (
+                    dialog.defaultButton().text()
+                    == dialog.button(dialog.positive_btn).text()
+                )
 
             if details is not None:
                 assert dialog.detailedText() == details
@@ -185,8 +196,12 @@ class TestBinaryChoiceDialog:
 
     @patch.object(BinaryChoiceDialog, "exec")
     def test_exec_is_positive(self, mock_exec: MagicMock, qtbot: QtBot) -> None:
-        def _test_exec_is_positive(dialog: BinaryChoiceDialog, positive_clicked: bool) -> None:
-            with patch.object(BinaryChoiceDialog, "clickedButton") as mock_clickedButton:
+        def _test_exec_is_positive(
+            dialog: BinaryChoiceDialog, positive_clicked: bool
+        ) -> None:
+            with patch.object(
+                BinaryChoiceDialog, "clickedButton"
+            ) as mock_clickedButton:
                 mock_clickedButton.return_value = dialog.button(
                     dialog.positive_btn if positive_clicked else dialog.negative_btn
                 )

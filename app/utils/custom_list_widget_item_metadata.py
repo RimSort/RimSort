@@ -75,19 +75,29 @@ class CustomListWidgetItemMetadata:
             )
         else:
             self.warning_toggled = warning_toggled
-        self.invalid = invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
-        self.mismatch = mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
+        self.invalid = (
+            invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
+        )
+        self.mismatch = (
+            mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
+        )
         if mod_color is None:
             self.mod_color = auxdb_get_mod_color(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.mod_color = mod_color
-        self.alternative = alternative if alternative is not None else self.get_alternative_by_uuid(uuid)
+        self.alternative = (
+            alternative
+            if alternative is not None
+            else self.get_alternative_by_uuid(uuid)
+        )
         # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
         self.list_type = list_type
 
-        logger.debug(f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}")
+        logger.debug(
+            f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
+        )
         if user_notes == "":
             self.user_notes = auxdb_get_mod_user_notes(
                 settings_controller, uuid, aux_metadata_controller, aux_metadata_session

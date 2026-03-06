@@ -72,7 +72,9 @@ class AppController(QObject):
         self.settings.load()
         self.initialize_translator(self.settings.language)
         self.settings_dialog = SettingsDialog()
-        self.settings_controller = SettingsController(model=self.settings, view=self.settings_dialog)
+        self.settings_controller = SettingsController(
+            model=self.settings, view=self.settings_dialog
+        )
 
     def initialize_theme_controller(self) -> None:
         """Initializes the ThemeController."""
@@ -86,7 +88,9 @@ class AppController(QObject):
         else:
             print(f"Translation file {path} not found.")
 
-        qt_translations_path = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+        qt_translations_path = QLibraryInfo.path(
+            QLibraryInfo.LibraryPath.TranslationsPath
+        )
 
         qt_file_path = os.path.join(qt_translations_path, f"qtbase_{language}.qm")
         if qt_translator.load(qt_file_path):
@@ -111,7 +115,9 @@ class AppController(QObject):
 
     def initialize_metadata_manager(self) -> None:
         """Initializes the MetadataManager."""
-        self.metadata_manager = MetadataManager.instance(settings_controller=self.settings_controller)
+        self.metadata_manager = MetadataManager.instance(
+            settings_controller=self.settings_controller
+        )
 
     def initialize_main_window(self) -> None:
         """Initializes the main window and its controller."""
