@@ -101,18 +101,14 @@ class DescriptionWidget(QTextBrowser):
 
         # Span text size
         span_size_pattern = r'<span style="font-size:(\d+)px">(.*?)</span>'
-        html_text = re.sub(
-            span_size_pattern, r'<span style="font-size:\1px">\2</span>', html_text
-        )
+        html_text = re.sub(span_size_pattern, r'<span style="font-size:\1px">\2</span>', html_text)
 
         # Convert explicit string \n to <br>
         html_text = html_text.replace("\\n", "<br>")
 
         # Image tags
         img_pattern = r"\[img\](.*?)\[/img\]"
-        html_text = re.sub(
-            img_pattern, "" if remove_img else r'<img src="\1">', html_text
-        )
+        html_text = re.sub(img_pattern, "" if remove_img else r'<img src="\1">', html_text)
         html_text = html_text.strip()
 
         # Remove empty tr, td, tables and lists if they exist
@@ -121,8 +117,6 @@ class DescriptionWidget(QTextBrowser):
 
         # If there are any html tags, wrap with html
         if re.search(r"<[^>]+>", html_text):
-            html_text = (
-                f'<html style="white-space: {white_space}">' + html_text + "</html>"
-            )
+            html_text = f'<html style="white-space: {white_space}">' + html_text + "</html>"
 
         return html_text

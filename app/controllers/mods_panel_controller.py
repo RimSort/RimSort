@@ -14,9 +14,7 @@ from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
-    def __init__(
-        self, view: ModsPanel, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, view: ModsPanel, settings_controller: SettingsController) -> None:
         super().__init__()
 
         self.mods_panel = view
@@ -35,41 +33,18 @@ class ModsPanelController(QObject):
             partial(self._change_visibility_of_mods_with_warnings_errors, "errors")
         )
         # New mods filter label (only when save-comparison feature enabled)
-        if (
-            hasattr(self.mods_panel, "new_text")
-            and self.settings_controller.settings.show_save_comparison_indicators
-        ):
-            self.mods_panel.new_text.clicked.connect(
-                self._change_visibility_of_new_mods
-            )
-        EventBus().reset_warnings_signal.connect(
-            self._on_menu_bar_reset_warnings_triggered
-        )
-        EventBus().reset_mod_colors_signal.connect(
-            self._on_menu_bar_reset_mod_colors_triggered
-        )
-        EventBus().do_change_mod_coloring_mode.connect(
-            self._on_change_mod_coloring_mode
-        )
-        EventBus().filters_changed_in_active_modlist.connect(
-            self._on_filters_changed_in_active_modlist
-        )
-        EventBus().filters_changed_in_inactive_modlist.connect(
-            self._on_filters_changed_in_inactive_modlist
-        )
-        EventBus().do_delete_outdated_entries_in_aux_db.connect(
-            self.delete_outdated_aux_db_entries
-        )
-        EventBus().do_set_all_entries_in_aux_db_as_outdated.connect(
-            self.do_all_entries_in_aux_db_as_outdated
-        )
+        if hasattr(self.mods_panel, "new_text") and self.settings_controller.settings.show_save_comparison_indicators:
+            self.mods_panel.new_text.clicked.connect(self._change_visibility_of_new_mods)
+        EventBus().reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+        EventBus().reset_mod_colors_signal.connect(self._on_menu_bar_reset_mod_colors_triggered)
+        EventBus().do_change_mod_coloring_mode.connect(self._on_change_mod_coloring_mode)
+        EventBus().filters_changed_in_active_modlist.connect(self._on_filters_changed_in_active_modlist)
+        EventBus().filters_changed_in_inactive_modlist.connect(self._on_filters_changed_in_inactive_modlist)
+        EventBus().do_delete_outdated_entries_in_aux_db.connect(self.delete_outdated_aux_db_entries)
+        EventBus().do_set_all_entries_in_aux_db_as_outdated.connect(self.do_all_entries_in_aux_db_as_outdated)
         # Translation signals
-        EventBus().do_toggle_translation_status.connect(
-            self.mods_panel._on_toggle_translation_status
-        )
-        EventBus().do_auto_add_translations.connect(
-            self.mods_panel._on_auto_add_translations
-        )
+        EventBus().do_toggle_translation_status.connect(self.mods_panel._on_toggle_translation_status)
+        EventBus().do_auto_add_translations.connect(self.mods_panel._on_auto_add_translations)
 
     def _reemit_active_filter_signal(self) -> None:
         """Re-emit the active filter label's click signal to reapply filtering."""
@@ -109,22 +84,16 @@ class ModsPanelController(QObject):
         if not binary_diag.exec_is_positive():
             return
         # Do visible mods first to resize the visible widgets
-        loaded_active_mods = (
-            self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
-        )
+        loaded_active_mods = self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
         loaded_inactive_mods = self.mods_panel.inactive_mods_list.get_all_loaded_and_toggled_mod_list_items()
         mods_done = set()
         for loaded_mod in loaded_active_mods + loaded_inactive_mods:
-            package_id = loaded_mod.metadata_manager.internal_local_metadata.get(
-                loaded_mod.uuid, {}
-            ).get("packageid")
+            package_id = loaded_mod.metadata_manager.internal_local_metadata.get(loaded_mod.uuid, {}).get("packageid")
             loaded_mod.toggle_warning_signal.emit(package_id, loaded_mod.uuid)
             mods_done.add(loaded_mod.uuid)
 
         active_mods = self.mods_panel.active_mods_list.get_all_toggled_mod_list_items()
-        inactive_mods = (
-            self.mods_panel.inactive_mods_list.get_all_toggled_mod_list_items()
-        )
+        inactive_mods = self.mods_panel.inactive_mods_list.get_all_toggled_mod_list_items()
         for mod in active_mods + inactive_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             uuid = mod_data["uuid"]
@@ -137,15 +106,11 @@ class ModsPanelController(QObject):
                 widget = mod.listWidget()
                 # Widget should always be of type ModListWidget
                 if isinstance(widget, ModListWidget):
-                    package_id = widget.metadata_manager.internal_local_metadata[
-                        mod_data["uuid"]
-                    ]["packageid"]
+                    package_id = widget.metadata_manager.internal_local_metadata[mod_data["uuid"]]["packageid"]
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
-                    aux_metadata_controller = (
-                        AuxMetadataController.get_or_create_cached_instance(
-                            self.settings_controller.settings.aux_db_path
-                        )
+                    aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                        self.settings_controller.settings.aux_db_path
                     )
                     if not uuid:
                         logger.error(
@@ -153,9 +118,7 @@ class ModsPanelController(QObject):
                         )
                         return
                     with aux_metadata_controller.Session() as aux_metadata_session:
-                        mod_path = widget.metadata_manager.internal_local_metadata[
-                            uuid
-                        ]["path"]
+                        mod_path = widget.metadata_manager.internal_local_metadata[uuid]["path"]
                         aux_metadata_controller.update(
                             aux_metadata_session,
                             mod_path,
@@ -187,12 +150,8 @@ class ModsPanelController(QObject):
             return
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
-        active_uuids = [
-            mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in active_mods
-        ]
-        inactive_uuids = [
-            mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in inactive_mods
-        ]
+        active_uuids = [mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in active_mods]
+        inactive_uuids = [mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in inactive_mods]
         self.mods_panel.active_mods_list.reset_all_mod_colors(active_uuids)
         self.mods_panel.inactive_mods_list.reset_all_mod_colors(inactive_uuids)
 
@@ -285,20 +244,14 @@ class ModsPanelController(QObject):
         # This is more performant, but we dont update db_time_touched. But that should be ok
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug(
-                "Skipping the setting entries as outdated because time limit is negative."
-            )
+            logger.debug("Skipping the setting entries as outdated because time limit is negative.")
             return
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
-            stmt = (
-                update(AuxMetadataEntry)
-                .where(AuxMetadataEntry.outdated.is_(False))
-                .values(outdated=True)
-            )
+            stmt = update(AuxMetadataEntry).where(AuxMetadataEntry.outdated.is_(False)).values(outdated=True)
             aux_metadata_session.execute(stmt)
             aux_metadata_session.commit()
 
@@ -314,18 +267,14 @@ class ModsPanelController(QObject):
         """
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug(
-                "Skipping the deletion of outdated entries because time limit is negative."
-            )
+            logger.debug("Skipping the deletion of outdated entries because time limit is negative.")
             return
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
-            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
-                seconds=time_limit
-            )
+            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=time_limit)
             stmt = (
                 delete(AuxMetadataEntry)
                 .where(AuxMetadataEntry.outdated)

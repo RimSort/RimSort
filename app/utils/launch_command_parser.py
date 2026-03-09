@@ -97,6 +97,4 @@ def parse_launch_command(command_string: str) -> ParsedLaunchCommand:
     # If there are multiple %command% placeholders, subsequent ones become literal args
     game_args = tokens[command_index + 1 :]
 
-    return ParsedLaunchCommand(
-        env_vars=env_vars, wrapper_commands=wrapper_commands, game_args=game_args
-    )
+    return ParsedLaunchCommand(env_vars=env_vars, wrapper_commands=wrapper_commands, game_args=game_args)
