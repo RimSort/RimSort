@@ -488,9 +488,9 @@ wheels = [
 
 [[package]]
 name = "nuitka"
-version = "4.0.3"
+version = "4.0.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ba/f1/ef78e6915c025d2c4e28dff253f617cc8c030435234c187ce8900c08535f/nuitka-4.0.3.tar.gz", hash = "sha256:284a4b3e7d670bb2833fdc0a29134d2e598f3cedf45142ebc29c808e6b0c1e44", size = 4420169, upload-time = "2026-03-06T14:32:27.622Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/76/fbc2c17511505d7ad09dbe14b32f31b1702669dc31647c5c314067e7e53a/nuitka-4.0.4.tar.gz", hash = "sha256:7f36a4bef1caddc1bc80d83ab1d9e65927bbc8a773642a29a3e06659f9dc5cc0", size = 4420259, upload-time = "2026-03-10T05:43:07.683Z" }
 
 [[package]]
 name = "numpy"
@@ -1000,7 +1000,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-build = [{ name = "nuitka", specifier = "==4.0.3" }]
+build = [{ name = "nuitka", specifier = "==4.0.4" }]
 dev = [
     { name = "lxml-stubs", specifier = ">=0.5.1" },
     { name = "mypy", specifier = ">=1.17.1" },
