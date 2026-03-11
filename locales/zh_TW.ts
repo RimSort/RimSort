@@ -2173,6 +2173,18 @@ How would you like to proceed?</source>
         <translation>忽略 JSON 編輯器...</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>自動新增翻譯</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>看法</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>顯示翻譯狀態</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>下載</translation>
     </message>
@@ -2282,25 +2294,6 @@ How would you like to proceed?</source>
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam 資料庫元數據已過期</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam 資料庫已過期，建議更新!
-</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam 資料庫最後更新時間：{last_updated}
-
-
-正在使用緩存但已過期的 Steam 資料庫。</translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation>缺少 Version.txt</translation>
@@ -2695,6 +2688,14 @@ Do you want to proceed?</source>
         <translation>通過 Steam 訂閱</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>提供翻譯 - 該模組有翻譯或已經在地化</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>找不到翻譯 - 該模組未安裝翻譯</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>不在最新存檔中</translation>
     </message>
@@ -2768,6 +2769,10 @@ Do you want to proceed?</source>
     <message>
         <source>Toggle warning</source>
         <translation>啟用/禁用警告</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>尋找翻譯</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2852,6 +2857,38 @@ This operation will recursively delete all mod files, except for .dds textures f
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 此操作可能會刪除殘留的 .dds 紋理。Steam 對此不可靠。你想要繼續嗎？</translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation>資料庫不可用</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam 創意工坊元資料資料庫未載入。請先使用資料庫產生器建立資料庫。</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>沒有找到翻譯</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>在 Steam 創意工坊資料庫中找不到此模組的翻譯模組。</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>選擇翻譯</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>找到 {len(translation_mods)} 翻譯。選擇一項開啟：</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>打開</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
     </message>
     <message>
         <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
@@ -2990,6 +3027,38 @@ Alternative Dependencies:</source>
         <translation>啟用 [0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>資料庫不可用</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam 創意工坊元資料資料庫未載入。請先使用資料庫產生器建立資料庫。</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>未找到翻譯</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>未找到適用於您的活動模組清單的翻譯模組。</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>新增翻譯</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>已成功將 {count} 個翻譯模組新增到活動清單中。</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>沒有新翻譯</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>所有找到的翻譯模組都已處於活動狀態。</translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation>隱藏篩選器已啟用</translation>
     </message>
@@ -3012,6 +3081,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Color</source>
         <translation>顏色</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>筆記</translation>
     </message>
     <message>
         <source>Author(s)</source>
@@ -3040,18 +3113,6 @@ Alternative Dependencies:</source>
     <message>
         <source>Check Dependencies</source>
         <translation>檢查依賴項</translation>
-    </message>
-    <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding}{num_warnings} 警告</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding}{num_errors} 錯誤</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0 錯誤</translation>
     </message>
     <message>
         <source>Active</source>
@@ -3110,8 +3171,43 @@ Alternative Dependencies:</source>
         <translation>點擊僅顯示未在最新存檔中的活動模組</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>{padding}{num} 個警告</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>{padding}{num} 個錯誤</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{padding}{count} 新</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>確認重置警告開關</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>您確定要重置所有警告/錯誤切換嗎？</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>全部重置</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>確認重設 Mod 顏色</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>您確定要重設所有模組顏色嗎？</translation>
     </message>
 </context>
 <context>
@@ -3135,6 +3231,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Statistics</source>
         <translation>統計資訊</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>正在加載檔案...%p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3293,6 +3393,10 @@ Alternative Dependencies:</source>
         <translation>滾動到日誌顯示的末尾</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>正在讀取檔案...%p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>路徑: 從 URL 加載: {url}</translation>
     </message>
@@ -3319,6 +3423,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Player log file not found.</source>
         <translation>未找到玩家日誌文件。</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>從 URL 讀取日誌...%p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3725,6 +3833,33 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>設定載入錯誤</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>如果繼續，損壞檔案的備份將會儲存到 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}。</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>繼續</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>退出邊緣排序</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>Settings Recovery Failed</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort 无法从备份恢复您的设置。您可以透過將「settings.json.backup」或「settings.json.backup.old」從 {AppInfo().settings_backups_folder} 還原到 {self._settings_file} 來手動恢復您的設定。</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3944,6 +4079,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>"Use This Instead" Database</source>
         <translation>『改用此項』資料庫</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4402,16 +4549,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>這將啟用對輔助元數據資料庫數據刪除時間限制的編輯。</translation>
     </message>
     <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>啟用輔助元數據資料庫性能模式</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>這在崩潰時增加了數據丟失/損壞的風險，從而提高了輔助資料庫的性能。
-性能提高約 50%。</translation>
-    </message>
-    <message>
         <source>To add your own theme / stylesheet 
 
 1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
@@ -4438,18 +4575,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>將模組著色應用於背景而不是文本</translation>
-    </message>
-    <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>要啟用此時間限制的編輯，請在高級設置中勾選相應的復選框。
-當模組被刪除後，系統將在此時間段後從輔助元數據資料庫中刪除該模組項。
-該輔助資料庫包含模組顏色、切換警告、用戶備註等資訊。
-此設置可在刪除後保留模組的顏色、用戶備註等資訊指定的秒數。
-（此設置同樣適用於RimSort外的刪除操作）</translation>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
@@ -4536,6 +4661,14 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML解析行為</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>在 Mod 名稱搜尋篩選器中包含 Mod 註釋</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>此選項將包括在按模組名稱搜尋時搜尋模組註釋。</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5423,6 +5556,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} 在 {e.filename} 發生，錯誤代碼 {error_code}。</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Steam DB metadata expired</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Steam 資料庫已過期！考慮更新！</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</translation>
     </message>
 </context>
 <context>
