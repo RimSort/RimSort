@@ -64,12 +64,7 @@ def metadata_controller(
     ):
         steamcmd_instance.return_value = MagicMock(spec=SteamcmdInterface)
         steamcmd_instance.return_value.steamcmd_appworkshop_acf_path = str(
-            (
-                Path("tests/data/instance/instance_1/steam")
-                / "steamapps"
-                / "workshop"
-                / "appworkshop_294100.acf"
-            )
+            (Path("tests/data/instance/instance_1/steam") / "steamapps" / "workshop" / "appworkshop_294100.acf")
         )
         return MetadataController(settings_controller, temp_db)
 
@@ -85,15 +80,9 @@ def metadata_controller_p(
     metadata_controller: MetadataController,
 ) -> MetadataController:
     metadata_controller.settings_controller.settings.external_steam_metadata_file_path = "tests/data/dbs/steamDB.json"
-    metadata_controller.settings_controller.active_instance.game_folder = (
-        "tests/data/mod_examples/RimWorld"
-    )
-    metadata_controller.settings_controller.active_instance.local_folder = (
-        "tests/data/mod_examples/Local"
-    )
-    metadata_controller.settings_controller.active_instance.workshop_folder = (
-        "tests/data/mod_examples/Steam"
-    )
+    metadata_controller.settings_controller.active_instance.game_folder = "tests/data/mod_examples/RimWorld"
+    metadata_controller.settings_controller.active_instance.local_folder = "tests/data/mod_examples/Local"
+    metadata_controller.settings_controller.active_instance.workshop_folder = "tests/data/mod_examples/Steam"
 
     metadata_controller.reset_paths()
     return metadata_controller
@@ -132,9 +121,7 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod.steam_app_id == 294100
 
     steamcmd_mod_1_path = Path("tests/data/mod_examples/Local/steamcmd_mod_1")
-    mod, aux_metadata = metadata_controller_p.get_metadata_with_path(
-        steamcmd_mod_1_path
-    )
+    mod, aux_metadata = metadata_controller_p.get_metadata_with_path(steamcmd_mod_1_path)
 
     assert mod is not None
     assert aux_metadata is not None
@@ -151,12 +138,8 @@ def test_metadata_controller_delete_mod(
 
     steam_mod_1_path = Path("tests/data/mod_examples/Steam/steam_mod_1")
     local_mod_2_path = Path("tests/data/mod_examples/Local/local_mod_2")
-    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(
-        steam_mod_1_path
-    )
-    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
-        local_mod_2_path
-    )
+    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(steam_mod_1_path)
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(local_mod_2_path)
 
     assert mod_1 is not None
     assert aux_metadata_1 is not None
@@ -167,12 +150,8 @@ def test_metadata_controller_delete_mod(
     # Ensure mod_1 is deleted but not mod_2
     metadata_controller_p.delete_mod(steam_mod_1_path)
 
-    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(
-        steam_mod_1_path
-    )
-    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
-        local_mod_2_path
-    )
+    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(steam_mod_1_path)
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(local_mod_2_path)
 
     assert mod_1 is None
     assert aux_metadata_1 is None
@@ -182,9 +161,7 @@ def test_metadata_controller_delete_mod(
 
     # Ensure mod_2 is deleted
     metadata_controller_p.delete_mod(str(local_mod_2_path))
-    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
-        local_mod_2_path
-    )
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(local_mod_2_path)
 
     assert mod_2 is None
     assert aux_metadata_2 is None
