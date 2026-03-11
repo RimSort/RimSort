@@ -489,6 +489,8 @@ class BaseModsPanel(QWidget):
     def clear_layout(self, layout: QLayout) -> None:
         while layout.count():
             child = layout.takeAt(0)
+            if child is None:
+                continue
             widget = child.widget()
             if widget is not None:
                 widget.deleteLater()

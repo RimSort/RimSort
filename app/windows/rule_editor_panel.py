@@ -915,6 +915,8 @@ class RuleEditor(QWidget):
         # Iterate through all widgets in layout
         for i in range(layout.count()):
             item = layout.itemAt(i)
+            if item is None:
+                continue
             widget = item.widget()
             if widget is not None:
                 if visibility is None:  # We only need to set this once per pass
@@ -1103,6 +1105,8 @@ class RuleEditor(QWidget):
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
         context_item = self.mods_list.itemAt(point)
+        if context_item is None:
+            return
         open_mod = context_menu.addAction(self.tr("Open this mod in the editor"))  # open mod in editor
         open_mod.triggered.connect(partial(self._open_mod_in_editor, context_item=context_item))
         _ = context_menu.exec_(self.mods_list.mapToGlobal(point))

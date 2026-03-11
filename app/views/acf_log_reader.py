@@ -626,8 +626,8 @@ class ActiveModDelegate(QStyledItemDelegate):
         # Highlight if this mod's PFID is in the active set
         if pfid and pfid in acf_log_reader.active_pfids:
             painter.save()
-            rect = option.rect  # type: ignore[attr-defined]
-            font = option.font  # type: ignore[attr-defined]
+            rect = option.rect
+            font = option.font
 
             # Dark green background for active mods
             painter.fillRect(rect, QColor(0, 100, 0))
