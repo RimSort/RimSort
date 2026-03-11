@@ -32,7 +32,9 @@ if sys.platform == "win32":
                     if os.path.isfile(candidate_path):
                         return value[0], True
 
-                    logger.warning(f"Steam executable not found at path defined by registry: {candidate_path}")
+                    logger.warning(
+                        f"Steam executable not found at path defined by registry: {candidate_path}"
+                    )
             except FileNotFoundError:
                 # Registry key not found. Continue to the next candidate key
                 continue

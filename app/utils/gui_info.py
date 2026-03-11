@@ -51,8 +51,12 @@ class GUIInfo:
         self._smaller_font: QFont = QFont(self._default_font)
         self._smaller_font.setPointSize(self._smaller_font.pointSize() - 1)
 
-        self._default_font_line_height: int = QFontMetrics(self._default_font).lineSpacing()
-        self._default_font_average_char_width: int = QFontMetrics(self._default_font).averageCharWidth()
+        self._default_font_line_height: int = QFontMetrics(
+            self._default_font
+        ).lineSpacing()
+        self._default_font_average_char_width: int = QFontMetrics(
+            self._default_font
+        ).averageCharWidth()
 
         self._text_field_margins: QMargins = QMargins(4, 4, 4, 4)
 
@@ -196,7 +200,9 @@ def show_dialogue_file(
             return dialog.selectedFiles()[0]
     else:
         if is_save:
-            file_path, _ = QFileDialog.getSaveFileName(parent=None, caption=title, dir=directory, filter=file_filter)
+            file_path, _ = QFileDialog.getSaveFileName(
+                parent=None, caption=title, dir=directory, filter=file_filter
+            )
             return file_path if file_path else None
         else:
             dialog.setFileMode(QFileDialog.FileMode.ExistingFile)

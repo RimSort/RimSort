@@ -64,7 +64,9 @@ class DBBuilderCore:
         # We only support "no_local" mode in the CLI
         mode = "no_local"
 
-        self.progress_callback(f"\nInitiating RimSort Steam Database Builder with mode : {mode}\n")
+        self.progress_callback(
+            f"\nInitiating RimSort Steam Database Builder with mode : {mode}\n"
+        )
 
         if len(self.apikey) == 32:  # If supplied WebAPI key is 32 characters
             self.progress_callback("Received valid Steam WebAPI key")
@@ -89,17 +91,25 @@ class DBBuilderCore:
                 )
                 return False  # Exit operation
 
-            database = self._init_empty_db_from_publishedfileids(dynamic_query.publishedfileids)
-            dynamic_query.create_steam_db(database=database, publishedfileids=dynamic_query.publishedfileids)
+            database = self._init_empty_db_from_publishedfileids(
+                dynamic_query.publishedfileids
+            )
+            dynamic_query.create_steam_db(
+                database=database, publishedfileids=dynamic_query.publishedfileids
+            )
             self._output_database(dynamic_query.database)
             self.progress_callback("SteamDatabasebuilder: Completed!")
             return True
         else:  # Otherwise, API key is not valid
-            self.progress_callback("SteamDatabaseBuilder (no_local): Invalid Steam WebAPI key!")
+            self.progress_callback(
+                "SteamDatabaseBuilder (no_local): Invalid Steam WebAPI key!"
+            )
             self.progress_callback("SteamDatabaseBuilder (no_local): Exiting...")
             return False
 
-    def _init_empty_db_from_publishedfileids(self, publishedfileids: list[str]) -> dict[str, Any]:
+    def _init_empty_db_from_publishedfileids(
+        self, publishedfileids: list[str]
+    ) -> dict[str, Any]:
         """
         Initialize an empty database from a list of PublishedFileIds.
 
@@ -129,7 +139,11 @@ class DBBuilderCore:
                 },
             },
         }
-        total = len(database["database"].keys()) if isinstance(database["database"], dict) else 0
+        total = (
+            len(database["database"].keys())
+            if isinstance(database["database"], dict)
+            else 0
+        )
         self.progress_callback(
             f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
         )
@@ -159,7 +173,9 @@ class DBBuilderCore:
                     self.progress_callback("\nReading info from file...")
                     db_to_update = json.loads(json_string)
                     self.progress_callback("Retrieved cached database!\n")
-                self.progress_callback("Recursively updating previous database with new metadata...\n")
+                self.progress_callback(
+                    "Recursively updating previous database with new metadata...\n"
+                )
                 recursively_update_dict(
                     db_to_update,
                     database,
@@ -169,14 +185,21 @@ class DBBuilderCore:
                 with open(self.output_database_path, "w", encoding="utf-8") as output:
                     json.dump(db_to_update, output, indent=4)
             else:
-                self.progress_callback("Unable to load database from specified path! Does the file exist...?")
-                appended_path = str(
-                    Path(self.output_database_path).parent / ("NEW_" + Path(self.output_database_path).name)
+                self.progress_callback(
+                    "Unable to load database from specified path! Does the file exist...?"
                 )
-                self.progress_callback(f"\nCaching DynamicQuery result:\n\n{appended_path}")
+                appended_path = str(
+                    Path(self.output_database_path).parent
+                    / ("NEW_" + Path(self.output_database_path).name)
+                )
+                self.progress_callback(
+                    f"\nCaching DynamicQuery result:\n\n{appended_path}"
+                )
                 with open(appended_path, "w", encoding="utf-8") as output:
                     json.dump(database, output, indent=4)
         else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
-            self.progress_callback(f"\nCaching DynamicQuery result:\n{self.output_database_path}")
+            self.progress_callback(
+                f"\nCaching DynamicQuery result:\n{self.output_database_path}"
+            )
             with open(self.output_database_path, "w", encoding="utf-8") as output:
                 json.dump(database, output, indent=4)

@@ -47,8 +47,12 @@ def test_migrate_multi_element_list() -> None:
 
 def test_migrate_comma_separated_string() -> None:
     """Old example: comma-separated string should be converted to space-separated."""
-    result = migrate_run_args(["-logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow"])
-    assert result == ["-logfile /path/to/file.log -savedatafolder=/path/to/savedata -popupwindow"]
+    result = migrate_run_args(
+        ["-logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow"]
+    )
+    assert result == [
+        "-logfile /path/to/file.log -savedatafolder=/path/to/savedata -popupwindow"
+    ]
 
 
 def test_migrate_comma_separated_with_spaces() -> None:
@@ -83,7 +87,9 @@ def test_migrate_single_arg_no_comma() -> None:
 
 def test_migrate_complex_paths() -> None:
     """Migration should handle complex paths correctly."""
-    result = migrate_run_args(["-logfile", "/home/user/logs/rimworld.log", "-savedatafolder=/data"])
+    result = migrate_run_args(
+        ["-logfile", "/home/user/logs/rimworld.log", "-savedatafolder=/data"]
+    )
     assert result == ["-logfile /home/user/logs/rimworld.log -savedatafolder=/data"]
 
 
