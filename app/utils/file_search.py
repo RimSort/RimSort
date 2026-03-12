@@ -2,7 +2,7 @@ import os
 import re
 from typing import Any, Callable, Generator, Optional, Tuple
 
-import chardet
+from charset_normalizer import from_bytes
 from loguru import logger
 
 from app.utils.metadata import MetadataManager
@@ -253,12 +253,14 @@ class FileSearch:
         try:
             with open(file_path, "rb") as f:
                 raw_data = f.read()
-                result = chardet.detect(raw_data)
-                encoding = result["encoding"]
-                if encoding:
-                    return raw_data.decode(encoding, errors="ignore")
+                # Use charset_normalizer for encoding detection
+                results = from_bytes(raw_data).best()
+                if results is not None:
+                    encoding = results.encoding
+                    if encoding:
+                        return raw_data.decode(encoding, errors="ignore")
         except Exception as e:
-            logger.error(f"Failed to read file {file_path} with chardet: {e}")
+            logger.error(f"Failed to read file {file_path} with charset_normalizer: {e}")
 
         encodings = ["utf-8", "utf-8-sig", "latin-1", "cp1252", "iso-8859-1"]
         return self._read_file_with_encodings(file_path, encodings)
