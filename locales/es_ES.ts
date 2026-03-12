@@ -3149,7 +3149,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{num} error(s)</source>
-        <translation>{relleno}{num} error(s)</translation>
+        <translation>{num} error(s) {padding}</translation>
     </message>
     <message>
         <source>{padding}{count} new</source>
