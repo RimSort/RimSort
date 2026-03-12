@@ -3835,7 +3835,7 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Если вы продолжите, резервная копия поврежденного файла будет сохранена в {AppInfo().settings_backups_folder/'settings.json.corrupted'}.</translation>
+        <translation>Если вы продолжите, резервная копия поврежденного файла будет сохранена в . {AppInfo().settings_backups_folder / 'settings.json.corrupted'}</translation>
     </message>
     <message>
         <source>Proceed</source>
