@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from typing import Any, Optional
 from xml.dom import minidom
 
-import chardet
+from charset_normalizer import from_bytes
 from loguru import logger
 from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
@@ -170,13 +170,15 @@ class SearchWorker(QThread):
             logger.warning(f"Error checking file size for {file_path}: {e}")
             return ""
 
-        try:  # Try to detect encoding with chardet for better accuracy
+        try:  # Try to detect encoding with charset_normalizer for better accuracy
             with open(file_path, "rb") as f:
                 raw_data = f.read(min(4096, file_size))
-                result = chardet.detect(raw_data)
-                if result["confidence"] > 0.7 and result["encoding"]:
-                    detected_encoding = result["encoding"]
+                # Use charset_normalizer for encoding detection
+                results = from_bytes(raw_data).best()
+                if results is not None and results.encoding:
+                    # charset_normalizer uses confidence property
                     try:
+                        detected_encoding = results.encoding
                         # Use explicit text mode with detected encoding
                         content = ""
                         with open(file_path, "r", encoding=detected_encoding) as text_file:
@@ -186,7 +188,7 @@ class SearchWorker(QThread):
                         # If detected encoding fails, continue with fallbacks
                         pass
         except ImportError:
-            # chardet not available, continue with fallbacks
+            # charset_normalizer not available, continue with fallbacks
             pass
         except Exception as e:
             logger.debug(f"Error detecting encoding: {e}")
