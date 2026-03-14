@@ -2181,6 +2181,10 @@ class ModListWidget(QListWidget):
         settings.save()
 
     def append_new_item(self, uuid: str) -> None:
+        if uuid not in self.metadata_manager.internal_local_metadata:
+            logger.error(f"Attempted to append item with uuid not in metadata: {uuid}")
+            return
+        
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
@@ -2200,7 +2204,7 @@ class ModListWidget(QListWidget):
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
-        self.uuids.append(uuid)  # Append for new item
+        self.uuids.append(uuid)
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """

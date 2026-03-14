@@ -1296,14 +1296,20 @@ class MetadataManager(QObject):
         logger.debug(
             f"Processing creation of {data_source + ' mod' if data_source != 'expansion' else data_source} for {mod_directory}"
         )
-        self.process_update(
+        created = self.process_update(
             batch=False,
             exists=uuid in self.internal_local_metadata.keys(),
             data_source=data_source,
             mod_directory=mod_directory,
             uuid=uuid,
         )
-        self.mod_created_signal.emit(uuid)
+
+        if created:
+            self.mod_created_signal.emit(uuid)
+        else:
+            logger.debug(
+                f"Mod creation/update failed for uuid {uuid} at path {mod_directory}; skipping mod_created_signal"
+            )
 
     def process_deletion(self, data_source: str, mod_directory: str, uuid: str) -> None:
         logger.debug(
@@ -1329,8 +1335,7 @@ class MetadataManager(QObject):
         data_source: str,
         mod_directory: str,
         uuid: str,
-    ) -> None:
-        # logger.warning(exists)
+    ) -> bool:
         parser = ModParser(
             mod_directory=mod_directory,
             data_source=data_source,
@@ -1343,10 +1348,13 @@ class MetadataManager(QObject):
             logger.debug("Waiting for metadata update to complete...")
             self.parser_threadpool.waitForDone()
             self.parser_threadpool.clear()
-        # Send signal to UI to update mod list if the mod we are updating exists
-        if exists and not batch:
-            self.compile_metadata(uuids=[uuid])
-            self.mod_metadata_updated_signal.emit(uuid)
+
+            # Send signal to UI to update mod list if the mod we are updating exists
+            if exists:
+                self.compile_metadata(uuids=[uuid])
+                self.mod_metadata_updated_signal.emit(uuid)
+
+        return uuid in self.internal_local_metadata
 
     def refresh_cache(self, is_initial: bool = False) -> None:
         """
