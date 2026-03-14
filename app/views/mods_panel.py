@@ -1961,7 +1961,7 @@ class ModListWidget(QListWidget):
         if uuid not in self.metadata_manager.internal_local_metadata:
             logger.error(f"Attempted to append item with uuid not in metadata: {uuid}")
             return
-        
+
         mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
