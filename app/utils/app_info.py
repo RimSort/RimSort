@@ -88,9 +88,7 @@ class AppInfo:
         self._ignore_mods_file: Path = self.databases_folder / "ignore.json"
         self._language_data_folder: Path = self._application_folder / "locales"
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
-        self._setup_web_channel_script_file: Path = (
-            self._application_folder / "setup_web_channel_script.js"
-        )
+        self._setup_web_channel_script_file: Path = self._application_folder / "setup_web_channel_script.js"
 
         # Backup directories
         self._backups_folder: Path = self._app_storage_folder / "backups"
@@ -276,14 +274,14 @@ class AppInfo:
         Get the path to the folder where settings backups are stored.
         """
         return self._settings_backups_folder
-    
+
     @property
     def game_saves_backups_folder(self) -> Path:
         """
         Get the path to the folder where game save backups are stored.
         """
         return self._game_saves_backups_folder
-    
+
     @property
     def application_backups_folder(self) -> Path:
         """

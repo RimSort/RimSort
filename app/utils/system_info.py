@@ -73,9 +73,7 @@ class SystemInfo:
         elif platform.system() in ["Darwin"]:
             self._operating_system = SystemInfo.OperatingSystem.MACOS
         else:
-            raise UnsupportedOperatingSystemError(
-                f"Unsupported operating system detected: {platform.system()}."
-            )
+            raise UnsupportedOperatingSystemError(f"Unsupported operating system detected: {platform.system()}.")
 
         arch = platform.machine().lower()
         if arch in ["x86_64", "amd64"]:
@@ -85,9 +83,7 @@ class SystemInfo:
         elif arch in ["arm64", "aarch64", "arm64e"]:
             self._architecture = SystemInfo.Architecture.ARM64
         else:
-            raise UnsupportedArchitectureError(
-                f"Unsupported architecture detected: {platform.machine()}."
-            )
+            raise UnsupportedArchitectureError(f"Unsupported architecture detected: {platform.machine()}.")
 
         self._is_initialized: bool = True
 

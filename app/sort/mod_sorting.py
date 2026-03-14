@@ -25,9 +25,7 @@ def uuid_no_key(uuid: str) -> str:
     return uuid
 
 
-def uuid_to_mod_name(
-    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
-) -> str:
+def uuid_to_mod_name(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) -> str:
     """
     Get mod name for inactive mods list sorting.
 
@@ -53,9 +51,7 @@ def uuid_to_mod_name(
         return "name error in mod about.xml"
 
 
-def uuid_to_filesystem_modified_time(
-    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
-) -> int:
+def uuid_to_filesystem_modified_time(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) -> int:
     """
     Get filesystem modification time for inactive mods list sorting.
 
@@ -119,9 +115,7 @@ def uuid_to_author(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) 
     return author.lower() if isinstance(author, str) else ""
 
 
-def uuid_to_folder_size(
-    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
-) -> int:
+def uuid_to_folder_size(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) -> int:
     """
     Calculate mod folder size for inactive mods list sorting.
 
@@ -158,9 +152,7 @@ def uuid_to_folder_size(
     return total_size
 
 
-def uuid_to_packageid(
-    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
-) -> str:
+def uuid_to_packageid(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) -> str:
     """
     Get mod package ID for inactive mods list sorting.
 
@@ -212,9 +204,7 @@ def uuid_to_version(uuid: str, cached_metadata: Optional[dict[str, Any]] = None)
         return ""
 
 
-def uuid_to_mod_color(
-    uuid: str, cached_metadata: Optional[dict[str, Any]] = None
-) -> str:
+def uuid_to_mod_color(uuid: str, cached_metadata: Optional[dict[str, Any]] = None) -> str:
     """
     Get mod color hex value for inactive mods list sorting.
 
@@ -445,11 +435,7 @@ def sort_uuids(
     start_time = time.perf_counter()
 
     # Automatically fetch auxiliary metadata if sorting by color
-    if (
-        key == ModsPanelSortKey.MOD_COLOR
-        and cached_metadata is None
-        and settings_controller is not None
-    ):
+    if key == ModsPanelSortKey.MOD_COLOR and cached_metadata is None and settings_controller is not None:
         cached_metadata = get_cached_metadata_for_batch(
             uuids,
             include_aux_metadata=True,
@@ -472,10 +458,7 @@ def sort_uuids(
 
     # Log performance metrics for debugging and monitoring
     elapsed = time.perf_counter() - start_time
-    logger.debug(
-        f"Sorted {len(uuids)} mods by {key.name} "
-        f"({reverse_flag and 'desc' or 'asc'}) in {elapsed:.3f}s"
-    )
+    logger.debug(f"Sorted {len(uuids)} mods by {key.name} ({reverse_flag and 'desc' or 'asc'}) in {elapsed:.3f}s")
 
     return sorted_result
 
@@ -524,9 +507,7 @@ class FolderSizeWorker(QObject):
 
         # Pre-fetch all metadata once to avoid repeated lookups
         cached_metadata = get_cached_metadata_for_batch(self._uuids)
-        logger.debug(
-            f"Pre-cached metadata for {len(cached_metadata)} mods in FolderSizeWorker"
-        )
+        logger.debug(f"Pre-cached metadata for {len(cached_metadata)} mods in FolderSizeWorker")
 
         # Calculate folder sizes with progress reporting
         for idx, uuid in enumerate(self._uuids, start=1):
@@ -536,8 +517,7 @@ class FolderSizeWorker(QObject):
         # Log folder size calculation performance metrics
         elapsed = time.perf_counter() - start_time
         logger.debug(
-            f"Calculated folder sizes for {total} mods in {elapsed:.3f}s "
-            f"({elapsed / total * 1000:.1f}ms per mod)"
+            f"Calculated folder sizes for {total} mods in {elapsed:.3f}s ({elapsed / total * 1000:.1f}ms per mod)"
         )
 
         # Signal completion with results

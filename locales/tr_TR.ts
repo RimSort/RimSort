@@ -2173,6 +2173,18 @@ Generated run arguments preview:
         <translation>Uyarı Ayarlarını Sıfırla</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>Çevirileri Otomatik Ekle</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>Görüş</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>Çeviri Durumunu Göster</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>İndir</translation>
     </message>
@@ -2279,29 +2291,12 @@ Generated run arguments preview:
 <context>
     <name>MetadataManager</name>
     <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam DB meta verilerin süresi doldu</translation>
-    </message>
-    <message>
         <source>Missing Version.txt</source>
         <translation>Eksik Versiyon.txt</translation>
     </message>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
         <translation>Rimsort, oyun sürümünü beklenen yolda alamaz: []. {version_file_path}</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB süresi doldu! Güncellemeyi düşünün!</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam DB Son Güncelleme: 
-
-Önbelleğe alınmış, ancak süresi dolmuş buhar veritabanına geri dönüyor ... {last_updated}</translation>
     </message>
     <message>
         <source>
@@ -2684,6 +2679,14 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Steam aracılığıyla abone olundu</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>Çeviri mevcut - Bu modun bir çevirisi var veya zaten yerelleştirilmiş</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>Çeviri bulunamadı - Bu modun yüklü bir çevirisi yok</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>En son kaydetmede değil</translation>
     </message>
@@ -2757,6 +2760,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Toggle warning</source>
         <translation>Toggle uyarısı</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>Çevirileri bul</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2845,6 +2852,38 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Change mod color</source>
         <translation>Mod rengini değiştir</translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation>Veritabanı mevcut değil</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam Atölyesi meta veri veritabanı yüklü değil. Lütfen önce Veritabanı Oluşturucuyu kullanarak veritabanını oluşturun.</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>Çeviri bulunamadı</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>Steam Workshop veritabanında bu mod için çeviri modu bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>Çeviri Seç</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>{len(translation_mods)} çeviri bulundu. Açmak için birini seçin:</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Açık</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>İptal etmek</translation>
     </message>
     <message>
         <source>Reset mod color</source>
@@ -2970,6 +3009,38 @@ An alternative updated mod is recommended:
         <translation>Etkin [0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>Veritabanı mevcut değil</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam Atölyesi meta veri veritabanı yüklü değil. Lütfen önce Veritabanı Oluşturucuyu kullanarak veritabanını oluşturun.</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>Hiçbir Çeviri Bulunamadı</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>Aktif mod listeniz için geçerli çeviri modu bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>Çeviriler Eklendi</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>{count} çeviri modu başarıyla etkin listeye eklendi.</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>Yeni Çeviri Yok</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>Bulunan tüm çeviri modları zaten etkin.</translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation>Gizleme Filtresi Aktif</translation>
     </message>
@@ -3026,18 +3097,6 @@ An alternative updated mod is recommended:
         <translation>Gerekli Modları Kontrol Et</translation>
     </message>
     <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding}{num_warnings} uyarı(lar)</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding}{num_errors} hata(lar)</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0 hata</translation>
-    </message>
-    <message>
         <source>Active</source>
         <translation>Etkin</translation>
     </message>
@@ -3082,6 +3141,10 @@ An alternative updated mod is recommended:
         <translation>ASC</translation>
     </message>
     <message>
+        <source>Notes</source>
+        <translation>Notlar</translation>
+    </message>
+    <message>
         <source>Rebuilding list...</source>
         <translation>Yeniden oluşturma listesi ...</translation>
     </message>
@@ -3090,8 +3153,43 @@ An alternative updated mod is recommended:
         <translation>Klasör boyutlarının hesaplanması ...</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>{padding}{num} uyarı(lar)</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>{padding}{num} hata(lar)</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{padding} {count} yeni</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>Uyarı Geçişlerini Sıfırlamayı Onaylayın</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>Tüm uyarı/hata geçişlerini sıfırlamak istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>Tümünü Sıfırla</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>İptal etmek</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>Mod Renklerini Sıfırlamayı Onaylayın</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>Tüm mod renklerini sıfırlamak istediğinizden emin misiniz?</translation>
     </message>
 </context>
 <context>
@@ -3115,6 +3213,10 @@ An alternative updated mod is recommended:
     <message>
         <source>Statistics</source>
         <translation>İstatistik</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>Dosya yükleniyor... %p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3273,6 +3375,10 @@ An alternative updated mod is recommended:
         <translation>Günlük ekranının sonuna gidin</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>Dosya okunuyor... %p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>Yol: URL'den yüklendi: {url}</translation>
     </message>
@@ -3299,6 +3405,10 @@ An alternative updated mod is recommended:
     <message>
         <source>Player log file not found.</source>
         <translation>Oyuncu günlük dosyası bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>URL'den günlük okunuyor... %p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3705,6 +3815,33 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>Ayarlar Yükleme Hatası</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>Devam ederseniz, bozuk dosyanın bir yedeği {AppInfo().settings_backups_folder / 'settings.json.corrupted'} klasörüne kaydedilecektir.</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>İlerlemek</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>RimSort'tan çık</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>Ayarları Kurtarma Başarısız Oldu</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort, ayarlarınızı yedeklemeden kurtaramadı. "settings.json.backup" veya "settings.json.backup.old" dosyasını {AppInfo().settings_backups_folder} konumundan {self._settings_file} konumuna geri yükleyerek ayarlarınızı manuel olarak kurtarabilirsiniz.</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3924,6 +4061,18 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     <message>
         <source>"Use This Instead" Database</source>
         <translation>"Use This Instead" Veritabanı</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Bu süre sınırının düzenlenmesini etkinleştirmek için sağdaki onay kutusunu (Düzenlemeyi etkinleştir) etkinleştirin.
+Bir mod silindikten sonra, bu mod öğesi Yardımcı Meta Veri Veritabanından silinene kadar beklediğimiz süredir. 
+Bu Yardımcı Veritabanı mod renkleri, değiştirilen uyarılar, kullanıcı notları vb. hakkında bilgi içerir. 
+Bu, temel olarak mod renklendirmenizi, kullanıcı notlarınızı vb. silme işleminden sonraki birkaç saniye boyunca korur. 
+(Bu, RimSort dışındaki silme işlemleri için de geçerlidir)</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4356,34 +4505,12 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Yardımcı meta veri db silme süresi sınırı saniyeler içinde. (Anında sil 0, asla -1 silmeyin)</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Bu zaman sınırının düzenlenmesini etkinleştirmek için ilgili onay kutusunu gelişmiş ayarlarda kontrol edin.
-Bir mod silindikten sonra, bu mod öğesi yardımcı meta veri db'den silinene kadar beklediğimiz zamandır. 
-Bu yardımcı DB, mod renkleri, değiştirilmiş uyarı, kullanıcı notları vb. İçin bilgi içerir. 
-Bu temel olarak MOD renklendirme, kullanıcı notları vb. Silme işleminden sonra bu çok saniye korur. 
-(Bu, rimsort dışındaki silme için de geçerlidir)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>Düzenlemeyi Etkinleştir</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
         <translation>Bu, aux meta veri DB veri silme için zaman sınırının düzenlenmesini sağlar.</translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>Yardımcı Meta Veri DB Performans Modunu Etkinleştir</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>Bu, kazalar durumunda veri kaybı/yolsuzluk riskinde yardımcı DB performansını artırır.
-Performansı ~%50 artırır.</translation>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
@@ -4515,6 +4642,14 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML ayrıştırma davranışı</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>Mod adı arama filtresine mod notlarını dahil edin</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>Bu seçenek, mod adına göre arama yaparken mod notlarının aranmasını içerecektir.</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5403,6 +5538,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>'te hata kodu {error_code} ile gerçekleşti. {e.strerror} {e.filename}</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Steam DB meta verilerinin süresi doldu</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Steam DB'nin süresi doldu! Güncellemeyi düşünün!</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Steam Veritabanının son güncellenme tarihi: {last_updated}
+
+Önbelleğe alınıyor ancak SÜRESİ DOLMUŞ Steam Veritabanına geri dönülüyor...</translation>
     </message>
 </context>
 <context>

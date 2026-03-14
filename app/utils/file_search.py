@@ -2,7 +2,7 @@ import os
 import re
 from typing import Any, Callable, Generator, Optional, Tuple
 
-import chardet
+from charset_normalizer import from_bytes
 from loguru import logger
 
 from app.utils.metadata import MetadataManager
@@ -48,9 +48,7 @@ class FileSearch:
         search_options["preview"] = True
         search_options["return_dict"] = True
 
-        for result in self._generic_search(
-            search_text, root_paths, search_options, result_callback
-        ):
+        for result in self._generic_search(search_text, root_paths, search_options, result_callback):
             if isinstance(result, dict):
                 yield result
 
@@ -98,24 +96,17 @@ class FileSearch:
                         continue
 
                     # Only process files with specified extensions if provided
-                    if file_extensions and not any(
-                        filename.lower().endswith(ext.lower())
-                        for ext in file_extensions
-                    ):
+                    if file_extensions and not any(filename.lower().endswith(ext.lower()) for ext in file_extensions):
                         continue
 
                     file_path = os.path.join(dirpath, filename)
                     try:
                         for content_chunk in self._read_file_in_chunks(file_path):
-                            if self._matches(
-                                content_chunk, search_text, case_sensitive, use_regex
-                            ):
+                            if self._matches(content_chunk, search_text, case_sensitive, use_regex):
                                 if return_dict:
                                     result: dict[str, str] | Tuple[str, str, str] = {
                                         "file_path": file_path,
-                                        "preview": self._get_preview(
-                                            content_chunk, search_text, case_sensitive
-                                        )
+                                        "preview": self._get_preview(content_chunk, search_text, case_sensitive)
                                         if preview
                                         else "",
                                     }
@@ -140,9 +131,7 @@ class FileSearch:
                     except Exception as e:
                         logger.error(f"Error reading file {file_path}: {e}")
 
-    def _read_file_in_chunks(
-        self, file_path: str, chunk_size: int = 1024 * 1024
-    ) -> Generator[str, None, None]:
+    def _read_file_in_chunks(self, file_path: str, chunk_size: int = 1024 * 1024) -> Generator[str, None, None]:
         """
         Read a file in chunks to handle large files efficiently.
 
@@ -196,9 +185,7 @@ class FileSearch:
                 search_options["use_regex"] = True
 
             # Use a generator expression to ensure we only yield tuples
-            for result in self._generic_search(
-                search_text, root_paths, search_options, result_callback
-            ):
+            for result in self._generic_search(search_text, root_paths, search_options, result_callback):
                 if isinstance(result, tuple):
                     yield result
 
@@ -209,9 +196,7 @@ class FileSearch:
     standard_search = property(lambda self: self._create_search_method("standard"))
     pattern_search = property(lambda self: self._create_search_method("pattern"))
 
-    def _matches(
-        self, content: str, search_text: str, case_sensitive: bool, use_regex: bool
-    ) -> bool:
+    def _matches(self, content: str, search_text: str, case_sensitive: bool, use_regex: bool) -> bool:
         """Check if the content matches the search criteria."""
         if use_regex:
             flags = 0 if case_sensitive else re.IGNORECASE
@@ -268,12 +253,14 @@ class FileSearch:
         try:
             with open(file_path, "rb") as f:
                 raw_data = f.read()
-                result = chardet.detect(raw_data)
-                encoding = result["encoding"]
-                if encoding:
-                    return raw_data.decode(encoding, errors="ignore")
+                # Use charset_normalizer for encoding detection
+                results = from_bytes(raw_data).best()
+                if results is not None:
+                    encoding = results.encoding
+                    if encoding:
+                        return raw_data.decode(encoding, errors="ignore")
         except Exception as e:
-            logger.error(f"Failed to read file {file_path} with chardet: {e}")
+            logger.error(f"Failed to read file {file_path} with charset_normalizer: {e}")
 
         encodings = ["utf-8", "utf-8-sig", "latin-1", "cp1252", "iso-8859-1"]
         return self._read_file_with_encodings(file_path, encodings)

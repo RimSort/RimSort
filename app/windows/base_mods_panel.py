@@ -204,30 +204,20 @@ class BaseModsPanel(QWidget):
         """
         # Set up model with header labels
         self.editor_model = QStandardItemModel(0, len(additional_columns) + 1)
-        editor_header_labels = ["✔"] + [
-            col[0] if isinstance(col, tuple) else col for col in additional_columns
-        ]
+        editor_header_labels = ["✔"] + [col[0] if isinstance(col, tuple) else col for col in additional_columns]
         self.editor_model.setHorizontalHeaderLabels(editor_header_labels)
 
         # Set up table view
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(sorting_enabled)
-        self.editor_table_view.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
-        self.editor_table_view.setSelectionMode(
-            QAbstractItemView.SelectionMode.NoSelection
-        )
-        self.editor_table_view.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
+        self.editor_table_view.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.editor_table_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.editor_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Set up headers - checkbox column resizes to contents
         header = self.editor_table_view.horizontalHeader()
-        header.setSectionResizeMode(
-            ColumnIndex.CHECKBOX.value, QHeaderView.ResizeMode.ResizeToContents
-        )
+        header.setSectionResizeMode(ColumnIndex.CHECKBOX.value, QHeaderView.ResizeMode.ResizeToContents)
 
         # Additional columns: use specified ResizeMode or default to Stretch
         for column_index, column in enumerate(additional_columns):
@@ -235,47 +225,27 @@ class BaseModsPanel(QWidget):
                 resize_mode = column[1]
             else:
                 resize_mode = QHeaderView.ResizeMode.Stretch
-            header.setSectionResizeMode(
-                ColumnIndex.CHECKBOX.value + column_index + 1, resize_mode
-            )
+            header.setSectionResizeMode(ColumnIndex.CHECKBOX.value + column_index + 1, resize_mode)
 
         # Set vertical header to resize to contents
-        self.editor_table_view.verticalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
+        self.editor_table_view.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _setup_action_buttons(self) -> None:
         """Set up the action buttons layout."""
-        self.layouts.editor_actions_layout.addLayout(
-            self.layouts.editor_checkbox_actions_layout
-        )
+        self.layouts.editor_actions_layout.addLayout(self.layouts.editor_checkbox_actions_layout)
         self.layouts.editor_actions_layout.addStretch(25)
-        self.layouts.editor_actions_layout.addLayout(
-            self.layouts.editor_main_actions_layout
-        )
+        self.layouts.editor_actions_layout.addLayout(self.layouts.editor_main_actions_layout)
         self.layouts.editor_actions_layout.addStretch(25)
-        self.layouts.editor_actions_layout.addLayout(
-            self.layouts.editor_exit_actions_layout
-        )
+        self.layouts.editor_actions_layout.addLayout(self.layouts.editor_exit_actions_layout)
 
-        self.ui_elements.editor_deselect_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, False)
-        )
-        self.layouts.editor_checkbox_actions_layout.addWidget(
-            self.ui_elements.editor_deselect_all_button
-        )
+        self.ui_elements.editor_deselect_all_button.clicked.connect(partial(self._set_all_checkbox_rows, False))
+        self.layouts.editor_checkbox_actions_layout.addWidget(self.ui_elements.editor_deselect_all_button)
 
-        self.ui_elements.editor_select_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, True)
-        )
-        self.layouts.editor_checkbox_actions_layout.addWidget(
-            self.ui_elements.editor_select_all_button
-        )
+        self.ui_elements.editor_select_all_button.clicked.connect(partial(self._set_all_checkbox_rows, True))
+        self.layouts.editor_checkbox_actions_layout.addWidget(self.ui_elements.editor_select_all_button)
 
         self.ui_elements.editor_cancel_button.clicked.connect(self.close)
-        self.layouts.editor_exit_actions_layout.addWidget(
-            self.ui_elements.editor_cancel_button
-        )
+        self.layouts.editor_exit_actions_layout.addWidget(self.ui_elements.editor_cancel_button)
 
         self.layouts.editor_layout.addWidget(self.editor_table_view)
         self.layouts.editor_layout.addLayout(self.layouts.editor_actions_layout)
@@ -356,9 +326,7 @@ class BaseModsPanel(QWidget):
         self._initialize_ui_elements()
         self._initialize_layouts()
         self._initialize_components()
-        self._setup_components(
-            object_name, window_title, title_text, details_text, additional_columns
-        )
+        self._setup_components(object_name, window_title, title_text, details_text, additional_columns)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress:
@@ -391,9 +359,7 @@ class BaseModsPanel(QWidget):
         # Iterate through the editor's rows
         for row in range(self.editor_model.rowCount()):
             # If an existing row is found, setChecked the value
-            checkbox = self.editor_table_view.indexWidget(
-                self.editor_model.item(row, 0).index()
-            )
+            checkbox = self.editor_table_view.indexWidget(self.editor_model.item(row, 0).index())
             if isinstance(checkbox, QCheckBox):
                 checkbox.setChecked(value)
 
@@ -447,9 +413,7 @@ class BaseModsPanel(QWidget):
         if self.__class__.__name__ != "AcfLogReader":
             self.close()
 
-    def _collect_pfids_by_mode(
-        self, pfid_column: int, mode: OperationMode
-    ) -> tuple[list[str], list[str]]:
+    def _collect_pfids_by_mode(self, pfid_column: int, mode: OperationMode) -> tuple[list[str], list[str]]:
         pfid_fn = self._get_selected_text_by_column(pfid_column)
         pfids = [(pfid, mode) for pfid in self._run_for_selected_rows(pfid_fn)]
 
@@ -489,9 +453,7 @@ class BaseModsPanel(QWidget):
         if not filtered_pfids:
             return
 
-        logger.warning(
-            f"Queuing '{command}' action for {len(filtered_pfids)} mods via Steamworks API"
-        )
+        logger.warning(f"Queuing '{command}' action for {len(filtered_pfids)} mods via Steamworks API")
         EventBus().do_steamworks_api_call.emit([command, filtered_pfids])
 
     def _create_update_callback(
@@ -527,14 +489,14 @@ class BaseModsPanel(QWidget):
     def clear_layout(self, layout: QLayout) -> None:
         while layout.count():
             child = layout.takeAt(0)
+            if child is None:
+                continue
             widget = child.widget()
             if widget is not None:
                 widget.deleteLater()
 
     def _row_is_checked(self, row: int) -> bool:
-        checkbox = self.editor_table_view.indexWidget(
-            self.editor_model.item(row, 0).index()
-        )
+        checkbox = self.editor_table_view.indexWidget(self.editor_model.item(row, 0).index())
         return isinstance(checkbox, QCheckBox) and checkbox.isChecked()
 
     def _get_selected_row_indices(self) -> set[int]:
@@ -544,11 +506,7 @@ class BaseModsPanel(QWidget):
         Returns:
             Set of row indices that are checked.
         """
-        return {
-            row
-            for row in range(self.editor_model.rowCount())
-            if self._row_is_checked(row)
-        }
+        return {row for row in range(self.editor_model.rowCount()) if self._row_is_checked(row)}
 
     T = TypeVar("T")
 
@@ -568,9 +526,7 @@ class BaseModsPanel(QWidget):
 
         return __selected_text_by_column
 
-    def _resolve_mode_getter(
-        self, mode: OperationMode | str | int
-    ) -> Callable[[int], str]:
+    def _resolve_mode_getter(self, mode: OperationMode | str | int) -> Callable[[int], str]:
         """
         Resolve a mode value getter function for the given mode parameter.
 
@@ -594,19 +550,13 @@ class BaseModsPanel(QWidget):
             # Return constant function for string mode
             return lambda _: mode
 
-    def _delete_selected_mods(
-        self, pfid_column: int, mode: OperationMode | str | int
-    ) -> None:
-        delete_before_update_state = (
-            self.settings_controller.settings.steamcmd_delete_before_update
-        )
+    def _delete_selected_mods(self, pfid_column: int, mode: OperationMode | str | int) -> None:
+        delete_before_update_state = self.settings_controller.settings.steamcmd_delete_before_update
         if delete_before_update_state:
             pfid_fn = self._get_selected_text_by_column(pfid_column)
             get_mode = self._resolve_mode_getter(mode)
 
-            pfid_mode_pairs = self._run_for_selected_rows(
-                lambda row: (pfid_fn(row), get_mode(row))
-            )
+            pfid_mode_pairs = self._run_for_selected_rows(lambda row: (pfid_fn(row), get_mode(row)))
             for pfid, mod_mode in pfid_mode_pairs:
                 if mod_mode == OperationMode.STEAMCMD.value:
                     mod_path = get_mod_path_from_pfid(pfid)
@@ -637,9 +587,7 @@ class BaseModsPanel(QWidget):
         if callback is not None:
             button.clicked.connect(callback)
 
-    def _create_workshop_button(
-        self, url: str, object_name: str = "workshopButton"
-    ) -> QPushButton:
+    def _create_workshop_button(self, url: str, object_name: str = "workshopButton") -> QPushButton:
         """
         Create a standardized workshop button that opens the Steam Workshop page.
 
@@ -757,19 +705,13 @@ class BaseModsPanel(QWidget):
         # Fallback
         return self._create_button(text or "Button", custom_callback)
 
-    def _create_refresh_button(
-        self, callback: Callable[[], None] | None
-    ) -> QPushButton:
+    def _create_refresh_button(self, callback: Callable[[], None] | None) -> QPushButton:
         """Create a standardized refresh button."""
-        return self._create_standardized_button(
-            ButtonType.REFRESH, custom_callback=callback
-        )
+        return self._create_standardized_button(ButtonType.REFRESH, custom_callback=callback)
 
     def _create_steamcmd_button(self, pfid_column: int) -> QPushButton:
         """Create a standardized SteamCMD button."""
-        return self._create_standardized_button(
-            ButtonType.STEAMCMD, pfid_column=pfid_column
-        )
+        return self._create_standardized_button(ButtonType.STEAMCMD, pfid_column=pfid_column)
 
     def _create_subscribe_button(
         self, pfid_column: int, completion_callback: Callable[[], None] | None = None
@@ -839,9 +781,7 @@ class BaseModsPanel(QWidget):
             enable_delete_and_resubscribe=steam_client_integration_enabled,
         )
         button.setMenu(deletion_menu)
-        button.clicked.connect(
-            lambda: deletion_menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-        )
+        button.clicked.connect(lambda: deletion_menu.exec(button.mapToGlobal(button.rect().bottomLeft())))
         return button
 
     def _setup_buttons_from_config(self, button_configs: list[ButtonConfig]) -> None:
@@ -870,9 +810,7 @@ class BaseModsPanel(QWidget):
         factory = self.get_button_factory()
         return self._create_button_from_config_with_factory(config, factory)
 
-    def _create_button_from_config_with_factory(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_button_from_config_with_factory(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """
         Create a button from a single button configuration using a factory.
 
@@ -899,43 +837,29 @@ class BaseModsPanel(QWidget):
             return self._create_select_button_from_config(config, factory)
         return None
 
-    def _create_refresh_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_refresh_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a refresh button from config."""
         return factory.create_refresh_button(config.custom_callback)
 
-    def _create_steamcmd_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_steamcmd_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a SteamCMD button from config."""
         if config.pfid_column is not None:
             return factory.create_steamcmd_button(config.pfid_column)
         return None
 
-    def _create_subscribe_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_subscribe_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a subscribe button from config."""
         if config.pfid_column is not None:
-            return factory.create_subscribe_button(
-                config.pfid_column, config.completion_callback
-            )
+            return factory.create_subscribe_button(config.pfid_column, config.completion_callback)
         return None
 
-    def _create_unsubscribe_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_unsubscribe_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create an unsubscribe button from config."""
         if config.pfid_column is not None:
-            return factory.create_unsubscribe_button(
-                config.pfid_column, config.completion_callback
-            )
+            return factory.create_unsubscribe_button(config.pfid_column, config.completion_callback)
         return None
 
-    def _create_delete_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_delete_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a delete button from config."""
         if config.menu_title is not None:
             return factory.create_delete_button(
@@ -949,25 +873,19 @@ class BaseModsPanel(QWidget):
             )
         return None
 
-    def _create_custom_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_custom_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a custom button from config."""
         if config.custom_callback is not None:
             return factory.create_custom_button(config.text, config.custom_callback)
         return None
 
-    def _create_select_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
+    def _create_select_button_from_config(self, config: ButtonConfig, factory: ButtonFactory) -> QWidget | None:
         """Create a select button from config."""
         if config.menu_items:
             return factory.create_select_button(config.text, config.menu_items)
         return None
 
-    def _create_custom_button(
-        self, text: str, callback: Callable[[], None]
-    ) -> QPushButton:
+    def _create_custom_button(self, text: str, callback: Callable[[], None]) -> QPushButton:
         """
         Create a custom button with text and callback.
 
@@ -982,9 +900,7 @@ class BaseModsPanel(QWidget):
         button.clicked.connect(callback)
         return button
 
-    def _create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
+    def _create_select_button(self, text: str, menu_items: list[MenuItem]) -> QToolButton:
         """
         Create a select button with dropdown menu.
 
@@ -1045,9 +961,7 @@ class BaseModsPanel(QWidget):
                 if self._row_is_checked(row):
                     uuid = self._get_uuid_from_row(row)
                     if uuid and uuid in self.metadata_manager.internal_local_metadata:
-                        selected_mods.append(
-                            self.metadata_manager.internal_local_metadata[uuid]
-                        )
+                        selected_mods.append(self.metadata_manager.internal_local_metadata[uuid])
         except Exception as e:
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
@@ -1169,12 +1083,8 @@ class BaseModsPanel(QWidget):
 
         # Add workshop button to the workshop column only if published_file_id exists
         if mod_info.published_file_id and mod_info.published_file_id.strip():
-            workshop_button = self._create_workshop_button(
-                mod_info.workshop_url, "workshopButton"
-            )
-            self.editor_table_view.setIndexWidget(
-                workshop_item.index(), workshop_button
-            )
+            workshop_button = self._create_workshop_button(mod_info.workshop_url, "workshopButton")
+            self.editor_table_view.setIndexWidget(workshop_item.index(), workshop_button)
 
     def _add_group_header_row(self, header_text: str) -> None:
         """
@@ -1187,16 +1097,12 @@ class BaseModsPanel(QWidget):
         header_item.setData(None, Qt.ItemDataRole.UserRole)
 
         # Create empty items for other columns
-        empty_items = [
-            QStandardItem("") for _ in range(self.editor_model.columnCount() - 1)
-        ]
+        empty_items = [QStandardItem("") for _ in range(self.editor_model.columnCount() - 1)]
         items = [header_item] + empty_items
 
         self.editor_model.appendRow(items)
 
-    def _extract_mod_info_from_metadata(
-        self, uuid: str | None, metadata: dict[str, Any]
-    ) -> ModInfo:
+    def _extract_mod_info_from_metadata(self, uuid: str | None, metadata: dict[str, Any]) -> ModInfo:
         """
         Extract ModInfo from metadata dictionary.
 
@@ -1296,9 +1202,7 @@ class BaseModsPanel(QWidget):
             ),
         ]
 
-    def _extend_button_configs_with_steam_actions(
-        self, button_configs: list[ButtonConfig]
-    ) -> list[ButtonConfig]:
+    def _extend_button_configs_with_steam_actions(self, button_configs: list[ButtonConfig]) -> list[ButtonConfig]:
         """
         Extend button configurations with Steam client actions if integration is enabled.
 
@@ -1324,9 +1228,7 @@ class BaseModsPanel(QWidget):
             )
         return button_configs
 
-    def _create_delete_button_config(
-        self, menu_title: str, enable_delete_and_unsubscribe: bool = True
-    ) -> ButtonConfig:
+    def _create_delete_button_config(self, menu_title: str, enable_delete_and_unsubscribe: bool = True) -> ButtonConfig:
         """
         Create a delete button configuration with standard settings.
 
@@ -1348,10 +1250,8 @@ class BaseModsPanel(QWidget):
             enable_delete_mod=True,
             enable_delete_keep_dds=False,
             enable_delete_dds_only=False,
-            enable_delete_and_unsubscribe=enable_delete_and_unsubscribe
-            and steam_client_integration_enabled,
-            enable_delete_and_resubscribe=enable_delete_and_unsubscribe
-            and steam_client_integration_enabled,
+            enable_delete_and_unsubscribe=enable_delete_and_unsubscribe and steam_client_integration_enabled,
+            enable_delete_and_resubscribe=enable_delete_and_unsubscribe and steam_client_integration_enabled,
         )
 
     def _check_missing_publish_field_id_notification(self) -> None:
@@ -1370,9 +1270,7 @@ class BaseModsPanel(QWidget):
         missing_pfid_mods = [
             self.editor_model.item(row, 1).text()
             for row in selected_indices
-            if self._row_has_missing_pfid(
-                row, missing_publishfieldid_mods, use_explicit_mode
-            )
+            if self._row_has_missing_pfid(row, missing_publishfieldid_mods, use_explicit_mode)
             and self.editor_model.item(row, 1) is not None
         ]
 
@@ -1388,11 +1286,7 @@ class BaseModsPanel(QWidget):
         """Check if a mod at given row has missing Publish Field ID."""
         if use_explicit_mode:
             uuid = self._get_uuid_from_row(row)
-            return bool(
-                uuid
-                and missing_publishfieldid_mods
-                and uuid in missing_publishfieldid_mods
-            )
+            return bool(uuid and missing_publishfieldid_mods and uuid in missing_publishfieldid_mods)
         else:
             pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)
             return bool(pfid_item and not pfid_item.text().strip())

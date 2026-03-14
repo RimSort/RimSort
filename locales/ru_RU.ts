@@ -2177,6 +2177,18 @@ How would you like to proceed?</source>
         <translation>Сбросить предупреждения</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>Автоматическое добавление переводов</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>Вид</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>Показать статус перевода</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>Скачать</translation>
     </message>
@@ -2282,24 +2294,6 @@ How would you like to proceed?</source>
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Метаданные Steam DB устарели</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB устарела! Рассмотрите возможность обновления!
-</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam DB последний раз обновлялась: {last_updated}
-
-Возврат к кэшированной, но УСТАРЕВШЕЙ базе данных Steam...</translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation>Отсутствует Version.txt</translation>
@@ -2692,6 +2686,14 @@ Do you want to proceed?</source>
         <translation>Подписано через Steam</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>Доступен перевод — этот мод имеет перевод или уже локализован.</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>Перевод не найден — в этом моде не установлен перевод.</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>Не в последнем сохранении</translation>
     </message>
@@ -2765,6 +2767,10 @@ Do you want to proceed?</source>
     <message>
         <source>Toggle warning</source>
         <translation>Переключить предупреждение</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>Найти переводы</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2904,6 +2910,38 @@ Should be Loaded Before:</source>
         <translation>Изменить цвет мода</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>База данных недоступна</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>База данных метаданных Steam Workshop не загружена. Сначала создайте базу данных с помощью Database Builder.</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>Переводов не найдено</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>В базе данных Мастерской Steam для этого мода не обнаружено модификаций перевода.</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>Выберите перевод</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>Найден перевод(ы): {len(translation_mods)}. Выберите один, чтобы открыть:</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Открыть</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
         <source>Reset mod color</source>
         <translation>Сбросить цвет мода</translation>
     </message>
@@ -2992,6 +3030,38 @@ Alternative Dependencies:</source>
         <translation>Неактивные [0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>База данных недоступна</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>База данных метаданных Steam Workshop не загружена. Сначала создайте базу данных с помощью Database Builder.</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>Переводов не найдено</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>Для вашего активного списка модов не найдено подходящих модов перевода.</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>Переводы добавлены</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>Модов перевода успешно добавлено в активный список: {count}.</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>Нет новых переводов</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>Все найденные моды перевода уже активны.</translation>
+    </message>
+    <message>
         <source>Modified Time</source>
         <translation>Время изменения</translation>
     </message>
@@ -3002,6 +3072,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Folder Size</source>
         <translation>Размер папки</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>Примечания</translation>
     </message>
     <message>
         <source>Toggle sort order</source>
@@ -3072,18 +3146,6 @@ Alternative Dependencies:</source>
         <translation>Проверьте зависимости</translation>
     </message>
     <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding}{num_warnings} предупреждение(я)</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding}{num_errors} ошибка(и)</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0 ошибок</translation>
-    </message>
-    <message>
         <source>Active</source>
         <translation>Активный</translation>
     </message>
@@ -3104,8 +3166,43 @@ Alternative Dependencies:</source>
         <translation>Нажмите, чтобы показать только активные моды, не в последнем сохранении</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>Предупреждений: {padding}{num}</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>Ошибок: {padding}{num}</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{padding} {count} новый</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>Подтвердите сброс переключателей предупреждений</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>Вы уверены, что хотите сбросить все переключатели предупреждений/ошибок?</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>Сбросить все</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>Подтвердите сброс цветов мода</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>Вы уверены, что хотите сбросить все цвета мода?</translation>
     </message>
 </context>
 <context>
@@ -3129,6 +3226,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Statistics</source>
         <translation>Статистика</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>Загрузка файла... %p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3287,6 +3388,10 @@ Alternative Dependencies:</source>
         <translation>Прокрутите до конца дисплея журнала</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>Чтение файла... %p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>Путь: загружен с URL: {url}</translation>
     </message>
@@ -3313,6 +3418,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Player log file not found.</source>
         <translation>Файл журнала игрока не найден.</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>Чтение журнала с URL... %p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3719,6 +3828,33 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>Ошибка загрузки настроек</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>Если вы продолжите, резервная копия поврежденного файла будет сохранена в . {AppInfo().settings_backups_folder / 'settings.json.corrupted'}</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>Продолжить</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>Выйти из сортировки по обоям</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>Восстановление настроек не удалось</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort не удалось восстановить ваши настройки из резервной копии. Возможно, вы сможете вручную восстановить свои настройки, восстановив «settings.json.backup» или «settings.json.backup.old» из {AppInfo().settings_backups_folder} в {self._settings_file}.</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3938,6 +4074,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>"Use This Instead" Database</source>
         <translation>База данных "Используйте это вместо"</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Чтобы разрешить редактирование этого лимита времени, установите флажок (Разрешить редактирование) справа.
+После удаления мода мы ждем, пока этот элемент мода не будет удален из базы данных вспомогательных метаданных. 
+Эта вспомогательная база данных содержит информацию о цветах модов, включенных предупреждениях, примечаниях пользователя и т. д. 
+По сути, это сохраняет цвет вашего мода, пользовательские заметки и т. д. в течение этого количества секунд после удаления. 
+(Это относится и к удалению за пределами RimSort)</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4368,34 +4516,12 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Ограничение по времени удаления вспомогательных метаданных.(Удалить мгновенно 0, никогда не удаляйте -1)</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Чтобы включить редактирование этого ограничения, проверьте соответствующий флажок в расширенных настройках.
-После того, как мод будет удален, это время, когда мы ждем, пока этот элемент мода не будет удален из вспомогательной метаданной.
-Этот вспомогательный DB содержит информацию о цветах модов, переключении предупреждения, пользовательских примечаниях и т. Д.
-Это в основном сохраняет ваш мод раскраски, пользовательские примечания и т. Д. В течение столько секунд после удаления.
-(Это относится и к удалению за пределами rimsort)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>Включить редактирование</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
         <translation>Это обеспечивает редактирование временного ограничения для удаления данных DB AUX.</translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>Включить вспомогательные метаданные режим производительности</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>Это улучшает вспомогательную производительность БД при повышенном риске потери/коррупции данных в случае сбоев.
-Повышает производительность на ~ 50%.</translation>
     </message>
     <message>
         <source>Delete before update</source>
@@ -4530,6 +4656,14 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML -диапазон поведения</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>Включить примечания к моду в фильтр поиска имени мода</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>Эта опция будет включать поиск заметок о моде при поиске по названию мода.</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5418,6 +5552,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Срок действия метаданных базы данных Steam истек.</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Срок действия базы данных Steam истек! Подумайте об обновлении!</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Последнее обновление базы данных Steam: {last_updated}
+
+Возврат к кэшированной, но ПРОДОЛЖЕННОЙ базе данных Steam...</translation>
     </message>
 </context>
 <context>

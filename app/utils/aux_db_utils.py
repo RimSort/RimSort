@@ -23,11 +23,8 @@ def auxdb_get_aux_db_entry(
     :return: AuxMetadataEntry | None, the AuxMetadataEntry for the given UUID, or None if no entry exists
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = (
-        aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
+        settings_controller.settings.aux_db_path
     )
     local_session = session or local_controller.Session()
     try:
@@ -129,11 +126,8 @@ def auxdb_update_mod_color(
     :param session: Session | None, optional SQLAlchemy session to use for the update; if None, a new session will be created and closed within this function
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = (
-        aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
+        settings_controller.settings.aux_db_path
     )
 
     local_session = session or local_controller.Session()
@@ -164,11 +158,8 @@ def auxdb_update_all_mod_colors(
     :param session: Session | None, optional SQLAlchemy session to use for the update; if None, a new session will be created and closed within this function
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = (
-        aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
+        settings_controller.settings.aux_db_path
     )
 
     local_session = session or local_controller.Session()
