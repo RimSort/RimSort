@@ -192,7 +192,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         id: release
         with:
           artifacts: "artifacts/*.zip,artifacts/*.msi,artifacts/*.rpm"
