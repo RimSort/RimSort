@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Union
@@ -102,6 +103,7 @@ def show_dialogue_conditional(
     if information:
         dialogue.setInformativeText(information)
     if details:
+        details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
         dialogue.setDetailedText(details)
 
     # Show the message box & return response
@@ -183,6 +185,7 @@ def show_information(
     if information:
         info_message_box.setInformativeText(information)
     if details:
+        details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
         info_message_box.setDetailedText(details)
 
     # Show the message box
@@ -232,6 +235,7 @@ def show_warning(
     if information:
         warning_message_box.setInformativeText(information)
     if details:
+        details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
         warning_message_box.setDetailedText(details)
 
     # Show the message box
@@ -368,6 +372,7 @@ class _BaseMessageBox(QMessageBox):
         self.setText(text)
         self.setInformativeText(information)
         if details is not None:
+            details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
             self.setDetailedText(details)
 
         # Dynamic sizing
@@ -541,7 +546,7 @@ class FatalErrorDialog(_BaseDialogue):
         # Add data
         self.text = text
         self.information = information
-        self.details = details
+        self.details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
 
         # Buttons
         self.details_btn = QPushButton(self.tr("Show Details"))
