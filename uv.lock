@@ -1189,14 +1189,14 @@ wheels = [
 
 [[package]]
 name = "types-networkx"
-version = "3.6.1.20260303"
+version = "3.6.1.20260321"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/37/d8f7a68a5291cab793e27967d187abbf0c6db318d49e5b6e9dd32b13c2e5/types_networkx-3.6.1.20260303.tar.gz", hash = "sha256:8248aa6fcadc08bd7992af6e412bfc5cfa043bda5ce7ab407fa591c808ce8557", size = 73790, upload-time = "2026-03-03T04:03:46.201Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/0e/d40bb8d5d37bed31f4f87f7081c05bb09c56f2f1a636ca7df340a50478d6/types_networkx-3.6.1.20260321.tar.gz", hash = "sha256:8012c9f3a1ba9ad357df649f8bf633968216847379b5baa7070fced27c1599f9", size = 73812, upload-time = "2026-03-21T03:53:40.519Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/b7/eedcba86c567832699eb242709e8951c0df2b6658beb5f931e954292bcda/types_networkx-3.6.1.20260303-py3-none-any.whl", hash = "sha256:754c7c7bcaab3c317b0b86441240c0a5bd0d2f419aba80a88e9718248a5c89af", size = 162680, upload-time = "2026-03-03T04:03:44.081Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/8e/4c13783c3ef1ceb1a98813786976177db5d30be2e8e638bb2c5ef36bfe68/types_networkx-3.6.1.20260321-py3-none-any.whl", hash = "sha256:be98c80a347daf39a947643f89c1d8753a3788994d87deced86f1df2d0a761c0", size = 162721, upload-time = "2026-03-21T03:53:39.281Z" },
 ]
 
 [[package]]
