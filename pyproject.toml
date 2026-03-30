@@ -20,7 +20,7 @@ dependencies = [
     "packaging==26.0",
     "platformdirs==4.9.4",
     "psutil==7.2.2",
-    "pygit2==1.19.1",
+    "pygit2==1.19.2",
     "pygithub==2.9.0",
     "pyside6==6.11.0",
     "rapidfuzz>=3.14.3",
