@@ -24,7 +24,7 @@ dependencies = [
     "pygithub==2.9.0",
     "pyside6==6.11.0",
     "rapidfuzz>=3.14.3",
-    "requests==2.33.0",
+    "requests==2.33.1",
     "sqlalchemy==2.0.48",
     "steam==1.4.4",
     "steamfiles",
