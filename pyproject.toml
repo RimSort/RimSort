@@ -25,7 +25,7 @@ dependencies = [
     "pyside6==6.11.0",
     "rapidfuzz>=3.14.3",
     "requests==2.33.1",
-    "sqlalchemy==2.0.48",
+    "sqlalchemy==2.0.49",
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
