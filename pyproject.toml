@@ -9,7 +9,7 @@ dependencies = [
     "aiohttp==3.13.5",
     "beautifulsoup4==4.14.3",
     "certifi==2026.2.25",
-    "charset-normalizer==3.4.6",
+    "charset-normalizer==3.4.7",
     "click==8.3.2",
     "imageio==2.37.3",
     "loguru==0.7.3",
