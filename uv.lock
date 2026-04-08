@@ -1234,14 +1234,14 @@ wheels = [
 
 [[package]]
 name = "types-pygments"
-version = "2.20.0.20260407"
+version = "2.20.0.20260408"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "types-docutils", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/52/a7/97ec1f3267736c32b9a8795f602e0efad1f72c922c1d29e1a1dc4d9b189e/types_pygments-2.20.0.20260407.tar.gz", hash = "sha256:57afab71ba7445ea095a395bc8bf66fbec32512d31ecbf4fb2f1d50449287e46", size = 21072, upload-time = "2026-04-07T04:22:52.874Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/89/4b443128fa540c54a8f7ecdeec225aab4818534167c4a2d133099dc00fa6/types_pygments-2.20.0.20260408.tar.gz", hash = "sha256:e8a56a3ab1aee7f4ed8f1876d2f62c96e0f41ede52405a7d30c888f3989d8f00", size = 21115, upload-time = "2026-04-08T04:34:24.29Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/fa/45955cb0beb01dcc6af8ba6ed85f56617126b9edd2fd2d536498b85d07e8/types_pygments-2.20.0.20260407-py3-none-any.whl", hash = "sha256:1595310e36b9a6de63865cd250c3779f3067edfaee4972ae2638d86712537092", size = 29055, upload-time = "2026-04-07T04:22:51.66Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/d8/30924b38eef70caef6b05af5440c84d7673cea2a042e206f404c8100a88d/types_pygments-2.20.0.20260408-py3-none-any.whl", hash = "sha256:6d347d5967b5f0654b659a8b8461a870b207b7e60cd4d646bbc047f6a8db8e1e", size = 29055, upload-time = "2026-04-08T04:34:23.412Z" },
 ]
 
 [[package]]
