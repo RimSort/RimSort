@@ -1204,11 +1204,11 @@ wheels = [
 
 [[package]]
 name = "types-pexpect"
-version = "4.9.0.20260127"
+version = "4.9.0.20260408"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2e/32/7e03a07e16f79a404d6200ed6bdfcc320d0fb833436a5c6895a1403dedb7/types_pexpect-4.9.0.20260127.tar.gz", hash = "sha256:f8d43efc24251a8e533c71ea9be03d19bb5d08af096d561611697af9720cba7f", size = 13461, upload-time = "2026-01-27T03:28:30.923Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/0f/5e9aa68e4595264e968ffaa3358afb2a8d60093f460aaa7e0398c0d9bfd0/types_pexpect-4.9.0.20260408.tar.gz", hash = "sha256:faedd97fc8086b224bc1966770c486ac6ec96bef07dc47cc2724fe4ae62f8f4a", size = 13471, upload-time = "2026-04-08T04:32:30.624Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/d9/7ac5c9aa5a89a1a64cd835ae348227f4939406d826e461b85b690a8ba1c2/types_pexpect-4.9.0.20260127-py3-none-any.whl", hash = "sha256:69216c0ebf0fe45ad2900823133959b027e9471e24fc3f2e4c7b00605555da5f", size = 17078, upload-time = "2026-01-27T03:28:29.848Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/13/96004a3e5dd6c6e7de4edc421d5a2926e062d22be7b006edab747ed42830/types_pexpect-4.9.0.20260408-py3-none-any.whl", hash = "sha256:ba6699609bb6593f00ef7204efc390fd10bc14a8d632f22c8dea13f263b16fcc", size = 17083, upload-time = "2026-04-08T04:32:29.75Z" },
 ]
 
 [[package]]
