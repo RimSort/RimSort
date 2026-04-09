@@ -14,7 +14,7 @@ dependencies = [
     "imageio==2.37.3",
     "loguru==0.7.3",
     "lxml==6.0.2",
-    "msgspec==0.20.0",
+    "msgspec==0.21.0",
     "natsort==8.4.0",
     "networkx==3.6.1",
     "packaging==26.0",
