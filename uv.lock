@@ -1156,11 +1156,11 @@ wheels = [
 
 [[package]]
 name = "types-greenlet"
-version = "3.3.0.20260408"
+version = "3.4.0.20260409"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ca/0f/29a36dc5c48a240788f3fa2ee90deeab686a675514f19440013eaba17fac/types_greenlet-3.3.0.20260408.tar.gz", hash = "sha256:28c9449edc8799fc4b07a859618aec03975d50452a9f8c33a4151b9b45d7754b", size = 8959, upload-time = "2026-04-08T04:29:26.254Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/a6/668751bc864efe820e1eb12c2a77f9e62537f433cc002e483ad01badb04b/types_greenlet-3.4.0.20260409.tar.gz", hash = "sha256:81d2cf628934a16856bb9e54136def8de5356e934f0ad5d5474f219a0c5cb205", size = 8976, upload-time = "2026-04-09T04:22:31.693Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/48/5d76229904ec6a51fb859845c6611407d1985002a208befc9039a2c26bd2/types_greenlet-3.3.0.20260408-py3-none-any.whl", hash = "sha256:dfbf230faea68e6e1f537b3a5bf40fbf65ed8c4fece169640b763fc104c7d39d", size = 8814, upload-time = "2026-04-08T04:29:25.243Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/3f/c8a4d8782f78fccb4b5fe91c5eae2efce6648072754bc7096b1e3b5407ad/types_greenlet-3.4.0.20260409-py3-none-any.whl", hash = "sha256:cbceadb4594eccd95b57b3f7fa8a9b851488f5e6c05026f4a3db9aac02ec8333", size = 8812, upload-time = "2026-04-09T04:22:30.734Z" },
 ]
 
 [[package]]
