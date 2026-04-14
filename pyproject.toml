@@ -13,7 +13,7 @@ dependencies = [
     "click==8.3.2",
     "imageio==2.37.3",
     "loguru==0.7.3",
-    "lxml==6.0.2",
+    "lxml==6.0.4",
     "msgspec==0.21.1",
     "natsort==8.4.0",
     "networkx==3.6.1",
