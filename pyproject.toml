@@ -21,7 +21,7 @@ dependencies = [
     "platformdirs==4.9.6",
     "psutil==7.2.2",
     "pygit2==1.19.2",
-    "pygithub==2.9.0",
+    "pygithub==2.9.1",
     "pyside6==6.11.0",
     "rapidfuzz>=3.14.3",
     "requests==2.33.1",
