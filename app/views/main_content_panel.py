@@ -1951,11 +1951,19 @@ class MainContent(QObject):
             return
 
     def _do_browse_workshop(self) -> None:
+        # Clean up previous instance if it still exists
+        if self.steam_browser:
+            self.steam_browser.close()
+            self.steam_browser.deleteLater()
+        
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/",
             self.metadata_manager,
             self.settings_controller,
         )
+        
+        # Automatically null the reference when browser is destroyed
+        self.steam_browser.destroyed.connect(lambda: setattr(self, 'steam_browser', None))
         self.steam_browser.show()
 
     def _do_check_for_workshop_updates(self) -> None:

@@ -696,3 +696,69 @@ class SteamBrowser(QWidget):
         }}
         """
         self.web_view.page().runJavaScript(script, 0, lambda result: None)
+
+    def closeEvent(self, event) -> None:
+        """Properly clean up web engine resources to prevent memory leaks and hanging processes"""
+        logger.debug("Cleaning up SteamBrowser resources...")
+        
+        # Delete on close flag
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        
+        # Stop any loading
+        if self.web_view:
+            self.web_view.stop()
+            
+            # Disconnect all web view signals
+            try:
+                self.web_view.loadStarted.disconnect()
+                self.web_view.loadProgress.disconnect()
+                self.web_view.loadFinished.disconnect()
+            except Exception:
+                pass
+            
+            # Clean up page
+            if self.web_view.page():
+                # Delete web channel
+                if hasattr(self, 'channel'):
+                    self.channel.deregisterObject(self.js_bridge)
+                    self.channel.deleteLater()
+                
+                # Clear scripts
+                self.web_view.page().profile().scripts().clear()
+                
+                # Delete page
+                self.web_view.page().deleteLater()
+            
+            # Delete web view
+            self.web_view.deleteLater()
+            self.web_view = None
+        
+        # Clean up web profile
+        if hasattr(self, 'web_profile'):
+            self.web_profile.deleteLater()
+            self.web_profile = None
+        
+        # Clear all references
+        self.metadata_manager = None
+        self.settings_controller = None
+        self.js_bridge = None
+        self.downloader_list_mods_tracking.clear()
+        self.downloader_list_dupe_tracking.clear()
+        
+        # Clear layouts
+        self.clear_layout(self.window_layout)
+        
+        logger.debug("SteamBrowser cleanup completed")
+        
+        event.accept()
+
+    def clear_layout(self, layout) -> None:
+        """Recursively clear layout and delete all widgets"""
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.clear_layout(item.layout())
