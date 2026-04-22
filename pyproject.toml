@@ -39,7 +39,7 @@ steamfiles = { git = "https://github.com/RimSort/steamfiles" }
 [dependency-groups]
 dev = [
     "lxml-stubs>=0.5.1",
-    "mypy>=1.20.1",
+    "mypy>=1.20.2",
     "pytest>=8.4.1",
     "pytest-asyncio>=0.25.1",
     "pytest-cov>=6.2.1",
