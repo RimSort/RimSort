@@ -473,7 +473,7 @@ class SteamworksSubscriptionHandler(Process):
                         override_callback=True,
                     )
                 else:
-                    logger.warning(f"DownloadItem skipped: not supported by SteamworksPy library.")
+                    logger.warning("DownloadItem skipped: not supported by SteamworksPy library.")
             except Exception as e:
                 logger.error(f"Failed to trigger download for {pfid}: {e}")
 
