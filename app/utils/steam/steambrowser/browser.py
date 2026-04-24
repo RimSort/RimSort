@@ -10,7 +10,7 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl
-from PySide6.QtGui import QAction, QPixmap
+from PySide6.QtGui import QAction, QCloseEvent, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
     QWebEnginePage,
@@ -21,6 +21,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QLayout,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
@@ -58,6 +59,13 @@ class SteamBrowser(QWidget):
     """
     A generic panel used to browse Workshop content - downloader included
     """
+
+    # Cleared in closeEvent when the window is closed.
+    web_view: QWebEngineView | None
+    web_profile: QWebEngineProfile | None
+    metadata_manager: MetadataManager | None
+    settings_controller: SettingsController | None
+    js_bridge: JavaScriptBridge | None
 
     def __init__(
         self,
@@ -222,6 +230,7 @@ class SteamBrowser(QWidget):
         """Apply browser window launch state from settings"""
         from app.utils.window_launch_state import apply_window_launch_state
 
+        assert self.settings_controller is not None
         browser_window_launch_state = self.settings_controller.settings.browser_window_launch_state
         custom_width = self.settings_controller.settings.browser_window_custom_width
         custom_height = self.settings_controller.settings.browser_window_custom_height
@@ -230,6 +239,7 @@ class SteamBrowser(QWidget):
         logger.info(f"Browser window started with launch state: {browser_window_launch_state}")
 
     def __browse_to_location(self) -> None:
+        assert self.web_view is not None
         url = QUrl(self.location.text())
         logger.debug(f"Browsing to: {url.url()}")
         self.web_view.load(url)
@@ -454,11 +464,13 @@ class SteamBrowser(QWidget):
         self.progress_bar.setValue(progress)
         # Placeholder done after page begins to load
         if progress > 25:
+            assert self.web_view is not None
             self.web_view_loading_placeholder.hide()
             self.web_view.show()
 
     # TODO: Probably a good idea to break this huge function down into a bunch of smaller helpers
     def _web_view_load_finished(self) -> None:
+        assert self.web_view is not None
         # Progress bar done
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(False)
@@ -663,6 +675,7 @@ class SteamBrowser(QWidget):
 
     def _is_mod_installed(self, publishedfileid: str) -> bool:
         """Check if a mod is installed by looking through local and workshop folders"""
+        assert self.metadata_manager is not None
         # check all mods in internal metadata
         for metadata in self.metadata_manager.internal_local_metadata.values():
             if metadata.get("publishedfileid") == publishedfileid:
@@ -671,6 +684,7 @@ class SteamBrowser(QWidget):
 
     def _get_installed_mods_list(self) -> list[str]:
         """Get list of installed mod IDs"""
+        assert self.metadata_manager is not None
         installed_mods = []
         for metadata in self.metadata_manager.internal_local_metadata.values():
             if metadata.get("publishedfileid"):
@@ -688,6 +702,7 @@ class SteamBrowser(QWidget):
 
     def _update_badge_js(self, mod_id: str, status: BadgeState) -> None:
         """Calls a JavaScript function in the web view to update a specific mod's badge"""
+        assert self.web_view is not None
         script = f"""
         if (typeof window.updateModBadge === 'function') {{
             window.updateModBadge('{mod_id}', '{status.value}');
@@ -697,7 +712,7 @@ class SteamBrowser(QWidget):
         """
         self.web_view.page().runJavaScript(script, 0, lambda result: None)
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Properly clean up web engine resources to prevent memory leaks and hanging processes"""
         logger.debug("Cleaning up SteamBrowser resources...")
         
@@ -705,7 +720,7 @@ class SteamBrowser(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         
         # Stop any loading
-        if self.web_view:
+        if self.web_view is not None:
             self.web_view.stop()
             
             # Disconnect all web view signals
@@ -719,7 +734,7 @@ class SteamBrowser(QWidget):
             # Clean up page
             if self.web_view.page():
                 # Delete web channel
-                if hasattr(self, 'channel'):
+                if self.js_bridge is not None and hasattr(self, "channel"):
                     self.channel.deregisterObject(self.js_bridge)
                     self.channel.deleteLater()
                 
@@ -734,7 +749,7 @@ class SteamBrowser(QWidget):
             self.web_view = None
         
         # Clean up web profile
-        if hasattr(self, 'web_profile'):
+        if self.web_profile is not None:
             self.web_profile.deleteLater()
             self.web_profile = None
         
@@ -752,11 +767,13 @@ class SteamBrowser(QWidget):
         
         event.accept()
 
-    def clear_layout(self, layout) -> None:
+    def clear_layout(self, layout: QLayout | None) -> None:
         """Recursively clear layout and delete all widgets"""
         if layout is not None:
             while layout.count():
                 item = layout.takeAt(0)
+                if item is None:
+                    break
                 widget = item.widget()
                 if widget is not None:
                     widget.deleteLater()
