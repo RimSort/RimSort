@@ -166,7 +166,7 @@ jobs:
       - name: Build
         uses: Nuitka/Nuitka-Action@main
         with:
-          nuitka-version: main
+          nuitka-version: 4.0.8
           script-name: app/
           python-flag: -m
           mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
@@ -179,7 +179,11 @@ jobs:
           file-description: "RimSort"
           include-data-files: |
             version.xml=version.xml
-          nofollow-import-to: "sqlalchemy.dialects.oracle"
+          nofollow-import-to: >-
+            sqlalchemy.dialects.mssql,
+            sqlalchemy.dialects.mysql,
+            sqlalchemy.dialects.oracle,
+            sqlalchemy.dialects.postgresql
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 
