@@ -123,6 +123,7 @@ class SteamBrowser(QWidget):
         self.downloader_list.setItemAlignment(Qt.AlignmentFlag.AlignCenter)
         self.downloader_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.downloader_list.customContextMenuRequested.connect(self._downloader_item_contextmenu_event)
+        self.downloader_list.itemDoubleClicked.connect(self._open_mod_url)
         self.add_to_list2_button = QPushButton(self.tr("Add to List"))
         self.add_to_list2_button.clicked.connect(self._add_collection_or_mod_to_list)
         self.clear_list_button = QPushButton(self.tr("Clear List"))
@@ -397,6 +398,12 @@ class SteamBrowser(QWidget):
                     self.downloader_list_dupe_tracking[publishedfileid] = page_title
                 else:
                     self.downloader_list_dupe_tracking[publishedfileid] = title
+    
+    def _open_mod_url(self, item: QListWidgetItem) -> None:
+        publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+        if publishedfileid and self.web_view is not None:
+            url = f"{self.url_prefix_sharedfiles}{publishedfileid}"
+            self.web_view.load(QUrl(url))
 
     def _clear_downloader_list(self) -> None:
         mods_to_clear_badges_for = list(self.downloader_list_mods_tracking)
