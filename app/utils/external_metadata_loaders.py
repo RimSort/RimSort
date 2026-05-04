@@ -35,7 +35,9 @@ class ExternalMetadataLoader:
             path,
         )
 
-    def _validate_db_path(self, path: str, db_type: str, expect_directory: bool = False) -> bool:
+    def _validate_db_path(
+        self, path: str, db_type: str, expect_directory: bool = False
+    ) -> bool:
         """Validate that a database path exists and matches expected type."""
         if not os.path.exists(path):
             self._emit_db_error(
@@ -140,12 +142,22 @@ class ExternalMetadataLoader:
                 self.manager.external_user_rules = rules
             else:
                 self.manager.external_user_rules = None
-            total_entries = len(self.manager.external_user_rules) if self.manager.external_user_rules else 0
+            total_entries = (
+                len(self.manager.external_user_rules)
+                if self.manager.external_user_rules
+                else 0
+            )
             if self.manager.external_user_rules is None:
-                logger.warning("Unable to load userRules.json. 'rules' is None or not a dict")
-            logger.info(f"Loaded {total_entries} additional sorting rules from User Rules")
+                logger.warning(
+                    "Unable to load userRules.json. 'rules' is None or not a dict"
+                )
+            logger.info(
+                f"Loaded {total_entries} additional sorting rules from User Rules"
+            )
 
-    def _load_steam_db(self, life: int, path: str) -> tuple[dict[str, Any] | None, str | None]:
+    def _load_steam_db(
+        self, life: int, path: str
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """Load and validate Steam database with expiry checking.
 
         NOTE: Steam DB has special handling for expired data - it will still be loaded
@@ -191,7 +203,9 @@ class ExternalMetadataLoader:
 
         db_json_data = db_data.get("database", {})
         total_entries = len(db_json_data)
-        logger.info(f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB")
+        logger.info(
+            f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+        )
 
         # Build packageid to name mapping for faster lookups
         self.manager.steamdb_packageid_to_name = {
@@ -220,7 +234,9 @@ class ExternalMetadataLoader:
             else (None, None)
         )
 
-    def _load_community_rules_db(self, path: str) -> tuple[dict[str, Any] | None, str | None]:
+    def _load_community_rules_db(
+        self, path: str
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """Load and validate Community Rules database."""
         logger.info(f"Checking for Community Rules DB at: {path}")
         if not self._validate_db_path(path, "Community Rules"):
@@ -233,7 +249,9 @@ class ExternalMetadataLoader:
 
         community_rules_json_data = rule_data.get("rules", {})
         total_entries = len(community_rules_json_data)
-        logger.info(f"Loaded {total_entries} additional sorting rules from Community Rules")
+        logger.info(
+            f"Loaded {total_entries} additional sorting rules from Community Rules"
+        )
         return community_rules_json_data, path
 
     def _load_community_rules_metadata(self, settings: Any) -> None:
@@ -254,7 +272,9 @@ class ExternalMetadataLoader:
             else (None, None)
         )
 
-    def _load_no_version_warning_db(self, path: str) -> tuple[list[str] | None, str | None]:
+    def _load_no_version_warning_db(
+        self, path: str
+    ) -> tuple[list[str] | None, str | None]:
         """Load and validate No Version Warning database."""
         logger.info(f'Checking for "No Version Warning" DB at: {path}')
         if not self._validate_db_path(path, "No Version Warning"):
@@ -263,7 +283,9 @@ class ExternalMetadataLoader:
         logger.info("No Version Warning DB exists, loading")
         no_version_warning_json_data = xml_path_to_json(path)
         total_entries = len(no_version_warning_json_data)
-        logger.info(f'Loaded {total_entries} compatibility version overrides from "No Version Warning"')
+        logger.info(
+            f'Loaded {total_entries} compatibility version overrides from "No Version Warning"'
+        )
         return list(
             map(
                 str.lower,
@@ -290,7 +312,9 @@ class ExternalMetadataLoader:
             else (None, None)
         )
 
-    def _load_use_this_instead_db(self, path: str) -> tuple[dict[str, Any] | None, str | None]:
+    def _load_use_this_instead_db(
+        self, path: str
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """Load and validate Use This Instead database."""
         logger.info(f"Checking for Use This Instead DB at: {path}")
         if not self._validate_db_path(path, "Use This Instead"):
@@ -302,7 +326,9 @@ class ExternalMetadataLoader:
             return None, None
 
         total_entries = len(db_data)
-        logger.info(f"Loaded metadata for {total_entries} mod replacements from Use This Instead DB")
+        logger.info(
+            f"Loaded metadata for {total_entries} mod replacements from Use This Instead DB"
+        )
         return db_data, path
 
     def _load_use_this_instead_metadata(self, settings: Any) -> None:

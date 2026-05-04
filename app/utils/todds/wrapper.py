@@ -128,7 +128,9 @@ class ToddsInterface:
             logger.warning(f"Executing todds with arguments: {args} in {self.cwd}")
         else:
             logger.error("Todds executable not found.")
-            development_guide_url = "https://rimsort.github.io/RimSort/development-guide/development-setup"
+            development_guide_url = (
+                "https://rimsort.github.io/RimSort/development-guide/development-setup"
+            )
             support_url = "https://github.com/RimSort/RimSort/issues"
             todds_error_message = QCoreApplication.translate(
                 "ToddsInterface",

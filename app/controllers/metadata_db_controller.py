@@ -19,14 +19,18 @@ class MetadataDbController:
             if db_path.parent:
                 db_path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            logger.exception(f"Failed to ensure database directory exists for {db_path}: {e}")
+            logger.exception(
+                f"Failed to ensure database directory exists for {db_path}: {e}"
+            )
 
         self.engine = create_engine(f"sqlite+pysqlite:///{db_path}")
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
 
 
 class AuxMetadataController(MetadataDbController):
-    _instances: dict[Path, "AuxMetadataController"] = {}  # db_path : AuxMetadataController
+    _instances: dict[
+        Path, "AuxMetadataController"
+    ] = {}  # db_path : AuxMetadataController
 
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
@@ -43,7 +47,9 @@ class AuxMetadataController(MetadataDbController):
         return cls._instances[db_path]
 
     @staticmethod
-    def update(session: Session, item_path: Path | str, **kwargs: Any) -> AuxMetadataEntry | None:
+    def update(
+        session: Session, item_path: Path | str, **kwargs: Any
+    ) -> AuxMetadataEntry | None:
         """
         Update an aux metadata entry by the mod path.
 
@@ -88,7 +94,11 @@ class AuxMetadataController(MetadataDbController):
         if isinstance(item_path, Path):
             item_path = str(item_path)
 
-        return session.query(AuxMetadataEntry).filter(AuxMetadataEntry.path == item_path).first()
+        return (
+            session.query(AuxMetadataEntry)
+            .filter(AuxMetadataEntry.path == item_path)
+            .first()
+        )
 
     @staticmethod
     def get_or_create(session: Session, item_path: Path | str) -> AuxMetadataEntry:
@@ -118,8 +128,12 @@ class AuxMetadataController(MetadataDbController):
                 # Query again to get the existing entry
                 entry = AuxMetadataController.get(session, item_path)
                 if entry is None:
-                    logger.error(f"Failed to create or retrieve aux metadata entry for path: {item_path}")
-                    raise RuntimeError(f"Failed to create or retrieve aux metadata entry for path: {item_path}")
+                    logger.error(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
+                    raise RuntimeError(
+                        f"Failed to create or retrieve aux metadata entry for path: {item_path}"
+                    )
             except Exception as e:
                 session.rollback()
                 logger.exception(f"Failed to create new aux metadata entry: {e}")
@@ -128,7 +142,9 @@ class AuxMetadataController(MetadataDbController):
         return entry
 
     @staticmethod
-    def get_value_equals(session: Session, key: str, value: str) -> list[AuxMetadataEntry]:
+    def get_value_equals(
+        session: Session, key: str, value: str
+    ) -> list[AuxMetadataEntry]:
         """Get aux metadata entries where the key equals the value.
 
         :param session: The database session.
@@ -140,7 +156,11 @@ class AuxMetadataController(MetadataDbController):
         :return: A list of aux metadata entries.
         :rtype: list[AuxMetadataEntry
         """
-        return session.query(AuxMetadataEntry).filter(getattr(AuxMetadataEntry, key) == value).all()
+        return (
+            session.query(AuxMetadataEntry)
+            .filter(getattr(AuxMetadataEntry, key) == value)
+            .all()
+        )
 
     @staticmethod
     def query(session: Session, query: str) -> list[AuxMetadataEntry]:
@@ -157,7 +177,9 @@ class AuxMetadataController(MetadataDbController):
         return [AuxMetadataEntry(**row._mapping) for row in result]
 
     @staticmethod
-    def add(session: Session, item: AuxMetadataEntry | Iterable[AuxMetadataEntry]) -> None:
+    def add(
+        session: Session, item: AuxMetadataEntry | Iterable[AuxMetadataEntry]
+    ) -> None:
         """Add an aux metadata entry or entries to the database.
 
         :param session: The database session.
@@ -177,7 +199,9 @@ class AuxMetadataController(MetadataDbController):
         """Delete mod(s) from database."""
 
         for path in paths:
-            session.query(AuxMetadataEntry).filter(AuxMetadataEntry.path == str(path)).delete()
+            session.query(AuxMetadataEntry).filter(
+                AuxMetadataEntry.path == str(path)
+            ).delete()
 
         session.commit()
 
@@ -209,7 +233,9 @@ class AuxMetadataController(MetadataDbController):
 
         workshop_items = {
             published_file_id: data
-            for published_file_id, data in acf_data.get("AppWorkshop", {}).get("WorkshopItemDetails", {}).items()
+            for published_file_id, data in acf_data.get("AppWorkshop", {})
+            .get("WorkshopItemDetails", {})
+            .items()
         }
 
         entries = (

@@ -27,7 +27,9 @@ class LanguageController:
         logger.info(f"Supported languages: {self.languages}")
 
     def _get_supported_languages(self) -> set[str]:
-        language_names = self._get_language_names_from_folder(self._language_data_folder)
+        language_names = self._get_language_names_from_folder(
+            self._language_data_folder
+        )
         logger.info(f"Supported languages retrieved: {language_names}")
         logger.debug(f"Checking language folders: {[self._language_data_folder]}")
 
@@ -71,7 +73,9 @@ class LanguageController:
             display_name = language_map.get(lang_code, lang_code)
             combox.addItem(display_name, lang_code)
 
-    def setup_language_dialog(self, settings_dialog: "SettingsDialog", settings: "Settings") -> None:
+    def setup_language_dialog(
+        self, settings_dialog: "SettingsDialog", settings: "Settings"
+    ) -> None:
         """
         Set up the settings dialog with current settings and connect language change signal.
         """
@@ -88,7 +92,9 @@ class LanguageController:
             lambda: self._on_language_changed(settings_dialog, settings)
         )
 
-    def _on_language_changed(self, settings_dialog: "SettingsDialog", settings: "Settings") -> None:
+    def _on_language_changed(
+        self, settings_dialog: "SettingsDialog", settings: "Settings"
+    ) -> None:
         """Handle language change and prompt user to restart."""
         new_language = settings_dialog.language_combobox.currentData()
         if new_language != settings.language:
@@ -98,7 +104,9 @@ class LanguageController:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Language Changed"),
                 text=self.tr("The language has been updated."),
-                information=self.tr("Restart the application to apply the change. Restart now?"),
+                information=self.tr(
+                    "Restart the application to apply the change. Restart now?"
+                ),
                 button_text_override=[
                     self.tr("Restart"),
                 ],

@@ -110,7 +110,9 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
             with __open_file_maybe_compressed(path) as f:
                 soup = BeautifulSoup(f.read(), "lxml-xml")
                 # Find and remove empty tags
-                empty_tags = soup.find_all(lambda tag: not tag.text.strip() or len(tag) == 0)
+                empty_tags = soup.find_all(
+                    lambda tag: not tag.text.strip() or len(tag) == 0
+                )
                 for empty_tag in empty_tags:
                     empty_tag.extract()
                 # Convert the BeautifulSoup object to a dictionary
@@ -125,7 +127,9 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
     return data
 
 
-def json_to_xml_write(data: dict[str, Any], path: str, raise_errs: bool = False) -> None:
+def json_to_xml_write(
+    data: dict[str, Any], path: str, raise_errs: bool = False
+) -> None:
     """
     Write dictionary data to an XML file.
 
@@ -226,7 +230,9 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
                 if stack == ["savegame", "meta", "modIds", "li"]:
                     return True
 
-                if event == "end" and (elem.tag == "modIds" or elem.tag == "meta" or elem.tag == "savegame"):
+                if event == "end" and (
+                    elem.tag == "modIds" or elem.tag == "meta" or elem.tag == "savegame"
+                ):
                     # No package ids or save file format is not right
                     return False
 

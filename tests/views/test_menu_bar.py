@@ -56,7 +56,10 @@ class TestMenuBarUpdateMenuCreation:
             assert menu_bar.check_for_updates_on_startup_action is not None
 
             # Verify the menu exists
-            menus = [qt_menu_bar.actions()[i].text() for i in range(len(qt_menu_bar.actions()))]
+            menus = [
+                qt_menu_bar.actions()[i].text()
+                for i in range(len(qt_menu_bar.actions()))
+            ]
             assert "Update" in menus
 
     def test_update_menu_hidden_when_env_var_set(
@@ -75,7 +78,10 @@ class TestMenuBarUpdateMenuCreation:
             assert menu_bar.check_for_updates_on_startup_action is None
 
             # Verify the menu does not exist
-            menus = [qt_menu_bar.actions()[i].text() for i in range(len(qt_menu_bar.actions()))]
+            menus = [
+                qt_menu_bar.actions()[i].text()
+                for i in range(len(qt_menu_bar.actions()))
+            ]
             assert "Update" not in menus
 
 

@@ -369,8 +369,7 @@ class SteamcmdInterface:
         num_batches = len(batches)
         first_batch = batches[0]
         runner.message(
-            f"\nBatch {batch_num}/{num_batches}: "
-            f"downloading {len(first_batch)} mod(s)..."
+            f"\nBatch {batch_num}/{num_batches}: downloading {len(first_batch)} mod(s)..."
         )
         script_path = self._build_download_script(first_batch)
         runner.message(f"Compiled & using script: {script_path}")

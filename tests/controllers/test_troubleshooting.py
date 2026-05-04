@@ -163,14 +163,18 @@ class TestUIInteractions:
         (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
 
         mods_config = config_dir / "ModsConfig.xml"
-        mods_config.write_text("<ModsConfigData><activeMods><li>test.mod</li></activeMods></ModsConfigData>")
+        mods_config.write_text(
+            "<ModsConfigData><activeMods><li>test.mod</li></activeMods></ModsConfigData>"
+        )
 
         with (
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("app.controllers.troubleshooting_controller.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.troubleshooting_controller.EventBus"
+            ) as mock_event_bus,
         ):
             mock_event_bus_instance = mock_event_bus.return_value
             mock_event_bus_instance.do_refresh_mods_lists = mock_event_bus_instance
@@ -251,7 +255,9 @@ class TestSteamUtilities:
 
         steam_path = Path("C:/Program Files (x86)/Steam")
         with (
-            patch("app.controllers.troubleshooting_controller.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.platform_specific_open"
+            ) as mock_open,
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
@@ -266,7 +272,9 @@ class TestSteamUtilities:
             controller._on_steam_clear_cache_clicked()
 
         mock_open.reset_mock()
-        with patch("app.controllers.troubleshooting_controller.EventBus") as mock_eventbus:
+        with patch(
+            "app.controllers.troubleshooting_controller.EventBus"
+        ) as mock_eventbus:
             controller._on_steam_verify_game_clicked()
             mock_eventbus.return_value.do_steam_verify_game_files.emit.assert_called_once()
 
@@ -275,7 +283,9 @@ class TestSteamUtilities:
                 "pathlib.Path.exists",
                 side_effect=lambda p: False if str(p).endswith("downloading") else True,
             ),
-            patch("app.controllers.troubleshooting_controller.show_dialogue_conditional") as mock_dialog,
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional"
+            ) as mock_dialog,
         ):
             controller._on_steam_clear_cache_clicked()
             assert mock_dialog.call_args.kwargs["title"] in [
@@ -305,7 +315,9 @@ class TestSteamUtilities:
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("app.controllers.troubleshooting_controller.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.platform_specific_open"
+            ) as mock_open,
         ):
             controller._on_steam_repair_library_clicked()
             assert mock_open.call_count == 2
@@ -404,7 +416,9 @@ class TestModListImportExport:
             ),
             patch("builtins.open", create=True) as mock_open,
             patch("json.load", return_value=import_data),
-            patch("app.controllers.troubleshooting_controller.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.troubleshooting_controller.EventBus"
+            ) as mock_event_bus,
         ):
             controller._on_mod_import_list_button_clicked()
             mock_open.assert_called()

@@ -7,7 +7,9 @@ from app.utils.metadata import MetadataManager
 from app.views.dialogue import show_warning
 
 
-def do_topo_sort(dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]) -> list[str]:
+def do_topo_sort(
+    dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
+) -> list[str]:
     """
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically by name for consistency.
@@ -80,7 +82,9 @@ def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
         logger.info("No circular dependencies found.")
 
     show_warning(
-        title=QCoreApplication.translate("find_circular_dependencies", "Unable to Sort"),
+        title=QCoreApplication.translate(
+            "find_circular_dependencies", "Unable to Sort"
+        ),
         text=QCoreApplication.translate("find_circular_dependencies", "Unable to Sort"),
         information=QCoreApplication.translate(
             "find_circular_dependencies",

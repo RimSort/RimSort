@@ -20,7 +20,9 @@ class Sorter:
     ):
         self.active_package_ids = active_package_ids.copy()
         self.active_uuids = active_uuids.copy()
-        self.use_moddependencies_as_loadTheseBefore = use_moddependencies_as_loadTheseBefore
+        self.use_moddependencies_as_loadTheseBefore = (
+            use_moddependencies_as_loadTheseBefore
+        )
 
         if isinstance(sort_method, SortMethod) or isinstance(sort_method, str):
             logger.info(f"Created sorter instance with {sort_method} sort method")
@@ -34,18 +36,28 @@ class Sorter:
         elif callable(sort_method):
             self.sort_method = sort_method
         else:
-            raise ValueError(f"Invalid sort method {sort_method}, type: {type(sort_method)}")
+            raise ValueError(
+                f"Invalid sort method {sort_method}, type: {type(sort_method)}"
+            )
 
     def generate_dependency_graphs(
         self,
     ) -> list[dict[str, set[str]]]:
         logger.info("Generating dependency graphs")
-        dependencies_graph = sort_deps.gen_deps_graph(self.active_uuids, list(self.active_package_ids))
-        reverse_dependencies_graph = sort_deps.gen_rev_deps_graph(self.active_uuids, list(self.active_package_ids))
+        dependencies_graph = sort_deps.gen_deps_graph(
+            self.active_uuids, list(self.active_package_ids)
+        )
+        reverse_dependencies_graph = sort_deps.gen_rev_deps_graph(
+            self.active_uuids, list(self.active_package_ids)
+        )
 
-        tier_zero_graph, tier_zero_mods = sort_deps.gen_tier_zero_deps_graph(dependencies_graph)
+        tier_zero_graph, tier_zero_mods = sort_deps.gen_tier_zero_deps_graph(
+            dependencies_graph
+        )
 
-        tier_one_graph, tier_one_mods = sort_deps.gen_tier_one_deps_graph(dependencies_graph)
+        tier_one_graph, tier_one_mods = sort_deps.gen_tier_one_deps_graph(
+            dependencies_graph
+        )
 
         tier_three_graph, tier_three_mods = sort_deps.gen_tier_three_deps_graph(
             dependencies_graph,
@@ -63,7 +75,9 @@ class Sorter:
 
         return [tier_zero_graph, tier_one_graph, tier_two_graph, tier_three_graph]
 
-    def sort(self, dependency_graphs: list[dict[str, set[str]]] | None = None) -> tuple[bool, list[str]]:
+    def sort(
+        self, dependency_graphs: list[dict[str, set[str]]] | None = None
+    ) -> tuple[bool, list[str]]:
         """Sorts the given dependency graph using the controller's sort method.
 
         :param dependency_graphs: The dependency graph to be sorted, defaults to None

@@ -68,7 +68,9 @@ class GitOperationType(Enum):
 class GitNotificationHandler(Protocol):
     """Protocol for handling git operation notifications."""
 
-    def show_error(self, title: str, message: str, details: Optional[str] = None) -> None:
+    def show_error(
+        self, title: str, message: str, details: Optional[str] = None
+    ) -> None:
         """Show error notification to user."""
         ...
 
@@ -76,7 +78,9 @@ class GitNotificationHandler(Protocol):
 class DefaultNotificationHandler:
     """Default implementation using QMessageBox for notifications."""
 
-    def show_error(self, title: str, message: str, details: Optional[str] = None) -> None:
+    def show_error(
+        self, title: str, message: str, details: Optional[str] = None
+    ) -> None:
         """Show error notification using InformationBox."""
         InformationBox(
             title=title,
@@ -109,12 +113,16 @@ class GitOperationConfig:
         return cls(notify_errors=False)
 
     @classmethod
-    def create_with_handler(cls, handler: GitNotificationHandler) -> "GitOperationConfig":
+    def create_with_handler(
+        cls, handler: GitNotificationHandler
+    ) -> "GitOperationConfig":
         """Create a config with a specific notification handler."""
         return cls(notify_errors=True, notification_handler=handler)
 
     @classmethod
-    def create_with_timeout(cls, fetch_timeout: int = 30, connection_timeout: int = 10) -> "GitOperationConfig":
+    def create_with_timeout(
+        cls, fetch_timeout: int = 30, connection_timeout: int = 10
+    ) -> "GitOperationConfig":
         """Create a config with custom timeout values."""
         return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
 
@@ -235,14 +243,20 @@ def _attempt_repository_repair(
                 delete_files_with_condition(repo_path_str, lambda _: True)
 
                 if not repo_path_obj.exists():
-                    logger.info(f"Successfully deleted corrupted repository at: {repo_path_str}")
+                    logger.info(
+                        f"Successfully deleted corrupted repository at: {repo_path_str}"
+                    )
                     break
 
                 if attempt < max_retries - 1:
-                    logger.warning(f"Deletion attempt {attempt + 1} failed, retrying... ({repo_path_str})")
+                    logger.warning(
+                        f"Deletion attempt {attempt + 1} failed, retrying... ({repo_path_str})"
+                    )
                     time.sleep(0.5 * (attempt + 1))  # Exponential backoff
                 else:
-                    logger.error(f"Failed to delete corrupted repository: {repo_path_str}")
+                    logger.error(
+                        f"Failed to delete corrupted repository: {repo_path_str}"
+                    )
                     return False
         else:
             logger.info(f"Repository directory already gone: {repo_path_str}")
@@ -295,7 +309,9 @@ def _handle_git_error(
         True if the error was due to corruption and repair was attempted, False otherwise.
     """
     error_msg = str(error)
-    logger.error(f"Git {operation.value} operation failed{f' ({context})' if context else ''}: {error_msg}")
+    logger.error(
+        f"Git {operation.value} operation failed{f' ({context})' if context else ''}: {error_msg}"
+    )
 
     # Check for repository corruption
     corruption_indicators = [
@@ -306,7 +322,10 @@ def _handle_git_error(
         "pack corruption",
     ]
 
-    if any(indicator in error_msg.lower() for indicator in corruption_indicators) and repo_path:
+    if (
+        any(indicator in error_msg.lower() for indicator in corruption_indicators)
+        and repo_path
+    ):
         logger.warning(f"Detected repository corruption in: {repo_path}")
         if _attempt_repository_repair(repo_path, repo_url, repo):
             logger.info(f"Repository corruption repair successful: {repo_path}")
@@ -518,7 +537,9 @@ def get_config(config: Optional[GitOperationConfig]) -> GitOperationConfig:
     return config
 
 
-def git_discover(path: str | Path, config: Optional[GitOperationConfig] = None) -> Optional[Repository]:
+def git_discover(
+    path: str | Path, config: Optional[GitOperationConfig] = None
+) -> Optional[Repository]:
     """Discover a git repository at a given path.
 
     Args:
@@ -543,7 +564,9 @@ def git_discover(path: str | Path, config: Optional[GitOperationConfig] = None) 
         return Repository(repo_path)
 
     except pygit2.GitError as e:
-        _handle_git_error(GitOperationType.DISCOVER, e, config, context=f"repository at: {path_str}")
+        _handle_git_error(
+            GitOperationType.DISCOVER, e, config, context=f"repository at: {path_str}"
+        )
         return None
 
 
@@ -623,7 +646,9 @@ def git_clone(
     # Validate path
     if repo_path_obj.exists() and not repo_path_obj.is_dir():
         error_msg = "The path is not a directory."
-        logger.error(f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}")
+        logger.error(
+            f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}"
+        )
         _handle_git_error(
             GitOperationType.CLONE,
             ValueError(error_msg),
@@ -636,7 +661,9 @@ def git_clone(
     if repo_path_obj.exists() and any(repo_path_obj.iterdir()):
         if not force:
             error_msg = f"The path is not empty: {repo_path}"
-            logger.error(f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}")
+            logger.error(
+                f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}"
+            )
             _handle_git_error(
                 GitOperationType.CLONE,
                 ValueError(error_msg),
@@ -646,19 +673,27 @@ def git_clone(
             return None, GitCloneResult.PATH_NOT_EMPTY
         else:
             # Force the clone operation by deleting the directory
-            logger.warning(f"Force cloning repository by deleting the local directory: {repo_path}")
+            logger.warning(
+                f"Force cloning repository by deleting the local directory: {repo_path}"
+            )
 
             # Attempt deletion
-            success = delete_files_with_condition(repo_path_str, lambda file: not file.endswith(".dds"))
+            success = delete_files_with_condition(
+                repo_path_str, lambda file: not file.endswith(".dds")
+            )
 
             if not success:
                 logger.error(f"Failed to delete the local directory: {repo_path}")
 
                 # If deletion failed, try alternative approaches
                 # 1. Attempt corruption repair
-                logger.warning(f"Attempting automatic corruption repair due to deletion failure: {repo_path}")
+                logger.warning(
+                    f"Attempting automatic corruption repair due to deletion failure: {repo_path}"
+                )
                 if _attempt_repository_repair(repo_path_str, repo_url, repo=None):
-                    logger.info(f"Successfully repaired and recovered corrupted repository: {repo_path}")
+                    logger.info(
+                        f"Successfully repaired and recovered corrupted repository: {repo_path}"
+                    )
                     # Try clone again after repair
                     try:
                         repo = pygit2.clone_repository(
@@ -674,7 +709,9 @@ def git_clone(
                         return None, GitCloneResult.GIT_ERROR
                 else:
                     # 2. If repair failed, try renaming the old directory and cloning fresh
-                    logger.warning(f"Repair failed, attempting to rename old directory and clone fresh: {repo_path}")
+                    logger.warning(
+                        f"Repair failed, attempting to rename old directory and clone fresh: {repo_path}"
+                    )
                     try:
                         timestamp = int(time.time())
                         backup_path = f"{repo_path_str}_backup_{timestamp}"
@@ -689,14 +726,18 @@ def git_clone(
                             depth=depth,
                         )
                         repo = Repository(repo_path_str)
-                        logger.info(f"Successfully cloned after renaming backup: {repo_path}")
+                        logger.info(
+                            f"Successfully cloned after renaming backup: {repo_path}"
+                        )
                         return repo, GitCloneResult.CLONED
                     except Exception as e:
                         logger.error(f"Failed to clone after renaming backup: {e}")
                         return None, GitCloneResult.PATH_DELETE_ERROR
 
     try:
-        repo = pygit2.clone_repository(repo_url, repo_path_str, checkout_branch=checkout_branch, depth=depth)
+        repo = pygit2.clone_repository(
+            repo_url, repo_path_str, checkout_branch=checkout_branch, depth=depth
+        )
         # Wrap the returned repo in the Python wrapper class for type consistency
         repo = Repository(repo_path_str)
         return repo, GitCloneResult.CLONED
@@ -710,7 +751,9 @@ def git_clone(
         return None, GitCloneResult.GIT_ERROR
 
 
-def git_check_updates(repo: Repository, config: Optional[GitOperationConfig] = None) -> Optional[pygit2.Walker]:
+def git_check_updates(
+    repo: Repository, config: Optional[GitOperationConfig] = None
+) -> Optional[pygit2.Walker]:
     """Check for updates in a git repository in the current branch.
 
     Args:
@@ -738,7 +781,9 @@ def git_check_updates(repo: Repository, config: Optional[GitOperationConfig] = N
             return None  # Fetch updates from remote with timeout
         try:
             if not _fetch_with_timeout(remote, config.fetch_timeout):
-                logger.error(f"Fetch operation timed out after {config.fetch_timeout} seconds")
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
                 return None
         except Exception as e:
             logger.error(f"Fetch operation failed: {str(e)}")
@@ -839,7 +884,9 @@ def git_pull(
         # Fetch updates from remote with timeout
         try:
             if not _fetch_with_timeout(remote, config.fetch_timeout):
-                logger.error(f"Fetch operation timed out after {config.fetch_timeout} seconds")
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
                 return GitPullResult.GIT_ERROR
         except Exception as e:
             logger.error(f"Fetch operation failed: {str(e)}")
@@ -887,7 +934,9 @@ def git_pull(
 
         if merge_result & pygit2.enums.MergeAnalysis.UP_TO_DATE:
             if reset_working_tree:
-                logger.debug("Working tree is up to date, but reset requested — performing hard reset")
+                logger.debug(
+                    "Working tree is up to date, but reset requested — performing hard reset"
+                )
                 repo.reset(repo.head.target, ResetMode.HARD)
             logger.info("Repository is already up to date.")
             return GitPullResult.UP_TO_DATE
@@ -935,7 +984,9 @@ def git_pull(
 
                 if config.notify_errors:
                     if conflict_files:
-                        logger.error(f"Git merge conflicts in files: {', '.join(conflict_files)}")
+                        logger.error(
+                            f"Git merge conflicts in files: {', '.join(conflict_files)}"
+                        )
                     else:
                         logger.error("Multiple git merge conflicts detected")
 
@@ -943,7 +994,9 @@ def git_pull(
                 try:
                     repo.state_cleanup()
                     repo.checkout_head(strategy=CheckoutStrategy.FORCE)
-                    logger.info("Aborted merge due to conflicts and reset repository state.")
+                    logger.info(
+                        "Aborted merge due to conflicts and reset repository state."
+                    )
                 except Exception as e:
                     logger.error(f"Failed to abort merge and reset state: {e}")
 
@@ -1182,7 +1235,9 @@ def git_stage_commit(
                 # This might be the first commit (no HEAD yet)
                 pass
 
-            commit_id = repo.create_commit("HEAD", author, committer, message, tree_id, parents)
+            commit_id = repo.create_commit(
+                "HEAD", author, committer, message, tree_id, parents
+            )
 
             logger.info(f"Changes staged and committed in the repository: {repo.path}")
             logger.debug(f"Created commit: {commit_id}")
@@ -1198,7 +1253,9 @@ def git_stage_commit(
             return GitStageCommitResult.COMMIT_FAILED
 
     except pygit2.GitError as e:
-        _handle_git_error(GitOperationType.STAGE_COMMIT, e, config, context=f"repository: {repo.path}")
+        _handle_git_error(
+            GitOperationType.STAGE_COMMIT, e, config, context=f"repository: {repo.path}"
+        )
         return GitStageCommitResult.GIT_ERROR
 
 
@@ -1259,11 +1316,15 @@ def git_get_status(
             if flags & pygit2.GIT_STATUS_IGNORED:
                 status_dict["ignored"].append(filepath)
 
-        logger.debug(f"Repository status: {sum(len(v) for v in status_dict.values())} files with changes")
+        logger.debug(
+            f"Repository status: {sum(len(v) for v in status_dict.values())} files with changes"
+        )
         return status_dict
 
     except pygit2.GitError as e:
-        _handle_git_error(GitOperationType.STATUS, e, config, context=f"repository: {repo.path}")
+        _handle_git_error(
+            GitOperationType.STATUS, e, config, context=f"repository: {repo.path}"
+        )
         return None
 
 
@@ -1392,7 +1453,9 @@ def git_stash(
                         conflict_files.append(filepath)
 
                 if conflict_files:
-                    logger.warning(f"Conflicts detected during stash pop in files: {conflict_files}")
+                    logger.warning(
+                        f"Conflicts detected during stash pop in files: {conflict_files}"
+                    )
                     return GitStashResult.STASH_POP_CONFLICT
 
                 logger.info("Stash popped successfully")
@@ -1435,7 +1498,9 @@ def git_stash(
         return GitStashResult.GIT_ERROR
 
 
-def git_stash_list(repo: Repository, config: Optional[GitOperationConfig] = None) -> List[str]:
+def git_stash_list(
+    repo: Repository, config: Optional[GitOperationConfig] = None
+) -> List[str]:
     """List stashes in the repository.
 
     Args:
@@ -1500,7 +1565,9 @@ def git_stash_drop(
         return GitStashResult.GIT_ERROR
 
 
-def git_has_uncommitted_changes(repo: Repository, config: Optional[GitOperationConfig] = None) -> bool:
+def git_has_uncommitted_changes(
+    repo: Repository, config: Optional[GitOperationConfig] = None
+) -> bool:
     """Check if the repository has uncommitted changes.
 
     Args:
@@ -1566,7 +1633,9 @@ def git_is_repository(path: str | Path) -> bool:
         return False
 
 
-def git_get_current_branch(repo: Repository, config: Optional[GitOperationConfig] = None) -> Optional[str]:
+def git_get_current_branch(
+    repo: Repository, config: Optional[GitOperationConfig] = None
+) -> Optional[str]:
     """Get the current branch name.
 
     Args:
@@ -1656,7 +1725,9 @@ def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
         if isinstance(commit, pygit2.Commit):
             if short_format:
                 short_hash = str(commit.id)[:7]
-                message = commit.message.split("\n")[0]  # Only the first line of the message
+                message = commit.message.split("\n")[
+                    0
+                ]  # Only the first line of the message
                 return f"{short_hash} {message}"
             else:
                 short_hash = str(commit.id)[:7]

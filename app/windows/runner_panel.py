@@ -541,8 +541,7 @@ class RunnerPanel(QWidget):
         total_batches = self._steamcmd_batch_index + len(self._pending_steamcmd_batches)
 
         self.message(
-            f"\nBatch {self._steamcmd_batch_index}/{total_batches}: "
-            f"downloading {len(next_batch)} mod(s)..."
+            f"\nBatch {self._steamcmd_batch_index}/{total_batches}: downloading {len(next_batch)} mod(s)..."
         )
 
         # _steamcmd_wrapper is the SteamcmdInterface instance set by download_mods()

@@ -43,7 +43,9 @@ def test_case_insensitive_str(pid: str, string: str) -> None:
 
 
 def test_case_insensitive_set_contains() -> None:
-    package_id_set = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
+    package_id_set = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
     assert "TestPackage" in package_id_set
     assert "AnotherPackage" in package_id_set
     assert "NonExistingPackage" not in package_id_set
@@ -67,33 +69,51 @@ def test_case_insensitive_set_discard() -> None:
 
 
 def test_case_insensitive_set_len() -> None:
-    package_id_set = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
+    package_id_set = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
     assert len(package_id_set) == 2
 
-    package_id_set = metadata_structure.CaseInsensitiveSet(["TestPackage", "testpackage"])
+    package_id_set = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "testpackage"]
+    )
     assert len(package_id_set) == 1
 
 
 def test_case_insensitive_set_iter() -> None:
-    package_id_set = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
+    package_id_set = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
     assert set(package_id_set) == {"testpackage", "anotherpackage"}
 
 
 def test_case_insensitive_set_and() -> None:
-    package_id_set1 = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
-    package_id_set2 = metadata_structure.CaseInsensitiveSet(["anotherpackage", "AdditionalPackage"])
+    package_id_set1 = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
+    package_id_set2 = metadata_structure.CaseInsensitiveSet(
+        ["anotherpackage", "AdditionalPackage"]
+    )
     intersection = package_id_set1 & package_id_set2
     assert set(intersection) == {"anotherpackage"}
 
 
 def test_case_insensitive_set_parametrize() -> None:
-    package_id_set = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
-    assert package_id_set == metadata_structure.CaseInsensitiveSet(["testpackage", "anotherpackage"])
+    package_id_set = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
+    assert package_id_set == metadata_structure.CaseInsensitiveSet(
+        ["testpackage", "anotherpackage"]
+    )
 
 
 def test_case_insensitive_set_union() -> None:
-    package_id_set1 = metadata_structure.CaseInsensitiveSet(["TestPackage", "AnotherPackage"])
-    package_id_set2 = metadata_structure.CaseInsensitiveSet(["anotherpackage", "AdditionalPackage"])
+    package_id_set1 = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage", "AnotherPackage"]
+    )
+    package_id_set2 = metadata_structure.CaseInsensitiveSet(
+        ["anotherpackage", "AdditionalPackage"]
+    )
     union = package_id_set1 | package_id_set2
     assert set(union) == {"testpackage", "anotherpackage", "additionalpackage"}
 
@@ -149,19 +169,31 @@ def test_about_xml_mod_overall_rules() -> None:
     mod.about_rules.load_after = metadata_structure.CaseInsensitiveSet(["TestPackage"])
     assert mod.overall_rules.load_after == {}
     mod.clear_cache()
-    assert mod.overall_rules.load_after == metadata_structure.CaseInsensitiveSet(["TestPackage"])
+    assert mod.overall_rules.load_after == metadata_structure.CaseInsensitiveSet(
+        ["TestPackage"]
+    )
 
-    mod.about_rules.load_after = metadata_structure.CaseInsensitiveSet(["AnotherPackage", "testpackage"])
+    mod.about_rules.load_after = metadata_structure.CaseInsensitiveSet(
+        ["AnotherPackage", "testpackage"]
+    )
     mod.clear_cache()
     assert mod.overall_rules.load_after == {"testpackage", "anotherpackage"}
     assert mod.overall_rules.load_before == set()
 
-    mod.about_rules.load_before = metadata_structure.CaseInsensitiveSet(["TestPackage1"])
+    mod.about_rules.load_before = metadata_structure.CaseInsensitiveSet(
+        ["TestPackage1"]
+    )
     mod.clear_cache()
-    assert mod.overall_rules.load_before == metadata_structure.CaseInsensitiveSet(["TestPackage1"])
+    assert mod.overall_rules.load_before == metadata_structure.CaseInsensitiveSet(
+        ["TestPackage1"]
+    )
 
-    mod.user_rules.load_before = metadata_structure.CaseInsensitiveSet(["AnotherPackage1", "testpackage1"])
-    mod.community_rules.load_before = metadata_structure.CaseInsensitiveSet(["AnotherPackage2", "testpackage2"])
+    mod.user_rules.load_before = metadata_structure.CaseInsensitiveSet(
+        ["AnotherPackage1", "testpackage1"]
+    )
+    mod.community_rules.load_before = metadata_structure.CaseInsensitiveSet(
+        ["AnotherPackage2", "testpackage2"]
+    )
     mod.clear_cache()
     assert mod.overall_rules.load_before == {
         "testpackage1",
