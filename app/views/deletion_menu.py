@@ -70,7 +70,9 @@ class ModDeletionMenu(QMenu):
         self._actions_initialized = False
 
         # Debug logging for remove_from_uuids
-        logger.debug(f"ModDeletionMenu initialized with remove_from_uuids: {self.remove_from_uuids}")
+        logger.debug(
+            f"ModDeletionMenu initialized with remove_from_uuids: {self.remove_from_uuids}"
+        )
 
         # Synchronize remove_from_uuids with selected mods' UUIDs
         self._sync_remove_from_uuids_with_selected_mods()
@@ -99,7 +101,9 @@ class ModDeletionMenu(QMenu):
             if not uuid:
                 mod_path = mod.get("path")
                 if mod_path:
-                    uuid = self.metadata_manager.mod_metadata_dir_mapper.get(str(mod_path))
+                    uuid = self.metadata_manager.mod_metadata_dir_mapper.get(
+                        str(mod_path)
+                    )
             if uuid:
                 uuids.append(uuid)
         # Remove duplicates and update the list
@@ -116,7 +120,9 @@ class ModDeletionMenu(QMenu):
     ) -> None:
         """Build the list of available deletion actions."""
         if enable_delete_mod:
-            self.delete_actions.append((QAction(self.tr("Delete mod completely")), self.delete_mod_completely))
+            self.delete_actions.append(
+                (QAction(self.tr("Delete mod completely")), self.delete_mod_completely)
+            )
 
         if enable_delete_keep_dds:
             self.delete_actions.append(
@@ -241,7 +247,9 @@ class ModDeletionMenu(QMenu):
         # Synchronize remove_from_uuids with current selected mods before deletion
         self._sync_remove_from_uuids_with_selected_mods()
 
-        if self._confirm_deletion(confirmation_title, confirmation_text, confirmation_info):
+        if self._confirm_deletion(
+            confirmation_title, confirmation_text, confirmation_info
+        ):
             result = self._iterate_mods(
                 deletion_fn,
                 selected_mods,
@@ -252,7 +260,9 @@ class ModDeletionMenu(QMenu):
 
     def _is_official_expansion(self, mod_metadata: ModMetadata) -> bool:
         """Check if the mod is an official expansion that should not be deleted."""
-        return mod_metadata.get("data_source") == self.EXPANSION_DATA_SOURCE and mod_metadata.get(
+        return mod_metadata.get(
+            "data_source"
+        ) == self.EXPANSION_DATA_SOURCE and mod_metadata.get(
             "packageid", ""
         ).startswith(self.LUDEON_PACKAGE_PREFIX)
 
@@ -272,14 +282,18 @@ class ModDeletionMenu(QMenu):
         if result.success_count > 0:
             show_information(
                 title=self.tr("RimSort"),
-                text=self.tr(f"Successfully deleted {result.success_count} selected mods."),
+                text=self.tr(
+                    f"Successfully deleted {result.success_count} selected mods."
+                ),
             )
 
             # Show failure message if any deletions failed
             if result.failed_count > 0:
                 show_warning(
                     title=self.tr("Deletion Incomplete"),
-                    text=self.tr(f"Failed to delete {result.failed_count} mod(s). Check logs for details."),
+                    text=self.tr(
+                        f"Failed to delete {result.failed_count} mod(s). Check logs for details."
+                    ),
                 )
 
         # Call completion callback if provided
@@ -316,14 +330,22 @@ class ModDeletionMenu(QMenu):
 
             # Skip official expansions
             if self._is_official_expansion(mod_metadata):
-                logger.info(f"Skipping official expansion: {mod_metadata.get('name', 'Unknown')}")
-                self._log_progress_if_enabled(processed_count, total_mods, show_progress)
+                logger.info(
+                    f"Skipping official expansion: {mod_metadata.get('name', 'Unknown')}"
+                )
+                self._log_progress_if_enabled(
+                    processed_count, total_mods, show_progress
+                )
                 continue
 
             # Process the mod deletion
-            if self._process_single_mod_deletion(mod_metadata, deletion_fn, result, collect_for_unsubscribe, update_db):
+            if self._process_single_mod_deletion(
+                mod_metadata, deletion_fn, result, collect_for_unsubscribe, update_db
+            ):
                 # Handle successful deletion tasks
-                self._handle_successful_deletion(mod_metadata, result, collect_for_unsubscribe)
+                self._handle_successful_deletion(
+                    mod_metadata, result, collect_for_unsubscribe
+                )
 
             self._log_progress_if_enabled(processed_count, total_mods, show_progress)
 
@@ -358,12 +380,18 @@ class ModDeletionMenu(QMenu):
                 uuid = self.metadata_manager.mod_metadata_dir_mapper.get(mod_path)
                 if uuid:
                     mod_metadata["uuid"] = uuid
-                    logger.debug(f"Retrieved UUID {uuid} for mod {mod_name} before deletion")
+                    logger.debug(
+                        f"Retrieved UUID {uuid} for mod {mod_name} before deletion"
+                    )
                 else:
-                    logger.warning(f"Could not retrieve UUID for mod {mod_name} with path {mod_path} before deletion")
+                    logger.warning(
+                        f"Could not retrieve UUID for mod {mod_name} with path {mod_path} before deletion"
+                    )
 
             # Perform the deletion operation
-            return self._execute_deletion_operation(mod_metadata, deletion_fn, result, mod_name)
+            return self._execute_deletion_operation(
+                mod_metadata, deletion_fn, result, mod_name
+            )
 
         except Exception as general_error:
             logger.error(f"Critical error processing mod {mod_name}: {general_error}")
@@ -402,12 +430,16 @@ class ModDeletionMenu(QMenu):
             return False
 
         except (ValueError, TypeError) as data_error:
-            logger.error(f"Data validation error processing mod {mod_name}: {data_error}")
+            logger.error(
+                f"Data validation error processing mod {mod_name}: {data_error}"
+            )
             result.failed_count += 1
             return False
 
         except Exception as deletion_error:
-            logger.error(f"Unexpected error during deletion of mod {mod_name}: {deletion_error}")
+            logger.error(
+                f"Unexpected error during deletion of mod {mod_name}: {deletion_error}"
+            )
             result.failed_count += 1
             return False
 
@@ -430,7 +462,9 @@ class ModDeletionMenu(QMenu):
 
     def _handle_uuid_removal(self, mod_metadata: ModMetadata) -> None:
         """Handle UUID removal from tracking list and emit signals."""
-        logger.debug(f"_handle_uuid_removal called for mod: {mod_metadata.get('name', 'Unknown')}")
+        logger.debug(
+            f"_handle_uuid_removal called for mod: {mod_metadata.get('name', 'Unknown')}"
+        )
         logger.debug(f"mod_metadata keys: {list(mod_metadata.keys())}")
         if self.remove_from_uuids is None:
             logger.debug("remove_from_uuids is None, skipping UUID removal")
@@ -442,17 +476,23 @@ class ModDeletionMenu(QMenu):
                 uuid = self.metadata_manager.mod_metadata_dir_mapper.get(str(mod_path))
                 if uuid:
                     mod_metadata["uuid"] = uuid
-                    logger.debug(f"Retrieved UUID {uuid} for mod {mod_metadata.get('name', 'Unknown')} from path")
+                    logger.debug(
+                        f"Retrieved UUID {uuid} for mod {mod_metadata.get('name', 'Unknown')} from path"
+                    )
                 else:
                     logger.debug(
                         f"Could not retrieve UUID for mod {mod_metadata.get('name', 'Unknown')} with path {mod_path}"
                     )
                     return
             else:
-                logger.debug(f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot retrieve UUID")
+                logger.debug(
+                    f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot retrieve UUID"
+                )
                 return
         if mod_metadata["uuid"] not in self.remove_from_uuids:
-            logger.debug(f"UUID {mod_metadata['uuid']} not in remove_from_uuids list, skipping removal")
+            logger.debug(
+                f"UUID {mod_metadata['uuid']} not in remove_from_uuids list, skipping removal"
+            )
             return
 
         try:
@@ -461,14 +501,20 @@ class ModDeletionMenu(QMenu):
             logger.debug(f"Removing UUID {mod_metadata['uuid']} from tracking list")
             self.remove_from_uuids.remove(mod_metadata["uuid"])
         except (ValueError, AttributeError) as uuid_error:
-            logger.warning(f"Failed to remove UUID for mod {mod_metadata.get('name', 'Unknown')}: {uuid_error}")
+            logger.warning(
+                f"Failed to remove UUID for mod {mod_metadata.get('name', 'Unknown')}: {uuid_error}"
+            )
 
-    def _track_steamcmd_mod(self, mod_metadata: ModMetadata, result: DeletionResult) -> None:
+    def _track_steamcmd_mod(
+        self, mod_metadata: ModMetadata, result: DeletionResult
+    ) -> None:
         """Track SteamCMD mods for metadata purging."""
         if mod_metadata.get("steamcmd") and "publishedfileid" in mod_metadata:
             result.steamcmd_purge_ids.add(mod_metadata["publishedfileid"])
 
-    def _log_progress_if_enabled(self, processed_count: int, total_mods: int, show_progress: bool) -> None:
+    def _log_progress_if_enabled(
+        self, processed_count: int, total_mods: int, show_progress: bool
+    ) -> None:
         """Log progress if progress tracking is enabled."""
         if show_progress and total_mods > 0:
             progress_percentage = (processed_count / total_mods) * 100
@@ -538,7 +584,9 @@ class ModDeletionMenu(QMenu):
         selected_count = len(self.get_selected_mod_metadata())
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm Complete Deletion"),
-            confirmation_text=self.tr(f"You have selected {selected_count} mod(s) for complete deletion."),
+            confirmation_text=self.tr(
+                f"You have selected {selected_count} mod(s) for complete deletion."
+            ),
             confirmation_info=self.tr(
                 "\nThis operation will permanently delete the selected mod directories from the filesystem.\n\nDo you want to proceed?"
             ),
@@ -550,7 +598,9 @@ class ModDeletionMenu(QMenu):
         selected_count = len(self.get_selected_mod_metadata())
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm DDS Deletion"),
-            confirmation_text=self.tr(f"You have selected {selected_count} mod(s) for DDS texture deletion."),
+            confirmation_text=self.tr(
+                f"You have selected {selected_count} mod(s) for DDS texture deletion."
+            ),
             confirmation_info=self.tr(
                 "\nThis operation will only delete optimized textures (.dds files) from the selected mods.\n\nDo you want to proceed?"
             ),
@@ -573,7 +623,9 @@ class ModDeletionMenu(QMenu):
         selected_count = len(self.get_selected_mod_metadata())
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm Selective Deletion"),
-            confirmation_text=self.tr(f"You have selected {selected_count} mod(s) for selective deletion."),
+            confirmation_text=self.tr(
+                f"You have selected {selected_count} mod(s) for selective deletion."
+            ),
             confirmation_info=self.tr(
                 "\nThis operation will delete all mod files except for .dds texture files.\nThe .dds files will be preserved.\n\nDo you want to proceed?"
             ),
@@ -596,7 +648,9 @@ class ModDeletionMenu(QMenu):
         """
         self._delete_mods_and_manage_steam("unsubscribe")
 
-    def _handle_steam_action(self, action: str, deleted_mods: list[ModMetadata]) -> None:
+    def _handle_steam_action(
+        self, action: str, deleted_mods: list[ModMetadata]
+    ) -> None:
         """
         Handle Steam Workshop unsubscription or resubscription for successfully deleted mods.
 
@@ -618,7 +672,9 @@ class ModDeletionMenu(QMenu):
                     # Convert string to integer as required by Steam API
                     publishedfileids.append(int(pfid))
                 except ValueError:
-                    logger.debug(f"Invalid publishedfileid format: {pfid} for mod {mod.get('name', 'Unknown')}")
+                    logger.debug(
+                        f"Invalid publishedfileid format: {pfid} for mod {mod.get('name', 'Unknown')}"
+                    )
                     # Continue processing other mods even if one ID is invalid
                     continue
 
@@ -627,7 +683,9 @@ class ModDeletionMenu(QMenu):
             return
 
         try:
-            logger.info(f"{action.capitalize()}ing {len(publishedfileids)} Steam Workshop mods.")
+            logger.info(
+                f"{action.capitalize()}ing {len(publishedfileids)} Steam Workshop mods."
+            )
 
             # Emit the Steam API call
             EventBus().do_steamworks_api_call.emit(
@@ -639,7 +697,9 @@ class ModDeletionMenu(QMenu):
 
             # Show success message
             show_information(
-                title=self.tr("Steam {action}").format(action=self.tr(action).capitalize()),
+                title=self.tr("Steam {action}").format(
+                    action=self.tr(action).capitalize()
+                ),
                 text=self.tr(
                     "Successfully initiated {action} from {len} Steam Workshop mod(s).\n"
                     "The process may take a few moments to complete."
@@ -649,15 +709,19 @@ class ModDeletionMenu(QMenu):
                 ),
             )
 
-            logger.info(f"Successfully initiated {action} for {len(publishedfileids)} mods.")
+            logger.info(
+                f"Successfully initiated {action} for {len(publishedfileids)} mods."
+            )
 
         except Exception as e:
             logger.error(f"Failed to initiate Steam {action}: {e}")
             show_warning(
-                title=self.tr("{action} Error").format(action=self.tr(action).capitalize()),
-                text=self.tr("An error occurred while trying to {action} from Steam Workshop mods.").format(
-                    action=self.tr(action)
+                title=self.tr("{action} Error").format(
+                    action=self.tr(action).capitalize()
                 ),
+                text=self.tr(
+                    "An error occurred while trying to {action} from Steam Workshop mods."
+                ).format(action=self.tr(action)),
                 information=str(e),
             )
 
@@ -685,7 +749,10 @@ class ModDeletionMenu(QMenu):
 
         # Filter mods that can be managed (have Steam Workshop IDs)
         steam_mods = [
-            mod for mod in selected_mods if mod.get("publishedfileid") and isinstance(mod.get("publishedfileid"), str)
+            mod
+            for mod in selected_mods
+            if mod.get("publishedfileid")
+            and isinstance(mod.get("publishedfileid"), str)
         ]
 
         selected_count = len(selected_mods)
@@ -706,7 +773,9 @@ class ModDeletionMenu(QMenu):
             self._sync_remove_from_uuids_with_selected_mods()
 
             # Perform deletion and collect successfully deleted mods
-            result = self._iterate_mods(self._delete_mod_directory, selected_mods, collect_for_unsubscribe=True)
+            result = self._iterate_mods(
+                self._delete_mod_directory, selected_mods, collect_for_unsubscribe=True
+            )
 
             # Process regular deletion results
             self._process_deletion_result(result)
@@ -722,7 +791,9 @@ class ModDeletionMenu(QMenu):
         """
         time_limit = self.settings_controller.settings.aux_db_time_limit
         if time_limit < 0:
-            logger.debug("Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative.")
+            logger.debug(
+                "Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative."
+            )
             return
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(

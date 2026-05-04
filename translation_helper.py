@@ -243,7 +243,9 @@ class TranslationCache:
             try:
                 with open(self._cache_file, "r", encoding="utf-8") as f:
                     self._cache = json.load(f)
-                print(f"✅ Loaded {len(self._cache)} items from cache file: {self._cache_file}")
+                print(
+                    f"✅ Loaded {len(self._cache)} items from cache file: {self._cache_file}"
+                )
             except (IOError, json.JSONDecodeError) as e:
                 print(f"⚠️  Could not load cache file: {e}")
                 self._cache = {}
@@ -258,11 +260,15 @@ class TranslationCache:
                 self._cache_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(self._cache_file, "w", encoding="utf-8") as f:
                     json.dump(self._cache, f, indent=2)
-                print(f"💾 Saved {len(self._cache)} items to cache file: {self._cache_file}")
+                print(
+                    f"💾 Saved {len(self._cache)} items to cache file: {self._cache_file}"
+                )
             except IOError as e:
                 print(f"❌ Could not save cache file: {e}")
 
-    def _get_cache_key(self, text: str, target_lang: str, source_lang: str, service: str) -> str:
+    def _get_cache_key(
+        self, text: str, target_lang: str, source_lang: str, service: str
+    ) -> str:
         """Generate a unique cache key from translation parameters.
 
         Uses SHA256 hash to create a compact, deterministic key from the
@@ -283,7 +289,9 @@ class TranslationCache:
         key_str = f"{text}:{target_lang}:{source_lang}:{service}"
         return hashlib.sha256(key_str.encode()).hexdigest()
 
-    def get(self, text: str, target_lang: str, source_lang: str, service: str) -> Optional[str]:
+    def get(
+        self, text: str, target_lang: str, source_lang: str, service: str
+    ) -> Optional[str]:
         """Retrieve a translation from cache if available.
 
         Args:
@@ -341,7 +349,9 @@ class TranslationCache:
 
 
 # Global cache instance
-_translation_cache = TranslationCache(_cache_file=Path(__file__).parent / ".translation_cache.json")
+_translation_cache = TranslationCache(
+    _cache_file=Path(__file__).parent / ".translation_cache.json"
+)
 
 
 def get_translation_cache() -> TranslationCache:
@@ -374,7 +384,9 @@ def validate_language_code(language: Optional[str]) -> Optional[str]:
 
     if language not in LANG_MAP:
         supported = ", ".join(sorted(LANG_MAP.keys()))
-        raise ValueError(f"Unsupported language: {language}\nSupported languages: {supported}")
+        raise ValueError(
+            f"Unsupported language: {language}\nSupported languages: {supported}"
+        )
 
     return language
 
@@ -549,7 +561,9 @@ def validate_retry_count(max_retries: int) -> int:
         raise ValueError(f"Retry count cannot be negative, got {max_retries}")
 
     if max_retries > 10:
-        raise ValueError(f"Retry count is very high ({max_retries}), max recommended is 10")
+        raise ValueError(
+            f"Retry count is very high ({max_retries}), max recommended is 10"
+        )
 
     return max_retries
 
@@ -570,13 +584,17 @@ def validate_concurrent_requests(max_concurrent: int) -> int:
         TypeError: If value is not an integer
     """
     if not isinstance(max_concurrent, int):
-        raise TypeError(f"Concurrent requests must be an integer, got {type(max_concurrent)}")
+        raise TypeError(
+            f"Concurrent requests must be an integer, got {type(max_concurrent)}"
+        )
 
     if max_concurrent <= 0:
         raise ValueError(f"Concurrent requests must be positive, got {max_concurrent}")
 
     if max_concurrent > 100:
-        raise ValueError(f"Concurrent requests is very high ({max_concurrent}), max recommended is 100")
+        raise ValueError(
+            f"Concurrent requests is very high ({max_concurrent}), max recommended is 100"
+        )
 
     return max_concurrent
 
@@ -649,7 +667,9 @@ async def retry_with_backoff(
             if attempt < config.max_retries - 1:
                 # Calculate exponential backoff delay
                 delay = config.get_delay(attempt)
-                print(f"⚠️  Attempt {attempt + 1} failed, retrying in {delay:.1f}s: {str(e)[:100]}")
+                print(
+                    f"⚠️  Attempt {attempt + 1} failed, retrying in {delay:.1f}s: {str(e)[:100]}"
+                )
                 # Wait before next attempt (prevents API rate limiting)
                 await asyncio.sleep(delay)
             else:
@@ -676,7 +696,9 @@ class TranslationService:
     (Google Translate, DeepL, OpenAI, etc.).
     """
 
-    async def translate(self, text: str, target_lang: str, source_lang: str = "en_US") -> Optional[str]:
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
         """Translate text from source language to target language.
 
         Args:
@@ -729,7 +751,9 @@ class GoogleTranslateService(TranslationService):
             # This is not a critical error, so we can safely ignore it.
             pass
 
-    async def translate(self, text: str, target_lang: str, source_lang: str = "en_US") -> Optional[str]:
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
         config = get_translation_config()
         cache = get_translation_cache()
 
@@ -751,7 +775,9 @@ class GoogleTranslateService(TranslationService):
         for attempt in range(self.config.retry_config.max_retries):
             try:
                 # The googletrans 4.0.0rc1 library has an async translate method
-                result_or_coro = self.translator.translate(text, dest=target, src=source)
+                result_or_coro = self.translator.translate(
+                    text, dest=target, src=source
+                )
 
                 # Handle both sync and async versions of googletrans
                 if inspect.iscoroutine(result_or_coro):
@@ -768,14 +794,20 @@ class GoogleTranslateService(TranslationService):
             except Exception as e:
                 error_str = str(e)
                 if attempt < self.config.retry_config.max_retries - 1:
-                    if "SSL" in error_str or "TLS" in error_str or "sslv3" in error_str.lower():
+                    if (
+                        "SSL" in error_str
+                        or "TLS" in error_str
+                        or "sslv3" in error_str.lower()
+                    ):
                         # Re-instantiate translator on SSL errors
                         assert GoogleTranslator is not None
                         self.translator = GoogleTranslator()
                         self._setup_translator()
 
                     delay = self.config.retry_config.get_delay(attempt)
-                    print(f"⚠️  Google translate attempt {attempt + 1} failed, retrying in {delay:.1f}s")
+                    print(
+                        f"⚠️  Google translate attempt {attempt + 1} failed, retrying in {delay:.1f}s"
+                    )
                     await asyncio.sleep(delay)
                 else:
                     print(f"❌ Google translate failed: {e}")
@@ -806,7 +838,9 @@ class DeepLService(TranslationService):
         self.base_url = "https://api-free.deepl.com/v2/translate"
         self.config = get_translation_config()
 
-    async def translate(self, text: str, target_lang: str, source_lang: str = "en_US") -> Optional[str]:
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
         # First, check if the translation is already in the cache.
         config = get_translation_config()
         cache = get_translation_cache()
@@ -847,11 +881,15 @@ class DeepLService(TranslationService):
         for attempt in range(self.config.retry_config.max_retries):
             try:
                 # Set the timeout for the request.
-                timeout = aiohttp.ClientTimeout(total=self.config.timeout_config.deepl_timeout)
+                timeout = aiohttp.ClientTimeout(
+                    total=self.config.timeout_config.deepl_timeout
+                )
                 # Create a new aiohttp session for each request.
                 async with aiohttp.ClientSession() as session:
                     # Send the request to the DeepL API.
-                    async with session.post(self.base_url, data=data, timeout=timeout) as response:
+                    async with session.post(
+                        self.base_url, data=data, timeout=timeout
+                    ) as response:
                         # Raise an exception if the request fails.
                         response.raise_for_status()
                         # Get the JSON response.
@@ -860,26 +898,34 @@ class DeepLService(TranslationService):
                         translation = result["translations"][0]["text"]
                         # Cache the translation.
                         if config.use_cache:
-                            cache.set(text, target_lang, source_lang, "deepl", translation)
+                            cache.set(
+                                text, target_lang, source_lang, "deepl", translation
+                            )
                         return translation
             except asyncio.TimeoutError:
                 # If the request times out, check if we should retry.
                 if attempt < self.config.retry_config.max_retries - 1:
                     # Calculate the delay for the next retry.
                     delay = self.config.retry_config.get_delay(attempt)
-                    print(f"⚠️  DeepL timeout, retrying in {delay:.1f}s: Request {text[:50]}...")
+                    print(
+                        f"⚠️  DeepL timeout, retrying in {delay:.1f}s: Request {text[:50]}..."
+                    )
                     # Wait for the calculated delay.
                     await asyncio.sleep(delay)
                 else:
                     # If all retries fail, print an error message.
-                    print(f"❌ DeepL translation timed out after {self.config.retry_config.max_retries} attempts")
+                    print(
+                        f"❌ DeepL translation timed out after {self.config.retry_config.max_retries} attempts"
+                    )
                     return None
             except Exception as e:
                 # If the request fails, check if we should retry.
                 if attempt < self.config.retry_config.max_retries - 1:
                     # Calculate the delay for the next retry.
                     delay = self.config.retry_config.get_delay(attempt)
-                    print(f"⚠️  DeepL attempt {attempt + 1} failed, retrying in {delay:.1f}s")
+                    print(
+                        f"⚠️  DeepL attempt {attempt + 1} failed, retrying in {delay:.1f}s"
+                    )
                     # Wait for the calculated delay.
                     await asyncio.sleep(delay)
                 else:
@@ -923,7 +969,9 @@ class OpenAIService(TranslationService):
         )
         self.model = model
 
-    async def translate(self, text: str, target_lang: str, source_lang: str = "en_US") -> Optional[str]:
+    async def translate(
+        self, text: str, target_lang: str, source_lang: str = "en_US"
+    ) -> Optional[str]:
         assert openai_module is not None
 
         config = get_translation_config()
@@ -985,15 +1033,21 @@ Only return the translation, no explanation:
                     # Calculate the delay for the next retry.
                     delay = self.config.retry_config.get_delay(attempt)
                     if is_timeout:
-                        print(f"⚠️  OpenAI timeout, retrying in {delay:.1f}s: Request {text[:50]}...")
+                        print(
+                            f"⚠️  OpenAI timeout, retrying in {delay:.1f}s: Request {text[:50]}..."
+                        )
                     else:
-                        print(f"⚠️  OpenAI attempt {attempt + 1} failed, retrying in {delay:.1f}s")
+                        print(
+                            f"⚠️  OpenAI attempt {attempt + 1} failed, retrying in {delay:.1f}s"
+                        )
                     # Wait for the calculated delay.
                     await asyncio.sleep(delay)
                 else:
                     # If all retries fail, print an error message.
                     if is_timeout:
-                        print(f"❌ OpenAI translation timed out after {self.config.retry_config.max_retries} attempts")
+                        print(
+                            f"❌ OpenAI translation timed out after {self.config.retry_config.max_retries} attempts"
+                        )
                     else:
                         print(f"❌ OpenAI translation failed: {e}")
                     return None
@@ -1038,7 +1092,9 @@ def get_source_keys(unfinished: list["UnfinishedItem"]) -> Dict[str, List[str]]:
     return result
 
 
-def parse_ts_file(file_path: Path, source_keys: Optional[Set[str]] = None) -> Dict[str, Any]:
+def parse_ts_file(
+    file_path: Path, source_keys: Optional[Set[str]] = None
+) -> Dict[str, Any]:
     """Parse a .ts file and extract translation information."""
     try:
         tree = ET.parse(file_path)
@@ -1078,17 +1134,23 @@ def parse_ts_file(file_path: Path, source_keys: Optional[Set[str]] = None) -> Di
                     if translation_type == "unfinished":
                         stats["unfinished"] += 1
                         stats["missing"] += 1
-                        issues.append(f"Unfinished: {context_name} - {source_text[:50]}...")
+                        issues.append(
+                            f"Unfinished: {context_name} - {source_text[:50]}..."
+                        )
                     elif translation_type == "obsolete":
                         stats["obsolete"] += 1
                     elif not translation_text.strip():
                         stats["missing"] += 1
-                        issues.append(f"Empty translation: {context_name} - {source_text[:50]}...")
+                        issues.append(
+                            f"Empty translation: {context_name} - {source_text[:50]}..."
+                        )
                     else:
                         stats["translated"] += 1
                 else:
                     stats["missing"] += 1
-                    issues.append(f"Missing translation tag: {context_name} - {source_text[:50]}...")
+                    issues.append(
+                        f"Missing translation tag: {context_name} - {source_text[:50]}..."
+                    )
 
         # Calculate missing keys based on source language
         if source_keys:
@@ -1097,7 +1159,9 @@ def parse_ts_file(file_path: Path, source_keys: Optional[Set[str]] = None) -> Di
 
             for key in list(missing_keys)[:5]:  # Show first 5 missing keys
                 context_key, source_text_key = key.split("::", 1)
-                issues.append(f"Missing from source: {context_key} - {source_text_key[:50]}...")
+                issues.append(
+                    f"Missing from source: {context_key} - {source_text_key[:50]}..."
+                )
 
         return {
             "stats": stats,
@@ -1208,7 +1272,9 @@ def create_translation_service(service_name: str, **kwargs: Any) -> TranslationS
     """
     if service_name == "google":
         if GoogleTranslator is None:
-            raise ImportError("googletrans not available. Install with: pip install googletrans==4.0.0rc1")
+            raise ImportError(
+                "googletrans not available. Install with: pip install googletrans==4.0.0rc1"
+            )
         return GoogleTranslateService()
 
     elif service_name == "deepl":
@@ -1297,7 +1363,9 @@ async def auto_translate_file(
             # Semaphore limits concurrent API requests to prevent rate limiting/overload
             semaphore = asyncio.Semaphore(config.max_concurrent_requests)
 
-            async def translate_item(i: int, item: UnfinishedItem) -> tuple[int, UnfinishedItem, Optional[str]]:
+            async def translate_item(
+                i: int, item: UnfinishedItem
+            ) -> tuple[int, UnfinishedItem, Optional[str]]:
                 """Inner coroutine to translate a single item with concurrency control."""
                 source_text = item.source
                 # Skip trivial strings (empty, single char, numbers, symbols)
@@ -1307,7 +1375,9 @@ async def auto_translate_file(
 
                 # Use semaphore to limit concurrent API requests
                 async with semaphore:
-                    print(f"🔄 Translating [{i}/{len(unfinished)}]: {source_text[:50]}...")
+                    print(
+                        f"🔄 Translating [{i}/{len(unfinished)}]: {source_text[:50]}..."
+                    )
                     try:
                         # Call translation service with configured timeout
                         translated = await asyncio.wait_for(
@@ -1364,9 +1434,13 @@ async def auto_translate_file(
                 print(f"   📁 Would update file: {ts_file}")
                 print("   💾 Use without --dry-run to apply changes")
                 if failed > 0:
-                    all_success = False  # Even in dry run, if failures, report overall failure
+                    all_success = (
+                        False  # Even in dry run, if failures, report overall failure
+                    )
             elif tree is not None:
-                if not translation_failed_midway and (continue_on_failure or failed == 0):
+                if not translation_failed_midway and (
+                    continue_on_failure or failed == 0
+                ):
                     try:
                         # Save file
                         tree.write(ts_file, encoding="utf-8", xml_declaration=True)
@@ -1402,7 +1476,9 @@ async def auto_translate_file(
                             shutil.copy2(backup_file, ts_file)
                         all_success = False
                 else:  # translation_failed_midway or (not continue_on_failure and failed > 0)
-                    print("\n❌ Auto-translation aborted due to failure. Restoring from backup.")
+                    print(
+                        "\n❌ Auto-translation aborted due to failure. Restoring from backup."
+                    )
                     if backup_file.exists():
                         shutil.copy2(backup_file, ts_file)
                         # No need to unlink backup here, it's the working copy now
@@ -1450,7 +1526,11 @@ def run_lupdate(language: Optional[str] = None) -> bool:
             locales_dir = Path("locales")
             ts_files = list(locales_dir.glob("*.ts"))
             if ts_files:
-                cmd.extend(["-ts"] + [str(f) for f in ts_files] + ["-no-obsolete", "-locations", "none"])
+                cmd.extend(
+                    ["-ts"]
+                    + [str(f) for f in ts_files]
+                    + ["-no-obsolete", "-locations", "none"]
+                )
             else:
                 print("⚠️ No .ts files found in locales/")
                 return False
@@ -1537,7 +1617,9 @@ def run_lrelease(language: Optional[str] = None) -> bool:
         return False
 
 
-def check_translation(language: Optional[str] = None, json_output: bool = False) -> None:
+def check_translation(
+    language: Optional[str] = None, json_output: bool = False
+) -> None:
     """Check translation completeness for a specific language or all languages.
 
     Compares each translation file against the source language (en_US) to verify
@@ -1601,7 +1683,9 @@ def check_translation(language: Optional[str] = None, json_output: bool = False)
         ts_file: Path = locales_dir / f"{lang}.ts"
         if not ts_file.exists():
             if json_output:
-                results.append({"language": lang, "error": "Translation file not found"})
+                results.append(
+                    {"language": lang, "error": "Translation file not found"}
+                )
             else:
                 print(f"❌ Translation file not found: {ts_file}")
             continue
@@ -1624,7 +1708,9 @@ def check_translation(language: Optional[str] = None, json_output: bool = False)
         issues: List[str] = result["issues"]
 
         # Calculate completion percentage: translated strings / total strings
-        completion: float = (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+        completion: float = (
+            (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+        )
 
         # Determine status level based on completion percentage
         status = (
@@ -1703,7 +1789,11 @@ def show_all_stats(json_output: bool = False) -> None:
     locales_dir = Path("locales")
     if not locales_dir.exists():
         if json_output:
-            print(json.dumps({"type": "stats", "error": "Locales directory not found"}, indent=2))
+            print(
+                json.dumps(
+                    {"type": "stats", "error": "Locales directory not found"}, indent=2
+                )
+            )
         else:
             print("❌ Locales directory not found")
         return
@@ -1711,7 +1801,11 @@ def show_all_stats(json_output: bool = False) -> None:
     ts_files = list(locales_dir.glob("*.ts"))
     if not ts_files:
         if json_output:
-            print(json.dumps({"type": "stats", "error": "No translation files found"}, indent=2))
+            print(
+                json.dumps(
+                    {"type": "stats", "error": "No translation files found"}, indent=2
+                )
+            )
         else:
             print("❌ No translation files found")
         return
@@ -1727,7 +1821,9 @@ def show_all_stats(json_output: bool = False) -> None:
     if not json_output:
         print("📊 Translation Statistics for All Languages:\n")
         print(f"Total files: {len(ts_files)}\n")
-        print(f"{'Language':<10} {'Progress':<10} {'Translated':<12} {'Unfinished ':<12} {'Missing':<12} {'Status'}")
+        print(
+            f"{'Language':<10} {'Progress':<10} {'Translated':<12} {'Unfinished ':<12} {'Missing':<12} {'Status'}"
+        )
         print("-" * 75)
 
     for ts_file in sorted(ts_files):
@@ -1743,11 +1839,15 @@ def show_all_stats(json_output: bool = False) -> None:
                     }
                 )
             else:
-                print(f"{language:<10} {'ERROR':<10} {'N/A':<12} {'N/A':<10} {'N/A':<12} ❌")
+                print(
+                    f"{language:<10} {'ERROR':<10} {'N/A':<12} {'N/A':<10} {'N/A':<12} ❌"
+                )
             continue
 
         stats = result["stats"]
-        completion = (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+        completion = (
+            (stats["translated"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+        )
 
         status = (
             "complete"
@@ -1776,7 +1876,13 @@ def show_all_stats(json_output: bool = False) -> None:
 
         if not json_output:
             status_emoji = (
-                "✅" if completion >= 95 else "🟡" if completion >= 80 else "🟠" if completion >= 50 else "🔴"
+                "✅"
+                if completion >= 95
+                else "🟡"
+                if completion >= 80
+                else "🟠"
+                if completion >= 50
+                else "🔴"
             )
 
             print(
@@ -1854,7 +1960,9 @@ def validate_translation(language: Optional[str] = None, dry_run: bool = False) 
                         trans_placeholders = set(re.findall(r"\{[^}]+\}", trans_text))
 
                         if source_placeholders != trans_placeholders and trans_text:
-                            issues.append(f"⚠️  Placeholder mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'")
+                            issues.append(
+                                f"⚠️  Placeholder mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
+                            )
                             made_changes = True
                             # Attempt to fix by aligning placeholders
                             # Remove placeholders not in source from translation
@@ -1866,7 +1974,9 @@ def validate_translation(language: Optional[str] = None, dry_run: bool = False) 
                                 if ph not in trans_text:
                                     trans_text += f" {ph}"
                             translation.text = trans_text.strip()
-                            print(f"🔧 Fixed placeholder mismatch in message: {source_text[:30]}...")
+                            print(
+                                f"🔧 Fixed placeholder mismatch in message: {source_text[:30]}..."
+                            )
 
                         # Check for HTML tag mismatches
                         source_tags_list = re.findall(r"<[^>]+>", source_text)
@@ -1875,7 +1985,9 @@ def validate_translation(language: Optional[str] = None, dry_run: bool = False) 
                         trans_tags_counts = Counter(trans_tags_list)
 
                         if source_tags_counts != trans_tags_counts and trans_text:
-                            issues.append(f"⚠️  HTML tag mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'")
+                            issues.append(
+                                f"⚠️  HTML tag mismatch: '{source_text[:30]}...' -> '{trans_text[:30]}...'"
+                            )
                             made_changes = True
                             # Attempt to fix by adding/removing tags. This is naive.
 
@@ -1891,7 +2003,9 @@ def validate_translation(language: Optional[str] = None, dry_run: bool = False) 
                                     trans_text += f" {tag}"
 
                             translation.text = trans_text.strip()
-                            print(f"🔧 Fixed HTML tag mismatch in message: {source_text[:30]}...")
+                            print(
+                                f"🔧 Fixed HTML tag mismatch in message: {source_text[:30]}..."
+                            )
 
             if not issues:
                 print("✅ Translation file is valid!")
@@ -1958,7 +2072,9 @@ async def process_language(
             print(f"📋 Would run: pyside6-lupdate for {language}")
             print(f"📋 Would run: validate for {language}")
 
-        if not await auto_translate_file(language, service, continue_on_failure, dry_run=dry_run, **service_kwargs):
+        if not await auto_translate_file(
+            language, service, continue_on_failure, dry_run=dry_run, **service_kwargs
+        ):
             print("❌ Aborting: auto-translation failed.")
             return False
 
@@ -1969,7 +2085,9 @@ async def process_language(
             print(f"📋 Would run: pyside6-lrelease for {language}")
 
         if dry_run:
-            print("✅ Dry-run preview complete. Use without --dry-run to apply changes.")
+            print(
+                "✅ Dry-run preview complete. Use without --dry-run to apply changes."
+            )
         else:
             print("✅ One-click process completed successfully!")
         return True
@@ -1997,7 +2115,9 @@ async def process_language(
                 print(f"📋 Would run: pyside6-lupdate for {lang}")
                 print(f"📋 Would run: validate for {lang}")
 
-            if not await auto_translate_file(lang, service, continue_on_failure, dry_run=dry_run, **service_kwargs):
+            if not await auto_translate_file(
+                lang, service, continue_on_failure, dry_run=dry_run, **service_kwargs
+            ):
                 print(f"❌ Aborting {lang}: auto-translation failed.")
                 if not continue_on_failure:
                     return False
@@ -2016,7 +2136,9 @@ async def process_language(
             print(f"✅ {lang} process preview complete!")
 
         if dry_run:
-            print("\n✅ Dry-run preview complete for all languages. Use without --dry-run to apply changes.")
+            print(
+                "\n✅ Dry-run preview complete for all languages. Use without --dry-run to apply changes."
+            )
         else:
             print("\n✅ All languages processed!")
         return all_successful
@@ -2068,7 +2190,9 @@ def _interactive_check() -> None:
         print("❌ Locales directory not found")
         return
 
-    available_langs = sorted([f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"])
+    available_langs = sorted(
+        [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
+    )
 
     print(f"\nAvailable languages: {', '.join(available_langs)}")
     print("(Press Enter to check all languages)")
@@ -2105,7 +2229,9 @@ def _interactive_validate() -> None:
         print("❌ Locales directory not found")
         return
 
-    available_langs = sorted([f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"])
+    available_langs = sorted(
+        [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
+    )
 
     print(f"\nAvailable languages: {', '.join(available_langs)}")
     print("(Press Enter to validate all languages)")
@@ -2133,7 +2259,9 @@ def _get_interactive_translation_config() -> (
         print("❌ Locales directory not found")
         return None, None, None, None
 
-    available_langs = sorted([f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"])
+    available_langs = sorted(
+        [f.stem for f in locales_dir.glob("*.ts") if f.stem != "en_US"]
+    )
 
     print(f"\nAvailable languages: {', '.join(available_langs)}")
     print("(Press Enter to process all languages)")
@@ -2183,7 +2311,11 @@ def _get_interactive_translation_config() -> (
 
     # Dry-run option
     dry_run_input = (
-        input("\nPreview mode (dry-run)? This shows what would change without saving (y/n): ").strip().lower()
+        input(
+            "\nPreview mode (dry-run)? This shows what would change without saving (y/n): "
+        )
+        .strip()
+        .lower()
     )
     dry_run = dry_run_input == "y"
 
@@ -2233,7 +2365,9 @@ def _interactive_auto_translate() -> None:
         print("\n🔄 Starting dry-run preview...")
     else:
         print("\n🔄 Starting auto-translation...")
-    asyncio.run(auto_translate_file(language, service, True, dry_run=dry_run, **service_kwargs))
+    asyncio.run(
+        auto_translate_file(language, service, True, dry_run=dry_run, **service_kwargs)
+    )
     if not dry_run:
         print("✅ Auto-translation complete!")
 
@@ -2258,7 +2392,9 @@ def _interactive_process() -> None:
         print("\n🔄 Starting dry-run preview...")
     else:
         print("\n🔄 Starting full translation process...")
-    asyncio.run(process_language(language, service, True, dry_run=dry_run, **service_kwargs))
+    asyncio.run(
+        process_language(language, service, True, dry_run=dry_run, **service_kwargs)
+    )
     if not dry_run:
         print("✅ Full process complete!")
 
@@ -2375,16 +2511,28 @@ def main() -> None:
 
     # Check command
     check_parser = subparsers.add_parser("check", help="Check translation completeness")
-    check_parser.add_argument("language", nargs="?", help="Language code (e.g., zh_CN), optional")
-    check_parser.add_argument("--json", action="store_true", help="Output results as structured JSON")
+    check_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
+    check_parser.add_argument(
+        "--json", action="store_true", help="Output results as structured JSON"
+    )
 
     # Stats command
-    stats_parser = subparsers.add_parser("stats", help="Show statistics for all translations")
-    stats_parser.add_argument("--json", action="store_true", help="Output results as structured JSON")
+    stats_parser = subparsers.add_parser(
+        "stats", help="Show statistics for all translations"
+    )
+    stats_parser.add_argument(
+        "--json", action="store_true", help="Output results as structured JSON"
+    )
 
     # Validate command
-    validate_parser = subparsers.add_parser("validate", help="Validate translation file")
-    validate_parser.add_argument("language", nargs="?", help="Language code (e.g., zh_CN), optional")
+    validate_parser = subparsers.add_parser(
+        "validate", help="Validate translation file"
+    )
+    validate_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
     validate_parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -2392,7 +2540,9 @@ def main() -> None:
     )
 
     # Update command
-    update_parser = subparsers.add_parser("update-ts", help="Update translation files using lupdate")
+    update_parser = subparsers.add_parser(
+        "update-ts", help="Update translation files using lupdate"
+    )
     update_parser.add_argument(
         "language",
         nargs="?",
@@ -2400,19 +2550,29 @@ def main() -> None:
     )
 
     # Compile command
-    compile_parser = subparsers.add_parser("compile", help="Compile translation file using lrelease")
-    compile_parser.add_argument("language", nargs="?", help="Language code (e.g., zh_CN), optional")
+    compile_parser = subparsers.add_parser(
+        "compile", help="Compile translation file using lrelease"
+    )
+    compile_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
 
     # Auto-translate command
-    auto_parser = subparsers.add_parser("auto-translate", help="Auto-translate unfinished strings")
-    auto_parser.add_argument("language", nargs="?", help="Language code (e.g., zh_CN), optional")
+    auto_parser = subparsers.add_parser(
+        "auto-translate", help="Auto-translate unfinished strings"
+    )
+    auto_parser.add_argument(
+        "language", nargs="?", help="Language code (e.g., zh_CN), optional"
+    )
     add_translation_args(auto_parser)
 
     process_parser = subparsers.add_parser(
         "process",
         help="One-click workflow: update .ts → validate → auto-translate → compile .qm",
     )
-    process_parser.add_argument("language", nargs="?", help="Language code, e.g. zh_CN, optional")
+    process_parser.add_argument(
+        "language", nargs="?", help="Language code, e.g. zh_CN, optional"
+    )
     add_translation_args(process_parser)
 
     args = parser.parse_args()

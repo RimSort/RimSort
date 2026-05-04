@@ -43,9 +43,15 @@ class InstanceController(QObject):
         if not cls._validate_archive_path(archive_path):
             logger.error(f"Invalid archive path: {archive_path}")
             show_warning(
-                title=QCoreApplication.translate("InstanceController", "Invalid archive path"),
-                text=QCoreApplication.translate("InstanceController", "The provided archive path is invalid."),
-                information=QCoreApplication.translate("InstanceController", "Please provide a valid archive path."),
+                title=QCoreApplication.translate(
+                    "InstanceController", "Invalid archive path"
+                ),
+                text=QCoreApplication.translate(
+                    "InstanceController", "The provided archive path is invalid."
+                ),
+                information=QCoreApplication.translate(
+                    "InstanceController", "Please provide a valid archive path."
+                ),
             )
             raise InvalidArchivePathError(archive_path)
 
@@ -57,7 +63,9 @@ class InstanceController(QObject):
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
-                title=QCoreApplication.translate("InstanceController", "Error restoring instance"),
+                title=QCoreApplication.translate(
+                    "InstanceController", "Error restoring instance"
+                ),
                 text=QCoreApplication.translate(
                     "InstanceController",
                     "An error occurred while reading instance archive: {e}",
@@ -75,7 +83,10 @@ class InstanceController(QObject):
     def instance_folder_path(self) -> Path:
         """Get instance folder path, using override if configured."""
         # Default instance never uses override
-        if self.instance.instance_folder_override and self.instance.name != DEFAULT_INSTANCE_NAME:
+        if (
+            self.instance.instance_folder_override
+            and self.instance.name != DEFAULT_INSTANCE_NAME
+        ):
             return Path(self.instance.instance_folder_override) / self.instance.name
         return AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / self.instance.name
 
@@ -173,7 +184,9 @@ class InstanceController(QObject):
 
     def _add_instance_folder_to_archive(self, archive: ZipFile) -> None:
         """Add instance folder contents to archive, skipping symlinks and junctions."""
-        for root, dirs, files in os.walk(self.instance_folder_path, topdown=True, followlinks=False):
+        for root, dirs, files in os.walk(
+            self.instance_folder_path, topdown=True, followlinks=False
+        ):
             # Detect and skip symlinks by comparing resolved vs absolute paths
             if Path(root).absolute() != Path(root).resolve():
                 logger.debug(f"Skipping symlinked directory: {root}")
@@ -220,7 +233,9 @@ class InstanceController(QObject):
         """Safely delete instance folder, handling read-only files on Windows."""
         logger.info(f"Deleting existing instance folder: {self.instance_folder_path}")
 
-        def ignore_extended_attributes(func: Callable[[Any], Any], filename: str, exc_info: Any) -> None:
+        def ignore_extended_attributes(
+            func: Callable[[Any], Any], filename: str, exc_info: Any
+        ) -> None:
             """Ignore macOS extended attribute files (._*) that may be read-only."""
             is_meta_file = os.path.basename(filename).startswith("._")
             if not (func is os.unlink and is_meta_file):

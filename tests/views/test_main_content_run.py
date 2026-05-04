@@ -64,7 +64,9 @@ def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, List[str]]
     def fake_launch_game_process(game_install_path: str, args: List[str]) -> None:
         calls.append((Path(game_install_path), args))
 
-    monkeypatch.setattr(main_content_panel, "launch_game_process", fake_launch_game_process)
+    monkeypatch.setattr(
+        main_content_panel, "launch_game_process", fake_launch_game_process
+    )
     # Also patch platform_specific_open to avoid trying to open Steam protocol
     monkeypatch.setattr(main_content_panel, "platform_specific_open", Mock())
     return calls
@@ -76,7 +78,9 @@ def patch_steamcmd(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         steamcmd_wrapper.SteamcmdInterface,
         "instance",
-        classmethod(lambda cls: SimpleNamespace(setup=True, steamcmd_appworkshop_acf_path="")),
+        classmethod(
+            lambda cls: SimpleNamespace(setup=True, steamcmd_appworkshop_acf_path="")
+        ),
     )
 
 
@@ -105,7 +109,9 @@ def main_content(
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
     # Mock check_if_essential_paths_are_set to return True
-    monkeypatch.setattr(mc, "check_if_essential_paths_are_set", lambda prompt=True: True)
+    monkeypatch.setattr(
+        mc, "check_if_essential_paths_are_set", lambda prompt=True: True
+    )
 
     yield mc, save_calls
 
@@ -145,7 +151,9 @@ def test_run_game_with_unsaved_changes(
 ) -> None:
     mc, save_calls = unsaved_main_content
     patch_dialogue.return_value = (
-        dialogue_return if isinstance(dialogue_return, QMessageBox.StandardButton) else mc.tr(dialogue_return)
+        dialogue_return
+        if isinstance(dialogue_return, QMessageBox.StandardButton)
+        else mc.tr(dialogue_return)
     )
     mc._do_run_game()
     assert save_calls == expected_save_calls

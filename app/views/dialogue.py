@@ -86,14 +86,18 @@ def show_dialogue_conditional(
         # Add custom buttons
         custom_btns = []
         for btn_text in button_text_override:
-            custom_btn_text = QCoreApplication.translate("show_dialogue_conditional", btn_text)
+            custom_btn_text = QCoreApplication.translate(
+                "show_dialogue_conditional", btn_text
+            )
             custom_btn = QPushButton(custom_btn_text)
             custom_btn.setFixedWidth(custom_btn.sizeHint().width())
             custom_btns.append(custom_btn)
             dialogue.addButton(custom_btn, QMessageBox.ButtonRole.ActionRole)
     else:
         # Configure buttons
-        dialogue.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        dialogue.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         dialogue.setEscapeButton(QMessageBox.StandardButton.No)
 
     # Add data
@@ -163,7 +167,9 @@ def show_information(
     :type parent: QWidget | None
     """
     # jscpd:ignore-end
-    logger.info(f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
+    )
 
     parent = _get_parent_if_constrain_enabled(parent)
 
@@ -212,7 +218,9 @@ def show_warning(
     :type parent: QWidget | None
     """
     # jscpd:ignore-end
-    logger.info(f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
+    )
 
     parent = _get_parent_if_constrain_enabled(parent)
 
@@ -258,7 +266,9 @@ def show_fatal_error(
     :param details: text to pass to setDetailedText
     :param parent: The parent widget
     """
-    logger.info(f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
+    )
 
     parent = _get_parent_if_constrain_enabled(parent)
 
@@ -266,7 +276,9 @@ def show_fatal_error(
     diag.exec_()
 
 
-def show_internet_connection_error(failed_urls: list[str] | None = None, parent: QWidget | None = None) -> None:
+def show_internet_connection_error(
+    failed_urls: list[str] | None = None, parent: QWidget | None = None
+) -> None:
     """Show a warning dialog for no internet connection, with firewall info and user information for help.
 
     :param failed_urls: Optional list of URLs that failed to connect
@@ -276,7 +288,9 @@ def show_internet_connection_error(failed_urls: list[str] | None = None, parent:
     logger.info("Showing no internet connection error dialog")
 
     failed_urls_str = (
-        f"Failed to reach: {', '.join(failed_urls)}" if failed_urls else "Unable to reach internet services"
+        f"Failed to reach: {', '.join(failed_urls)}"
+        if failed_urls
+        else "Unable to reach internet services"
     )
 
     show_information(
@@ -318,7 +332,9 @@ class _BaseDialogue(QDialog):
         self.setObjectName("dialogue")
 
         # Dynamic sizing
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
 
     def exec(self) -> int:
         """Executes the message box and returns the result.
@@ -328,7 +344,9 @@ class _BaseDialogue(QDialog):
         """
         logger.info(f"Showing {self._dialogue_type} with title: {self.windowTitle()}")
         result = super().exec()
-        logger.info(f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}")
+        logger.info(
+            f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}"
+        )
         return result
 
     def exec_(self) -> int:
@@ -371,7 +389,9 @@ class _BaseMessageBox(QMessageBox):
             self.setDetailedText(details)
 
         # Dynamic sizing
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
         self.setMinimumWidth(400)
 
     def exec(self) -> int:
@@ -384,7 +404,9 @@ class _BaseMessageBox(QMessageBox):
             f"Showing {self._dialogue_type} with title: [{self.windowTitle()}], text: [{self.text()}], information: [{self.informativeText()}], details: [{self.detailedText()}]"
         )
         result = super().exec()
-        logger.info(f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}")
+        logger.info(
+            f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}"
+        )
         return result
 
     def exec_(self) -> int:
@@ -428,7 +450,9 @@ class InformationBox(_BaseMessageBox):
         :param parent: The parent widget
         :type parent: QWidget | None, optional
         """
-        super().__init__(title, text, information, icon, details, modal=modal, parent=parent)
+        super().__init__(
+            title, text, information, icon, details, modal=modal, parent=parent
+        )
 
         self.setStandardButtons(QMessageBox.StandardButton.Ok)
         self.setDefaultButton(QMessageBox.StandardButton.Ok)
@@ -481,7 +505,9 @@ class BinaryChoiceDialog(_BaseMessageBox):
         :type parent: QWidget | None, optional
         :raises ValueError: If the positive and negative buttons are the same
         """
-        super().__init__(title, text, information, icon, details, modal=modal, parent=parent)
+        super().__init__(
+            title, text, information, icon, details, modal=modal, parent=parent
+        )
 
         if positive_btn == negative_btn:
             raise ValueError("Positive and negative buttons cannot be the same")
@@ -604,7 +630,9 @@ class FatalErrorDialog(_BaseDialogue):
             self.adjustSize()
 
         self.close_btn.clicked.connect(self.close)
-        self.open_log_btn.clicked.connect(lambda: generic.platform_specific_open(AppInfo().user_log_folder))
+        self.open_log_btn.clicked.connect(
+            lambda: generic.platform_specific_open(AppInfo().user_log_folder)
+        )
 
         def _upload_log(parent: FatalErrorDialog) -> None:
             """Helper function to upload the log file to 0x0. Displays a loading dialog while doing so. When finished, copy the URL to the clipboard and display the link."""
@@ -642,7 +670,9 @@ class _UploadLogDialog(QDialog):
                 generic.copy_to_clipboard_safely(url)
                 show_information(
                     title=self.tr("Log Upload Successful"),
-                    text=self.tr("Log file uploaded successfully! Copied URL to clipboard."),
+                    text=self.tr(
+                        "Log file uploaded successfully! Copied URL to clipboard."
+                    ),
                     information=f"URL: <a href='{url}'>{url}</a>",
                     parent=parent,
                 )
@@ -650,7 +680,9 @@ class _UploadLogDialog(QDialog):
                 show_warning(
                     title=self.tr("Log Upload Failed"),
                     text=self.tr("Log file upload failed!"),
-                    information=self.tr("Please check your internet connection and try again."),
+                    information=self.tr(
+                        "Please check your internet connection and try again."
+                    ),
                     parent=parent,
                 )
 
@@ -665,7 +697,9 @@ class UploadLogTask(QRunnable):
     @Slot()
     def run(self) -> None:
         # Perform the upload task
-        result, url = generic.upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
+        result, url = generic.upload_data_to_0x0_st(
+            str(AppInfo().user_log_folder / "RimSort.log")
+        )
 
         # Emit signal on completion
         self.parent._upload_finished_signal.emit(result, url)
@@ -724,7 +758,9 @@ class SettingsFailureDialog(QDialog):
         self.setObjectName("dialogue")
 
         # Dynamic sizing
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
 
         # Add data
         self.text = self.tr(
@@ -792,7 +828,9 @@ class SettingsFailureDialog(QDialog):
         sys.exit()
 
 
-def _setup_error_icon(diag: QDialog, details_btn: QPushButton | None = None) -> QVBoxLayout:
+def _setup_error_icon(
+    diag: QDialog, details_btn: QPushButton | None = None
+) -> QVBoxLayout:
     l_layout = QVBoxLayout()
     piximap = getattr(QStyle, "SP_MessageBoxCritical")
     icon = diag.style().standardIcon(piximap)

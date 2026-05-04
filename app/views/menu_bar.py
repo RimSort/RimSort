@@ -13,7 +13,9 @@ from app.utils.system_info import SystemInfo
 
 
 class MenuBar(QObject):
-    def __init__(self, menu_bar: QMenuBar, settings_controller: SettingsController) -> None:
+    def __init__(
+        self, menu_bar: QMenuBar, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the MenuBar object.
 
@@ -122,24 +124,38 @@ class MenuBar(QObject):
             QMenu: The created "File" menu.
         """
         file_menu = self.menu_bar.addMenu(self.tr("File"))
-        self.open_mod_list_action = self._add_action(file_menu, self.tr("Open Mod List…"), "Ctrl+O")
+        self.open_mod_list_action = self._add_action(
+            file_menu, self.tr("Open Mod List…"), "Ctrl+O"
+        )
         file_menu.addSeparator()
-        self.save_mod_list_action = self._add_action(file_menu, self.tr("Save Mod List As…"), "Ctrl+Shift+S")
+        self.save_mod_list_action = self._add_action(
+            file_menu, self.tr("Save Mod List As…"), "Ctrl+Shift+S"
+        )
         file_menu.addSeparator()
         self.import_submenu = QMenu(self.tr("Import"))
         file_menu.addMenu(self.import_submenu)
-        self.import_from_rentry_action = self._add_action(self.import_submenu, self.tr("From Rentry.co"))
+        self.import_from_rentry_action = self._add_action(
+            self.import_submenu, self.tr("From Rentry.co")
+        )
         self.import_from_workshop_collection_action = self._add_action(
             self.import_submenu, self.tr("From Workshop collection")
         )
-        self.import_from_save_file_action = self._add_action(self.import_submenu, self.tr("From Save file…"))
+        self.import_from_save_file_action = self._add_action(
+            self.import_submenu, self.tr("From Save file…")
+        )
         self.export_submenu = QMenu(self.tr("Export"))
         file_menu.addMenu(self.export_submenu)
-        self.export_to_clipboard_action = self._add_action(self.export_submenu, self.tr("To Clipboard…"))
-        self.export_to_rentry_action = self._add_action(self.export_submenu, self.tr("To Rentry.co…"))
+        self.export_to_clipboard_action = self._add_action(
+            self.export_submenu, self.tr("To Clipboard…")
+        )
+        self.export_to_rentry_action = self._add_action(
+            self.export_submenu, self.tr("To Rentry.co…")
+        )
         file_menu.addSeparator()
 
-        self.upload_submenu = self._create_logfile_submenu("Upload Log", self.upload_log_actions)
+        self.upload_submenu = self._create_logfile_submenu(
+            "Upload Log", self.upload_log_actions
+        )
         file_menu.addMenu(self.upload_submenu)
 
         if self.settings_controller.settings.text_editor_location:
@@ -158,7 +174,9 @@ class MenuBar(QObject):
         self.rimworld_shortcuts_submenu = QMenu(self.tr("RimWorld"))
         self.shortcuts_submenu.addMenu(self.rimworld_shortcuts_submenu)
         # Add actions to RimSort submenu
-        self.open_app_directory_action = self._add_action(self.rimsort_shortcuts_submenu, self.tr("Root Directory"))
+        self.open_app_directory_action = self._add_action(
+            self.rimsort_shortcuts_submenu, self.tr("Root Directory")
+        )
         self.open_settings_directory_action = self._add_action(
             self.rimsort_shortcuts_submenu, self.tr("Config Directory")
         )
@@ -184,7 +202,9 @@ class MenuBar(QObject):
 
         if SystemInfo().operating_system != SystemInfo.OperatingSystem.MACOS:
             file_menu.addSeparator()
-            self.settings_action = self._add_action(file_menu, self.tr("Settings…"), "Ctrl+,")
+            self.settings_action = self._add_action(
+                file_menu, self.tr("Settings…"), "Ctrl+,"
+            )
             file_menu.addSeparator()
             self.quit_action = self._add_action(file_menu, self.tr("Exit"), "Ctrl+Q")
         return file_menu
@@ -194,7 +214,9 @@ class MenuBar(QObject):
         menu_name: str,
         action_list: list[QAction],
     ) -> QMenu:
-        def create_entry(name: str, path_accessor: Callable[[], Path | None]) -> QAction:
+        def create_entry(
+            name: str, path_accessor: Callable[[], Path | None]
+        ) -> QAction:
             action = self._add_action(logfile_submenu, name)
             action.setData(path_accessor)
             action_list.append(action)
@@ -210,7 +232,9 @@ class MenuBar(QObject):
 
         logfile_submenu = QMenu(self.tr(menu_name))
         create_entry("RimSort.log", lambda: AppInfo().user_log_folder / "RimSort.log")
-        create_entry("RimSort.old.log", lambda: AppInfo().user_log_folder / "RimSort.old.log")
+        create_entry(
+            "RimSort.old.log", lambda: AppInfo().user_log_folder / "RimSort.old.log"
+        )
         create_entry(
             "RimWorld Player.log",
             partial(rimworld_log_path, "Player.log"),
@@ -235,11 +259,19 @@ class MenuBar(QObject):
         self.paste_action = self._add_action(edit_menu, self.tr("Paste"), "Ctrl+V")
         edit_menu.addSeparator()
         self.rule_editor_action = self._add_action(edit_menu, self.tr("Rule Editor…"))
-        self.ignore_json_editor_action = self._add_action(edit_menu, self.tr("Ignore JSON Editor…"))
-        self.reset_all_warnings_action = self._add_action(edit_menu, self.tr("Reset Warning Toggles"))
-        self.reset_all_mod_colors_action = self._add_action(edit_menu, self.tr("Reset Mod Colors"))
+        self.ignore_json_editor_action = self._add_action(
+            edit_menu, self.tr("Ignore JSON Editor…")
+        )
+        self.reset_all_warnings_action = self._add_action(
+            edit_menu, self.tr("Reset Warning Toggles")
+        )
+        self.reset_all_mod_colors_action = self._add_action(
+            edit_menu, self.tr("Reset Mod Colors")
+        )
         edit_menu.addSeparator()
-        self.auto_add_translations_action = self._add_action(edit_menu, self.tr("Auto-add Translations"))
+        self.auto_add_translations_action = self._add_action(
+            edit_menu, self.tr("Auto-add Translations")
+        )
         return edit_menu
 
     def _create_view_menu(self) -> QMenu:
@@ -263,13 +295,23 @@ class MenuBar(QObject):
             QMenu: The created "Download" menu.
         """
         download_menu = self.menu_bar.addMenu(self.tr("Download"))
-        self.add_git_mod_action = self._add_action(download_menu, self.tr("Add Git Mod"))
-        self.add_zip_mod_action = self._add_action(download_menu, self.tr("Add Zip Mod"))
+        self.add_git_mod_action = self._add_action(
+            download_menu, self.tr("Add Git Mod")
+        )
+        self.add_zip_mod_action = self._add_action(
+            download_menu, self.tr("Add Zip Mod")
+        )
         download_menu.addSeparator()
-        self.browse_workshop_action = self._add_action(download_menu, self.tr("Browse Workshop"))
-        self.update_workshop_mods_action = self._add_action(download_menu, self.tr("Update Workshop Mods"))
+        self.browse_workshop_action = self._add_action(
+            download_menu, self.tr("Browse Workshop")
+        )
+        self.update_workshop_mods_action = self._add_action(
+            download_menu, self.tr("Update Workshop Mods")
+        )
         download_menu.addSeparator()
-        self.steam_verify_game_files_action = self._add_action(download_menu, self.tr("Verify Game Files"))
+        self.steam_verify_game_files_action = self._add_action(
+            download_menu, self.tr("Verify Game Files")
+        )
         return download_menu
 
     def _create_instances_menu(self) -> QMenu:
@@ -283,12 +325,22 @@ class MenuBar(QObject):
         self.instances_submenu = QMenu(self.tr('Current: "Default"'))
         instances_menu.addMenu(self.instances_submenu)
         instances_menu.addSeparator()
-        self.backup_instance_action = self._add_action(instances_menu, self.tr("Backup Instance…"))
-        self.restore_instance_action = self._add_action(instances_menu, self.tr("Restore Instance…"))
+        self.backup_instance_action = self._add_action(
+            instances_menu, self.tr("Backup Instance…")
+        )
+        self.restore_instance_action = self._add_action(
+            instances_menu, self.tr("Restore Instance…")
+        )
         instances_menu.addSeparator()
-        self.clone_instance_action = self._add_action(instances_menu, self.tr("Clone Instance…"))
-        self.create_instance_action = self._add_action(instances_menu, self.tr("Create Instance…"))
-        self.delete_instance_action = self._add_action(instances_menu, self.tr("Delete Instance…"))
+        self.clone_instance_action = self._add_action(
+            instances_menu, self.tr("Clone Instance…")
+        )
+        self.create_instance_action = self._add_action(
+            instances_menu, self.tr("Create Instance…")
+        )
+        self.delete_instance_action = self._add_action(
+            instances_menu, self.tr("Delete Instance…")
+        )
         return instances_menu
 
     def _create_texture_menu(self) -> QMenu:
@@ -299,14 +351,20 @@ class MenuBar(QObject):
             QMenu: The created "Textures" menu.
         """
         texture_menu = self.menu_bar.addMenu(self.tr("Textures"))
-        self.optimize_textures_action = self._add_action(texture_menu, self.tr("Optimize Textures"))
+        self.optimize_textures_action = self._add_action(
+            texture_menu, self.tr("Optimize Textures")
+        )
         texture_menu.addSeparator()
-        self.delete_dds_textures_action = self._add_action(texture_menu, self.tr("Delete .dds Textures"))
+        self.delete_dds_textures_action = self._add_action(
+            texture_menu, self.tr("Delete .dds Textures")
+        )
         return texture_menu
 
     def _create_update_menu(self) -> QMenu:
         update_menu = self.menu_bar.addMenu(self.tr("Update"))
-        self.check_for_updates_action = self._add_action(update_menu, self.tr("Check for Updates…"))
+        self.check_for_updates_action = self._add_action(
+            update_menu, self.tr("Check for Updates…")
+        )
         self.check_for_updates_on_startup_action = self._add_action(
             update_menu, self.tr("Check for Updates on Startup"), checkable=True
         )

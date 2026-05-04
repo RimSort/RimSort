@@ -40,7 +40,9 @@ def extract_text_from_xml(file_path: str) -> list[str]:
         return []
 
 
-def analyze_terms(mods_path: str, sample_size: Optional[int] = 100) -> Tuple[dict[str, int], list[str], list[str]]:
+def analyze_terms(
+    mods_path: str, sample_size: Optional[int] = 100
+) -> Tuple[dict[str, int], list[str], list[str]]:
     """analyze xml files to find common and rare terms"""
     # get list of xml files
     xml_files = find_xml_files(mods_path)
@@ -63,7 +65,9 @@ def analyze_terms(mods_path: str, sample_size: Optional[int] = 100) -> Tuple[dic
 
     # find common and rare terms
     common_terms = [term for term, count in term_counter.most_common(10)]
-    rare_terms = [term for term, count in term_counter.most_common()[:-11:-1] if count > 1]
+    rare_terms = [
+        term for term, count in term_counter.most_common()[:-11:-1] if count > 1
+    ]
 
     return dict(term_counter), common_terms, rare_terms
 

@@ -35,7 +35,9 @@ def subfolder_contains_candidate_path(
 
     subfolder_paths = [subfolder]
     try:
-        subfolder_paths.extend([subfolder / folder for folder in subfolder.iterdir() if folder.is_dir()])
+        subfolder_paths.extend(
+            [subfolder / folder for folder in subfolder.iterdir() if folder.is_dir()]
+        )
     except Exception:
         # Could not list subdirectories, return False
         return False
@@ -61,10 +63,14 @@ def cleanup_old_backups(backup_dir: Path, keep: int) -> None:
     Deletes old backups, keeping only the specified number of recent ones.
     """
     if keep == -1:
-        logger.info("Skipping backup cleanup because retention count is set to -1 (keep all).")
+        logger.info(
+            "Skipping backup cleanup because retention count is set to -1 (keep all)."
+        )
         return
     try:
-        logger.info(f"Cleaning up old backups in {backup_dir}. Keeping the most recent {keep}.")
+        logger.info(
+            f"Cleaning up old backups in {backup_dir}. Keeping the most recent {keep}."
+        )
         backups = sorted(
             [p for p in backup_dir.glob("Saves_*.zip")],
             key=lambda p: p.stat().st_mtime,
@@ -86,7 +92,9 @@ def cleanup_old_backups(backup_dir: Path, keep: int) -> None:
         logger.error(f"An error occurred during backup cleanup: {e}")
 
 
-def create_saves_backup(saves_path: Path, backup_dir: Path, settings: Settings) -> str | None:
+def create_saves_backup(
+    saves_path: Path, backup_dir: Path, settings: Settings
+) -> str | None:
     """
     Creates a compressed backup of the specified number of recent save files and cleans up old backups.
     """
@@ -104,7 +112,9 @@ def create_saves_backup(saves_path: Path, backup_dir: Path, settings: Settings) 
         if compression_count == -1:
             recent_files = all_files
         elif compression_count == 0:
-            logger.info("No save files will be backed up because compression count is set to 0.")
+            logger.info(
+                "No save files will be backed up because compression count is set to 0."
+            )
             return None
         else:
             recent_files = all_files[:compression_count]
@@ -120,8 +130,12 @@ def create_saves_backup(saves_path: Path, backup_dir: Path, settings: Settings) 
         backup_filename = f"Saves_{timestamp}.zip"
         backup_archive_path = backup_dir / backup_filename
 
-        logger.info(f"Compressing {len(recent_files)} most recent save(s) to {backup_archive_path} using DEFLATED...")
-        with zipfile.ZipFile(backup_archive_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        logger.info(
+            f"Compressing {len(recent_files)} most recent save(s) to {backup_archive_path} using DEFLATED..."
+        )
+        with zipfile.ZipFile(
+            backup_archive_path, "w", compression=zipfile.ZIP_DEFLATED
+        ) as zf:
             for file_path in recent_files:
                 arc_name = file_path.relative_to(saves_path)
                 zf.write(file_path, arc_name)
@@ -154,7 +168,9 @@ def create_backup_in_thread(settings: Settings) -> None:
 
     current_instance = settings.instances.get(settings.current_instance)
     if not current_instance or not current_instance.config_folder:
-        logger.warning("No active instance or config folder path found. Cannot perform backup.")
+        logger.warning(
+            "No active instance or config folder path found. Cannot perform backup."
+        )
         return
 
     config_path = Path(current_instance.config_folder)

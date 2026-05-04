@@ -52,7 +52,9 @@ class SettingsDialog(QDialog):
         main_layout.addLayout(button_layout)
 
         # Reset to defaults button
-        self.global_reset_to_defaults_button = QPushButton(self.tr("Reset to Defaults"), self)
+        self.global_reset_to_defaults_button = QPushButton(
+            self.tr("Reset to Defaults"), self
+        )
         button_layout.addWidget(self.global_reset_to_defaults_button)
 
         button_layout.addStretch()
@@ -100,7 +102,9 @@ class SettingsDialog(QDialog):
         # "Game location" → "Config location" → "Steam mods location" → "Local mods location"
         self.setTabOrder(self.game_location, self.config_folder_location)
         self.setTabOrder(self.config_folder_location, self.steam_mods_folder_location)
-        self.setTabOrder(self.steam_mods_folder_location, self.local_mods_folder_location)
+        self.setTabOrder(
+            self.steam_mods_folder_location, self.local_mods_folder_location
+        )
 
         # Push the buttons to the bottom
         tab_layout.addStretch()
@@ -147,7 +151,9 @@ class SettingsDialog(QDialog):
 
         self.game_location = QLineEdit()
         self.game_location.setPlaceholderText(
-            self.tr(r"Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld")
+            self.tr(
+                r"Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld"
+            )
         )
         self.game_location.setTextMargins(GUIInfo().text_field_margins)
         self.game_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
@@ -185,7 +191,9 @@ class SettingsDialog(QDialog):
             )
         )
         self.config_folder_location.setTextMargins(GUIInfo().text_field_margins)
-        self.config_folder_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.config_folder_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.config_folder_location)
 
     def _do_steam_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -197,10 +205,14 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        self.steam_client_integration_checkbox = QCheckBox(self.tr("Enable Steam client integration"))
+        self.steam_client_integration_checkbox = QCheckBox(
+            self.tr("Enable Steam client integration")
+        )
         group_layout.addWidget(self.steam_client_integration_checkbox)
 
-        self.steam_client_integration_checkbox.stateChanged.connect(self._on_steam_integration_toggled)
+        self.steam_client_integration_checkbox.stateChanged.connect(
+            self._on_steam_integration_toggled
+        )
 
         section_label = QLabel(self.tr("Steam mods location"))
         section_label.setFont(GUIInfo().emphasis_font)
@@ -225,7 +237,9 @@ class SettingsDialog(QDialog):
             )
         )
         self.steam_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
-        self.steam_mods_folder_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.steam_mods_folder_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.steam_mods_folder_location)
 
     def _do_local_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -255,10 +269,14 @@ class SettingsDialog(QDialog):
 
         self.local_mods_folder_location = QLineEdit()
         self.local_mods_folder_location.setPlaceholderText(
-            self.tr(r"should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods")
+            self.tr(
+                r"should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods"
+            )
         )
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
-        self.local_mods_folder_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.local_mods_folder_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.local_mods_folder_location)
 
     def _do_instance_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -285,9 +303,13 @@ class SettingsDialog(QDialog):
 
         self.instance_folder_location = QLineEdit()
         self.instance_folder_location.setReadOnly(True)
-        self.instance_folder_location.setPlaceholderText(self.tr("Leave empty to use default location"))
+        self.instance_folder_location.setPlaceholderText(
+            self.tr("Leave empty to use default location")
+        )
         self.instance_folder_location.setTextMargins(GUIInfo().text_field_margins)
-        self.instance_folder_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.instance_folder_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.instance_folder_location)
 
     def _do_game_launch_tab(self) -> None:
@@ -314,7 +336,9 @@ class SettingsDialog(QDialog):
             )
         )
         # Connect checkbox to disable/enable run_args group
-        self.launch_via_steam_protocol_checkbox.stateChanged.connect(self._on_steam_protocol_toggled)
+        self.launch_via_steam_protocol_checkbox.stateChanged.connect(
+            self._on_steam_protocol_toggled
+        )
         steam_protocol_layout.addWidget(self.launch_via_steam_protocol_checkbox)
 
         # Game arguments group
@@ -347,7 +371,9 @@ class SettingsDialog(QDialog):
         run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
 
         run_args_label = QLabel(self.tr("Edit Game Run Arguments:"))
-        run_args_layout.addWidget(run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        run_args_layout.addWidget(
+            run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
 
         self.run_args = QLineEdit()
         self.run_args.setTextMargins(GUIInfo().text_field_margins)
@@ -398,9 +424,13 @@ class SettingsDialog(QDialog):
         backup_group_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         tab_layout.addWidget(backup_group_label)
 
-        self.backup_saves_on_launch_checkbox = QCheckBox(self.tr("Automatically backup saves on first daily launch"))
+        self.backup_saves_on_launch_checkbox = QCheckBox(
+            self.tr("Automatically backup saves on first daily launch")
+        )
         self.backup_saves_on_launch_checkbox.setToolTip(
-            self.tr("If enabled, RimSort will automatically backup saves on the first daily launch.")
+            self.tr(
+                "If enabled, RimSort will automatically backup saves on the first daily launch."
+            )
         )
         tab_layout.addWidget(self.backup_saves_on_launch_checkbox)
 
@@ -408,13 +438,17 @@ class SettingsDialog(QDialog):
         retention_layout = QHBoxLayout()
         retention_label = QLabel(self.tr("Number of backups to keep:"))
         retention_label.setToolTip(
-            self.tr("The number of backups to keep. Set to -1 to keep all backups, 0 to delete all.")
+            self.tr(
+                "The number of backups to keep. Set to -1 to keep all backups, 0 to delete all."
+            )
         )
         retention_layout.addWidget(retention_label)
 
         self.auto_backup_retention_count_spinbox = QSpinBox()
         self.auto_backup_retention_count_spinbox.setRange(-1, 999)
-        self.auto_backup_retention_count_spinbox.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.auto_backup_retention_count_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
         retention_layout.addWidget(self.auto_backup_retention_count_spinbox)
         tab_layout.addLayout(retention_layout)
 
@@ -429,7 +463,9 @@ class SettingsDialog(QDialog):
         )
         self.auto_backup_compression_count_spinbox = QSpinBox()
         self.auto_backup_compression_count_spinbox.setRange(-1, 999)
-        self.auto_backup_compression_count_spinbox.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.auto_backup_compression_count_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
         compression_layout.addWidget(self.auto_backup_compression_count_spinbox)
         tab_layout.addLayout(compression_layout)
 
@@ -468,7 +504,9 @@ class SettingsDialog(QDialog):
 
         section_label = QLabel(section_lbl)
         section_label.setFont(GUIInfo().emphasis_font)
-        section_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        section_label.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+        )
         group_layout.addWidget(section_label)
 
         section_layout = QVBoxLayout()
@@ -537,7 +575,9 @@ class SettingsDialog(QDialog):
         local_file_choose_button = QToolButton()
         local_file_choose_button.setText(self.tr("Choose…"))
         local_file_choose_button.setEnabled(False)
-        local_file_choose_button.setFixedWidth(github_download_button.sizeHint().width())
+        local_file_choose_button.setFixedWidth(
+            github_download_button.sizeHint().width()
+        )
         row_layout.addWidget(local_file_choose_button)
 
         section_layout.addStretch(1)
@@ -593,7 +633,9 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
         database_expiry_label = QLabel(
-            self.tr("Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.")
+            self.tr(
+                "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
+            )
         )
         database_expiry_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(database_expiry_label)
@@ -635,7 +677,9 @@ class SettingsDialog(QDialog):
 
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
         self.aux_db_time_limit_label = QLabel(
-            self.tr("Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)")
+            self.tr(
+                "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            )
         )
         aux_db_tooltip = self.tr("""To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
 After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
@@ -652,9 +696,13 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.aux_db_time_limit.setFixedHeight(GUIInfo().default_font_line_height * 2)
 
         self.enable_aux_db_behavior_editing = QCheckBox(self.tr("Enable editing"))
-        self.enable_aux_db_behavior_editing.stateChanged.connect(self.enable_aux_db_time_limit_line_edit)
+        self.enable_aux_db_behavior_editing.stateChanged.connect(
+            self.enable_aux_db_time_limit_line_edit
+        )
         self.enable_aux_db_behavior_editing.setToolTip(
-            self.tr("This enables the editing of the time limit for Aux Metadata DB data deletion.")
+            self.tr(
+                "This enables the editing of the time limit for Aux Metadata DB data deletion."
+            )
         )
 
         label_layout = QHBoxLayout()
@@ -701,7 +749,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         deps_group_box_layout.addWidget(deps_label)
 
         # Use dependencies for sorting checkbox
-        self.use_moddependencies_as_loadTheseBefore = QCheckBox(self.tr("Use dependency rules for sorting."))
+        self.use_moddependencies_as_loadTheseBefore = QCheckBox(
+            self.tr("Use dependency rules for sorting.")
+        )
         self.use_moddependencies_as_loadTheseBefore.setToolTip(
             self.tr(
                 "If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod."
@@ -710,8 +760,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
         deps_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
 
         # Use alternativePackageIds as satisfying dependencies
-        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox = QCheckBox(
-            self.tr("Use alternativePackageIds as satisfying dependencies")
+        self.use_alternative_package_ids_as_satisfying_dependencies_checkbox = (
+            QCheckBox(self.tr("Use alternativePackageIds as satisfying dependencies"))
         )
         self.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setToolTip(
             self.tr(
@@ -719,9 +769,13 @@ This basically preserves your mod coloring, user notes etc. for this many second
                 "E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'"
             )
         )
-        deps_group_box_layout.addWidget(self.use_alternative_package_ids_as_satisfying_dependencies_checkbox)
+        deps_group_box_layout.addWidget(
+            self.use_alternative_package_ids_as_satisfying_dependencies_checkbox
+        )
 
-        self.check_deps_checkbox = QCheckBox(self.tr("Prompt user to download dependencies when click in Sort"))
+        self.check_deps_checkbox = QCheckBox(
+            self.tr("Prompt user to download dependencies when click in Sort")
+        )
         deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
         # XML parsing behavior group
@@ -735,7 +789,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         xml_parsing_explanatory_label = QLabel(self.tr("XML Parsing Behavior"))
         xml_parsing_explanatory_label.setFont(GUIInfo().emphasis_font)
         xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
-        self.prefer_versioned_about_tags_checkbox = QCheckBox(self.tr("Prefer versioned About.xml tags over base tags"))
+        self.prefer_versioned_about_tags_checkbox = QCheckBox(
+            self.tr("Prefer versioned About.xml tags over base tags")
+        )
         self.prefer_versioned_about_tags_checkbox.setToolTip(
             self.tr(
                 "When enabled, *ByVersion tags take precedence over the base tags, \n"
@@ -744,7 +800,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
 
-        xml_parsing_group_box_layout.addWidget(self.prefer_versioned_about_tags_checkbox)
+        xml_parsing_group_box_layout.addWidget(
+            self.prefer_versioned_about_tags_checkbox
+        )
 
         # Mod list options group
         modlist_option_group_box = QGroupBox()
@@ -758,56 +816,80 @@ This basically preserves your mod coloring, user notes etc. for this many second
         modlist_option_group_box_layout.addWidget(modlist_option_label)
 
         # Download missing mods checkbox
-        self.download_missing_mods_checkbox = QCheckBox(self.tr("Download missing mods automatically"))
+        self.download_missing_mods_checkbox = QCheckBox(
+            self.tr("Download missing mods automatically")
+        )
         self.download_missing_mods_checkbox.setToolTip(
-            self.tr("Notifies to download mods that may be missing in the active modlist")
+            self.tr(
+                "Notifies to download mods that may be missing in the active modlist"
+            )
         )
         modlist_option_group_box_layout.addWidget(self.download_missing_mods_checkbox)
 
         # Duplicate mod notification checkbox
-        self.show_duplicate_mods_warning_checkbox = QCheckBox(self.tr("Show duplicate mods warning"))
+        self.show_duplicate_mods_warning_checkbox = QCheckBox(
+            self.tr("Show duplicate mods warning")
+        )
         self.show_duplicate_mods_warning_checkbox.setToolTip(
             self.tr("Notifies and displays the mods that have the same packageid")
         )
-        modlist_option_group_box_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
+        modlist_option_group_box_layout.addWidget(
+            self.show_duplicate_mods_warning_checkbox
+        )
 
         # Mod type filter checkbox
         self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
         self.mod_type_filter_checkbox.setToolTip(
-            self.tr("Add icons and filtering options for easy mods identification and grouping")
+            self.tr(
+                "Add icons and filtering options for easy mods identification and grouping"
+            )
         )
         modlist_option_group_box_layout.addWidget(self.mod_type_filter_checkbox)
 
         # Hide invalid mod filtering checkbox
-        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(self.tr("Hide invalid mods when filtering"))
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
+            self.tr("Hide invalid mods when filtering")
+        )
         self.hide_invalid_mods_when_filtering_checkbox.setToolTip(
             self.tr("Hides invalid mods, not recommended to enable")
         )
-        modlist_option_group_box_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
+        modlist_option_group_box_layout.addWidget(
+            self.hide_invalid_mods_when_filtering_checkbox
+        )
 
         # Inactive mods sorting group
         self.inactive_mods_sorting_group_box = QGroupBox()
         tab_layout.addWidget(self.inactive_mods_sorting_group_box)
 
         inactive_mods_sorting_group_box_layout = QVBoxLayout()
-        self.inactive_mods_sorting_group_box.setLayout(inactive_mods_sorting_group_box_layout)
+        self.inactive_mods_sorting_group_box.setLayout(
+            inactive_mods_sorting_group_box_layout
+        )
 
         inactive_mods_sorting_label = QLabel(self.tr("Inactive Mods Sorting"))
         inactive_mods_sorting_label.setFont(GUIInfo().emphasis_font)
         inactive_mods_sorting_group_box_layout.addWidget(inactive_mods_sorting_label)
 
         # Inactive mods sorting options checkbox
-        self.enable_inactive_mods_sorting_checkbox = QCheckBox(self.tr("Enable inactive mods sorting"))
+        self.enable_inactive_mods_sorting_checkbox = QCheckBox(
+            self.tr("Enable inactive mods sorting")
+        )
         self.enable_inactive_mods_sorting_checkbox.setToolTip(
             self.tr(
                 "Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods \n"
                 "Disabling this can improve performance by avoiding heavy calculations."
             )
         )
-        inactive_mods_sorting_group_box_layout.addWidget(self.enable_inactive_mods_sorting_checkbox)
+        inactive_mods_sorting_group_box_layout.addWidget(
+            self.enable_inactive_mods_sorting_checkbox
+        )
 
-        self.save_inactive_mods_sort_state_checkbox = QCheckBox(self.tr("Save inactive mods sort state"))
-        inactive_mods_sorting_group_box_layout.addWidget(self.save_inactive_mods_sort_state_checkbox)
+        self.save_inactive_mods_sort_state_checkbox = QCheckBox(
+            self.tr("Save inactive mods sort state")
+        )
+        inactive_mods_sorting_group_box_layout.addWidget(
+            self.save_inactive_mods_sort_state_checkbox
+        )
 
         tab_layout.addStretch()
 
@@ -829,7 +911,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         when_building_database_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(when_building_database_label)
 
-        self.db_builder_include_all_radio = QRadioButton(self.tr("Get PublishedFileIDs from locally installed mods."))
+        self.db_builder_include_all_radio = QRadioButton(
+            self.tr("Get PublishedFileIDs from locally installed mods.")
+        )
         group_layout.addWidget(self.db_builder_include_all_radio)
 
         explanatory_label = QLabel(
@@ -840,7 +924,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(explanatory_label)
 
-        self.db_builder_include_no_local_radio = QRadioButton(self.tr("Get PublishedFileIDs from the Steam Workshop."))
+        self.db_builder_include_no_local_radio = QRadioButton(
+            self.tr("Get PublishedFileIDs from the Steam Workshop.")
+        )
         group_layout.addWidget(self.db_builder_include_no_local_radio)
 
         explanatory_label = QLabel(
@@ -858,7 +944,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        self.db_builder_query_dlc_checkbox = QCheckBox(self.tr("Query DLC dependency data with Steamworks API"))
+        self.db_builder_query_dlc_checkbox = QCheckBox(
+            self.tr("Query DLC dependency data with Steamworks API")
+        )
         group_layout.addWidget(self.db_builder_query_dlc_checkbox)
 
         self.db_builder_update_instead_of_overwriting_checkbox = QCheckBox(
@@ -879,7 +967,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.db_builder_steam_api_key = QLineEdit()
         self.db_builder_steam_api_key.setEchoMode(QLineEdit.EchoMode.Password)
         self.db_builder_steam_api_key.setTextMargins(GUIInfo().text_field_margins)
-        self.db_builder_steam_api_key.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.db_builder_steam_api_key.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         grid_group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
 
         grid_group_layout.setColumnStretch(0, 0)
@@ -896,10 +986,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
         item_label = QLabel(self.tr("Download all published Workshop mods via:"))
         item_layout.addWidget(item_label)
 
-        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton(self.tr("SteamCMD"))
+        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton(
+            self.tr("SteamCMD")
+        )
         item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
 
-        self.db_builder_download_all_mods_via_steam_button = QPushButton(self.tr("Steam"))
+        self.db_builder_download_all_mods_via_steam_button = QPushButton(
+            self.tr("Steam")
+        )
         self.db_builder_download_all_mods_via_steam_button.setFixedWidth(
             self.db_builder_download_all_mods_via_steamcmd_button.sizeHint().width()
         )
@@ -911,7 +1005,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         item_layout.addStretch()
 
-        self.db_builder_compare_databases_button = QPushButton(self.tr("Compare Databases"))
+        self.db_builder_compare_databases_button = QPushButton(
+            self.tr("Compare Databases")
+        )
         item_layout.addWidget(self.db_builder_compare_databases_button)
 
         self.db_builder_merge_databases_button = QPushButton(self.tr("Merge Databases"))
@@ -921,7 +1017,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         item_layout.addWidget(self.db_builder_merge_databases_button)
 
         self.db_builder_build_database_button = QPushButton(self.tr("Build Database"))
-        self.db_builder_build_database_button.setFixedWidth(self.db_builder_compare_databases_button.sizeHint().width())
+        self.db_builder_build_database_button.setFixedWidth(
+            self.db_builder_compare_databases_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_build_database_button)
 
     def _do_steamcmd_tab(self) -> None:
@@ -937,10 +1035,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        self.steamcmd_validate_downloads_checkbox = QCheckBox(self.tr("Validate downloaded mods"))
+        self.steamcmd_validate_downloads_checkbox = QCheckBox(
+            self.tr("Validate downloaded mods")
+        )
         group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
-        self.steamcmd_auto_clear_depot_cache_checkbox = QCheckBox(self.tr("Automatically clear depot cache"))
+        self.steamcmd_auto_clear_depot_cache_checkbox = QCheckBox(
+            self.tr("Automatically clear depot cache")
+        )
         self.steamcmd_auto_clear_depot_cache_checkbox.setToolTip(
             (
                 self.tr(
@@ -951,7 +1053,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
 
-        self.steamcmd_delete_before_update_checkbox = QCheckBox(self.tr("Delete before update"))
+        self.steamcmd_delete_before_update_checkbox = QCheckBox(
+            self.tr("Delete before update")
+        )
         self.steamcmd_delete_before_update_checkbox.setToolTip(
             self.tr("This is useful if you want to ensure clean mod updates.")
         )
@@ -976,7 +1080,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.steamcmd_install_location = QLineEdit()
         self.steamcmd_install_location.setTextMargins(GUIInfo().text_field_margins)
-        self.steamcmd_install_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.steamcmd_install_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.steamcmd_install_location)
 
         tab_layout.addStretch()
@@ -986,7 +1092,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         button_layout.addStretch()
 
-        self.steamcmd_clear_depot_cache_button = QPushButton(self.tr("Clear depot cache"))
+        self.steamcmd_clear_depot_cache_button = QPushButton(
+            self.tr("Clear depot cache")
+        )
         self.steamcmd_clear_depot_cache_button.setToolTip(
             self.tr(
                 "Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD."
@@ -1020,25 +1128,33 @@ This basically preserves your mod coloring, user notes etc. for this many second
         quality_preset_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(quality_preset_label)
 
-        self.todds_preset_optimized_radio = QRadioButton(self.tr("Optimized - Recommended for RimWorld"))
+        self.todds_preset_optimized_radio = QRadioButton(
+            self.tr("Optimized - Recommended for RimWorld")
+        )
         group_layout.addWidget(self.todds_preset_optimized_radio)
 
         self.todds_preset_custom_radio = QRadioButton(self.tr("Custom todds command"))
         group_layout.addWidget(self.todds_preset_custom_radio)
 
         custom_command_label = QLabel(
-            self.tr("If -p as in path is not specified, path from current active or all mods selection will be used.")
+            self.tr(
+                "If -p as in path is not specified, path from current active or all mods selection will be used."
+            )
         )
         custom_command_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(custom_command_label)
 
         self.todds_custom_command_lineedit = QLineEdit()
-        todds_example = '-f BC1 -af BC7 -on -vf -fs -r Textures -t -p "D:\\Games\\RimWorld\\Mods"'
+        todds_example = (
+            '-f BC1 -af BC7 -on -vf -fs -r Textures -t -p "D:\\Games\\RimWorld\\Mods"'
+        )
         self.todds_custom_command_lineedit.setPlaceholderText(
             self.tr("eg: {todds_example}").format(todds_example=todds_example)
         )
         self.todds_custom_command_lineedit.setTextMargins(GUIInfo().text_field_margins)
-        self.todds_custom_command_lineedit.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.todds_custom_command_lineedit.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.todds_custom_command_lineedit)
 
         group_box = QGroupBox()
@@ -1051,7 +1167,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         when_optimizing_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(when_optimizing_label)
 
-        self.todds_active_mods_only_radio = QRadioButton(self.tr("Optimize active mods only"))
+        self.todds_active_mods_only_radio = QRadioButton(
+            self.tr("Optimize active mods only")
+        )
         group_layout.addWidget(self.todds_active_mods_only_radio)
 
         self.todds_all_mods_radio = QRadioButton(self.tr("Optimize all mods"))
@@ -1066,11 +1184,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.todds_dry_run_checkbox = QCheckBox(self.tr("Enable dry-run mode"))
         group_layout.addWidget(self.todds_dry_run_checkbox)
 
-        self.todds_overwrite_checkbox = QCheckBox(self.tr("Overwrite existing optimized textures"))
+        self.todds_overwrite_checkbox = QCheckBox(
+            self.tr("Overwrite existing optimized textures")
+        )
         group_layout.addWidget(self.todds_overwrite_checkbox)
 
         self.auto_delete_orphaned_dds_checkbox = QCheckBox(
-            self.tr("Automatically delete .dds files if no corresponding .png file exists")
+            self.tr(
+                "Automatically delete .dds files if no corresponding .png file exists"
+            )
         )
         self.auto_delete_orphaned_dds_checkbox.setToolTip(
             self.tr(
@@ -1122,7 +1244,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(folder_arg_label)
         self.text_editor_folder_arg = QLineEdit()
         self.text_editor_folder_arg.setTextMargins(GUIInfo().text_field_margins)
-        self.text_editor_folder_arg.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.text_editor_folder_arg.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         group_layout.addWidget(self.text_editor_folder_arg)
 
         file_arg_label = QLabel(self.tr("Additional Arguments (Opening Single File)"))
@@ -1169,7 +1293,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         theme_layout = QHBoxLayout()
         theme_group_box.setLayout(theme_layout)
 
-        self.enable_themes_checkbox = QCheckBox(self.tr("Enable to use theme / stylesheet instead of system Theme"))
+        self.enable_themes_checkbox = QCheckBox(
+            self.tr("Enable to use theme / stylesheet instead of system Theme")
+        )
         self.enable_themes_checkbox.setToolTip(
             self.tr(
                 "To add your own theme / stylesheet \n\n"
@@ -1185,7 +1311,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         theme_layout.addWidget(self.enable_themes_checkbox)
 
         self.themes_combobox = QComboBox()
-        self.themes_combobox.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.themes_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
         theme_layout.addWidget(self.themes_combobox)
 
         self.theme_location_open_button = QToolButton()
@@ -1209,7 +1337,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         font_family_layout.addWidget(font_family_label)
 
         self.font_family_combobox = QFontComboBox()
-        self.font_family_combobox.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.font_family_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
         font_family_layout.addWidget(self.font_family_combobox)
 
         font_size_layout = QHBoxLayout()
@@ -1221,11 +1351,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.font_size_spinbox = QSpinBox()
         self.font_size_spinbox.setRange(8, 20)
         self.font_size_spinbox.setValue(12)
-        self.font_size_spinbox.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.font_size_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
         font_size_layout.addWidget(self.font_size_spinbox)
 
         reset_button = QPushButton(self.tr("Reset"))
-        reset_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        reset_button.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
 
         reset_button_layout = QHBoxLayout()
         reset_button_layout.addStretch(1)
@@ -1234,7 +1368,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         reset_button.clicked.connect(self.reset_font_settings)
 
         if self.enable_themes_checkbox.isChecked():
-            self.enable_themes_checkbox.stateChanged.connect(self.connect_populate_themes_combobox)
+            self.enable_themes_checkbox.stateChanged.connect(
+                self.connect_populate_themes_combobox
+            )
         else:
             self.themes_combobox.clear()
 
@@ -1249,11 +1385,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
         language_group_layout = QHBoxLayout()
         language_group_box.setLayout(language_group_layout)
 
-        language_label = QLabel(self.tr("Select Language (Restart required to apply changes)"))
+        language_label = QLabel(
+            self.tr("Select Language (Restart required to apply changes)")
+        )
         language_group_layout.addWidget(language_label)
 
         self.language_combobox = QComboBox()
-        self.language_combobox.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.language_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
 
         language_group_layout.addWidget(self.language_combobox)
 
@@ -1316,9 +1456,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.main_window_group)
 
         # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
-        self.main_launch_maximized_radio.toggled.connect(self.disable_main_custom_size_spinboxes)
-        self.main_launch_normal_radio.toggled.connect(self.disable_main_custom_size_spinboxes)
-        self.main_launch_custom_radio.toggled.connect(self.enable_main_custom_size_spinboxes)
+        self.main_launch_maximized_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_normal_radio.toggled.connect(
+            self.disable_main_custom_size_spinboxes
+        )
+        self.main_launch_custom_radio.toggled.connect(
+            self.enable_main_custom_size_spinboxes
+        )
 
         # Browser Window
         (
@@ -1344,9 +1490,15 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.browser_window_group)
 
         # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
-        self.browser_launch_maximized_radio.toggled.connect(self.disable_browser_custom_size_spinboxes)
-        self.browser_launch_normal_radio.toggled.connect(self.disable_browser_custom_size_spinboxes)
-        self.browser_launch_custom_radio.toggled.connect(self.enable_browser_custom_size_spinboxes)
+        self.browser_launch_maximized_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_normal_radio.toggled.connect(
+            self.disable_browser_custom_size_spinboxes
+        )
+        self.browser_launch_custom_radio.toggled.connect(
+            self.enable_browser_custom_size_spinboxes
+        )
 
         # Settings Window (only custom option)
         settings_window_title_label = QLabel(self.tr("Settings Window Launch State"))
@@ -1358,7 +1510,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         settings_window_group.setLayout(settings_window_layout)
 
         self.settings_custom_width_spinbox = QSpinBox()
-        self.settings_custom_width_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
+        self.settings_custom_width_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
         self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
         self.settings_custom_width_spinbox.setSuffix(" px")
         self.settings_custom_width_spinbox.setFixedWidth(100)
@@ -1368,7 +1522,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         settings_window_layout.addWidget(self.settings_custom_width_spinbox)
 
         self.settings_custom_height_spinbox = QSpinBox()
-        self.settings_custom_height_spinbox.setRange(Settings.MIN_SIZE, Settings.MAX_SIZE)
+        self.settings_custom_height_spinbox.setRange(
+            Settings.MIN_SIZE, Settings.MAX_SIZE
+        )
         self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
         self.settings_custom_height_spinbox.setSuffix(" px")
         self.settings_custom_height_spinbox.setFixedWidth(100)
@@ -1439,12 +1595,16 @@ This basically preserves your mod coloring, user notes etc. for this many second
         auth_group.setLayout(auth_group_layout)
 
         rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
-        auth_group_layout.addWidget(rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        auth_group_layout.addWidget(
+            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
 
         self.rentry_auth_code = QLineEdit()
         self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
         self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.rentry_auth_code.setPlaceholderText(self.tr("Obtain rentry auth code by emailing: support@rentry.co"))
+        self.rentry_auth_code.setPlaceholderText(
+            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
+        )
         # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
         auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
 
@@ -1455,7 +1615,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         github_identity_group.setLayout(github_identity_layout)
 
         github_username_label = QLabel(self.tr("GitHub username:"))
-        github_identity_layout.addWidget(github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        github_identity_layout.addWidget(
+            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
 
         self.github_username = QLineEdit()
         self.github_username.setTextMargins(GUIInfo().text_field_margins)
@@ -1463,7 +1625,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         github_identity_layout.addWidget(self.github_username, 0, 1)
 
         github_token_label = QLabel(self.tr("GitHub personal access token:"))
-        github_identity_layout.addWidget(github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        github_identity_layout.addWidget(
+            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
 
         self.github_token = QLineEdit()
         self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
@@ -1499,27 +1663,37 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.debug_logging_checkbox = QCheckBox(self.tr("Enable debug logging"))
         group_layout.addWidget(self.debug_logging_checkbox)
 
-        self.watchdog_checkbox = QCheckBox(self.tr("Enable watchdog file monitor daemon"))
+        self.watchdog_checkbox = QCheckBox(
+            self.tr("Enable watchdog file monitor daemon")
+        )
         group_layout.addWidget(self.watchdog_checkbox)
 
         # Clear button behavior
         self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
-        self.show_mod_updates_checkbox = QCheckBox(self.tr("Check for mod updates on refresh"))
+        self.show_mod_updates_checkbox = QCheckBox(
+            self.tr("Check for mod updates on refresh")
+        )
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
-        self.render_unity_rich_text_checkbox = QCheckBox(self.tr("Render Unity Rich Text in mod descriptions"))
+        self.render_unity_rich_text_checkbox = QCheckBox(
+            self.tr("Render Unity Rich Text in mod descriptions")
+        )
         self.color_background_instead_of_text_checkbox = QCheckBox(
             self.tr("Apply mod coloring to background instead of text")
         )
         group_layout.addWidget(self.color_background_instead_of_text_checkbox)
         self.render_unity_rich_text_checkbox.setToolTip(
-            self.tr("Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.")
+            self.tr(
+                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+            )
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
-        self.update_databases_on_startup_checkbox = QCheckBox(self.tr("Update databases on startup"))
+        self.update_databases_on_startup_checkbox = QCheckBox(
+            self.tr("Update databases on startup")
+        )
         self.update_databases_on_startup_checkbox.setToolTip(
             self.tr(
                 "Enable this option to automatically update enabled databases when RimSort starts. "
@@ -1532,13 +1706,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Include mod notes in mod name search filter")
         )
         self.include_mod_notes_in_mod_name_filter_checkbox.setToolTip(
-            self.tr("This option will include searching mod notes when searching by mod name.")
+            self.tr(
+                "This option will include searching mod notes when searching by mod name."
+            )
         )
         group_layout.addWidget(self.include_mod_notes_in_mod_name_filter_checkbox)
 
         # Put checkbox, label and spinbox on the same horizontal line
         backup_layout = QHBoxLayout()
-        self.enable_backup_before_update_checkbox = QCheckBox(self.tr("Create backup before RimSort update"))
+        self.enable_backup_before_update_checkbox = QCheckBox(
+            self.tr("Create backup before RimSort update")
+        )
         self.enable_backup_before_update_checkbox.setToolTip(
             self.tr(
                 "Recommended to keep this enabled as it creates a backup before updating RimSort, "

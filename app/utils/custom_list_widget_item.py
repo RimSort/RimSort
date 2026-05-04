@@ -38,4 +38,6 @@ class CustomListWidgetItem(QListWidgetItem):
             list_widget.itemChanged.emit(self)
         else:
             # If the CustomListWidgetItem is not added to a QListWidget the signal will not be emitted
-            logger.warning("Could not emit itemChanged signal from CustomListWidgetItem, listWidget is None.")
+            logger.warning(
+                "Could not emit itemChanged signal from CustomListWidgetItem, listWidget is None."
+            )

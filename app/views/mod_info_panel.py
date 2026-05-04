@@ -139,45 +139,67 @@ class ModInfoPanel:
         self.panel.addWidget(self.info_panel_frame)
 
         # Create widgets
-        self.missing_image_path = str(AppInfo().theme_data_folder / "default-icons" / "missing.png")
-        self.rimsort_image_a_path = str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_a.png")
-        self.rimsort_image_b_path = str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")
-        self.scenario_image_path = str(AppInfo().theme_data_folder / "default-icons" / "rimworld.png")
+        self.missing_image_path = str(
+            AppInfo().theme_data_folder / "default-icons" / "missing.png"
+        )
+        self.rimsort_image_a_path = str(
+            AppInfo().theme_data_folder / "default-icons" / "AppIcon_a.png"
+        )
+        self.rimsort_image_b_path = str(
+            AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png"
+        )
+        self.scenario_image_path = str(
+            AppInfo().theme_data_folder / "default-icons" / "rimworld.png"
+        )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview_picture.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.preview_picture.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.preview_picture.setMinimumSize(1, 1)
         self.preview_picture.setPixmap(
-            QPixmap(self.rimsort_image_a_path).scaled(self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio)
+            QPixmap(self.rimsort_image_a_path).scaled(
+                self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio
+            )
         )
         self.mod_info_name_label = QLabel(self.tr("Name:"))
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
         self.mod_info_name_value.setObjectName("summaryValue")
-        self.mod_info_name_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_name_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_name_value.setWordWrap(True)
         self.scenario_info_summary_label = QLabel(self.tr("Summary:"))
         self.scenario_info_summary_label.setObjectName("summaryLabel")
         self.scenario_info_summary_value = QLabel()
-        self.scenario_info_summary_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.scenario_info_summary_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.scenario_info_summary_value.setWordWrap(True)
         self.mod_info_package_id_label = QLabel(self.tr("PackageID:"))
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
         self.mod_info_package_id_value.setObjectName("summaryValue")
-        self.mod_info_package_id_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_package_id_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_package_id_value.setWordWrap(True)
         self.mod_info_author_label = QLabel(self.tr("Authors:"))
         self.mod_info_author_label.setObjectName("summaryLabel")
         self.mod_info_author_value = QLabel()
         self.mod_info_author_value.setObjectName("summaryValue")
-        self.mod_info_author_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_author_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_author_value.setWordWrap(True)
         self.mod_info_mod_version_label = QLabel(self.tr("Mod Version:"))
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
         self.mod_info_mod_version_value.setObjectName("summaryValue")
-        self.mod_info_mod_version_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_mod_version_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_mod_version_value.setWordWrap(True)
         self.mod_info_supported_versions_label = QLabel(self.tr("Supported Version:"))
         self.mod_info_supported_versions_label.setObjectName("summaryLabel")
@@ -191,25 +213,33 @@ class ModInfoPanel:
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = ClickablePathLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
-        self.mod_info_path_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_path_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_path_value.setWordWrap(True)
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
         self.mod_info_last_touched_value = QLabel()
         self.mod_info_last_touched_value.setObjectName("summaryValue")
-        self.mod_info_last_touched_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_last_touched_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_last_touched_value.setWordWrap(True)
         self.mod_info_filesystem_time_label = QLabel(self.tr("Filesystem Modified:"))
         self.mod_info_filesystem_time_label.setObjectName("summaryLabel")
         self.mod_info_filesystem_time_value = QLabel()
         self.mod_info_filesystem_time_value.setObjectName("summaryValue")
-        self.mod_info_filesystem_time_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_filesystem_time_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_filesystem_time_value.setWordWrap(True)
         self.mod_info_external_times_label = QLabel(self.tr("Workshop Times:"))
         self.mod_info_external_times_label.setObjectName("summaryLabel")
         self.mod_info_external_times_value = QLabel()
         self.mod_info_external_times_value.setObjectName("summaryValue")
-        self.mod_info_external_times_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_external_times_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_external_times_value.setWordWrap(True)
         self.description = DescriptionWidget()
         self.description_text = self.tr("Welcome to RimSort!")
@@ -217,9 +247,7 @@ class ModInfoPanel:
             f"<br><br><br><center>{self.description_text}<h3></h3></center>",
             convert=False,
         )
-        self.notes = (
-            QTextEdit()
-        )  # TODO: Custom QTextEdit to allow markdown and clickable hyperlinks? Also make collapsible?
+        self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow markdown and clickable hyperlinks? Also make collapsible?
         self.notes.setObjectName("userModNotes")
         self.notes.setPlaceholderText(self.tr("Put your personal mod notes here!"))
         self.notes.textChanged.connect(self.update_user_mod_notes)
@@ -230,24 +258,56 @@ class ModInfoPanel:
         self.mod_info_name.addWidget(self.mod_info_name_value, NAME_VALUE_RATIO)
         self.mod_info_path.addWidget(self.mod_info_path_label, NAME_LABEL_RATIO)
         self.mod_info_path.addWidget(self.mod_info_path_value, NAME_VALUE_RATIO)
-        self.scenario_info_summary.addWidget(self.scenario_info_summary_label, NAME_LABEL_RATIO)
-        self.scenario_info_summary.addWidget(self.scenario_info_summary_value, NAME_VALUE_RATIO)
-        self.mod_info_package_id.addWidget(self.mod_info_package_id_label, NAME_LABEL_RATIO)
-        self.mod_info_package_id.addWidget(self.mod_info_package_id_value, NAME_VALUE_RATIO)
+        self.scenario_info_summary.addWidget(
+            self.scenario_info_summary_label, NAME_LABEL_RATIO
+        )
+        self.scenario_info_summary.addWidget(
+            self.scenario_info_summary_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_package_id.addWidget(
+            self.mod_info_package_id_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_package_id.addWidget(
+            self.mod_info_package_id_value, NAME_VALUE_RATIO
+        )
         self.mod_info_authors.addWidget(self.mod_info_author_label, NAME_LABEL_RATIO)
         self.mod_info_authors.addWidget(self.mod_info_author_value, NAME_VALUE_RATIO)
-        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, NAME_LABEL_RATIO)
-        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, NAME_VALUE_RATIO)
-        self.mod_info_supported_versions.addWidget(self.mod_info_supported_versions_label, NAME_LABEL_RATIO)
-        self.mod_info_supported_versions.addWidget(self.mod_info_supported_versions_value, NAME_VALUE_RATIO)
-        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_label, NAME_LABEL_RATIO)
-        self.mod_info_folder_size.addWidget(self.mod_info_folder_size_value, NAME_VALUE_RATIO)
-        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_label, NAME_LABEL_RATIO)
-        self.mod_info_last_touched.addWidget(self.mod_info_last_touched_value, NAME_VALUE_RATIO)
-        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_label, NAME_LABEL_RATIO)
-        self.mod_info_filesystem_time.addWidget(self.mod_info_filesystem_time_value, NAME_VALUE_RATIO)
-        self.mod_info_external_times.addWidget(self.mod_info_external_times_label, NAME_LABEL_RATIO)
-        self.mod_info_external_times.addWidget(self.mod_info_external_times_value, NAME_VALUE_RATIO)
+        self.mod_info_mod_version.addWidget(
+            self.mod_info_mod_version_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_mod_version.addWidget(
+            self.mod_info_mod_version_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_supported_versions.addWidget(
+            self.mod_info_supported_versions_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_supported_versions.addWidget(
+            self.mod_info_supported_versions_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_folder_size.addWidget(
+            self.mod_info_folder_size_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_folder_size.addWidget(
+            self.mod_info_folder_size_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_last_touched.addWidget(
+            self.mod_info_last_touched_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_last_touched.addWidget(
+            self.mod_info_last_touched_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_filesystem_time.addWidget(
+            self.mod_info_filesystem_time_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_filesystem_time.addWidget(
+            self.mod_info_filesystem_time_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_external_times.addWidget(
+            self.mod_info_external_times_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_external_times.addWidget(
+            self.mod_info_external_times_value, NAME_VALUE_RATIO
+        )
         self.mod_info_layout.addLayout(self.mod_info_name)
         self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
@@ -295,7 +355,11 @@ class ModInfoPanel:
         ]
 
         # Hide all widgets by default
-        for widget in self.essential_info_widgets + self.base_mod_info_widgets + self.scenario_info_widgets:
+        for widget in (
+            self.essential_info_widgets
+            + self.base_mod_info_widgets
+            + self.scenario_info_widgets
+        ):
             widget.hide()
 
         logger.debug("Finished ModInfo initialization")
@@ -334,7 +398,9 @@ class ModInfoPanel:
         self.notes.blockSignals(False)
         logger.debug(f"Finished setting notes for UUID: {mod_data['uuid']}")
 
-    def _add_label_value_to_layout(self, layout: QHBoxLayout, label: QLabel, value: QLabel) -> None:
+    def _add_label_value_to_layout(
+        self, layout: QHBoxLayout, label: QLabel, value: QLabel
+    ) -> None:
         """Helper method to add label-value pairs to layouts with consistent ratios."""
         layout.addWidget(label, NAME_LABEL_RATIO)
         layout.addWidget(value, NAME_VALUE_RATIO)
@@ -356,7 +422,9 @@ class ModInfoPanel:
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
             # Set invalid path style (red color, no clickable styling)
-            self.mod_info_path_value.setStyleSheet("color: #cc0000; text-decoration: none;")
+            self.mod_info_path_value.setStyleSheet(
+                "color: #cc0000; text-decoration: none;"
+            )
             self.mod_info_path_value.setClickable(False)
         else:
             # Set valid value style
@@ -378,7 +446,9 @@ class ModInfoPanel:
         if isinstance(mod_version, dict):
             self.mod_info_mod_version_value.setText(mod_version.get("#text", UNKNOWN))
         else:
-            self.mod_info_mod_version_value.setText(mod_version if mod_version else UNKNOWN)
+            self.mod_info_mod_version_value.setText(
+                mod_version if mod_version else UNKNOWN
+            )
 
     def _set_folder_size_info(self, uuid: str) -> None:
         """Set folder size information using optimized calculation."""
@@ -392,7 +462,9 @@ class ModInfoPanel:
             logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
             self.mod_info_folder_size_value.setText("Not available")
 
-    def _set_timestamp_info(self, timestamp: int | None, label: QLabel, field_name: str) -> None:
+    def _set_timestamp_info(
+        self, timestamp: int | None, label: QLabel, field_name: str
+    ) -> None:
         """Set timestamp information with consistent error handling."""
         if timestamp and timestamp != 0:
             try:
@@ -407,10 +479,16 @@ class ModInfoPanel:
 
     def _set_filesystem_time_info(self, mod_path: str | None) -> None:
         """Set filesystem modification time information."""
-        if self.settings_controller.settings.inactive_mods_sorting and mod_path and os.path.exists(mod_path):
+        if (
+            self.settings_controller.settings.inactive_mods_sorting
+            and mod_path
+            and os.path.exists(mod_path)
+        ):
             try:
                 fs_time = int(os.path.getmtime(mod_path))
-                self._set_timestamp_info(fs_time, self.mod_info_filesystem_time_value, "filesystem time")
+                self._set_timestamp_info(
+                    fs_time, self.mod_info_filesystem_time_value, "filesystem time"
+                )
             except (ValueError, OSError, OverflowError) as e:
                 logger.error(f"Error formatting filesystem time: {e}")
                 self.mod_info_filesystem_time_value.setText("Invalid timestamp")
@@ -427,21 +505,27 @@ class ModInfoPanel:
         if external_time_created:
             try:
                 dt_created = datetime.fromtimestamp(int(external_time_created))
-                external_times.append(f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}")
+                external_times.append(
+                    f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
             except (ValueError, OSError, OverflowError):
                 external_times.append("Created: Invalid")
 
         if external_time_updated:
             try:
                 dt_updated = datetime.fromtimestamp(int(external_time_updated))
-                external_times.append(f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                external_times.append(
+                    f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
             except (ValueError, OSError, OverflowError):
                 external_times.append("Updated: Invalid")
 
         if internal_time_updated:
             try:
                 dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
-                external_times.append(f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+                external_times.append(
+                    f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
             except (ValueError, OSError, OverflowError):
                 external_times.append("Steam Updated: Invalid")
 
@@ -450,7 +534,9 @@ class ModInfoPanel:
         else:
             self.mod_info_external_times_value.setText("Not available")
 
-    def _set_mod_info_fields(self, mod_metadata: dict[str, Any], mod_info: ModInfo, uuid: str) -> None:
+    def _set_mod_info_fields(
+        self, mod_metadata: dict[str, Any], mod_info: ModInfo, uuid: str
+    ) -> None:
         """Set information fields for valid mods."""
         # Show valid-mod-specific fields, hide scenario summary
         for widget in self.base_mod_info_widgets:
@@ -490,7 +576,9 @@ class ModInfoPanel:
         for widget in self.scenario_info_widgets:
             widget.show()
 
-        self.scenario_info_summary_value.setText(mod_metadata.get("summary", "Not specified"))
+        self.scenario_info_summary_value.setText(
+            mod_metadata.get("summary", "Not specified")
+        )
 
     def _set_invalid_info_fields(self) -> None:
         """Set information fields for invalid mods."""
@@ -498,21 +586,31 @@ class ModInfoPanel:
         for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
             widget.hide()
 
-    def _set_description(self, mod_metadata: dict[str, Any], render_unity_rt: bool) -> None:
+    def _set_description(
+        self, mod_metadata: dict[str, Any], render_unity_rt: bool
+    ) -> None:
         """Set the mod description with version-specific handling."""
         self.description.setText("")
         if "description" in mod_metadata:
             if mod_metadata["description"] is not None:
                 if isinstance(mod_metadata["description"], str):
-                    self.description.setText(mod_metadata["description"], render_unity_rt)
+                    self.description.setText(
+                        mod_metadata["description"], render_unity_rt
+                    )
                 else:
-                    logger.error(f"[description] tag is not a string: {mod_metadata['description']}")
-        elif "descriptionsbyversion" in mod_metadata and isinstance(mod_metadata["descriptionsbyversion"], dict):
+                    logger.error(
+                        f"[description] tag is not a string: {mod_metadata['description']}"
+                    )
+        elif "descriptionsbyversion" in mod_metadata and isinstance(
+            mod_metadata["descriptionsbyversion"], dict
+        ):
             major, minor = self.metadata_manager.game_version.split(".")[
                 :2
             ]  # Split the version and take the first two parts
             version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-            for version, description_by_ver in mod_metadata["descriptionsbyversion"].items():
+            for version, description_by_ver in mod_metadata[
+                "descriptionsbyversion"
+            ].items():
                 if match(version_regex, version):
                     if isinstance(description_by_ver, str):
                         self.description.setText(description_by_ver, render_unity_rt)
@@ -521,33 +619,49 @@ class ModInfoPanel:
                             f"[descriptionbyversion] value for {version} is not a string: {description_by_ver}"
                         )
 
-    def _load_preview_image(self, mod_metadata: dict[str, Any], is_scenario: bool) -> None:
+    def _load_preview_image(
+        self, mod_metadata: dict[str, Any], is_scenario: bool
+    ) -> None:
         """Load and set the preview image for the mod."""
         if is_scenario:
             pixmap = QPixmap(self.scenario_image_path)
             self.preview_picture.setPixmap(
-                pixmap.scaled(self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio)
+                pixmap.scaled(
+                    self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio
+                )
             )
         else:
             # Get Preview.png
             workshop_folder_path = mod_metadata.get("path", "")
-            logger.debug(f"Retrieved mod path to parse preview image: {workshop_folder_path}")
+            logger.debug(
+                f"Retrieved mod path to parse preview image: {workshop_folder_path}"
+            )
             if os.path.exists(workshop_folder_path):
                 about_folder_name = "About"
-                about_folder_target_path = str((Path(workshop_folder_path) / about_folder_name))
+                about_folder_target_path = str(
+                    (Path(workshop_folder_path) / about_folder_name)
+                )
                 if os.path.exists(about_folder_target_path):
                     # Look for a case-insensitive About folder
                     invalid_folder_path_found = True
                     for temp_file in scanpath(workshop_folder_path):
-                        if temp_file.name.lower() == about_folder_name.lower() and temp_file.is_dir():
+                        if (
+                            temp_file.name.lower() == about_folder_name.lower()
+                            and temp_file.is_dir()
+                        ):
                             about_folder_name = temp_file.name
                             invalid_folder_path_found = False
                             break
                     # Look for a case-insensitive "Preview.png" file
                     invalid_file_path_found = True
                     preview_file_name = "Preview.png"
-                    for temp_file in scanpath(str((Path(workshop_folder_path) / about_folder_name))):
-                        if temp_file.name.lower() == preview_file_name.lower() and temp_file.is_file():
+                    for temp_file in scanpath(
+                        str((Path(workshop_folder_path) / about_folder_name))
+                    ):
+                        if (
+                            temp_file.name.lower() == preview_file_name.lower()
+                            and temp_file.is_file()
+                        ):
                             preview_file_name = temp_file.name
                             invalid_file_path_found = False
                             break
@@ -563,7 +677,13 @@ class ModInfoPanel:
                         )
                     else:
                         logger.debug("Preview image found")
-                        image_path = str((Path(workshop_folder_path) / about_folder_name / preview_file_name))
+                        image_path = str(
+                            (
+                                Path(workshop_folder_path)
+                                / about_folder_name
+                                / preview_file_name
+                            )
+                        )
                         pixmap = QPixmap(image_path)
                         self.preview_picture.setPixmap(
                             pixmap.scaled(
