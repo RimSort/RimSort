@@ -9,13 +9,13 @@ from tempfile import gettempdir
 from typing import Any
 from zipfile import ZipFile
 
-import requests
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.symlink as symlink
 from app.controllers.settings_controller import SettingsController
+from app.utils import http
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.generic import rmtree as g_rmtree
@@ -27,6 +27,13 @@ from app.views.dialogue import (
     show_warning,
 )
 from app.windows.runner_panel import RunnerPanel
+
+# Maximum number of workshop items to download in a single SteamCMD invocation.
+# SteamCMD's internal vprof profiler has a fixed-size thread table
+# (MAX_THREADS_TO_VPROF_AT_ONCE). Exceeding it produces:
+#   src/tier0/vprof.cpp: No room for new profile in vprof thread profile list
+# and causes downloads to time-out.  Keeping batches small avoids the limit.
+STEAMCMD_BATCH_SIZE = 25
 
 
 class SteamcmdInterface:
@@ -254,6 +261,37 @@ class SteamcmdInterface:
 
         return False
 
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _build_download_script(self, publishedfileids: list[str]) -> str:
+        """Write a SteamCMD script for *publishedfileids* and return its path.
+
+        :param publishedfileids: Workshop IDs to include in this script.
+        :return: Absolute path to the written script file.
+        """
+        download_cmd = "workshop_download_item 294100"
+        script_lines = [
+            f'force_install_dir "{self.steamcmd_steam_path}"',
+            "login anonymous",
+        ]
+        for pfid in publishedfileids:
+            if self.validate_downloads:
+                script_lines.append(f"{download_cmd} {pfid} validate")
+            else:
+                script_lines.append(f"{download_cmd} {pfid}")
+        script_lines.append("quit\n")
+
+        script_path = str(Path(gettempdir()) / "steamcmd_script.txt")
+        with open(script_path, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(script_lines))
+        return script_path
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
     def download_mods(
         self,
         publishedfileids: list[str],
@@ -261,48 +299,61 @@ class SteamcmdInterface:
         clear_cache: bool = False,
     ) -> None:
         """
-        This function downloads a list of mods from a list publishedfileids
+        Download a list of Workshop mods via SteamCMD.
+
+        To avoid the Steam vprof thread-profiler overflow
+        (``src/tier0/vprof.cpp: No room for new profile in vprof thread
+        profile list, grow MAX_THREADS_TO_VPROF_AT_ONCE``) the IDs are
+        split into batches of at most :data:`STEAMCMD_BATCH_SIZE` items.
+        SteamCMD is invoked once per batch; the runner chains batches
+        automatically via its ``_pending_steamcmd_batches`` queue.
 
         https://developer.valvesoftware.com/wiki/SteamCMD
 
-        :param appid: a Steam AppID to pass to steamcmd
-        :param publishedfileids: list of publishedfileids
-        :param runner: a RimSort RunnerPanel to interact with
-        :param clear_cache: whether to clear the steamcmd depot cache before downloading
+        :param publishedfileids: Workshop IDs to download.
+        :param runner: RunnerPanel used to display output and run the process.
+        :param clear_cache: Clear the SteamCMD depot cache before downloading.
         """
         runner.message("Checking for steamcmd...")
-        if self.setup:
-            runner.message(
-                f"Got it: {self.steamcmd}\n"
-                + f"Downloading list of {str(len(publishedfileids))} "
-                + f"publishedfileids to: {self.steamcmd_steam_path}"
-            )
-            if clear_cache:
-                self.clear_depot_cache(runner=runner)
-
-            script = [
-                f'force_install_dir "{self.steamcmd_steam_path}"',
-                "login anonymous",
-            ]
-            download_cmd = "workshop_download_item 294100"
-            for publishedfileid in publishedfileids:
-                if self.validate_downloads:
-                    script.append(f"{download_cmd} {publishedfileid} validate")
-                else:
-                    script.append(f"{download_cmd} {publishedfileid}")
-            script.extend(["quit\n"])
-            script_path = str((Path(gettempdir()) / "steamcmd_script.txt"))
-            with open(script_path, "w", encoding="utf-8") as script_output:
-                script_output.write("\n".join(script))
-            runner.message(f"Compiled & using script: {script_path}")
-            runner.execute(
-                self.steamcmd,
-                [f'+runscript "{script_path}"'],
-                len(publishedfileids),
-            )
-        else:
+        if not self.setup:
             runner.message("SteamCMD was not found. Please setup SteamCMD first!")
             self.on_steamcmd_not_found(runner=runner)
+            return
+
+        total = len(publishedfileids)
+        runner.message(
+            f"Got it: {self.steamcmd}\n"
+            f"Downloading list of {total} publishedfileid(s) to: {self.steamcmd_steam_path}\n"
+            f"(splitting into batches of up to {STEAMCMD_BATCH_SIZE} to avoid SteamCMD vprof overflow)"
+        )
+
+        if clear_cache:
+            self.clear_depot_cache(runner=runner)
+
+        # Build all batch lists up-front; stored on the runner so the
+        # finished() callback can chain them without needing a reference
+        # back to this wrapper.
+        batches: list[list[str]] = [
+            publishedfileids[i : i + STEAMCMD_BATCH_SIZE] for i in range(0, total, STEAMCMD_BATCH_SIZE)
+        ]
+
+        # Stash the queue on the runner instance so finished() can pop it.
+        runner._pending_steamcmd_batches = batches[1:]
+        runner._steamcmd_executable = self.steamcmd
+        runner._steamcmd_wrapper = self
+
+        # Kick off the first batch immediately.
+        batch_num = 1
+        num_batches = len(batches)
+        first_batch = batches[0]
+        runner.message(f"\nBatch {batch_num}/{num_batches}: downloading {len(first_batch)} mod(s)...")
+        script_path = self._build_download_script(first_batch)
+        runner.message(f"Compiled & using script: {script_path}")
+        runner.execute(
+            self.steamcmd,
+            [f'+runscript "{script_path}"'],
+            total,
+        )
 
     def check_for_steamcmd(self, prefix: str) -> bool:
         executable_name = os.path.split(self.steamcmd)[1] if self.steamcmd else None
@@ -421,13 +472,13 @@ class SteamcmdInterface:
             try:
                 runner.message(f"Downloading & extracting steamcmd release from: {self.steamcmd_url}")
                 if ".zip" in self.steamcmd_url:
-                    with ZipFile(BytesIO(requests.get(self.steamcmd_url).content)) as zipobj:
+                    with ZipFile(BytesIO(http.get(self.steamcmd_url).content)) as zipobj:
                         zipobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
                     installed = True
                 elif ".tar.gz" in self.steamcmd_url:
                     with (
-                        requests.get(self.steamcmd_url, stream=True) as rx,
+                        http.get(self.steamcmd_url, stream=True) as rx,
                         tarfile.open(fileobj=BytesIO(rx.content), mode="r:gz") as tarobj,
                     ):
                         tarobj.extractall(self.steamcmd_install_path)

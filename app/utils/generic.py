@@ -21,6 +21,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.launch_command_parser import parse_launch_command
 
@@ -493,7 +494,6 @@ def launch_process(
             p = subprocess.Popen(
                 popen_args,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                shell=True,
                 cwd=cwd,
                 env=env,
             )
@@ -620,7 +620,7 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     try:
         with open(path, "rb") as f:
             headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
-            request = requests.post(
+            request = http.post(
                 url="https://0x0.st/",
                 files={"file": (Path(path).name, f)},
                 headers=headers,
@@ -776,7 +776,7 @@ def check_internet_connection(timeout: float = 10) -> bool:
 
     for url in urls:
         try:
-            requests.head(url, timeout=timeout)
+            http.head(url, timeout=timeout)
             logger.debug(f"Internet connection verified via {url}")
             return True
         except requests.exceptions.RequestException as e:
