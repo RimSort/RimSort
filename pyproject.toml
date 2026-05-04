@@ -54,7 +54,7 @@ dev = [
     "types-psutil>=7.0.0.20250801",
     "types-pygit2>=1.15.0.20250319",
     "types-pygments>=2.19.0.20250715",
-    "types-requests>=2.32.4.20250611",
+    "types-requests>=2.33.0.20260503",
     "types-toposort>=1.10.0.20250401",
 
 ]
