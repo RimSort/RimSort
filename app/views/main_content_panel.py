@@ -1695,33 +1695,88 @@ class MainContent(QObject):
             )
 
     # TODDS ACTIONS
-    def _do_generate_todds_txt(self) -> str:
+    def _do_generate_todds_txt(self) -> tuple[str, int]:
+        """
+        Generate the todds.txt path-list file that todds uses as input.
+
+        Only paths that actually exist on disk are written to the file so that
+        todds never receives a path it cannot iterate (which would cause a
+        ``filesystem::recursive_directory_iterator`` crash).  If no valid
+        paths are found a warning dialog is shown to the user.
+
+        Returns:
+            tuple[str, int]: Absolute path to the generated todds.txt file,
+                and the number of valid paths written.  Callers should abort
+                when the count is zero.
+        """
         logger.info("Generating todds.txt...")
         # Create or overwrite todds.txt in temp directory
         todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
         if os.path.exists(todds_txt_path):
             os.remove(todds_txt_path)
+
+        paths_written = 0
+
         if not self.settings_controller.settings.todds_active_mods_target:
             local_mods_target = self.settings_controller.settings.instances[
                 self.settings_controller.settings.current_instance
             ].local_folder
             if local_mods_target and local_mods_target != "":
-                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                    todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+                abs_local = os.path.abspath(local_mods_target)
+                if os.path.isdir(abs_local):
+                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
+                        todds_txt_file.write(abs_local + "\n")
+                    paths_written += 1
+                else:
+                    logger.warning(
+                        f"Local mods folder does not exist, skipping for todds: {abs_local}"
+                    )
+
             workshop_mods_target = self.settings_controller.settings.instances[
                 self.settings_controller.settings.current_instance
             ].workshop_folder
             if workshop_mods_target and workshop_mods_target != "":
-                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                    todds_txt_file.write(os.path.abspath(workshop_mods_target) + "\n")
+                abs_workshop = os.path.abspath(workshop_mods_target)
+                if os.path.isdir(abs_workshop):
+                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
+                        todds_txt_file.write(abs_workshop + "\n")
+                    paths_written += 1
+                else:
+                    logger.warning(
+                        f"Workshop mods folder does not exist, skipping for todds: {abs_workshop}"
+                    )
         else:
             with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                 for uuid in self.mods_panel.active_mods_list.uuids:
-                    todds_txt_file.write(
-                        os.path.abspath(self.metadata_manager.internal_local_metadata[uuid]["path"]) + "\n"
+                    mod_path = os.path.abspath(
+                        self.metadata_manager.internal_local_metadata[uuid]["path"]
                     )
-        logger.info(f"Generated todds.txt at: {todds_txt_path}")
-        return todds_txt_path
+                    if os.path.isdir(mod_path):
+                        todds_txt_file.write(mod_path + "\n")
+                        paths_written += 1
+                    else:
+                        logger.warning(
+                            f"Mod path does not exist, skipping for todds: {mod_path}"
+                        )
+
+        if paths_written == 0:
+            logger.error("No valid mod paths found for todds texture optimization.")
+            dialogue.show_warning(
+                title=self.tr("No valid paths for todds"),
+                text=self.tr(
+                    "todds could not find any valid mod folders to process."
+                ),
+                information=self.tr(
+                    "None of the configured mod folder paths exist on disk. "
+                    "Please verify your Local Mods and Workshop folders are correctly "
+                    "set in Settings, then try again."
+                ),
+            )
+
+        logger.info(
+            f"Generated todds.txt at: {todds_txt_path} ({paths_written} path(s) written)"
+        )
+        return todds_txt_path, paths_written
 
     def _create_todds_runner(self, is_pre_launch: bool) -> RunnerPanel:
         """
@@ -1812,7 +1867,12 @@ class MainContent(QObject):
 
         # Create and display runner UI (auto-closes if pre-launch, shows dialog if manual)
         todds_runner = self._create_todds_runner(block_until_complete)
-        todds_txt_path = self._do_generate_todds_txt()
+        todds_txt_path, paths_written = self._do_generate_todds_txt()
+
+        # Bail out early if no valid paths — warning already shown by generator
+        if paths_written == 0:
+            todds_runner.close()
+            return (False, -1) if block_until_complete else None
 
         # Execute the todds command
         todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
@@ -1841,7 +1901,12 @@ class MainContent(QObject):
 
         # Create and display runner UI (shows completion dialog after finishing)
         todds_runner = self._create_todds_runner(is_pre_launch=False)
-        todds_txt_path = self._do_generate_todds_txt()
+        todds_txt_path, paths_written = self._do_generate_todds_txt()
+
+        # Bail out early if no valid paths — warning already shown by generator
+        if paths_written == 0:
+            todds_runner.close()
+            return
 
         # Execute the todds command
         todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
