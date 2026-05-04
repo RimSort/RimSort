@@ -1976,10 +1976,12 @@ class ModListWidget(QListWidget):
                 aux_metadata_session=aux_metadata_session,
                 settings_controller=self.settings_controller,
             )
-        item = CustomListWidgetItem(self)
-        item.setData(Qt.ItemDataRole.UserRole, data)
+        # Create item without a parent first so we can set data before adding to the list.
+        # This ensures handle_rows_inserted (connected via QueuedConnection) sees the data
+        # when it fires after addItem, and can correctly track the UUID in self.uuids.
+        item = CustomListWidgetItem()
+        item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
         self.addItem(item)
-        self.uuids.append(uuid)
 
     def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """

@@ -10,7 +10,7 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QUrl
-from PySide6.QtGui import QAction, QPixmap
+from PySide6.QtGui import QAction, QCloseEvent, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
     QWebEnginePage,
@@ -21,6 +21,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QLayout,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
@@ -58,6 +59,13 @@ class SteamBrowser(QWidget):
     """
     A generic panel used to browse Workshop content - downloader included
     """
+
+    # Cleared in closeEvent when the window is closed.
+    web_view: QWebEngineView | None
+    web_profile: QWebEngineProfile | None
+    metadata_manager: MetadataManager | None
+    settings_controller: SettingsController | None
+    js_bridge: JavaScriptBridge | None
 
     def __init__(
         self,
@@ -115,6 +123,7 @@ class SteamBrowser(QWidget):
         self.downloader_list.setItemAlignment(Qt.AlignmentFlag.AlignCenter)
         self.downloader_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.downloader_list.customContextMenuRequested.connect(self._downloader_item_contextmenu_event)
+        self.downloader_list.itemDoubleClicked.connect(self._open_mod_url)
         self.add_to_list2_button = QPushButton(self.tr("Add to List"))
         self.add_to_list2_button.clicked.connect(self._add_collection_or_mod_to_list)
         self.clear_list_button = QPushButton(self.tr("Clear List"))
@@ -222,6 +231,7 @@ class SteamBrowser(QWidget):
         """Apply browser window launch state from settings"""
         from app.utils.window_launch_state import apply_window_launch_state
 
+        assert self.settings_controller is not None
         browser_window_launch_state = self.settings_controller.settings.browser_window_launch_state
         custom_width = self.settings_controller.settings.browser_window_custom_width
         custom_height = self.settings_controller.settings.browser_window_custom_height
@@ -230,6 +240,7 @@ class SteamBrowser(QWidget):
         logger.info(f"Browser window started with launch state: {browser_window_launch_state}")
 
     def __browse_to_location(self) -> None:
+        assert self.web_view is not None
         url = QUrl(self.location.text())
         logger.debug(f"Browsing to: {url.url()}")
         self.web_view.load(url)
@@ -388,6 +399,12 @@ class SteamBrowser(QWidget):
                 else:
                     self.downloader_list_dupe_tracking[publishedfileid] = title
 
+    def _open_mod_url(self, item: QListWidgetItem) -> None:
+        publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+        if publishedfileid and self.web_view is not None:
+            url = f"{self.url_prefix_sharedfiles}{publishedfileid}"
+            self.web_view.load(QUrl(url))
+
     def _clear_downloader_list(self) -> None:
         mods_to_clear_badges_for = list(self.downloader_list_mods_tracking)
 
@@ -454,11 +471,13 @@ class SteamBrowser(QWidget):
         self.progress_bar.setValue(progress)
         # Placeholder done after page begins to load
         if progress > 25:
+            assert self.web_view is not None
             self.web_view_loading_placeholder.hide()
             self.web_view.show()
 
     # TODO: Probably a good idea to break this huge function down into a bunch of smaller helpers
     def _web_view_load_finished(self) -> None:
+        assert self.web_view is not None
         # Progress bar done
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(False)
@@ -663,6 +682,7 @@ class SteamBrowser(QWidget):
 
     def _is_mod_installed(self, publishedfileid: str) -> bool:
         """Check if a mod is installed by looking through local and workshop folders"""
+        assert self.metadata_manager is not None
         # check all mods in internal metadata
         for metadata in self.metadata_manager.internal_local_metadata.values():
             if metadata.get("publishedfileid") == publishedfileid:
@@ -671,6 +691,7 @@ class SteamBrowser(QWidget):
 
     def _get_installed_mods_list(self) -> list[str]:
         """Get list of installed mod IDs"""
+        assert self.metadata_manager is not None
         installed_mods = []
         for metadata in self.metadata_manager.internal_local_metadata.values():
             if metadata.get("publishedfileid"):
@@ -688,6 +709,7 @@ class SteamBrowser(QWidget):
 
     def _update_badge_js(self, mod_id: str, status: BadgeState) -> None:
         """Calls a JavaScript function in the web view to update a specific mod's badge"""
+        assert self.web_view is not None
         script = f"""
         if (typeof window.updateModBadge === 'function') {{
             window.updateModBadge('{mod_id}', '{status.value}');
@@ -696,3 +718,71 @@ class SteamBrowser(QWidget):
         }}
         """
         self.web_view.page().runJavaScript(script, 0, lambda result: None)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Properly clean up web engine resources to prevent memory leaks and hanging processes"""
+        logger.debug("Cleaning up SteamBrowser resources...")
+
+        # Delete on close flag
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
+        # Stop any loading
+        if self.web_view is not None:
+            self.web_view.stop()
+
+            # Disconnect all web view signals
+            try:
+                self.web_view.loadStarted.disconnect()
+                self.web_view.loadProgress.disconnect()
+                self.web_view.loadFinished.disconnect()
+            except Exception:
+                pass
+
+            # Clean up page
+            if self.web_view.page():
+                # Delete web channel
+                if self.js_bridge is not None and hasattr(self, "channel"):
+                    self.channel.deregisterObject(self.js_bridge)
+                    self.channel.deleteLater()
+
+                # Clear scripts
+                self.web_view.page().profile().scripts().clear()
+
+                # Delete page
+                self.web_view.page().deleteLater()
+
+            # Delete web view
+            self.web_view.deleteLater()
+            self.web_view = None
+
+        # Clean up web profile
+        if self.web_profile is not None:
+            self.web_profile.deleteLater()
+            self.web_profile = None
+
+        # Clear all references
+        self.metadata_manager = None
+        self.settings_controller = None
+        self.js_bridge = None
+        self.downloader_list_mods_tracking.clear()
+        self.downloader_list_dupe_tracking.clear()
+
+        # Clear layouts
+        self.clear_layout(self.window_layout)
+
+        logger.debug("SteamBrowser cleanup completed")
+
+        event.accept()
+
+    def clear_layout(self, layout: QLayout | None) -> None:
+        """Recursively clear layout and delete all widgets"""
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                if item is None:
+                    break
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.clear_layout(item.layout())

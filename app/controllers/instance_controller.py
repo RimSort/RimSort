@@ -277,13 +277,13 @@ class InstanceController(QObject):
             if path_value and not Path(path_value).exists():
                 invalid_paths.append(path_name)
                 if clear:
-                    object.__setattr__(self.instance, path_name, "")
+                    setattr(self.instance, path_name, "")
 
         # Auto-recover steamcmd path if folder exists in instance directory
         if "steamcmd_install_path" in invalid_paths:
             default_path = self.instance_folder_path / STEAMCMD_FOLDER_NAME
             if default_path.exists():
-                object.__setattr__(
+                setattr(
                     self.instance,
                     "steamcmd_install_path",
                     str(self.instance_folder_path),

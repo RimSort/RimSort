@@ -465,12 +465,15 @@ class SteamworksSubscriptionHandler(Process):
                 # Call DownloadItem to force Steam to queue the mod for download
                 # high_priority=True makes Steam skip other queued downloads
                 # Note: callback may not fire, but the download is still queued
-                steamworks_interface.steamworks.Workshop.DownloadItem(
-                    pfid,
-                    high_priority=True,
-                    callback=self._create_download_callback(steamworks_interface),
-                    override_callback=True,
-                )
+                if hasattr(steamworks_interface.steamworks.Workshop, "DownloadItem"):
+                    steamworks_interface.steamworks.Workshop.DownloadItem(
+                        pfid,
+                        high_priority=True,
+                        callback=self._create_download_callback(steamworks_interface),
+                        override_callback=True,
+                    )
+                else:
+                    logger.warning("DownloadItem skipped: not supported by SteamworksPy library.")
             except Exception as e:
                 logger.error(f"Failed to trigger download for {pfid}: {e}")
 
