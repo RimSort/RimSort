@@ -1716,7 +1716,7 @@ class ModListWidget(QListWidget):
                         EventBus().do_steamworks_api_call.emit(
                             [
                                 "resubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
+                                [int(str_pfid) for str_pfid in publishedfileids],
                             ]
                         )
                     return True
@@ -1735,7 +1735,7 @@ class ModListWidget(QListWidget):
                         EventBus().do_steamworks_api_call.emit(
                             [
                                 "unsubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
+                                [int(str_pfid) for str_pfid in publishedfileids],
                             ]
                         )
                     return True

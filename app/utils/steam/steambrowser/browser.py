@@ -454,7 +454,7 @@ class SteamBrowser(QWidget):
         EventBus().do_steamworks_api_call.emit(
             [
                 "subscribe",
-                [eval(str_pfid) for str_pfid in self.downloader_list_mods_tracking],
+                [int(str_pfid) for str_pfid in self.downloader_list_mods_tracking],
             ]
         )
 
