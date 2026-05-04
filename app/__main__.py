@@ -13,7 +13,7 @@
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
-# nuitka-project: --noinclude-qt-translations=yes
+# nuitka-project: --noinclude-qt-translations
 
 # OS-Specific options
 # nuitka-project-if: {OS} == "Darwin":
