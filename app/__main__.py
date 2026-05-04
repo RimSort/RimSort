@@ -9,9 +9,11 @@
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
 # nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico
+# nuitka-project: --python-flag=no_asserts,no_docstrings
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
+# nuitka-project: --noinclude-qt-translations=yes
 
 # OS-Specific options
 # nuitka-project-if: {OS} == "Darwin":

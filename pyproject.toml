@@ -11,7 +11,6 @@ dependencies = [
     "certifi==2026.4.22",
     "charset-normalizer==3.4.7",
     "click==8.3.3",
-    "imageio==2.37.3",
     "loguru==0.7.3",
     "lxml==6.1.0",
     "msgspec==0.21.1",
