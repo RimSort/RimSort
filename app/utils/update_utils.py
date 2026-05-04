@@ -20,6 +20,7 @@ from PySide6.QtCore import QEventLoop, QObject, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 import app.views.dialogue as dialogue
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import check_internet_connection
 from app.utils.zip_extractor import (
@@ -696,7 +697,7 @@ class UpdateManager(QObject):
         """
         try:
             # Use releases API for better asset information
-            response = requests.get(GITHUB_API_URL, timeout=API_TIMEOUT)
+            response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT)
             response.raise_for_status()
             release_data = response.json()
 
@@ -1053,7 +1054,7 @@ class UpdateManager(QObject):
             File size in bytes, or 0 if unable to determine
         """
         try:
-            head_response = requests.head(url, timeout=API_TIMEOUT, allow_redirects=True)
+            head_response = http.head(url, timeout=API_TIMEOUT, allow_redirects=True)
             return int(head_response.headers.get("content-length", 0))
         except Exception as e:
             logger.debug(f"Failed to get file size: {e}")
@@ -1169,7 +1170,7 @@ class UpdateManager(QObject):
             if total_size:
                 logger.info(f"File size: {total_size / (1024 * 1024):.2f} MB")
 
-            response = requests.get(url, timeout=DOWNLOAD_TIMEOUT, stream=True)
+            response = http.get(url, timeout=DOWNLOAD_TIMEOUT, stream=True)
             response.raise_for_status()
             logger.debug(f"HTTP response status: {response.status_code}")
 

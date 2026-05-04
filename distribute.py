@@ -424,7 +424,7 @@ def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
 
 
 def handle_request(url: str, headers: dict[str, str] | None = None) -> requests.Response:
-    raw = requests.get(url, headers=headers)
+    raw = requests.get(url, headers=headers, timeout=15)
     if raw.status_code != 200:
         raise Exception(f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}")
     return raw

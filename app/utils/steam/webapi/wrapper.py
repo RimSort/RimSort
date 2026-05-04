@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from urllib.parse import urlparse
 
 import requests
 from loguru import logger
@@ -13,6 +14,7 @@ from PySide6.QtCore import QCoreApplication, QObject, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
@@ -79,7 +81,10 @@ class CollectionImport:
         Returns:
             bool: True if the link is valid, False otherwise.
         """
-        return link.startswith(BASE_URL) and (BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link)
+        parsed = urlparse(link)
+        if parsed.scheme != "https" or parsed.hostname != "steamcommunity.com":
+            return False
+        return BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link
 
     def import_collection_link(self) -> None:
         # Handle the import button click event
@@ -127,7 +132,7 @@ class CollectionImport:
                         steam_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
 
                         try:
-                            steam_response = requests.get(steam_link).text
+                            steam_response = http.get(steam_link).text
                         except Exception as e:
                             logger.exception(e)
                             steam_response = ""
@@ -715,7 +720,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = http.post(url, data=data, timeout=(5, 60))
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -758,13 +763,15 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
+        # jscpd:ignore-start
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = http.post(url, data=data, timeout=(5, 60))
         except Exception as e:
             logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
+        # jscpd:ignore-end
         try:  # Parse the JSON response
             json_response = request.json()
             if json_response.get("response", {}).get("resultcount", 0) > 0:

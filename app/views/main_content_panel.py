@@ -12,7 +12,6 @@ from tempfile import gettempdir
 from typing import Any, Callable, Literal, Optional, cast, overload
 from urllib.parse import urlparse
 
-import requests
 from loguru import logger
 from PySide6.QtCore import (
     QEventLoop,
@@ -39,6 +38,7 @@ import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.sort.mod_sorting import ModsPanelSortKey
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
@@ -675,7 +675,7 @@ class MainContent(QObject):
         url = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
         logger.debug(f"Requesting GitHub release info from: {url}")
 
-        raw = requests.get(url, timeout=10)
+        raw = http.get(url, timeout=10)
 
         # Check for HTTP errors
         if raw.status_code != 200:
@@ -2352,7 +2352,7 @@ class MainContent(QObject):
 
                 try:
                     logger.info(f"Downloading {url} to {temp_path}")
-                    response = requests.get(url, stream=True, timeout=30)
+                    response = http.get(url, stream=True, timeout=30)
                     response.raise_for_status()
 
                     # Get total file size
