@@ -1,7 +1,10 @@
 import os
 from platform import system
 from re import compile, search
-from typing import Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Optional, Sequence
+
+if TYPE_CHECKING:
+    from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 
 import psutil
 from loguru import logger
@@ -77,6 +80,12 @@ class RunnerPanel(QWidget):
         self.login_error = False
         self.redownloading = False
 
+        # Batch-download state (populated by SteamcmdInterface.download_mods)
+        self._pending_steamcmd_batches: list[list[str]] = []
+        self._steamcmd_executable: str = ""
+        self._steamcmd_wrapper: Optional["SteamcmdInterface"] = None
+        self._steamcmd_batch_index: int = 1  # 1-based; first batch already sent
+
         # Set up UI components
         self._setup_text_display()
         self._setup_buttons()
@@ -112,34 +121,50 @@ class RunnerPanel(QWidget):
         self.setObjectName("RunnerPanel")
 
         # Clear button
-        self.clear_runner_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "clear.png"))
+        self.clear_runner_icon = QIcon(
+            str(AppInfo().theme_data_folder / "default-icons" / "clear.png")
+        )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
         self.clear_runner_button.clicked.connect(self._do_clear_runner)
-        self.clear_runner_button.setToolTip(self.tr("Clear the text currently displayed by the runner"))
+        self.clear_runner_button.setToolTip(
+            self.tr("Clear the text currently displayed by the runner")
+        )
 
         # Restart button
-        self.restart_process_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "restart_process.png"))
+        self.restart_process_icon = QIcon(
+            str(AppInfo().theme_data_folder / "default-icons" / "restart_process.png")
+        )
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
         self.restart_process_button.clicked.connect(self._do_restart_process)
-        self.restart_process_button.setToolTip(self.tr("Re-run the process last used by the runner"))
+        self.restart_process_button.setToolTip(
+            self.tr("Re-run the process last used by the runner")
+        )
         self.restart_process_button.hide()  # Hidden until execute() is called
 
         # Kill button
-        self.kill_process_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "kill_process.png"))
+        self.kill_process_icon = QIcon(
+            str(AppInfo().theme_data_folder / "default-icons" / "kill_process.png")
+        )
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
         self.kill_process_button.clicked.connect(self._do_kill_process)
-        self.kill_process_button.setToolTip(self.tr("Kill a process currently being executed by the runner"))
+        self.kill_process_button.setToolTip(
+            self.tr("Kill a process currently being executed by the runner")
+        )
         self.kill_process_button.hide()  # Hidden until execute() is called
 
         # Save output button
-        self.save_runner_icon = QIcon(str(AppInfo().theme_data_folder / "default-icons" / "save_output.png"))
+        self.save_runner_icon = QIcon(
+            str(AppInfo().theme_data_folder / "default-icons" / "save_output.png")
+        )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)
         self.save_runner_output_button.clicked.connect(self._do_save_runner_output)
-        self.save_runner_output_button.setToolTip(self.tr("Save the current output to a file"))
+        self.save_runner_output_button.setToolTip(
+            self.tr("Save the current output to a file")
+        )
 
     def _setup_progress_bar(self) -> None:
         """Set up the progress bar."""
@@ -478,16 +503,28 @@ class RunnerPanel(QWidget):
     def finished(self) -> None:
         """
         Handle process completion, including success/failure reporting and cleanup.
+
+        If the completed process was a SteamCMD batch download and additional
+        batches are still pending, the next batch is started automatically
+        instead of showing the final completion dialog.
         """
         # Skip detailed output in dry run mode
         if not self.todds_dry_run_support:
             # Show completion status
-            status_message = "Subprocess killed!" if self.process_killed else "Subprocess completed."
+            status_message = (
+                "Subprocess killed!" if self.process_killed else "Subprocess completed."
+            )
             self.message(status_message)
             self.process_killed = False  # Reset the kill flag
 
             # Handle process-specific completion tasks
             if "SteamCMD" in self.windowTitle():
+                # If more batches remain, start the next one instead of
+                # finalising.  _handle_steamcmd_completion() is only called
+                # once every batch has been processed.
+                if self._pending_steamcmd_batches and not self.redownloading:
+                    self._start_next_steamcmd_batch()
+                    return
                 self._handle_steamcmd_completion()
             elif "todds" in self.windowTitle():
                 self._handle_todds_completion()
@@ -496,6 +533,38 @@ class RunnerPanel(QWidget):
         if not self.redownloading:
             self.process.terminate()
             self.process_complete()
+
+    def _start_next_steamcmd_batch(self) -> None:
+        """Pop the next pending batch and start a new SteamCMD process for it."""
+        next_batch = self._pending_steamcmd_batches.pop(0)
+        self._steamcmd_batch_index += 1
+        total_batches = self._steamcmd_batch_index + len(self._pending_steamcmd_batches)
+
+        self.message(
+            f"\nBatch {self._steamcmd_batch_index}/{total_batches}: "
+            f"downloading {len(next_batch)} mod(s)..."
+        )
+
+        # _steamcmd_wrapper is the SteamcmdInterface instance set by download_mods()
+        wrapper = self._steamcmd_wrapper
+        if wrapper is None:
+            logger.error(
+                "_start_next_steamcmd_batch: no wrapper reference stored on runner"
+            )
+            return
+
+        script_path = wrapper._build_download_script(next_batch)
+        self.message(f"Compiled & using script: {script_path}")
+
+        # Re-wire the finished signal before starting the new process.
+        self.process = QProcess(self)
+        self.process.setProgram(self._steamcmd_executable)
+        self.process.setArguments([f'+runscript "{script_path}"'])
+        self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        self.process.readyReadStandardError.connect(self.handle_output)
+        self.process.readyReadStandardOutput.connect(self.handle_output)
+        self.process.finished.connect(self.finished)
+        self.process.start()
 
     def _handle_steamcmd_completion(self) -> None:
         """Handle SteamCMD-specific completion tasks."""
@@ -522,7 +591,8 @@ class RunnerPanel(QWidget):
 
         # Compile details of failed mods for the report
         details = "\n".join(
-            f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}" for pfid in self.steamcmd_download_tracking
+            f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
+            for pfid in self.steamcmd_download_tracking
         )
         # Prompt user for action on failed mods
         answer = show_dialogue_conditional(
@@ -568,7 +638,9 @@ class RunnerPanel(QWidget):
         # For mods not found in local DB, try Steam API
         if failed_mods_no_names:
             try:
-                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(failed_mods_no_names)
+                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(
+                    failed_mods_no_names
+                )
                 if mod_details_lookup:
                     for mod_metadata in mod_details_lookup:
                         mod_title = mod_metadata.get("title")
