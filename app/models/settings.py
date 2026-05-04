@@ -54,20 +54,12 @@ class Settings(QObject):
 
         # Databases
         self.external_steam_metadata_source: str = "None"
-        self.external_steam_metadata_file_path: str = str(
-            AppInfo().app_storage_folder / "steamDB.json"
-        )
-        self.external_steam_metadata_repo: str = (
-            "https://github.com/RimSort/Steam-Workshop-Database"
-        )
+        self.external_steam_metadata_file_path: str = str(AppInfo().app_storage_folder / "steamDB.json")
+        self.external_steam_metadata_repo: str = "https://github.com/RimSort/Steam-Workshop-Database"
 
         self.external_community_rules_metadata_source: str = "None"
-        self.external_community_rules_file_path: str = str(
-            AppInfo().app_storage_folder / "communityRules.json"
-        )
-        self.external_community_rules_repo: str = (
-            "https://github.com/RimSort/Community-Rules-Database"
-        )
+        self.external_community_rules_file_path: str = str(AppInfo().app_storage_folder / "communityRules.json")
+        self.external_community_rules_repo: str = "https://github.com/RimSort/Community-Rules-Database"
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
@@ -75,20 +67,14 @@ class Settings(QObject):
         self.aux_db_time_limit: int = -1
 
         self.external_no_version_warning_metadata_source: str = "None"
-        self.external_no_version_warning_file_path: str = str(
-            AppInfo().app_storage_folder / "ModIdsToFix.xml"
-        )
-        self.external_no_version_warning_repo_path: str = (
-            "https://github.com/emipa606/NoVersionWarning"
-        )
+        self.external_no_version_warning_file_path: str = str(AppInfo().app_storage_folder / "ModIdsToFix.xml")
+        self.external_no_version_warning_repo_path: str = "https://github.com/emipa606/NoVersionWarning"
 
         self.external_use_this_instead_metadata_source: str = "None"
         self.external_use_this_instead_file_path: str = str(
             AppInfo().app_storage_folder / "UseThisInstead" / "replacements.json.gz"
         )
-        self.external_use_this_instead_repo_path: str = (
-            "https://github.com/emipa606/UseThisInstead"
-        )
+        self.external_use_this_instead_repo_path: str = "https://github.com/emipa606/UseThisInstead"
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
@@ -210,9 +196,7 @@ class Settings(QObject):
         # Instances
         self.current_instance: str = DEFAULT_INSTANCE_NAME
         self.current_instance_path: str = str(
-            Path(AppInfo().app_storage_folder)
-            / INSTANCE_FOLDER_NAME
-            / self.current_instance
+            Path(AppInfo().app_storage_folder) / INSTANCE_FOLDER_NAME / self.current_instance
         )
         self.instances: dict[str, Instance] = {DEFAULT_INSTANCE_NAME: Instance()}
 
@@ -227,14 +211,8 @@ class Settings(QObject):
 
         instance = self.instances[self.current_instance]
         # Default instance never uses override
-        override = (
-            ""
-            if self.current_instance == DEFAULT_INSTANCE_NAME
-            else instance.instance_folder_override
-        )
-        instance_path = InstanceController.get_instance_folder_path(
-            self.current_instance, override
-        )
+        override = "" if self.current_instance == DEFAULT_INSTANCE_NAME else instance.instance_folder_override
+        instance_path = InstanceController.get_instance_folder_path(self.current_instance, override)
         return instance_path / "aux_metadata.db"
 
     def __setattr__(self, key: str, value: Any) -> None:
@@ -261,15 +239,9 @@ class Settings(QObject):
                 mitigations = True
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
-                    logger.debug(
-                        "Instances key not found in settings.json. Performing mitigation."
-                    )
+                    logger.debug("Instances key not found in settings.json. Performing mitigation.")
                     steamcmd_prefix_default_instance_path = str(
-                        Path(
-                            AppInfo().app_storage_folder
-                            / INSTANCE_FOLDER_NAME
-                            / DEFAULT_INSTANCE_NAME
-                        )
+                        Path(AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / DEFAULT_INSTANCE_NAME)
                     )
                     # Create Default instance
                     data["instances"] = {
@@ -285,25 +257,17 @@ class Settings(QObject):
                         )
                     }
                     steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path", "")
-                    steamcmd_path_to_mitigate = str(
-                        Path(steamcmd_prefix_to_mitigate) / STEAMCMD_FOLDER_NAME
-                    )
-                    steam_path_to_mitigate = str(
-                        Path(steamcmd_prefix_to_mitigate) / STEAM_FOLDER_NAME
-                    )
-                    if steamcmd_prefix_to_mitigate and path.exists(
-                        steamcmd_prefix_to_mitigate
-                    ):
+                    steamcmd_path_to_mitigate = str(Path(steamcmd_prefix_to_mitigate) / STEAMCMD_FOLDER_NAME)
+                    steam_path_to_mitigate = str(Path(steamcmd_prefix_to_mitigate) / STEAM_FOLDER_NAME)
+                    if steamcmd_prefix_to_mitigate and path.exists(steamcmd_prefix_to_mitigate):
                         logger.debug(
                             "Configured SteamCMD install path found. Attempting to migrate it to the Default instance path..."
                         )
                         steamcmd_prefix_steamcmd_path = str(
-                            Path(steamcmd_prefix_default_instance_path)
-                            / STEAMCMD_FOLDER_NAME
+                            Path(steamcmd_prefix_default_instance_path) / STEAMCMD_FOLDER_NAME
                         )
                         steamcmd_prefix_steam_path = str(
-                            Path(steamcmd_prefix_default_instance_path)
-                            / STEAM_FOLDER_NAME
+                            Path(steamcmd_prefix_default_instance_path) / STEAM_FOLDER_NAME
                         )
                         try:
                             if path.exists(steamcmd_prefix_steamcmd_path):
@@ -326,9 +290,7 @@ class Settings(QObject):
                                 steamcmd_prefix_steamcmd_path,
                                 symlinks=True,
                             )
-                            logger.info(
-                                f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}..."
-                            )
+                            logger.info(f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}...")
                             rmtree(
                                 steamcmd_path_to_mitigate,
                                 ignore_errors=False,
@@ -342,39 +304,22 @@ class Settings(QObject):
                                 steamcmd_prefix_steam_path,
                                 symlinks=True,
                             )
-                            logger.info(
-                                f"Deleting old SteamCMD data path at {steam_path_to_mitigate}..."
-                            )
+                            logger.info(f"Deleting old SteamCMD data path at {steam_path_to_mitigate}...")
                             rmtree(
                                 steam_path_to_mitigate,
                                 ignore_errors=False,
                                 onerror=handle_remove_read_only,
                             )
                         except Exception as e:
-                            logger.error(
-                                f"Failed to migrate SteamCMD install path. Error: {e}"
-                            )
-                elif (
-                    not data.get("current_instance")
-                    or data["current_instance"] not in data["instances"]
-                ):
-                    logger.debug(
-                        "Current instance not found in settings.json. Performing mitigation."
-                    )
+                            logger.error(f"Failed to migrate SteamCMD install path. Error: {e}")
+                elif not data.get("current_instance") or data["current_instance"] not in data["instances"]:
+                    logger.debug("Current instance not found in settings.json. Performing mitigation.")
                     data["current_instance"] = DEFAULT_INSTANCE_NAME
 
-                    new_path = str(
-                        Path(AppInfo().app_storage_folder)
-                        / "instances"
-                        / data.get("current_instance")
-                    )
+                    new_path = str(Path(AppInfo().app_storage_folder) / "instances" / data.get("current_instance"))
                     data["current_instance_path"] = new_path
                 elif not data.get("current_instance_path"):
-                    new_path = str(
-                        Path(AppInfo().app_storage_folder)
-                        / "instances"
-                        / data.get("current_instance")
-                    )
+                    new_path = str(Path(AppInfo().app_storage_folder) / "instances" / data.get("current_instance"))
                     data["current_instance_path"] = new_path
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
@@ -508,9 +453,7 @@ class Settings(QObject):
                 elif isinstance(instance_data, dict):
                     instances[instance_name] = msgspec.convert(instance_data, Instance)
                 else:
-                    logger.warning(
-                        f"Instance data for {instance_name} is not a valid type: {type(instance_data)}"
-                    )
+                    logger.warning(f"Instance data for {instance_name} is not a valid type: {type(instance_data)}")
             self.instances = instances
 
     def _to_dict(self, skip_private: bool = True) -> Dict[str, Any]:
@@ -531,9 +474,7 @@ class Settings(QObject):
         # Serialize instances using msgspec
         instances_dict = {}
         for name, instance in self.instances.items():
-            instances_dict[name] = msgspec.json.decode(
-                msgspec.json.encode(instance), type=dict
-            )
+            instances_dict[name] = msgspec.json.decode(msgspec.json.encode(instance), type=dict)
         data["instances"] = instances_dict
         return data
 
@@ -557,26 +498,18 @@ class Settings(QObject):
         launch_via_steam_protocol = active_instance.launch_via_steam_protocol
 
         # If neither is enabled, no validation needed
-        if (
-            not steam_client_integration
-            and not workshop_folder
-            and not launch_via_steam_protocol
-        ):
+        if not steam_client_integration and not workshop_folder and not launch_via_steam_protocol:
             return False
 
         # If launch_via_steam_protocol is enabled but steam_client_integration is not, disable it
         if launch_via_steam_protocol and not steam_client_integration:
-            logger.warning(
-                "Steam protocol launch is enabled but Steam client integration is disabled. Disabling..."
-            )
+            logger.warning("Steam protocol launch is enabled but Steam client integration is disabled. Disabling...")
             active_instance.launch_via_steam_protocol = False
             return True
 
         # If steam_client_integration is enabled but workshop_folder is not set, disable it
         if steam_client_integration and not workshop_folder:
-            logger.warning(
-                "Steam client integration is enabled but workshop folder is not configured. Disabling..."
-            )
+            logger.warning("Steam client integration is enabled but workshop folder is not configured. Disabling...")
             active_instance.steam_client_integration = False
             return True
 

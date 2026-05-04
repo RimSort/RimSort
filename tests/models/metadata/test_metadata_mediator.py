@@ -65,9 +65,7 @@ def test_user_rules_addition(mediator: MetadataMediator) -> None:
     assert mediator.mods_metadata is not None
     assert len(mediator.mods_metadata) > 0
 
-    mod = mediator.mods_metadata.get(
-        str(Path("tests/data/mod_examples/Local/local_mod_1")), None
-    )
+    mod = mediator.mods_metadata.get(str(Path("tests/data/mod_examples/Local/local_mod_1")), None)
     assert mod is not None
 
     assert isinstance(mod, AboutXmlMod)

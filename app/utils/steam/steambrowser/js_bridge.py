@@ -12,9 +12,7 @@ class JavaScriptBridge(QObject):
     and the Python SteamBrowser class, exposing only specific methods.
     """
 
-    def __init__(
-        self, browser_instance: "SteamBrowser", parent: Optional[QObject] = None
-    ) -> None:
+    def __init__(self, browser_instance: "SteamBrowser", parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
         self._browser_instance = browser_instance
 
@@ -23,9 +21,7 @@ class JavaScriptBridge(QObject):
         """
         Slot callable from JavaScript to add a mod to the download list.
         """
-        self._browser_instance._add_mod_to_list(
-            publishedfileid=publishedfileid, title=mod_title
-        )
+        self._browser_instance._add_mod_to_list(publishedfileid=publishedfileid, title=mod_title)
 
     @Slot(str)
     def remove_mod_from_js(self, mod_id: str) -> None:
