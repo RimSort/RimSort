@@ -44,23 +44,15 @@ class ModInfo:
         try:
             name = cls._parse_name(metadata)
             authors = cls._parse_authors(metadata)
-            packageid = str(
-                metadata.get("packageid", "")
-            )  # make sure packageid is a string
-            published_file_id = str(
-                metadata.get("publishedfileid", "")
-            )  # make sure published_file_id is a string
-            supported_versions = cls._parse_supported_versions_static(
-                metadata.get("supportedversions")
-            )
+            packageid = str(metadata.get("packageid", ""))  # make sure packageid is a string
+            published_file_id = str(metadata.get("publishedfileid", ""))  # make sure published_file_id is a string
+            supported_versions = cls._parse_supported_versions_static(metadata.get("supportedversions"))
             source = ""
             if metadata.get("steamcmd"):
                 source = STEAM_CMD
             elif metadata.get("data_source") == "workshop":
                 source = STEAM
-            elif metadata.get("data_source") == "local" and not metadata.get(
-                "steamcmd"
-            ):
+            elif metadata.get("data_source") == "local" and not metadata.get("steamcmd"):
                 source = LOCAL
             else:
                 source = DATABASE
@@ -73,9 +65,7 @@ class ModInfo:
 
             # Input validation for required fields
             if not isinstance(packageid, str) or not packageid.strip():
-                logger.warning(
-                    f"Invalid or missing packageid in metadata for UUID {uuid}"
-                )
+                logger.warning(f"Invalid or missing packageid in metadata for UUID {uuid}")
             if not isinstance(name, str) or not name.strip():
                 logger.warning(f"Invalid or missing name in metadata for UUID {uuid}")
             if not isinstance(published_file_id, str):
@@ -98,14 +88,8 @@ class ModInfo:
             )
         except Exception as e:
             # Log detailed error information and raise exception instead of returning minimal ModInfo
-            metadata_keys = (
-                list(metadata.keys())
-                if isinstance(metadata, dict)
-                else "Invalid metadata type"
-            )
-            logger.error(
-                f"Error creating ModInfo from metadata for UUID {uuid}: {e}. Metadata keys: {metadata_keys}"
-            )
+            metadata_keys = list(metadata.keys()) if isinstance(metadata, dict) else "Invalid metadata type"
+            logger.error(f"Error creating ModInfo from metadata for UUID {uuid}: {e}. Metadata keys: {metadata_keys}")
             raise ValueError(f"Failed to create ModInfo from metadata: {e}") from e
 
     @staticmethod

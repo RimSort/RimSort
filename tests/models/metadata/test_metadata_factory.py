@@ -222,10 +222,7 @@ def test_create_mod_dependency() -> None:
     mod = create_mod_dependency(input_dict)
     assert mod.package_id == "com.example.mod"
     assert mod.name == "Example Mod"
-    assert (
-        mod.workshop_url
-        == "https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890"
-    )
+    assert mod.workshop_url == "https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890"
 
 
 def test_create_mod_dependency_missing_fields() -> None:
@@ -244,9 +241,7 @@ def test_create_base_rules_ludeon_core() -> None:
     rules = create_base_rules(mod_data, "1.5")
 
     assert rules.dependencies == {}
-    assert rules.load_before == CaseInsensitiveSet(
-        {"ludeon.rimworld.ideology", "ludeon.rimworld.royalty"}
-    )
+    assert rules.load_before == CaseInsensitiveSet({"ludeon.rimworld.ideology", "ludeon.rimworld.royalty"})
     assert rules.load_after == CaseInsensitiveSet()
 
 
@@ -458,9 +453,7 @@ def test_read_write_steam_db(tmp_path: Path) -> None:
 
 
 def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
-    path = Path(
-        "tests/data/mod_examples/Local/invalid_scenario_mod_meta/scenario abc.rsc"
-    )
+    path = Path("tests/data/mod_examples/Local/invalid_scenario_mod_meta/scenario abc.rsc")
 
     valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
@@ -469,9 +462,7 @@ def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
 
 
 def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
-    path = Path(
-        "tests/data/mod_examples/Local/invalid_scenario_mod_scenario/scenario abc.rsc"
-    )
+    path = Path("tests/data/mod_examples/Local/invalid_scenario_mod_scenario/scenario abc.rsc")
 
     valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
@@ -496,9 +487,7 @@ def test_create_scenario_mod_from_rsc_valid() -> None:
 def test_create_listed_mod_from_path_invalid_folder() -> None:
     path = Path("tests/data/mod_examples/Local/invalid folder")
 
-    valid, mod = create_listed_mod_from_path(
-        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
-    )
+    valid, mod = create_listed_mod_from_path(path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH)
 
     assert not valid
     assert not mod.valid
@@ -507,9 +496,7 @@ def test_create_listed_mod_from_path_invalid_folder() -> None:
 
 def test_create_listed_mod_from_path_local_mod_1() -> None:
     path = Path("tests/data/mod_examples/Local/local_mod_1")
-    valid, mod = create_listed_mod_from_path(
-        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
-    )
+    valid, mod = create_listed_mod_from_path(path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH)
 
     assert valid
     assert mod.valid
@@ -521,9 +508,7 @@ def test_create_listed_mod_from_path_local_mod_1() -> None:
 
 def test_create_listed_mod_from_path_local_mod_2() -> None:
     path = Path("tests/data/mod_examples/Local/local_mod_2")
-    valid, mod = create_listed_mod_from_path(
-        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
-    )
+    valid, mod = create_listed_mod_from_path(path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH)
 
     assert valid
     assert mod.valid
@@ -535,9 +520,7 @@ def test_create_listed_mod_from_path_local_mod_2() -> None:
 
 def test_create_listed_mod_from_path_steamcmd_mod_1() -> None:
     path = Path("tests/data/mod_examples/Local/steamcmd_mod_1")
-    valid, mod = create_listed_mod_from_path(
-        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
-    )
+    valid, mod = create_listed_mod_from_path(path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH)
 
     assert valid
     assert mod.valid

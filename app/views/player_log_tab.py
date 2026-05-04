@@ -50,18 +50,12 @@ class LogPatternManager:
 
     # Pre-compiled patterns for syntax highlighting
     TIMESTAMP_PATTERN = re.compile(r"\d{1,2}:\d{2}:\d{2} [AP]M")
-    INFO_PATTERN = re.compile(
-        r"\b(info|initialized|loaded|start(ed)?|starting|done|success)\b", re.IGNORECASE
-    )
+    INFO_PATTERN = re.compile(r"\b(info|initialized|loaded|start(ed)?|starting|done|success)\b", re.IGNORECASE)
     KEYBIND_PATTERN = re.compile(r"key binding conflict", re.IGNORECASE)
     MOD_ISSUE_PATTERN = re.compile(r"\[([^\]]+)\]")
-    WARNING_PATTERN = re.compile(
-        r"\b(warning|warn|deprecat|deprecated)\b", re.IGNORECASE
-    )
+    WARNING_PATTERN = re.compile(r"\b(warning|warn|deprecat|deprecated)\b", re.IGNORECASE)
     WARNING_SHORT_PATTERN = re.compile(r"\[W\]")
-    ERROR_PATTERN = re.compile(
-        r"\b(error|failed|exception|fatal|critical)\b|\[E\]", re.IGNORECASE
-    )
+    ERROR_PATTERN = re.compile(r"\b(error|failed|exception|fatal|critical)\b|\[E\]", re.IGNORECASE)
     ERROR_SHORT_PATTERN = re.compile(r"\[E\]")
     EXCEPTION_PATTERN = re.compile(r".*Exception.*:|.*Error.*:")
     STACK_TRACE_PATTERN = re.compile(r"^\s*at .*")
@@ -72,15 +66,9 @@ class LogPatternManager:
         re.IGNORECASE,
     )
     KEYBIND_FILTER_PATTERN = re.compile(r"key binding conflict", re.IGNORECASE)
-    MOD_ISSUE_FILTER_PATTERN = re.compile(
-        r"(\[.*\].*(error|warning|exception))|(mod.*(conflict|issue))", re.IGNORECASE
-    )
-    WARNING_FILTER_PATTERN = re.compile(
-        r"\b(warning|warn|deprecat|deprecated)\b|\[W\]", re.IGNORECASE
-    )
-    ERROR_FILTER_PATTERN = re.compile(
-        r"\b(error|failed|fatal|critical)\b|\[E\]", re.IGNORECASE
-    )
+    MOD_ISSUE_FILTER_PATTERN = re.compile(r"(\[.*\].*(error|warning|exception))|(mod.*(conflict|issue))", re.IGNORECASE)
+    WARNING_FILTER_PATTERN = re.compile(r"\b(warning|warn|deprecat|deprecated)\b|\[W\]", re.IGNORECASE)
+    ERROR_FILTER_PATTERN = re.compile(r"\b(error|failed|fatal|critical)\b|\[E\]", re.IGNORECASE)
     EXCEPTION_FILTER_PATTERN = re.compile(r"exception", re.IGNORECASE)
 
     PATHLIKE_PATTERN = re.compile(
@@ -147,10 +135,7 @@ class LogContentStorage:
             line_length = len(line)
 
             # If adding this line would exceed chunk size and we have existing content
-            if (
-                current_chunk_size + line_length > self.max_chunk_size
-                and current_chunk_lines
-            ):
+            if current_chunk_size + line_length > self.max_chunk_size and current_chunk_lines:
                 # Join the current chunk and add to deque
                 self.chunks.append("".join(current_chunk_lines))
                 current_chunk_lines = [line]
@@ -190,9 +175,7 @@ class LogContentStorage:
         """Get the full content as a string (use sparingly)."""
         return "".join(self.chunks)
 
-    def get_lines(
-        self, start_line: int = 0, end_line: Optional[int] = None
-    ) -> List[str]:
+    def get_lines(self, start_line: int = 0, end_line: Optional[int] = None) -> List[str]:
         """Get specific lines efficiently without loading entire content."""
         lines = []
         current_line = 0
@@ -303,16 +286,10 @@ class PlayerLogTab(QWidget):
     match_count_label: QLabel
     _file_change_debounce_timer: QTimer
     # Precompile regex patterns for filtering and analysis once at class level
-    _info_pattern = re.compile(
-        r"\b(info|initialized|loaded|start(ed)?|done|success)\b", re.IGNORECASE
-    )
+    _info_pattern = re.compile(r"\b(info|initialized|loaded|start(ed)?|done|success)\b", re.IGNORECASE)
     _keybind_pattern = re.compile(r"key binding conflict", re.IGNORECASE)
-    _mod_issue_pattern = re.compile(
-        r"(\[.*\].*(error|warning|exception))|(mod.*(conflict|issue))", re.IGNORECASE
-    )
-    _warning_pattern = re.compile(
-        r"\b(warning|warn|deprecat|deprecated)\b|\[W\]", re.IGNORECASE
-    )
+    _mod_issue_pattern = re.compile(r"(\[.*\].*(error|warning|exception))|(mod.*(conflict|issue))", re.IGNORECASE)
+    _warning_pattern = re.compile(r"\b(warning|warn|deprecat|deprecated)\b|\[W\]", re.IGNORECASE)
     _error_pattern = re.compile(r"\b(error|failed|fatal)\b|\[E\]", re.IGNORECASE)
     _exception_pattern = re.compile(r"exception", re.IGNORECASE)
 
@@ -430,9 +407,7 @@ class PlayerLogTab(QWidget):
     def _get_player_log_path(self) -> Optional[Path]:
         try:
             current_instance: str = self.settings_controller.settings.current_instance
-            config_folder: str = self.settings_controller.settings.instances[
-                current_instance
-            ].config_folder
+            config_folder: str = self.settings_controller.settings.instances[current_instance].config_folder
             player_log_path: Path = Path(config_folder).parent / "Player.log"
             if player_log_path.exists():
                 return player_log_path
@@ -460,9 +435,7 @@ class PlayerLogTab(QWidget):
         self.log_display.customContextMenuRequested.connect(self.show_context_menu)
 
         self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.horizontal_splitter.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.horizontal_splitter.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.horizontal_splitter.addWidget(self.left_panel)
         self.horizontal_splitter.addWidget(self.middle_panel)
         self.horizontal_splitter.setSizes([400, 1250])
@@ -477,9 +450,7 @@ class PlayerLogTab(QWidget):
         self.left_panel = QWidget()
         self.left_panel.setMinimumWidth(350)
         self.left_panel.setMaximumWidth(500)
-        self.left_panel.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
-        )
+        self.left_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.left_layout = QVBoxLayout(self.left_panel)
         self.left_layout.setSpacing(1)
         self.left_layout.setContentsMargins(1, 1, 1, 1)
@@ -494,9 +465,7 @@ class PlayerLogTab(QWidget):
     def _init_middle_panel(self) -> None:
         """Initialize the middle panel UI components."""
         self.middle_panel = QWidget()
-        self.middle_panel.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.middle_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.middle_layout = QVBoxLayout(self.middle_panel)
         self.middle_layout.setContentsMargins(8, 8, 8, 8)
 
@@ -504,9 +473,7 @@ class PlayerLogTab(QWidget):
         self.log_display.setReadOnly(True)
         self.log_display.setFont(QFont("Consolas", 10))
         self.log_display.setMinimumSize(400, 200)
-        self.log_display.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.log_display.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.log_display.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.log_display.customContextMenuRequested.connect(self.show_context_menu)
         self.middle_layout.addWidget(self.log_display)
@@ -521,9 +488,7 @@ class PlayerLogTab(QWidget):
         file_info_layout.setSpacing(1)
         file_info_layout.setContentsMargins(1, 1, 1, 1)
 
-        file_info_group.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
-        )
+        file_info_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         self.file_path_label = QLabel(self.tr("Path:"))
         self.file_path_label.setWordWrap(True)
@@ -547,9 +512,7 @@ class PlayerLogTab(QWidget):
                 widget = item.widget()
                 if widget:
                     widget.setContentsMargins(0, 0, 0, 0)
-                    widget.setSizePolicy(
-                        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
-                    )
+                    widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
     def _init_statistics_group(self) -> None:
         stats_group = QGroupBox(self.tr("Statistics"))
@@ -560,39 +523,21 @@ class PlayerLogTab(QWidget):
 
         def create_stat_button(text: str, color: str, filter_name: str) -> QPushButton:
             btn = QPushButton(text)
-            btn.setStyleSheet(
-                f"color: {color}; background: transparent; border: none; text-align: left;"
-            )
+            btn.setStyleSheet(f"color: {color}; background: transparent; border: none; text-align: left;")
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFlat(True)
             btn.clicked.connect(lambda: self._on_stat_button_clicked(filter_name))
             btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             return btn
 
-        self.total_lines_label = create_stat_button(
-            self.tr("Total Lines: 0"), "#00FF00", self.tr("All Entries")
-        )
-        self.info_label = create_stat_button(
-            self.tr("Infos: 0"), "#00FF00", self.tr("Infos Only")
-        )
-        self.keybind_label = create_stat_button(
-            self.tr("Keybinds: 0"), "#EEFF00", self.tr("Keybinds Only")
-        )
-        self.mod_issues_label = create_stat_button(
-            self.tr("Mod Issues: 0"), "#FF8C00", self.tr("Mod Issues")
-        )
-        self.warnings_label = create_stat_button(
-            self.tr("Warnings: 0"), "#FF8C00", self.tr("Warnings Only")
-        )
-        self.errors_label = create_stat_button(
-            self.tr("Errors: 0"), "#FF0000", self.tr("Errors Only")
-        )
-        self.exceptions_label = create_stat_button(
-            self.tr("Exceptions: 0"), "#FF0000", self.tr("Exceptions Only")
-        )
-        self.all_issues_label = create_stat_button(
-            self.tr("All Issues: 0"), "#FF0000", self.tr("All Issues")
-        )
+        self.total_lines_label = create_stat_button(self.tr("Total Lines: 0"), "#00FF00", self.tr("All Entries"))
+        self.info_label = create_stat_button(self.tr("Infos: 0"), "#00FF00", self.tr("Infos Only"))
+        self.keybind_label = create_stat_button(self.tr("Keybinds: 0"), "#EEFF00", self.tr("Keybinds Only"))
+        self.mod_issues_label = create_stat_button(self.tr("Mod Issues: 0"), "#FF8C00", self.tr("Mod Issues"))
+        self.warnings_label = create_stat_button(self.tr("Warnings: 0"), "#FF8C00", self.tr("Warnings Only"))
+        self.errors_label = create_stat_button(self.tr("Errors: 0"), "#FF0000", self.tr("Errors Only"))
+        self.exceptions_label = create_stat_button(self.tr("Exceptions: 0"), "#FF0000", self.tr("Exceptions Only"))
+        self.all_issues_label = create_stat_button(self.tr("All Issues: 0"), "#FF0000", self.tr("All Issues"))
 
         stats_layout.addWidget(self.total_lines_label)
         stats_layout.addWidget(self.info_label)
@@ -619,9 +564,7 @@ class PlayerLogTab(QWidget):
         controls_layout.setSpacing(1)
         controls_layout.setContentsMargins(1, 1, 1, 1)
 
-        self.auto_load_player_log_on_startup_checkbox = QCheckBox(
-            self.tr("Auto Load Game Log on Startup")
-        )
+        self.auto_load_player_log_on_startup_checkbox = QCheckBox(self.tr("Auto Load Game Log on Startup"))
         self.auto_load_player_log_on_startup_checkbox.setToolTip(
             self.tr("If checked, the Game log will be loaded automatically on startup.")
         )
@@ -629,19 +572,11 @@ class PlayerLogTab(QWidget):
         self.auto_load_player_log_on_startup_checkbox.setChecked(
             self.settings_controller.settings.auto_load_player_log_on_startup
         )
-        self.auto_load_player_log_on_startup_checkbox.toggled.connect(
-            self._on_auto_load_player_log_on_startup_toggled
-        )
+        self.auto_load_player_log_on_startup_checkbox.toggled.connect(self._on_auto_load_player_log_on_startup_toggled)
 
-        self.real_time_monitor_checkbox = QCheckBox(
-            self.tr("Enable Real-Time Log Monitoring")
-        )
-        self.real_time_monitor_checkbox.setToolTip(
-            self.tr("Enable real-time monitoring of Player.log file changes.")
-        )
-        self.real_time_monitor_checkbox.toggled.connect(
-            self.toggle_real_time_monitoring
-        )
+        self.real_time_monitor_checkbox = QCheckBox(self.tr("Enable Real-Time Log Monitoring"))
+        self.real_time_monitor_checkbox.setToolTip(self.tr("Enable real-time monitoring of Player.log file changes."))
+        self.real_time_monitor_checkbox.toggled.connect(self.toggle_real_time_monitoring)
         controls_layout.addWidget(self.real_time_monitor_checkbox)
 
         button_layout = QHBoxLayout()
@@ -660,16 +595,12 @@ class PlayerLogTab(QWidget):
         load_buttons_layout = QHBoxLayout()
         load_buttons_layout.setSpacing(1)
         self.load_default_button = QPushButton(self.tr("Load Game Log"))
-        self.load_default_button.setToolTip(
-            self.tr("Loads the game's Player.log file.")
-        )
+        self.load_default_button.setToolTip(self.tr("Loads the game's Player.log file."))
         self.load_default_button.clicked.connect(self.load_default_log)
         load_buttons_layout.addWidget(self.load_default_button)
 
         self.load_file_button = QPushButton(self.tr("Load Log from File"))
-        self.load_file_button.setToolTip(
-            self.tr("Open a file dialog to select a log file")
-        )
+        self.load_file_button.setToolTip(self.tr("Open a file dialog to select a log file"))
         self.load_file_button.clicked.connect(self.load_log_from_file)
         load_buttons_layout.addWidget(self.load_file_button)
 
@@ -729,16 +660,12 @@ class PlayerLogTab(QWidget):
                 self.tr("All Issues"),
             ]
         )
-        self.filter_combo.currentIndexChanged.connect(
-            lambda _: self.apply_filter(clear_log=True, filter_type="Type")
-        )
+        self.filter_combo.currentIndexChanged.connect(lambda _: self.apply_filter(clear_log=True, filter_type="Type"))
         filter_layout.addWidget(self.filter_combo)
 
         self.mod_filter_input = QLineEdit()
         self.mod_filter_input.setPlaceholderText(self.tr("Filter by mod name..."))
-        self.mod_filter_input.textChanged.connect(
-            lambda _: self.apply_filter(clear_log=True, filter_type="Search")
-        )
+        self.mod_filter_input.textChanged.connect(lambda _: self.apply_filter(clear_log=True, filter_type="Search"))
         filter_layout.addWidget(self.mod_filter_input)
         search_filter_layout.addLayout(filter_layout)
 
@@ -747,9 +674,7 @@ class PlayerLogTab(QWidget):
         highlight_nav_layout.setSpacing(1)
 
         self.color_picker_button = QPushButton(self.tr("Highlight Color"))
-        self.color_picker_button.setToolTip(
-            self.tr("Pick color for search and navigation highlighting")
-        )
+        self.color_picker_button.setToolTip(self.tr("Pick color for search and navigation highlighting"))
         self.color_picker_button.setMaximumHeight(24)
         self.color_picker_button.clicked.connect(self.pick_highlight_color)
 
@@ -776,9 +701,7 @@ class PlayerLogTab(QWidget):
         return lambda: self.goto_next_pattern(pattern)
 
     def _init_quick_navigation_group(self) -> None:
-        def create_nav_button(
-            text: str, tooltip: str, callback: Callable[[], None]
-        ) -> QPushButton:
+        def create_nav_button(text: str, tooltip: str, callback: Callable[[], None]) -> QPushButton:
             btn = QPushButton(text)
             btn.setToolTip(tooltip)
             btn.clicked.connect(callback)
@@ -807,9 +730,7 @@ class PlayerLogTab(QWidget):
         for row, (label_text, pattern) in enumerate(log_types):
             prev_btn = create_nav_button(
                 "<",
-                self.tr("Jump to previous {lower} entry").format(
-                    lower=label_text.lower()
-                ),
+                self.tr("Jump to previous {lower} entry").format(lower=label_text.lower()),
                 self._make_prev_callback(pattern),
             )
             next_btn = create_nav_button(
@@ -831,9 +752,7 @@ class PlayerLogTab(QWidget):
         scroll_to_end_btn.setToolTip(self.tr("Scroll to the end of the log display"))
         scroll_to_end_btn.clicked.connect(self.scroll_to_end)
         scroll_to_end_btn.setMaximumHeight(24)
-        scroll_to_end_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        scroll_to_end_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         nav_layout.addWidget(scroll_to_end_btn, len(log_types), 0, 1, 3)
 
         self.left_layout.addWidget(self.nav_group)
@@ -854,17 +773,11 @@ class PlayerLogTab(QWidget):
                 logger.debug("Player log path is None in _process_file_change.")
                 return
             current_size = self.player_log_path.stat().st_size
-            logger.debug(
-                f"_process_file_change: current_size={current_size}, last_log_size={self.last_log_size}"
-            )
-            with open(
-                self.player_log_path, "r", encoding="utf-8", errors="ignore"
-            ) as f:
+            logger.debug(f"_process_file_change: current_size={current_size}, last_log_size={self.last_log_size}")
+            with open(self.player_log_path, "r", encoding="utf-8", errors="ignore") as f:
                 while True:
                     if current_size < self.last_log_size:
-                        logger.debug(
-                            "File size smaller than last log size, treating as reset."
-                        )
+                        logger.debug("File size smaller than last log size, treating as reset.")
                         self.log_storage.clear()
                         self.last_log_size = 0
                         self.load_log()
@@ -876,9 +789,7 @@ class PlayerLogTab(QWidget):
                         f"Read {len(new_content)} new characters from log file: {new_content[:100]}..."  # Log first 100 characters
                     )
                     if new_content.startswith("Mono path"):
-                        logger.debug(
-                            "New content starts with 'Mono path', reloading log."
-                        )
+                        logger.debug("New content starts with 'Mono path', reloading log.")
                         self.log_storage.clear()
                         self.last_log_size = 0
                         self.load_log()
@@ -889,13 +800,9 @@ class PlayerLogTab(QWidget):
                         # Instead of breaking, restart the debounce timer to keep monitoring
                         self._file_change_debounce_timer.start()
                         return
-                    logger.debug(
-                        f"Appending {len(new_content)} new characters to log content."
-                    )
+                    logger.debug(f"Appending {len(new_content)} new characters to log content.")
                     self.log_storage.append(new_content)  # Use new storage method
-                    self.current_log_content = str(
-                        self.log_storage
-                    )  # Keep for backward compatibility
+                    self.current_log_content = str(self.log_storage)  # Keep for backward compatibility
                     self.last_log_size = current_size
                     break
             self._analyze_log_content(new_content)  # Analyze only the new content
@@ -923,11 +830,7 @@ class PlayerLogTab(QWidget):
 
         if enabled:
             self._observer = Observer()
-            if (
-                hasattr(self, "_observer")
-                and self._observer is not None
-                and self._observer.is_alive()
-            ):
+            if hasattr(self, "_observer") and self._observer is not None and self._observer.is_alive():
                 logger.debug("Real-time monitoring already running.")
                 return
             if self.player_log_path is None:
@@ -943,23 +846,15 @@ class PlayerLogTab(QWidget):
             event_handler = PlayerLogEventHandler(self)
             self.file_changed_signal.connect(self.on_file_changed)
             try:
-                self._observer.schedule(
-                    event_handler, str(self.player_log_path.parent), recursive=False
-                )
+                self._observer.schedule(event_handler, str(self.player_log_path.parent), recursive=False)
                 self._observer.start()
-                logger.info(
-                    f"Started real-time monitoring of Player.log at {self.player_log_path}"
-                )
+                logger.info(f"Started real-time monitoring of Player.log at {self.player_log_path}")
             except Exception as e:
                 logger.error(f"Failed to start observer: {e}")
                 show_warning(f"Failed to start real-time monitoring: {e}")
                 self.real_time_monitor_checkbox.setChecked(False)
         else:
-            if (
-                hasattr(self, "_observer")
-                and self._observer is not None
-                and self._observer.is_alive()
-            ):
+            if hasattr(self, "_observer") and self._observer is not None and self._observer.is_alive():
                 self._observer.stop()
                 self._observer.join()
                 logger.info("Stopped real-time monitoring of Player.log.")
@@ -1011,13 +906,10 @@ class PlayerLogTab(QWidget):
                 "errors": 0,
                 "exceptions": 0,
             }
-            with open(
-                self.player_log_path, "r", encoding="utf-8", errors="ignore"
-            ) as f:
+            with open(self.player_log_path, "r", encoding="utf-8", errors="ignore") as f:
                 total_chunks = max(
                     1,
-                    (self.player_log_path.stat().st_size + chunk_size - 1)
-                    // chunk_size,
+                    (self.player_log_path.stat().st_size + chunk_size - 1) // chunk_size,
                 )
                 chunk_cnt = 0
                 self.progress_bar.setTextVisible(True)
@@ -1034,16 +926,12 @@ class PlayerLogTab(QWidget):
                     QApplication.processEvents()
 
             self.last_log_size = len(self.log_storage)  # Update based on new storage
-            self.current_log_content = str(
-                self.log_storage
-            )  # Keep for backward compatibility
+            self.current_log_content = str(self.log_storage)  # Keep for backward compatibility
             self._update_file_info()
             self._update_statistics()
             self.apply_filter()
             self.enable_options()
-            logger.info(
-                "Loaded player log file in chunks using memory-efficient storage."
-            )
+            logger.info("Loaded player log file in chunks using memory-efficient storage.")
         except Exception as e:
             logger.error(f"Failed to load player log file: {e}")
             self.progress_bar.hide()
@@ -1056,16 +944,10 @@ class PlayerLogTab(QWidget):
             if self.current_log_content:
                 url = self.url
                 if url:
-                    self.file_path_label.setText(
-                        self.tr("Path: Loaded from URL: {url}").format(url=url)
-                    )
+                    self.file_path_label.setText(self.tr("Path: Loaded from URL: {url}").format(url=url))
                 else:
                     self.file_path_label.setText(self.tr("Path: Loaded from URL"))
-                self.file_size_label.setText(
-                    self.tr("Size: {size:,} bytes").format(
-                        size=len(self.current_log_content)
-                    )
-                )
+                self.file_size_label.setText(self.tr("Size: {size:,} bytes").format(size=len(self.current_log_content)))
                 self.last_modified_label.setText(self.tr("Modified: N/A"))
             else:
                 self.file_path_label.setText(self.tr("Path: N/A"))
@@ -1091,28 +973,18 @@ class PlayerLogTab(QWidget):
                 return f"{size:.1f} PB"
 
             size_str = format_size(size_bytes)
-            modified_str = datetime.fromtimestamp(modified_time).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            modified_str = datetime.fromtimestamp(modified_time).strftime("%Y-%m-%d %H:%M:%S")
 
-            self.file_path_label.setText(
-                self.tr("Path: {path_str}").format(path_str=path_str)
-            )
-            self.file_size_label.setText(
-                self.tr("Size: {size_str}").format(size_str=size_str)
-            )
-            self.last_modified_label.setText(
-                self.tr("Modified: {modified_str}").format(modified_str=modified_str)
-            )
+            self.file_path_label.setText(self.tr("Path: {path_str}").format(path_str=path_str))
+            self.file_size_label.setText(self.tr("Size: {size_str}").format(size_str=size_str))
+            self.last_modified_label.setText(self.tr("Modified: {modified_str}").format(modified_str=modified_str))
         except Exception as e:
             logger.error(f"Failed to update file info: {e}")
 
     def _update_match_count(self) -> None:
         """Update the match count label based on current matches."""
         total_matches = len(self.matches)
-        current_index = (
-            self.current_match_index + 1 if self.current_match_index >= 0 else 0
-        )
+        current_index = self.current_match_index + 1 if self.current_match_index >= 0 else 0
         self.match_count_label.setText(f"{current_index}/{total_matches}")
 
     def _on_search_text_changed_debounced(self) -> None:
@@ -1130,9 +1002,7 @@ class PlayerLogTab(QWidget):
             return
         cursor = self.log_display.textCursor()
         document = self.log_display.document()
-        regex = QRegularExpression(
-            text, QRegularExpression.PatternOption.CaseInsensitiveOption
-        )
+        regex = QRegularExpression(text, QRegularExpression.PatternOption.CaseInsensitiveOption)
         pos = 0
         while True:
             match = regex.match(document.toPlainText(), pos)
@@ -1154,9 +1024,7 @@ class PlayerLogTab(QWidget):
             return
         self.current_match_index = (self.current_match_index - 1) % len(self.matches)
         if self.current_match_index < 0:
-            self.current_match_index = (
-                len(self.matches) - 1
-            )  # Wrap around to last match
+            self.current_match_index = len(self.matches) - 1  # Wrap around to last match
         self.log_display.setTextCursor(self.matches[self.current_match_index])
         self._update_match_count()
 
@@ -1189,9 +1057,7 @@ class PlayerLogTab(QWidget):
                 if match.hasMatch():
                     cursor = QTextCursor(document)
                     cursor.setPosition(match.capturedStart())
-                    cursor.setPosition(
-                        match.capturedEnd(), QTextCursor.MoveMode.KeepAnchor
-                    )
+                    cursor.setPosition(match.capturedEnd(), QTextCursor.MoveMode.KeepAnchor)
                     matches.append(QTextCursor(cursor))
 
             self._pattern_matches_cache[pattern] = matches
@@ -1280,9 +1146,7 @@ class PlayerLogTab(QWidget):
         cursor.mergeCharFormat(self.quick_nav_highlight_format)
 
         # Update status message (optional - could be shown in a status bar)
-        logger.debug(
-            f"Navigated to pattern '{pattern}' - {total_matches} total matches"
-        )
+        logger.debug(f"Navigated to pattern '{pattern}' - {total_matches} total matches")
 
     def load_default_log(self) -> None:
         self.player_log_path = self._get_player_log_path()
@@ -1292,9 +1156,7 @@ class PlayerLogTab(QWidget):
         self.load_log()
 
     def load_log_from_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Log File", "", "Log Files (*.log *.txt);;All Files (*)"
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Log File", "", "Log Files (*.log *.txt);;All Files (*)")
         if file_path:
             self.player_log_path = Path(file_path)
             self.load_log()
@@ -1327,9 +1189,7 @@ class PlayerLogTab(QWidget):
             self.current_log_content = b"".join(chunks).decode("utf-8", errors="ignore")
             self.progress_bar.setValue(100)
 
-        url, ok = QInputDialog.getText(
-            self, self.tr("Load Log from Link"), self.tr("Enter URL:")
-        )
+        url, ok = QInputDialog.getText(self, self.tr("Load Log from Link"), self.tr("Enter URL:"))
         if ok and url:
             try:
                 self.clear_log()
@@ -1355,9 +1215,7 @@ class PlayerLogTab(QWidget):
         self.load_log()
 
     def export_log(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Log", "", "Text Files (*.txt);;All Files (*)"
-        )
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export Log", "", "Text Files (*.txt);;All Files (*)")
         if file_path:
             try:
                 with open(file_path, "w", encoding="utf-8") as f:
@@ -1372,11 +1230,7 @@ class PlayerLogTab(QWidget):
         menu = self.log_display.createStandardContextMenu()
         cursor = self.log_display.cursorForPosition(pos)
         line_number = cursor.blockNumber()
-        bookmark_action_text = (
-            "Remove Bookmark"
-            if line_number in self.bookmarked_lines
-            else "Add Bookmark"
-        )
+        bookmark_action_text = "Remove Bookmark" if line_number in self.bookmarked_lines else "Add Bookmark"
         bookmark_action = menu.addAction(bookmark_action_text)
         bookmark_action.triggered.connect(lambda: self.toggle_bookmark(line_number))
         pathmatch = LogPatternManager.PATHLIKE_PATTERN.findall(cursor.block().text())
@@ -1387,9 +1241,7 @@ class PlayerLogTab(QWidget):
                     path[:-1],
                 ):  # error messages frequently tag on a ] or other terminator character
                     if os.path.exists(candidate):
-                        menu.addAction(
-                            f"Open '{candidate}'", lambda p=candidate: self.open_file(p)
-                        )
+                        menu.addAction(f"Open '{candidate}'", lambda p=candidate: self.open_file(p))
                         break
         menu.exec(self.log_display.mapToGlobal(pos))
 
@@ -1397,8 +1249,7 @@ class PlayerLogTab(QWidget):
         if self.settings_controller.settings.text_editor_location:
             launch_process(
                 self.settings_controller.settings.text_editor_location,
-                self.settings_controller.settings.text_editor_file_arg.split(" ")
-                + [file_path],
+                self.settings_controller.settings.text_editor_file_arg.split(" ") + [file_path],
                 str(AppInfo().application_folder),
             )
 
@@ -1459,9 +1310,7 @@ class PlayerLogTab(QWidget):
             self.clear_log()
         self.progress_bar.setFormat(self.tr("Loading file... %p%"))
         self.progress_bar.show()
-        filter_text = (
-            self.filter_combo.currentText() if self.filter_combo else "All Entries"
-        )
+        filter_text = self.filter_combo.currentText() if self.filter_combo else "All Entries"
         mod_filter = self.mod_filter_input.text() if self.mod_filter_input else ""
         lines = new_content.splitlines() or self.current_log_content.splitlines()
 
@@ -1483,27 +1332,17 @@ class PlayerLogTab(QWidget):
                 continue
             if filter_text == self.tr("All Entries"):
                 filtered_lines.append(line)
-            elif filter_text == self.tr("Infos Only") and self._info_pattern.search(
-                line
-            ):
+            elif filter_text == self.tr("Infos Only") and self._info_pattern.search(line):
                 filtered_lines.append(line)
-            elif filter_text == self.tr("Keybinds Only") and keybind_pattern.search(
-                line
-            ):
+            elif filter_text == self.tr("Keybinds Only") and keybind_pattern.search(line):
                 filtered_lines.append(line)
-            elif filter_text == self.tr("Mod Issues") and mod_issue_pattern.search(
-                line
-            ):
+            elif filter_text == self.tr("Mod Issues") and mod_issue_pattern.search(line):
                 filtered_lines.append(line)
-            elif filter_text == self.tr("Warnings Only") and warning_pattern.search(
-                line
-            ):
+            elif filter_text == self.tr("Warnings Only") and warning_pattern.search(line):
                 filtered_lines.append(line)
             elif filter_text == self.tr("Errors Only") and error_pattern.search(line):
                 filtered_lines.append(line)
-            elif filter_text == self.tr("Exceptions Only") and exception_pattern.search(
-                line
-            ):
+            elif filter_text == self.tr("Exceptions Only") and exception_pattern.search(line):
                 filtered_lines.append(line)
             elif filter_text == self.tr("All Issues") and (
                 keybind_pattern.search(line)
@@ -1517,9 +1356,7 @@ class PlayerLogTab(QWidget):
         collapsed_lines = self._collapse_repeated_lines(filtered_lines)
         self.filtered_content = "\n".join(collapsed_lines)
         scroll_bar = self.log_display.verticalScrollBar()
-        total_chunks = max(
-            1, (len(self.filtered_content) + chunk_size - 1) // chunk_size
-        )
+        total_chunks = max(1, (len(self.filtered_content) + chunk_size - 1) // chunk_size)
         chunk_cnt = 0
         for i in range(0, len(self.filtered_content), chunk_size):
             old_value = scroll_bar.value()
@@ -1546,31 +1383,17 @@ class PlayerLogTab(QWidget):
         """Update the statistics labels in the UI (consolidated)."""
         # Update button texts for clickable stats
         self.total_lines_label.setText(
-            self.tr("Total Lines: {total_lines}").format(
-                total_lines=self.log_stats["total_lines"]
-            )
+            self.tr("Total Lines: {total_lines}").format(total_lines=self.log_stats["total_lines"])
         )
-        self.info_label.setText(
-            self.tr("Infos: {infos}").format(infos=self.log_stats["infos"])
-        )
-        self.keybind_label.setText(
-            self.tr("Keybinds: {keybinds}").format(keybinds=self.log_stats["keybinds"])
-        )
+        self.info_label.setText(self.tr("Infos: {infos}").format(infos=self.log_stats["infos"]))
+        self.keybind_label.setText(self.tr("Keybinds: {keybinds}").format(keybinds=self.log_stats["keybinds"]))
         self.mod_issues_label.setText(
-            self.tr("Mod Issues: {mod_issues}").format(
-                mod_issues=self.log_stats["mod_issues"]
-            )
+            self.tr("Mod Issues: {mod_issues}").format(mod_issues=self.log_stats["mod_issues"])
         )
-        self.warnings_label.setText(
-            self.tr("Warnings: {warnings}").format(warnings=self.log_stats["warnings"])
-        )
-        self.errors_label.setText(
-            self.tr("Errors: {errors}").format(errors=self.log_stats["errors"])
-        )
+        self.warnings_label.setText(self.tr("Warnings: {warnings}").format(warnings=self.log_stats["warnings"]))
+        self.errors_label.setText(self.tr("Errors: {errors}").format(errors=self.log_stats["errors"]))
         self.exceptions_label.setText(
-            self.tr("Exceptions: {exceptions}").format(
-                exceptions=self.log_stats["exceptions"]
-            )
+            self.tr("Exceptions: {exceptions}").format(exceptions=self.log_stats["exceptions"])
         )
         self.all_issues_label.setText(
             self.tr("All Issues: {all_issues}").format(

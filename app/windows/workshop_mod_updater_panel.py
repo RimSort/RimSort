@@ -38,9 +38,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             object_name="updateModsPanel",
             window_title=self.tr("RimSort - Updates found for Workshop mods"),
             title_text=self.tr("There are updates available for Workshop mods!"),
-            details_text=self.tr(
-                "\nThe following table displays Workshop mods available for update from Steam."
-            ),
+            details_text=self.tr("\nThe following table displays Workshop mods available for update from Steam."),
             additional_columns=self._get_standard_mod_columns(),
         )
 
@@ -87,9 +85,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         Returns:
             List of (uuid, metadata) tuples for mods eligible for update.
         """
-        eligible_mods = filter_eligible_mods_for_update(
-            self.metadata_manager.internal_local_metadata
-        )
+        eligible_mods = filter_eligible_mods_for_update(self.metadata_manager.internal_local_metadata)
         # Return tuples of (uuid, metadata) by looking up UUIDs from internal_local_metadata
         return [
             (uuid, metadata)
@@ -102,17 +98,13 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         Populate the table with mods that have available updates.
         """
         try:
-            logger.debug(
-                "Starting to populate table with mods that have updates available"
-            )
+            logger.debug("Starting to populate table with mods that have updates available")
 
             # Clear existing table data before populating since it shows duplicate rows if not cleared
             self._clear_table_model()
 
             self.eligible_metadata = self._filter_eligible_mods()
-            logger.debug(
-                f"Found {len(self.eligible_metadata)} eligible mods for update"
-            )
+            logger.debug(f"Found {len(self.eligible_metadata)} eligible mods for update")
 
             if not self.eligible_metadata:
                 logger.info("No mods with updates available")

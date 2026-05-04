@@ -23,9 +23,7 @@ class ButtonFactory:
     def __init__(self, panel: Any):
         self.panel = panel
 
-    def create_refresh_button(
-        self, callback: Callable[[], None] | None = None
-    ) -> QPushButton:
+    def create_refresh_button(self, callback: Callable[[], None] | None = None) -> QPushButton:
         """Create a refresh button."""
         return self.panel._create_refresh_button(callback)
 
@@ -72,17 +70,13 @@ class ButtonFactory:
             enable_delete_and_resubscribe,
         )
 
-    def create_custom_button(
-        self, text: str, callback: Callable[[], None]
-    ) -> QPushButton:
+    def create_custom_button(self, text: str, callback: Callable[[], None]) -> QPushButton:
         """Create a custom button."""
         button = QPushButton(text)
         button.clicked.connect(callback)
         return button
 
-    def create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
+    def create_select_button(self, text: str, menu_items: list[MenuItem]) -> QToolButton:
         """Create a select button with dropdown menu."""
         button = QToolButton()
         button.setText(text)

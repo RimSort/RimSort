@@ -42,9 +42,7 @@ from app.views.main_content_panel import MainContent
 class MainContentController(QObject):
     """Controller with concurrent checking/updating and improved structure."""
 
-    def __init__(
-        self, view: MainContent, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, view: MainContent, settings_controller: SettingsController) -> None:
         super().__init__()
         self.view = view
         self.settings_controller = settings_controller
@@ -67,15 +65,11 @@ class MainContentController(QObject):
             ),
             EventBus().do_download_use_this_instead_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: (
-                    self.settings_controller.settings.external_use_this_instead_repo_path
-                ),
+                lambda: self.settings_controller.settings.external_use_this_instead_repo_path,
             ),
             EventBus().do_download_no_version_warning_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: (
-                    self.settings_controller.settings.external_no_version_warning_repo_path
-                ),
+                lambda: self.settings_controller.settings.external_no_version_warning_repo_path,
             ),
         }
 
@@ -96,20 +90,14 @@ class MainContentController(QObject):
         # Bind download signals
         for event_signal, (base_path_obj, url_getter) in self.download_signals.items():
             event_signal.connect(
-                lambda url_getter=url_getter, base_path_obj=base_path_obj: (
-                    self._do_git_clone(
-                        base_path=str(base_path_obj),
-                        repo_url=url_getter(),
-                    )
+                lambda url_getter=url_getter, base_path_obj=base_path_obj: self._do_git_clone(
+                    base_path=str(base_path_obj),
+                    repo_url=url_getter(),
                 )
             )
 
-        EventBus().do_upload_steam_workshop_db_to_github.connect(
-            self._on_do_upload_steam_workshop_db_to_github
-        )
-        EventBus().do_upload_community_rules_db_to_github.connect(
-            self._on_do_upload_community_db_to_github
-        )
+        EventBus().do_upload_steam_workshop_db_to_github.connect(self._on_do_upload_steam_workshop_db_to_github)
+        EventBus().do_upload_community_rules_db_to_github.connect(self._on_do_upload_community_db_to_github)
 
     @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
@@ -121,9 +109,7 @@ class MainContentController(QObject):
                 information=self.tr("Please select at least one repository to check."),
             ).exec()
             return
-        logger.debug(
-            f"Scheduling concurrent check for {len(repos_paths)} repositories."
-        )
+        logger.debug(f"Scheduling concurrent check for {len(repos_paths)} repositories.")
         config = GitOperationConfig(notify_errors=True)
         worker = GitCheckUpdatesWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_check_updates_results)
@@ -148,9 +134,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Errors during update check"),
                 text=self.tr("Some repositories encountered errors."),
-                information=self.tr(
-                    "Errors occurred while checking for updates:\n{errors}"
-                ).format(errors=msg),
+                information=self.tr("Errors occurred while checking for updates:\n{errors}").format(errors=msg),
             ).exec()
             return
 
@@ -171,9 +155,7 @@ class MainContentController(QObject):
 
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Git Updates Found"),
-            text=self.tr("{len} repositories have updates available.").format(
-                len=len(updates)
-            ),
+            text=self.tr("{len} repositories have updates available.").format(len=len(updates)),
             information=self.tr("Would you like to update them now?"),
             details=details_msg,
             positive_text=self.tr("Update All"),
@@ -186,9 +168,7 @@ class MainContentController(QObject):
 
     def _on_update_repos(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories."""
-        logger.debug(
-            f"Scheduling concurrent update for {len(repos_paths)} repositories."
-        )
+        logger.debug(f"Scheduling concurrent update for {len(repos_paths)} repositories.")
         config = GitOperationConfig(notify_errors=True)
         worker = GitBatchUpdateWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results)
@@ -205,17 +185,15 @@ class MainContentController(QObject):
             details_msg = ""
             for repo_path in successful:
                 repo_name = Path(repo_path).name
-                commit_info = getattr(results, "commit_info", {}).get(
-                    str(repo_path), "No commit info"
-                )
+                commit_info = getattr(results, "commit_info", {}).get(str(repo_path), "No commit info")
                 details_msg += f"✓ {repo_name}\n  └─ {commit_info}\n\n"
 
             InformationBox(
                 title=self.tr("Updates Completed"),
                 text=self.tr("All repositories updated successfully!"),
-                information=self.tr(
-                    "{count} repositories were updated with their latest commits:"
-                ).format(count=len(successful)),
+                information=self.tr("{count} repositories were updated with their latest commits:").format(
+                    count=len(successful)
+                ),
                 details=details_msg.strip(),
             ).exec()
         elif not successful:
@@ -226,18 +204,14 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Failed to update repo!"),
                 text=self.tr("All pull operations failed."),
-                information=self.tr(
-                    "{count} repositories could not be updated."
-                ).format(count=len(failed)),
+                information=self.tr("{count} repositories could not be updated.").format(count=len(failed)),
                 details=details_msg,
             ).exec()
         else:
             details_msg = self.tr("Successful updates:\n")
             for repo_path in successful:
                 repo_name = Path(repo_path).name
-                commit_info = getattr(results, "commit_info", {}).get(
-                    str(repo_path), "No commit info"
-                )
+                commit_info = getattr(results, "commit_info", {}).get(str(repo_path), "No commit info")
                 details_msg += f"  ✓ {repo_name}\n    └─ {commit_info}\n"
 
             details_msg += f"\n{self.tr('Failed updates:')}\n"
@@ -247,9 +221,9 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Partial Updates Completed"),
                 text=self.tr("Some repositories updated successfully."),
-                information=self.tr(
-                    "{success} succeeded, {failed} failed out of {total}."
-                ).format(success=len(successful), failed=len(failed), total=total),
+                information=self.tr("{success} succeeded, {failed} failed out of {total}.").format(
+                    success=len(successful), failed=len(failed), total=total
+                ),
                 details=details_msg,
             ).exec()
 
@@ -269,9 +243,7 @@ class MainContentController(QObject):
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Push Options"),
             text=self.tr("Push changes to remote repositories?"),
-            information=self.tr(
-                "This will push local commits to the remote repositories."
-            ),
+            information=self.tr("This will push local commits to the remote repositories."),
             details="\n".join([str(p) for p in repos_paths]),
             positive_text=self.tr("Push"),
             negative_text=self.tr("Cancel"),
@@ -285,9 +257,7 @@ class MainContentController(QObject):
         force_diag = BinaryChoiceDialog(
             title=self.tr("Force Push"),
             text=self.tr("Use force push?"),
-            information=self.tr(
-                "Force push will overwrite remote history. Use with caution!"
-            ),
+            information=self.tr("Force push will overwrite remote history. Use with caution!"),
             positive_text=self.tr("Force Push"),
             negative_text=self.tr("Normal Push"),
         )
@@ -297,9 +267,7 @@ class MainContentController(QObject):
 
     def _on_push_repos(self, repos_paths: List[Path], force: bool = False) -> None:
         """Schedule concurrent batch push for multiple repositories."""
-        logger.debug(
-            f"Scheduling concurrent push for {len(repos_paths)} repositories (force={force})."
-        )
+        logger.debug(f"Scheduling concurrent push for {len(repos_paths)} repositories (force={force}).")
         config = GitOperationConfig(notify_errors=True)
 
         # Get GitHub authentication from settings
@@ -327,9 +295,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Push Completed"),
                 text=self.tr("All repositories pushed successfully!"),
-                information=self.tr("{count} repositories were pushed.").format(
-                    count=len(successful)
-                ),
+                information=self.tr("{count} repositories were pushed.").format(count=len(successful)),
                 details="\n".join([Path(p).name for p in successful]),
             ).exec()
         elif not successful:
@@ -340,9 +306,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Push Failed"),
                 text=self.tr("All push operations failed."),
-                information=self.tr("{count} repositories could not be pushed.").format(
-                    count=len(failed)
-                ),
+                information=self.tr("{count} repositories could not be pushed.").format(count=len(failed)),
                 details=details_msg,
             ).exec()
         else:
@@ -356,9 +320,9 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Partial Push Completed"),
                 text=self.tr("Some repositories pushed successfully."),
-                information=self.tr(
-                    "{success} succeeded, {failed} failed out of {total}."
-                ).format(success=len(successful), failed=len(failed), total=total),
+                information=self.tr("{success} succeeded, {failed} failed out of {total}.").format(
+                    success=len(successful), failed=len(failed), total=total
+                ),
                 details=details_msg,
             ).exec()
 
@@ -388,9 +352,7 @@ class MainContentController(QObject):
         if full_repo_path.exists():
             answer = show_dialogue_conditional(
                 title=self.tr("Existing repository found"),
-                text=self.tr(
-                    "An existing local repo that matches this repository was found:"
-                ),
+                text=self.tr("An existing local repo that matches this repository was found:"),
                 information=self.tr(
                     "{repo_folder}<br/>"
                     + "How would you like to handle? Choose option:<br/>"
@@ -423,8 +385,7 @@ class MainContentController(QObject):
 
         # Community Rules database
         if (
-            self.settings_controller.settings.external_community_rules_metadata_source
-            == "Configured git repository"
+            self.settings_controller.settings.external_community_rules_metadata_source == "Configured git repository"
             and self.settings_controller.settings.external_community_rules_repo
         ):
             logger.info("Auto-updating Community Rules database from GitHub.")
@@ -435,8 +396,7 @@ class MainContentController(QObject):
 
         # Steam Workshop database
         if (
-            self.settings_controller.settings.external_steam_metadata_source
-            == "Configured git repository"
+            self.settings_controller.settings.external_steam_metadata_source == "Configured git repository"
             and self.settings_controller.settings.external_steam_metadata_repo
         ):
             logger.info("Auto-updating Steam Workshop database from GitHub.")
@@ -447,8 +407,7 @@ class MainContentController(QObject):
 
         # No Version Warning database
         if (
-            self.settings_controller.settings.external_no_version_warning_metadata_source
-            == "Configured git repository"
+            self.settings_controller.settings.external_no_version_warning_metadata_source == "Configured git repository"
             and self.settings_controller.settings.external_no_version_warning_repo_path
         ):
             logger.info('Auto-updating "No Version Warning" database from GitHub.')
@@ -459,8 +418,7 @@ class MainContentController(QObject):
 
         # Use This Instead database (Cross Version Databases)
         if (
-            self.settings_controller.settings.external_use_this_instead_metadata_source
-            == "Configured git repository"
+            self.settings_controller.settings.external_use_this_instead_metadata_source == "Configured git repository"
             and self.settings_controller.settings.external_use_this_instead_repo_path
         ):
             logger.info('Auto-updating "Use This Instead" database from GitHub.')
@@ -486,17 +444,13 @@ class MainContentController(QObject):
 
     def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories silently."""
-        logger.debug(
-            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
-        )
+        logger.debug(f"Scheduling silent concurrent update for {len(repos_paths)} repositories.")
         config = GitOperationConfig(notify_errors=False)
         worker = GitBatchUpdateWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results_silent)
         self.thread_pool.start(worker)
 
-    def _start_git_clone_worker(
-        self, repo_url: str, base_path: str, force: bool
-    ) -> None:
+    def _start_git_clone_worker(self, repo_url: str, base_path: str, force: bool) -> None:
         """Initialize and start GitCloneWorker."""
         if self._git_clone_worker is not None:
             try:
@@ -528,9 +482,7 @@ class MainContentController(QObject):
 
     @Slot(bool, str, str)
     def _on_git_clone_finished(self, success: bool, message: str, path: str) -> None:
-        logger.info(
-            f"Git clone finished: success={success}, message={message}, path={path}"
-        )
+        logger.info(f"Git clone finished: success={success}, message={message}, path={path}")
         if success:
             InformationBox(
                 title=self.tr("Repo retrieved"),
@@ -597,9 +549,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Invalid repository"),
                 text=self.tr("Repository URL is empty or invalid."),
-                information=self.tr(
-                    "Please configure a valid repository URL in settings."
-                ),
+                information=self.tr("Please configure a valid repository URL in settings."),
             ).exec()
             return
 
@@ -623,9 +573,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Invalid repository URL"),
                 text=self.tr("Failed to parse repository information from URL."),
-                information=self.tr("URL: {repo_url}\nError: {error}").format(
-                    repo_url=repo_url, error=str(e)
-                ),
+                information=self.tr("URL: {repo_url}\nError: {error}").format(repo_url=repo_url, error=str(e)),
             ).exec()
             return
 
@@ -636,12 +584,8 @@ class MainContentController(QObject):
         if not github_username or not github_token:
             InformationBox(
                 title=self.tr("GitHub credentials missing"),
-                text=self.tr(
-                    "GitHub username and token are required for database upload."
-                ),
-                information=self.tr(
-                    "Please configure your GitHub credentials in settings."
-                ),
+                text=self.tr("GitHub username and token are required for database upload."),
+                information=self.tr("Please configure your GitHub credentials in settings."),
             ).exec()
             return
 
@@ -667,12 +611,10 @@ class MainContentController(QObject):
         if not file_full_path.exists():
             InformationBox(
                 title=self.tr("File does not exist"),
-                text=self.tr(
-                    "Please ensure the file exists and then try to upload again!"
+                text=self.tr("Please ensure the file exists and then try to upload again!"),
+                information=self.tr("File not found:\n{file_full_path}\nRepository:\n{repo_url}").format(
+                    file_full_path=file_full_path, repo_url=repo_url
                 ),
-                information=self.tr(
-                    "File not found:\n{file_full_path}\nRepository:\n{repo_url}"
-                ).format(file_full_path=file_full_path, repo_url=repo_url),
             ).exec()
             return
 
@@ -682,21 +624,14 @@ class MainContentController(QObject):
                 database = json.loads(f.read())
 
             if database.get("version"):
-                database_version = (
-                    database["version"]
-                    - self.settings_controller.settings.database_expiry
-                )
+                database_version = database["version"] - self.settings_controller.settings.database_expiry
             elif database.get("timestamp"):
                 database_version = database["timestamp"]
             else:
                 InformationBox(
                     title=self.tr("Invalid database"),
-                    text=self.tr(
-                        "Database file does not contain version or timestamp."
-                    ),
-                    information=self.tr("File: {file_path}").format(
-                        file_path=str(file_full_path)
-                    ),
+                    text=self.tr("Database file does not contain version or timestamp."),
+                    information=self.tr("File: {file_path}").format(file_path=str(file_full_path)),
                 ).exec()
                 return
         except (json.JSONDecodeError, IOError) as e:
@@ -709,12 +644,9 @@ class MainContentController(QObject):
             return
 
         # Create human-readable version
-        timezone_abbreviation = (
-            datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-        )
+        timezone_abbreviation = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
         database_version_human_readable = (
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(database_version))
-            + f" {timezone_abbreviation}"
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(database_version)) + f" {timezone_abbreviation}"
         )
         # Initialize GitHub API
         try:
@@ -842,27 +774,20 @@ class MainContentController(QObject):
 
                 # Step 1: Check if there are uncommitted changes and stash them
                 if git_utils.git_has_uncommitted_changes(repo, config):
-                    logger.info(
-                        "Uncommitted changes detected, stashing them before pull"
-                    )
+                    logger.info("Uncommitted changes detected, stashing them before pull")
                     stash_result = git_utils.git_stash(
                         repo,
                         message="Auto-stash before database upload pull",
                         config=config,
                     )
-                    if (
-                        stash_result.is_successful()
-                        and stash_result == git_utils.GitStashResult.STASHED
-                    ):
+                    if stash_result.is_successful() and stash_result == git_utils.GitStashResult.STASHED:
                         stash_created = True
                         logger.info("Successfully stashed uncommitted changes")
                     elif not stash_result.is_successful():
                         logger.error(f"Failed to stash changes: {stash_result}")
                         InformationBox(
                             title=self.tr("Stash failed"),
-                            text=self.tr(
-                                "Failed to stash uncommitted changes before pull."
-                            ),
+                            text=self.tr("Failed to stash uncommitted changes before pull."),
                             information=str(stash_result),
                         ).exec()
                         return
@@ -883,12 +808,8 @@ class MainContentController(QObject):
                         logger.error("Merge conflicts detected during pull")
                         InformationBox(
                             title=self.tr("Pull conflict"),
-                            text=self.tr(
-                                "Merge conflicts encountered during pull operation."
-                            ),
-                            information=self.tr(
-                                "Please manually resolve conflicts and try again."
-                            ),
+                            text=self.tr("Merge conflicts encountered during pull operation."),
+                            information=self.tr("Please manually resolve conflicts and try again."),
                         ).exec()
                         return
                     else:
@@ -904,9 +825,7 @@ class MainContentController(QObject):
                 commit_message = f"DB Update: {database_version_human_readable}"
                 # Step 4: Restore stashed changes with automatic conflict resolution
                 if stash_created:
-                    logger.info(
-                        "Restoring stashed changes on main branch after successful pull"
-                    )
+                    logger.info("Restoring stashed changes on main branch after successful pull")
 
                     # Store current HEAD before attempting stash pop for potential rollback
                     current_head_after_pull = repo.head.target
@@ -918,9 +837,7 @@ class MainContentController(QObject):
                     )
 
                     if not unstash_result.is_successful():
-                        logger.warning(
-                            f"Failed to restore stashed changes: {unstash_result}"
-                        )
+                        logger.warning(f"Failed to restore stashed changes: {unstash_result}")
 
                         # Check if there are merge conflicts in the working directory
                         conflict_detected = False
@@ -933,31 +850,23 @@ class MainContentController(QObject):
 
                             if conflict_files:
                                 conflict_detected = True
-                                logger.error(
-                                    f"Merge conflicts detected in files: {conflict_files}"
-                                )
+                                logger.error(f"Merge conflicts detected in files: {conflict_files}")
 
                                 # Automatic conflict resolution: Reset to clean state
                                 logger.info(
                                     "Automatically resolving conflicts by resetting to clean state"
                                 )  # Reset the working directory and index to clean state
-                                repo.reset(
-                                    current_head_after_pull, pygit2.enums.ResetMode.HARD
-                                )
+                                repo.reset(current_head_after_pull, pygit2.enums.ResetMode.HARD)
 
                                 # Clear any remaining conflicted state
                                 repo.state_cleanup()
 
-                                logger.info(
-                                    "Repository reset to clean state after conflicts"
-                                )
+                                logger.info("Repository reset to clean state after conflicts")
 
                                 # Inform user about the automatic resolution
                                 InformationBox(
                                     title=self.tr("Conflicts Auto-Resolved"),
-                                    text=self.tr(
-                                        "Merge conflicts were detected and automatically resolved."
-                                    ),
+                                    text=self.tr("Merge conflicts were detected and automatically resolved."),
                                     information=self.tr(
                                         "Your local changes conflicted with remote changes. "
                                         "The repository has been reset to a clean state with the latest remote changes. "
@@ -970,14 +879,10 @@ class MainContentController(QObject):
                         # If conflicts were detected and resolved, continue with clean state
                         # If no conflicts but still failed, show warning and continue
                         if not conflict_detected:
-                            logger.warning(
-                                "Stash pop failed but no conflicts detected, continuing..."
-                            )
+                            logger.warning("Stash pop failed but no conflicts detected, continuing...")
                             InformationBox(
                                 title=self.tr("Stash restore warning"),
-                                text=self.tr(
-                                    "Failed to restore stashed changes, but no conflicts detected."
-                                ),
+                                text=self.tr("Failed to restore stashed changes, but no conflicts detected."),
                                 information=self.tr(
                                     "Continuing with current state. Your database changes should still be present."
                                 ),
@@ -1004,9 +909,7 @@ class MainContentController(QObject):
 
                     # IMPORTANT: Don't switch branches yet! Keep the changes in the working directory
                     # We'll switch after committing the changes
-                    logger.info(
-                        f"Created branch: {branch_name} (will switch after commit)"
-                    )
+                    logger.info(f"Created branch: {branch_name} (will switch after commit)")
                 except Exception as e:
                     logger.error(f"Failed to create branch {branch_name}: {e}")
                     InformationBox(
@@ -1017,17 +920,13 @@ class MainContentController(QObject):
                     return
 
                 # Step 6: Verify changes are still present in working directory
-                logger.info(
-                    "Verifying changes are present in working directory before staging"
-                )
+                logger.info("Verifying changes are present in working directory before staging")
 
                 # Quick verification that we have uncommitted changes as expected
                 if git_utils.git_has_uncommitted_changes(repo, config):
                     logger.info("Uncommitted changes confirmed in working directory")
                 else:
-                    logger.warning(
-                        "No uncommitted changes detected in working directory"
-                    )
+                    logger.warning("No uncommitted changes detected in working directory")
                     # Don't return here - let git_stage_commit make the final determination
 
                 # Log the current working tree status before staging
@@ -1051,9 +950,7 @@ class MainContentController(QObject):
                 logger.info(f"Stage and commit result: {stage_commit_result}")
 
                 if stage_commit_result == git_utils.GitStageCommitResult.COMMITTED:
-                    logger.info(
-                        "Successfully staged and committed changes on main branch"
-                    )
+                    logger.info("Successfully staged and committed changes on main branch")
 
                     # Now move the commit to the new branch
                     try:
@@ -1070,16 +967,12 @@ class MainContentController(QObject):
                         main_branch = repo.branches.local["main"]
                         main_branch.set_target(current_commit_oid)
 
-                        logger.info(
-                            f"Moved commit to branch: {branch_name} and reset main branch"
-                        )
+                        logger.info(f"Moved commit to branch: {branch_name} and reset main branch")
                     except Exception as e:
                         logger.error(f"Failed to move commit to new branch: {e}")
                         # If this fails, the commit is still on main, but we can continue
                         # Just switch to the new branch and the commit will be duplicated
-                        repo.head.set_target(
-                            branch_ref.target
-                        )  # Push to user's fork with the new branch
+                        repo.head.set_target(branch_ref.target)  # Push to user's fork with the new branch
                     push_result = git_utils.git_push(
                         repo=repo,
                         branch=branch_name,
@@ -1100,12 +993,8 @@ class MainContentController(QObject):
                             database_version_human_readable=database_version_human_readable,
                             commit_message=commit_message,
                         )
-                    elif (
-                        push_result == git_utils.GitPushResult.REJECTED_NON_FAST_FORWARD
-                    ):
-                        logger.warning(
-                            "Push rejected due to non-fast-forward. Attempting force push."
-                        )
+                    elif push_result == git_utils.GitPushResult.REJECTED_NON_FAST_FORWARD:
+                        logger.warning("Push rejected due to non-fast-forward. Attempting force push.")
 
                         # For a feature branch in a fork, force push is generally safe
                         # since it's a new branch that only we are working on
@@ -1134,9 +1023,7 @@ class MainContentController(QObject):
                             else:
                                 InformationBox(
                                     title=self.tr("Force push failed"),
-                                    text=self.tr(
-                                        "Failed to force push changes to fork."
-                                    ),
+                                    text=self.tr("Failed to force push changes to fork."),
                                     information=str(push_result_force),
                                 ).exec()
 
@@ -1144,9 +1031,7 @@ class MainContentController(QObject):
                             logger.error(f"Error during force push: {e}")
                             InformationBox(
                                 title=self.tr("Force push error"),
-                                text=self.tr(
-                                    "Error occurred while force pushing to remote."
-                                ),
+                                text=self.tr("Error occurred while force pushing to remote."),
                                 information=str(e),
                             ).exec()
                     else:
@@ -1160,9 +1045,7 @@ class MainContentController(QObject):
                     InformationBox(
                         title=self.tr("No changes"),
                         text=self.tr("No changes detected in database file."),
-                        information=self.tr(
-                            "The database appears to be up to date with the remote repository."
-                        ),
+                        information=self.tr("The database appears to be up to date with the remote repository."),
                     ).exec()
                     return
                 # Stop execution here since there's nothing to push or create PR for
@@ -1192,9 +1075,7 @@ class MainContentController(QObject):
                                 repo.checkout(main_branch)
                                 logger.info("Switched back to main branch")
                             else:
-                                logger.warning(
-                                    "Main branch not found, staying on current branch"
-                                )
+                                logger.warning("Main branch not found, staying on current branch")
                         except Exception as e:
                             logger.warning(f"Failed to switch to main branch: {e}")
             except Exception as e:
@@ -1271,12 +1152,8 @@ class MainContentController(QObject):
         """Ask user for confirmation before uploading Steam Workshop database."""
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Upload Steam Workshop Database"),
-            text=self.tr(
-                "Are you sure you want to upload the Steam Workshop database to GitHub?"
-            ),
-            information=self.tr(
-                "This will create a pull request with your local database changes."
-            ),
+            text=self.tr("Are you sure you want to upload the Steam Workshop database to GitHub?"),
+            information=self.tr("This will create a pull request with your local database changes."),
             positive_text=self.tr("Upload"),
             negative_text=self.tr("Cancel"),
         )
@@ -1294,12 +1171,8 @@ class MainContentController(QObject):
         """Ask user for confirmation before uploading Community Rules database."""
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Upload Community Rules Database"),
-            text=self.tr(
-                "Are you sure you want to upload the Community Rules database to GitHub?"
-            ),
-            information=self.tr(
-                "This will create a pull request with your local database changes."
-            ),
+            text=self.tr("Are you sure you want to upload the Community Rules database to GitHub?"),
+            information=self.tr("This will create a pull request with your local database changes."),
             positive_text=self.tr("Upload"),
             negative_text=self.tr("Cancel"),
         )
@@ -1313,19 +1186,13 @@ class MainContentController(QObject):
             logger.debug("User cancelled Community Rules database upload.")
 
     @Slot(object)
-    def _handle_batch_update_results_silent(
-        self, results: GitBatchUpdateResults
-    ) -> None:
+    def _handle_batch_update_results_silent(self, results: GitBatchUpdateResults) -> None:
         """Process results from GitBatchUpdateWorker silently."""
         successful = results.successful
         failed = results.failed
 
         if successful:
-            logger.info(
-                f"Silently updated {len(successful)} database repositories successfully"
-            )
+            logger.info(f"Silently updated {len(successful)} database repositories successfully")
 
         if failed:
-            logger.warning(
-                f"Failed to update {len(failed)} database repositories: {[str(p) for p, e in failed]}"
-            )
+            logger.warning(f"Failed to update {len(failed)} database repositories: {[str(p) for p, e in failed]}")
