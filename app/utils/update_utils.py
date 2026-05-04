@@ -1789,9 +1789,10 @@ class UpdateManager(QObject):
 
         # For systems requiring elevation, copy script to temp location to avoid permission issues
         if needs_elevation:
-            temp_script_path = os.path.join(tempfile.gettempdir(), os.path.basename(script_path))
+            fd, temp_script_path = tempfile.mkstemp(suffix=".sh", prefix="rimsort_update_")
+            os.close(fd)
             shutil.copy2(str(script_path), temp_script_path)
-            os.chmod(temp_script_path, 0o755)
+            os.chmod(temp_script_path, 0o700)
             logger.debug(f"Copied script to temp location: {temp_script_path}")
             script_path = Path(temp_script_path)
             # Rebuild args_repr with the new script path
@@ -1879,11 +1880,11 @@ class UpdateManager(QObject):
             logger.warning(f"Could not create log directory: {e}")
 
         # Build msiexec command
-        cmd = f'msiexec /i "{msi_path}" /passive /norestart /log "{log_path}"'
+        cmd = ["msiexec", "/i", str(msi_path), "/passive", "/norestart", "/log", str(log_path)]
 
         try:
             logger.info(f"Launching MSI installer: {msi_path}")
-            subprocess.Popen(cmd, shell=True)
+            subprocess.Popen(cmd)
             self.update_progress.emit(100, "Update launched!")
             logger.info("MSI launched, exiting RimSort to allow file replacement")
 

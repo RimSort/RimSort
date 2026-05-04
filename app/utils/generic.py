@@ -493,7 +493,6 @@ def launch_process(
             p = subprocess.Popen(
                 popen_args,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                shell=True,
                 cwd=cwd,
                 env=env,
             )
