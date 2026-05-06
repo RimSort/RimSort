@@ -207,8 +207,13 @@ class InstanceController(QObject):
         try:
             logger.info(f"Extracting to: {self.instance_folder_path}")
             with ZipFile(archive_path, "r") as archive:
+                real_target = os.path.realpath(self.instance_folder_path)
                 for info in archive.infolist():
                     if info.filename == "instance.json":
+                        continue
+                    dst = os.path.realpath(os.path.join(self.instance_folder_path, info.filename))
+                    if not (dst.startswith(real_target + os.sep) or dst == real_target):
+                        logger.warning(f"Zip slip detected, skipping entry: {info.filename}")
                         continue
                     logger.debug(f"Extracting file: {info.filename}")
                     archive.extract(info, path=self.instance_folder_path)
