@@ -119,10 +119,11 @@ class GitOperationConfig:
         return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
 
 
-def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
+def _fetch_with_timeout(repo: Repository, remote: pygit2.Remote, timeout: int) -> bool:
     """Fetch from remote with timeout handling.
 
     Args:
+        repo: The git repository object.
         remote: The pygit2 remote object.
         timeout: Timeout in seconds.
 
@@ -149,6 +150,8 @@ def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
     if fetch_thread.is_alive():
         # Timeout occurred
         logger.warning(f"Fetch operation timed out after {timeout} seconds")
+        # Prevent the repository from being freed while the C-level fetch is still running
+        setattr(repo, "_has_hanging_threads", True)
         return False
 
     if result["error"]:
@@ -737,7 +740,7 @@ def git_check_updates(repo: Repository, config: Optional[GitOperationConfig] = N
             logger.warning("No 'origin' remote found in repository")
             return None  # Fetch updates from remote with timeout
         try:
-            if not _fetch_with_timeout(remote, config.fetch_timeout):
+            if not _fetch_with_timeout(repo, remote, config.fetch_timeout):
                 logger.error(f"Fetch operation timed out after {config.fetch_timeout} seconds")
                 return None
         except Exception as e:
@@ -838,7 +841,7 @@ def git_pull(
 
         # Fetch updates from remote with timeout
         try:
-            if not _fetch_with_timeout(remote, config.fetch_timeout):
+            if not _fetch_with_timeout(repo, remote, config.fetch_timeout):
                 logger.error(f"Fetch operation timed out after {config.fetch_timeout} seconds")
                 return GitPullResult.GIT_ERROR
         except Exception as e:
@@ -1348,6 +1351,10 @@ def git_cleanup(repo: Repository) -> None:
     Args:
         repo: The repository to clean up.
     """
+    if getattr(repo, "_has_hanging_threads", False):
+        logger.warning(f"Skipping repo.free() for {repo.path} because of hanging fetch thread")
+        return
+
     repo.state_cleanup()
     repo.free()
     logger.debug(f"Git repository cleaned up: {repo.path}")
