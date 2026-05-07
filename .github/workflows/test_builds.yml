@@ -71,14 +71,14 @@ jobs:
         shell: bash
 
       - name: Download AppImage artifact
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         uses: actions/download-artifact@v8.0.1
         with:
           pattern: "${{ matrix.platform }}_${{ matrix.arch }}_appimage"
           path: appimage-test
 
       - name: Install libfuse2 for AppImage
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libfuse2 || sudo apt-get install -y libfuse2t64
@@ -133,7 +133,7 @@ jobs:
         shell: bash
 
       - name: Test AppImage
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         run: |
           APPIMAGE=$(find appimage-test/ -name "*.AppImage" | head -n 1)
           if [[ -z "$APPIMAGE" ]]; then

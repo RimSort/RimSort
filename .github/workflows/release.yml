@@ -120,7 +120,6 @@ jobs:
           mv artifacts/Fedora-42_x86_64_rpm artifacts/rpm-f42 || true
           mv artifacts/Fedora-43_x86_64_rpm artifacts/rpm-f43 || true
           mv artifacts/Ubuntu-22.04_x86_64_appimage artifacts/appimage-u2204 || true
-          mv artifacts/Ubuntu-24.04_x86_64_appimage artifacts/appimage-u2404 || true
           cd artifacts
           for artifact in ./*; do
             file=${artifact##*/}
@@ -141,12 +140,7 @@ jobs:
               cd ..
             elif [[ "$file" == "appimage-u2204" ]]; then
               cd "$artifact"
-              name="RimSort-${{ needs.pre-build.outputs.version }}-Ubuntu-22.04_x86_64.AppImage"
-              mv ./*.AppImage "../$name"
-              cd ..
-            elif [[ "$file" == "appimage-u2404" ]]; then
-              cd "$artifact"
-              name="RimSort-${{ needs.pre-build.outputs.version }}-Ubuntu-24.04_x86_64.AppImage"
+              name="RimSort-${{ needs.pre-build.outputs.version }}-x86_64.AppImage"
               mv ./*.AppImage "../$name"
               cd ..
             else

@@ -245,7 +245,7 @@ jobs:
           subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
 
       - name: Build AppImage
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         run: |
           bash packaging/appimage/build-appimage.sh \
             "build/${{ matrix.env.BUILD_OUTPUT }}" \
@@ -253,7 +253,7 @@ jobs:
         shell: bash
 
       - name: Find AppImage
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         id: find_appimage
         run: |
           APPIMAGE=$(find build/ -name "RimSort-*.AppImage" | head -n 1)
@@ -267,12 +267,12 @@ jobs:
 
       - name: Generate AppImage attestation
         uses: actions/attest-build-provenance@v4.1.0
-        if: ${{ inputs.attest && startsWith(matrix.platform, 'Ubuntu') }}
+        if: ${{ inputs.attest && matrix.platform == 'Ubuntu-22.04' }}
         with:
           subject-path: ${{ steps.find_appimage.outputs.APPIMAGE }}
 
       - name: Upload AppImage
-        if: startsWith(matrix.platform, 'Ubuntu')
+        if: matrix.platform == 'Ubuntu-22.04'
         uses: actions/upload-artifact@main
         with:
           name: ${{ matrix.platform }}_${{ matrix.arch }}_appimage
