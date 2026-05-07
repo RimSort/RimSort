@@ -180,7 +180,7 @@ jobs:
           wait
           echo "Cleaning up - Removing non-zip files"
           shopt -s extglob
-          rm -rf -- ./!(*.zip|*.msi|*.AppImage)
+          rm -rf -- ./!(*.zip|*.msi|*.rpm|*.AppImage)
         shell: bash
 
       - name: Create body

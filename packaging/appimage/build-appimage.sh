@@ -10,7 +10,7 @@ VERSION="${2:?Usage: build-appimage.sh <app.dist path> <version>}"
 APP_DIST="$(cd "$APP_DIST" && pwd)"
 BUILD_DIR="${REPO_ROOT}/build"
 APPDIR="${BUILD_DIR}/RimSort-x86_64.AppDir"
-LINUXDEPLOY="${BUILD_DIR}/linuxdeploy-x86_64.AppImage"
+APPIMAGETOOL="${BUILD_DIR}/appimagetool-x86_64.AppImage"
 OUTPUT="${BUILD_DIR}/RimSort-${VERSION}-x86_64.AppImage"
 
 DESKTOP_FILE="${REPO_ROOT}/data/io.github.rimsort.RimSort.desktop"
@@ -43,7 +43,9 @@ done
 rm -rf "$APPDIR" "$OUTPUT"
 mkdir -p "$APPDIR"
 
-# Copy entire Nuitka output into usr/bin/ to preserve relative path layout
+# Copy entire Nuitka output into usr/bin/ to preserve relative path layout.
+# Nuitka standalone mode places the executable alongside its bundled .so files
+# and expects them to remain as siblings — do NOT split into usr/bin and usr/lib.
 echo "Copying Nuitka output to AppDir..."
 mkdir -p "${APPDIR}/usr/bin"
 cp -a "${APP_DIST}/." "${APPDIR}/usr/bin/"
@@ -58,26 +60,36 @@ cp "$DESKTOP_FILE" "${APPDIR}/usr/share/applications/"
 cp "$ICON_FILE" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/io.github.rimsort.RimSort.png"
 cp "$METAINFO_FILE" "${APPDIR}/usr/share/metainfo/"
 
-# Download linuxdeploy if not cached
-if [[ ! -f "$LINUXDEPLOY" ]]; then
-    echo "Downloading linuxdeploy..."
-    curl -fSL -o "$LINUXDEPLOY" \
-        "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
-    chmod +x "$LINUXDEPLOY"
+# Create AppRun entry point — a simple wrapper that execs the Nuitka binary.
+# We use a custom AppRun instead of linuxdeploy's --executable flag to avoid
+# patchelf rewriting Nuitka's RPATH layout.
+cat > "${APPDIR}/AppRun" << 'APPRUN_EOF'
+#!/usr/bin/env bash
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+HERE="${SELF%/*}"
+exec "${HERE}/usr/bin/RimSort" "$@"
+APPRUN_EOF
+chmod +x "${APPDIR}/AppRun"
+
+# Symlink desktop file and icon to AppDir root (required by AppImage spec)
+ln -sf usr/share/applications/io.github.rimsort.RimSort.desktop "${APPDIR}/io.github.rimsort.RimSort.desktop"
+ln -sf usr/share/icons/hicolor/256x256/apps/io.github.rimsort.RimSort.png "${APPDIR}/io.github.rimsort.RimSort.png"
+ln -sf io.github.rimsort.RimSort.png "${APPDIR}/.DirIcon"
+
+# Download appimagetool if not cached
+if [[ ! -f "$APPIMAGETOOL" ]]; then
+    echo "Downloading appimagetool..."
+    curl -fSL -o "$APPIMAGETOOL" \
+        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+    chmod +x "$APPIMAGETOOL"
 fi
 
-# Build the AppImage
-echo "Running linuxdeploy..."
-export LDAI_OUTPUT="$OUTPUT"
-export LINUXDEPLOY_OUTPUT_VERSION="$VERSION"
-
-# Use --appimage-extract-and-run to avoid FUSE dependency in CI
-APPIMAGE_EXTRACT_AND_RUN=1 "$LINUXDEPLOY" \
-    --appdir "$APPDIR" \
-    --executable "${APPDIR}/usr/bin/RimSort" \
-    --desktop-file "${APPDIR}/usr/share/applications/io.github.rimsort.RimSort.desktop" \
-    --icon-file "${APPDIR}/usr/share/icons/hicolor/256x256/apps/io.github.rimsort.RimSort.png" \
-    --output appimage
+# Build the AppImage using appimagetool directly.
+# We skip linuxdeploy because Nuitka already bundles all dependencies —
+# linuxdeploy's --executable flag would run patchelf and corrupt Nuitka's RPATHs.
+echo "Running appimagetool..."
+export VERSION="$VERSION"
+ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
 
 echo "=== AppImage built successfully ==="
 ls -lh "$OUTPUT"
