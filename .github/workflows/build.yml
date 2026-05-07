@@ -257,6 +257,10 @@ jobs:
         id: find_appimage
         run: |
           APPIMAGE=$(find build/ -name "RimSort-*.AppImage" | head -n 1)
+          if [[ -z "$APPIMAGE" ]]; then
+            echo "ERROR: No AppImage found in build/" >&2
+            exit 1
+          fi
           echo "APPIMAGE=$APPIMAGE" >> "$GITHUB_OUTPUT"
           echo "AppImage found at $APPIMAGE"
         shell: bash

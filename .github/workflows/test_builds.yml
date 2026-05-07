@@ -32,14 +32,14 @@ jobs:
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
-              ARTIFACT_KEY: "Ubuntu-22.04_x86_64 "
+              ARTIFACT_KEY_GLOB: "Ubuntu-22.04_x86_64"
+              ARTIFACT_KEY: "Ubuntu-22.04_x86_64"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
+              ARTIFACT_KEY_GLOB: "Ubuntu-24.04_x86_64"
               ARTIFACT_KEY: "Ubuntu-24.04_x86_64"
               EXPECTED_NAME: "RimSort"
           - os: windows-latest
@@ -81,7 +81,7 @@ jobs:
         if: startsWith(matrix.platform, 'Ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2
+          sudo apt-get install -y libfuse2 || sudo apt-get install -y libfuse2t64
         shell: bash
 
       - name: Find executable

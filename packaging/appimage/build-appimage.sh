@@ -69,9 +69,10 @@ fi
 # Build the AppImage
 echo "Running linuxdeploy..."
 export LDAI_OUTPUT="$OUTPUT"
-export VERSION="$VERSION"
+export LINUXDEPLOY_OUTPUT_VERSION="$VERSION"
 
-"$LINUXDEPLOY" \
+# Use --appimage-extract-and-run to avoid FUSE dependency in CI
+APPIMAGE_EXTRACT_AND_RUN=1 "$LINUXDEPLOY" \
     --appdir "$APPDIR" \
     --executable "${APPDIR}/usr/bin/RimSort" \
     --desktop-file "${APPDIR}/usr/share/applications/io.github.rimsort.RimSort.desktop" \
