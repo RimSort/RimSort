@@ -7,17 +7,31 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 APP_DIST="${1:?Usage: build-appimage.sh <app.dist path> <version>}"
 VERSION="${2:?Usage: build-appimage.sh <app.dist path> <version>}"
 
+# Detect architecture from the host or allow override via ARCH env var
+ARCH="${ARCH:-$(uname -m)}"
+case "$ARCH" in
+    x86_64)  APPIMAGE_ARCH="x86_64" ;;
+    aarch64) APPIMAGE_ARCH="aarch64" ;;
+    armv7l)  APPIMAGE_ARCH="armhf" ;;
+    i686)    APPIMAGE_ARCH="i686" ;;
+    *)
+        echo "ERROR: Unsupported architecture: ${ARCH}" >&2
+        exit 1
+        ;;
+esac
+
 APP_DIST="$(cd "$APP_DIST" && pwd)"
 BUILD_DIR="${REPO_ROOT}/build"
-APPDIR="${BUILD_DIR}/RimSort-x86_64.AppDir"
-APPIMAGETOOL="${BUILD_DIR}/appimagetool-x86_64.AppImage"
-OUTPUT="${BUILD_DIR}/RimSort-${VERSION}-x86_64.AppImage"
+APPDIR="${BUILD_DIR}/RimSort-${APPIMAGE_ARCH}.AppDir"
+APPIMAGETOOL="${BUILD_DIR}/appimagetool-${APPIMAGE_ARCH}.AppImage"
+APPIMAGETOOL_EXTRACTED="${BUILD_DIR}/appimagetool-extracted/AppRun"
+OUTPUT="${BUILD_DIR}/RimSort-${VERSION}-${APPIMAGE_ARCH}.AppImage"
 
 DESKTOP_FILE="${REPO_ROOT}/data/io.github.rimsort.RimSort.desktop"
 ICON_FILE="${REPO_ROOT}/themes/default-icons/AppIcon_a.png"
 METAINFO_FILE="${REPO_ROOT}/data/io.github.rimsort.RimSort.metainfo.xml"
 
-echo "=== Building AppImage for RimSort ${VERSION} ==="
+echo "=== Building AppImage for RimSort ${VERSION} (${APPIMAGE_ARCH}) ==="
 echo "  app.dist: ${APP_DIST}"
 echo "  AppDir:   ${APPDIR}"
 
@@ -76,12 +90,22 @@ ln -sf usr/share/applications/io.github.rimsort.RimSort.desktop "${APPDIR}/io.gi
 ln -sf usr/share/icons/hicolor/256x256/apps/io.github.rimsort.RimSort.png "${APPDIR}/io.github.rimsort.RimSort.png"
 ln -sf io.github.rimsort.RimSort.png "${APPDIR}/.DirIcon"
 
-# Download appimagetool if not cached
-if [[ ! -f "$APPIMAGETOOL" ]]; then
-    echo "Downloading appimagetool..."
+# Download appimagetool if not present (either as AppImage or pre-extracted)
+if [[ ! -f "$APPIMAGETOOL_EXTRACTED" && ! -f "$APPIMAGETOOL" ]]; then
+    echo "Downloading appimagetool (${APPIMAGE_ARCH})..."
     curl -fSL -o "$APPIMAGETOOL" \
-        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage"
     chmod +x "$APPIMAGETOOL"
+fi
+
+# Determine how to run appimagetool:
+# 1. If pre-extracted (e.g. in environments where AppImage execution is problematic), use that
+# 2. Otherwise use APPIMAGE_EXTRACT_AND_RUN=1 to avoid FUSE dependency
+if [[ -f "$APPIMAGETOOL_EXTRACTED" ]]; then
+    APPIMAGETOOL_CMD="$APPIMAGETOOL_EXTRACTED"
+else
+    APPIMAGETOOL_CMD="$APPIMAGETOOL"
+    export APPIMAGE_EXTRACT_AND_RUN=1
 fi
 
 # Build the AppImage using appimagetool directly.
@@ -89,7 +113,7 @@ fi
 # linuxdeploy's --executable flag would run patchelf and corrupt Nuitka's RPATHs.
 echo "Running appimagetool..."
 export VERSION="$VERSION"
-ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
+ARCH="$APPIMAGE_ARCH" "$APPIMAGETOOL_CMD" "$APPDIR" "$OUTPUT"
 
 echo "=== AppImage built successfully ==="
 ls -lh "$OUTPUT"
