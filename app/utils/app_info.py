@@ -1,6 +1,7 @@
 import json
-import os
 import sys
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as pkg_version
 from pathlib import Path
 
 from lxml import etree, objectify
@@ -59,19 +60,7 @@ class AppInfo:
         self._app_name = "RimSort"
         self._app_copyright = ""
 
-        self._app_version = "Unknown version"
-        version_file = str(self._application_folder / "version.xml")
-        if os.path.exists(version_file):
-            root = objectify.parse(version_file, parser=etree.XMLParser(recover=True))
-            ver = root.find("version")
-            if ver is not None and ver.text is not None:
-                self._app_version = ver.text
-
-            # If edge in version_string, append short sha
-            if "edge" in self._app_version.lower():
-                commit = root.find("commit")
-                if commit is not None and commit.text is not None:
-                    self._app_version += f"+{commit[:7]}"
+        self._app_version = self._detect_version()
 
         # Define important directories using platformdirs
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
@@ -117,6 +106,34 @@ class AppInfo:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
 
         self._is_initialized: bool = True
+
+    def _detect_version(self) -> str:
+        """
+        Detect application version from available sources.
+
+        Priority:
+        1. version.xml (present in Nuitka-compiled builds)
+        2. importlib.metadata (present when installed from source via uv/pip)
+        3. Fallback to "Unknown version"
+        """
+        version_file = self._application_folder / "version.xml"
+        if version_file.exists():
+            try:
+                root = objectify.parse(
+                    str(version_file), parser=etree.XMLParser(recover=True)
+                )
+                ver = root.find("version")
+                if ver is not None and ver.text is not None:
+                    return str(ver.text)
+            except Exception:
+                pass
+
+        try:
+            return pkg_version("rimsort")
+        except PackageNotFoundError:
+            pass
+
+        return "Unknown version"
 
     @property
     def app_name(self) -> str:
