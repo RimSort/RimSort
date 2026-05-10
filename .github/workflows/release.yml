@@ -169,7 +169,7 @@ jobs:
           wait
           echo "Cleaning up - Removing non-archive files"
           shopt -s extglob
-          rm -rf -- ./!(*.zip|*.tar.gz|*.msi)
+          rm -rf -- ./!(*.zip|*.tar.gz|*.msi|*.rpm)
         shell: bash
 
       - name: Create body

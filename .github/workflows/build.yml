@@ -72,7 +72,7 @@ jobs:
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
-              BUILD_RPM: true
+              BUILD_RPM: "true"
           - os: ubuntu-latest
             container: fedora:43
             platform: "Fedora-43"
@@ -80,7 +80,7 @@ jobs:
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
-              BUILD_RPM: true
+              BUILD_RPM: "true"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
