@@ -260,7 +260,8 @@ jobs:
       - name: Rename new build
         run: |
           cd build
-          if [[ "${{ matrix.platform }}" == *"Darwin"* ]]; then
+          platform="${{ matrix.platform }}"
+          if [[ "$platform" == *"Darwin"* ]]; then
             rootname="RimSort.app"
           else
             rootname="RimSort"
