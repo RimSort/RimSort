@@ -148,6 +148,8 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: uv sync --locked --no-dev --group build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: "${{ steps.sem_version.outputs.version }}"
 
       - name: Build Actions
         shell: bash
