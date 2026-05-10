@@ -182,3 +182,6 @@ ltex.dictionary*
 # Translation cache
 .translation_cache.json
 nuitka-crash-report.xml
+
+# hatch-vcs generated version file
+app/_version.py
