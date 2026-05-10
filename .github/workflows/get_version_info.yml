@@ -69,13 +69,13 @@ jobs:
         id: version_format
         run: |
           if [[ "${{ inputs.type }}" == "Stable" ]]; then
-              v_format="v\${major}.\${minor}.\${patch}"
+              v_format="\${major}.\${minor}.\${patch}"
               prerelease=false
           elif [[ "${{ inputs.type }}" == "Edge" ]]; then
-              v_format="v\${major}.\${minor}.\${patch}-edge\${increment}"
+              v_format="\${major}.\${minor}.\${patch}rc\${increment}"
               prerelease=true
           elif [[ "${{ inputs.type }}" == "Auto-Build" ]]; then
-              v_format="v\${major}.\${minor}.\${patch}-auto\${increment}"
+              v_format="\${major}.\${minor}.\${patch}.dev\${increment}"
               prerelease=true
           else
               echo "Unknown type: ${{ inputs.type }}"
@@ -113,7 +113,7 @@ jobs:
           if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
                     version="${{ steps.sem_version.outputs.version}}"
           else
-            version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
+            version="${{ steps.sem_version.outputs.version}}+g${{steps.short_sha.outputs.short_sha}}"
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
