@@ -56,7 +56,9 @@ EOF
 
 %build
 # Sync dependencies using uv
-uv sync --locked --no-dev --group build
+# SETUPTOOLS_SCM_PRETEND_VERSION is required because hatch-vcs cannot
+# detect the version from git tags in a tarball-based build environment
+SETUPTOOLS_SCM_PRETEND_VERSION='%{version}' uv sync --locked --no-dev --group build
 
 # Build using the existing distribute.py script
 # Skip git submodule init (already in tarball), use pre-built SteamworksPy libs, download todds

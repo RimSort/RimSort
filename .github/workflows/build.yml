@@ -6,7 +6,7 @@ on:
         description: "Versioning format"
         required: false
         type: string
-        default: "v${major}.${minor}.${patch}"
+        default: "${major}.${minor}.${patch}"
       attest:
         description: "Generate attestations"
         required: false
@@ -19,7 +19,7 @@ on:
         description: "Versioning format"
         required: false
         type: string
-        default: "v${major}.${minor}.${patch}"
+        default: "${major}.${minor}.${patch}"
       attest:
         description: "Generate attestations"
         required: false
