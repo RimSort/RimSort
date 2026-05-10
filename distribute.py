@@ -426,9 +426,7 @@ def post_build_optimize_macos_bundle() -> None:
             return
         for bundle in bundles:
             print(f"Optimizing macOS bundle: {bundle}")
-            _execute(
-                [PY_CMD, os.path.join(_CWD, "packaging", "optimize_macos_bundle.py"), bundle]
-            )
+            _execute([PY_CMD, os.path.join(_CWD, "packaging", "optimize_macos_bundle.py"), bundle])
     except Exception as e:
         print(f"Warning: post_build_optimize_macos_bundle failed: {e}")
 
