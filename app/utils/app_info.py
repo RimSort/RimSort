@@ -119,9 +119,7 @@ class AppInfo:
         version_file = self._application_folder / "version.xml"
         if version_file.exists():
             try:
-                root = objectify.parse(
-                    str(version_file), parser=etree.XMLParser(recover=True)
-                )
+                root = objectify.parse(str(version_file), parser=etree.XMLParser(recover=True))
                 ver = root.find("version")
                 if ver is not None and ver.text is not None:
                     return str(ver.text)
