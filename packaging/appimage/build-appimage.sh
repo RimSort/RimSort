@@ -124,12 +124,23 @@ if ! "$APPIMAGETOOL_CMD" --version &>/dev/null; then
     fi
 fi
 
+# Remove .ts translation source files — only compiled .qm files are needed at runtime
+echo "Removing .ts locale source files..."
+find "${APPDIR}" -name "*.ts" -type f | while read -r ts_file; do
+    qm_file="${ts_file%.ts}.qm"
+    if [[ -f "$qm_file" ]]; then
+        rm -f "$ts_file"
+    fi
+done
+
 # Build the AppImage using appimagetool directly.
 # We skip linuxdeploy because Nuitka already bundles all dependencies —
 # linuxdeploy's --executable flag would run patchelf and corrupt Nuitka's RPATHs.
 echo "Running appimagetool..."
 export VERSION
-ARCH="$APPIMAGE_ARCH" "$APPIMAGETOOL_CMD" "$APPDIR" "$OUTPUT"
+ARCH="$APPIMAGE_ARCH" "$APPIMAGETOOL_CMD" \
+    --mksquashfs-opt -Xcompression-level --mksquashfs-opt 19 \
+    "$APPDIR" "$OUTPUT"
 
 echo "=== AppImage built successfully ==="
 ls -lh "$OUTPUT"
