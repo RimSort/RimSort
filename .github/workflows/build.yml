@@ -65,22 +65,25 @@ jobs:
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
-          - os: ubuntu-latest
-            container: fedora:42
-            platform: "Fedora-42"
-            arch: "x86_64"
-            env:
-              BUILD_OUTPUT: "app.dist"
-              Executable: RimSort
-              BUILD_RPM: "true"
-          - os: ubuntu-latest
-            container: fedora:43
-            platform: "Fedora-43"
-            arch: "x86_64"
-            env:
-              BUILD_OUTPUT: "app.dist"
-              Executable: RimSort
-              BUILD_RPM: "true"
+          # TODO(debt): Fedora/RPM builds disabled — the container: key was never
+          # applied at the job level so these always ran on Ubuntu. Revisit once
+          # AppImage support lands (see PR for appimage-distribution branch).
+          # - os: ubuntu-latest
+          #   container: fedora:42
+          #   platform: "Fedora-42"
+          #   arch: "x86_64"
+          #   env:
+          #     BUILD_OUTPUT: "app.dist"
+          #     Executable: RimSort
+          #     BUILD_RPM: "true"
+          # - os: ubuntu-latest
+          #   container: fedora:43
+          #   platform: "Fedora-43"
+          #   arch: "x86_64"
+          #   env:
+          #     BUILD_OUTPUT: "app.dist"
+          #     Executable: RimSort
+          #     BUILD_RPM: "true"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
