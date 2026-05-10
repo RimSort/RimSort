@@ -180,12 +180,25 @@ jobs:
           include-data-files: |
             version.xml=version.xml
           nofollow-import-to: >-
+            numpy,
             sqlalchemy.dialects.mssql,
             sqlalchemy.dialects.mysql,
             sqlalchemy.dialects.oracle,
             sqlalchemy.dialects.postgresql
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
+
+      - name: Optimize macOS bundle
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          APP_BUNDLE=$(find build/ -name "*.app" -maxdepth 2 | head -n 1)
+          if [ -n "$APP_BUNDLE" ]; then
+            echo "Optimizing $APP_BUNDLE..."
+            python packaging/optimize_macos_bundle.py "$APP_BUNDLE"
+          else
+            echo "No .app bundle found, skipping optimization"
+          fi
 
       - name: Set FILENAME
         id: filename
