@@ -260,9 +260,14 @@ jobs:
       - name: Rename new build
         run: |
           cd build
-          mv "${{ matrix.env.BUILD_OUTPUT }}" "output"
-          tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "output"
-          rm -rf "output"
+          if [[ "${{ matrix.platform }}" == *"Darwin"* ]]; then
+            rootname="RimSort.app"
+          else
+            rootname="RimSort"
+          fi
+          mv "${{ matrix.env.BUILD_OUTPUT }}" "$rootname"
+          tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "$rootname"
+          rm -rf "$rootname"
         shell: bash
 
       - name: Install RPM build dependencies
