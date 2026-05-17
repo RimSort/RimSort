@@ -747,6 +747,18 @@ Deseja configurá-los agora?</translation>
         <translation>Não foi possível salvar os mods ativos no arquivo:</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>Não há caminhos válidos para todds</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>todds não conseguiu encontrar nenhuma pasta mod válida para processar.</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>Nenhum dos caminhos de pasta mod configurados existe no disco. Verifique se as pastas de Mods Locais e Workshop estão definidas corretamente nas Configurações e tente novamente.</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>Confirmar importação ACF</translation>
     </message>

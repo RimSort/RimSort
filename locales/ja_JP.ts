@@ -745,6 +745,18 @@ Would you like to configure them now?</source>
         <translation>アクティブなモッドをファイルに保存できませんでした:</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>トッズに有効なパスがありません</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>todds は処理する有効な MOD フォルダーを見つけることができませんでした。</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>設定された mod フォルダーのパスがディスク上に存在しません。ローカル Mod フォルダーとワークショップ フォルダーが設定で正しく設定されていることを確認してから、もう一度お試しください。</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>ACFインポートを確認する</translation>
     </message>
