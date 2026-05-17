@@ -943,6 +943,18 @@ La base de données résultante, C, est enregistrée sur un chemin spécifié pa
         <translation>Échec de l'enregistrement des mods actifs dans le fichier:</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>Aucun chemin valide pour Todds</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>Todds n'a trouvé aucun dossier de mod valide à traiter.</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>Aucun des chemins de dossier mod configurés n'existe sur le disque. Veuillez vérifier que vos dossiers Local Mods et Workshop sont correctement définis dans Paramètres, puis réessayez.</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>Confirmer l'importation ACF</translation>
     </message>
