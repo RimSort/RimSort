@@ -414,6 +414,23 @@ def post_build_fixup_macos_steamworks() -> None:
         print(f"Warning: post_build_fixup_macos_steamworks failed: {e}")
 
 
+def post_build_optimize_macos_bundle() -> None:
+    """Thin fat binaries in macOS .app bundle to reduce size."""
+    if _SYSTEM != "Darwin":
+        return
+    try:
+        build_dir = os.path.join(_CWD, "build")
+        bundles = _find_macos_bundles(build_dir)
+        if not bundles:
+            print("No .app bundle found in build/ — skipping bundle optimization")
+            return
+        for bundle in bundles:
+            print(f"Optimizing macOS bundle: {bundle}")
+            _execute([PY_CMD, os.path.join(_CWD, "packaging", "optimize_macos_bundle.py"), bundle])
+    except Exception as e:
+        print(f"Warning: post_build_optimize_macos_bundle failed: {e}")
+
+
 def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
@@ -555,6 +572,7 @@ def main() -> None:
         freeze_application()
         # After build, ensure the app bundle contains the generic Steamworks dylib
         post_build_fixup_macos_steamworks()
+        post_build_optimize_macos_bundle()
     else:
         print("Skipped distribute.py build")
 
