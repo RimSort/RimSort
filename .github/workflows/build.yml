@@ -244,6 +244,41 @@ jobs:
         with:
           subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
 
+      - name: Build AppImage
+        if: matrix.platform == 'Ubuntu-22.04'
+        run: |
+          bash packaging/appimage/build-appimage.sh \
+            "build/${{ matrix.env.BUILD_OUTPUT }}" \
+            "${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}"
+        shell: bash
+
+      - name: Find AppImage
+        if: matrix.platform == 'Ubuntu-22.04'
+        id: find_appimage
+        run: |
+          APPIMAGE=$(find build/ -name "RimSort-*.AppImage" | head -n 1)
+          if [[ -z "$APPIMAGE" ]]; then
+            echo "ERROR: No AppImage found in build/" >&2
+            exit 1
+          fi
+          echo "APPIMAGE=$APPIMAGE" >> "$GITHUB_OUTPUT"
+          echo "AppImage found at $APPIMAGE"
+        shell: bash
+
+      - name: Generate AppImage attestation
+        uses: actions/attest-build-provenance@v4.1.0
+        if: ${{ inputs.attest && matrix.platform == 'Ubuntu-22.04' }}
+        with:
+          subject-path: ${{ steps.find_appimage.outputs.APPIMAGE }}
+
+      - name: Upload AppImage
+        if: matrix.platform == 'Ubuntu-22.04'
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.platform }}_${{ matrix.arch }}_appimage
+          path: ${{ steps.find_appimage.outputs.APPIMAGE }}
+          if-no-files-found: error
+
       - name: Rename new build
         run: |
           cd build

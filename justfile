@@ -143,6 +143,10 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
         echo "Warning: Could not find built RPM"
     fi
 
+# Build AppImage from existing Nuitka output (Linux only)
+build-appimage VERSION='1.0.0':
+    bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
+
 # Utilities
 
 # Initialize and update git submodules (run after cloning)

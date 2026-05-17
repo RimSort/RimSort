@@ -26,6 +26,7 @@ class AppController(QObject):
         super().__init__()
 
         self.app = QApplication(sys.argv)
+        self.app.setDesktopFileName("io.github.rimsort.RimSort")
         self.app.setWindowIcon(GUIInfo().app_icon)
 
         # Initialize the application settings.

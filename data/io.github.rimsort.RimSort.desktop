@@ -8,4 +8,5 @@ Categories=Game;Qt;
 
 Icon=io.github.rimsort.RimSort
 Exec=RimSort
+StartupWMClass=io.github.rimsort.RimSort
 Terminal=false

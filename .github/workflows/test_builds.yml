@@ -32,14 +32,14 @@ jobs:
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
-              ARTIFACT_KEY: "Ubuntu-22.04_x86_64 "
+              ARTIFACT_KEY_GLOB: "Ubuntu-22.04_x86_64"
+              ARTIFACT_KEY: "Ubuntu-22.04_x86_64"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
+              ARTIFACT_KEY_GLOB: "Ubuntu-24.04_x86_64"
               ARTIFACT_KEY: "Ubuntu-24.04_x86_64"
               EXPECTED_NAME: "RimSort"
           - os: windows-latest
@@ -68,6 +68,20 @@ jobs:
         run: |
           cd "$(find . -mindepth 1 -type d | head -n 1)"
           tar -xf ./*.tar
+        shell: bash
+
+      - name: Download AppImage artifact
+        if: matrix.platform == 'Ubuntu-22.04'
+        uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: "${{ matrix.platform }}_${{ matrix.arch }}_appimage"
+          path: appimage-test
+
+      - name: Install libfuse2 for AppImage
+        if: matrix.platform == 'Ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2 || sudo apt-get install -y libfuse2t64
         shell: bash
 
       - name: Find executable
@@ -115,5 +129,27 @@ jobs:
             exit "$EXIT_CODE"
           else
             echo "Executable ran successfully"
+          fi
+        shell: bash
+
+      - name: Test AppImage
+        if: matrix.platform == 'Ubuntu-22.04'
+        run: |
+          APPIMAGE=$(find appimage-test/ -name "*.AppImage" | head -n 1)
+          if [[ -z "$APPIMAGE" ]]; then
+            echo "ERROR: No AppImage found in appimage-test/" >&2
+            exit 1
+          fi
+          chmod +x "$APPIMAGE"
+          export QT_QPA_PLATFORM=offscreen
+          timeout 10 "$APPIMAGE" || EXIT_CODE="$?"
+
+          if [[ ${EXIT_CODE:-0} == 124 ]]; then
+            echo "AppImage ran and timed out correctly"
+          elif [[ ${EXIT_CODE:-0} != 0 ]]; then
+            echo "AppImage failed with exit code $EXIT_CODE"
+            exit "$EXIT_CODE"
+          else
+            echo "AppImage ran successfully"
           fi
         shell: bash
