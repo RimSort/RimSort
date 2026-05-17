@@ -747,6 +747,18 @@ Would you like to configure them now?</source>
         <translation>Не удалось сохранить активные моды в файл:</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>Нет допустимых путей для todds</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>Тоддс не смог найти ни одной допустимой папки модов для обработки.</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>Ни один из настроенных путей к папкам мода не существует на диске. Убедитесь, что папки «Локальные моды» и «Мастерская» правильно установлены в настройках, затем повторите попытку.</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>Подтвердить импорт ACF</translation>
     </message>

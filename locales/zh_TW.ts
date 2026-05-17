@@ -747,6 +747,18 @@ Would you like to configure them now?</source>
         <translation>無法將啟用模組保存到文件：</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>todds 沒有有效路徑</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>todds 找不到任何有效的 mod 資料夾來處理。</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>磁碟上不存在已配置的 mod 資料夾路徑。請驗證您的本地模組和創意工坊資料夾是否在「設定」中正確設置，然後再試一次。</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>確認 ACF 導入</translation>
     </message>

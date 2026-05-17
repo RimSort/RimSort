@@ -725,6 +725,18 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation type="unfinished"></translation>
     </message>
