@@ -145,19 +145,10 @@ jobs:
               cd ..
             else
               base=${file%%.tar}
-              name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
-              rootname=RimSort
-              if [[ $base == *"Darwin"* ]]; then
-                rootname=RimSort.app
-              fi
-              echo "Will zip $artifact to $name"
-              echo "Rootname $rootname"
               cd "$artifact"
-              tar -xvf "${file}.tar"
-              mv "output" "$rootname"
               echo "Doing commit match check."
-              version_xml=$(find "$rootname" -name version.xml)
-              commit=$(xmlstarlet sel -t -v "//commit" "$version_xml")
+              version_xml=$(tar -xf "${file}.tar" --wildcards '*/version.xml' -O 2>/dev/null || tar -xf "${file}.tar" --include='*/version.xml' -O)
+              commit=$(echo "$version_xml" | xmlstarlet sel -t -v "//commit" -)
               if [[ "$commit" != "${{ needs.pre-build.outputs.current_commit }}" ]]; then
                 echo "Commit mismatch for artifact $artifact. Expected ${{ needs.pre-build.outputs.current_commit }} but true build commit was $commit"
                 if [[ "${{ inputs.no_commit_match }}" == true ]]; then
@@ -166,15 +157,25 @@ jobs:
                   exit 1
                 fi
               fi
-              zip -rmqq "../$name" "$rootname" &
+              if [[ $base == *"Windows"* ]]; then
+                rootname=RimSort
+                name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
+                echo "Zipping $artifact to $name"
+                tar -xf "${file}.tar"
+                zip -rmqq "../$name" "$rootname" &
+              else
+                name="RimSort-${{ needs.pre-build.outputs.version }}-$base.tar.gz"
+                echo "Compressing $artifact to $name (gzip existing tar)"
+                gzip -c "${file}.tar" > "../$name" &
+              fi
               cd ..
             fi
           done
           echo "Waiting for zips to finish"
           wait
-          echo "Cleaning up - Removing non-zip files"
+          echo "Cleaning up - Removing non-archive files"
           shopt -s extglob
-          rm -rf -- ./!(*.zip|*.msi|*.rpm|*.AppImage)
+          rm -rf -- ./!(*.zip|*.tar.gz|*.msi|*.rpm|*.AppImage)
         shell: bash
 
       - name: Create body
@@ -201,7 +202,7 @@ jobs:
         uses: ncipollo/release-action@v1.21.0
         id: release
         with:
-          artifacts: "artifacts/*.zip,artifacts/*.msi,artifacts/*.rpm,artifacts/*.AppImage"
+          artifacts: "artifacts/*.zip,artifacts/*.tar.gz,artifacts/*.msi,artifacts/*.rpm,artifacts/*.AppImage"
           tag: ${{ steps.tag.outputs.tag }}
           generateReleaseNotes: true
           prerelease: ${{ needs.pre-build.outputs.prerelease }}
