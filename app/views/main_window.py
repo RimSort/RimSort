@@ -67,9 +67,7 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(
-        self, settings_controller: SettingsController, debug_mode: bool = False
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController, debug_mode: bool = False) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
@@ -105,12 +103,8 @@ class MainWindow(QMainWindow):
         app_layout.addWidget(self.tab_widget)
 
         # Create various panels on the application GUI
-        self.main_content_panel: MainContent = MainContent(
-            settings_controller=self.settings_controller
-        )
-        self.main_content_panel.disable_enable_widgets_signal.connect(
-            self.__disable_enable_widgets
-        )
+        self.main_content_panel: MainContent = MainContent(settings_controller=self.settings_controller)
+        self.main_content_panel.disable_enable_widgets_signal.connect(self.__disable_enable_widgets)
         self.bottom_panel = Status()
 
         # Create and add the Main Content panel tab
@@ -222,9 +216,7 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
         )
 
-        self.menu_bar = MenuBar(
-            menu_bar=self.menuBar(), settings_controller=self.settings_controller
-        )
+        self.menu_bar = MenuBar(menu_bar=self.menuBar(), settings_controller=self.settings_controller)
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings_controller=self.settings_controller,
@@ -241,9 +233,7 @@ class MainWindow(QMainWindow):
         EventBus().do_clone_existing_instance.connect(self.__clone_existing_instance)
         EventBus().do_create_new_instance.connect(self.__create_new_instance)
         EventBus().do_delete_current_instance.connect(self.__delete_current_instance)
-        EventBus().do_restore_instance_from_archive.connect(
-            self.__restore_instance_from_archive
-        )
+        EventBus().do_restore_instance_from_archive.connect(self.__restore_instance_from_archive)
 
         # launch the main window
         self._launch_main_window()
@@ -253,18 +243,12 @@ class MainWindow(QMainWindow):
         """Apply main window launch state from settings"""
         from app.utils.window_launch_state import apply_window_launch_state
 
-        main_window_launch_state = (
-            self.settings_controller.settings.main_window_launch_state
-        )
+        main_window_launch_state = self.settings_controller.settings.main_window_launch_state
         custom_width = self.settings_controller.settings.main_window_custom_width
         custom_height = self.settings_controller.settings.main_window_custom_height
 
-        apply_window_launch_state(
-            self, main_window_launch_state, custom_width, custom_height
-        )
-        logger.info(
-            f"Main window started with launch state: {main_window_launch_state}"
-        )
+        apply_window_launch_state(self, main_window_launch_state, custom_width, custom_height)
+        logger.info(f"Main window started with launch state: {main_window_launch_state}")
 
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
@@ -285,15 +269,11 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
         )
-        self.menu_bar_controller._on_set_current_instance(
-            self.settings_controller.settings.current_instance
-        )
+        self.menu_bar_controller._on_set_current_instance(self.settings_controller.settings.current_instance)
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK FOR STEAMCMD SETUP
-        if not os.path.exists(
-            self.steamcmd_wrapper.steamcmd_prefix
-        ) or not self.steamcmd_wrapper.check_for_steamcmd(
+        if not os.path.exists(self.steamcmd_wrapper.steamcmd_prefix) or not self.steamcmd_wrapper.check_for_steamcmd(
             prefix=self.steamcmd_wrapper.steamcmd_prefix
         ):
             if not self.settings_controller.active_instance.steamcmd_ignore:
@@ -332,9 +312,7 @@ class MainWindow(QMainWindow):
         if instance.initial_setup and not instance.steam_client_integration:
             diag = BinaryChoiceDialog(
                 title=self.tr("Steam Client Integration"),
-                text=self.tr(
-                    "<h3>Would you like to enable Steam Client Integration for this instance?</h3>"
-                ),
+                text=self.tr("<h3>Would you like to enable Steam Client Integration for this instance?</h3>"),
                 information=self.tr("""This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
                 <br><br>
                 You can change this in the settings under the Advanced tab."""),
@@ -359,27 +337,21 @@ class MainWindow(QMainWindow):
             instance_name, ok = QInputDialog.getText(
                 self,
                 self.tr("Provide instance name"),
-                self.tr(
-                    'Input a unique name for the backed up instance that is not "{name}"'
-                ).format(name=DEFAULT_INSTANCE_NAME),
+                self.tr('Input a unique name for the backed up instance that is not "{name}"').format(
+                    name=DEFAULT_INSTANCE_NAME
+                ),
             )
             if ok and instance_name.lower() != DEFAULT_INSTANCE_NAME.lower():
                 return instance_name
             else:
                 return None
 
-    def __ask_how_to_workshop_mods(
-        self, existing_instance_name: str, existing_instance_workshop_folder: str
-    ) -> str:
+    def __ask_how_to_workshop_mods(self, existing_instance_name: str, existing_instance_workshop_folder: str) -> str:
         answer = show_dialogue_conditional(
             title=self.tr("Clone instance [{existing_instance_name}]").format(
                 existing_instance_name=existing_instance_name
             ),
-            text=(
-                self.tr(
-                    "What would you like to do with the configured Workshop mods folder?"
-                )
-            ),
+            text=(self.tr("What would you like to do with the configured Workshop mods folder?")),
             information=(
                 self.tr(
                     "Workshop folder: {existing_instance_workshop_folder}\n\n"
@@ -388,9 +360,7 @@ class MainWindow(QMainWindow):
                     + "Option 2: Keep Workshop Folder\n"
                     + "The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.\n\n"
                     + "How would you like to proceed?"
-                ).format(
-                    existing_instance_workshop_folder=existing_instance_workshop_folder
-                )
+                ).format(existing_instance_workshop_folder=existing_instance_workshop_folder)
             ),
             button_text_override=[
                 self.tr("Convert to SteamCMD"),
@@ -436,16 +406,14 @@ class MainWindow(QMainWindow):
                         instance_controller.compress_to_archive,
                         output_path,
                     ),
-                    self.tr(
-                        "Compressing [{instance_name}] instance folder to archive..."
-                    ).format(instance_name=instance_name),
+                    self.tr("Compressing [{instance_name}] instance folder to archive...").format(
+                        instance_name=instance_name
+                    ),
                 )
             except Exception as e:
                 show_fatal_error(
                     title=self.tr("Error compressing instance"),
-                    text=self.tr(
-                        "An error occurred while compressing instance folder: {e}"
-                    ).format(e=e),
+                    text=self.tr("An error occurred while compressing instance folder: {e}").format(e=e),
                     information=self.tr("Please check the logs for more information."),
                     details=format_exc(),
                 )
@@ -472,9 +440,7 @@ class MainWindow(QMainWindow):
             logger.error(f"Archive not found at path: {input_path}")
             show_warning(
                 title=self.tr("Error restoring instance"),
-                text=self.tr("Archive not found at path: {input_path}").format(
-                    input_path=input_path
-                ),
+                text=self.tr("Archive not found at path: {input_path}").format(input_path=input_path),
             )
             return
 
@@ -496,12 +462,10 @@ class MainWindow(QMainWindow):
         if os.path.exists(instance_controller.instance_folder_path):
             answer = show_dialogue_conditional(
                 title=self.tr("Instance folder exists"),
-                text=self.tr(
-                    "Instance folder already exists: {instance_folder_path}"
-                ).format(instance_folder_path=instance_controller.instance_folder_path),
-                information=self.tr(
-                    "Do you want to continue and replace the existing instance folder?"
+                text=self.tr("Instance folder already exists: {instance_folder_path}").format(
+                    instance_folder_path=instance_controller.instance_folder_path
                 ),
+                information=self.tr("Do you want to continue and replace the existing instance folder?"),
                 button_text_override=[
                     self.tr("Replace"),
                 ],
@@ -517,27 +481,21 @@ class MainWindow(QMainWindow):
                 instance_controller.extract_from_archive,
                 input_path,
             ),
-            self.tr("Restoring instance [{name}] from archive...").format(
-                name=instance_controller.instance.name
-            ),
+            self.tr("Restoring instance [{name}] from archive...").format(name=instance_controller.instance.name),
         )
 
         # Check that the instance folder exists. If it does, update Settings with the instance data
         if os.path.exists(instance_controller.instance_folder_path):
             cleared_paths = instance_controller.validate_paths()
             if cleared_paths:
-                logger.warning(
-                    f"Instance folder paths not found: {', '.join(cleared_paths)}"
-                )
+                logger.warning(f"Instance folder paths not found: {', '.join(cleared_paths)}")
                 show_warning(
                     title=self.tr("Invalid instance folder paths"),
                     text=self.tr("Invalid instance folder paths"),
                     information=self.tr(
                         "Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings"
                     ),
-                    details=self.tr("Invalid paths: {path}").format(
-                        path=", ".join(cleared_paths)
-                    ),
+                    details=self.tr("Invalid paths: {path}").format(path=", ".join(cleared_paths)),
                 )
 
             steamcmd_link_path = str(
@@ -549,10 +507,7 @@ class MainWindow(QMainWindow):
                 / "294100"
             )
 
-            if (
-                os.path.exists(steamcmd_link_path)
-                and instance_controller.instance.local_folder != ""
-            ):
+            if os.path.exists(steamcmd_link_path) and instance_controller.instance.local_folder != "":
                 logger.info("Restoring steamcmd symlink...")
                 self.steamcmd_wrapper.create_symlink(
                     instance_controller.instance.local_folder,
@@ -579,63 +534,43 @@ class MainWindow(QMainWindow):
         else:
             show_warning(
                 title=self.tr("Error restoring instance"),
-                text=self.tr(
-                    "An error occurred while restoring instance [{name}]."
-                ).format(name=instance_controller.instance.name),
+                text=self.tr("An error occurred while restoring instance [{name}].").format(
+                    name=instance_controller.instance.name
+                ),
                 information=self.tr(
                     "The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid."
                 ),
             )
 
-            logger.warning(
-                "Restore cancelled: Instance folder not found after extraction..."
-            )
+            logger.warning("Restore cancelled: Instance folder not found after extraction...")
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
         """Clone an existing instance to create a new one with copied data."""
 
-        def copy_game_folder(
-            existing_instance_game_folder: str, target_game_folder: str
-        ) -> None:
+        def copy_game_folder(existing_instance_game_folder: str, target_game_folder: str) -> None:
             try:
-                if os.path.exists(target_game_folder) and os.path.isdir(
-                    target_game_folder
-                ):
-                    logger.info(
-                        f"Replacing existing game folder at {target_game_folder}"
-                    )
+                if os.path.exists(target_game_folder) and os.path.isdir(target_game_folder):
+                    logger.info(f"Replacing existing game folder at {target_game_folder}")
                     rmtree(
                         target_game_folder,
                         ignore_errors=False,
                         onerror=handle_remove_read_only,
                     )
-                logger.info(
-                    f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
-                )
-                copytree(
-                    existing_instance_game_folder, target_game_folder, symlinks=True
-                )
+                logger.info(f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}")
+                copytree(existing_instance_game_folder, target_game_folder, symlinks=True)
             except Exception as e:
                 logger.error(f"An error occurred while copying game folder: {e}")
 
-        def copy_config_folder(
-            existing_instance_config_folder: str, target_config_folder: str
-        ) -> None:
+        def copy_config_folder(existing_instance_config_folder: str, target_config_folder: str) -> None:
             try:
-                if os.path.exists(target_config_folder) and os.path.isdir(
-                    target_config_folder
-                ):
-                    logger.info(
-                        f"Replacing existing config folder at {target_config_folder}"
-                    )
+                if os.path.exists(target_config_folder) and os.path.isdir(target_config_folder):
+                    logger.info(f"Replacing existing config folder at {target_config_folder}")
                     rmtree(
                         target_config_folder,
                         ignore_errors=False,
                         onerror=handle_remove_read_only,
                     )
-                logger.info(
-                    f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
-                )
+                logger.info(f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}")
                 copytree(
                     existing_instance_config_folder,
                     target_config_folder,
@@ -644,24 +579,16 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 logger.error(f"An error occurred while copying config folder: {e}")
 
-        def copy_local_folder(
-            existing_instance_local_folder: str, target_local_folder: str
-        ) -> None:
+        def copy_local_folder(existing_instance_local_folder: str, target_local_folder: str) -> None:
             try:
-                if os.path.exists(target_local_folder) and os.path.isdir(
-                    target_local_folder
-                ):
-                    logger.info(
-                        f"Replacing existing local folder at {target_local_folder}"
-                    )
+                if os.path.exists(target_local_folder) and os.path.isdir(target_local_folder):
+                    logger.info(f"Replacing existing local folder at {target_local_folder}")
                     rmtree(
                         target_local_folder,
                         ignore_errors=False,
                         onerror=handle_remove_read_only,
                     )
-                logger.info(
-                    f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
-                )
+                logger.info(f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}")
                 copytree(
                     existing_instance_local_folder,
                     target_local_folder,
@@ -670,20 +597,14 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 logger.error(f"An error occurred while copying local folder: {e}")
 
-        def copy_workshop_mods_to_local(
-            existing_instance_workshop_folder: str, target_local_folder: str
-        ) -> None:
+        def copy_workshop_mods_to_local(existing_instance_workshop_folder: str, target_local_folder: str) -> None:
             try:
                 if not os.path.exists(target_local_folder):
                     os.mkdir(target_local_folder)
-                logger.info(
-                    f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}"
-                )
+                logger.info(f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}")
                 # Copy each subdirectory of the existing Workshop folder to the new local mods folder
                 for subdir in os.listdir(existing_instance_workshop_folder):
-                    if os.path.isdir(
-                        os.path.join(existing_instance_workshop_folder, subdir)
-                    ):
+                    if os.path.isdir(os.path.join(existing_instance_workshop_folder, subdir)):
                         logger.debug(f"Cloning Workshop mod: {subdir}")
                         copytree(
                             os.path.join(existing_instance_workshop_folder, subdir),
@@ -700,26 +621,18 @@ class MainWindow(QMainWindow):
             target_config_folder: str,
         ) -> None:
             # Clone the existing game_folder to the new instance
-            if os.path.exists(existing_instance_game_folder) and os.path.isdir(
-                existing_instance_game_folder
-            ):
+            if os.path.exists(existing_instance_game_folder) and os.path.isdir(existing_instance_game_folder):
                 copy_game_folder(existing_instance_game_folder, target_game_folder)
             # Clone the existing config_folder to the new instance
-            if os.path.exists(existing_instance_config_folder) and os.path.isdir(
-                existing_instance_config_folder
-            ):
-                copy_config_folder(
-                    existing_instance_config_folder, target_config_folder
-                )
+            if os.path.exists(existing_instance_config_folder) and os.path.isdir(existing_instance_config_folder):
+                copy_config_folder(existing_instance_config_folder, target_config_folder)
 
         # Check if paths are set. We can't clone if they aren't set
         if not self.main_content_panel.check_if_essential_paths_are_set(prompt=True):
             return
         # Get instance data from Settings
         current_instances = list(self.settings_controller.settings.instances.keys())
-        existing_instance = self.settings_controller.settings.instances[
-            existing_instance_name
-        ]
+        existing_instance = self.settings_controller.settings.instances[existing_instance_name]
 
         existing_instance_game_folder = existing_instance.game_folder
         game_folder_name = os.path.split(existing_instance_game_folder)[1]
@@ -728,12 +641,8 @@ class MainWindow(QMainWindow):
         existing_instance_workshop_folder = existing_instance.workshop_folder
         existing_instance_config_folder = existing_instance.config_folder
         existing_instance_run_args = existing_instance.run_args
-        existing_instance_steamcmd_install_path = (
-            existing_instance.steamcmd_install_path
-        )
-        existing_instance_steam_client_integration = (
-            existing_instance.steam_client_integration
-        )
+        existing_instance_steamcmd_install_path = existing_instance.steamcmd_install_path
+        existing_instance_steam_client_integration = existing_instance.steam_client_integration
         existing_instance_folder_override = existing_instance.instance_folder_override
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name()
@@ -743,9 +652,7 @@ class MainWindow(QMainWindow):
             and new_instance_name not in current_instances
         ):
             new_instance_path = str(
-                InstanceController.get_instance_folder_path(
-                    new_instance_name, existing_instance_folder_override
-                )
+                InstanceController.get_instance_folder_path(new_instance_name, existing_instance_folder_override)
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = BinaryChoiceDialog(
@@ -764,13 +671,9 @@ class MainWindow(QMainWindow):
             if answer.exec_is_positive():
                 # Clone the RimWorld game_folder to the new instance
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
-                target_local_folder = str(
-                    Path(new_instance_path) / game_folder_name / local_folder_name
-                )
+                target_local_folder = str(Path(new_instance_path) / game_folder_name / local_folder_name)
                 target_workshop_folder = ""
-                target_config_folder = str(
-                    Path(new_instance_path) / "InstanceData" / "Config"
-                )
+                target_config_folder = str(Path(new_instance_path) / "InstanceData" / "Config")
                 EventBus().do_threaded_loading_animation.emit(
                     str(AppInfo().theme_data_folder / "default-icons" / "rimworld.gif"),
                     partial(
@@ -785,19 +688,12 @@ class MainWindow(QMainWindow):
                 # Clone the existing local_folder to the new instance
                 # Skip if local folder is already included within the game folder (prevents redundant cloning)
                 local_folder_in_game = (
-                    str(Path(existing_instance_game_folder) / local_folder_name)
-                    == existing_instance_local_folder
+                    str(Path(existing_instance_game_folder) / local_folder_name) == existing_instance_local_folder
                 )
                 if existing_instance_local_folder and not local_folder_in_game:
-                    if os.path.exists(existing_instance_local_folder) and os.path.isdir(
-                        existing_instance_local_folder
-                    ):
+                    if os.path.exists(existing_instance_local_folder) and os.path.isdir(existing_instance_local_folder):
                         EventBus().do_threaded_loading_animation.emit(
-                            str(
-                                AppInfo().theme_data_folder
-                                / "default-icons"
-                                / "rimworld.gif"
-                            ),
+                            str(AppInfo().theme_data_folder / "default-icons" / "rimworld.gif"),
                             partial(
                                 copy_local_folder,
                                 existing_instance_local_folder,
@@ -813,15 +709,11 @@ class MainWindow(QMainWindow):
                         existing_instance_workshop_folder=existing_instance_workshop_folder,
                     )
                     if answer_workshop_mods == self.tr("Convert to SteamCMD"):
-                        if os.path.exists(
+                        if os.path.exists(existing_instance_workshop_folder) and os.path.isdir(
                             existing_instance_workshop_folder
-                        ) and os.path.isdir(existing_instance_workshop_folder):
+                        ):
                             EventBus().do_threaded_loading_animation.emit(
-                                str(
-                                    AppInfo().theme_data_folder
-                                    / "default-icons"
-                                    / "steam_api.gif"
-                                ),
+                                str(AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"),
                                 partial(
                                     copy_workshop_mods_to_local,
                                     existing_instance_workshop_folder,
@@ -834,28 +726,16 @@ class MainWindow(QMainWindow):
                                 title=self.tr("Workshop mods not found"),
                                 text=self.tr(
                                     "Workshop mods folder at [{existing_instance_workshop_folder}] not found."
-                                ).format(
-                                    existing_instance_workshop_folder=existing_instance_workshop_folder
-                                ),
+                                ).format(existing_instance_workshop_folder=existing_instance_workshop_folder),
                             )
                     elif answer_workshop_mods == self.tr("Keep Workshop Folder"):
                         target_workshop_folder = str(existing_instance_workshop_folder)
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
-                steamcmd_install_path = str(
-                    Path(existing_instance_steamcmd_install_path) / STEAMCMD_FOLDER_NAME
-                )
-                if os.path.exists(steamcmd_install_path) and os.path.isdir(
-                    steamcmd_install_path
-                ):
-                    target_steamcmd_install_path = str(
-                        Path(new_instance_path) / STEAMCMD_FOLDER_NAME
-                    )
-                    if os.path.exists(target_steamcmd_install_path) and os.path.isdir(
-                        target_steamcmd_install_path
-                    ):
-                        logger.info(
-                            f"Replacing existing steamcmd folder at {target_steamcmd_install_path}"
-                        )
+                steamcmd_install_path = str(Path(existing_instance_steamcmd_install_path) / STEAMCMD_FOLDER_NAME)
+                if os.path.exists(steamcmd_install_path) and os.path.isdir(steamcmd_install_path):
+                    target_steamcmd_install_path = str(Path(new_instance_path) / STEAMCMD_FOLDER_NAME)
+                    if os.path.exists(target_steamcmd_install_path) and os.path.isdir(target_steamcmd_install_path):
+                        logger.info(f"Replacing existing steamcmd folder at {target_steamcmd_install_path}")
                         rmtree(
                             target_steamcmd_install_path,
                             ignore_errors=False,
@@ -870,46 +750,28 @@ class MainWindow(QMainWindow):
                         symlinks=True,
                     )
                 # If the instance has a 'steam' folder, clone it to the new instance
-                steam_install_path = str(
-                    Path(existing_instance_steamcmd_install_path) / STEAM_FOLDER_NAME
-                )
-                if os.path.exists(steam_install_path) and os.path.isdir(
-                    steam_install_path
-                ):
-                    target_steam_install_path = str(
-                        Path(new_instance_path) / STEAM_FOLDER_NAME
-                    )
-                    if os.path.exists(target_steam_install_path) and os.path.isdir(
-                        target_steam_install_path
-                    ):
-                        logger.info(
-                            f"Replacing existing steam folder at {target_steam_install_path}"
-                        )
+                steam_install_path = str(Path(existing_instance_steamcmd_install_path) / STEAM_FOLDER_NAME)
+                if os.path.exists(steam_install_path) and os.path.isdir(steam_install_path):
+                    target_steam_install_path = str(Path(new_instance_path) / STEAM_FOLDER_NAME)
+                    if os.path.exists(target_steam_install_path) and os.path.isdir(target_steam_install_path):
+                        logger.info(f"Replacing existing steam folder at {target_steam_install_path}")
                         rmtree(
                             target_steam_install_path,
                             ignore_errors=False,
                             onerror=handle_remove_read_only,
                         )
-                    logger.info(
-                        f"Copying steam folder from {steam_install_path} to {target_steam_install_path}"
-                    )
+                    logger.info(f"Copying steam folder from {steam_install_path} to {target_steam_install_path}")
                     # Copy the directory, but omit the symlink path
                     copytree(
                         steam_install_path,
                         target_steam_install_path,
                         symlinks=True,
-                        ignore=lambda d, names: ["steamapps/workshop/content/294100"]
-                        if d == steam_install_path
-                        else [],
+                        ignore=lambda d, names: (
+                            ["steamapps/workshop/content/294100"] if d == steam_install_path else []
+                        ),
                     )
                     # Unlink steam/workshop/content/294100 symlink if it exists, and relink it to our new target local mods folder
-                    link_path = str(
-                        Path(target_steam_install_path)
-                        / "steamapps"
-                        / "workshop"
-                        / "content"
-                        / "294100"
-                    )
+                    link_path = str(Path(target_steam_install_path) / "steamapps" / "workshop" / "content" / "294100")
                     self.steamcmd_wrapper.create_symlink(
                         target_local_folder, link_path, show_dialogues=False, force=True
                     )
@@ -923,9 +785,7 @@ class MainWindow(QMainWindow):
                         "config_folder": target_config_folder,
                         "run_args": existing_instance_run_args or [],
                         "steamcmd_install_path": str(
-                            AppInfo().app_storage_folder
-                            / INSTANCE_FOLDER_NAME
-                            / new_instance_name
+                            AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / new_instance_name
                         ),
                         "steam_client_integration": existing_instance_steam_client_integration,
                         "instance_folder_override": existing_instance_folder_override,
@@ -942,9 +802,7 @@ class MainWindow(QMainWindow):
         else:
             logger.debug("User cancelled clone operation")
 
-    def __create_new_instance(
-        self, instance_name: str = "", instance_data: dict[str, Any] | None = None
-    ) -> None:
+    def __create_new_instance(self, instance_name: str = "", instance_data: dict[str, Any] | None = None) -> None:
         """Create a new instance with the provided name and data."""
         if instance_data is None:
             instance_data = {}
@@ -956,11 +814,7 @@ class MainWindow(QMainWindow):
                 return
             instance_name = new_instance_name
         current_instances = list(self.settings_controller.settings.instances.keys())
-        if (
-            instance_name
-            and instance_name != DEFAULT_INSTANCE_NAME
-            and instance_name not in current_instances
-        ):
+        if instance_name and instance_name != DEFAULT_INSTANCE_NAME and instance_name not in current_instances:
             # Get instance folder override if provided
             # First check if override was passed in instance_data (e.g., from cloning)
             instance_folder_override = instance_data.get("instance_folder_override", "")
@@ -972,9 +826,7 @@ class MainWindow(QMainWindow):
                 ]
                 instance_folder_override = current_instance.instance_folder_override
             # Create new instance folder if it does not exist
-            instance_path = InstanceController.get_instance_folder_path(
-                instance_name, instance_folder_override
-            )
+            instance_path = InstanceController.get_instance_folder_path(instance_name, instance_folder_override)
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
             # Get run args from instance data, autogenerate additional config items if desired
@@ -991,9 +843,7 @@ class MainWindow(QMainWindow):
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(
                     title=self.tr("Create new instance [{instance_name}]"),
-                    text=self.tr(
-                        "Would you like to automatically generate run args for the new instance?"
-                    ),
+                    text=self.tr("Would you like to automatically generate run args for the new instance?"),
                     information=self.tr(
                         "This will try to generate run args for the new instance based on the configured Game/Config folders.\n\n"
                         + "Generated run arguments preview:\n{preview}"
@@ -1013,9 +863,7 @@ class MainWindow(QMainWindow):
                 config_folder=instance_data.get("config_folder", ""),
                 run_args=run_args,
                 steamcmd_install_path=str(instance_path),
-                steam_client_integration=instance_data.get(
-                    "steam_client_integration", False
-                ),
+                steam_client_integration=instance_data.get("steam_client_integration", False),
                 instance_folder_override=instance_folder_override,
             )
 
@@ -1043,9 +891,7 @@ class MainWindow(QMainWindow):
                 information=self.tr("The default instance cannot be deleted."),
             )
             return
-        elif not self.settings_controller.settings.instances.get(
-            self.settings_controller.settings.current_instance
-        ):
+        elif not self.settings_controller.settings.instances.get(self.settings_controller.settings.current_instance):
             show_fatal_error(
                 title=self.tr("Error deleting instance"),
                 text=self.tr("Unable to delete instance {current_instance}.").format(
@@ -1059,16 +905,12 @@ class MainWindow(QMainWindow):
                 title=self.tr("Delete instance {current_instance}").format(
                     current_instance=self.settings_controller.settings.current_instance
                 ),
-                text=self.tr(
-                    "Are you sure you want to delete the selected instance and all of its data?"
-                ),
+                text=self.tr("Are you sure you want to delete the selected instance and all of its data?"),
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
-                aux_metadata_controller = (
-                    AuxMetadataController.get_or_create_cached_instance(
-                        self.settings_controller.settings.aux_db_path
-                    )
+                aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
+                    self.settings_controller.settings.aux_db_path
                 )
                 aux_metadata_controller.engine.dispose()
                 try:
@@ -1086,9 +928,7 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     logger.error(f"Error deleting instance: {e}")
                 # Remove instance from settings and reset to Default
-                self.settings_controller.settings.instances.pop(
-                    self.settings_controller.settings.current_instance
-                )
+                self.settings_controller.settings.instances.pop(self.settings_controller.settings.current_instance)
                 self.__switch_to_instance(DEFAULT_INSTANCE_NAME)
 
     def __switch_to_instance(self, instance: str) -> None:
@@ -1124,35 +964,18 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler = WatchdogHandler(
             settings_controller=self.settings_controller,
             targets=[
-                str(
-                    Path(
-                        self.settings_controller.settings.instances[
-                            current_instance
-                        ].game_folder
-                    )
-                    / "Data"
-                ),
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].local_folder,
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].workshop_folder,
+                str(Path(self.settings_controller.settings.instances[current_instance].game_folder) / "Data"),
+                self.settings_controller.settings.instances[current_instance].local_folder,
+                self.settings_controller.settings.instances[current_instance].workshop_folder,
             ],
         )
         # Connect watchdog to MetadataManager for ACF changes
         self.watchdog_event_handler.acf_changed.connect(
             partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
         )
-        self.watchdog_event_handler.mod_created.connect(
-            self.main_content_panel.metadata_manager.process_creation
-        )
-        self.watchdog_event_handler.mod_deleted.connect(
-            self.main_content_panel.metadata_manager.process_deletion
-        )
-        self.watchdog_event_handler.mod_updated.connect(
-            self.main_content_panel.metadata_manager.process_update
-        )
+        self.watchdog_event_handler.mod_created.connect(self.main_content_panel.metadata_manager.process_creation)
+        self.watchdog_event_handler.mod_deleted.connect(self.main_content_panel.metadata_manager.process_deletion)
+        self.watchdog_event_handler.mod_updated.connect(self.main_content_panel.metadata_manager.process_update)
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
@@ -1166,9 +989,7 @@ class MainWindow(QMainWindow):
             else:
                 logger.warning("Watchdog Mods Observer is None. Unable to start.")
         except Exception as e:
-            logger.warning(
-                f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
-            )
+            logger.warning(f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}")
 
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING

@@ -23,7 +23,7 @@
         <!-- ===================================================== -->
 
         <!-- License file path for the installer UI -->
-        <Property Id="WixUILicenseRtf" Value="$(License)" />
+        <WixVariable Id="WixUILicenseRtf" Value="$(License)" />
 
         <!-- Force complete reinstall like app is new - a=all files, e=even if not installed,
         c=recache source, m=missing files, u=user registry, s=shortcuts -->

@@ -2177,6 +2177,18 @@ How would you like to proceed?</source>
         <translation>警告トグルをリセット</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>翻訳の自動追加</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>ビュー</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>翻訳ステータスを表示</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>ダウンロード</translation>
     </message>
@@ -2282,24 +2294,6 @@ How would you like to proceed?</source>
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam DB メタデータの有効期限が切れました</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB の有効期限が切れています！ 更新を検討してください！
-</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam DB最終更新：{last_updated}
-
-キャッシュされたが、期限切れの蒸気データベースに戻る...</translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation>Version.txt が見つかりません</translation>
@@ -2694,6 +2688,14 @@ Do you want to proceed?</source>
         <translation>Steamを通じて購読中</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>翻訳が利用可能 - この MOD には翻訳があるか、すでにローカライズされています</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>翻訳が見つかりません - この MOD には翻訳がインストールされていません</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>最新のセーブではありません</translation>
     </message>
@@ -2767,6 +2769,10 @@ Do you want to proceed?</source>
     <message>
         <source>Toggle warning</source>
         <translation>警告を切り替え</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>翻訳を探す</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2851,6 +2857,38 @@ This operation will recursively delete all mod files, except for .dds textures f
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 この操作は潜在的に.ddsテクスチャを削除します。Steamはこれに不安定です。続行しますか？</translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation>データベースが利用できません</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam ワークショップのメタデータ データベースがロードされていません。最初にデータベース ビルダーを使用してデータベースを構築してください。</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>翻訳が見つかりませんでした</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>Steam ワークショップ データベースには、この MOD の翻訳 MOD が見つかりませんでした。</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>翻訳を選択</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>{len(translation_mods)} 件の翻訳が見つかりました。開くものを 1 つ選択してください:</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>開ける</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
@@ -2987,6 +3025,38 @@ Alternative Dependencies:</source>
         <translation>アクティブ[0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>データベースが利用できません</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam ワークショップのメタデータ データベースがロードされていません。最初にデータベース ビルダーを使用してデータベースを構築してください。</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>翻訳が見つかりませんでした</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>アクティブな MOD リストに該当する翻訳 MOD が見つかりませんでした。</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>翻訳を追加しました</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>{count} 個の翻訳 MOD をアクティブ リストに追加しました。</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>新しい翻訳はありません</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>見つかった翻訳 MOD はすべてすでに有効になっています。</translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation>フィルターを表示する</translation>
     </message>
@@ -3005,6 +3075,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Folder Size</source>
         <translation>フォルダーサイズ</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>注意事項</translation>
     </message>
     <message>
         <source>Toggle sort order</source>
@@ -3075,18 +3149,6 @@ Alternative Dependencies:</source>
         <translation>依存関係を確認</translation>
     </message>
     <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding}{num_warnings}警告</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding}{num_errors}エラー</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0エラー</translation>
-    </message>
-    <message>
         <source>Active</source>
         <translation>アクティブ</translation>
     </message>
@@ -3107,8 +3169,43 @@ Alternative Dependencies:</source>
         <translation>クリックして、最新の保存にないアクティブMODのみを表示する</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>{padding}{num} 件の警告</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>{padding}{num} 個のエラー</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{count} new {padding}</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>警告トグルのリセットを確認する</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>すべての警告/エラーの切り替えをリセットしてもよろしいですか?</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>すべてリセット</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>キャンセル</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>MODカラーのリセットを確認する</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>すべての MOD カラーをリセットしてもよろしいですか?</translation>
     </message>
 </context>
 <context>
@@ -3132,6 +3229,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Statistics</source>
         <translation>統計</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>ファイルをロード中... %p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3290,6 +3391,10 @@ Alternative Dependencies:</source>
         <translation>ログディスプレイの端までスクロールします</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>ファイルを読み取り中... %p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>パス：urlからロード：{url}</translation>
     </message>
@@ -3316,6 +3421,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Player log file not found.</source>
         <translation>プレーヤーログファイルが見つかりません。</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>URL からログを読み取り中... %p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3721,6 +3830,33 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>設定読み込みエラー</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>続行すると、破損したファイルのバックアップが {AppInfo().settings_backups_folder / 'settings.json.corrupted'} に保存されます。</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>進む</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>リムソートを終了する</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>設定の回復に失敗しました</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>rimSort はバックアップから設定を復元できませんでした。 「settings.json.backup」または「settings.json.backup.old」を {AppInfo().settings_backups_folder} から {self._settings_file} に復元することで、設定を手動で復元できる場合があります。</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3940,6 +4076,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>"Use This Instead" Database</source>
         <translation>"これを使用してください"データベース</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>この制限時間の編集を有効にするには、右側のチェックボックス (編集を有効にする) を有効にします。
+MOD が削除された後、この MOD アイテムが補助メタデータ DB から削除されるまで待機する時間です。 
+この補助 DB には、MOD カラー、切り替えられた警告、ユーザーメモなどの情報が含まれています。 
+これは基本的に、MOD のカラーリングやユーザー ノートなどを、削除後この数秒間保持します。 
+(これは、RimSort 以外での削除にも当てはまります)</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4368,34 +4516,12 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>補助メタデータDB削除時間制限秒で。（すぐに削除され、-1を削除しないでください）</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>この時間制限の編集を有効にするには、高度な設定で関連するチェックボックスを確認してください。
-modが削除された後、これはこのmodアイテムが補助メタデータdbから削除されるまで待つ時間です。
-この補助DBには、mod色の情報、切り替えの警告、ユーザーノートなどが含まれています。
-これにより、基本的には、削除後何秒後に、MODの着色、ユーザーノートなどが保存されます。
-（これはRimsort以外の削除にも適用されます）</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>編集を有効にします</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
         <translation>これにより、AUXメタデータDBデータ削除の時間制限の編集が可能になります。</translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>補助メタデータDBパフォーマンスモードを有効にします</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>これにより、クラッシュが発生した場合のデータ損失/腐敗のリスクの増加により、補助DBパフォーマンスが向上します。
-パフォーマンスが〜50％向上します。</translation>
     </message>
     <message>
         <source>Delete before update</source>
@@ -4530,6 +4656,14 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML解析動作</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>MOD名検索フィルターにMODノートを含める</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>このオプションには、MOD 名で検索するときに MOD ノートの検索が含まれます。</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5419,6 +5553,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Steam DB メタデータの有効期限が切れました</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Steam DB の有効期限が切れています。アップデートを検討してください。</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Steam DB の最終更新日: {last_updated}
+
+キャッシュされたものにフォールバックしていますが、期限切れの Steam データベース...</translation>
     </message>
 </context>
 <context>

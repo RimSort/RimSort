@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from typing import Any, Optional
 from xml.dom import minidom
 
-import chardet
+from charset_normalizer import from_bytes
 from loguru import logger
 from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
@@ -109,9 +109,7 @@ class SearchWorker(QThread):
             # For all other file types, use standard search
             self.options["algorithm"] = "standard search"
 
-        logger.info(
-            f"Auto-selected search algorithm: {self.options['algorithm']} for {file_type}"
-        )
+        logger.info(f"Auto-selected search algorithm: {self.options['algorithm']} for {file_type}")
 
     def _check_memory_usage(self) -> bool:
         """
@@ -123,17 +121,10 @@ class SearchWorker(QThread):
             memory_info = process.memory_info()
             memory_percent = process.memory_percent()
 
-            logger.debug(
-                f"Memory usage: {memory_info.rss / (1024 * 1024):.1f} MB ({memory_percent:.1f}%)"
-            )
+            logger.debug(f"Memory usage: {memory_info.rss / (1024 * 1024):.1f} MB ({memory_percent:.1f}%)")
 
-            if (
-                memory_percent > self.memory_warning_threshold
-                and not self.memory_warning_shown
-            ):
-                logger.warning(
-                    f"High memory usage detected: {memory_percent:.1f}%. Consider optimizing the search."
-                )
+            if memory_percent > self.memory_warning_threshold and not self.memory_warning_shown:
+                logger.warning(f"High memory usage detected: {memory_percent:.1f}%. Consider optimizing the search.")
                 self.memory_warning_shown = True
 
             return memory_percent <= self.memory_warning_threshold
@@ -166,17 +157,12 @@ class SearchWorker(QThread):
             # Skip very large files to prevent memory issues
             max_size = 20 * 1024 * 1024  # 20MB
             if file_size > max_size:
-                logger.warning(
-                    f"File too large to read fully: {file_path} ({format_file_size(file_size)})"
-                )
+                logger.warning(f"File too large to read fully: {file_path} ({format_file_size(file_size)})")
                 # For large files, read only the first part
                 try:
                     with open(file_path, "rb") as f:
                         binary_content = f.read(1024 * 1024)  # Read first 1MB
-                        return (
-                            binary_content.decode("utf-8", errors="replace")
-                            + "\n\n[File truncated due to size...]"
-                        )
+                        return binary_content.decode("utf-8", errors="replace") + "\n\n[File truncated due to size...]"
                 except Exception as e:
                     logger.warning(f"Failed to read large file {file_path}: {e}")
                     return ""
@@ -184,25 +170,25 @@ class SearchWorker(QThread):
             logger.warning(f"Error checking file size for {file_path}: {e}")
             return ""
 
-        try:  # Try to detect encoding with chardet for better accuracy
+        try:  # Try to detect encoding with charset_normalizer for better accuracy
             with open(file_path, "rb") as f:
                 raw_data = f.read(min(4096, file_size))
-                result = chardet.detect(raw_data)
-                if result["confidence"] > 0.7 and result["encoding"]:
-                    detected_encoding = result["encoding"]
+                # Use charset_normalizer for encoding detection
+                results = from_bytes(raw_data).best()
+                if results is not None and results.encoding:
+                    # charset_normalizer uses confidence property
                     try:
+                        detected_encoding = results.encoding
                         # Use explicit text mode with detected encoding
                         content = ""
-                        with open(
-                            file_path, "r", encoding=detected_encoding
-                        ) as text_file:
+                        with open(file_path, "r", encoding=detected_encoding) as text_file:
                             content = text_file.read()
                             return content
                     except UnicodeDecodeError:
                         # If detected encoding fails, continue with fallbacks
                         pass
         except ImportError:
-            # chardet not available, continue with fallbacks
+            # charset_normalizer not available, continue with fallbacks
             pass
         except Exception as e:
             logger.debug(f"Error detecting encoding: {e}")
@@ -254,14 +240,8 @@ class SearchWorker(QThread):
                     return xml_preview
 
             # Find the position of the search term
-            search_term = (
-                self.pattern.lower()
-                if not self.options.get("case_sensitive")
-                else self.pattern
-            )
-            content_to_search = (
-                content.lower() if not self.options.get("case_sensitive") else content
-            )
+            search_term = self.pattern.lower() if not self.options.get("case_sensitive") else self.pattern
+            content_to_search = content.lower() if not self.options.get("case_sensitive") else content
 
             # For regex patterns, we need to find all matches
             if self.options.get("use_regex", False):
@@ -321,24 +301,14 @@ class SearchWorker(QThread):
                     if self.options.get("use_regex", False):
                         # For regex search, we need to find the match in this specific line
                         try:
-                            flags = (
-                                0
-                                if self.options.get("case_sensitive")
-                                else re.IGNORECASE
-                            )
+                            flags = 0 if self.options.get("case_sensitive") else re.IGNORECASE
                             regex = re.compile(self.pattern, flags)
                             line_match = regex.search(line)
                             if line_match:
                                 match_pos = line_match.start()
                                 match_end = line_match.end()
                                 # Highlight with ** around the match
-                                line = (
-                                    line[:match_pos]
-                                    + "**"
-                                    + line[match_pos:match_end]
-                                    + "**"
-                                    + line[match_end:]
-                                )
+                                line = line[:match_pos] + "**" + line[match_pos:match_end] + "**" + line[match_end:]
                         except re.error:
                             # If regex fails, just show the line without highlighting
                             pass
@@ -395,11 +365,7 @@ class SearchWorker(QThread):
     def _get_xml_preview(self, file_path: str, content: str) -> str:
         """Generate a more structured preview for XML files with better formatting"""
         try:  # Find the position of the search term
-            search_term = (
-                self.pattern.lower()
-                if not self.options.get("case_sensitive")
-                else self.pattern
-            )
+            search_term = self.pattern.lower() if not self.options.get("case_sensitive") else self.pattern
 
             # Try to parse the XML
             try:
@@ -427,27 +393,21 @@ class SearchWorker(QThread):
 
                     # Check children
                     for child in element:
-                        result = find_element_with_text(
-                            child, search_text, case_sensitive
-                        )
+                        result = find_element_with_text(child, search_text, case_sensitive)
                         if result is not None:
                             return result
 
                     return None
 
                 # Find the element containing the search term
-                element = find_element_with_text(
-                    root, search_term, self.options.get("case_sensitive", False)
-                )
+                element = find_element_with_text(root, search_term, self.options.get("case_sensitive", False))
 
                 if element is not None:
                     # Convert element to string with nice formatting
                     element_str = ET.tostring(element, encoding="unicode")
 
                     # Pretty print the XML
-                    pretty_xml = minidom.parseString(element_str).toprettyxml(
-                        indent="  "
-                    )
+                    pretty_xml = minidom.parseString(element_str).toprettyxml(indent="  ")
 
                     # Remove XML declaration
                     if pretty_xml.startswith("<?xml"):
@@ -458,9 +418,7 @@ class SearchWorker(QThread):
                         pattern = re.compile(re.escape(search_term), re.IGNORECASE)
                         pretty_xml = pattern.sub("**\\g<0>**", pretty_xml)
                     else:
-                        pretty_xml = pretty_xml.replace(
-                            search_term, f"**{search_term}**"
-                        )
+                        pretty_xml = pretty_xml.replace(search_term, f"**{search_term}**")
 
                     # Create the preview
                     file_name = os.path.basename(file_path)
@@ -510,9 +468,7 @@ class SearchWorker(QThread):
             return False
         is_active = mod_id in self.active_mod_ids
 
-        return (scope == "active mods" and is_active) or (
-            scope == "inactive mods" and not is_active
-        )
+        return (scope == "active mods" and is_active) or (scope == "inactive mods" and not is_active)
 
     def _should_exclude(self, file_path: str) -> bool:
         """Check if a file or directory should be excluded based on exclude_options."""
@@ -570,9 +526,7 @@ class SearchWorker(QThread):
 
             # Check if the method exists
             if not hasattr(self.searcher, method_name):
-                logger.warning(
-                    f"Search method {method_name} not found, falling back to simple_search"
-                )
+                logger.warning(f"Search method {method_name} not found, falling back to simple_search")
                 method_name = "simple_search"
 
             search_method = getattr(self.searcher, method_name)
@@ -580,9 +534,7 @@ class SearchWorker(QThread):
 
             # Perform the search
             for root_path in self.root_paths:
-                self.stats.emit(
-                    self.tr("Searching in: {root_path}").format(root_path=root_path)
-                )
+                self.stats.emit(self.tr("Searching in: {root_path}").format(root_path=root_path))
                 for result in search_method(self.pattern, [root_path], self.options):
                     mod_name, file_name, path = result
                     preview = self._get_file_preview(path)
@@ -633,9 +585,7 @@ class FileSearchController(QObject):
         self.mods_panel = ModsPanel(
             settings_controller=self.settings_controller,
         )
-        self.active_mod_ids = (
-            active_mod_ids or set()
-        )  # This is used for the controller, not the worker
+        self.active_mod_ids = active_mod_ids or set()  # This is used for the controller, not the worker
         self.search_results: list[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
         self.searcher = FileSearch()
@@ -753,13 +703,9 @@ class FileSearchController(QObject):
         """
         self._on_search_start()
         self.dialog.search_button.setEnabled(False)
-        self.dialog.search_button.setStyleSheet(
-            "font-weight: bold; background-color: nornal;"
-        )
+        self.dialog.search_button.setStyleSheet("font-weight: bold; background-color: nornal;")
         self.dialog.stop_button.setEnabled(True)
-        self.dialog.stop_button.setStyleSheet(
-            "font-weight: bold; background-color: red;"
-        )
+        self.dialog.stop_button.setStyleSheet("font-weight: bold; background-color: red;")
 
         options = self.dialog.get_search_options()
         search_text = self.dialog.search_input.text()
@@ -792,9 +738,7 @@ class FileSearchController(QObject):
 
         if scope == "all mods":
             # Get all mod IDs by combining active and inactive mods
-            all_uuids = set(self.mods_panel.active_mods_list.uuids) | set(
-                self.mods_panel.inactive_mods_list.uuids
-            )
+            all_uuids = set(self.mods_panel.active_mods_list.uuids) | set(self.mods_panel.inactive_mods_list.uuids)
             # Use our helper method to get paths and extract IDs
             all_paths = self._get_mod_paths_from_uuids(list(all_uuids))
             for path in all_paths:
@@ -838,9 +782,7 @@ class FileSearchController(QObject):
             return
         # For active/inactive mods, we're already searching in specific mod folders
         # so we don't need to filter by mod ID
-        root_paths_list = (
-            list(root_paths) if not isinstance(root_paths, list) else root_paths
-        )
+        root_paths_list = list(root_paths) if not isinstance(root_paths, list) else root_paths
 
         # Log the search paths
         logger.info(f"Searching in {len(root_paths_list)} paths: {root_paths_list}")
@@ -848,13 +790,9 @@ class FileSearchController(QObject):
         # Start the search worker
         # Pass mod_ids_for_search for active/inactive mods to enable filtering
         if scope in ("active mods", "inactive mods"):
-            self._start_search_worker(
-                root_paths_list, search_text, options, mod_ids_for_search, scope
-            )
+            self._start_search_worker(root_paths_list, search_text, options, mod_ids_for_search, scope)
         else:
-            self._start_search_worker(
-                root_paths_list, search_text, options, None, scope
-            )
+            self._start_search_worker(root_paths_list, search_text, options, None, scope)
 
     def _start_search_worker(
         self,
@@ -880,9 +818,7 @@ class FileSearchController(QObject):
         self.dialog.set_search_paths(root_paths)
         self.dialog.clear_results()
 
-        worker = self._setup_search_worker(
-            root_paths, search_text, options, mod_ids, scope
-        )
+        worker = self._setup_search_worker(root_paths, search_text, options, mod_ids, scope)
         worker.start()
         self.search_worker = worker
 
@@ -900,9 +836,7 @@ class FileSearchController(QObject):
         root_paths = active_mods + inactive_mods
 
         # Log the combined paths for debugging
-        logger.info(
-            f"All mods paths: {len(root_paths)} paths found (active + inactive)"
-        )
+        logger.info(f"All mods paths: {len(root_paths)} paths found (active + inactive)")
 
         return root_paths
 
@@ -989,9 +923,7 @@ class FileSearchController(QObject):
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
         _, inactive_uuids, _, _ = metadata.get_mods_from_list(mod_list_path)
-        logger.info(
-            f"Getting paths for {len(inactive_uuids)} inactive mods from mod list"
-        )
+        logger.info(f"Getting paths for {len(inactive_uuids)} inactive mods from mod list")
         return get_mod_paths_from_uuids(inactive_uuids)
 
     def _on_stop_clicked(self) -> None:
@@ -1028,13 +960,9 @@ class FileSearchController(QObject):
         """
         # Reset buttons
         self.dialog.search_button.setEnabled(True)
-        self.dialog.search_button.setStyleSheet(
-            "font-weight: bold; background-color: green;"
-        )
+        self.dialog.search_button.setStyleSheet("font-weight: bold; background-color: green;")
         self.dialog.stop_button.setEnabled(False)
-        self.dialog.stop_button.setStyleSheet(
-            "font-weight: bold; background-color: normal;"
-        )
+        self.dialog.stop_button.setStyleSheet("font-weight: bold; background-color: normal;")
 
     def _on_search_error(self, error_msg: str) -> None:
         """
@@ -1050,12 +978,10 @@ class FileSearchController(QObject):
         if "regex" in error_msg.lower():
             show_warning(
                 title=self.tr("Regular Expression Error"),
-                text=self.tr(
-                    "There was an error with your regular expression pattern."
+                text=self.tr("There was an error with your regular expression pattern."),
+                information=self.tr("{error_msg}\n\nTry simplifying your pattern or check for syntax errors.").format(
+                    error_msg=error_msg
                 ),
-                information=self.tr(
-                    "{error_msg}\n\nTry simplifying your pattern or check for syntax errors."
-                ).format(error_msg=error_msg),
             )
         elif "permission" in error_msg.lower() or "access" in error_msg.lower():
             show_warning(
@@ -1077,15 +1003,13 @@ class FileSearchController(QObject):
             show_warning(
                 title=self.tr("Search Error"),
                 text=self.tr("An error occurred during the search."),
-                information=self.tr(
-                    "{error_msg}\n\nPlease check your settings and try again."
-                ).format(error_msg=error_msg),
+                information=self.tr("{error_msg}\n\nPlease check your settings and try again.").format(
+                    error_msg=error_msg
+                ),
             )
 
         # Update the stats label to show the error
-        self.dialog.update_stats(
-            self.tr("Search failed: {error_msg[:100]}...").format(error_msg=error_msg)
-        )
+        self.dialog.update_stats(self.tr("Search failed: {error_msg[:100]}...").format(error_msg=error_msg))
 
         # Reset the UI
         self._on_search_finished()
@@ -1103,9 +1027,7 @@ class FileSearchController(QObject):
             self._filter_timer.timeout.connect(self._apply_filter)
 
         self._filter_text = text.lower()
-        self._filter_timer.start(
-            200
-        )  # Reduced debounce to 200 ms for more responsiveness
+        self._filter_timer.start(200)  # Reduced debounce to 200 ms for more responsiveness
 
     def _apply_filter(self) -> None:
         """
@@ -1139,9 +1061,7 @@ class FileSearchController(QObject):
             )
         )
 
-        logger.debug(
-            f"Filter complete - Visible rows: {visible_rows}/{self.dialog.results_table.rowCount()}"
-        )
+        logger.debug(f"Filter complete - Visible rows: {visible_rows}/{self.dialog.results_table.rowCount()}")
 
     def location_not_set(self) -> None:
         """

@@ -2184,6 +2184,18 @@ RimSort 将会把所有创意工坊模组复制到新实例的本地模组文件
         <translation>忽略编辑器</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>自动添加翻译</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>看法</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>显示翻译状态</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>下载</translation>
     </message>
@@ -2293,24 +2305,6 @@ RimSort 将会把所有创意工坊模组复制到新实例的本地模组文件
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam 数据库元数据已过期</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam 数据库已过期，建议更新!
-</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam 数据库最后更新时间：{last_updated}
-
-正在使用缓存但已过期的 Steam 数据库。</translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation>缺少 Version.txt</translation>
@@ -2705,6 +2699,14 @@ Do you want to proceed?</source>
         <translation>通过 Steam 订阅</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>提供翻译 - 该模组有翻译或已经本地化</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>未找到翻译 - 该模组未安装翻译</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>不在最新存档中</translation>
     </message>
@@ -2778,6 +2780,10 @@ Do you want to proceed?</source>
     <message>
         <source>Toggle warning</source>
         <translation>启用/禁用警告</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>查找翻译</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2862,6 +2868,38 @@ This operation will recursively delete all mod files, except for .dds textures f
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>
 此操作可能会删除残留的 .dds 纹理。Steam 对此不可靠。你想要继续吗？</translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation>数据库不可用</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam 创意工坊元数据数据库未加载。请首先使用数据库生成器构建数据库。</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>没有找到翻译</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>在 Steam 创意工坊数据库中未找到此模组的翻译模组。</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>选择翻译</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>找到 {len(translation_mods)} 翻译。选择一项打开：</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
     </message>
     <message>
         <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
@@ -3000,6 +3038,38 @@ Alternative Dependencies:</source>
         <translation>启用 [0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>数据库不可用</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Steam 创意工坊元数据数据库未加载。请首先使用数据库生成器构建数据库。</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>未找到翻译</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>未找到适用于您的活动模组列表的翻译模组。</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>添加翻译</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>已成功将 {count} 个翻译模组添加到活动列表中。</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>没有新翻译</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>所有找到的翻译模块都已处于活动状态。</translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation>隐藏过滤器已启用</translation>
     </message>
@@ -3022,6 +3092,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Color</source>
         <translation>颜色</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>笔记</translation>
     </message>
     <message>
         <source>Author(s)</source>
@@ -3050,18 +3124,6 @@ Alternative Dependencies:</source>
     <message>
         <source>Check Dependencies</source>
         <translation>查看依赖</translation>
-    </message>
-    <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding}{num_warnings} 警告</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding}{num_errors} 错误</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0 错误</translation>
     </message>
     <message>
         <source>Active</source>
@@ -3120,8 +3182,43 @@ Alternative Dependencies:</source>
         <translation>点击仅显示未在最新存档中的活动模组</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>{padding}{num} 个警告</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>{padding}{num} 个错误</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{padding}{count} 新</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>确认重置警告开关</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>您确定要重置所有警告/错误切换吗？</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>全部重置</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>确认重置 Mod 颜色</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>您确定要重置所有模组颜色吗？</translation>
     </message>
 </context>
 <context>
@@ -3145,6 +3242,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Statistics</source>
         <translation>统计信息</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>正在加载文件...%p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3303,6 +3404,10 @@ Alternative Dependencies:</source>
         <translation>滚动到日志显示的末尾</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>正在读取文件...%p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>路径: 从 URL 加载: {url}</translation>
     </message>
@@ -3329,6 +3434,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Player log file not found.</source>
         <translation>未找到玩家日志文件。</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>从 URL 读取日志...%p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3735,6 +3844,33 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>设置加载错误</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>如果继续，损坏文件的备份将保存到 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}。</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>继续</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>退出边缘排序</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>设置恢复失败</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort 无法从备份恢复您的设置。您可以通过将“settings.json.backup”或“settings.json.backup.old”从 {AppInfo().settings_backups_folder} 恢复到 {self._settings_file} 来手动恢复您的设置。</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3954,6 +4090,18 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>"Use This Instead" Database</source>
         <translation>''替代为此'' 数据库</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>要启用对此时间限制的编辑，请启用右侧的复选框（启用编辑）。
+删除 mod 后，这是我们等待该 mod 项从辅助元数据 DB 中删除的时间。 
+该辅助数据库包含模组颜色、切换警告、用户注释等信息。 
+这基本上会在删除后的几秒钟内保留您的模组颜色、用户注释等。 
+（这也适用于 RimSort 之外的删除）</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4412,16 +4560,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>这将启用对辅助元数据数据库数据删除时间限制的编辑。</translation>
     </message>
     <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>启用辅助元数据数据库性能模式</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>这在崩溃时增加了数据丢失/损坏的风险，从而提高了辅助数据库的性能。
-性能提高约 50%。</translation>
-    </message>
-    <message>
         <source>To add your own theme / stylesheet 
 
 1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
@@ -4448,18 +4586,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>将模组着色应用于背景而不是文本</translation>
-    </message>
-    <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>要启用此时间限制的编辑，请在高级设置中勾选相应的复选框。
-当模组被删除后，系统将在此时间段后从辅助元数据数据库中删除该模组项。
-该辅助数据库包含模组颜色、切换警告、用户备注等信息。
-此设置可在删除后保留模组的颜色、用户备注等信息指定的秒数。
-（此设置同样适用于RimSort外的删除操作）</translation>
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
@@ -4546,6 +4672,14 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML解析方式</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>在 Mod 名称搜索过滤器中包含 Mod 注释</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>此选项将包括在按模组名称搜索时搜索模组注释。</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5433,6 +5567,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} 在 {e.filename} 发生，错误代码 {error_code}。</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Steam DB 元数据已过期</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Steam 数据库已过期！考虑更新！</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Steam 数据库上次更新：{last_updated}
+
+回退到缓存但已过期的 Steam 数据库...</translation>
     </message>
 </context>
 <context>

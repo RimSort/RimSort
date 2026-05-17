@@ -5,10 +5,13 @@
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
 # nuitka-project: --windows-console-mode=attach
 # nuitka-project: --noinclude-default-mode=error
+# nuitka-project: --nofollow-import-to=numpy
+# nuitka-project: --noinclude-data-files=*qtwebengine_devtools_resources.pak
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
 # nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico
+# nuitka-project: --python-flag=no_asserts,no_docstrings
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
@@ -80,9 +83,7 @@ def handle_exception(
             title="RimSort crashed",
             text="The RimSort application crashed! Sorry for the inconvenience!",
             information="Please contact us on the Discord/Github to report the issue.",
-            details="".join(
-                traceback.format_exception(exc_type, exc_value, exc_traceback)
-            ),
+            details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
         )
 
     sys.exit()
@@ -120,15 +121,10 @@ def main_thread() -> None:
             # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
             # try to remove the Steam API key from the stacktrace
             pattern = "&key="
-            stacktrace = stacktrace[
-                : len(stacktrace)
-                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-            ]
+            stacktrace = stacktrace[: len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))]
         else:
             stacktrace = traceback.format_exc()
-        logger.error(
-            "The main application instantiation has failed with an uncaught exception:"
-        )
+        logger.error("The main application instantiation has failed with an uncaught exception:")
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
@@ -139,9 +135,7 @@ def main_thread() -> None:
             except Exception as e:
                 stacktrace = traceback.format_exc()
                 logger.warning(f"Exception: {e}")
-                logger.warning(
-                    f"watchdog received the following exception while exiting: {stacktrace}"
-                )
+                logger.warning(f"watchdog received the following exception while exiting: {stacktrace}")
         logger.info("Exiting application!")
         sys.exit()
 
@@ -194,13 +188,7 @@ if __name__ == "__main__":
     def formatter(record: "loguru.Record") -> str:
         """Custom formatter for loguru logger"""
         format_string = (
-            "[{level}]"
-            "[{time:YYYY-MM-DD HH:mm:ss}]"
-            "[{process.id}]"
-            "[{thread.name}]"
-            "[{module}]"
-            "[{function}][{line}]"
-            " : "
+            "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}][{thread.name}][{module}][{function}][{line}] : "
         )
 
         record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
@@ -224,9 +212,7 @@ if __name__ == "__main__":
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
-        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(
-            AppInfo().application_folder / "qtwebengine_locales"
-        )
+        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(AppInfo().application_folder / "qtwebengine_locales")
 
         # MacOS and Windows do not support fork, and can only use spawn
         if SYSTEM != "Linux":

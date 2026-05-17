@@ -2106,6 +2106,18 @@ How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2211,21 +2223,6 @@ How would you like to proceed?</source>
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation type="unfinished"></translation>
@@ -2591,6 +2588,14 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2663,6 +2668,10 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Toggle warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find translations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2745,6 +2754,38 @@ This operation will recursively delete all mod files, except for .dds textures f
     <message>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2876,6 +2917,38 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2893,6 +2966,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>PackageId</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2929,18 +3006,6 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Check Dependencies</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>0 errors</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2996,7 +3061,42 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3020,6 +3120,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3179,6 +3283,10 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3204,6 +3312,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Player log file not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3608,6 +3720,33 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3826,6 +3965,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>&quot;Use This Instead&quot; Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4225,28 +4372,11 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4378,6 +4508,14 @@ E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapf
     </message>
     <message>
         <source>XML Parsing Behavior</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5233,6 +5371,24 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

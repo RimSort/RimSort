@@ -76,9 +76,7 @@ class FileSearchDialog(QDialog):
         search_input_layout.addWidget(search_label)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(
-            self.tr("Enter text to search for in files")
-        )
+        self.search_input.setPlaceholderText(self.tr("Enter text to search for in files"))
         search_input_layout.addWidget(self.search_input)
 
         self.recent_searches_button = QPushButton("▼")
@@ -172,9 +170,7 @@ class FileSearchDialog(QDialog):
 
         self.skip_translations = QCheckBox(self.tr("Skip translations"))
         self.skip_translations.setChecked(True)
-        self.skip_translations.setToolTip(
-            self.tr("Skip translation files to improve search speed")
-        )
+        self.skip_translations.setToolTip(self.tr("Skip translation files to improve search speed"))
 
         self.skip_git = QCheckBox(self.tr("Skip .git folder"))
         self.skip_git.setChecked(True)
@@ -186,9 +182,7 @@ class FileSearchDialog(QDialog):
 
         self.skip_textures = QCheckBox(self.tr("Skip Textures folder"))
         self.skip_textures.setChecked(True)
-        self.skip_textures.setToolTip(
-            self.tr("Skip Textures folders containing images")
-        )
+        self.skip_textures.setToolTip(self.tr("Skip Textures folders containing images"))
 
         skip_options_column.addWidget(self.skip_translations)
         skip_options_column.addWidget(self.skip_git)
@@ -208,9 +202,7 @@ class FileSearchDialog(QDialog):
         buttons_layout.setSpacing(10)
 
         # Add a note about search method
-        search_method_info = QLabel(
-            self.tr("Search method is automatically selected based on options")
-        )
+        search_method_info = QLabel(self.tr("Search method is automatically selected based on options"))
         buttons_layout.addWidget(search_method_info)
 
         # Add spacer to push buttons to the right
@@ -258,9 +250,7 @@ class FileSearchDialog(QDialog):
 
         # Statistics
         self.stats_label = QLabel(self.tr("Ready to search"))
-        self.stats_label.setAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        )
+        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         status_row.addWidget(self.stats_label)
 
         progress_layout.addLayout(status_row)
@@ -278,9 +268,7 @@ class FileSearchDialog(QDialog):
         filter_layout.addWidget(filter_label)
 
         self.filter_input = QLineEdit()
-        self.filter_input.setPlaceholderText(
-            self.tr("Filter results by mod name, file name, or path")
-        )
+        self.filter_input.setPlaceholderText(self.tr("Filter results by mod name, file name, or path"))
         filter_layout.addWidget(self.filter_input)
 
         results_layout.addWidget(filter_group)
@@ -316,9 +304,7 @@ class FileSearchDialog(QDialog):
 
         # Set table properties for better appearance
         self.results_table.setAlternatingRowColors(True)
-        self.results_table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows
-        )
+        self.results_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.results_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.results_table.setSortingEnabled(True)
         self.results_table.verticalHeader().setVisible(False)
@@ -327,9 +313,7 @@ class FileSearchDialog(QDialog):
         self.results_table.setMinimumHeight(300)
 
         # Configure columns: full-width fit + manual resizing using proportional weights
-        self.results_table.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
+        self.results_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         header = self.results_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setMinimumSectionSize(40)
@@ -354,9 +338,7 @@ class FileSearchDialog(QDialog):
         results_layout.addWidget(results_table_group)
 
         # Add results section to main layout with stretch factor
-        main_layout.addWidget(
-            results_section, 1
-        )  # Give it a stretch factor of 1 to take available space
+        main_layout.addWidget(results_section, 1)  # Give it a stretch factor of 1 to take available space
 
         # Connect filter input to filter method
         self.filter_input.textChanged.connect(self._on_filter_changed)
@@ -405,11 +387,7 @@ class FileSearchDialog(QDialog):
         result_count = self.results_table.rowCount()
 
         if result_count > 0:
-            self.stats_label.setText(
-                self.tr("Found {result_count} results").format(
-                    result_count=result_count
-                )
-            )
+            self.stats_label.setText(self.tr("Found {result_count} results").format(result_count=result_count))
         else:
             self.stats_label.setText(self.tr("No results found"))
 
@@ -533,10 +511,7 @@ class FileSearchDialog(QDialog):
         col_count = self.results_table.columnCount()
         if col_count <= 0:
             return
-        if (
-            not getattr(self, "_results_col_weights", None)
-            or len(self._results_col_weights) != col_count
-        ):
+        if not getattr(self, "_results_col_weights", None) or len(self._results_col_weights) != col_count:
             # Initialize equal weights
             self._results_col_weights = [1.0 / col_count for _ in range(col_count)]
 
@@ -597,15 +572,9 @@ class FileSearchDialog(QDialog):
         # Handle keyboard shortcuts
         if event.key() == Qt.Key.Key_Return:
             self._open_file(path)
-        elif (
-            event.key() == Qt.Key.Key_C
-            and event.modifiers() == Qt.KeyboardModifier.ControlModifier
-        ):
+        elif event.key() == Qt.Key.Key_C and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             self._copy_path(path)
-        elif (
-            event.key() == Qt.Key.Key_O
-            and event.modifiers() == Qt.KeyboardModifier.ControlModifier
-        ):
+        elif event.key() == Qt.Key.Key_O and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             self._open_folder(path)
         else:
             super().keyPressEvent(event)
@@ -678,9 +647,7 @@ class FileSearchDialog(QDialog):
         if text.startswith("Found ") and " results" in text:
             self._on_search_complete()
 
-    def add_result(
-        self, mod_name: str, file_name: str, path: str, preview: str = ""
-    ) -> None:
+    def add_result(self, mod_name: str, file_name: str, path: str, preview: str = "") -> None:
         """Add a search result to the table with improved performance and error handling."""
         try:
             # Batch insertion for better performance
@@ -699,9 +666,7 @@ class FileSearchDialog(QDialog):
             max_preview_length = 1000
             if len(preview) > max_preview_length:
                 cutoff = preview.rfind("\n", 0, max_preview_length)
-                cutoff = (
-                    cutoff if cutoff > max_preview_length // 2 else max_preview_length
-                )
+                cutoff = cutoff if cutoff > max_preview_length // 2 else max_preview_length
                 preview = preview[:cutoff] + "\n... [Preview truncated]"
 
             # Create table items
@@ -725,10 +690,7 @@ class FileSearchDialog(QDialog):
             self.results_table.setItem(row, 3, preview_item)
 
             # Re-enable updates and sorting at batch boundaries
-            if (
-                current_row % batch_size == batch_size - 1
-                or current_row == self.results_table.rowCount() - 1
-            ):
+            if current_row % batch_size == batch_size - 1 or current_row == self.results_table.rowCount() - 1:
                 self.results_table.setUpdatesEnabled(True)
                 self.results_table.setSortingEnabled(True)
 
@@ -758,9 +720,7 @@ class FileSearchDialog(QDialog):
         # Add recent searches to menu
         for search in self._recent_searches:
             action = menu.addAction(search)
-            action.triggered.connect(
-                lambda checked=False, text=search: self._use_recent_search(text)
-            )
+            action.triggered.connect(lambda checked=False, text=search: self._use_recent_search(text))
 
         # Add a separator and clear action
         if self._recent_searches:
@@ -769,11 +729,7 @@ class FileSearchDialog(QDialog):
             clear_action.triggered.connect(self._clear_recent_searches)
 
         # Show menu below the button
-        menu.exec(
-            self.recent_searches_button.mapToGlobal(
-                self.recent_searches_button.rect().bottomLeft()
-            )
-        )
+        menu.exec(self.recent_searches_button.mapToGlobal(self.recent_searches_button.rect().bottomLeft()))
 
     def _use_recent_search(self, text: str) -> None:
         """Use a recent search"""
@@ -847,13 +803,11 @@ class FileSearchDialog(QDialog):
         # Update the stats label to show filter results
         if text:
             self.update_stats(
-                self.tr(
-                    "Filter: {visible_rows} of {total_rows} results visible"
-                ).format(visible_rows=visible_rows, total_rows=total_rows)
+                self.tr("Filter: {visible_rows} of {total_rows} results visible").format(
+                    visible_rows=visible_rows, total_rows=total_rows
+                )
             )
         elif total_rows > 0:
-            self.update_stats(
-                self.tr("Found {total_rows} results").format(total_rows=total_rows)
-            )
+            self.update_stats(self.tr("Found {total_rows} results").format(total_rows=total_rows))
         else:
             self.update_stats(self.tr("Ready to search"))

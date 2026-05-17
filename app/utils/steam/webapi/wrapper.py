@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from urllib.parse import urlparse
 
 import requests
 from loguru import logger
@@ -13,6 +14,7 @@ from PySide6.QtCore import QCoreApplication, QObject, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
@@ -51,9 +53,7 @@ class CollectionImport:
         """
         self.metadata_manager = metadata_manager
         self.translate = QCoreApplication.translate
-        self.package_ids: list[
-            str
-        ] = []  # Initialize an empty list to store package IDs
+        self.package_ids: list[str] = []  # Initialize an empty list to store package IDs
         self.publishedfileids: list[str] = []  # Initialize an empty list to store pfids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
@@ -81,9 +81,10 @@ class CollectionImport:
         Returns:
             bool: True if the link is valid, False otherwise.
         """
-        return link.startswith(BASE_URL) and (
-            BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link
-        )
+        parsed = urlparse(link)
+        if parsed.scheme != "https" or parsed.hostname != "steamcommunity.com":
+            return False
+        return BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link
 
     def import_collection_link(self) -> None:
         # Handle the import button click event
@@ -92,9 +93,7 @@ class CollectionImport:
 
         # Check if the input link is a valid workshop collection link
         if not self.is_valid_collection_link(collection_link):
-            logger.error(
-                "Invalid Workshop collection link. Please enter a valid Workshop collection link."
-            )
+            logger.error("Invalid Workshop collection link. Please enter a valid Workshop collection link.")
             # Show warning message box
             show_warning(
                 title=self.translate("CollectionImport", "Invalid Link"),
@@ -110,13 +109,8 @@ class CollectionImport:
                 collection_link = collection_link.split(BASE_URL_STEAMFILES, 1)[1]
             elif BASE_URL_WORKSHOP in collection_link:
                 collection_link = collection_link.split(BASE_URL_WORKSHOP, 1)[1]
-            collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
-                [collection_link]
-            )
-            if (
-                collection_webapi_result is not None
-                and len(collection_webapi_result) > 0
-            ):
+            collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails([collection_link])
+            if collection_webapi_result is not None and len(collection_webapi_result) > 0:
                 self.publishedfileids = [
                     pfid
                     for mod in collection_webapi_result[0]["children"]
@@ -129,8 +123,7 @@ class CollectionImport:
                         pkgid = self._get_package_id_from_pfid(pfid)
                     except ValueError:
                         logger.warning(
-                            f"Failed to parse packageId from collection PublishedFileId {pfid}: "
-                            "incorrect pfid format"
+                            f"Failed to parse packageId from collection PublishedFileId {pfid}: incorrect pfid format"
                         )
                         failed_mods.append(f"{pfid} - incorrect pfid format")
                         continue
@@ -139,7 +132,7 @@ class CollectionImport:
                         steam_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
 
                         try:
-                            steam_response = requests.get(steam_link).text
+                            steam_response = http.get(steam_link).text
                         except Exception as e:
                             logger.exception(e)
                             steam_response = ""
@@ -168,9 +161,7 @@ class CollectionImport:
                         details="\n".join(failed_mods),
                     )
         except Exception as e:
-            logger.error(
-                f"An error occurred while fetching collection content: {str(e)}"
-            )
+            logger.error(f"An error occurred while fetching collection content: {str(e)}")
 
     def _get_package_id_from_pfid(self, pfid: str | int | None) -> str | None:
         """Map published id to package id if possible
@@ -185,9 +176,7 @@ class CollectionImport:
             return None
         pfid_str = str(pfid).strip()
         if not pfid_str.isdigit():
-            raise ValueError(
-                f"PublishedFileId (pfid) is expected to be a numeric sequence, not {pfid_str}"
-            )
+            raise ValueError(f"PublishedFileId (pfid) is expected to be a numeric sequence, not {pfid_str}")
         return (
             self._get_package_id_from_pfid_using_steamdb(pfid_str)
             or self._get_package_id_from_pfid_using_metadata(pfid_str)
@@ -209,11 +198,7 @@ class CollectionImport:
         )
 
     def _get_package_id_from_pfid_using_steamdb(self, pfid: str) -> str | None:
-        steamdb = (
-            self.metadata_manager.external_steam_metadata
-            if self.metadata_manager
-            else None
-        )
+        steamdb = self.metadata_manager.external_steam_metadata if self.metadata_manager else None
         if not steamdb:
             return None
         mod = steamdb.get(pfid)
@@ -327,20 +312,15 @@ class DynamicQuery(QObject):
             pattern = "&key="
             if pattern in stacktrace:
                 stacktrace = stacktrace[
-                    : len(stacktrace)
-                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                    : len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                 ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-            logger.warning(
-                f"Dynamic Query received an uncaught exception: {e.__class__.__name__}"
-            )
+            logger.warning(f"Dynamic Query received an uncaught exception: {e.__class__.__name__}")
             self._emit_message(
                 "\nDynamicQuery failed to initialize WebAPI query!"
                 + "\nAre you connected to the internet?\nIs your configured key invalid or revoked?\n"
             )
 
-    def create_steam_db(
-        self, database: Dict[str, Any], publishedfileids: list[str]
-    ) -> None:
+    def create_steam_db(self, database: Dict[str, Any], publishedfileids: list[str]) -> None:
         """
         Builds a database using a chunked WebAPI query of all available
         PublishedFileIds supplied.
@@ -367,14 +347,10 @@ class DynamicQuery(QObject):
             # Returns WHAT we can get remotely, FROM what we have locally
             query, missing_children = result
 
-            if (
-                missing_children and len(missing_children) > 0
-            ):  # If we have missing data for any dependency...
+            if missing_children and len(missing_children) > 0:  # If we have missing data for any dependency...
                 # Uncomment to see the contents of missing_children
                 # logger.debug(missing_children)
-                self._emit_message(
-                    f"\nRetrieving dependency information for {len(missing_children)} missing children"
-                )
+                self._emit_message(f"\nRetrieving dependency information for {len(missing_children)} missing children")
                 # Extend publishedfileids with the missing_children PublishedFileIds for final query
                 publishedfileids.extend(missing_children)
                 # Launch a separate query from the initial, to recursively append
@@ -404,17 +380,11 @@ class DynamicQuery(QObject):
                 querying = False
 
         if self.get_appid_deps:
-            self._emit_message(
-                "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)"
-            )
+            self._emit_message("\nAppID dependency retrieval enabled. Starting Steamworks API call(s)")
             # ISteamUGC/GetAppDependencies
-            self.ISteamUGC_GetAppDependencies(
-                publishedfileids=publishedfileids, query=query
-            )
+            self.ISteamUGC_GetAppDependencies(publishedfileids=publishedfileids, query=query)
         else:
-            self._emit_message(
-                "\nAppID dependency retrieval disabled. Skipping Steamworks API call(s)!"
-            )
+            self._emit_message("\nAppID dependency retrieval disabled. Skipping Steamworks API call(s)!")
 
         # Notify & return
         total = len(query["database"])
@@ -435,9 +405,7 @@ class DynamicQuery(QObject):
                 if self.pagenum > self.pages:
                     query = False
                     break
-                self.next_cursor = self.IPublishedFileService_QueryFiles(
-                    self.next_cursor
-                )
+                self.next_cursor = self.IPublishedFileService_QueryFiles(self.next_cursor)
         else:
             self._emit_message("AppIDQuery: WebAPI failed to initialize!")
 
@@ -461,9 +429,7 @@ class DynamicQuery(QObject):
         """
         chunks_processed = 0
         total = len(publishedfileids)
-        self._emit_message(
-            f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
-        )
+        self._emit_message(f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n")
         self._emit_message(f"IPublishedFileService/GetDetails chunk [0/{total}]")
         if not self.api:  # If we don't have API initialized
             return None  # Exit query
@@ -506,9 +472,7 @@ class DynamicQuery(QObject):
                     # logger.debug(f"{publishedfileid}: {metadata}")
                     # If the mod is no longer published
                     if metadata["result"] != 1:
-                        if not result[
-                            "database"
-                        ].get(
+                        if not result["database"].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
                             result["database"][publishedfileid] = {}
@@ -522,18 +486,12 @@ class DynamicQuery(QObject):
                         # This case is mostly intended for any missing_children passed back thru
                         # If this is part of an AppIDQuery, then it is useful for population of
                         # child_name and/or child_url below as part of the dependency data being collected
-                        if not result[
-                            "database"
-                        ].get(
+                        if not result["database"].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
-                            result["database"][
-                                publishedfileid
-                            ] = {}  # Add in skeleton data
+                            result["database"][publishedfileid] = {}  # Add in skeleton data
                         # We populate the data
-                        result["database"][publishedfileid]["steamName"] = metadata[
-                            "title"
-                        ]
+                        result["database"][publishedfileid]["steamName"] = metadata["title"]
                         result["database"][publishedfileid]["url"] = (
                             f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                         )
@@ -551,37 +509,26 @@ class DynamicQuery(QObject):
                         result["database"][publishedfileid]["dependencies"] = {}
                         # If the publishing has listed mod dependencies
                         if metadata.get("children"):
-                            for children in metadata[
-                                "children"
-                            ]:  # Check if children present in database
+                            for children in metadata["children"]:  # Check if children present in database
                                 child_pfid = children["publishedfileid"]
-                                if result["database"].get(
-                                    child_pfid
-                                ):  # If we have data for this child already cached
+                                if result["database"].get(child_pfid):  # If we have data for this child already cached
                                     if not result["database"][child_pfid].get(
                                         "unpublished"
                                     ):  # ... and the mod is published, populate it
                                         if result["database"][child_pfid].get(
                                             "name"
                                         ):  # Use local name over Steam name if possible
-                                            child_name = result["database"][child_pfid][
-                                                "name"
-                                            ]
-                                        elif result["database"][child_pfid].get(
-                                            "steamName"
-                                        ):
-                                            child_name = result["database"][child_pfid][
-                                                "steamName"
-                                            ]
+                                            child_name = result["database"][child_pfid]["name"]
+                                        elif result["database"][child_pfid].get("steamName"):
+                                            child_name = result["database"][child_pfid]["steamName"]
                                         else:  # This is a stub value used in-memory only (hopefully)
                                             # and is intended for AppIdQuery first pass
                                             child_name = "UNKNOWN"
-                                        child_url = result["database"][child_pfid][
-                                            "url"
+                                        child_url = result["database"][child_pfid]["url"]
+                                        result["database"][publishedfileid]["dependencies"][child_pfid] = [
+                                            child_name,
+                                            child_url,
                                         ]
-                                        result["database"][publishedfileid][
-                                            "dependencies"
-                                        ][child_pfid] = [child_name, child_url]
                                 else:  # Child was not found in database, track it's pfid for later
                                     if child_pfid not in missing_children:
                                         logger.debug(
@@ -591,26 +538,20 @@ class DynamicQuery(QObject):
             except Exception as e:
                 stacktrace = traceback.format_exc()
                 if (
-                    e.__class__.__name__ == "HTTPError"
-                    or e.__class__.__name__ == "SSLError"
+                    e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
                 ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
                     # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
                     # try to remove the Steam API key from the stacktrace
                     pattern = "&key="
                     stacktrace = stacktrace[
-                        : len(stacktrace)
-                        - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                        : len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                     ]
                 logger.error(
                     f"IPublishedFileService/GetDetails errored querying batch [{chunks_processed}/{total}]: {stacktrace}"
                 )
-            self._emit_message(
-                f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]"
-            )
+            self._emit_message(f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]")
         for missing_child in missing_children:
-            if result["database"].get(missing_child) and result["database"][
-                missing_child
-            ].get(
+            if result["database"].get(missing_child) and result["database"][missing_child].get(
                 "unpublished"
             ):  # If there is somehow an unpublished mod in missing_children, remove it
                 missing_children.remove(missing_child)
@@ -636,9 +577,7 @@ class DynamicQuery(QObject):
         WebAPI.call() results that are being are parsing
         """
         if self.api is None:
-            raise Exception(
-                "Tried to query files while API was not properly initialized."
-            )  # Exit query
+            raise Exception("Tried to query files while API was not properly initialized.")  # Exit query
 
         result = self.api.call(
             method_path="IPublishedFileService.QueryFiles",
@@ -664,6 +603,10 @@ class DynamicQuery(QObject):
             date_range_created=None,
             date_range_updated=None,
             excluded_content_descriptors=None,
+            special_filter=None,
+            appids_required_for_use=None,
+            excluded_appids_required_for_use=None,
+            search_text_target=None,
             totalonly=False,
             ids_only=True,
             return_vote_data=False,
@@ -679,24 +622,15 @@ class DynamicQuery(QObject):
             admin_query=False,
         )
         # Print total mods found we need to iter through paginations to get info for
-        if (
-            self.pagenum and self.total == 0
-        ):  # If True, this is initial loop; we properly set them in initial loop
+        if self.pagenum and self.total == 0:  # If True, this is initial loop; we properly set them in initial loop
             if result["response"]["total"]:
                 self.pagenum = 1
                 self.total = result["response"]["total"]
-                self.pages = ceil(
-                    self.total / len(result["response"]["publishedfiledetails"])
-                )
+                self.pages = ceil(self.total / len(result["response"]["publishedfiledetails"]))
                 # Since this is only run during the initial loop, we print out the 0
                 # needed for RunnerPanel progress bar calculations
-                self._emit_message(
-                    "IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
-                )
-        self._emit_message(
-            f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}"
-            + f"/{str(self.pages)}]"
-        )
+                self._emit_message("IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]")
+        self._emit_message(f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}" + f"/{str(self.pages)}]")
         ids_from_page = []
         for item in result["response"]["publishedfiledetails"]:
             self.publishedfileids.append(item["publishedfileid"])
@@ -704,9 +638,7 @@ class DynamicQuery(QObject):
         self.pagenum += 1
         return result["response"]["next_cursor"]
 
-    def ISteamUGC_GetAppDependencies(
-        self, publishedfileids: list[str], query: Dict[str, Any]
-    ) -> None:
+    def ISteamUGC_GetAppDependencies(self, publishedfileids: list[str], query: Dict[str, Any]) -> None:
         """
         Given a list of PublishedFileIds and a query, return the query after looking up
         and appending DLC dependency data from the Steamworks API.
@@ -728,7 +660,7 @@ class DynamicQuery(QObject):
             # Create instances of SteamworksAppDependenciesQuery for each chunk
             queries = [
                 SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk],
+                    pfid_or_pfids=[int(str_pfid) for str_pfid in chunk],
                     interval=1,
                     _libs=str((AppInfo().application_folder / "libs")),
                 )
@@ -785,16 +717,14 @@ def ISteamRemoteStorage_GetCollectionDetails(
     # Construct arguments to pass to the API call
     metadata = []
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):
-        logger.debug(
-            f"Querying details for {len(chunk)} collection(s) via Steam WebAPI"
-        )
+        logger.debug(f"Querying details for {len(chunk)} collection(s) via Steam WebAPI")
         # Construct arguments to pass to the API call
         data = {"collectioncount": f"{str(len(chunk))}"}
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = http.post(url, data=data, timeout=(5, 60))
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -837,13 +767,15 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
+        # jscpd:ignore-start
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = http.post(url, data=data, timeout=(5, 60))
         except Exception as e:
             logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
+        # jscpd:ignore-end
         try:  # Parse the JSON response
             json_response = request.json()
             if json_response.get("response", {}).get("resultcount", 0) > 0:

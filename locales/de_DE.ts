@@ -2171,6 +2171,18 @@ How would you like to proceed?</source>
         <translation>Warnschaltungen zurücksetzen</translation>
     </message>
     <message>
+        <source>Auto-add Translations</source>
+        <translation>Übersetzungen automatisch hinzufügen</translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation>Sicht</translation>
+    </message>
+    <message>
+        <source>Show Translation Status</source>
+        <translation>Übersetzungsstatus anzeigen</translation>
+    </message>
+    <message>
         <source>Download</source>
         <translation>Herunterladen</translation>
     </message>
@@ -2276,23 +2288,6 @@ How would you like to proceed?</source>
 </context>
 <context>
     <name>MetadataManager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Dampf -DB -Metadaten sind abgelaufen</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB ist abgelaufen!Erwägen Sie das Aktualisieren!</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam db letztes aktualisiert: {last_updated}
-
-Zurück auf zwischengespeicherte, aber abgelaufene Steam -Datenbank ...</translation>
-    </message>
     <message>
         <source>Missing Version.txt</source>
         <translation>Fehlende Version.txt</translation>
@@ -2682,6 +2677,14 @@ Möchten Sie fortfahren?</translation>
         <translation>Über Dampf abonniert</translation>
     </message>
     <message>
+        <source>Translation available - This mod has a translation or is already localized</source>
+        <translation>Übersetzung verfügbar – Dieser Mod hat eine Übersetzung oder ist bereits lokalisiert</translation>
+    </message>
+    <message>
+        <source>No translation found - This mod does not have a translation installed</source>
+        <translation>Keine Übersetzung gefunden – Für diesen Mod ist keine Übersetzung installiert</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>Nicht im letzten Speichern</translation>
     </message>
@@ -2755,6 +2758,10 @@ Möchten Sie fortfahren?</translation>
     <message>
         <source>Toggle warning</source>
         <translation>Warnung umschalten</translation>
+    </message>
+    <message>
+        <source>Find translations</source>
+        <translation>Übersetzungen finden</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
@@ -2837,6 +2844,38 @@ This operation will recursively delete all mod files, except for .dds textures f
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation>Dieser Vorgang löscht möglicherweise .DDS -Texturen übrig. Dampf ist dafür unzuverlässig. Möchten Sie fortfahren?</translation>
+    </message>
+    <message>
+        <source>Database not available</source>
+        <translation>Datenbank nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Die Steam Workshop-Metadatendatenbank ist nicht geladen. Bitte erstellen Sie zunächst die Datenbank mit dem Database Builder.</translation>
+    </message>
+    <message>
+        <source>No translations found</source>
+        <translation>Keine Übersetzungen gefunden</translation>
+    </message>
+    <message>
+        <source>No translation mods were found for this mod in the Steam Workshop database.</source>
+        <translation>Für diesen Mod wurden in der Steam Workshop-Datenbank keine Übersetzungsmods gefunden.</translation>
+    </message>
+    <message>
+        <source>Select Translation</source>
+        <translation>Wählen Sie Übersetzung</translation>
+    </message>
+    <message>
+        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <translation>{len(translation_mods)} Übersetzung(en) gefunden. Wählen Sie eine zum Öffnen aus:</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Offen</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Stornieren</translation>
     </message>
     <message>
         <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
@@ -2968,6 +3007,38 @@ Alternative Dependencies:</source>
         <translation>Aktiv [0]</translation>
     </message>
     <message>
+        <source>Database not available</source>
+        <translation>Datenbank nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>Steam Workshop metadata database is not loaded. Please build the database first using the Database Builder.</source>
+        <translation>Die Steam Workshop-Metadatendatenbank ist nicht geladen. Bitte erstellen Sie zunächst die Datenbank mit dem Database Builder.</translation>
+    </message>
+    <message>
+        <source>No Translations Found</source>
+        <translation>Keine Übersetzungen gefunden</translation>
+    </message>
+    <message>
+        <source>No applicable translation mods were found for your active mod list.</source>
+        <translation>Für Ihre aktive Mod-Liste wurden keine anwendbaren Übersetzungs-Mods gefunden.</translation>
+    </message>
+    <message>
+        <source>Translations Added</source>
+        <translation>Übersetzungen hinzugefügt</translation>
+    </message>
+    <message>
+        <source>Successfully added {count} translation mods to the active list.</source>
+        <translation>{count} Übersetzungs-Mods wurden erfolgreich zur aktiven Liste hinzugefügt.</translation>
+    </message>
+    <message>
+        <source>No New Translations</source>
+        <translation>Keine neuen Übersetzungen</translation>
+    </message>
+    <message>
+        <source>All found translation mods are already active.</source>
+        <translation>Alle gefundenen Übersetzungsmods sind bereits aktiv.</translation>
+    </message>
+    <message>
         <source>Hide Filter Enabled</source>
         <translation>Filter ausblenden aktiviert</translation>
     </message>
@@ -2986,6 +3057,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Folder Size</source>
         <translation>Ordnergröße</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>Notizen</translation>
     </message>
     <message>
         <source>Toggle sort order</source>
@@ -3056,18 +3131,6 @@ Alternative Dependencies:</source>
         <translation>Überprüfen Sie die Abhängigkeiten</translation>
     </message>
     <message>
-        <source>{padding}{num_warnings} warning(s)</source>
-        <translation>{padding} {num_warnings} Warnung (s)</translation>
-    </message>
-    <message>
-        <source>{padding}{num_errors} error(s)</source>
-        <translation>{padding} {num_errors} fehler (s)</translation>
-    </message>
-    <message>
-        <source>0 errors</source>
-        <translation>0 Fehler</translation>
-    </message>
-    <message>
         <source>Active</source>
         <translation>Aktiv</translation>
     </message>
@@ -3088,8 +3151,43 @@ Alternative Dependencies:</source>
         <translation>Klicken Sie hier, um nur aktive Mods nicht in der neuesten Speicherung anzeigen</translation>
     </message>
     <message>
+        <source>{padding}{num} warning(s)</source>
+        <translation>{padding}{num} Warnung(en)</translation>
+    </message>
+    <message>
+        <source>{padding}{num} error(s)</source>
+        <translation>{padding}{num} Fehler(e)</translation>
+    </message>
+    <message>
         <source>{padding}{count} new</source>
         <translation>{padding} {count} neu</translation>
+    </message>
+</context>
+<context>
+    <name>ModsPanelController</name>
+    <message>
+        <source>Confirm Resetting Warning Toggles</source>
+        <translation>Bestätigen Sie das Zurücksetzen der Warnschalter</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all warning/error toggles?</source>
+        <translation>Sind Sie sicher, dass Sie alle Warnungs-/Fehlerumschaltungen zurücksetzen möchten?</translation>
+    </message>
+    <message>
+        <source>Reset All</source>
+        <translation>Alles zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Stornieren</translation>
+    </message>
+    <message>
+        <source>Confirm Resetting Mod Colors</source>
+        <translation>Bestätigen Sie das Zurücksetzen der Mod-Farben</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to reset all mod colors?</source>
+        <translation>Sind Sie sicher, dass Sie alle Mod-Farben zurücksetzen möchten?</translation>
     </message>
 </context>
 <context>
@@ -3113,6 +3211,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Statistics</source>
         <translation>Statistiken</translation>
+    </message>
+    <message>
+        <source>Loading file... %p%</source>
+        <translation>Datei wird geladen... %p%</translation>
     </message>
     <message>
         <source>Total Lines: {total_lines}</source>
@@ -3271,6 +3373,10 @@ Alternative Dependencies:</source>
         <translation>Scrollen Sie bis zum Ende der Protokollanzeige</translation>
     </message>
     <message>
+        <source>Reading file... %p%</source>
+        <translation>Datei wird gelesen... %p%</translation>
+    </message>
+    <message>
         <source>Path: Loaded from URL: {url}</source>
         <translation>Pfad: geladen aus der URL: {url}</translation>
     </message>
@@ -3297,6 +3403,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Player log file not found.</source>
         <translation>Spielerprotokolldatei nicht gefunden.</translation>
+    </message>
+    <message>
+        <source>Reading log from URL... %p%</source>
+        <translation>Protokoll von URL lesen... %p%</translation>
     </message>
     <message>
         <source>Enter URL:</source>
@@ -3703,6 +3813,33 @@ Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlg
     </message>
 </context>
 <context>
+    <name>Settings</name>
+    <message>
+        <source>Settings Load Error</source>
+        <translation>Fehler beim Laden der Einstellungen</translation>
+    </message>
+    <message>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
+        <translation>Wenn Sie fortfahren, wird eine Sicherung der beschädigten Datei in {AppInfo().settings_backups_folder / 'settings.json.corrupted'} gespeichert.</translation>
+    </message>
+    <message>
+        <source>Proceed</source>
+        <translation>Fortfahren</translation>
+    </message>
+    <message>
+        <source>Exit RimSort</source>
+        <translation>Beenden Sie RimSort</translation>
+    </message>
+    <message>
+        <source>Settings Recovery Failed</source>
+        <translation>Wiederherstellung der Einstellungen fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort konnte Ihre Einstellungen aus der Sicherung nicht wiederherstellen. Möglicherweise können Sie Ihre Einstellungen manuell wiederherstellen, indem Sie „settings.json.backup“ oder „settings.json.backup.old“ von {AppInfo().settings_backups_folder} in {self._settings_file} wiederherstellen.</translation>
+    </message>
+</context>
+<context>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
@@ -3922,6 +4059,18 @@ Klicken Sie auf "Details anzeigen", um eine Liste von Mods anzuzeigen, die fehlg
     <message>
         <source>"Use This Instead" Database</source>
         <translation>"Verwenden Sie diese stattdessen" Datenbank</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Um die Bearbeitung dieses Zeitlimits zu ermöglichen, aktivieren Sie das Kontrollkästchen (Bearbeitung aktivieren) auf der rechten Seite.
+Nachdem ein Mod gelöscht wurde, ist dies die Zeit, die wir warten, bis dieses Mod-Element aus der Auxiliary Metadata DB gelöscht wird. 
+Diese Hilfsdatenbank enthält Informationen zu Mod-Farben, umschaltbaren Warnungen, Benutzernotizen usw. 
+Dadurch bleiben Ihre Mod-Farben, Benutzernotizen usw. im Grunde für viele Sekunden nach dem Löschen erhalten. 
+(Dies gilt auch für das Löschen außerhalb von RimSort)</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4351,34 +4500,12 @@ Der Name des Ordners wird als Name des Themas verwendet und jedes ungültige The
         <translation>Auxiliary Metadata DB -Löschzeitbeschränkung in Sekunden. (Sofort löschen 0, niemals -1 löschen)</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, check the relevant checkbox in Advanced settings.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Aktivieren Sie das relevante Kontrollkästchen in erweiterten Einstellungen, um die Bearbeitung dieses Zeitlimits zu aktivieren.
-Nachdem ein Mod gelöscht wurde, ist dies die Zeit, die wir warten, bis dieser Modelement aus dem Hilfsmetadaten dB gelöscht wird. 
-Diese Auxiliary DB enthält Informationen für Mod -Farben, WARNUNG, User Notes usw. 
-Dies bewahrt im Grunde genommen Ihre Mod -Färbung, Benutzernotizen usw. für so viele Sekunden nach dem Löschen bei. 
-(Dies gilt auch für die Löschung außerhalb von Rimsort)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>Bearbeiten aktivieren</translation>
     </message>
     <message>
         <source>This enables the editing of the time limit for Aux Metadata DB data deletion.</source>
         <translation>Dies ermöglicht die Bearbeitung des Zeitlimits für die DB -Datenlöschung von Aux -Metadaten.</translation>
-    </message>
-    <message>
-        <source>Enable Auxiliary Metadata DB performance mode</source>
-        <translation>Aktivieren</translation>
-    </message>
-    <message>
-        <source>This improves Auxiliary DB performance at the increased risk of data loss/corruption in the event of crashes.
-Improves performance by ~50%.</source>
-        <translation>Dies verbessert die DB -Leistung der Hilfsdauer mit dem erhöhten Risiko eines Datenverlusts/der Korruption bei Abstürzen.
-Verbessert die Leistung um ~ 50%.</translation>
     </message>
     <message>
         <source>Delete before update</source>
@@ -4513,6 +4640,14 @@ Z. B. 'oels.vehiclemapframework', Alternativen: 'oels.vehiclemapframework.dev' '
     <message>
         <source>XML Parsing Behavior</source>
         <translation>XML Parsing -Verhalten</translation>
+    </message>
+    <message>
+        <source>Include mod notes in mod name search filter</source>
+        <translation>Fügen Sie Mod-Notizen in den Suchfilter für Mod-Namen ein</translation>
+    </message>
+    <message>
+        <source>This option will include searching mod notes when searching by mod name.</source>
+        <translation>Diese Option umfasst die Suche nach Mod-Notizen bei der Suche nach Mod-Namen.</translation>
     </message>
     <message>
         <source>Create backup before RimSort update</source>
@@ -5400,6 +5535,26 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>ist bei  mit dem Fehlercode {error_code} aufgetreten. {e.strerror} {e.filename}</translation>
+    </message>
+</context>
+<context>
+    <name>self.manager</name>
+    <message>
+        <source>Steam DB metadata expired</source>
+        <translation>Steam-DB-Metadaten sind abgelaufen</translation>
+    </message>
+    <message>
+        <source>Steam DB is expired! Consider updating!
+</source>
+        <translation>Steam DB ist abgelaufen! Erwägen Sie eine Aktualisierung!</translation>
+    </message>
+    <message>
+        <source>Steam DB last updated: {last_updated}
+
+Falling back to cached, but EXPIRED Steam Database...</source>
+        <translation>Letzte Aktualisierung der Steam-Datenbank: {last_updated}
+
+Zurückgreifen auf die zwischengespeicherte, aber ABGELAUFENE Steam-Datenbank ...</translation>
     </message>
 </context>
 <context>

@@ -49,7 +49,7 @@ jobs:
         run: mv .venv /home/runner/work/_temp/_github_workflow
 
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v8.5.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v8.6.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,6 +58,7 @@ jobs:
             /github/workflow/.venv/lib/python3.12/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
+          VALIDATE_PYTHON_RUFF_FORMAT: true
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITLEAKS: true
           VALIDATE_JSON: true
@@ -75,6 +76,7 @@ jobs:
           IGNORE_GITIGNORED_FILES: true
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
+          FIX_PYTHON_RUFF_FORMAT: true
       - name: Commit and push linting fixes
         # Run only on:
         # - Pull requests from the same repository
