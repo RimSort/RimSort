@@ -2855,6 +2855,10 @@ class ModsPanel(QWidget):
         "Color": ModsPanelSortKey.MOD_COLOR,
     }
 
+    # Note: combobox items store their corresponding `ModsPanelSortKey` in
+    # userData; avoid index-based mappings which are fragile if ordering
+    # changes or items are hidden.
+
     def update_sort_ui_from_settings(self) -> None:
         """
         Update the inactive mods sort UI elements from settings.
@@ -2863,20 +2867,18 @@ class ModsPanel(QWidget):
         """
         self.inactive_mods_sort_key = self.settings_controller.settings.inactive_mods_sort_key
         self.inactive_mods_sort_descending = self.settings_controller.settings.inactive_mods_sort_descending
-        # Map enum names to translated text for setting combo box selection
-        key_to_text = {
-            "MODNAME": self.tr("Name"),
-            "AUTHOR": self.tr("Author"),
-            "FILESYSTEM_MODIFIED_TIME": self.tr("Modified Time"),
-            "FOLDER_SIZE": self.tr("Folder Size"),
-            "VERSION": self.tr("Version"),
-            "PACKAGEID": self.tr("PackageId"),
-            "MOD_COLOR": self.tr("Color"),
-        }
-        # Set combo box selection based on loaded settings
-        self.inactive_mods_sort_combobox.setCurrentText(
-            key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
-        )
+        # Select the combo box entry by matching stored enum name to item userData
+        try:
+            desired_enum = ModsPanelSortKey[self.inactive_mods_sort_key]
+        except Exception:
+            desired_enum = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
+        idx = self.inactive_mods_sort_combobox.findData(desired_enum)
+        if idx >= 0:
+            self.inactive_mods_sort_combobox.setCurrentIndex(idx)
+        else:
+            fallback_idx = self.inactive_mods_sort_combobox.findData(ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME)
+            if fallback_idx >= 0:
+                self.inactive_mods_sort_combobox.setCurrentIndex(fallback_idx)
         # Update sort order button text
         self.inactive_mods_sort_order_button.setText(
             self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
@@ -3211,31 +3213,31 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox.setObjectName("MainUI")
         self.inactive_mods_sort_combobox.setMaximumWidth(120)
         self.inactive_mods_sort_combobox.setToolTip(self.tr("Sort inactive mods by"))
-        self.inactive_mods_sort_combobox.addItems(
-            [
-                self.tr("Name"),
-                self.tr("Author"),
-                self.tr("Modified Time"),
-                self.tr("Folder Size"),
-                self.tr("Version"),
-                self.tr("PackageId"),
-                self.tr("Color"),
-            ]
-        )
-        # Map enum names to translated text for setting initial combo box selection
-        key_to_text = {
-            "MODNAME": self.tr("Name"),
-            "AUTHOR": self.tr("Author"),
-            "FILESYSTEM_MODIFIED_TIME": self.tr("Modified Time"),
-            "FOLDER_SIZE": self.tr("Folder Size"),
-            "VERSION": self.tr("Version"),
-            "PACKAGEID": self.tr("PackageId"),
-            "MOD_COLOR": self.tr("Color"),
-        }
-        # Set initial combo box selection based on loaded settings
-        self.inactive_mods_sort_combobox.setCurrentText(
-            key_to_text.get(self.inactive_mods_sort_key, self.tr("Modified Time"))
-        )
+        # Populate combobox with translated text and store the corresponding
+        # ModsPanelSortKey enum in the userData for each item. Using userData
+        # keeps the mapping stable across locales and if the visible text changes.
+        self.inactive_mods_sort_combobox.addItem(self.tr("Name"), ModsPanelSortKey.MODNAME)
+        self.inactive_mods_sort_combobox.addItem(self.tr("Author"), ModsPanelSortKey.AUTHOR)
+        self.inactive_mods_sort_combobox.addItem(self.tr("Modified Time"), ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME)
+        self.inactive_mods_sort_combobox.addItem(self.tr("Folder Size"), ModsPanelSortKey.FOLDER_SIZE)
+        self.inactive_mods_sort_combobox.addItem(self.tr("Version"), ModsPanelSortKey.VERSION)
+        self.inactive_mods_sort_combobox.addItem(self.tr("PackageId"), ModsPanelSortKey.PACKAGEID)
+        self.inactive_mods_sort_combobox.addItem(self.tr("Color"), ModsPanelSortKey.MOD_COLOR)
+        # Set initial combo box selection based on loaded settings by matching
+        # the stored enum name to the item userData. Fall back to
+        # FILESYSTEM_MODIFIED_TIME if the stored value is invalid.
+        try:
+            desired_enum = ModsPanelSortKey[self.inactive_mods_sort_key]
+        except Exception:
+            desired_enum = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
+        idx = self.inactive_mods_sort_combobox.findData(desired_enum)
+        if idx >= 0:
+            self.inactive_mods_sort_combobox.setCurrentIndex(idx)
+        else:
+            # Ensure at least a sensible default is selected
+            fallback_idx = self.inactive_mods_sort_combobox.findData(ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME)
+            if fallback_idx >= 0:
+                self.inactive_mods_sort_combobox.setCurrentIndex(fallback_idx)
         # Sort order toggle (Asc/Desc)
         self.inactive_sort_descending: bool = self.inactive_mods_sort_descending
         self.inactive_mods_sort_order_button: QToolButton = QToolButton()
@@ -3465,8 +3467,18 @@ class ModsPanel(QWidget):
         if not self.settings_controller.settings.inactive_mods_sorting:
             return
 
-        # Convert combobox text to sort key enum
-        sort_key = self._text_to_sort_key(text)
+        # Prefer the enum stored in the combobox itemData (userData). This is
+        # robust across locales and reordering. Fall back to the text->enum map
+        # if no userData is available.
+        current_data = self.inactive_mods_sort_combobox.currentData()
+        if isinstance(current_data, ModsPanelSortKey):
+            sort_key = current_data
+        else:
+            # Fallback to text-based mapping for safety
+            sort_key = self._text_to_sort_key(text)
+        # Ensure we have a valid fallback (align with global default)
+        if not isinstance(sort_key, ModsPanelSortKey):
+            sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
 
         # Get current list of UUIDs to sort
         current_uuids = self.inactive_mods_list.uuids.copy()
@@ -3824,6 +3836,8 @@ class ModsPanel(QWidget):
         # Filter the list using any search and filter state
         num_filtered = 0
         num_unfiltered = 0
+        # Ensure `matches` is defined even if we don't call `search_mod_notes`.
+        matches: set[str] = set()
         if pattern.strip() and (
             search_filter == "notes"
             or (search_filter == "name" and self.settings_controller.settings.include_mod_notes_in_mod_name_filter)
