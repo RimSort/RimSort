@@ -21,7 +21,7 @@ dependencies = [
     "psutil==7.2.2",
     "pygit2==1.19.2",
     "pygithub==2.9.1",
-    "pyside6==6.11.0",
+    "pyside6==6.11.1",
     "rapidfuzz>=3.14.3",
     "requests==2.33.1",
     "sqlalchemy==2.0.49",
