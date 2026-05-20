@@ -22,8 +22,7 @@ if TYPE_CHECKING:
 def _formatter(record: "loguru_module.Record") -> str:
     """Custom formatter for loguru logger with obfuscation and exception support."""
     format_string = (
-        "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}]"
-        "[{thread.name}][{module}][{function}][{line}] : "
+        "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}][{thread.name}][{module}][{function}][{line}] : "
     )
     record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
     return format_string + "{extra[obfuscated_message]}\n{exception}"
@@ -69,9 +68,7 @@ def _rotate_session_logs(log_dir: Path, base_name: str, session_history: int) ->
                 try:
                     source.unlink()
                 except OSError:
-                    print(
-                        f"Warning: failed to delete old log {source}", file=sys.stderr
-                    )
+                    print(f"Warning: failed to delete old log {source}", file=sys.stderr)
             else:
                 # Move it up one position
                 target = log_dir / f"{stem}.{target_index}{suffix}"
