@@ -9,6 +9,7 @@ import json
 import shutil
 import tempfile
 import zipfile
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum, auto
 from pathlib import Path
@@ -16,6 +17,7 @@ from typing import Callable
 
 import requests
 from loguru import logger
+from PySide6.QtCore import QThread, Signal
 
 from app.utils import http
 
@@ -218,3 +220,44 @@ class HttpDatabaseDownloader:
             error_msg = f"Failed to extract {repo_name}: {e}"
             logger.warning(error_msg)
             return DownloadResult.FAILED, error_msg
+
+
+@dataclass
+class DatabaseDownloadTask:
+    url: str
+    target_dir: Path
+    repo_name: str
+    display_name: str
+
+
+class HttpDownloadWorker(QThread):
+    progress = Signal(str)
+    finished = Signal(dict)
+    error = Signal(str)
+
+    def __init__(self, tasks: list[DatabaseDownloadTask]) -> None:
+        super().__init__()
+        self._tasks = tasks
+        self._downloader = HttpDatabaseDownloader()
+
+    def run(self) -> None:
+        results: dict[str, DownloadResult] = {}
+
+        for task in self._tasks:
+            self.progress.emit(f"Downloading {task.display_name}...")
+            result, error_msg = self._downloader.download(
+                url=task.url,
+                target_dir=task.target_dir,
+                repo_name=task.repo_name,
+                progress_callback=None,
+            )
+            results[task.repo_name] = result
+
+            if result == DownloadResult.UPDATED:
+                self.progress.emit(f"{task.display_name}: updated")
+            elif result == DownloadResult.UP_TO_DATE:
+                self.progress.emit(f"{task.display_name}: already up to date")
+            elif result == DownloadResult.FAILED:
+                self.progress.emit(f"{task.display_name}: failed — {error_msg}")
+
+        self.finished.emit(results)
