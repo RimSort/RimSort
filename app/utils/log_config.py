@@ -2,8 +2,43 @@
 
 from __future__ import annotations
 
+import atexit
+import json
+import platform
 import sys
+import traceback
 from pathlib import Path
+from typing import IO, TYPE_CHECKING
+from collections.abc import Callable
+
+from loguru import logger
+
+from app.utils.obfuscate_message import obfuscate_message
+
+if TYPE_CHECKING:
+    import loguru as loguru_module
+
+
+def _formatter(record: "loguru_module.Record") -> str:
+    """Custom formatter for loguru logger with obfuscation and exception support."""
+    format_string = (
+        "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}]"
+        "[{thread.name}][{module}][{function}][{line}] : "
+    )
+    record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
+    return format_string + "{extra[obfuscated_message]}\n{exception}"
+
+
+def _suppress_noisy_loggers() -> None:
+    """Suppress verbose third-party loggers that use stdlib logging."""
+    from logging import WARNING, getLogger
+
+    system = platform.system()
+    if system == "Darwin":
+        getLogger("watchdog.observers.fsevents").setLevel(WARNING)
+    elif system == "Linux":
+        getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
+    getLogger("urllib3").setLevel(WARNING)
 
 
 def _rotate_session_logs(
@@ -71,3 +106,52 @@ def _rotate_session_logs(
                 old_legacy.unlink()
             except OSError:
                 pass
+
+
+def setup_logging(
+    log_dir: Path,
+    debug: bool = False,
+    session_history: int = 5,
+    json_logging: bool = True,
+    file_logging: bool = True,
+) -> None:
+    """
+    Configure loguru sinks for the application.
+
+    :param log_dir: Directory for log files
+    :param debug: Enable DEBUG level logging (otherwise INFO)
+    :param session_history: Number of past session logs to keep
+    :param json_logging: Enable JSON log file alongside human-readable
+    :param file_logging: Enable file sinks (False for CLI-only mode)
+    """
+    logger.remove()
+
+    file_level = "DEBUG" if debug else "INFO"
+
+    if file_logging:
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        # Rotate session logs
+        _rotate_session_logs(log_dir, "RimSort.log", session_history)
+        if json_logging:
+            _rotate_session_logs(log_dir, "RimSort.json.log", session_history)
+
+        # Human-readable file sink
+        log_file = log_dir / "RimSort.log"
+        logger.add(
+            log_file,
+            level=file_level,
+            format=_formatter,
+            enqueue=True,
+        )
+
+    # stderr sink
+    stderr_level = "DEBUG" if (debug and not file_logging) else "WARNING"
+    logger.add(
+        sys.stderr,
+        level=stderr_level,
+        format=_formatter,
+        colorize=False,
+    )
+
+    _suppress_noisy_loggers()
