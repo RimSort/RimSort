@@ -564,7 +564,7 @@ class BaseModsPanel(QWidget):
                         try:
                             shutil.rmtree(mod_path)
                         except Exception as e:
-                            print(f"Error deleting mod directory {mod_path}: {e}")
+                            logger.error(f"Error deleting mod directory {mod_path}: {e}")
 
     def _configure_button(
         self,
