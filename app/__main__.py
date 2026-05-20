@@ -66,7 +66,9 @@ def handle_exception(
             title="RimSort crashed",
             text="The RimSort application crashed! Sorry for the inconvenience!",
             information="Please contact us on the Discord/Github to report the issue.",
-            details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
+            details="".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            ),
         )
 
     sys.exit()
@@ -104,8 +106,12 @@ def main_thread() -> None:
             logger.warning("Exiting application")
         else:
             stacktrace = traceback.format_exc()
-            stacktrace = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", stacktrace)
-        logger.error("The main application instantiation has failed with an uncaught exception:")
+            stacktrace = re.sub(
+                r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", stacktrace
+            )
+        logger.error(
+            "The main application instantiation has failed with an uncaught exception:"
+        )
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
@@ -116,7 +122,9 @@ def main_thread() -> None:
             except Exception as e:
                 stacktrace = traceback.format_exc()
                 logger.warning(f"Exception: {e}")
-                logger.warning(f"watchdog received the following exception while exiting: {stacktrace}")
+                logger.warning(
+                    f"watchdog received the following exception while exiting: {stacktrace}"
+                )
         logger.info("Exiting application!")
         sys.exit()
 
@@ -156,6 +164,14 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
+
+    # Compiled non-Linux builds must call freeze_support() and set_start_method()
+    # BEFORE anything that touches multiprocessing (loguru's enqueue=True creates
+    # an internal multiprocessing queue, locking in the start method context).
+    if "__compiled__" in globals() and SYSTEM != "Linux":
+        freeze_support()
+        set_start_method("spawn")
+
     # Determine debug mode from --debug flag or DEBUG file
     debug_file_path = AppInfo().app_storage_folder / "DEBUG"
     if not DEBUG_MODE:
@@ -172,16 +188,13 @@ if __name__ == "__main__":
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
-        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(AppInfo().application_folder / "qtwebengine_locales")
-
-        # MacOS and Windows do not support fork, and can only use spawn
+        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(
+            AppInfo().application_folder / "qtwebengine_locales"
+        )
         if SYSTEM != "Linux":
             logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
-            freeze_support()
-            set_start_method("spawn")
-
         logger.debug("Running using Nuitka bundle")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
