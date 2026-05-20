@@ -27,6 +27,7 @@
 
 import os
 import platform
+import re
 import sys
 import traceback
 from multiprocessing import freeze_support, set_start_method
@@ -102,19 +103,11 @@ def main_thread() -> None:
         stacktrace: str = ""
         if isinstance(e, SystemExit):
             logger.warning("Exiting application")
-        elif (
-            e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
-        ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
-            stacktrace = traceback.format_exc()
-            # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
-            # try to remove the Steam API key from the stacktrace
-            pattern = "&key="
-            stacktrace = stacktrace[
-                : len(stacktrace)
-                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-            ]
         else:
             stacktrace = traceback.format_exc()
+            stacktrace = re.sub(
+                r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", stacktrace
+            )
         logger.error(
             "The main application instantiation has failed with an uncaught exception:"
         )
@@ -162,10 +155,10 @@ if __name__ == "__main__":
             cli()
         except Exception as e:
             # Handle CLI errors without Qt dialogs
-            import traceback
-
+            tb = traceback.format_exc()
+            tb = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", tb)
             print(f"Error: {e}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
+            print(tb, file=sys.stderr)
             sys.exit(1)
         sys.exit(0)
 
