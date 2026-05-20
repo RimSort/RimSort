@@ -2914,13 +2914,11 @@ class MainContent(QObject):
             logger.debug("Steam DB Builder: User cancelled selection...")
             return
         for k, v in db_input_a["database"].items():
-            # print(k, v['dependencies'])
             database_b_deps[k] = set()
             if v.get("dependencies"):
                 for dep_key in v["dependencies"]:
                     database_b_deps[k].add(dep_key)
         for k, v in db_input_b["database"].items():
-            # print(k, v['dependencies'])
             if k in database_b_deps:
                 database_a_deps[k] = set()
                 if v.get("dependencies"):
