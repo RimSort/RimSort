@@ -20,6 +20,7 @@ def obfuscate_message(message: str, anonymize_path: bool = True) -> str:
     """
     if anonymize_path:
         message = _anonymize_path(message)
+    message = _redact_secrets(message)
 
     return message
 
@@ -40,4 +41,10 @@ def _anonymize_path(message: str) -> str:
     # Linux - Only remove the username
     message = re.sub(r"/home/[^/]+/", r"/home/.../", message)
 
+    return message
+
+
+def _redact_secrets(message: str) -> str:
+    """Redact API keys and tokens from log messages."""
+    message = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", message)
     return message
