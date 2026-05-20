@@ -121,3 +121,67 @@ def test_formatter_includes_exception(tmp_path: Path) -> None:
     assert "caught error" in content
     assert "ValueError: test error" in content
     assert "Traceback" in content
+
+
+def test_json_sink_produces_valid_jsonl(tmp_path: Path) -> None:
+    """JSON sink produces valid JSON Lines output."""
+    setup_logging(log_dir=tmp_path, debug=True, json_logging=True)
+    logger.info("json test message")
+    logger.complete()
+
+    json_log = tmp_path / "RimSort.json.log"
+    assert json_log.exists()
+    line = json_log.read_text().strip()
+    record = json.loads(line)
+    assert record["message"] == "json test message"
+    assert record["level"] == "INFO"
+    assert "time" in record
+    assert "module" in record
+    assert "name" in record
+
+
+def test_json_sink_obfuscates_message(tmp_path: Path) -> None:
+    """JSON sink obfuscates paths in messages."""
+    setup_logging(log_dir=tmp_path, debug=True, json_logging=True)
+    logger.info("Path is /home/johndoe/mods")
+    logger.complete()
+
+    json_log = tmp_path / "RimSort.json.log"
+    record = json.loads(json_log.read_text().strip())
+    assert "johndoe" not in record["message"]
+    assert "/home/.../" in record["message"]
+
+
+def test_json_sink_obfuscates_exception(tmp_path: Path) -> None:
+    """JSON sink obfuscates paths in exception tracebacks."""
+    setup_logging(log_dir=tmp_path, debug=True, json_logging=True)
+    try:
+        raise ValueError("error at /home/johndoe/file.py")
+    except ValueError:
+        logger.exception("caught")
+    logger.complete()
+
+    json_log = tmp_path / "RimSort.json.log"
+    record = json.loads(json_log.read_text().strip())
+    assert "exception" in record
+    assert "johndoe" not in record["exception"]
+
+
+def test_json_sink_no_exception_field_when_none(tmp_path: Path) -> None:
+    """JSON records without exceptions don't have an exception field."""
+    setup_logging(log_dir=tmp_path, debug=True, json_logging=True)
+    logger.info("no exception here")
+    logger.complete()
+
+    json_log = tmp_path / "RimSort.json.log"
+    record = json.loads(json_log.read_text().strip())
+    assert "exception" not in record
+
+
+def test_json_sink_disabled(tmp_path: Path) -> None:
+    """json_logging=False produces no JSON log file."""
+    setup_logging(log_dir=tmp_path, debug=True, json_logging=False)
+    logger.info("test")
+    logger.complete()
+
+    assert not (tmp_path / "RimSort.json.log").exists()
