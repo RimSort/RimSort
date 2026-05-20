@@ -100,3 +100,34 @@ class TestLoadMetadataBySource:
 
         getter.assert_called_once_with(file_path)
         assert result == ({"data": "test"}, "/file/path")
+
+
+class TestLoadMetadataSourceDispatch:
+    """Verify URL source uses repo path for directory derivation."""
+
+    @pytest.fixture
+    def manager(self) -> MagicMock:
+        manager = MagicMock()
+        manager.show_warning_signal = MagicMock()
+        return manager
+
+    @pytest.fixture
+    def loader(self, manager: MagicMock) -> ExternalMetadataLoader:
+        return ExternalMetadataLoader(manager)
+
+    def test_url_source_uses_repo_path_for_directory_derivation(
+        self, loader: ExternalMetadataLoader
+    ) -> None:
+        """When source is URL, the repo URL (not archive URL) should be used for directory path derivation."""
+        getter = MagicMock(return_value=({"data": True}, "/some/path"))
+
+        loader._load_metadata_by_source(
+            SOURCE_URL,
+            "",
+            "https://github.com/RimSort/Steam-Workshop-Database",
+            "steamDB.json",
+            getter,
+        )
+
+        called_path = getter.call_args[0][0]
+        assert "Steam-Workshop-Database" in called_path
