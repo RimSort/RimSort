@@ -35,6 +35,8 @@ def _anonymize_path(message: str) -> str:
     """
     # Windows - Only remove the username, keep the drive letter
     message = message = re.sub(r"([A-Z]:\\Users\\)[^\\]+\\", r"\1...\\", message)
+    # macOS - Only remove the username
+    message = re.sub(r"/Users/[^/]+/", r"/Users/.../", message)
     # Linux - Only remove the username
     message = re.sub(r"/home/[^/]+/", r"/home/.../", message)
 
