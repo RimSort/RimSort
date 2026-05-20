@@ -89,6 +89,9 @@ jobs:
         with:
           add_options: "-- . :!super-linter-output/ :!github_conf/"
           branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          # Skip the internal git checkout to avoid conflicts between
+          # linter-modified files and the detached HEAD -> branch switch
+          skip_checkout: true
           commit_message: "chore: fix linting issues"
           commit_user_name: super-linter
           commit_user_email: super-linter@super-linter.dev
