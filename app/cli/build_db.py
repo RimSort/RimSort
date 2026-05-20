@@ -201,8 +201,11 @@ def build_db(
             err=True,
         )
         if not quiet:
+            import re
             import traceback
 
+            tb = traceback.format_exc()
+            tb = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", tb)
             click.echo("\nFull traceback:", err=True)
-            click.echo(traceback.format_exc(), err=True)
+            click.echo(tb, err=True)
         sys.exit(1)
