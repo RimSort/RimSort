@@ -64,7 +64,9 @@ def handle_exception(
             title="RimSort crashed",
             text="The RimSort application crashed! Sorry for the inconvenience!",
             information="Please contact us on the Discord/Github to report the issue.",
-            details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
+            details="".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            ),
         )
 
     sys.exit()
@@ -107,10 +109,15 @@ def main_thread() -> None:
             # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
             # try to remove the Steam API key from the stacktrace
             pattern = "&key="
-            stacktrace = stacktrace[: len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))]
+            stacktrace = stacktrace[
+                : len(stacktrace)
+                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+            ]
         else:
             stacktrace = traceback.format_exc()
-        logger.error("The main application instantiation has failed with an uncaught exception:")
+        logger.error(
+            "The main application instantiation has failed with an uncaught exception:"
+        )
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
@@ -121,7 +128,9 @@ def main_thread() -> None:
             except Exception as e:
                 stacktrace = traceback.format_exc()
                 logger.warning(f"Exception: {e}")
-                logger.warning(f"watchdog received the following exception while exiting: {stacktrace}")
+                logger.warning(
+                    f"watchdog received the following exception while exiting: {stacktrace}"
+                )
         logger.info("Exiting application!")
         sys.exit()
 
@@ -177,7 +186,9 @@ if __name__ == "__main__":
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
-        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(AppInfo().application_folder / "qtwebengine_locales")
+        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(
+            AppInfo().application_folder / "qtwebengine_locales"
+        )
 
         # MacOS and Windows do not support fork, and can only use spawn
         if SYSTEM != "Linux":
