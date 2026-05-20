@@ -44,3 +44,22 @@ def test__anonymize_path_linux_mixed_message() -> None:
     message = "Error!!! at: /home/user/Documents/file.txt"
     expected = "Error!!! at: /home/.../Documents/file.txt"
     assert _anonymize_path(message) == expected
+
+
+def test__anonymize_path_macos_path_only() -> None:
+    message = "/Users/user/Documents/file.txt"
+    expected = "/Users/.../Documents/file.txt"
+    assert _anonymize_path(message) == expected
+
+    message = "/Users/abc/Documents/file.txt"
+    assert _anonymize_path(message) == expected
+
+
+def test__anonymize_path_macos_mixed_message() -> None:
+    message = "/Users/user/Documents/file.txt: error"
+    expected = "/Users/.../Documents/file.txt: error"
+    assert _anonymize_path(message) == expected
+
+    message = "Error!!! at: /Users/user/Documents/file.txt"
+    expected = "Error!!! at: /Users/.../Documents/file.txt"
+    assert _anonymize_path(message) == expected
