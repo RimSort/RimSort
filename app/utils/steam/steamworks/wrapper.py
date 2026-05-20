@@ -391,7 +391,7 @@ class SteamworksSubscriptionHandler(Process):
             logger.warning(f"✓ All callbacks completed! ({steamworks_interface.callbacks_count}/{callbacks_total})")
 
         except Exception as e:
-            logger.error(f"✗ Error during subscription action {self.action}: {e}", exc_info=True)
+            logger.exception(f"✗ Error during subscription action {self.action}: {e}")
         finally:
             # Cleanup
             logger.warning("=== SteamworksSubscriptionHandler END: Unloading Steamworks ===")
