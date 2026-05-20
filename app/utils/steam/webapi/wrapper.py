@@ -1,6 +1,5 @@
 import sys
 import traceback
-from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
@@ -27,12 +26,6 @@ STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
 if TYPE_CHECKING:
     from app.utils.metadata import MetadataManager
 
-
-# This is redundant since it is also done in `logger-tt` config,
-# however, it can't hurt, just in case!
-# Uncomment this if you want to see the full urllib3 request
-# THIS CONTAINS THE STEAM API KEY
-getLogger("urllib3").setLevel(WARNING)
 
 BASE_URL = "https://steamcommunity.com"
 BASE_URL_STEAMFILES = "https://steamcommunity.com/sharedfiles/filedetails/?id="
