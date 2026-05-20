@@ -200,7 +200,7 @@ class TroubleshootingController:
         for item in config_dir.iterdir():
             if item.is_file() and item.name not in protected_files:
                 try:
-                    print(f"Deleting {item}...")
+                    logger.info(f"Deleting {item}...")
                     item.unlink()
                     deleted_any = True
                     logger.info(f"Deleted {item} successfully.")
