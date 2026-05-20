@@ -49,7 +49,7 @@ dev = [
     "pytest-mock>=3.15.1",
     "pytest-qt>=4.5.0",
     "pytest-xvfb>=3.1.1",
-    "ruff>=0.15.12",
+    "ruff>=0.15.13",
     "types-beautifulsoup4>=4.12.0.20250516",
     "types-greenlet>=3.5.0.20260508",
     "types-lxml>=2025.3.30",
@@ -57,14 +57,14 @@ dev = [
     "types-pexpect>=4.9.0.20260508",
     "types-psutil>=7.2.2.20260508",
     "types-pygit2>=1.15.0.20250319",
-    "types-pygments>=2.20.0.20260508",
+    "types-pygments>=2.20.0.20260518",
     "types-requests>=2.33.0.20260508",
     "types-toposort>=1.10.0.20250401",
 
 ]
 
 build = [
-    "nuitka==4.1",
+    "nuitka==4.1.1",
 ]
 
 [tool.uv]

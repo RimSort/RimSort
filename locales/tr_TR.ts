@@ -711,6 +711,18 @@ Kontrol edilmediğinde, tüm dosya türlerini standart arama ile arayın.</trans
         <translation>Aktif modlar dosyaya kaydedilemedi:</translation>
     </message>
     <message>
+        <source>No valid paths for todds</source>
+        <translation>Todds için geçerli yol yok</translation>
+    </message>
+    <message>
+        <source>todds could not find any valid mod folders to process.</source>
+        <translation>todds işlenecek geçerli mod klasörü bulamadı.</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>Diskte yapılandırılmış mod klasörü yollarının hiçbiri mevcut değil. Lütfen Yerel Modlar ve Atölye klasörlerinizin Ayarlar'da doğru şekilde ayarlandığını doğrulayın ve tekrar deneyin.</translation>
+    </message>
+    <message>
         <source>Confirm ACF import</source>
         <translation>ACF içe aktarmayı onaylayın</translation>
     </message>
