@@ -7,9 +7,9 @@ import json
 import platform
 import sys
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 from typing import IO, TYPE_CHECKING
-from collections.abc import Callable
 
 from loguru import logger
 
@@ -41,9 +41,7 @@ def _suppress_noisy_loggers() -> None:
     getLogger("urllib3").setLevel(WARNING)
 
 
-def _rotate_session_logs(
-    log_dir: Path, base_name: str, session_history: int
-) -> None:
+def _rotate_session_logs(log_dir: Path, base_name: str, session_history: int) -> None:
     """
     Rotate session-based log files using numbered suffixes.
 
@@ -71,7 +69,9 @@ def _rotate_session_logs(
                 try:
                     source.unlink()
                 except OSError:
-                    print(f"Warning: failed to delete old log {source}", file=sys.stderr)
+                    print(
+                        f"Warning: failed to delete old log {source}", file=sys.stderr
+                    )
             else:
                 # Move it up one position
                 target = log_dir / f"{stem}.{target_index}{suffix}"
@@ -80,7 +80,10 @@ def _rotate_session_logs(
                         target.unlink()
                     source.rename(target)
                 except OSError:
-                    print(f"Warning: failed to rotate log {source} -> {target}", file=sys.stderr)
+                    print(
+                        f"Warning: failed to rotate log {source} -> {target}",
+                        file=sys.stderr,
+                    )
 
     # Move current log to .1
     current = log_dir / base_name
@@ -89,7 +92,10 @@ def _rotate_session_logs(
         try:
             current.rename(first_rotated)
         except OSError:
-            print(f"Warning: failed to rotate log {current} -> {first_rotated}", file=sys.stderr)
+            print(
+                f"Warning: failed to rotate log {current} -> {first_rotated}",
+                file=sys.stderr,
+            )
 
     # Now handle legacy .old.log — place it after the newly rotated current
     if old_legacy.exists():
@@ -99,7 +105,10 @@ def _rotate_session_logs(
                 try:
                     old_legacy.rename(slot)
                 except OSError:
-                    print(f"Warning: failed to migrate legacy log {old_legacy}", file=sys.stderr)
+                    print(
+                        f"Warning: failed to migrate legacy log {old_legacy}",
+                        file=sys.stderr,
+                    )
                 break
         else:
             try:
