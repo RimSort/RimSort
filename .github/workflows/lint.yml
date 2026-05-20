@@ -19,6 +19,7 @@ jobs:
       packages: read
       # To report GitHub Actions status checks
       statuses: write
+      checks: write
 
     steps:
       - name: Checkout code
@@ -78,6 +79,7 @@ jobs:
           FIX_PYTHON_RUFF: true
           FIX_PYTHON_RUFF_FORMAT: true
       - name: Commit and push linting fixes
+        id: auto-commit
         # Run only on:
         # - Pull requests from the same repository
         # - Not on the default branch
@@ -95,3 +97,33 @@ jobs:
           commit_message: "chore: fix linting issues"
           commit_user_name: super-linter
           commit_user_email: super-linter@super-linter.dev
+
+      - name: Re-trigger CI on auto-fix commit
+        # GITHUB_TOKEN-pushed commits don't trigger workflows, so required
+        # checks get stuck at "Waiting for status to be reported." This
+        # re-requests check suites on the new commit to unblock the PR.
+        # No infinite loop: the re-triggered lint run finds clean code,
+        # changes_detected is false, and this step is skipped.
+        if: steps.auto-commit.outputs.changes_detected == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMIT_SHA="${{ steps.auto-commit.outputs.commit_hash }}"
+          echo "Auto-fix pushed commit: $COMMIT_SHA"
+          echo "Re-requesting check suites..."
+
+          SUITE_IDS=$(gh api "repos/${{ github.repository }}/commits/${COMMIT_SHA}/check-suites" \
+            --jq '.check_suites[].id')
+
+          if [ -z "$SUITE_IDS" ]; then
+            echo "No check suites found yet, requesting creation"
+            gh api "repos/${{ github.repository }}/check-suites" \
+              --method POST \
+              --field head_sha="$COMMIT_SHA"
+          else
+            for SUITE_ID in $SUITE_IDS; do
+              echo "Re-requesting suite $SUITE_ID"
+              gh api "repos/${{ github.repository }}/check-suites/${SUITE_ID}/rerequest" \
+                --method POST || true
+            done
+          fi
