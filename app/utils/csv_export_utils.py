@@ -269,7 +269,7 @@ def _handle_csv_export_error(
         title: The dialog title.
         details: Optional additional details (technical info) to show in the dialog.
     """
-    logger.error(f"CSV Export error: {message}", exc_info=True)
+    logger.exception(f"CSV Export error: {message}")
     show_warning(
         title=panel.tr(title),
         text=message,

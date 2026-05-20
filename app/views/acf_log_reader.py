@@ -257,7 +257,7 @@ class AcfLogReader(BaseModsPanel):
                 all_rows.append(base_items)
                 row_metadata.append((path, workshop_url))
             except Exception as e:
-                logger.error(f"Failed to prepare ACF entry {pfid}: {e}", exc_info=True)
+                logger.exception(f"Failed to prepare ACF entry {pfid}: {e}")
                 continue
 
         # Track starting row count before adding new rows
@@ -415,7 +415,7 @@ class AcfLogReader(BaseModsPanel):
                 # Just enable sorting, don't change sort order
                 self.editor_table_view.setSortingEnabled(True)
         except Exception as e:
-            logger.error(f"Failed to populate ACF Log Reader: {e}", exc_info=True)
+            logger.exception(f"Failed to populate ACF Log Reader: {e}")
             # Re-enable updates even on error
             self.editor_table_view.setUpdatesEnabled(True)
             self.editor_table_view.setSortingEnabled(True)
