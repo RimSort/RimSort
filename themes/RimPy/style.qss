@@ -894,3 +894,95 @@ QLabel#clearWarning {
 QSplitter::handle {
     background-color: #455364;
 }
+/* Tag edit dialog styling */
+QDialog#TagEditDialog {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #e6edf3;
+}
+
+QLabel#TagEditDialogLabel {
+    color: #e6edf3;
+    background-color: transparent;
+}
+
+QLineEdit#TagEditDialogInput {
+    color: #cfcfcf;
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 3px;
+}
+
+QListWidget#TagEditDialogList {
+    background-color: #19232d;
+    color: #e6edf3;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    padding-right: 5px;
+}
+
+QListWidget#TagEditDialogList::item {
+    color: #e6edf3;
+    background-color: transparent;
+    padding: 3px;
+}
+
+QListWidget#TagEditDialogList::item:selected {
+    background-color: #54687a;
+    color: #e6edf3;
+}
+
+QListWidget#TagEditDialogList::item:hover {
+    background-color: #272e37;
+}
+
+QListWidget#TagEditDialogList::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid #54687a;
+    border-radius: 3px;
+    background-color: #455364;
+}
+
+QListWidget#TagEditDialogList::indicator:hover {
+    border: 1px solid #3688c3;
+    background-color: #54687a;
+}
+
+QListWidget#TagEditDialogList::indicator:checked {
+    border: 1px solid #3688c3;
+    background-color: #3688c3;
+}
+
+QListWidget#TagEditDialogList::indicator:unchecked {
+    border: 1px solid #54687a;
+    background-color: #455364;
+}
+
+QPushButton#TagEditDialogButton {
+    color: #e6edf3;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    min-height: 1em;
+    min-width: 6em;
+    padding: 2px 4px;
+}
+
+QPushButton#TagEditDialogButton:hover {
+    background-color: #54687a;
+}
+
+QPushButton#TagEditDialogButton:pressed {
+    background-color: #3e4a52;
+}

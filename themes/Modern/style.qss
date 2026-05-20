@@ -892,3 +892,95 @@ QLabel#clearWarning {
 QSplitter::handle {
     background-color: #3b4a64;
 }
+
+/* Tag edit dialog styling */
+QDialog#TagEditDialog {
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #d6e0f3;
+}
+
+QLabel#TagEditDialogLabel {
+    color: #d6e0f3;
+    background-color: transparent;
+}
+
+QLineEdit#TagEditDialogInput {
+    color: #bfbfbf;
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 3px;
+}
+
+QListWidget#TagEditDialogList {
+    background-color: #101820;
+    color: #d6e0f3;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    padding-right: 5px;
+}
+
+QListWidget#TagEditDialogList::item {
+    color: #d6e0f3;
+    background-color: transparent;
+    padding: 3px;
+}
+
+QListWidget#TagEditDialogList::item:selected {
+    background-color: #4a5a7a;
+    color: #d6e0f3;
+}
+
+QListWidget#TagEditDialogList::item:hover {
+    background-color: #1f2e38;
+}
+
+QPushButton#TagEditDialogButton {
+    color: #d6e0f3;
+    background-color: #3b4a64;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    min-height: 1em;
+    min-width: 6em;
+    padding: 2px 4px;
+}
+
+QPushButton#TagEditDialogButton:hover {
+    background-color: #4a5a7a;
+}
+
+QPushButton#TagEditDialogButton:pressed {
+    background-color: #354a52;
+}
+QListWidget#TagEditDialogList::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid #4a5a7a;
+    border-radius: 3px;
+    background-color: #3b4a64;
+}
+
+QListWidget#TagEditDialogList::indicator:hover {
+    border: 1px solid #2d6aa3;
+    background-color: #4a5a7a;
+}
+
+QListWidget#TagEditDialogList::indicator:checked {
+    border: 1px solid #2d6aa3;
+    background-color: #2d6aa3;
+}
+
+QListWidget#TagEditDialogList::indicator:unchecked {
+    border: 1px solid #4a5a7a;
+    background-color: #3b4a64;
+}
