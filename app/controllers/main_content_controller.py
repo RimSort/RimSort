@@ -132,7 +132,7 @@ class MainContentController(QObject):
             event_signal.connect(
                 lambda repo_getter=repo_getter, url_getter=url_getter, source_getter=source_getter, base_path_obj=base_path_obj, display_name=display_name: (
                     self._do_download_database(
-                        base_path=str(base_path_obj),
+                        base_path=base_path_obj,
                         repo_url=repo_getter(),
                         url=url_getter(),
                         source=source_getter(),
@@ -535,7 +535,7 @@ class MainContentController(QObject):
         self.thread_pool.start(worker)
 
     def _do_download_database(
-        self, base_path: str, repo_url: str, url: str, source: str, display_name: str
+        self, base_path: Path, repo_url: str, url: str, source: str, display_name: str
     ) -> None:
         """Dispatch a database download via HTTP or git based on the configured source."""
         if not check_internet_connection():
@@ -549,27 +549,33 @@ class MainContentController(QObject):
             )
             task = DatabaseDownloadTask(
                 url=url,
-                target_dir=Path(base_path),
+                target_dir=base_path,
                 repo_name=repo_name,
                 display_name=display_name,
             )
             self._start_http_download_interactive([task])
         elif source == "Configured git repository" and repo_url:
-            self._do_git_clone(base_path=base_path, repo_url=repo_url)
+            self._do_git_clone(base_path=str(base_path), repo_url=repo_url)
+        else:
+            logger.debug(f"Download not applicable for source type: {source}")
+
+    def _cleanup_http_download_worker(self) -> None:
+        """Disconnect signals, stop, and discard the current HTTP download worker."""
+        if self._http_download_worker is not None:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+                self._http_download_worker.quit()
+                self._http_download_worker.wait()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
 
     def _start_http_download_silent(self, tasks: list[DatabaseDownloadTask]) -> None:
         """Start an HTTP download worker in silent mode (no user dialogs)."""
-        if self._http_download_worker is not None:
-            try:
-                self._http_download_worker.finished.disconnect()
-                self._http_download_worker.quit()
-                self._http_download_worker.wait()
-            except Exception:
-                pass
-            self._http_download_worker = None
+        self._cleanup_http_download_worker()
 
         self._http_download_worker = HttpDownloadWorker(tasks)
-        self._http_download_worker.finished.connect(
+        self._http_download_worker.download_finished.connect(
             self._on_http_download_finished_silent
         )
         self._http_download_worker.progress.connect(
@@ -593,28 +599,16 @@ class MainContentController(QObject):
             logger.warning(
                 f"HTTP DB update: {len(failed)} database(s) failed: {', '.join(failed)}"
             )
-        if self._http_download_worker:
-            try:
-                self._http_download_worker.finished.disconnect()
-            except Exception:
-                pass
-            self._http_download_worker = None
+        self._cleanup_http_download_worker()
 
     def _start_http_download_interactive(
         self, tasks: list[DatabaseDownloadTask]
     ) -> None:
         """Start an HTTP download worker with user-facing result dialogs."""
-        if self._http_download_worker is not None:
-            try:
-                self._http_download_worker.finished.disconnect()
-                self._http_download_worker.quit()
-                self._http_download_worker.wait()
-            except Exception:
-                pass
-            self._http_download_worker = None
+        self._cleanup_http_download_worker()
 
         self._http_download_worker = HttpDownloadWorker(tasks)
-        self._http_download_worker.finished.connect(
+        self._http_download_worker.download_finished.connect(
             self._on_http_download_finished_interactive
         )
         self._http_download_worker.progress.connect(
@@ -658,12 +652,7 @@ class MainContentController(QObject):
                 ),
             ).exec()
 
-        if self._http_download_worker:
-            try:
-                self._http_download_worker.finished.disconnect()
-            except Exception:
-                pass
-            self._http_download_worker = None
+        self._cleanup_http_download_worker()
 
     def _start_git_clone_worker(
         self, repo_url: str, base_path: str, force: bool

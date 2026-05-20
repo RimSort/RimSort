@@ -44,7 +44,7 @@ class TestHttpDownloadWorker:
 
         worker = HttpDownloadWorker(tasks)
         results: list[dict[str, DownloadResult]] = []
-        worker.finished.connect(lambda r: results.append(r))
+        worker.download_finished.connect(lambda r: results.append(r))
         worker.run()  # Call run() directly, not start()
 
         assert mock_download.call_count == 2
@@ -78,7 +78,7 @@ class TestHttpDownloadWorker:
 
         worker = HttpDownloadWorker(tasks)
         results: list[dict[str, DownloadResult]] = []
-        worker.finished.connect(lambda r: results.append(r))
+        worker.download_finished.connect(lambda r: results.append(r))
         worker.run()
 
         assert mock_download.call_count == 2

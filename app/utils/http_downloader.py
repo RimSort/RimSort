@@ -151,6 +151,7 @@ class HttpDatabaseDownloader:
         target_dir: Path,
         repo_name: str,
         progress_callback: Callable[[int, int | None], None] | None = None,
+        cancel_check: Callable[[], bool] | None = None,
     ) -> tuple[DownloadResult, str | None]:
         """Download and extract a zip archive from a URL.
 
@@ -163,6 +164,7 @@ class HttpDatabaseDownloader:
         :param target_dir: Parent directory where ``repo_name/`` will be created
         :param repo_name: Subdirectory name for the extracted content
         :param progress_callback: Optional ``(downloaded_bytes, total_bytes)`` callback
+        :param cancel_check: Optional callable returning True to abort the download
         :return: Tuple of (result, error_message_or_none)
         """
         repo_dir = target_dir / repo_name
@@ -189,6 +191,8 @@ class HttpDatabaseDownloader:
             try:
                 downloaded = 0
                 for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+                    if cancel_check and cancel_check():
+                        raise _DownloadCancelled()
                     if chunk:
                         temp_fd.write(chunk)
                         downloaded += len(chunk)
@@ -212,6 +216,9 @@ class HttpDatabaseDownloader:
                     except OSError:
                         pass
 
+        except _DownloadCancelled:
+            logger.info(f"{repo_name}: download cancelled")
+            return DownloadResult.FAILED, "Download cancelled"
         except requests.RequestException as e:
             error_msg = f"Failed to download {repo_name}: {e}"
             logger.warning(error_msg)
@@ -224,32 +231,47 @@ class HttpDatabaseDownloader:
 
 @dataclass
 class DatabaseDownloadTask:
+    """Describes a single database archive to download and extract."""
+
     url: str
     target_dir: Path
     repo_name: str
     display_name: str
 
 
+class _DownloadCancelled(Exception):
+    """Raised internally when a download is cancelled via the worker's cancel flag."""
+
+
 class HttpDownloadWorker(QThread):
     progress = Signal(str)
-    finished = Signal(dict)
-    error = Signal(str)
+    download_finished = Signal(dict)
 
     def __init__(self, tasks: list[DatabaseDownloadTask]) -> None:
         super().__init__()
         self._tasks = tasks
         self._downloader = HttpDatabaseDownloader()
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        """Request cancellation of the current download batch."""
+        self._cancelled = True
 
     def run(self) -> None:
         results: dict[str, DownloadResult] = {}
 
         for task in self._tasks:
+            if self._cancelled:
+                results[task.repo_name] = DownloadResult.FAILED
+                continue
+
             self.progress.emit(f"Downloading {task.display_name}...")
             result, error_msg = self._downloader.download(
                 url=task.url,
                 target_dir=task.target_dir,
                 repo_name=task.repo_name,
                 progress_callback=None,
+                cancel_check=lambda: self._cancelled,
             )
             results[task.repo_name] = result
 
@@ -260,4 +282,4 @@ class HttpDownloadWorker(QThread):
             elif result == DownloadResult.FAILED:
                 self.progress.emit(f"{task.display_name}: failed — {error_msg}")
 
-        self.finished.emit(results)
+        self.download_finished.emit(results)
