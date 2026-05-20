@@ -12,13 +12,20 @@ from app.controllers.language_controller import LanguageController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.acf_utils import validate_acf_file_exists
+from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_INSTANCE_NAME, SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    extract_git_dir_name,
     find_steam_rimworld,
     get_path_up_to_string,
     platform_specific_open,
     validate_game_executable,
+)
+from app.utils.http_downloader import (
+    DatabaseDownloadTask,
+    DownloadResult,
+    HttpDownloadWorker,
 )
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
@@ -73,6 +80,8 @@ class SettingsController(QObject):
         self.app_instance = QApplication.instance()
 
         self.change_mod_coloring_mode = False
+
+        self._http_download_worker: HttpDownloadWorker | None = None
 
         # Initialize the settings dialog from the settings model
 
@@ -234,7 +243,11 @@ class SettingsController(QObject):
             EventBus().do_download_community_rules_db_from_github
         )
         self.settings_dialog.community_rules_db_url_download_button.clicked.connect(
-            EventBus().do_download_community_rules_db_from_github
+            lambda: self._do_http_download_from_dialog(
+                self.settings_dialog.community_rules_db_url_input.text(),
+                self.settings.external_community_rules_repo,
+                "Community Rules",
+            )
         )
 
         self.settings_dialog.steam_workshop_db_none_radio.clicked.connect(
@@ -260,7 +273,11 @@ class SettingsController(QObject):
             EventBus().do_download_steam_workshop_db_from_github
         )
         self.settings_dialog.steam_workshop_db_url_download_button.clicked.connect(
-            EventBus().do_download_steam_workshop_db_from_github
+            lambda: self._do_http_download_from_dialog(
+                self.settings_dialog.steam_workshop_db_url_input.text(),
+                self.settings.external_steam_metadata_repo,
+                "Steam Workshop",
+            )
         )
 
         # Cross Version DB tab
@@ -287,7 +304,11 @@ class SettingsController(QObject):
             EventBus().do_download_no_version_warning_db_from_github
         )
         self.settings_dialog.no_version_warning_db_url_download_button.clicked.connect(
-            EventBus().do_download_no_version_warning_db_from_github
+            lambda: self._do_http_download_from_dialog(
+                self.settings_dialog.no_version_warning_db_url_input.text(),
+                self.settings.external_no_version_warning_repo_path,
+                "No Version Warning",
+            )
         )
 
         self.settings_dialog.use_this_instead_db_none_radio.clicked.connect(
@@ -313,7 +334,11 @@ class SettingsController(QObject):
             EventBus().do_download_use_this_instead_db_from_github
         )
         self.settings_dialog.use_this_instead_db_url_download_button.clicked.connect(
-            EventBus().do_download_use_this_instead_db_from_github
+            lambda: self._do_http_download_from_dialog(
+                self.settings_dialog.use_this_instead_db_url_input.text(),
+                self.settings.external_use_this_instead_repo_path,
+                "Use This Instead",
+            )
         )
 
         # Build DB tab
@@ -2033,6 +2058,79 @@ class SettingsController(QObject):
             raise ValueError("This function should only be called on Windows")
 
     @Slot(bool)
+    def _do_http_download_from_dialog(
+        self, url: str, repo_url: str, display_name: str
+    ) -> None:
+        """Download a database via HTTP using the URL currently in the settings dialog."""
+        if not url:
+            show_warning(
+                title="No URL configured",
+                text=f"No URL is configured for {display_name}.",
+                information="Please enter a URL in the text field.",
+            )
+            return
+
+        repo_name = (
+            extract_git_dir_name(repo_url)
+            if repo_url
+            else display_name.replace(" ", "-")
+        )
+        task = DatabaseDownloadTask(
+            url=url,
+            target_dir=AppInfo().databases_folder,
+            repo_name=repo_name,
+            display_name=display_name,
+        )
+
+        if self._http_download_worker is not None:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+                self._http_download_worker.quit()
+                self._http_download_worker.wait()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
+
+        self._http_download_worker = HttpDownloadWorker([task])
+        self._http_download_worker.download_finished.connect(
+            self._on_http_download_from_dialog_finished
+        )
+        self._http_download_worker.start()
+
+    @Slot(dict)
+    def _on_http_download_from_dialog_finished(
+        self, results: dict[str, DownloadResult]
+    ) -> None:
+        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
+        up_to_date = [
+            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
+        ]
+        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
+
+        if failed:
+            show_warning(
+                title="Download failed",
+                text=f"Failed to download: {', '.join(failed)}",
+                information="Please check your internet connection and the configured URL.",
+            )
+        elif updated:
+            show_warning(
+                title="Download complete",
+                text=f"Downloaded successfully: {', '.join(updated)}",
+            )
+        elif up_to_date:
+            show_warning(
+                title="Already up to date",
+                text=f"Already up to date: {', '.join(up_to_date)}",
+            )
+
+        if self._http_download_worker:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
+
     def _on_community_rules_db_radio_clicked(self, checked: bool = True) -> None:
         """
         This function handles the community rules db radio buttons. Clicking one button
