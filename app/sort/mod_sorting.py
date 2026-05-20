@@ -9,6 +9,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.utils.generic import scanpath
 from app.utils.metadata import MetadataManager, ModMetadata
+from app.utils.aux_db_utils import auxdb_get_mod_tags
 
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
 _FOLDER_SIZE_CACHE: dict[str, tuple[int, int]] = {}
@@ -231,6 +232,27 @@ def uuid_to_mod_color(uuid: str, cached_metadata: Optional[dict[str, Any]] = Non
     else:
         return ""
 
+def uuid_to_mod_tags(
+    uuid: str,
+    cached_metadata: Optional[dict[str, Any]] = None,
+    settings_controller: Optional[Any] = None,
+) -> str:
+    """
+    Get user tags for inactive mods list sorting.
+
+    Mods without tags sort first by an empty string. Tagged mods are sorted by
+    their comma-separated, normalized tag list.
+    """
+    if settings_controller is None:
+        return ""
+
+    try:
+        tags = auxdb_get_mod_tags(settings_controller, uuid)
+    except Exception as e:
+        logger.debug(f"Failed to retrieve tags for sorting UUID {uuid}: {e}")
+        return ""
+
+    return ", ".join(sorted(tag.lower() for tag in tags))
 
 def get_dir_size(path: str) -> int:
     total = 0
@@ -322,6 +344,7 @@ def _build_sort_key_map(
     uuids: list[str],
     key: "ModsPanelSortKey",
     cached_metadata: Optional[dict[str, Any]] = None,
+    settings_controller: Optional[Any] = None,
 ) -> dict[str, str | int]:
     """
     Pre-compute sort keys for all UUIDs to improve sort performance.
@@ -359,6 +382,8 @@ def _build_sort_key_map(
             sort_key_map[uuid] = uuid_to_version(uuid, cached_metadata)
         elif key == ModsPanelSortKey.MOD_COLOR:
             sort_key_map[uuid] = uuid_to_mod_color(uuid, cached_metadata)
+        elif key == ModsPanelSortKey.MOD_TAGS:
+            sort_key_map[uuid] = uuid_to_mod_tags(uuid, cached_metadata, settings_controller)
         else:
             sort_key_map[uuid] = uuid
     return sort_key_map
@@ -377,6 +402,7 @@ class ModsPanelSortKey(Enum):
     PACKAGEID = 5
     VERSION = 6
     MOD_COLOR = 7
+    MOD_TAGS = 8
 
 
 # Lookup dictionary for default sort direction flags
@@ -390,6 +416,7 @@ DEFAULT_REVERSE_FLAGS = {
     ModsPanelSortKey.PACKAGEID: False,
     ModsPanelSortKey.VERSION: False,
     ModsPanelSortKey.MOD_COLOR: False,
+    ModsPanelSortKey.MOD_TAGS: False,
 }
 
 
@@ -443,7 +470,7 @@ def sort_uuids(
         )
 
     # Pre-compute sort keys to avoid repeated function calls during sort
-    sort_key_map = _build_sort_key_map(uuids, key, cached_metadata)
+    sort_key_map = _build_sort_key_map(uuids, key, cached_metadata, settings_controller=settings_controller)
 
     # Get sort direction from default flags or explicit override
     default_reverse = DEFAULT_REVERSE_FLAGS.get(key, False)

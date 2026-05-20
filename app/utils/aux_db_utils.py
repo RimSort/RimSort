@@ -1,3 +1,5 @@
+from typing import Literal
+
 from PySide6.QtGui import QColor
 from sqlalchemy.orm.session import Session
 
@@ -225,6 +227,64 @@ def auxdb_get_all_tags(
         if not session:
             local_session.close()
 
+def _normalize_tags(tags: list[str]) -> list[str]:
+    return sorted({tag.strip().lower() for tag in tags if tag.strip()})
+
+
+def _get_aux_controller(
+    settings_controller: SettingsController,
+    aux_db_controller: AuxMetadataController | None = None,
+) -> AuxMetadataController:
+    return aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
+        settings_controller.settings.aux_db_path
+    )
+
+
+def _get_mod_path(uuid: str) -> str:
+    metadata_manager = MetadataManager.instance()
+    return metadata_manager.internal_local_metadata[uuid]["path"]
+
+
+def _get_or_create_tag_entry(session: Session, tag_text: str) -> TagsEntry:
+    tag_entry = session.query(TagsEntry).filter(TagsEntry.tag == tag_text).first()
+    if tag_entry is None:
+        tag_entry = TagsEntry(tag=tag_text)
+        session.add(tag_entry)
+        session.flush()
+    return tag_entry
+
+
+def _update_mod_tags(
+    settings_controller: SettingsController,
+    uuid: str,
+    tags: list[str] | None,
+    mode: Literal["add", "replace", "remove"],
+    aux_db_controller: AuxMetadataController | None = None,
+    session: Session | None = None,
+) -> None:
+    local_controller = _get_aux_controller(settings_controller, aux_db_controller)
+    local_session = session or local_controller.Session()
+
+    try:
+        entry = local_controller.get_or_create(local_session, _get_mod_path(uuid))
+
+        if mode in {"replace", "remove"}:
+            entry.tags.clear()
+            local_session.flush()
+
+        if mode != "remove" and tags is not None:
+            existing_tags = {tag.tag for tag in entry.tags}
+
+            for tag_text in _normalize_tags(tags):
+                if tag_text in existing_tags:
+                    continue
+
+                entry.tags.append(_get_or_create_tag_entry(local_session, tag_text))
+
+        local_session.commit()
+    finally:
+        if not session:
+            local_session.close()
 
 def auxdb_add_mod_tags(
     settings_controller: SettingsController,
@@ -236,34 +296,14 @@ def auxdb_add_mod_tags(
     """
     Add tags to a mod without removing existing tags.
     """
-    metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    _update_mod_tags(
+        settings_controller=settings_controller,
+        uuid=uuid,
+        tags=tags,
+        mode="add",
+        aux_db_controller=aux_db_controller,
+        session=session,
     )
-    local_session = session or local_controller.Session()
-    try:
-        mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
-        entry = local_controller.get_or_create(local_session, mod_path)
-
-        existing_tags = {tag.tag for tag in entry.tags}
-        normalized_tags = sorted({tag.strip().lower() for tag in tags if tag.strip()})
-
-        for tag_text in normalized_tags:
-            if tag_text in existing_tags:
-                continue
-
-            tag_entry = local_session.query(TagsEntry).filter(TagsEntry.tag == tag_text).first()
-            if tag_entry is None:
-                tag_entry = TagsEntry(tag=tag_text)
-                local_session.add(tag_entry)
-                local_session.flush()
-
-            entry.tags.append(tag_entry)
-
-        local_session.commit()
-    finally:
-        if not session:
-            local_session.close()
 
 
 def auxdb_replace_mod_tags(
@@ -276,33 +316,14 @@ def auxdb_replace_mod_tags(
     """
     Replace all tags for a mod.
     """
-    metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    _update_mod_tags(
+        settings_controller=settings_controller,
+        uuid=uuid,
+        tags=tags,
+        mode="replace",
+        aux_db_controller=aux_db_controller,
+        session=session,
     )
-    local_session = session or local_controller.Session()
-    try:
-        mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
-        entry = local_controller.get_or_create(local_session, mod_path)
-
-        entry.tags.clear()
-        local_session.flush()
-
-        normalized_tags = sorted({tag.strip().lower() for tag in tags if tag.strip()})
-
-        for tag_text in normalized_tags:
-            tag_entry = local_session.query(TagsEntry).filter(TagsEntry.tag == tag_text).first()
-            if tag_entry is None:
-                tag_entry = TagsEntry(tag=tag_text)
-                local_session.add(tag_entry)
-                local_session.flush()
-
-            entry.tags.append(tag_entry)
-
-        local_session.commit()
-    finally:
-        if not session:
-            local_session.close()
 
 
 def auxdb_remove_mod_tags(
@@ -314,19 +335,14 @@ def auxdb_remove_mod_tags(
     """
     Remove all tags from a mod.
     """
-    metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    _update_mod_tags(
+        settings_controller=settings_controller,
+        uuid=uuid,
+        tags=None,
+        mode="remove",
+        aux_db_controller=aux_db_controller,
+        session=session,
     )
-    local_session = session or local_controller.Session()
-    try:
-        mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
-        entry = local_controller.get_or_create(local_session, mod_path)
-        entry.tags.clear()
-        local_session.commit()
-    finally:
-        if not session:
-            local_session.close()
 
 
 def auxdb_update_all_mod_tags(
@@ -357,6 +373,8 @@ def auxdb_update_all_mod_tags(
                     aux_db_controller,
                     aux_metadata_session,
                 )
+
+
 def auxdb_cleanup_unused_tags(
     settings_controller: SettingsController,
     aux_db_controller: AuxMetadataController | None = None,
@@ -365,10 +383,9 @@ def auxdb_cleanup_unused_tags(
     """
     Delete tags that are no longer assigned to any mod.
     """
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
-    )
+    local_controller = _get_aux_controller(settings_controller, aux_db_controller)
     local_session = session or local_controller.Session()
+
     try:
         unused_tags = local_session.query(TagsEntry).filter(~TagsEntry.mods.any()).all()
         for tag in unused_tags:

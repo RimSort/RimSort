@@ -718,7 +718,12 @@ class TagFilterButton(QToolButton):
         self.refresh_tags()
 
     def refresh_tags(self) -> None:
-        selected_tags = self.selected_tags()
+        previous_selected_tags = self.selected_tags()
+        previous_total_count = len(self._tag_actions)
+        previous_all_selected = (
+            previous_total_count == 0
+            or len(previous_selected_tags) == previous_total_count
+        )
 
         self._menu.clear()
         self._tag_actions.clear()
@@ -735,7 +740,9 @@ class TagFilterButton(QToolButton):
 
         no_tags_action = QAction(self.tr("No tags"), self)
         no_tags_action.setCheckable(True)
-        no_tags_action.setChecked(NO_TAGS_FILTER_VALUE in selected_tags)
+        no_tags_action.setChecked(
+            previous_all_selected or NO_TAGS_FILTER_VALUE in previous_selected_tags
+        )
         no_tags_action.toggled.connect(self._on_tag_toggled)
         self._menu.addAction(no_tags_action)
         self._tag_actions[NO_TAGS_FILTER_VALUE] = no_tags_action
@@ -751,7 +758,7 @@ class TagFilterButton(QToolButton):
         for tag in tags:
             action = QAction(tag, self)
             action.setCheckable(True)
-            action.setChecked(tag in selected_tags)
+            action.setChecked(previous_all_selected or tag in previous_selected_tags)
             action.toggled.connect(self._on_tag_toggled)
             self._menu.addAction(action)
             self._tag_actions[tag] = action
@@ -1040,6 +1047,7 @@ class ModListWidget(QListWidget):
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
+        "Tags": ModsPanelSortKey.MOD_TAGS,
     }
 
     @staticmethod
@@ -1125,6 +1133,9 @@ class ModListWidget(QListWidget):
         # Translation status
         self.show_translation_status: bool = False
         self.translation_lookup: set[str] = set()
+
+        # User tags display state. This must survive list rebuilds/sorting.
+        self.show_tags: bool = False
 
         self.deletion_sub_menu = ModDeletionMenu(
             self.settings_controller,
@@ -2364,6 +2375,7 @@ class ModListWidget(QListWidget):
                 aux_metadata_session=aux_metadata_session,
                 settings_controller=self.settings_controller,
             )
+            data.__dict__["show_tags"] = self.show_tags
         # Create item without a parent first so we can set data before adding to the list.
         # This ensures handle_rows_inserted (connected via QueuedConnection) sees the data
         # when it fires after addItem, and can correctly track the UUID in self.uuids.
@@ -2448,7 +2460,7 @@ class ModListWidget(QListWidget):
         alternative = data["alternative"]
         uuid = data["uuid"]
         mod_color = data["mod_color"]
-        show_tags = bool(data.__dict__.get("show_tags", False))
+        show_tags = bool(data.__dict__.get("show_tags", self.show_tags))
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
@@ -3096,6 +3108,7 @@ class ModListWidget(QListWidget):
                         aux_metadata_session=aux_metadata_session,
                         settings_controller=self.settings_controller,
                     )
+                    data.__dict__["show_tags"] = self.show_tags
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
@@ -3218,7 +3231,12 @@ class ModListWidget(QListWidget):
             widget.setToolTip(widget.get_tool_tip_text())
             widget._resize_text_after_icon_toggle()
 
+        if self.currentItem() == item:
+            self.mod_info_signal.emit(uuid, item)
+
     def set_tags_visible(self, visible: bool) -> None:
+        self.show_tags = visible
+        
         for index in range(self.count()):
             item = self.item(index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
@@ -3288,6 +3306,7 @@ class ModsPanel(QWidget):
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
+        "Tags": ModsPanelSortKey.MOD_TAGS,
     }
 
     # Note: combobox items store their corresponding `ModsPanelSortKey` in
@@ -3707,6 +3726,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox.addItem(self.tr("Version"), ModsPanelSortKey.VERSION)
         self.inactive_mods_sort_combobox.addItem(self.tr("PackageId"), ModsPanelSortKey.PACKAGEID)
         self.inactive_mods_sort_combobox.addItem(self.tr("Color"), ModsPanelSortKey.MOD_COLOR)
+        self.inactive_mods_sort_combobox.addItem(
+            self.tr("Tags"), ModsPanelSortKey.MOD_TAGS
+        )
         # Set initial combo box selection based on loaded settings by matching
         # the stored enum name to the item userData. Fall back to
         # FILESYSTEM_MODIFIED_TIME if the stored value is invalid.
@@ -3876,6 +3898,7 @@ class ModsPanel(QWidget):
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
                     )
+                    data.__dict__["show_tags"] = lw.show_tags
                     list_item.setData(Qt.ItemDataRole.UserRole, data)
                     lw.addItem(list_item)
                     if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:

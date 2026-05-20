@@ -27,6 +27,7 @@ from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.metadata import MetadataManager
 from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
+from app.utils.aux_db_utils import auxdb_get_mod_tags
 
 # Constants for layout proportions
 NAME_LABEL_RATIO = 20
@@ -120,6 +121,7 @@ class ModInfoPanel:
         self.scenario_info_summary = QHBoxLayout()
         self.mod_info_package_id = QHBoxLayout()
         self.mod_info_authors = QHBoxLayout()
+        self.mod_info_tags = QHBoxLayout()
         self.mod_info_mod_version = QHBoxLayout()
         self.mod_info_supported_versions = QHBoxLayout()
         self.mod_info_folder_size = QHBoxLayout()
@@ -173,6 +175,16 @@ class ModInfoPanel:
         self.mod_info_author_value.setObjectName("summaryValue")
         self.mod_info_author_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.mod_info_author_value.setWordWrap(True)
+
+        self.mod_info_tags_label = QLabel(self.tr("Tags:"))
+        self.mod_info_tags_label.setObjectName("summaryLabel")
+        self.mod_info_tags_value = QLabel()
+        self.mod_info_tags_value.setObjectName("summaryValue")
+        self.mod_info_tags_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_tags_value.setWordWrap(True)
+        
         self.mod_info_mod_version_label = QLabel(self.tr("Mod Version:"))
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
@@ -236,6 +248,8 @@ class ModInfoPanel:
         self.mod_info_package_id.addWidget(self.mod_info_package_id_value, NAME_VALUE_RATIO)
         self.mod_info_authors.addWidget(self.mod_info_author_label, NAME_LABEL_RATIO)
         self.mod_info_authors.addWidget(self.mod_info_author_value, NAME_VALUE_RATIO)
+        self.mod_info_tags.addWidget(self.mod_info_tags_label, NAME_LABEL_RATIO)
+        self.mod_info_tags.addWidget(self.mod_info_tags_value, NAME_VALUE_RATIO)
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, NAME_LABEL_RATIO)
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, NAME_VALUE_RATIO)
         self.mod_info_supported_versions.addWidget(self.mod_info_supported_versions_label, NAME_LABEL_RATIO)
@@ -252,6 +266,7 @@ class ModInfoPanel:
         self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
+        self.mod_info_layout.addLayout(self.mod_info_tags)
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
         self.mod_info_layout.addLayout(self.mod_info_folder_size)
@@ -275,6 +290,8 @@ class ModInfoPanel:
             self.mod_info_package_id_value,
             self.mod_info_author_label,
             self.mod_info_author_value,
+            self.mod_info_tags_label,
+            self.mod_info_tags_value,
             self.mod_info_mod_version_label,
             self.mod_info_mod_version_value,
             self.mod_info_supported_versions_label,
@@ -380,6 +397,22 @@ class ModInfoPanel:
         else:
             self.mod_info_mod_version_value.setText(mod_version if mod_version else UNKNOWN)
 
+    def _set_mod_tags_info(self, uuid: str) -> None:
+        """Set user-defined tags information."""
+        try:
+            tags = auxdb_get_mod_tags(self.settings_controller, uuid)
+        except Exception as e:
+            logger.debug(f"Failed to load tags for mod info panel UUID {uuid}: {e}")
+            tags = []
+
+        if tags:
+            tags_text = ", ".join(f"[{tag}]" for tag in tags)
+            self.mod_info_tags_value.setText(tags_text)
+            self.mod_info_tags_value.setToolTip(tags_text)
+        else:
+            self.mod_info_tags_value.setText(self.tr("None"))
+            self.mod_info_tags_value.setToolTip("")
+
     def _set_folder_size_info(self, uuid: str) -> None:
         """Set folder size information using optimized calculation."""
         try:
@@ -461,6 +494,7 @@ class ModInfoPanel:
         # Populate values from ModInfo - all edge cases already handled
         self.mod_info_package_id_value.setText(mod_info.packageid)
         self.mod_info_author_value.setText(mod_info.authors)
+        self._set_mod_tags_info(uuid)
         self.mod_info_supported_versions_value.setText(mod_info.supported_versions)
 
         # Set mod version
