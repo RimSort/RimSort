@@ -108,6 +108,38 @@ def _rotate_session_logs(
                 pass
 
 
+def _make_json_sink(json_file: IO[str]) -> Callable[["loguru_module.Message"], None]:
+    """Create a JSON sink closure that obfuscates before serializing."""
+
+    def _json_sink(message: "loguru_module.Message") -> None:
+        record = message.record
+        serialized: dict[str, object] = {
+            "time": record["time"].isoformat(),
+            "level": record["level"].name,
+            "module": record["module"],
+            "name": record["name"],
+            "function": record["function"],
+            "line": record["line"],
+            "process": record["process"].id,
+            "thread": record["thread"].name,
+            "message": obfuscate_message(record["message"]),
+        }
+        if record["exception"] is not None:
+            serialized["exception"] = obfuscate_message(
+                "".join(
+                    traceback.format_exception(
+                        record["exception"].type,
+                        record["exception"].value,
+                        record["exception"].traceback,
+                    )
+                )
+            )
+        json_file.write(json.dumps(serialized) + "\n")
+        json_file.flush()
+
+    return _json_sink
+
+
 def setup_logging(
     log_dir: Path,
     debug: bool = False,
@@ -144,6 +176,17 @@ def setup_logging(
             format=_formatter,
             enqueue=True,
         )
+
+        # JSON file sink
+        if json_logging:
+            json_log_path = log_dir / "RimSort.json.log"
+            json_file = open(json_log_path, "w", encoding="utf-8")  # noqa: SIM115
+            atexit.register(json_file.close)
+            logger.add(
+                _make_json_sink(json_file),
+                level="DEBUG",
+                enqueue=True,
+            )
 
     # stderr sink
     stderr_level = "DEBUG" if (debug and not file_logging) else "WARNING"
