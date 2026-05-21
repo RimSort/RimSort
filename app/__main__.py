@@ -156,7 +156,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
-
     # Compiled non-Linux builds must call freeze_support() and set_start_method()
     # BEFORE anything that touches multiprocessing (loguru's enqueue=True creates
     # an internal multiprocessing queue, locking in the start method context).
