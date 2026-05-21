@@ -169,7 +169,7 @@ if __name__ == "__main__":
         DEBUG_MODE = debug_file_path.exists() and debug_file_path.is_file()
 
     from app.utils.log_config import setup_logging
-
+    
     setup_logging(
         log_dir=AppInfo().user_log_folder,
         debug=DEBUG_MODE,

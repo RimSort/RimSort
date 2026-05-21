@@ -45,6 +45,7 @@ DOWNLOAD_TIMEOUT = 30
 # File and archive constants
 ZIP_EXTENSION = ".zip"
 MSI_EXTENSION = ".msi"
+APPIMAGE_EXTENSION = ".AppImage"
 DOWNLOAD_CHUNK_SIZE = 131072  # 128KB for better performance
 MIN_UPDATE_SIZE = 1024  # Minimum reasonable size for an app update
 UPDATER_LOG_FILENAME = "updater.log"
@@ -132,6 +133,7 @@ class ReleaseInfo(TypedDict):
     tag_name: str
     download_url: str
     is_msi: bool
+    is_appimage: bool
 
 
 class DownloadInfo(TypedDict):
@@ -140,6 +142,7 @@ class DownloadInfo(TypedDict):
     url: str
     name: str
     is_msi: bool
+    is_appimage: bool
 
 
 class PlatformPatterns(TypedDict):
@@ -608,6 +611,7 @@ class UpdateManager(QObject):
             "latest_version": latest_version,
             "needs_elevation": needs_elevation,
             "is_msi": latest_release_info.get("is_msi", False),
+            "is_appimage": latest_release_info.get("is_appimage", False),
         }
 
     def _parse_current_version(self, current_version: str) -> version.Version:
@@ -675,9 +679,10 @@ class UpdateManager(QObject):
         tag_name = update_info["tag_name"]
 
         is_msi = bool(update_info.get("is_msi", False))
+        is_appimage = bool(update_info.get("is_appimage", False))
 
         try:
-            self._perform_update(download_url, tag_name, is_msi)
+            self._perform_update(download_url, tag_name, is_msi, is_appimage)
         except UpdateError as e:
             logger.error(f"Update process failed: {e}")
             raise
@@ -728,6 +733,7 @@ class UpdateManager(QObject):
                 "tag_name": tag_name,
                 "download_url": download_info["url"],
                 "is_msi": download_info.get("is_msi", False),
+                "is_appimage": download_info.get("is_appimage", False),
             }
 
         except requests.RequestException as e:
@@ -806,6 +812,14 @@ class UpdateManager(QObject):
         arch_patterns_dict = cast(Dict[str, List[str]], self._cached_patterns["arch_patterns"])
         arch_patterns = arch_patterns_dict.get(self._arch, [])
 
+        # AppImage mode: prefer .AppImage asset, fall back to ZIP
+        if self._system == "Linux" and AppInfo().is_appimage:
+            logger.info("AppImage mode: looking for .AppImage asset first")
+            candidate = self._find_appimage_asset(assets, arch_patterns)
+            if candidate:
+                return candidate
+            logger.warning("No .AppImage asset found in release, falling back to ZIP")
+
         # Determine preferred extension order
         if self._system == "Windows" and self._is_in_protected_path():
             preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
@@ -870,6 +884,7 @@ class UpdateManager(QObject):
                         "url": str(download_url),
                         "name": asset_name,
                         "is_msi": preferred_extension == MSI_EXTENSION,
+                        "is_appimage": False,
                     },
                 )
             elif download_url and self._asset_matches(asset, system_patterns, preferred_extension, require_arch=False):
@@ -881,10 +896,60 @@ class UpdateManager(QObject):
                             "url": str(download_url),
                             "name": asset_name,
                             "is_msi": preferred_extension == MSI_EXTENSION,
+                            "is_appimage": False,
                         },
                     )
 
         return candidate
+
+    def _find_appimage_asset(
+        self,
+        assets: List[Dict[str, Any]],
+        arch_patterns: List[str],
+    ) -> DownloadInfo | None:
+        """
+        Find an AppImage asset from the release.
+
+        AppImage filenames use the format ``RimSort-{version}-{arch}.AppImage``
+        and don't contain "Linux"/"Ubuntu", so we match only on extension and
+        optionally on architecture.
+        """
+        for asset in assets:
+            asset_name = str(asset.get("name", ""))
+            download_url = asset.get("browser_download_url")
+            if not download_url or not asset_name.lower().endswith(APPIMAGE_EXTENSION.lower()):
+                continue
+
+            asset_name_lower = asset_name.lower()
+            if arch_patterns and any(p.lower() in asset_name_lower for p in arch_patterns):
+                logger.debug(f"Found arch-specific AppImage asset: {asset_name}")
+                return cast(
+                    DownloadInfo,
+                    {
+                        "url": str(download_url),
+                        "name": asset_name,
+                        "is_msi": False,
+                        "is_appimage": True,
+                    },
+                )
+
+        # Fallback: return any AppImage regardless of arch
+        for asset in assets:
+            asset_name = str(asset.get("name", ""))
+            download_url = asset.get("browser_download_url")
+            if download_url and asset_name.lower().endswith(APPIMAGE_EXTENSION.lower()):
+                logger.debug(f"Found AppImage asset (no arch match): {asset_name}")
+                return cast(
+                    DownloadInfo,
+                    {
+                        "url": str(download_url),
+                        "name": asset_name,
+                        "is_msi": False,
+                        "is_appimage": True,
+                    },
+                )
+
+        return None
 
     def _on_download_cancel(self) -> None:
         self._download_cancelled = True
@@ -896,13 +961,15 @@ class UpdateManager(QObject):
         except Exception as e:
             self.download_complete.emit(False, str(e))
 
-    def _perform_update(self, download_url: str, tag_name: str, is_msi: bool) -> None:
+    def _perform_update(self, download_url: str, tag_name: str, is_msi: bool, is_appimage: bool = False) -> None:
         """
         Download and extract the update, then launch the update script.
 
         Args:
             download_url: URL to download the update from
             tag_name: Tag name of the release
+            is_msi: Whether the update is an MSI installer
+            is_appimage: Whether the update is an AppImage file
         """
         try:
             logger.debug(f"Downloading & extracting RimSort release from: {download_url}")
@@ -960,15 +1027,21 @@ class UpdateManager(QObject):
                     raise UpdateDownloadError("Download cancelled by user")
                 raise UpdateDownloadError(download_result["error"] or "Download did not complete successfully")
 
-            # Extract or save with progress window
-            try:
-                self._extract_update_with_progress(is_msi)
-            except Exception as e:
-                logger.error(f"Extraction/preparation failed: {e}")
-                raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
+            update_source_path: Path | None
+            if is_appimage:
+                # AppImage: write the downloaded file directly, no extraction needed
+                update_source_path = self._prepare_appimage_update()
+            else:
+                # Extract or save with progress window
+                try:
+                    self._extract_update_with_progress(is_msi)
+                except Exception as e:
+                    logger.error(f"Extraction/preparation failed: {e}")
+                    raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
 
-            update_source_path = self._extracted_path
-            logger.info(f"Update extracted to: {update_source_path}")
+                update_source_path = self._extracted_path
+
+            logger.info(f"Update prepared at: {update_source_path}")
 
             if update_source_path is None:
                 raise UpdateExtractionError("Extraction/preparation did not complete successfully")
@@ -984,13 +1057,20 @@ class UpdateManager(QObject):
 
             if answer != QMessageBox.StandardButton.Yes:
                 logger.info("User declined update")
+                # Clean up the staged AppImage file if the user declined
+                if is_appimage and update_source_path.exists():
+                    try:
+                        update_source_path.unlink()
+                        logger.debug(f"Cleaned up declined AppImage update: {update_source_path}")
+                    except OSError as e:
+                        logger.warning(f"Failed to clean up {update_source_path}: {e}")
                 # Restore panel if it was hidden
                 if self.mod_info_panel:
                     self.mod_info_panel.info_panel_frame.show()
                 return
 
-            # Check if backup is enabled in settings
-            if self.settings_controller.settings.enable_backup_before_update:
+            # AppImage updates use .bak rename as the backup — skip ZIP backup
+            if not is_appimage and self.settings_controller.settings.enable_backup_before_update:
                 # Create backup of current installation with progress window
                 self._create_backup_with_progress()
                 # Clean up old backups after successful backup creation
@@ -1379,6 +1459,39 @@ class UpdateManager(QObject):
 
         logger.debug(f"Normalized update ready at: {temp_base}")
 
+    def _prepare_appimage_update(self) -> Path:
+        """
+        Write the downloaded AppImage content to a ``.new`` file next to the
+        running AppImage.  The file is placed in the same directory to ensure
+        atomic renames in ``update.sh``.
+
+        :return: Path to the new AppImage file.
+        :raises UpdateExtractionError: If the AppImage path is unknown or
+            the target directory is not writable.
+        """
+        appimage_path = AppInfo().appimage_path
+        if appimage_path is None:
+            raise UpdateExtractionError("Cannot determine AppImage path from environment")
+
+        if self._update_content is None:
+            raise UpdateExtractionError("No update content available")
+
+        new_path = appimage_path.with_suffix(appimage_path.suffix + ".new")
+        target_dir = appimage_path.parent
+
+        if not os.access(target_dir, os.W_OK):
+            raise UpdateExtractionError(
+                f"Cannot update: no write permission to {target_dir}. "
+                "Move RimSort to a user-writable location or update manually."
+            )
+
+        logger.info(f"Writing new AppImage to: {new_path}")
+        new_path.write_bytes(self._update_content)
+        os.chmod(new_path, 0o755)
+        self._extracted_path = new_path
+        logger.info(f"AppImage prepared ({len(self._update_content)} bytes)")
+        return new_path
+
     def _extract_update(self, is_msi: bool = False) -> Path:
         """
         Extract the downloaded update to a dedicated temporary directory and normalize structure,
@@ -1640,8 +1753,28 @@ class UpdateManager(QObject):
             if not script_path.exists():
                 raise UpdateScriptLaunchError(f"Update script not found: {script_path}")
 
+            # For AppImage, the script lives inside the FUSE mount which goes
+            # away when the app exits.  Copy it to a temp location first.
+            if AppInfo().is_appimage:
+                fd, temp_script = tempfile.mkstemp(suffix=".sh", prefix="rimsort_update_")
+                os.close(fd)
+                shutil.copy2(str(script_path), temp_script)
+                os.chmod(temp_script, 0o755)
+                logger.debug(f"Copied update.sh out of AppImage to: {temp_script}")
+                script_path = Path(temp_script)
+
+                config = self._script_configs[self._system]
+                args_repr = config.get_args(
+                    script_path,
+                    update_source_path,
+                    log_path,
+                    needs_elevation,
+                    install_dir,
+                    update_manager=self,
+                )
+
             # For Windows, copy update.bat to app_storage_folder to avoid conflicts during update
-            if self._system == "Windows":
+            elif self._system == "Windows":
                 app_storage_folder = AppInfo().app_storage_folder
                 temp_script_path = app_storage_folder / "update.bat"
 
@@ -1950,7 +2083,13 @@ class UpdateManager(QObject):
         """
         config = self._script_configs[self._system]
         script_path = config.get_script_path()
-        install_dir = script_path.parent
+
+        # For AppImage, install_dir is the directory containing the .AppImage file
+        appimage_path = AppInfo().appimage_path
+        if appimage_path is not None:
+            install_dir = appimage_path.parent
+        else:
+            install_dir = script_path.parent
         args_repr = config.get_args(
             script_path,
             update_source_path,

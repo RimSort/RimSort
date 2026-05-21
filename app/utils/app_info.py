@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 
+from loguru import logger
 from lxml import etree, objectify
 from platformdirs import PlatformDirs
 
@@ -115,6 +116,9 @@ class AppInfo:
             self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self._user_rules_file, "w", encoding="utf-8") as output:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
+
+        # AppImage: clean up .bak from a previous successful update
+        self._cleanup_appimage_backup()
 
         self._is_initialized: bool = True
 
@@ -288,3 +292,36 @@ class AppInfo:
         Get the path to the folder where application backups are stored.
         """
         return self._application_backups_folder
+
+    @property
+    def is_appimage(self) -> bool:
+        """
+        Check if the application is running from an AppImage.
+
+        The ``$APPIMAGE`` environment variable is set automatically by the
+        AppImage runtime and contains the absolute path to the ``.AppImage`` file.
+        """
+        return bool(os.environ.get("APPIMAGE"))
+
+    @property
+    def appimage_path(self) -> Path | None:
+        """
+        Get the path to the running AppImage file, or ``None`` if not an AppImage.
+        """
+        appimage = os.environ.get("APPIMAGE")
+        if appimage:
+            return Path(appimage)
+        return None
+
+    def _cleanup_appimage_backup(self) -> None:
+        """Remove leftover ``.bak`` file from a previous AppImage update."""
+        appimage = self.appimage_path
+        if appimage is None:
+            return
+        bak = appimage.with_suffix(appimage.suffix + ".bak")
+        if bak.exists():
+            try:
+                bak.unlink()
+                logger.info(f"Cleaned up old AppImage backup: {bak}")
+            except OSError as e:
+                logger.warning(f"Failed to clean up AppImage backup {bak}: {e}")
