@@ -54,9 +54,7 @@ def _find_steam_executable() -> Path | None:
     elif sys.platform == "win32":
         import os
 
-        program_files_x86 = os.environ.get(
-            "ProgramFiles(x86)", r"C:\Program Files (x86)"
-        )
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
         program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
         candidates = [
             Path(program_files_x86) / "Steam" / "steam.exe",
@@ -188,9 +186,7 @@ class SteamStatusHandler(QObject):
         """
         logger.warning(f"Steam operation failed for pfid={pfid}: {reason}")
         show_warning(
-            title=QCoreApplication.translate(
-                "SteamStatusHandler", "Steam Operation Failed"
-            ),
+            title=QCoreApplication.translate("SteamStatusHandler", "Steam Operation Failed"),
             text=QCoreApplication.translate(
                 "SteamStatusHandler",
                 "A Steam operation has failed.",
@@ -219,8 +215,7 @@ class SteamStatusHandler(QObject):
                 ),
                 information=QCoreApplication.translate(
                     "SteamStatusHandler",
-                    "Some features require Steam to be running. "
-                    "You can launch Steam from Help > Launch Steam.",
+                    "Some features require Steam to be running. You can launch Steam from Help > Launch Steam.",
                 ),
             )
 
@@ -268,12 +263,9 @@ class SteamStatusHandler(QObject):
             ),
             information=QCoreApplication.translate(
                 "SteamStatusHandler",
-                "Steam is required for this operation. "
-                "You can enable automatic launching in Settings > Advanced.",
+                "Steam is required for this operation. You can enable automatic launching in Settings > Advanced.",
             ),
-            positive_text=QCoreApplication.translate(
-                "SteamStatusHandler", "Launch Steam"
-            ),
+            positive_text=QCoreApplication.translate("SteamStatusHandler", "Launch Steam"),
             negative_text=QCoreApplication.translate("SteamStatusHandler", "Cancel"),
         )
         if dialog.exec_is_positive():
@@ -290,17 +282,14 @@ class SteamStatusHandler(QObject):
         steam_path = _find_steam_executable()
         if steam_path is None:
             show_warning(
-                title=QCoreApplication.translate(
-                    "SteamStatusHandler", "Steam Not Found"
-                ),
+                title=QCoreApplication.translate("SteamStatusHandler", "Steam Not Found"),
                 text=QCoreApplication.translate(
                     "SteamStatusHandler",
                     "Could not find the Steam executable.",
                 ),
                 information=QCoreApplication.translate(
                     "SteamStatusHandler",
-                    "Please ensure Steam is installed in a standard location, "
-                    "or launch it manually.",
+                    "Please ensure Steam is installed in a standard location, or launch it manually.",
                 ),
             )
             return
@@ -319,8 +308,7 @@ class SteamStatusHandler(QObject):
             title=QCoreApplication.translate("SteamStatusHandler", "Steam Launched"),
             text=QCoreApplication.translate(
                 "SteamStatusHandler",
-                "Steam has been launched successfully. "
-                "You may now retry the operation.",
+                "Steam has been launched successfully. You may now retry the operation.",
             ),
         )
 
@@ -332,9 +320,7 @@ class SteamStatusHandler(QObject):
         """
         logger.warning(f"Steam launch failed: {reason}")
         show_warning(
-            title=QCoreApplication.translate(
-                "SteamStatusHandler", "Steam Launch Failed"
-            ),
+            title=QCoreApplication.translate("SteamStatusHandler", "Steam Launch Failed"),
             text=QCoreApplication.translate(
                 "SteamStatusHandler",
                 "Failed to launch Steam.",
