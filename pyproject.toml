@@ -10,7 +10,7 @@ dependencies = [
     "beautifulsoup4==4.14.3",
     "certifi==2026.4.22",
     "charset-normalizer==3.4.7",
-    "click==8.3.3",
+    "click==8.4.0",
     "loguru==0.7.3",
     "lxml==6.1.1",
     "msgspec==0.21.1",
