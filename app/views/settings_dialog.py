@@ -82,6 +82,7 @@ class SettingsDialog(QDialog):
         self._do_authentication_tab()
         self._do_aux_db_settings_tab()
         self._do_advanced_tab()
+        self._do_companion_tab()
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
@@ -1556,6 +1557,37 @@ This basically preserves your mod coloring, user notes etc. for this many second
         backup_layout.addWidget(self.max_backups_spinbox)
 
         group_layout.addLayout(backup_layout)
+
+    def _do_companion_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Companion"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        port_layout = QHBoxLayout()
+        port_label = QLabel(self.tr("Server port:"))
+        self.companion_port_input = QSpinBox()
+        self.companion_port_input.setRange(1024, 65535)
+        self.companion_port_input.setValue(29515)
+        port_layout.addWidget(port_label)
+        port_layout.addWidget(self.companion_port_input)
+        port_layout.addStretch()
+        group_layout.addLayout(port_layout)
+
+        self.companion_auto_fetch_checkbox = QCheckBox(
+            self.tr("Auto-fetch load order on connect")
+        )
+        self.companion_auto_fetch_checkbox.setChecked(True)
+        group_layout.addWidget(self.companion_auto_fetch_checkbox)
+
+        tab_layout.addStretch()
 
     def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):
