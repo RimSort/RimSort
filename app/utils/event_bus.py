@@ -133,6 +133,18 @@ class EventBus(QObject):
     do_toggle_translation_status = Signal(bool)
     do_auto_add_translations = Signal()
 
+    # Companion signals
+    companion_connected = Signal(dict)
+    companion_disconnected = Signal()
+    companion_heartbeat = Signal(dict)
+    companion_state_changed = Signal(str)
+    companion_load_order_received = Signal(dict)
+    companion_mod_errors_received = Signal(dict)
+    companion_mod_details_received = Signal(dict)
+    companion_harmony_patches_received = Signal(dict)
+    companion_apply_result = Signal(dict)
+    companion_server_error = Signal(str)
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
