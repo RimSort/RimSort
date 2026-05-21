@@ -24,8 +24,7 @@ def _create_acf_file(
             "TimeLastAppRan": "0",
             "LastBuildID": "0",
             "WorkshopItemsInstalled": {
-                pfid: {"size": "100", "timeupdated": "1700000000", "manifest": "123"}
-                for pfid in installed_pfids
+                pfid: {"size": "100", "timeupdated": "1700000000", "manifest": "123"} for pfid in installed_pfids
             },
             "WorkshopItemDetails": {
                 pfid: {
@@ -60,9 +59,7 @@ def acf_workshop_setup(tmp_path: Path) -> tuple[Path, Path, list[str], list[str]
 
 
 class TestCleanupOrphanedWorkshopItems:
-    def test_removes_orphaned_entries(
-        self, acf_workshop_setup: tuple[Path, Path, list[str], list[str]]
-    ) -> None:
+    def test_removes_orphaned_entries(self, acf_workshop_setup: tuple[Path, Path, list[str], list[str]]) -> None:
         """Orphaned PFIDs should be removed from both ACF sections."""
         acf_path, workshop_dir, existing_pfids, orphaned_pfids = acf_workshop_setup
 
@@ -142,9 +139,7 @@ class TestCleanupOrphanedWorkshopItems:
         workshop_dir = tmp_path / "content"
         workshop_dir.mkdir()
 
-        result = cleanup_orphaned_workshop_items(
-            tmp_path / "nonexistent.acf", workshop_dir
-        )
+        result = cleanup_orphaned_workshop_items(tmp_path / "nonexistent.acf", workshop_dir)
 
         assert result == []
 

@@ -28,34 +28,18 @@ class TroubleshootingController:
         self.translate = QCoreApplication.translate
 
         # Connect button signals
-        self.dialog.integrity_apply_button.clicked.connect(
-            self._on_integrity_apply_button_clicked
-        )
-        self.dialog.integrity_cancel_button.clicked.connect(
-            self._on_integrity_cancel_button_clicked
-        )
+        self.dialog.integrity_apply_button.clicked.connect(self._on_integrity_apply_button_clicked)
+        self.dialog.integrity_cancel_button.clicked.connect(self._on_integrity_cancel_button_clicked)
 
         # Connect mod configuration buttons
-        self.dialog.clear_mods_button.clicked.connect(
-            self._on_clear_mods_button_clicked
-        )
-        self.dialog.mod_export_list_button.clicked.connect(
-            self._on_mod_export_list_button_clicked
-        )
-        self.dialog.mod_import_list_button.clicked.connect(
-            self._on_mod_import_list_button_clicked
-        )
+        self.dialog.clear_mods_button.clicked.connect(self._on_clear_mods_button_clicked)
+        self.dialog.mod_export_list_button.clicked.connect(self._on_mod_export_list_button_clicked)
+        self.dialog.mod_import_list_button.clicked.connect(self._on_mod_import_list_button_clicked)
 
         # Connect Steam utility buttons
-        self.dialog.steam_clear_cache_button.clicked.connect(
-            self._on_steam_clear_cache_clicked
-        )
-        self.dialog.steam_verify_game_button.clicked.connect(
-            self._on_steam_verify_game_clicked
-        )
-        self.dialog.steam_repair_library_button.clicked.connect(
-            self._on_steam_repair_library_clicked
-        )
+        self.dialog.steam_clear_cache_button.clicked.connect(self._on_steam_clear_cache_clicked)
+        self.dialog.steam_verify_game_button.clicked.connect(self._on_steam_verify_game_clicked)
+        self.dialog.steam_repair_library_button.clicked.connect(self._on_steam_repair_library_clicked)
         self.dialog.steam_cleanup_orphaned_workshop_button.clicked.connect(
             self._on_steam_cleanup_orphaned_workshop_clicked
         )
@@ -72,9 +56,7 @@ class TroubleshootingController:
     def steam_mods_location(self) -> Optional[str]:
         return self.settings.instances[self.settings.current_instance].workshop_folder
 
-    def _delete_files_in_directory(
-        self, directory: Path, exclude: Optional[List[str]] = None
-    ) -> None:
+    def _delete_files_in_directory(self, directory: Path, exclude: Optional[List[str]] = None) -> None:
         """Helper method to delete files and folders in a directory, excluding specified names."""
         if exclude is None:
             exclude = []
@@ -146,9 +128,7 @@ class TroubleshootingController:
         except Exception as e:
             logger.error(f"Failed to launch Steam installation: {e}")
             show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Steam Launch Failed"
-                ),
+                title=self.translate("TroubleshootingController", "Steam Launch Failed"),
                 text=self.translate(
                     "TroubleshootingController",
                     "Could not automatically start game installation through Steam.\n\nPlease manually verify/install the game through Steam.",
@@ -172,9 +152,7 @@ class TroubleshootingController:
         # get list of mod IDs before deleting
         mod_ids = []
         for item in steam_mods_dir.iterdir():
-            if (
-                item.is_dir() and item.name.isdigit()
-            ):  # workshop folders are numeric IDs
+            if item.is_dir() and item.name.isdigit():  # workshop folders are numeric IDs
                 mod_ids.append(item.name)
 
         # delete all files and folders
@@ -195,16 +173,12 @@ class TroubleshootingController:
 
             # then trigger download for each mod
             for mod_id in mod_ids:
-                platform_specific_open(
-                    f"steam://workshop_download_item/294100/{mod_id}"
-                )
+                platform_specific_open(f"steam://workshop_download_item/294100/{mod_id}")
                 logger.info(f"opening: steam://workshop_download_item/294100/{mod_id}")
         except Exception as e:
             logger.error(f"Failed to trigger Steam workshop redownload: {e}")
             show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Steam Workshop Redownload"
-                ),
+                title=self.translate("TroubleshootingController", "Steam Workshop Redownload"),
                 text=self.translate(
                     "TroubleshootingController",
                     "Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.\n\nIf mods don't download automatically, try:\n1. Restart Steam\n2. Verify game files in Steam\n3. Visit the Workshop page of each mod",
@@ -278,12 +252,10 @@ class TroubleshootingController:
                     item.unlink()
                     logger.info(f"Deleted {item} successfully.")
                     show_information(
-                        title=self.translate(
-                            "TroubleshootingController", "Process complete"
+                        title=self.translate("TroubleshootingController", "Process complete"),
+                        text=self.translate("TroubleshootingController", "Deleted {item} successfully.").format(
+                            item=item
                         ),
-                        text=self.translate(
-                            "TroubleshootingController", "Deleted {item} successfully."
-                        ).format(item=item),
                     )
                 except Exception as e:
                     logger.error(f"Failed to delete game config file {item}: {e}")
@@ -376,13 +348,9 @@ class TroubleshootingController:
   </knownExpansions>
 </ModsConfigData>"""
                 mods_config.write_text(vanilla_content)
-                logger.info(
-                    "Successfully deleted all mods and resetting ModsConfig.xml to vanilla state."
-                )
+                logger.info("Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.")
                 show_information(
-                    title=self.translate(
-                        "TroubleshootingController", "Process complete"
-                    ),
+                    title=self.translate("TroubleshootingController", "Process complete"),
                     text=self.translate(
                         "TroubleshootingController",
                         "Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.",
@@ -392,9 +360,7 @@ class TroubleshootingController:
                 logger.error(f"Failed to reset ModsConfig.xml: {e}")
                 show_dialogue_conditional(
                     title=self.translate("TroubleshootingController", "Error"),
-                    text=self.translate(
-                        "TroubleshootingController", "Failed to reset ModsConfig.xml."
-                    ),
+                    text=self.translate("TroubleshootingController", "Failed to reset ModsConfig.xml."),
                     icon="warning",
                 )
                 return
@@ -441,9 +407,7 @@ class TroubleshootingController:
 
         if not show_dialogue_conditional(
             self.translate("TroubleshootingController", "Confirm Export"),
-            self.translate(
-                "TroubleshootingController", "Export current mod list to file?"
-            ),
+            self.translate("TroubleshootingController", "Export current mod list to file?"),
         ):
             return
 
@@ -452,9 +416,7 @@ class TroubleshootingController:
             content = mods_config.read_text()
             tree = ElementTree.fromstring(content)
             active_mod_list = [mod.text for mod in tree.findall(".//activeMods/li")]
-            known_expansions_list = [
-                exp.text for exp in tree.findall(".//knownExpansions/li")
-            ]
+            known_expansions_list = [exp.text for exp in tree.findall(".//knownExpansions/li")]
 
             # create new ModsConfig.xml content
             root = ElementTree.Element("ModsConfigData")
@@ -494,9 +456,7 @@ class TroubleshootingController:
             logger.error(f"Failed to export mod list: {e}")
             show_warning(
                 title=self.translate("TroubleshootingController", "Error"),
-                text=self.translate(
-                    "TroubleshootingController", "Failed to export mod list."
-                ),
+                text=self.translate("TroubleshootingController", "Failed to export mod list."),
                 information=self.translate(
                     "TroubleshootingController",
                     "Error: {e}",
@@ -576,9 +536,7 @@ class TroubleshootingController:
             logger.error(f"Failed to import mod list: {e}")
             show_dialogue_conditional(
                 self.translate("TroubleshootingController", "Error"),
-                self.translate(
-                    "TroubleshootingController", "Failed to import mod list"
-                ),
+                self.translate("TroubleshootingController", "Failed to import mod list"),
                 self.translate(
                     "TroubleshootingController",
                     "The selected file is not a valid mod list file.\nDetails: {e}",
@@ -598,10 +556,7 @@ class TroubleshootingController:
         try:
             if "steamapps" in str(workshop_path):
                 steam_root = workshop_path
-                while (
-                    steam_root.name.lower() != "steam"
-                    and steam_root.parent != steam_root
-                ):
+                while steam_root.name.lower() != "steam" and steam_root.parent != steam_root:
                     steam_root = steam_root.parent
                 if steam_root.name.lower() == "steam":
                     return steam_root
@@ -707,9 +662,7 @@ class TroubleshootingController:
 
             # ask for confirmation since this will validate all games
             if not show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Confirm Library Repair"
-                ),
+                title=self.translate("TroubleshootingController", "Confirm Library Repair"),
                 text=self.translate(
                     "TroubleshootingController",
                     "This will verify all {len} games in your Steam library.\nThis may take a while. Continue?",
@@ -722,9 +675,7 @@ class TroubleshootingController:
                 platform_specific_open(f"steam://validate/{app_id}")
 
             show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Library Repair Started"
-                ),
+                title=self.translate("TroubleshootingController", "Library Repair Started"),
                 text=self.translate(
                     "TroubleshootingController",
                     "Steam will now verify {len} games.\nYou can monitor progress in the Steam client.",
@@ -735,9 +686,7 @@ class TroubleshootingController:
         except Exception as e:
             logger.error(f"Failed to repair Steam library: {e}")
             show_dialogue_conditional(
-                title=self.translate(
-                    "TroubleshootingController", "Steam Action Failed"
-                ),
+                title=self.translate("TroubleshootingController", "Steam Action Failed"),
                 text=self.translate(
                     "TroubleshootingController",
                     "Could not repair Steam library.\nPlease verify your games manually through Steam.\nDetails: {e}",
@@ -765,9 +714,7 @@ class TroubleshootingController:
             return
 
         if not show_dialogue_conditional(
-            title=self.translate(
-                "TroubleshootingController", "Clean Orphaned Workshop Items"
-            ),
+            title=self.translate("TroubleshootingController", "Clean Orphaned Workshop Items"),
             text=self.translate(
                 "TroubleshootingController",
                 "This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.\n\nA backup will be created before any changes are made.\n\nContinue?",
@@ -781,13 +728,9 @@ class TroubleshootingController:
 
             if removed_pfids:
                 backup_path = str(acf_path) + ".backup"
-                details = (
-                    "\n".join(removed_pfids) + f"\n\nBackup saved to: {backup_path}"
-                )
+                details = "\n".join(removed_pfids) + f"\n\nBackup saved to: {backup_path}"
                 show_information(
-                    title=self.translate(
-                        "TroubleshootingController", "Cleanup Complete"
-                    ),
+                    title=self.translate("TroubleshootingController", "Cleanup Complete"),
                     text=self.translate(
                         "TroubleshootingController",
                         "Removed {count} orphaned workshop entries.",
@@ -796,9 +739,7 @@ class TroubleshootingController:
                 )
             else:
                 show_information(
-                    title=self.translate(
-                        "TroubleshootingController", "No Orphans Found"
-                    ),
+                    title=self.translate("TroubleshootingController", "No Orphans Found"),
                     text=self.translate(
                         "TroubleshootingController",
                         "No orphaned workshop entries were found. The ACF file is clean.",
@@ -827,9 +768,7 @@ class TroubleshootingController:
     def show_failed_warning(self, item: Path | str, e: Exception) -> None:
         show_warning(
             title=self.translate("TroubleshootingController", "Process failed"),
-            text=self.translate(
-                "TroubleshootingController", "Could not process: {item}"
-            ).format(item=item),
+            text=self.translate("TroubleshootingController", "Could not process: {item}").format(item=item),
             information=self.translate(
                 "TroubleshootingController",
                 "Failed to process item: {item} due to the following error: {e}",
@@ -838,9 +777,7 @@ class TroubleshootingController:
 
     def show_steam_user_warning(self) -> None:
         show_warning(
-            title=self.translate(
-                "TroubleshootingController", "Steam user Check failed"
-            ),
+            title=self.translate("TroubleshootingController", "Steam user Check failed"),
             text=self.translate(
                 "TroubleshootingController",
                 "You are not a Steam user, or Path not set, Please check settings and try again.",
