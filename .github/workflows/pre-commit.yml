@@ -1,0 +1,69 @@
+name: Pre-commit
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+    push:
+        branches:
+            - main
+            - master
+    merge_group:
+
+permissions: {}
+
+jobs:
+    pre-commit:
+        name: pre-commit
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            checks: write
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  submodules: recursive
+
+            - name: Setup Python
+              uses: actions/setup-python@main
+              with:
+                  python-version-file: "pyproject.toml"
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v7
+              with:
+                  enable-cache: true
+                  activate-environment: true
+
+            - name: Install dependencies
+              shell: bash
+              run: uv sync --locked --dev
+
+            - name: Install pre-commit
+              shell: bash
+              run: uv pip install pre-commit
+
+            - name: Run pre-commit
+              shell: bash
+              run: |
+                  set -e
+                  pre-commit run --all-files --show-diff-on-failure
+
+            - name: Auto-fix commit (if needed)
+              id: auto-commit
+              # Avoid duplicate/looping fixes by committing only when the PR
+              # comes from this repo (same-repo PRs) and it's not targeting
+              # the default branch.
+              if: >
+                  github.event_name == 'pull_request' &&
+                  github.ref_name != github.event.repository.default_branch &&
+                  github.event.pull_request.head.repo.full_name == github.repository
+              uses: stefanzweifel/git-auto-commit-action@v7
+              with:
+                  add_options: "-- . :!super-linter-output/"
+                  commit_message: "chore: pre-commit autofix"
+                  commit_user_name: pre-commit-ci
+                  commit_user_email: pre-commit-ci@users.noreply.github.com

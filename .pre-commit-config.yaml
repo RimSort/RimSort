@@ -1,0 +1,54 @@
+# Pre-commit hooks configuration for RimSort
+# Install with: pip install pre-commit
+# Setup with: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Python formatting with ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        args: [--config-file=pyproject.toml]
+        additional_dependencies:
+          [
+            types-requests,
+            types-beautifulsoup4,
+            types-lxml,
+            lxml-stubs,
+            types-networkx,
+            types-psutil,
+            types-greenlet,
+            types-toposort,
+          ]
+        exclude: ^(submodules|.venv|venv)
+
+  # Unit tests with pytest
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        types: [python]
+        stages: [commit]
+        pass_filenames: false
+        always_run: true
+        # Tests are intentionally NOT executed in the GitHub pre-commit workflow.
+        # Enable/adjust locally by removing `ci.skip` below.
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_stage: push
+  skip: [pytest]

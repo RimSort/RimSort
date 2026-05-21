@@ -76,8 +76,12 @@ jobs:
           FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
           IGNORE_GITIGNORED_FILES: true
           # Set your fix mode variables to true
+          # NOTE: If you enable auto-fixing, you must also commit/push the
+          # resulting changes back to the PR branch, otherwise lint.yml will
+          # report failures (or re-run) without ever updating the PR.
           FIX_PYTHON_RUFF: true
           FIX_PYTHON_RUFF_FORMAT: true
+
       - name: Commit and push linting fixes
         id: auto-commit
         # Run only on:
@@ -126,4 +130,3 @@ jobs:
               gh api "repos/${{ github.repository }}/check-suites/${SUITE_ID}/rerequest" \
                 --method POST || true
             done
-          fi
