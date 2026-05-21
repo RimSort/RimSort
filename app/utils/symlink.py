@@ -11,7 +11,9 @@ from app.utils.generic import handle_remove_read_only
 class SymlinkCreationError(Exception):
     """Exception related to creating a symlink/junction."""
 
-    def __init__(self, message: str, src_path: str | Path, dst_path: str | Path) -> None:
+    def __init__(
+        self, message: str, src_path: str | Path, dst_path: str | Path
+    ) -> None:
         super().__init__(message)
         self.src_path = Path(src_path)
         self.dst_path = Path(dst_path)
@@ -81,7 +83,9 @@ def create_symlink(
     :param force: Force the creation of the symlink/junction, even if the dst_path exists. Default is False.
     """
     if not os.path.exists(src_path):
-        logger.warning(f"Provided source path {src_path} does not exist, abandoning symlink creation.")
+        logger.warning(
+            f"Provided source path {src_path} does not exist, abandoning symlink creation."
+        )
         raise SymlinkSrcNotExistError(
             f"Provided source path {src_path} does not exist, abandoning symlink creation.",
             src_path,
@@ -89,7 +93,9 @@ def create_symlink(
         )
 
     if not os.path.isdir(src_path):
-        logger.warning(f"Provided source path {src_path} is not a directory, abandoning symlink creation.")
+        logger.warning(
+            f"Provided source path {src_path} is not a directory, abandoning symlink creation."
+        )
         raise SymlinkSrcNotDirError(
             f"Provided source path {src_path} is not a directory, abandoning symlink creation.",
             src_path,
@@ -97,7 +103,9 @@ def create_symlink(
         )
 
     if os.path.exists(dst_path):
-        logger.debug(f"Potential existing link at {dst_path}. Will attempt to recreate to source: {src_path}")
+        logger.debug(
+            f"Potential existing link at {dst_path}. Will attempt to recreate to source: {src_path}"
+        )
         # Remove by type
         if is_junction_or_link(dst_path) or os.path.ismount(dst_path):
             os.unlink(dst_path)
@@ -162,4 +170,6 @@ def create_symlink(
         CreateJunction(src_path, dst_path)
 
     else:
-        raise NotImplementedError(f"Platform {sys.platform} is not supported for symlink/junction creation")
+        raise NotImplementedError(
+            f"Platform {sys.platform} is not supported for symlink/junction creation"
+        )

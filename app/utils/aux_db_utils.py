@@ -25,8 +25,11 @@ def auxdb_get_aux_db_entry(
     :return: AuxMetadataEntry | None, the AuxMetadataEntry for the given UUID, or None if no entry exists
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
     )
     local_session = session or local_controller.Session()
     try:
@@ -55,7 +58,9 @@ def auxdb_get_mod_color(
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: QColor | None, Color of the mod, or None if no color
     """
-    entry = auxdb_get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
+    entry = auxdb_get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
     mod_color = None
     if entry:
         color_text = entry.color_hex
@@ -80,7 +85,9 @@ def auxdb_get_mod_user_notes(
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: str, User notes for the mod, or empty string if no notes
     """
-    entry = auxdb_get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
+    entry = auxdb_get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
     user_notes = ""
     if entry:
         user_notes = entry.user_notes
@@ -103,7 +110,9 @@ def auxdb_get_mod_warning_toggled(
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: bool, Warning toggled status for the mod
     """
-    entry = auxdb_get_aux_db_entry(settings_controller, uuid, aux_db_controller, session)
+    entry = auxdb_get_aux_db_entry(
+        settings_controller, uuid, aux_db_controller, session
+    )
     warning_toggled = False
     if entry:
         warning_toggled = entry.ignore_warnings
@@ -128,8 +137,11 @@ def auxdb_update_mod_color(
     :param session: Session | None, optional SQLAlchemy session to use for the update; if None, a new session will be created and closed within this function
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
     )
 
     local_session = session or local_controller.Session()
@@ -160,8 +172,11 @@ def auxdb_update_all_mod_colors(
     :param session: Session | None, optional SQLAlchemy session to use for the update; if None, a new session will be created and closed within this function
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
     )
 
     local_session = session or local_controller.Session()
@@ -190,8 +205,11 @@ def auxdb_get_mod_tags(
     Get user-defined tags for a mod from Aux Metadata DB.
     """
     metadata_manager = MetadataManager.instance()
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
     )
     local_session = session or local_controller.Session()
     try:
@@ -214,11 +232,16 @@ def auxdb_get_all_tags(
     """
     Get all user-defined mod tags from Aux Metadata DB.
     """
-    if aux_db_controller is None and not hasattr(settings_controller.settings, "aux_db_path"):
+    if aux_db_controller is None and not hasattr(
+        settings_controller.settings, "aux_db_path"
+    ):
         return []
 
-    local_controller = aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+    local_controller = (
+        aux_db_controller
+        or AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
     )
     local_session = session or local_controller.Session()
     try:
@@ -357,7 +380,9 @@ def auxdb_update_all_mod_tags(
     """
     Update tags for multiple mods.
     """
-    aux_db_controller = AuxMetadataController.get_or_create_cached_instance(settings_controller.settings.aux_db_path)
+    aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
+        settings_controller.settings.aux_db_path
+    )
     with aux_db_controller.Session() as aux_metadata_session:
         for uuid in uuids:
             if replace:
