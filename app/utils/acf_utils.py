@@ -17,6 +17,7 @@ Key functions:
 - validate_acf_file_exists: Validate that appworkshop_294100.acf exists
 """
 
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -66,7 +67,9 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
         return {}
 
 
-def refresh_acf_metadata(metadata_manager: "MetadataManager", steamclient: bool = True, steamcmd: bool = True) -> None:
+def refresh_acf_metadata(
+    metadata_manager: "MetadataManager", steamclient: bool = True, steamcmd: bool = True
+) -> None:
     """
     Load and cache ACF metadata from Steam and SteamCMD sources.
 
@@ -100,7 +103,9 @@ def refresh_acf_metadata(metadata_manager: "MetadataManager", steamclient: bool 
 
     # Load SteamCMD appworkshop_294100.acf if enabled
     if steamcmd:
-        steamcmd_data = load_acf_from_path(metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
+        steamcmd_data = load_acf_from_path(
+            metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
         if steamcmd_data:
             metadata_manager.steamcmd_acf_data = steamcmd_data
             logger.info(
@@ -217,7 +222,9 @@ def _merge_workshop_items_from_sources(
             # Parse timestamp with validation
             timeupdated_int = parse_timeupdated(item.get("timeupdated"))
             if timeupdated_int is None and item.get("timeupdated") is not None:
-                logger.warning(f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}")
+                logger.warning(
+                    f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}"
+                )
             entries.append((pfid_str, steamcmd_source, timeupdated_int))
             seen_pfids.add(pfid_str)
 
@@ -230,7 +237,9 @@ def _merge_workshop_items_from_sources(
             # Parse timestamp with validation
             timeupdated_int = parse_timeupdated(item.get("timeupdated"))
             if timeupdated_int is None and item.get("timeupdated") is not None:
-                logger.warning(f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}")
+                logger.warning(
+                    f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}"
+                )
             entries.append((pfid_str, steam_source, timeupdated_int))
             seen_pfids.add(pfid_str)
 
@@ -267,15 +276,21 @@ def get_acf_workshop_items(
     """
     # Extract workshop items from cached SteamCMD ACF data
     steamcmd_items = (
-        get_workshop_items_from_acf(metadata_manager.steamcmd_acf_data) if metadata_manager.steamcmd_acf_data else {}
+        get_workshop_items_from_acf(metadata_manager.steamcmd_acf_data)
+        if metadata_manager.steamcmd_acf_data
+        else {}
     )
     # Extract workshop items from cached Steam ACF data
     workshop_items = (
-        get_workshop_items_from_acf(metadata_manager.workshop_acf_data) if metadata_manager.workshop_acf_data else {}
+        get_workshop_items_from_acf(metadata_manager.workshop_acf_data)
+        if metadata_manager.workshop_acf_data
+        else {}
     )
 
     # Merge items with source attribution and deduplication
-    entries = _merge_workshop_items_from_sources(steamcmd_items, workshop_items, "SteamCMD", "Steam")
+    entries = _merge_workshop_items_from_sources(
+        steamcmd_items, workshop_items, "SteamCMD", "Steam"
+    )
 
     return (
         entries,
@@ -310,7 +325,9 @@ def load_and_merge_acf_data(
         ValueError: If no ACF data could be loaded from either source.
     """
     # Load ACF files from both sources
-    steamcmd_acf_data = load_acf_from_path(steamcmd_acf_path) if steamcmd_acf_path else {}
+    steamcmd_acf_data = (
+        load_acf_from_path(steamcmd_acf_path) if steamcmd_acf_path else {}
+    )
     steam_acf_data = load_acf_from_path(steam_acf_path) if steam_acf_path else {}
 
     if not steamcmd_acf_data and not steam_acf_data:
@@ -324,12 +341,16 @@ def load_and_merge_acf_data(
         raise ValueError("Invalid workshop items data format")
 
     # Merge items with source attribution using shared helper
-    entries = _merge_workshop_items_from_sources(steamcmd_items, steam_items, "SteamCMD", "Steam")
+    entries = _merge_workshop_items_from_sources(
+        steamcmd_items, steam_items, "SteamCMD", "Steam"
+    )
 
     return entries, steamcmd_acf_data, steam_acf_data
 
 
-def _extract_manifest_ids_and_remove_pfid(workshop_section: dict[str, Any] | None, delete_pfid: str) -> set[str]:
+def _extract_manifest_ids_and_remove_pfid(
+    workshop_section: dict[str, Any] | None, delete_pfid: str
+) -> set[str]:
     """
     Extract manifest IDs from a workshop section and remove a PFID entry.
 
@@ -400,15 +421,21 @@ def steamcmd_purge_mods(
     acf_path = metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
     acf_metadata = load_acf_from_path(acf_path)
     if not acf_metadata:
-        logger.warning(f"SteamCMD ACF file not found or failed to parse at: {acf_path}. Skipping mod removal.")
+        logger.warning(
+            f"SteamCMD ACF file not found or failed to parse at: {acf_path}. Skipping mod removal."
+        )
         return
 
     # Get depotcache directory path for manifest file cleanup
     depotcache_path = metadata_manager.steamcmd_wrapper.steamcmd_depotcache_path
 
     # Extract workshop sections from ACF metadata
-    workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get("WorkshopItemsInstalled")
-    workshop_item_details = acf_metadata.get("AppWorkshop", {}).get("WorkshopItemDetails")
+    workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
+        "WorkshopItemsInstalled"
+    )
+    workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
+        "WorkshopItemDetails"
+    )
 
     # Collect manifest IDs associated with mods being removed
     mod_manifest_ids = set()
@@ -416,8 +443,12 @@ def steamcmd_purge_mods(
     # Process each PFID to be removed
     for delete_pfid in publishedfileids:
         # Extract manifest IDs from both sections and remove entries
-        manifest_ids_installed = _extract_manifest_ids_and_remove_pfid(workshop_items_installed, delete_pfid)
-        manifest_ids_details = _extract_manifest_ids_and_remove_pfid(workshop_item_details, delete_pfid)
+        manifest_ids_installed = _extract_manifest_ids_and_remove_pfid(
+            workshop_items_installed, delete_pfid
+        )
+        manifest_ids_details = _extract_manifest_ids_and_remove_pfid(
+            workshop_item_details, delete_pfid
+        )
         # Accumulate all manifest IDs found
         mod_manifest_ids.update(manifest_ids_installed)
         mod_manifest_ids.update(manifest_ids_details)
@@ -462,7 +493,9 @@ def validate_acf_file_exists(steam_mods_location: str) -> bool:
         return False
 
     try:
-        acf_file_path = Path(steam_mods_location).parent.parent / "appworkshop_294100.acf"
+        acf_file_path = (
+            Path(steam_mods_location).parent.parent / "appworkshop_294100.acf"
+        )
         exists = acf_file_path.exists() and acf_file_path.is_file()
 
         if exists:
@@ -474,3 +507,87 @@ def validate_acf_file_exists(steam_mods_location: str) -> bool:
     except Exception as e:
         logger.warning(f"Error validating ACF file path for {steam_mods_location}: {e}")
         return False
+
+
+def cleanup_orphaned_workshop_items(
+    acf_path: str | Path,
+    workshop_content_path: str | Path,
+) -> list[str]:
+    """
+    Remove orphaned entries from a Steam Workshop ACF metadata file.
+
+    Orphaned entries are workshop items that have metadata records in the ACF
+    file but no corresponding mod folder on disk. This can happen when users
+    manually delete mod folders or when Steam fails to fully unsubscribe.
+
+    Creates a backup of the ACF file before modification. If the write fails,
+    the backup is automatically restored.
+
+    :param acf_path: Path to the appworkshop_294100.acf file.
+    :param workshop_content_path: Path to the workshop content directory
+        (typically steamapps/workshop/content/294100/).
+    :return: Sorted list of removed PFID strings. Empty list if no orphans
+        found or if input validation fails.
+    """
+    acf_path = Path(acf_path) if isinstance(acf_path, str) else acf_path
+    workshop_content_path = (
+        Path(workshop_content_path)
+        if isinstance(workshop_content_path, str)
+        else workshop_content_path
+    )
+
+    if not acf_path.exists():
+        logger.warning(f"ACF file not found: {acf_path}")
+        return []
+
+    if not workshop_content_path.exists() or not workshop_content_path.is_dir():
+        logger.warning(f"Workshop content directory not found: {workshop_content_path}")
+        return []
+
+    acf_data = load_acf_from_path(acf_path)
+    if not acf_data:
+        logger.warning(f"Failed to parse ACF file: {acf_path}")
+        return []
+
+    installed_dirs: set[str] = {
+        entry.name
+        for entry in workshop_content_path.iterdir()
+        if entry.is_dir() and entry.name.isdigit()
+    }
+
+    workshop_installed: dict[str, Any] = acf_data.get("AppWorkshop", {}).get(
+        "WorkshopItemsInstalled", {}
+    )
+    workshop_details: dict[str, Any] = acf_data.get("AppWorkshop", {}).get(
+        "WorkshopItemDetails", {}
+    )
+
+    acf_pfids = set(workshop_installed.keys()) | set(workshop_details.keys())
+    orphaned_pfids = acf_pfids - installed_dirs
+
+    if not orphaned_pfids:
+        logger.info("No orphaned workshop entries found in ACF file")
+        return []
+
+    backup_path = str(acf_path) + ".backup"
+    shutil.copy2(acf_path, backup_path)
+    logger.info(f"Created ACF backup at: {backup_path}")
+
+    for pfid in orphaned_pfids:
+        workshop_installed.pop(pfid, None)
+        workshop_details.pop(pfid, None)
+
+    try:
+        dict_to_acf(data=acf_data, path=str(acf_path))
+    except Exception:
+        logger.error(
+            f"Failed to write updated ACF file, restoring backup from {backup_path}"
+        )
+        shutil.copy2(backup_path, acf_path)
+        raise
+
+    sorted_orphans = sorted(orphaned_pfids)
+    logger.info(
+        f"Removed {len(sorted_orphans)} orphaned workshop entries: {sorted_orphans}"
+    )
+    return sorted_orphans
