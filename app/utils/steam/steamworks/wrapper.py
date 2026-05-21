@@ -20,6 +20,7 @@ Reference:
 
 import concurrent.futures
 import sys
+import threading
 import time
 from dataclasses import dataclass, field
 from os import getcwd
@@ -118,12 +119,13 @@ class SteamworksWorker(QThread):
         self._libs_path = libs_path
         self._last_activity = time.monotonic()
         self._pending_callbacks = 0
-        self._shutdown_requested = False
+        self._callback_generation = 0
+        self._shutdown_event = threading.Event()
 
     def run(self) -> None:
         """Main loop: dequeue ops, pump callbacks, check idle timeout."""
         logger.info("SteamworksWorker thread started")
-        while not self._shutdown_requested:
+        while not self._shutdown_event.is_set():
             # 1. Check queue for new operations
             try:
                 op = self._queue.get(timeout=_LOOP_INTERVAL)
@@ -165,7 +167,7 @@ class SteamworksWorker(QThread):
     def shutdown(self) -> None:
         """Signal shutdown and wait for the thread to finish."""
         logger.info("SteamworksWorker shutdown requested")
-        self._shutdown_requested = True
+        self._shutdown_event.set()
         self.wait(10000)
 
     def update_idle_timeout(self, timeout: int) -> None:
@@ -263,7 +265,7 @@ class SteamworksWorker(QThread):
         deadline = time.monotonic() + timeout
         while (
             self._pending_callbacks > 0
-            and not self._shutdown_requested
+            and not self._shutdown_event.is_set()
             and time.monotonic() < deadline
         ):
             self._pump_callbacks()
@@ -278,7 +280,7 @@ class SteamworksWorker(QThread):
     def _wait_with_callbacks(self, duration: float) -> None:
         """Wait for a duration while continuing to pump callbacks."""
         deadline = time.monotonic() + duration
-        while time.monotonic() < deadline and not self._shutdown_requested:
+        while time.monotonic() < deadline and not self._shutdown_event.is_set():
             self._pump_callbacks()
             time.sleep(_LOOP_INTERVAL)
 
@@ -305,9 +307,13 @@ class SteamworksWorker(QThread):
             self.operation_complete.emit("subscribe", False)
             return
 
+        self._callback_generation += 1
+        gen = self._callback_generation
         self._pending_callbacks = len(op.pfids)
 
         def on_subscribed(*args: Any, **kwargs: Any) -> None:
+            if gen != self._callback_generation:
+                return
             self._pending_callbacks = max(0, self._pending_callbacks - 1)
             self._last_activity = time.monotonic()
             try:
@@ -342,9 +348,13 @@ class SteamworksWorker(QThread):
             self.operation_complete.emit("unsubscribe", False)
             return
 
+        self._callback_generation += 1
+        gen = self._callback_generation
         self._pending_callbacks = len(op.pfids)
 
         def on_unsubscribed(*args: Any, **kwargs: Any) -> None:
+            if gen != self._callback_generation:
+                return
             self._pending_callbacks = max(0, self._pending_callbacks - 1)
             self._last_activity = time.monotonic()
             try:
@@ -386,9 +396,13 @@ class SteamworksWorker(QThread):
             return
 
         # 2 callbacks per pfid: 1 unsub + 1 sub (download callbacks unreliable)
+        self._callback_generation += 1
+        gen = self._callback_generation
         self._pending_callbacks = len(op.pfids) * 2
 
         def on_unsubscribed(*args: Any, **kwargs: Any) -> None:
+            if gen != self._callback_generation:
+                return
             self._pending_callbacks = max(0, self._pending_callbacks - 1)
             self._last_activity = time.monotonic()
             try:
@@ -407,6 +421,8 @@ class SteamworksWorker(QThread):
                 logger.error(f"Error in resubscribe unsub callback: {e}")
 
         def on_subscribed(*args: Any, **kwargs: Any) -> None:
+            if gen != self._callback_generation:
+                return
             self._pending_callbacks = max(0, self._pending_callbacks - 1)
             self._last_activity = time.monotonic()
             try:
@@ -507,10 +523,14 @@ class SteamworksWorker(QThread):
             op.result_future.set_result(None)
             return
 
+        self._callback_generation += 1
+        gen = self._callback_generation
         self._pending_callbacks = len(op.pfids)
         results: dict[int, Any] = {}
 
         def on_result(*args: Any, **kwargs: Any) -> None:
+            if gen != self._callback_generation:
+                return
             self._pending_callbacks = max(0, self._pending_callbacks - 1)
             self._last_activity = time.monotonic()
             try:

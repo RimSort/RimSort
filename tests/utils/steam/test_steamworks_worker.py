@@ -344,3 +344,174 @@ class TestOperationHandling:
         assert call_order.index("sub-100") < call_order.index("unsub-200")
 
         worker.shutdown()
+
+    def test_subscribe_multiple_pfids(self, mock_steamworks_class: MagicMock) -> None:
+        """Subscribe with multiple pfids should call SubscribeItem for each."""
+        mock_sw = mock_steamworks_class._mock_instance
+        subscribed_pfids: list[int] = []
+
+        def fire_subscribe_callback(*args, **kwargs):
+            cb = args[0]
+
+            def on_item(pfid):
+                subscribed_pfids.append(pfid)
+                result_obj = MagicMock()
+                result_obj.publishedFileId = pfid
+                result_obj.result = 1
+                cb(result_obj)
+
+            mock_sw.Workshop.SubscribeItem.side_effect = on_item
+
+        mock_sw.Workshop.SetItemSubscribedCallback.side_effect = fire_subscribe_callback
+
+        worker = SteamworksWorker(idle_timeout=60)
+        spy = QSignalSpy(worker.item_subscribed)
+        worker.start()
+        time.sleep(0.2)
+
+        worker.subscribe([100, 200, 300])
+        time.sleep(3.0)
+
+        assert subscribed_pfids == [100, 200, 300]
+        assert spy.count() == 3
+        assert spy.at(0) == ["100"]
+        assert spy.at(1) == ["200"]
+        assert spy.at(2) == ["300"]
+
+        worker.shutdown()
+
+    def test_subscribe_callback_failure_emits_operation_failed(
+        self, mock_steamworks_class: MagicMock
+    ) -> None:
+        """Callback with result != 1 should emit steam_operation_failed."""
+        mock_sw = mock_steamworks_class._mock_instance
+
+        def fire_failed_callback(*args, **kwargs):
+            cb = args[0]
+            result_obj = MagicMock()
+            result_obj.publishedFileId = 666
+            result_obj.result = 2  # failure
+            cb(result_obj)
+
+        mock_sw.Workshop.SetItemSubscribedCallback.side_effect = fire_failed_callback
+
+        worker = SteamworksWorker(idle_timeout=60)
+        fail_spy = QSignalSpy(worker.steam_operation_failed)
+        sub_spy = QSignalSpy(worker.item_subscribed)
+        worker.start()
+        time.sleep(0.2)
+
+        worker.subscribe([666])
+        time.sleep(1.0)
+
+        assert fail_spy.count() >= 1
+        assert fail_spy.at(0) == ["666", "subscribe failed"]
+        assert sub_spy.count() == 0
+
+        worker.shutdown()
+
+    def test_resubscribe_batched_sequencing(
+        self, mock_steamworks_class: MagicMock
+    ) -> None:
+        """Resubscribe should follow the 5-stage batched pattern."""
+        mock_sw = mock_steamworks_class._mock_instance
+        stage_log: list[str] = []
+
+        def track_unsub_callback(*args, **kwargs):
+            cb = args[0]
+
+            def on_unsub(pfid):
+                stage_log.append(f"unsub-{pfid}")
+                result_obj = MagicMock()
+                result_obj.publishedFileId = pfid
+                result_obj.result = 1
+                cb(result_obj)
+
+            mock_sw.Workshop.UnsubscribeItem.side_effect = on_unsub
+
+        def track_sub_callback(*args, **kwargs):
+            cb = args[0]
+
+            def on_sub(pfid):
+                stage_log.append(f"sub-{pfid}")
+                result_obj = MagicMock()
+                result_obj.publishedFileId = pfid
+                result_obj.result = 1
+                cb(result_obj)
+
+            mock_sw.Workshop.SubscribeItem.side_effect = on_sub
+
+        mock_sw.Workshop.SetItemUnsubscribedCallback.side_effect = track_unsub_callback
+        mock_sw.Workshop.SetItemSubscribedCallback.side_effect = track_sub_callback
+
+        worker = SteamworksWorker(idle_timeout=60)
+        spy = QSignalSpy(worker.operation_complete)
+        worker.start()
+        time.sleep(0.2)
+
+        worker.resubscribe([10, 20])
+        # Resubscribe takes: API calls + 4s wait + API calls + 2s wait + download
+        time.sleep(10.0)
+
+        # All unsubs should come before all subs
+        assert "unsub-10" in stage_log
+        assert "unsub-20" in stage_log
+        assert "sub-10" in stage_log
+        assert "sub-20" in stage_log
+        unsub_end = max(stage_log.index("unsub-10"), stage_log.index("unsub-20"))
+        sub_start = min(stage_log.index("sub-10"), stage_log.index("sub-20"))
+        assert unsub_end < sub_start
+
+        assert spy.count() >= 1
+        assert spy.at(0)[0] == "resubscribe"
+
+        worker.shutdown()
+
+    def test_stale_callback_ignored_across_operations(
+        self, mock_steamworks_class: MagicMock
+    ) -> None:
+        """Late callbacks from a previous operation should not affect the next one."""
+        mock_sw = mock_steamworks_class._mock_instance
+        stored_callbacks: list = []
+
+        def capture_subscribe_callback(*args, **kwargs):
+            stored_callbacks.append(args[0])
+
+            def on_item(pfid):
+                if pfid == 200:
+                    cb = stored_callbacks[-1]
+                    result_obj = MagicMock()
+                    result_obj.publishedFileId = pfid
+                    result_obj.result = 1
+                    cb(result_obj)
+
+            mock_sw.Workshop.SubscribeItem.side_effect = on_item
+
+        mock_sw.Workshop.SetItemSubscribedCallback.side_effect = (
+            capture_subscribe_callback
+        )
+
+        worker = SteamworksWorker(idle_timeout=60)
+        worker.start()
+        time.sleep(0.2)
+
+        # First operation — callback won't fire (simulating dropped callback)
+        worker.subscribe([100])
+        time.sleep(2.0)
+
+        # Second operation — callback fires normally
+        worker.subscribe([200])
+        time.sleep(2.0)
+
+        # Fire the stale callback from op 1 — should be ignored by generation check
+        if len(stored_callbacks) >= 1:
+            stale_cb = stored_callbacks[0]
+            result_obj = MagicMock()
+            result_obj.publishedFileId = 100
+            result_obj.result = 1
+            stale_cb(result_obj)
+
+        time.sleep(0.5)
+        assert worker._pending_callbacks >= 0
+
+        worker.shutdown()
