@@ -8,6 +8,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.aux_db_utils import (
     auxdb_get_mod_color,
+    auxdb_get_mod_tags,
     auxdb_get_mod_user_notes,
     auxdb_get_mod_warning_toggled,
 )
@@ -33,6 +34,7 @@ class CustomListWidgetItemMetadata:
         invalid: bool | None = None,
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
+        mod_tags: list[str] | None = None,
         alternative: Optional[str] = None,
         list_type: str | None = None,
         aux_metadata_controller: AuxMetadataController | None = None,
@@ -84,6 +86,13 @@ class CustomListWidgetItemMetadata:
         else:
             self.mod_color = mod_color
         self.alternative = alternative if alternative is not None else self.get_alternative_by_uuid(uuid)
+        self.mod_tags = (
+            auxdb_get_mod_tags(
+                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+            )
+            if mod_tags is None
+            else mod_tags
+        )
         # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
         self.list_type = list_type
 

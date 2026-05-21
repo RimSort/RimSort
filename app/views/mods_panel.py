@@ -71,7 +71,16 @@ from app.sort.mod_sorting import (
 )
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.app_info import AppInfo
-from app.utils.aux_db_utils import auxdb_update_all_mod_colors, auxdb_update_mod_color
+from app.utils.aux_db_utils import (
+    auxdb_add_mod_tags,
+    auxdb_cleanup_unused_tags,
+    auxdb_get_all_tags,
+    auxdb_get_mod_tags,
+    auxdb_update_all_mod_colors,
+    auxdb_remove_mod_tags,
+    auxdb_replace_mod_tags,
+    auxdb_update_mod_color,
+)
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -120,6 +129,7 @@ class ModListItemInner(QWidget):
         settings_controller: SettingsController,
         uuid: str,
         mod_color: QColor,
+        show_tags: bool = False,
     ) -> None:
         """
         Initialize the QWidget with mod uuid. Metadata can be accessed via MetadataManager.
@@ -164,6 +174,8 @@ class ModListItemInner(QWidget):
         self.alternative = alternative
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
+        # Cache whether tags should be displayed
+        self.show_tags = show_tags
         # Cache the mod color
         self.mod_color: QColor | None = mod_color
 
@@ -177,6 +189,8 @@ class ModListItemInner(QWidget):
             name_value = "name error in mod about.xml"
         self.list_item_name = name_value
         self.main_label = QLabel()
+        self.mod_tags_label = QLabel()
+        self.mod_tags_label.setObjectName("ListItemTagsLabel")
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -283,6 +297,10 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.xml_icon, Qt.AlignmentFlag.AlignRight)
         # Compose the layout of our widget and set it to the main layout
         self.main_item_layout.addWidget(self.main_label, Qt.AlignmentFlag.AlignCenter)
+        self.main_item_layout.addWidget(
+            self.mod_tags_label, Qt.AlignmentFlag.AlignCenter
+        )
+        self.update_tags_label()
         if self.settings_controller.settings.show_save_comparison_indicators:
             self.main_item_layout.addWidget(self.in_save_icon_label, Qt.AlignmentFlag.AlignRight)
             self.main_item_layout.addWidget(self.new_icon_label, Qt.AlignmentFlag.AlignRight)
@@ -395,6 +413,9 @@ class ModListItemInner(QWidget):
 
         name_line = f"Mod: {metadata.get('name', 'Not specified')}\n"
 
+        tags = auxdb_get_mod_tags(self.settings_controller, self.uuid)
+        tags_line = f"Tags: {', '.join(tags) if tags else 'None'}\n"
+
         authors_tag = metadata.get("authors")
         authors_text = (
             ", ".join(authors_tag.get("li", ["Not specified"]))
@@ -446,6 +467,7 @@ class ModListItemInner(QWidget):
         return "".join(
             [
                 name_line,
+                tags_line,
                 author_line,
                 package_id_line,
                 modversion_line,
@@ -486,20 +508,58 @@ class ModListItemInner(QWidget):
         if icon_count == -1:
             # Count the number of QLabel widgets with QIcon and calculate total icon width
             icon_count = self.count_icons(self)
+
         icon_width = icon_count * 20
         if not self.translation_status_label.isHidden():
             icon_width += (
-                self.translation_status_label.fontMetrics().boundingRect(self.translation_status_label.text()).width()
+                self.translation_status_label.fontMetrics()
+                .boundingRect(self.translation_status_label.text())
+                .width()
                 + 6
             )
+
         # If only 2 icons (On the left, eg. c#/xml/steam/local etc.) No need for padding.
         padding = 6 if icon_count > 2 else 0
         self.item_width = super().width()
-        text_width_needed = QRectF(self.font_metrics.boundingRect(self.list_item_name)).width()
-        if text_width_needed > self.item_width - icon_width - padding:
-            available_width = max(0, int(self.item_width - icon_width - padding))
+
+        available_content_width = max(0, int(self.item_width - icon_width - padding))
+        min_name_width = int(available_content_width * 0.45)
+        max_tags_width = int(available_content_width * 0.35)
+
+        tags_width = 0
+        if (
+            self.show_tags
+            and not self.mod_tags_label.isHidden()
+            and self.mod_tags_label.toolTip()
+        ):
+            tags_text = self.mod_tags_label.toolTip()
+            tags_width_needed = (
+                self.mod_tags_label.fontMetrics().boundingRect(tags_text).width() + 6
+            )
+            tags_width = min(max_tags_width, tags_width_needed)
+
+            shortened_tags = self.mod_tags_label.fontMetrics().elidedText(
+                tags_text,
+                Qt.TextElideMode.ElideRight,
+                tags_width,
+            )
+            self.mod_tags_label.setText(" " + shortened_tags)
+            self.mod_tags_label.setMaximumWidth(tags_width)
+        else:
+            self.mod_tags_label.setText("")
+            self.mod_tags_label.setMaximumWidth(0)
+            tags_width = 0
+
+        name_width = max(min_name_width, available_content_width - tags_width)
+        text_width_needed = QRectF(
+            self.font_metrics.boundingRect(self.list_item_name)
+        ).width()
+
+        if text_width_needed > name_width:
             shortened_text = self.font_metrics.elidedText(
-                self.list_item_name, Qt.TextElideMode.ElideRight, available_width
+                self.list_item_name,
+                Qt.TextElideMode.ElideRight,
+                name_width,
             )
             self.main_label.setText(str(shortened_text))
         else:
@@ -513,6 +573,8 @@ class ModListItemInner(QWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         error_tooltip = item_data["errors"]
         warning_tooltip = item_data["warnings"]
+
+        self.set_tags_visible(bool(item_data.__dict__.get("show_tags", False)), item_data["mod_tags"])
         # If an error exists we show an error icon with error tooltip
         # If a warning exists we show a warning icon with warning tooltip
         if error_tooltip:
@@ -614,6 +676,259 @@ class ModListItemInner(QWidget):
         # Update ModListItemInner color
         self.mod_color = None
 
+    def update_tags_label(self, tags: list[str] | None = None) -> None:
+        if tags is None:
+            tags = auxdb_get_mod_tags(self.settings_controller, self.uuid)
+
+        if not self.show_tags or not tags:
+            self.mod_tags_label.setText("")
+            self.mod_tags_label.setToolTip(", ".join(tags) if tags else "")
+            self.mod_tags_label.setHidden(True)
+            return
+
+        full_tags_text = " ".join(f"[{tag}]" for tag in tags)
+        self.mod_tags_label.setToolTip(full_tags_text)
+        self.mod_tags_label.setHidden(False)
+
+        # The actual text is calculated in resizeEvent, where widget width is known.
+        self.mod_tags_label.setText(full_tags_text)
+
+    def set_tags_visible(self, visible: bool, tags: list[str] | None = None) -> None:
+        self.show_tags = visible
+        self.update_tags_label(tags)
+        self._resize_text_after_icon_toggle()
+
+NO_TAGS_FILTER_VALUE = "__rimsort_no_tags__"
+class TagFilterButton(QToolButton):
+    tags_changed = Signal()
+
+    def __init__(self, settings_controller: SettingsController, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.settings_controller = settings_controller
+        self._tag_actions: dict[str, QAction] = {}
+        self._menu = QMenu(self)
+
+        self.setText(self.tr("Tags: All"))
+        self.setToolTip(self.tr("Filter by one or more user tags"))
+        self.setMinimumWidth(100)
+        self.setMaximumWidth(135)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.setMenu(self._menu)
+
+        self.refresh_tags()
+
+    def refresh_tags(self) -> None:
+        previous_selected_tags = self.selected_tags()
+        previous_total_count = len(self._tag_actions)
+        previous_all_selected = (
+            previous_total_count == 0
+            or len(previous_selected_tags) == previous_total_count
+        )
+
+        self._menu.clear()
+        self._tag_actions.clear()
+
+        select_all_action = QAction(self.tr("Select all"), self)
+        select_none_action = QAction(self.tr("Select none"), self)
+
+        select_all_action.triggered.connect(self.select_all)
+        select_none_action.triggered.connect(self.select_none)
+
+        self._menu.addAction(select_all_action)
+        self._menu.addAction(select_none_action)
+        self._menu.addSeparator()
+
+        no_tags_action = QAction(self.tr("No tags"), self)
+        no_tags_action.setCheckable(True)
+        no_tags_action.setChecked(
+            previous_all_selected or NO_TAGS_FILTER_VALUE in previous_selected_tags
+        )
+        no_tags_action.toggled.connect(self._on_tag_toggled)
+        self._menu.addAction(no_tags_action)
+        self._tag_actions[NO_TAGS_FILTER_VALUE] = no_tags_action
+
+        try:
+            tags = auxdb_get_all_tags(self.settings_controller)
+        except Exception as e:
+            logger.debug(f"Unable to load tag filter list: {e}")
+            tags = []
+        if tags:
+            self._menu.addSeparator()
+
+        for tag in tags:
+            action = QAction(tag, self)
+            action.setCheckable(True)
+            action.setChecked(previous_all_selected or tag in previous_selected_tags)
+            action.toggled.connect(self._on_tag_toggled)
+            self._menu.addAction(action)
+            self._tag_actions[tag] = action
+
+        self._update_text()
+
+    def selected_tags(self) -> set[str]:
+        return {tag for tag, action in self._tag_actions.items() if action.isChecked()}
+
+    def selected_real_tags(self) -> set[str]:
+        return {tag for tag in self.selected_tags() if tag != NO_TAGS_FILTER_VALUE}
+
+    def no_tags_selected(self) -> bool:
+        return NO_TAGS_FILTER_VALUE in self.selected_tags()
+
+    def has_active_filter(self) -> bool:
+        selected_count = len(self.selected_tags())
+        total_count = len(self._tag_actions)
+        return total_count > 0 and selected_count != total_count
+
+    def select_all(self) -> None:
+        for action in self._tag_actions.values():
+            action.blockSignals(True)
+            action.setChecked(True)
+            action.blockSignals(False)
+        self._update_text()
+        self.tags_changed.emit()
+
+    def select_none(self) -> None:
+        for action in self._tag_actions.values():
+            action.blockSignals(True)
+            action.setChecked(False)
+            action.blockSignals(False)
+        self._update_text()
+        self.tags_changed.emit()
+
+    def _on_tag_toggled(self) -> None:
+        self._update_text()
+        self.tags_changed.emit()
+
+    def _update_text(self) -> None:
+        selected = self.selected_tags()
+        selected_count = len(selected)
+        total_count = len(self._tag_actions)
+
+        if total_count == 0:
+            self.setText(self.tr("Tags: None"))
+            self.setToolTip(self.tr("No user tags have been created yet"))
+        elif selected_count == total_count:
+            self.setText(self.tr("Tags: All"))
+            self.setToolTip(self.tr("Showing all tags and untagged mods"))
+        elif selected_count == 0:
+            self.setText(self.tr("Tags: 0"))
+            self.setToolTip(self.tr("No tags selected"))
+        elif selected == {NO_TAGS_FILTER_VALUE}:
+            self.setText(self.tr("Tags: No tags"))
+            self.setToolTip(self.tr("Showing mods without tags"))
+        else:
+            tooltip_parts = []
+            if NO_TAGS_FILTER_VALUE in selected:
+                tooltip_parts.append(self.tr("No tags"))
+            tooltip_parts.extend(sorted(tag for tag in selected if tag != NO_TAGS_FILTER_VALUE))
+
+            self.setText(self.tr("Tags: {count}").format(count=selected_count))
+            self.setToolTip(", ".join(tooltip_parts))
+
+class TagEditDialog(QDialog):
+    def __init__(
+        self,
+        settings_controller: SettingsController,
+        title: str,
+        existing_selected_tags: set[str] | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.settings_controller = settings_controller
+        self.existing_selected_tags = existing_selected_tags or set()
+
+        self.setObjectName("TagEditDialog")
+        self.setWindowTitle(title)
+        self.setMinimumWidth(420)
+        self.setMinimumHeight(360)
+
+        self.dialog_layout = QVBoxLayout()
+
+        self.info_label = QLabel(
+            self.tr("Select existing tags and/or enter new tags separated by commas:")
+        )
+        self.info_label.setObjectName("TagEditDialogLabel")
+        self.info_label.setWordWrap(True)
+        self.dialog_layout.addWidget(self.info_label)
+
+        self.new_tags_input = QLineEdit()
+        self.new_tags_input.setObjectName("TagEditDialogInput")
+        self.new_tags_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
+        self.dialog_layout.addWidget(self.new_tags_input)
+
+        self.tags_list = QListWidget()
+        self.tags_list.setObjectName("TagEditDialogList")
+        self.tags_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.dialog_layout.addWidget(self.tags_list)
+
+        self.buttons_layout = QHBoxLayout()
+
+        self.select_all_button = QPushButton(self.tr("Select all"))
+        self.select_all_button.setObjectName("TagEditDialogButton")
+        self.select_none_button = QPushButton(self.tr("Select none"))
+        self.select_none_button.setObjectName("TagEditDialogButton")
+        self.ok_button = QPushButton(self.tr("OK"))
+        self.ok_button.setObjectName("TagEditDialogButton")
+        self.cancel_button = QPushButton(self.tr("Cancel"))
+        self.cancel_button.setObjectName("TagEditDialogButton")
+
+        self.select_all_button.clicked.connect(self.select_all)
+        self.select_none_button.clicked.connect(self.select_none)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button.clicked.connect(self.reject)
+
+        self.buttons_layout.addWidget(self.select_all_button)
+        self.buttons_layout.addWidget(self.select_none_button)
+        self.buttons_layout.addStretch()
+        self.buttons_layout.addWidget(self.ok_button)
+        self.buttons_layout.addWidget(self.cancel_button)
+
+        self.dialog_layout.addLayout(self.buttons_layout)
+        self.setLayout(self.dialog_layout)
+
+        self.populate_tags()
+
+    def populate_tags(self) -> None:
+        try:
+            tags = auxdb_get_all_tags(self.settings_controller)
+        except Exception as e:
+            logger.debug(f"Unable to load existing tags: {e}")
+            tags = []
+
+        for tag in tags:
+            item = QListWidgetItem(tag)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(
+                Qt.CheckState.Checked
+                if tag in self.existing_selected_tags
+                else Qt.CheckState.Unchecked
+            )
+            self.tags_list.addItem(item)
+
+    def select_all(self) -> None:
+        for index in range(self.tags_list.count()):
+            self.tags_list.item(index).setCheckState(Qt.CheckState.Checked)
+
+    def select_none(self) -> None:
+        for index in range(self.tags_list.count()):
+            self.tags_list.item(index).setCheckState(Qt.CheckState.Unchecked)
+
+    def selected_tags(self) -> list[str]:
+        selected = set()
+
+        for index in range(self.tags_list.count()):
+            item = self.tags_list.item(index)
+            if item.checkState() == Qt.CheckState.Checked:
+                selected.add(item.text().strip().lower())
+
+        manual_tags = [
+            tag.strip().lower()
+            for tag in self.new_tags_input.text().split(",")
+            if tag.strip()
+        ]
+        selected.update(manual_tags)
+
+        return sorted(selected)
 
 class ModListIcons:
     _data_path: Path = AppInfo().theme_data_folder / "default-icons"
@@ -732,6 +1047,7 @@ class ModListWidget(QListWidget):
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
+        "Tags": ModsPanelSortKey.MOD_TAGS,
     }
 
     @staticmethod
@@ -745,6 +1061,7 @@ class ModListWidget(QListWidget):
     mod_info_signal = Signal(str, CustomListWidgetItem)
     recalculate_warnings_signal = Signal()
     refresh_signal = Signal()
+    tags_changed_signal = Signal()
     update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
 
@@ -816,6 +1133,9 @@ class ModListWidget(QListWidget):
         # Translation status
         self.show_translation_status: bool = False
         self.translation_lookup: set[str] = set()
+
+        # User tags display state. This must survive list rebuilds/sorting.
+        self.show_tags: bool = False
 
         self.deletion_sub_menu = ModDeletionMenu(
             self.settings_controller,
@@ -1240,6 +1560,10 @@ class ModListWidget(QListWidget):
             change_mod_color_action = None
             # Reset mod color
             reset_mod_color_action = None
+            # Tags
+            add_mod_tags_action = None
+            replace_mod_tags_action = None
+            remove_mod_tags_action = None
             # Find translation mods
             find_translation_action = None
             # Disable all warnings by default
@@ -1271,6 +1595,14 @@ class ModListWidget(QListWidget):
                     change_mod_color_action.setText(self.tr("Change mod color"))
                     reset_mod_color_action = QAction()
                     reset_mod_color_action.setText(self.tr("Reset mod color"))
+
+                    add_mod_tags_action = QAction()
+                    add_mod_tags_action.setText(self.tr("Add new tags..."))
+                    replace_mod_tags_action = QAction()
+                    replace_mod_tags_action.setText(self.tr("Replace all tags..."))
+                    remove_mod_tags_action = QAction()
+                    remove_mod_tags_action.setText(self.tr("Remove all tags"))
+                    
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -1393,6 +1725,14 @@ class ModListWidget(QListWidget):
                         change_mod_color_action.setText("Change mod colors")
                         reset_mod_color_action = QAction()
                         reset_mod_color_action.setText("Reset mod colors")
+
+                        add_mod_tags_action = QAction()
+                        add_mod_tags_action.setText(self.tr("Add new tags..."))
+                        replace_mod_tags_action = QAction()
+                        replace_mod_tags_action.setText(self.tr("Replace all tags..."))
+                        remove_mod_tags_action = QAction()
+                        remove_mod_tags_action.setText(self.tr("Remove all tags"))
+                        
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
@@ -1470,6 +1810,17 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(change_mod_color_action)
             if reset_mod_color_action:
                 context_menu.addAction(reset_mod_color_action)
+
+            if add_mod_tags_action or replace_mod_tags_action or remove_mod_tags_action:
+                tags_menu = QMenu(title=self.tr("Tags"))
+                if add_mod_tags_action:
+                    tags_menu.addAction(add_mod_tags_action)
+                if replace_mod_tags_action:
+                    tags_menu.addAction(replace_mod_tags_action)
+                if remove_mod_tags_action:
+                    tags_menu.addAction(remove_mod_tags_action)
+                context_menu.addMenu(tags_menu)
+            
             if open_url_browser_action:
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
@@ -1787,6 +2138,54 @@ class ModListWidget(QListWidget):
                     if answer == QMessageBox.StandardButton.Yes:
                         self.steamdb_blacklist_signal.emit([steamdb_remove_blacklist, False])
                     return True
+
+                if action in [add_mod_tags_action, replace_mod_tags_action]:
+                    selected_uuids = list(all_selected_uuids.values())
+                    existing_selected_tags = self.get_common_selected_tags(selected_uuids)
+
+                    tag_dialog = TagEditDialog(
+                        settings_controller=self.settings_controller,
+                        title=(
+                            self.tr("Replace tags")
+                            if action == replace_mod_tags_action
+                            else self.tr("Add tags")
+                        ),
+                        existing_selected_tags=existing_selected_tags,
+                        parent=self,
+                    )
+
+                    if tag_dialog.exec() == QDialog.DialogCode.Accepted:
+                        tags = tag_dialog.selected_tags()
+
+                        for selected_uuid in selected_uuids:
+                            if action == replace_mod_tags_action:
+                                auxdb_replace_mod_tags(
+                                    self.settings_controller, selected_uuid, tags
+                                )
+                            else:
+                                auxdb_add_mod_tags(
+                                    self.settings_controller, selected_uuid, tags
+                                )
+
+                            self.refresh_mod_tags_for_uuid(selected_uuid)
+
+                        if action == replace_mod_tags_action:
+                            auxdb_cleanup_unused_tags(self.settings_controller)
+
+                        self.tags_changed_signal.emit()
+                        return True
+                    return True
+
+                if action == remove_mod_tags_action:
+                    selected_uuids = list(all_selected_uuids.values())
+                    for selected_uuid in selected_uuids:
+                        auxdb_remove_mod_tags(
+                            self.settings_controller, selected_uuid
+                        )
+                        self.refresh_mod_tags_for_uuid(selected_uuid)
+                    auxdb_cleanup_unused_tags(self.settings_controller)
+                    self.tags_changed_signal.emit()
+                    return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
                 invalid_color = True
                 new_color = QColor()
@@ -1976,6 +2375,7 @@ class ModListWidget(QListWidget):
                 aux_metadata_session=aux_metadata_session,
                 settings_controller=self.settings_controller,
             )
+            data.__dict__["show_tags"] = self.show_tags
         # Create item without a parent first so we can set data before adding to the list.
         # This ensures handle_rows_inserted (connected via QueuedConnection) sees the data
         # when it fires after addItem, and can correctly track the UUID in self.uuids.
@@ -2060,6 +2460,7 @@ class ModListWidget(QListWidget):
         alternative = data["alternative"]
         uuid = data["uuid"]
         mod_color = data["mod_color"]
+        show_tags = bool(data.__dict__.get("show_tags", self.show_tags))
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
@@ -2072,6 +2473,7 @@ class ModListWidget(QListWidget):
                 settings_controller=self.settings_controller,
                 uuid=uuid,
                 mod_color=mod_color,
+                show_tags=show_tags,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -2706,6 +3108,7 @@ class ModListWidget(QListWidget):
                         aux_metadata_session=aux_metadata_session,
                         settings_controller=self.settings_controller,
                     )
+                    data.__dict__["show_tags"] = self.show_tags
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
                 # When refreshing, update entry if needed?
@@ -2797,6 +3200,56 @@ class ModListWidget(QListWidget):
             uuid_to_color[uuid] = None
         auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
 
+    def get_common_selected_tags(self, uuids: list[str]) -> set[str]:
+        common_tags: set[str] | None = None
+
+        for uuid in uuids:
+            tags = set(auxdb_get_mod_tags(self.settings_controller, uuid))
+            if common_tags is None:
+                common_tags = tags
+            else:
+                common_tags &= tags
+
+        return common_tags or set()
+    
+    def refresh_mod_tags_for_uuid(self, uuid: str) -> None:
+        if uuid not in self.uuids:
+            return
+
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_tags"] = auxdb_get_mod_tags(self.settings_controller, uuid)
+        item_data.__dict__["show_tags"] = bool(
+            item_data.__dict__.get("show_tags", False)
+        )
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+        widget = self.itemWidget(item)
+        if isinstance(widget, ModListItemInner):
+            widget.set_tags_visible(item_data.__dict__["show_tags"], item_data["mod_tags"])
+            widget.setToolTip(widget.get_tool_tip_text())
+            widget._resize_text_after_icon_toggle()
+
+        if self.currentItem() == item:
+            self.mod_info_signal.emit(uuid, item)
+
+    def set_tags_visible(self, visible: bool) -> None:
+        self.show_tags = visible
+        
+        for index in range(self.count()):
+            item = self.item(index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if item_data is None:
+                continue
+
+            item_data.__dict__["show_tags"] = visible
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+            widget = self.itemWidget(item)
+            if isinstance(widget, ModListItemInner):
+                widget.set_tags_visible(visible, item_data["mod_tags"])
+
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
         IMPORTANT: This is used to replace an item without triggering the rowsInserted signal and rowsAboutToBeRemoved signal.
@@ -2853,6 +3306,7 @@ class ModsPanel(QWidget):
         "Version": ModsPanelSortKey.VERSION,
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
+        "Tags": ModsPanelSortKey.MOD_TAGS,
     }
 
     # Note: combobox items store their corresponding `ModsPanelSortKey` in
@@ -3090,12 +3544,35 @@ class ModsPanel(QWidget):
             [
                 self.tr("Name"),
                 self.tr("Notes"),
+                self.tr("Tags"),
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
                 self.tr("Version"),
             ]
         )
+        self.active_mods_tag_filter_enabled = False
+        self.active_mods_tag_filter_button = QToolButton()
+        self.active_mods_tag_filter_button.setText(self.tr("Tags"))
+        self.active_mods_tag_filter_button.setIcon(self.mode_filter_icon)
+        self.active_mods_tag_filter_button.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+        )
+        self.active_mods_tag_filter_button.setCheckable(True)
+        self.active_mods_tag_filter_button.setToolTip(
+            self.tr("Tag filter disabled")
+        )
+        self.active_mods_tag_filter_button.clicked.connect(
+            self.on_active_mods_tag_filter_toggle
+        )
+
+        self.active_mods_tag_filter_selector = TagFilterButton(
+            self.settings_controller, self
+        )
+        self.active_mods_tag_filter_selector.tags_changed.connect(
+            self.on_active_mods_tag_filter_changed
+        )
+
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(self.active_mods_filter_data_source_button)
         if self.settings_controller.settings.mod_type_filter:
@@ -3103,6 +3580,8 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(self.active_mods_search_mode_filter_button)
         self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
+        self.active_mods_search_layout.addWidget(self.active_mods_tag_filter_button)
+        self.active_mods_search_layout.addWidget(self.active_mods_tag_filter_selector)
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
@@ -3202,12 +3681,36 @@ class ModsPanel(QWidget):
             [
                 self.tr("Name"),
                 self.tr("Notes"),
+                self.tr("Tags"),
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
                 self.tr("Version"),
             ]
         )
+
+        self.inactive_mods_tag_filter_enabled = False
+        self.inactive_mods_tag_filter_button = QToolButton()
+        self.inactive_mods_tag_filter_button.setText(self.tr("Tags"))
+        self.inactive_mods_tag_filter_button.setIcon(self.mode_filter_icon)
+        self.inactive_mods_tag_filter_button.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+        )
+        self.inactive_mods_tag_filter_button.setCheckable(True)
+        self.inactive_mods_tag_filter_button.setToolTip(
+            self.tr("Enable/disable tag filter")
+        )
+        self.inactive_mods_tag_filter_button.clicked.connect(
+            self.on_inactive_mods_tag_filter_toggle
+        )
+
+        self.inactive_mods_tag_filter_selector = TagFilterButton(
+            self.settings_controller, self
+        )
+        self.inactive_mods_tag_filter_selector.tags_changed.connect(
+            self.on_inactive_mods_tag_filter_changed
+        )
+
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
         self.inactive_mods_sort_combobox.setObjectName("MainUI")
@@ -3223,6 +3726,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_sort_combobox.addItem(self.tr("Version"), ModsPanelSortKey.VERSION)
         self.inactive_mods_sort_combobox.addItem(self.tr("PackageId"), ModsPanelSortKey.PACKAGEID)
         self.inactive_mods_sort_combobox.addItem(self.tr("Color"), ModsPanelSortKey.MOD_COLOR)
+        self.inactive_mods_sort_combobox.addItem(
+            self.tr("Tags"), ModsPanelSortKey.MOD_TAGS
+        )
         # Set initial combo box selection based on loaded settings by matching
         # the stored enum name to the item userData. Fall back to
         # FILESYSTEM_MODIFIED_TIME if the stored value is invalid.
@@ -3254,6 +3760,10 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_mode_filter_button)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_tag_filter_button)
+        self.inactive_mods_search_layout.addWidget(
+            self.inactive_mods_tag_filter_selector
+        )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_combobox, 120)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
@@ -3278,6 +3788,12 @@ class ModsPanel(QWidget):
         )
         self.inactive_mods_list.recalculate_warnings_signal.connect(
             partial(self.recalculate_list_errors_warnings, list_type="Inactive")
+        )
+        self.active_mods_list.tags_changed_signal.connect(
+            self.refresh_all_tag_filter_selectors
+        )
+        self.inactive_mods_list.tags_changed_signal.connect(
+            self.refresh_all_tag_filter_selectors
         )
         self.inactive_mods_sort_combobox.currentTextChanged.connect(self.on_inactive_mods_sort_changed)
         self.inactive_mods_sort_order_button.clicked.connect(self.on_inactive_mods_sort_order_toggled)
@@ -3382,6 +3898,7 @@ class ModsPanel(QWidget):
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
                     )
+                    data.__dict__["show_tags"] = lw.show_tags
                     list_item.setData(Qt.ItemDataRole.UserRole, data)
                     lw.addItem(list_item)
                     if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
@@ -3591,6 +4108,89 @@ class ModsPanel(QWidget):
 
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
+
+    def refresh_tag_filter_combobox(self, combobox: QComboBox) -> None:
+        current_text = combobox.currentText()
+        combobox.blockSignals(True)
+        combobox.clear()
+        combobox.addItem(self.tr("All tags"))
+        for tag in auxdb_get_all_tags(self.settings_controller):
+            combobox.addItem(tag)
+        index = combobox.findText(current_text)
+        if index >= 0:
+            combobox.setCurrentIndex(index)
+        combobox.blockSignals(False)
+
+    def refresh_all_tag_filter_selectors(self) -> None:
+        self.active_mods_tag_filter_selector.refresh_tags()
+        self.inactive_mods_tag_filter_selector.refresh_tags()
+
+        self.signal_search_and_filters(
+            list_type="Active",
+            pattern=self.active_mods_search.text(),
+            filters_active=self.active_mods_tag_filter_enabled,
+        )
+        self.signal_search_and_filters(
+            list_type="Inactive",
+            pattern=self.inactive_mods_search.text(),
+            filters_active=self.inactive_mods_tag_filter_enabled,
+        )
+
+    def on_active_mods_tag_filter_toggle(self) -> None:
+        self.active_mods_tag_filter_enabled = (
+            self.active_mods_tag_filter_button.isChecked()
+        )
+        self.active_mods_tag_filter_button.setIcon(
+            self.mode_nofilter_icon
+            if self.active_mods_tag_filter_enabled
+            else self.mode_filter_icon
+        )
+        self.active_mods_tag_filter_button.setToolTip(
+            self.tr("Tag filter enabled")
+            if self.active_mods_tag_filter_enabled
+            else self.tr("Tag filter disabled")
+        )
+        self.active_mods_list.set_tags_visible(self.active_mods_tag_filter_enabled)
+        self.signal_search_and_filters(
+            list_type="Active",
+            pattern=self.active_mods_search.text(),
+            filters_active=self.active_mods_tag_filter_enabled,
+        )
+
+    def on_inactive_mods_tag_filter_toggle(self) -> None:
+        self.inactive_mods_tag_filter_enabled = (
+            self.inactive_mods_tag_filter_button.isChecked()
+        )
+        self.inactive_mods_tag_filter_button.setIcon(
+            self.mode_nofilter_icon
+            if self.inactive_mods_tag_filter_enabled
+            else self.mode_filter_icon
+        )
+        self.inactive_mods_tag_filter_button.setToolTip(
+            self.tr("Tag filter enabled")
+            if self.inactive_mods_tag_filter_enabled
+            else self.tr("Tag filter disabled")
+        )
+        self.inactive_mods_list.set_tags_visible(self.inactive_mods_tag_filter_enabled)
+        self.signal_search_and_filters(
+            list_type="Inactive",
+            pattern=self.inactive_mods_search.text(),
+            filters_active=self.inactive_mods_tag_filter_enabled,
+        )
+
+    def on_active_mods_tag_filter_changed(self) -> None:
+        self.signal_search_and_filters(
+            list_type="Active",
+            pattern=self.active_mods_search.text(),
+            filters_active=self.active_mods_tag_filter_enabled,
+        )
+
+    def on_inactive_mods_tag_filter_changed(self) -> None:
+        self.signal_search_and_filters(
+            list_type="Inactive",
+            pattern=self.inactive_mods_search.text(),
+            filters_active=self.inactive_mods_tag_filter_enabled,
+        )
 
     def on_mod_created(self, uuid: str) -> None:
         self.inactive_mods_list.append_new_item(uuid)
@@ -3811,11 +4411,21 @@ class ModsPanel(QWidget):
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
             uuids = self.active_mods_list.uuids
+            tag_filter_enabled = self.active_mods_tag_filter_enabled
+            selected_tags = self.active_mods_tag_filter_selector.selected_real_tags()
+            no_tags_selected = self.active_mods_tag_filter_selector.no_tags_selected()
+            tag_filter_active = self.active_mods_tag_filter_selector.has_active_filter()
         elif list_type == "Inactive":
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
             uuids = self.inactive_mods_list.uuids
+            tag_filter_enabled = self.inactive_mods_tag_filter_enabled
+            selected_tags = self.inactive_mods_tag_filter_selector.selected_real_tags()
+            no_tags_selected = self.inactive_mods_tag_filter_selector.no_tags_selected()
+            tag_filter_active = (
+                self.inactive_mods_tag_filter_selector.has_active_filter()
+            )
         else:
             raise NotImplementedError(f"Unknown list type: {list_type}")
         # Evaluate the search filter state for the list
@@ -3825,6 +4435,8 @@ class ModsPanel(QWidget):
             search_filter = "name"
         if _filter.currentText() == self.tr("Notes"):
             search_filter = "notes"
+        elif _filter.currentText() == self.tr("Tags"):
+            search_filter = "tags"
         elif _filter.currentText() == self.tr("PackageId"):
             search_filter = "packageid"
         elif _filter.currentText() == self.tr("Author(s)"):
@@ -3880,6 +4492,14 @@ class ModsPanel(QWidget):
                 else:
                     mod_path = metadata.get("path", "")
                     item_filtered = mod_path not in matches
+            elif search_filter == "tags":
+                tags = item_data["mod_tags"]
+                if not pattern.strip():
+                    item_filtered = False
+                else:
+                    item_filtered = not any(
+                        pattern.lower() in tag.lower() for tag in tags
+                    )
             # Filter by name and mod notes
             elif (
                 pattern.strip()
@@ -3926,6 +4546,17 @@ class ModsPanel(QWidget):
                 item_filtered = True
             elif type_filter_index == 2 and metadata.get("csharp"):
                 item_filtered = True
+
+            # User tag filtering
+            if tag_filter_enabled and tag_filter_active:
+                filters_active = True
+                tags = set(item_data["mod_tags"])
+
+                matches_selected_tags = bool(tags.intersection(selected_tags))
+                matches_no_tags = no_tags_selected and len(tags) == 0
+
+                if not matches_selected_tags and not matches_no_tags:
+                    item_filtered = True
 
             # Check if the item should be filtered or hidden based on filter state
             if filter_state:
