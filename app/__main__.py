@@ -145,6 +145,13 @@ def main_thread() -> None:
                 logger.warning(
                     f"watchdog received the following exception while exiting: {stacktrace}"
                 )
+            try:
+                from app.views.main_content_panel import MainContent
+
+                if MainContent._instance is not None:
+                    MainContent._instance.cleanup()
+            except Exception as e:
+                logger.warning(f"Error during MainContent cleanup: {e}")
         logger.info("Exiting application!")
         sys.exit()
 

@@ -242,6 +242,27 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steam_mods_folder_location)
 
+        # Steam API idle timeout
+        idle_timeout_layout = QHBoxLayout()
+        idle_timeout_label = QLabel(self.tr("Steam API idle timeout (seconds)"))
+        idle_timeout_label.setToolTip(
+            self.tr(
+                "How long to keep the Steamworks API handle open after the last "
+                "operation completes. Lower values release Steam faster; higher "
+                "values avoid re-initialization for rapid operations."
+            )
+        )
+        idle_timeout_layout.addWidget(idle_timeout_label)
+        self.steam_api_idle_timeout_spinbox = QSpinBox()
+        self.steam_api_idle_timeout_spinbox.setMinimum(5)
+        self.steam_api_idle_timeout_spinbox.setMaximum(300)
+        self.steam_api_idle_timeout_spinbox.setSingleStep(5)
+        self.steam_api_idle_timeout_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        idle_timeout_layout.addWidget(self.steam_api_idle_timeout_spinbox)
+        group_layout.addLayout(idle_timeout_layout)
+
     def _do_local_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)

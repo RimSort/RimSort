@@ -105,6 +105,8 @@ class EventBus(QObject):
     do_save_active_mods_list = Signal()
     do_run_game = Signal()
     do_steamworks_api_call = Signal(list)
+    workshop_item_installed = Signal(str)
+    do_refresh_steamcmd_acf = Signal()
     do_steamcmd_download = Signal(list)
     do_delete_outdated_entries_in_aux_db = Signal()
     do_set_all_entries_in_aux_db_as_outdated = Signal()

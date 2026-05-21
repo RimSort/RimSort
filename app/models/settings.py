@@ -133,6 +133,9 @@ class Settings(QObject):
         self.build_steam_database_update_toggle: bool = False
         self.steam_apikey: str = ""
 
+        # Steam API
+        self.steam_api_idle_timeout: int = 15
+
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
         self.steamcmd_delete_before_update: bool = False

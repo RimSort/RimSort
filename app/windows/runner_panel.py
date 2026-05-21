@@ -567,6 +567,7 @@ class RunnerPanel(QWidget):
 
     def _handle_steamcmd_completion(self) -> None:
         """Handle SteamCMD-specific completion tasks."""
+        EventBus().do_refresh_steamcmd_acf.emit()
         # Check if there are any failed downloads to report
         if len(self.steamcmd_download_tracking) == 0:
             self.change_progress_bar_color("success")

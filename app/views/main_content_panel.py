@@ -59,10 +59,7 @@ from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (
-    SteamworksGameLaunch,
-    SteamworksSubscriptionHandler,
-)
+from app.utils.steam.steamworks.wrapper import SteamworksWorker
 from app.utils.steam.webapi.wrapper import (
     CollectionImport,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -340,8 +337,19 @@ class MainContent(QObject):
             # Instantiate query runner
             self.query_runner: RunnerPanel | None = None
 
-            # Steamworks bool - use this to check any Steamworks processes you try to initialize
-            self.steamworks_in_use = False
+            # Steamworks worker thread (deferred init — no Steam API call until first operation)
+            self._steamworks_worker = SteamworksWorker(
+                idle_timeout=self.settings_controller.settings.steam_api_idle_timeout,
+                libs_path=str(AppInfo().application_folder / "libs"),
+            )
+            self._steamworks_worker.steam_not_running.connect(
+                self._on_steam_not_running
+            )
+            self._steamworks_worker.operation_complete.connect(
+                self._on_steamworks_operation_complete
+            )
+            self._steamworks_worker.item_subscribed.connect(self._on_item_subscribed)
+            self._steamworks_worker.start()
 
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
@@ -2523,101 +2531,43 @@ class MainContent(QObject):
                 ),
             )
 
-    def _handle_steamworks_resubscribe(self, instruction: list[Any]) -> None:
-        """
-        Handle mod revalidation by forcing Steam to validate and redownload mods.
-
-        This bypasses the Steamworks API because the native resubscribe process is broken.
-        Instead, we use the Steam URI protocol to trigger validation directly.
-        This approach is more efficient than the Steamworks API implementation, which
-        would unsubscribe then subscribe again.
-
-        :param instruction: List where instruction[0] = "resubscribe" and
-                           instruction[1] = list of PublishedFileIds (int)
-        """
-        logger.info(f"Validating mods with instruction: {instruction}")
-        # Steam URI protocol: steam://validate/{APP_ID}/{PublishedFileIds}
-        # APP_ID 294100 is RimWorld
-        platform_specific_open(f"steam://validate/294100/{instruction[1]}")
-
     def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
-        Create & launch Steamworks API process to handle instructions received from connected signals
+        Bridge: parse instruction list and submit typed operation to the worker.
 
-        FOR subscription_actions[]...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
-        FOR "launch_game_process"...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is a list containing [game_folder_path: str, args: list] respectively
+        The do_steamworks_api_call Signal(list) is kept for backward compatibility.
+        This translates the legacy format into typed SteamworksOperation submissions.
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        # use prebuilt libs path
-        libs_path = str((AppInfo().application_folder / "libs"))
-        if not self.steamworks_in_use:
-            subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
-            supported_actions = ["launch_game_process"]
-            supported_actions.extend(subscription_actions)
-            if (
-                instruction[0] in supported_actions
-            ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
-                if instruction[0] == "launch_game_process":  # SW API init + game launch
-                    self.steamworks_in_use = True
-                    steamworks_api_process = SteamworksGameLaunch(
-                        game_install_path=instruction[1][0],
-                        args=instruction[1][1],
-                        _libs=libs_path,
-                    )
-                    # Start the Steamworks API Process
-                    steamworks_api_process.start()
-                    logger.info(
-                        f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
-                    )
-                    steamworks_api_process.join()
-                    logger.info(
-                        f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-                    )
-                    self.steamworks_in_use = False
-                elif (
-                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
-                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
-                    logger.info(
-                        f"Creating Steamworks API process with instruction {instruction}"
-                    )
-                    self.steamworks_in_use = True
-                    # Process all mods in a single handler to ensure proper sequencing and avoid parallel processing issues
-                    logger.debug(
-                        f"Processing {instruction[0]} sequentially for {len(instruction[1])} mod(s)"
-                    )
-                    handler = SteamworksSubscriptionHandler(
-                        action=instruction[0],
-                        pfid_or_pfids=instruction[1],
-                        _libs=libs_path,
-                    )
-                    handler.start()
-                    handler.join()
-                    # Clean up after processing
-                    self.steamworks_in_use = False
-                else:
-                    logger.warning(
-                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
-                    )
-            else:
-                logger.error(f"Unsupported instruction {instruction}")
-                return
+        action = instruction[0]
+        pfids = instruction[1]
+
+        # Normalize pfids to list[int]
+        if isinstance(pfids, int):
+            pfids = [pfids]
         else:
-            logger.warning(
-                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
-            )
+            pfids = [int(p) for p in pfids]
+
+        if not pfids:
+            logger.warning("Empty pfids list, skipping Steamworks API call")
+            return
+
+        if action == "subscribe":
+            self._steamworks_worker.subscribe(pfids)
+        elif action == "unsubscribe":
+            self._steamworks_worker.unsubscribe(pfids)
+        elif action == "resubscribe":
+            self._steamworks_worker.resubscribe(pfids)
+        elif action == "force_download":
+            self._steamworks_worker.force_download(pfids)
+        else:
+            logger.error(f"Unsupported steamworks instruction: {action}")
 
     def _do_steamworks_api_call_animated(
         self, instruction: list[list[str] | str]
     ) -> None:
         publishedfileids = instruction[1]
-        logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
+        logger.debug(f"Attempting to process {len(publishedfileids)} mods with Steam")
         steamdb = self.metadata_manager.external_steam_metadata
         if steamdb is None:
             steamdb = {}
@@ -2628,7 +2578,6 @@ class MainContent(QObject):
                 publishedfileids=publishedfileids,
                 steamdb=steamdb,
             )
-        # No empty publishedfileids
         if len(publishedfileids) == 0:
             dialogue.show_warning(
                 title=self.tr("RimSort"),
@@ -2641,21 +2590,25 @@ class MainContent(QObject):
         # Close browser if open
         if self.steam_browser:
             self.steam_browser.close()
-        # Process API call
-        self.do_threaded_loading_animation(
-            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
-            target=partial(self._do_steamworks_api_call, instruction=instruction),
-            text=self.tr(
-                "Processing Steam subscription action(s) via Steamworks API..."
-            ),
+        # Submit to worker (non-blocking — GUI doesn't freeze)
+        self._do_steamworks_api_call([instruction[0], publishedfileids])
+
+    def _on_steam_not_running(self) -> None:
+        logger.warning("Steam is not running — Steamworks operations unavailable")
+
+    def _on_steamworks_operation_complete(self, op_type: str, success: bool) -> None:
+        logger.info(
+            f"Steamworks '{op_type}' completed: {'success' if success else 'failure'}"
         )
-        # Do a full refresh of metadata and UI
-        # self._do_refresh()
-        # TODO  check if this is necessary
-        """       
-        Disabled refresh since steam downloads are not instant and in the background in its own time
-        Refreshing metadata and UI here could tag mods as invalid or cause crashes due to key errors etc
-        """
+
+    def _on_item_subscribed(self, pfid: str) -> None:
+        EventBus().workshop_item_installed.emit(pfid)
+
+    def cleanup(self) -> None:
+        """Clean up resources before application exit."""
+        if hasattr(self, "_steamworks_worker"):
+            logger.info("Shutting down Steamworks worker thread...")
+            self._steamworks_worker.shutdown()
 
         # GIT MOD ACTIONS
 
@@ -3591,6 +3544,11 @@ class MainContent(QObject):
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
+
+        if hasattr(self, "_steamworks_worker"):
+            self._steamworks_worker.update_idle_timeout(
+                self.settings_controller.settings.steam_api_idle_timeout
+            )
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:

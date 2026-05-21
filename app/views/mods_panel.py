@@ -1693,6 +1693,7 @@ class ModListWidget(QListWidget):
             re_git_action = None
             re_steamcmd_action = None
             re_steam_action = None
+            force_download_steam_action = None
             # Unsubscribe mod
             unsubscribe_mod_steam_action = None
             # Change mod color
@@ -1829,6 +1830,11 @@ class ModListWidget(QListWidget):
                             re_steam_action = QAction()
                             re_steam_action.setText(
                                 self.tr("Re-subscribe mod with Steam")
+                            )
+                            # Force download steam mods
+                            force_download_steam_action = QAction()
+                            force_download_steam_action.setText(
+                                self.tr("Force download with Steam")
                             )
                             # Unsubscribe steam mods
                             unsubscribe_mod_steam_action = QAction()
@@ -2003,6 +2009,12 @@ class ModListWidget(QListWidget):
                                     re_steam_action.setText(
                                         self.tr("Re-subscribe mod(s) with Steam")
                                     )
+                                # Force download steam mods
+                                if not force_download_steam_action:
+                                    force_download_steam_action = QAction()
+                                    force_download_steam_action.setText(
+                                        self.tr("Force download mod(s) with Steam")
+                                    )
                                 # Unsubscribe steam mods
                                 if not unsubscribe_mod_steam_action:
                                     unsubscribe_mod_steam_action = QAction()
@@ -2065,6 +2077,7 @@ class ModListWidget(QListWidget):
                 or convert_workshop_local_action
                 or re_steamcmd_action
                 or re_steam_action
+                or force_download_steam_action
                 or unsubscribe_mod_steam_action
                 or add_to_steamdb_blacklist_action
                 or remove_from_steamdb_blacklist_action
@@ -2083,6 +2096,8 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(re_steamcmd_action)
                 if re_steam_action:
                     workshop_actions_menu.addAction(re_steam_action)
+                if force_download_steam_action:
+                    workshop_actions_menu.addAction(force_download_steam_action)
                 if unsubscribe_mod_steam_action:
                     workshop_actions_menu.addAction(unsubscribe_mod_steam_action)
                 if (
@@ -2338,6 +2353,21 @@ class ModListWidget(QListWidget):
                                 [int(str_pfid) for str_pfid in publishedfileids],
                             ]
                         )
+                    return True
+                elif (  # ACTION: Force download mod(s) with steam
+                    action == force_download_steam_action
+                    and len(steam_publishedfileid_to_name) > 0
+                ):
+                    publishedfileids = steam_publishedfileid_to_name.keys()
+                    logger.debug(
+                        f"Force downloading {len(publishedfileids)} mod(s) with Steam"
+                    )
+                    EventBus().do_steamworks_api_call.emit(
+                        [
+                            "force_download",
+                            [int(str_pfid) for str_pfid in publishedfileids],
+                        ]
+                    )
                     return True
                 elif (  # ACTION: Unsubscribe mod(s) with steam
                     action == unsubscribe_mod_steam_action
