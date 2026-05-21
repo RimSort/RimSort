@@ -156,6 +156,13 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
+    # Compiled non-Linux builds must call freeze_support() and set_start_method()
+    # BEFORE anything that touches multiprocessing (loguru's enqueue=True creates
+    # an internal multiprocessing queue, locking in the start method context).
+    if "__compiled__" in globals() and SYSTEM != "Linux":
+        freeze_support()
+        set_start_method("spawn")
+
     # Determine debug mode from --debug flag or DEBUG file
     debug_file_path = AppInfo().app_storage_folder / "DEBUG"
     if not DEBUG_MODE:
@@ -173,15 +180,10 @@ if __name__ == "__main__":
     else:
         # Configure QtWebEngine locales path
         os.environ["QTWEBENGINE_LOCALES_PATH"] = str(AppInfo().application_folder / "qtwebengine_locales")
-
-        # MacOS and Windows do not support fork, and can only use spawn
         if SYSTEM != "Linux":
             logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
-            freeze_support()
-            set_start_method("spawn")
-
         logger.debug("Running using Nuitka bundle")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
