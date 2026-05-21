@@ -79,6 +79,10 @@ cp "$DESKTOP_FILE" "${APPDIR}/usr/share/applications/"
 cp "$ICON_FILE" "${APPDIR}/usr/share/icons/hicolor/scalable/apps/io.github.rimsort.RimSort.svg"
 cp "$METAINFO_FILE" "${APPDIR}/usr/share/metainfo/"
 
+# Include update script for self-update support
+echo "Including update script..."
+cp "${REPO_ROOT}/update.sh" "${APPDIR}/usr/share/RimSort/"
+
 # Create AppRun entry point — a wrapper that sets cwd to the AppDir root and
 # execs the Nuitka binary. We use a custom AppRun instead of linuxdeploy's
 # --executable flag to avoid patchelf rewriting Nuitka's RPATH layout.

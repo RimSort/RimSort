@@ -223,6 +223,77 @@ fi
 # Kill running processes
 kill_rimsort
 
+# ======================================================================
+# AppImage self-update mode
+# When $APPIMAGE is set, we are running inside an AppImage.  The update
+# source ($TEMP_UPDATE_PATH) is a single .AppImage file, not a directory.
+# We replace the running AppImage atomically via rename.
+# ======================================================================
+if [ -n "${APPIMAGE:-}" ]; then
+    NEW_APPIMAGE="$TEMP_UPDATE_PATH"
+    BACKUP_PATH="${APPIMAGE}.bak"
+
+    # Override the generic ERR trap with an AppImage-specific recovery hint
+    trap 'log_error "AppImage update failed. If your AppImage is missing, restore from: $BACKUP_PATH"; exit 1' ERR
+
+    log_info "AppImage update mode"
+    log_info "Current AppImage: $APPIMAGE"
+    log_info "New AppImage: $NEW_APPIMAGE"
+
+    # Validate new AppImage file exists
+    if [ ! -f "$NEW_APPIMAGE" ]; then
+        log_error "New AppImage file not found: $NEW_APPIMAGE"
+        exit 1
+    fi
+
+    # Validate write permission to AppImage directory
+    APPIMAGE_DIR="$(dirname "$APPIMAGE")"
+    if [ ! -w "$APPIMAGE_DIR" ]; then
+        log_error "No write permission to AppImage directory: $APPIMAGE_DIR"
+        log_error "Move RimSort to a user-writable location or update manually."
+        exit 1
+    fi
+
+    # Rename current AppImage to .bak (serves as backup)
+    log_info "Backing up current AppImage to: $BACKUP_PATH"
+    if $DRY_RUN; then
+        log_info "DRY RUN: Would rename $APPIMAGE -> $BACKUP_PATH"
+    else
+        mv "$APPIMAGE" "$BACKUP_PATH"
+    fi
+
+    # Move new AppImage into place
+    log_info "Installing new AppImage to: $APPIMAGE"
+    if $DRY_RUN; then
+        log_info "DRY RUN: Would move $NEW_APPIMAGE -> $APPIMAGE"
+    else
+        mv "$NEW_APPIMAGE" "$APPIMAGE"
+        chmod +x "$APPIMAGE"
+    fi
+
+    log_success "AppImage replaced successfully"
+
+    # Launch new AppImage
+    log_info "Launching updated AppImage..."
+    if [ "$(id -u)" -eq 0 ]; then
+        log_warning "Cannot launch GUI application as root. Please launch RimSort manually as a regular user."
+        read -r -p "Press any key to continue..."
+    elif ! $DRY_RUN; then
+        nohup "$APPIMAGE" >/dev/null 2>&1 &
+        sleep 2
+        if pgrep -xf "$APPIMAGE" >/dev/null; then
+            log_success "RimSort started successfully!"
+        else
+            log_warning "RimSort may not have started successfully"
+        fi
+    fi
+
+    log_success "AppImage update completed successfully!"
+    echo "========================================================================"
+    trap - ERR
+    exit 0
+fi
+
 # Check if update source exists
 if [ ! -d "$UPDATE_SOURCE_FOLDER" ]; then
     log_error "Update source folder does not exist: $UPDATE_SOURCE_FOLDER"
