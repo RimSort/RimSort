@@ -1140,6 +1140,9 @@ class SettingsController(QObject):
         self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
             self.settings.clear_moves_dlc
         )
+        self.settings_dialog.auto_launch_steam_checkbox.setChecked(
+            self.settings.auto_launch_steam
+        )
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
@@ -1501,6 +1504,9 @@ class SettingsController(QObject):
         # Clear button behavior
         self.settings.clear_moves_dlc = (
             self.settings_dialog.clear_moves_dlc_checkbox.isChecked()
+        )
+        self.settings.auto_launch_steam = (
+            self.settings_dialog.auto_launch_steam_checkbox.isChecked()
         )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()

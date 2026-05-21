@@ -1716,6 +1716,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
+        self.auto_launch_steam_checkbox = QCheckBox(
+            self.tr("Automatically launch Steam when needed")
+        )
+        self.auto_launch_steam_checkbox.setToolTip(
+            self.tr(
+                "If enabled, RimSort will automatically attempt to launch Steam "
+                "when a Steam operation is requested but Steam is not running. "
+                "If disabled, a warning dialog will be shown instead."
+            )
+        )
+        group_layout.addWidget(self.auto_launch_steam_checkbox)
+
         self.show_mod_updates_checkbox = QCheckBox(
             self.tr("Check for mod updates on refresh")
         )

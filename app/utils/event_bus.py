@@ -125,6 +125,12 @@ class EventBus(QObject):
 
     # Help Menu bar signals
     do_check_for_application_update = Signal()
+    do_check_steam_connection = Signal()
+    do_launch_steam = Signal()
+
+    # Steam status signals
+    steam_not_running = Signal()
+    steam_operation_failed = Signal(str, str)  # (pfid, reason)
 
     # Loading animation signals
     do_threaded_loading_animation = Signal(str, object, str)
