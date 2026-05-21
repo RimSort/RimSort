@@ -7,9 +7,9 @@ from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
+from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.generic import scanpath
 from app.utils.metadata import MetadataManager, ModMetadata
-from app.utils.aux_db_utils import auxdb_get_mod_tags
 
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
 _FOLDER_SIZE_CACHE: dict[str, tuple[int, int]] = {}
@@ -232,6 +232,7 @@ def uuid_to_mod_color(uuid: str, cached_metadata: Optional[dict[str, Any]] = Non
     else:
         return ""
 
+
 def uuid_to_mod_tags(
     uuid: str,
     cached_metadata: Optional[dict[str, Any]] = None,
@@ -253,6 +254,7 @@ def uuid_to_mod_tags(
         return ""
 
     return ", ".join(sorted(tag.lower() for tag in tags))
+
 
 def get_dir_size(path: str) -> int:
     total = 0

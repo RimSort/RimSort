@@ -87,9 +87,7 @@ class CustomListWidgetItemMetadata:
             self.mod_color = mod_color
         self.alternative = alternative if alternative is not None else self.get_alternative_by_uuid(uuid)
         self.mod_tags = (
-            auxdb_get_mod_tags(
-                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
-            )
+            auxdb_get_mod_tags(settings_controller, uuid, aux_metadata_controller, aux_metadata_session)
             if mod_tags is None
             else mod_tags
         )
