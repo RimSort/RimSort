@@ -1,14 +1,17 @@
 import os
 import sys
 
+from loguru import logger
 from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
+from app.controllers.companion_controller import CompanionController
 from app.controllers.main_window_controller import MainWindowController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
+from app.utils.companion.server import CompanionServer
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
@@ -44,6 +47,8 @@ class AppController(QObject):
         self.initialize_metadata_manager()
         # Initialize the main window controller
         self.initialize_main_window()
+        # Initialize the companion server and UI
+        self.initialize_companion()
 
     def set_language(self) -> None:
         """Sets the language of the application on initial setup."""
@@ -73,7 +78,9 @@ class AppController(QObject):
         self.settings.load()
         self.initialize_translator(self.settings.language)
         self.settings_dialog = SettingsDialog()
-        self.settings_controller = SettingsController(model=self.settings, view=self.settings_dialog)
+        self.settings_controller = SettingsController(
+            model=self.settings, view=self.settings_dialog
+        )
 
     def initialize_theme_controller(self) -> None:
         """Initializes the ThemeController."""
@@ -87,7 +94,9 @@ class AppController(QObject):
         else:
             print(f"Translation file {path} not found.")
 
-        qt_translations_path = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+        qt_translations_path = QLibraryInfo.path(
+            QLibraryInfo.LibraryPath.TranslationsPath
+        )
 
         qt_file_path = os.path.join(qt_translations_path, f"qtbase_{language}.qm")
         if qt_translator.load(qt_file_path):
@@ -112,12 +121,28 @@ class AppController(QObject):
 
     def initialize_metadata_manager(self) -> None:
         """Initializes the MetadataManager."""
-        self.metadata_manager = MetadataManager.instance(settings_controller=self.settings_controller)
+        self.metadata_manager = MetadataManager.instance(
+            settings_controller=self.settings_controller
+        )
 
     def initialize_main_window(self) -> None:
         """Initializes the main window and its controller."""
         self.main_window = MainWindow(settings_controller=self.settings_controller)
         self.main_window_controller = MainWindowController(self.main_window)
+
+    def initialize_companion(self) -> None:
+        """Initializes the companion server and controller."""
+        port = self.settings.companion_port
+        self.companion_server = CompanionServer(port=port)
+        self.companion_controller = CompanionController(
+            server=self.companion_server,
+            panel=self.main_window.companion_panel,
+        )
+        self.companion_controller.set_auto_fetch_enabled(
+            self.settings.companion_auto_fetch
+        )
+        if not self.companion_server.start():
+            logger.warning(f"Companion server failed to start on port {port}")
 
     def run(self) -> int:
         """Runs the main application loop after initializing the main window."""
@@ -131,4 +156,6 @@ class AppController(QObject):
 
     def quit(self) -> None:
         """Exits the application."""
+        if hasattr(self, "companion_server"):
+            self.companion_server.stop()
         self.app.quit()
