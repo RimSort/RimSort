@@ -135,9 +135,7 @@ class TestFilterEligibleModsForUpdate:
             ),
         }
         result = filter_eligible_mods_for_update(mods)
-        assert len(result) == 0, (
-            "Should use internal_time_touched, not internal_time_updated"
-        )
+        assert len(result) == 0, "Should use internal_time_touched, not internal_time_updated"
 
     def test_neither_internal_timestamp_present(self) -> None:
         """Mods with no internal timestamps at all are skipped."""
