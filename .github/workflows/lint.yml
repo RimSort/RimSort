@@ -4,6 +4,8 @@ on:
     branches:
       - main
       - master
+      - lint_autofix
+
   pull_request: null
   merge_group:
 
@@ -108,22 +110,42 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
           COMMIT_SHA="${{ steps.auto-commit.outputs.commit_hash }}"
           echo "Auto-fix pushed commit: $COMMIT_SHA"
-          echo "Re-requesting check suites..."
+          echo "Re-requesting CI checks..."
 
-          SUITE_IDS=$(gh api "repos/${{ github.repository }}/commits/${COMMIT_SHA}/check-suites" \
+          OWNER_REPO="${{ github.repository }}"
+
+          echo "Looking for existing check-runs for $COMMIT_SHA"
+          CHECK_RUN_IDS=$(gh api "repos/${OWNER_REPO}/commits/${COMMIT_SHA}/check-runs" \
+            --jq '.check_runs[].id')
+
+          if [ -n "${CHECK_RUN_IDS}" ]; then
+            echo "Found check-runs; re-requesting each"
+            for CHECK_RUN_ID in $CHECK_RUN_IDS; do
+              echo "Re-requesting check-run $CHECK_RUN_ID"
+              # GitHub API: /check-runs/{check_run_id}/rerequest
+              gh api "repos/${OWNER_REPO}/check-runs/${CHECK_RUN_ID}/rerequest" \
+                --method POST || true
+            done
+            exit 0
+          fi
+
+          echo "No check-runs found; falling back to check-suites re-request"
+          SUITE_IDS=$(gh api "repos/${OWNER_REPO}/commits/${COMMIT_SHA}/check-suites" \
             --jq '.check_suites[].id')
 
-          if [ -z "$SUITE_IDS" ]; then
-            echo "No check suites found yet, requesting creation"
-            gh api "repos/${{ github.repository }}/check-suites" \
+          if [ -z "${SUITE_IDS}" ]; then
+            echo "No check suites found yet; requesting creation"
+            gh api "repos/${OWNER_REPO}/check-suites" \
               --method POST \
               --field head_sha="$COMMIT_SHA"
           else
             for SUITE_ID in $SUITE_IDS; do
               echo "Re-requesting suite $SUITE_ID"
-              gh api "repos/${{ github.repository }}/check-suites/${SUITE_ID}/rerequest" \
+              gh api "repos/${OWNER_REPO}/check-suites/${SUITE_ID}/rerequest" \
                 --method POST || true
             done
           fi
