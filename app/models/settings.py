@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from json import JSONDecodeError
 from os import path, rename
@@ -347,8 +348,10 @@ class Settings(QObject):
         else:
             self._debug_file.unlink(missing_ok=True)
 
-        with open(str(self._settings_file), "w") as file:
+        fd = os.open(str(self._settings_file), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as file:
             json.dump(self._to_dict(), file, indent=4)
+        os.chmod(str(self._settings_file), 0o600)
 
     def handle_corrupted_settings(self) -> None:
         use_old_backup = False
