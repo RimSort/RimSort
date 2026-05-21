@@ -331,7 +331,7 @@ class TestPanelButtonToServerWiring:
 
 
 class TestAutoFetchAndMetadata:
-    """Test auto-fetch preference and metadata manager stub."""
+    """Test auto-fetch preference and metadata/mod-list wiring."""
 
     def test_set_auto_fetch_enabled(self, controller: CompanionController) -> None:
         controller.set_auto_fetch_enabled(True)
@@ -345,7 +345,79 @@ class TestAutoFetchAndMetadata:
         controller.set_metadata_manager(mock_mm)
         assert controller._metadata_manager is mock_mm
 
-    def test_get_current_mod_list_returns_none_by_default(
+    def test_set_active_uuids_fn(self, controller: CompanionController) -> None:
+        def get_uuids() -> list[str]:
+            return ["uuid-1", "uuid-2"]
+
+        controller.set_active_uuids_fn(get_uuids)
+        assert controller._active_uuids_fn is get_uuids
+
+    def test_get_current_mod_list_returns_none_without_dependencies(
         self, controller: CompanionController
     ) -> None:
+        """Returns None when metadata_manager or active_uuids_fn are missing."""
+        assert controller._get_current_mod_list() is None
+
+        # Only metadata_manager set — still None
+        controller.set_metadata_manager(MagicMock())
+        assert controller._get_current_mod_list() is None
+
+    def test_get_current_mod_list_returns_ordered_package_ids(
+        self, controller: CompanionController
+    ) -> None:
+        """Returns correctly ordered list of package_id dicts."""
+        mock_mm = MagicMock()
+        mock_mm.internal_local_metadata = {
+            "uuid-1": {"packageid": "brrainz.harmony"},
+            "uuid-2": {"packageid": "Ludeon.RimWorld"},
+            "uuid-3": {"packageid": "author.SomeMod"},
+        }
+        controller.set_metadata_manager(mock_mm)
+        controller.set_active_uuids_fn(lambda: ["uuid-1", "uuid-2", "uuid-3"])
+
+        result = controller._get_current_mod_list()
+        assert result == [
+            {"package_id": "brrainz.harmony"},
+            {"package_id": "ludeon.rimworld"},
+            {"package_id": "author.somemod"},
+        ]
+
+    def test_get_current_mod_list_skips_missing_uuids(
+        self, controller: CompanionController
+    ) -> None:
+        """Skips UUIDs not found in metadata."""
+        mock_mm = MagicMock()
+        mock_mm.internal_local_metadata = {
+            "uuid-1": {"packageid": "brrainz.harmony"},
+        }
+        controller.set_metadata_manager(mock_mm)
+        controller.set_active_uuids_fn(lambda: ["uuid-1", "uuid-missing"])
+
+        result = controller._get_current_mod_list()
+        assert result == [{"package_id": "brrainz.harmony"}]
+
+    def test_get_current_mod_list_skips_mods_without_packageid(
+        self, controller: CompanionController
+    ) -> None:
+        """Skips mods that have no packageid field."""
+        mock_mm = MagicMock()
+        mock_mm.internal_local_metadata = {
+            "uuid-1": {"packageid": "brrainz.harmony"},
+            "uuid-2": {"name": "No PackageId Mod"},
+        }
+        controller.set_metadata_manager(mock_mm)
+        controller.set_active_uuids_fn(lambda: ["uuid-1", "uuid-2"])
+
+        result = controller._get_current_mod_list()
+        assert result == [{"package_id": "brrainz.harmony"}]
+
+    def test_get_current_mod_list_returns_none_for_empty_list(
+        self, controller: CompanionController
+    ) -> None:
+        """Returns None when active list has no resolvable mods."""
+        mock_mm = MagicMock()
+        mock_mm.internal_local_metadata = {}
+        controller.set_metadata_manager(mock_mm)
+        controller.set_active_uuids_fn(lambda: [])
+
         assert controller._get_current_mod_list() is None

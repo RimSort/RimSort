@@ -4,13 +4,19 @@ Thin coordinator that connects EventBus companion signals to panel display
 methods, and panel button clicks to server request methods.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from PySide6.QtCore import QObject
 
 from app.utils.event_bus import EventBus
 from app.views.companion_panel import CompanionPanel
+
+if TYPE_CHECKING:
+    from app.utils.metadata import MetadataManager
 
 
 class CompanionController(QObject):
@@ -36,7 +42,8 @@ class CompanionController(QObject):
         self._event_bus = EventBus()
         self._auto_fetch_enabled = False
         self._last_state: str | None = None
-        self._metadata_manager: Any = None
+        self._metadata_manager: MetadataManager | None = None
+        self._active_uuids_fn: Callable[[], list[str]] | None = None
 
         self._connect_event_bus_signals()
         self._connect_panel_buttons()
@@ -151,22 +158,58 @@ class CompanionController(QObject):
         """
         self._auto_fetch_enabled = enabled
 
-    def set_metadata_manager(self, metadata_manager: Any) -> None:
-        """Store a reference to the MetadataManager for future use.
+    def set_metadata_manager(self, metadata_manager: MetadataManager) -> None:
+        """Store a reference to the MetadataManager.
 
         :param metadata_manager: the MetadataManager instance
         """
         self._metadata_manager = metadata_manager
 
+    def set_active_uuids_fn(self, fn: Callable[[], list[str]]) -> None:
+        """Provide a callable that returns the current active mod UUIDs in order.
+
+        This decouples the controller from the view hierarchy — the caller
+        wires in whatever data source is appropriate (typically the active
+        mods list widget's ``.uuids`` property).
+
+        :param fn: zero-arg callable returning ordered active UUIDs
+        """
+        self._active_uuids_fn = fn
+
     def _get_current_mod_list(self) -> list[dict] | None:
         """Return the current active mod list for apply requests.
 
-        This is a stub that will be wired to MetadataManager in Task 9.
+        Reads the ordered active UUIDs, resolves each to its ``packageid``
+        via MetadataManager, and returns them as a list of dicts suitable
+        for the companion mod's ``apply.mod_list`` request.
 
-        :return: list of mod dicts, or None if unavailable
+        :return: list of ``{"package_id": "<id>"}`` dicts in load order,
+                 or None if the required data sources are unavailable
         """
-        logger.warning(
-            "_get_current_mod_list is a stub — "
-            "will be wired to MetadataManager in a future task"
-        )
-        return None
+        if self._metadata_manager is None or self._active_uuids_fn is None:
+            logger.warning(
+                "Cannot build mod list: metadata_manager={}, active_uuids_fn={}",
+                self._metadata_manager is not None,
+                self._active_uuids_fn is not None,
+            )
+            return None
+
+        uuids = self._active_uuids_fn()
+        local_metadata = self._metadata_manager.internal_local_metadata
+
+        mod_list: list[dict] = []
+        for uuid in uuids:
+            mod_data = local_metadata.get(uuid)
+            if mod_data is None:
+                logger.debug("Skipping unknown UUID in active list: {}", uuid)
+                continue
+
+            package_id = mod_data.get("packageid")
+            if not package_id:
+                logger.debug("Mod {} has no packageid, skipping", uuid)
+                continue
+
+            mod_list.append({"package_id": package_id.lower()})
+
+        logger.info("Built companion mod list with {} entries", len(mod_list))
+        return mod_list if mod_list else None

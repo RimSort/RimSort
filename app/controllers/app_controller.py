@@ -138,6 +138,12 @@ class AppController(QObject):
             server=self.companion_server,
             panel=self.main_window.companion_panel,
         )
+        self.companion_controller.set_metadata_manager(self.metadata_manager)
+        self.companion_controller.set_active_uuids_fn(
+            lambda: (
+                self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            )
+        )
         self.companion_controller.set_auto_fetch_enabled(
             self.settings.companion_auto_fetch
         )
