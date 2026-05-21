@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.utils.http_downloader import (
     DatabaseDownloadTask,
     DownloadResult,
@@ -22,30 +24,35 @@ class TestDatabaseDownloadTask:
         assert task.display_name == "Test Repository"
 
 
+@pytest.fixture
+def two_task_batch() -> list[DatabaseDownloadTask]:
+    return [
+        DatabaseDownloadTask(
+            url="https://example.com/a.zip",
+            target_dir=Path("/tmp"),
+            repo_name="RepoA",
+            display_name="Repo A",
+        ),
+        DatabaseDownloadTask(
+            url="https://example.com/b.zip",
+            target_dir=Path("/tmp"),
+            repo_name="RepoB",
+            display_name="Repo B",
+        ),
+    ]
+
+
 class TestHttpDownloadWorker:
     @patch("app.utils.http_downloader.HttpDatabaseDownloader.download")
-    def test_worker_processes_all_tasks(self, mock_download: MagicMock) -> None:
+    def test_worker_processes_all_tasks(
+        self, mock_download: MagicMock, two_task_batch: list[DatabaseDownloadTask]
+    ) -> None:
         mock_download.return_value = (DownloadResult.UPDATED, None)
 
-        tasks = [
-            DatabaseDownloadTask(
-                url="https://example.com/a.zip",
-                target_dir=Path("/tmp"),
-                repo_name="RepoA",
-                display_name="Repo A",
-            ),
-            DatabaseDownloadTask(
-                url="https://example.com/b.zip",
-                target_dir=Path("/tmp"),
-                repo_name="RepoB",
-                display_name="Repo B",
-            ),
-        ]
-
-        worker = HttpDownloadWorker(tasks)
+        worker = HttpDownloadWorker(two_task_batch)
         results: list[dict[str, DownloadResult]] = []
         worker.download_finished.connect(lambda r: results.append(r))
-        worker.run()  # Call run() directly, not start()
+        worker.run()
 
         assert mock_download.call_count == 2
         assert len(results) == 1
@@ -54,29 +61,14 @@ class TestHttpDownloadWorker:
 
     @patch("app.utils.http_downloader.HttpDatabaseDownloader.download")
     def test_single_failure_does_not_abort_batch(
-        self, mock_download: MagicMock
+        self, mock_download: MagicMock, two_task_batch: list[DatabaseDownloadTask]
     ) -> None:
         mock_download.side_effect = [
             (DownloadResult.FAILED, "timeout"),
             (DownloadResult.UPDATED, None),
         ]
 
-        tasks = [
-            DatabaseDownloadTask(
-                url="https://example.com/a.zip",
-                target_dir=Path("/tmp"),
-                repo_name="RepoA",
-                display_name="Repo A",
-            ),
-            DatabaseDownloadTask(
-                url="https://example.com/b.zip",
-                target_dir=Path("/tmp"),
-                repo_name="RepoB",
-                display_name="Repo B",
-            ),
-        ]
-
-        worker = HttpDownloadWorker(tasks)
+        worker = HttpDownloadWorker(two_task_batch)
         results: list[dict[str, DownloadResult]] = []
         worker.download_finished.connect(lambda r: results.append(r))
         worker.run()

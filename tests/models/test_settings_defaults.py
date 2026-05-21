@@ -8,7 +8,9 @@ class TestSettingsURLDefaults:
 
     @patch("app.models.settings.QApplication")
     @patch("app.models.settings.AppInfo")
-    def test_new_install_defaults_to_configured_url(self, mock_app_info, mock_qapp):
+    def test_new_install_defaults_to_configured_url(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
         """New installs should default all database sources to 'Configured URL'."""
         mock_qapp.font.return_value.family.return_value = "monospace"
         mock_app_info.return_value.app_storage_folder = MagicMock()
@@ -25,7 +27,9 @@ class TestSettingsURLDefaults:
 
     @patch("app.models.settings.QApplication")
     @patch("app.models.settings.AppInfo")
-    def test_url_fields_have_github_archive_defaults(self, mock_app_info, mock_qapp):
+    def test_url_fields_have_github_archive_defaults(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
         """URL fields should point to GitHub archive ZIP URLs by default."""
         mock_qapp.font.return_value.family.return_value = "monospace"
         mock_app_info.return_value.app_storage_folder = MagicMock()
@@ -55,7 +59,9 @@ class TestSettingsURLDefaults:
 
     @patch("app.models.settings.QApplication")
     @patch("app.models.settings.AppInfo")
-    def test_git_repo_fields_still_exist(self, mock_app_info, mock_qapp):
+    def test_git_repo_fields_still_exist(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
         """Git repo fields must remain for backward compatibility."""
         mock_qapp.font.return_value.family.return_value = "monospace"
         mock_app_info.return_value.app_storage_folder = MagicMock()
