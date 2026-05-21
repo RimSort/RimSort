@@ -59,9 +59,7 @@ class HttpDatabaseDownloader:
             logger.debug(f"Could not read HTTP cache metadata: {e}")
             return {}
 
-    def _write_cache_metadata(
-        self, repo_dir: Path, etag: str | None, last_modified: str | None
-    ) -> None:
+    def _write_cache_metadata(self, repo_dir: Path, etag: str | None, last_modified: str | None) -> None:
         """Write ETag/Last-Modified to the sidecar cache file.
 
         :param repo_dir: Directory to write the cache sidecar into
@@ -91,9 +89,7 @@ class HttpDatabaseDownloader:
             headers["If-Modified-Since"] = cache["last_modified"]
         return headers
 
-    def _extract_zip_to_dir(
-        self, zip_path: Path, target_dir: Path, repo_name: str
-    ) -> Path:
+    def _extract_zip_to_dir(self, zip_path: Path, target_dir: Path, repo_name: str) -> Path:
         """Extract a zip archive into the target directory.
 
         GitHub zips contain a single top-level ``<repo>-<branch>/`` directory.
@@ -183,9 +179,7 @@ class HttpDatabaseDownloader:
             total_size = int(total_size_str) if total_size_str else None
 
             target_dir.mkdir(parents=True, exist_ok=True)
-            temp_fd = tempfile.NamedTemporaryFile(
-                dir=str(target_dir), suffix=".zip", delete=False
-            )
+            temp_fd = tempfile.NamedTemporaryFile(dir=str(target_dir), suffix=".zip", delete=False)
             temp_path = Path(temp_fd.name)
 
             try:
