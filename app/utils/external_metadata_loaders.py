@@ -13,6 +13,7 @@ from app.utils.xml import xml_path_to_json
 # Metadata loader source constants
 SOURCE_FILE_PATH = "Configured file path"
 SOURCE_GIT_REPO = "Configured git repository"
+SOURCE_URL = "Configured URL"
 SOURCE_DISABLED = "Disabled"
 
 # Metadata file names
@@ -101,22 +102,22 @@ class ExternalMetadataLoader:
         getter_func: Callable[[str], tuple[Any, str | None]],
         subdir: str = "",
     ) -> tuple[Any, str | None]:
-        """Load metadata from either file path or git repository.
+        """Load metadata from either file path, git repository, or HTTP URL.
 
         Args:
-            source: SOURCE_FILE_PATH, SOURCE_GIT_REPO, or SOURCE_DISABLED
+            source: SOURCE_FILE_PATH, SOURCE_GIT_REPO, SOURCE_URL, or SOURCE_DISABLED
             file_path: Path to file when using SOURCE_FILE_PATH
-            repo_path: Path to git repo when using SOURCE_GIT_REPO
+            repo_path: Path to git repo/URL when using SOURCE_GIT_REPO or SOURCE_URL
             file_name: Name of the file to load (e.g., 'steamDB.json')
             getter_func: Callable that loads and validates the file at given path
-            subdir: Optional subdirectory within git repo path
+            subdir: Optional subdirectory within git repo/URL path
 
         Returns:
             Tuple of (loaded_data, path_used) or (None, None) if disabled
         """
         if source == SOURCE_FILE_PATH:
             return getter_func(file_path)
-        elif source == SOURCE_GIT_REPO:
+        elif source in (SOURCE_GIT_REPO, SOURCE_URL):
             path = self._get_repo_path(repo_path, file_name, subdir)
             return getter_func(path)
         else:

@@ -31,6 +31,11 @@ from app.utils.git_worker import (
     GitStageCommitWorker,
     PushConfig,
 )
+from app.utils.http_downloader import (
+    DatabaseDownloadTask,
+    DownloadResult,
+    HttpDownloadWorker,
+)
 from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
@@ -49,27 +54,40 @@ class MainContentController(QObject):
         self._git_clone_worker: Optional[GitCloneWorker] = None
         self._git_push_worker: Optional[GitPushWorker] = None
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
+        self._http_download_worker: Optional[HttpDownloadWorker] = None
 
         # Thread pool for concurrent tasks
         self.thread_pool = QThreadPool.globalInstance()
 
-        # Map download signals to (base_path, url_getter)
+        # Map download signals to (base_path, repo_getter, url_getter, source_getter, display_name)
         self.download_signals = {
             EventBus().do_download_community_rules_db_from_github: (
                 AppInfo().databases_folder,
                 lambda: self.settings_controller.settings.external_community_rules_repo,
+                lambda: self.settings_controller.settings.external_community_rules_url,
+                lambda: self.settings_controller.settings.external_community_rules_metadata_source,
+                "Community Rules",
             ),
             EventBus().do_download_steam_workshop_db_from_github: (
                 AppInfo().databases_folder,
                 lambda: self.settings_controller.settings.external_steam_metadata_repo,
+                lambda: self.settings_controller.settings.external_steam_metadata_url,
+                lambda: self.settings_controller.settings.external_steam_metadata_source,
+                "Steam Workshop",
             ),
             EventBus().do_download_use_this_instead_db_from_github: (
                 AppInfo().databases_folder,
                 lambda: self.settings_controller.settings.external_use_this_instead_repo_path,
+                lambda: self.settings_controller.settings.external_use_this_instead_url,
+                lambda: self.settings_controller.settings.external_use_this_instead_metadata_source,
+                "Use This Instead",
             ),
             EventBus().do_download_no_version_warning_db_from_github: (
                 AppInfo().databases_folder,
                 lambda: self.settings_controller.settings.external_no_version_warning_repo_path,
+                lambda: self.settings_controller.settings.external_no_version_warning_url,
+                lambda: self.settings_controller.settings.external_no_version_warning_metadata_source,
+                "No Version Warning",
             ),
         }
 
@@ -88,11 +106,22 @@ class MainContentController(QObject):
             signal.connect(self._on_check_updates_requested)
 
         # Bind download signals
-        for event_signal, (base_path_obj, url_getter) in self.download_signals.items():
+        for event_signal, (
+            base_path_obj,
+            repo_getter,
+            url_getter,
+            source_getter,
+            display_name,
+        ) in self.download_signals.items():
             event_signal.connect(
-                lambda url_getter=url_getter, base_path_obj=base_path_obj: self._do_git_clone(
-                    base_path=str(base_path_obj),
-                    repo_url=url_getter(),
+                lambda repo_getter=repo_getter, url_getter=url_getter, source_getter=source_getter, base_path_obj=base_path_obj, display_name=display_name: (
+                    self._do_download_database(
+                        base_path=base_path_obj,
+                        repo_url=repo_getter(),
+                        url=url_getter(),
+                        source=source_getter(),
+                        display_name=display_name,
+                    )
                 )
             )
 
@@ -373,59 +402,62 @@ class MainContentController(QObject):
     def _update_databases_on_startup_if_enabled_silent(self) -> None:
         """
         Silently update databases on startup if enabled.
-        Directly calls MainContentController methods instead of emitting signals.
+        Dispatches to HTTP or git depending on each database's configured source.
         """
         if not self.settings_controller.settings.update_databases_on_startup:
             logger.info("Update databases on startup is disabled.")
             return
 
-        # Check internet connection before attempting task
         if not check_internet_connection():
             return
 
-        # Community Rules database
-        if (
-            self.settings_controller.settings.external_community_rules_metadata_source == "Configured git repository"
-            and self.settings_controller.settings.external_community_rules_repo
-        ):
-            logger.info("Auto-updating Community Rules database from GitHub.")
-            self._do_auto_database_update(
-                str(AppInfo().databases_folder),
-                self.settings_controller.settings.external_community_rules_repo,
-            )
+        settings = self.settings_controller.settings
+        http_tasks: list[DatabaseDownloadTask] = []
 
-        # Steam Workshop database
-        if (
-            self.settings_controller.settings.external_steam_metadata_source == "Configured git repository"
-            and self.settings_controller.settings.external_steam_metadata_repo
-        ):
-            logger.info("Auto-updating Steam Workshop database from GitHub.")
-            self._do_auto_database_update(
-                str(AppInfo().databases_folder),
-                self.settings_controller.settings.external_steam_metadata_repo,
-            )
+        db_configs = [
+            (
+                settings.external_community_rules_metadata_source,
+                settings.external_community_rules_repo,
+                settings.external_community_rules_url,
+                "Community Rules",
+            ),
+            (
+                settings.external_steam_metadata_source,
+                settings.external_steam_metadata_repo,
+                settings.external_steam_metadata_url,
+                "Steam Workshop",
+            ),
+            (
+                settings.external_no_version_warning_metadata_source,
+                settings.external_no_version_warning_repo_path,
+                settings.external_no_version_warning_url,
+                "No Version Warning",
+            ),
+            (
+                settings.external_use_this_instead_metadata_source,
+                settings.external_use_this_instead_repo_path,
+                settings.external_use_this_instead_url,
+                "Use This Instead",
+            ),
+        ]
 
-        # No Version Warning database
-        if (
-            self.settings_controller.settings.external_no_version_warning_metadata_source == "Configured git repository"
-            and self.settings_controller.settings.external_no_version_warning_repo_path
-        ):
-            logger.info('Auto-updating "No Version Warning" database from GitHub.')
-            self._do_auto_database_update(
-                str(AppInfo().databases_folder),
-                self.settings_controller.settings.external_no_version_warning_repo_path,
-            )
+        for source, repo_url, url, display_name in db_configs:
+            if source == "Configured URL" and url:
+                repo_name = extract_git_dir_name(repo_url) if repo_url else display_name.replace(" ", "-")
+                http_tasks.append(
+                    DatabaseDownloadTask(
+                        url=url,
+                        target_dir=AppInfo().databases_folder,
+                        repo_name=repo_name,
+                        display_name=display_name,
+                    )
+                )
+            elif source == "Configured git repository" and repo_url:
+                logger.info(f"Auto-updating {display_name} database via git.")
+                self._do_auto_database_update(str(AppInfo().databases_folder), repo_url)
 
-        # Use This Instead database (Cross Version Databases)
-        if (
-            self.settings_controller.settings.external_use_this_instead_metadata_source == "Configured git repository"
-            and self.settings_controller.settings.external_use_this_instead_repo_path
-        ):
-            logger.info('Auto-updating "Use This Instead" database from GitHub.')
-            self._do_auto_database_update(
-                str(AppInfo().databases_folder),
-                self.settings_controller.settings.external_use_this_instead_repo_path,
-            )
+        if http_tasks:
+            self._start_http_download_silent(http_tasks)
 
     def _do_auto_database_update(self, base_path: str, repo_url: str) -> None:
         """Handle automatic database update: silently update existing or clone new."""
@@ -449,6 +481,92 @@ class MainContentController(QObject):
         worker = GitBatchUpdateWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results_silent)
         self.thread_pool.start(worker)
+
+    def _do_download_database(self, base_path: Path, repo_url: str, url: str, source: str, display_name: str) -> None:
+        """Dispatch a database download via HTTP or git based on the configured source."""
+        if not check_internet_connection():
+            return
+
+        if source == "Configured URL" and url:
+            repo_name = extract_git_dir_name(repo_url) if repo_url else display_name.replace(" ", "-")
+            task = DatabaseDownloadTask(
+                url=url,
+                target_dir=base_path,
+                repo_name=repo_name,
+                display_name=display_name,
+            )
+            self._start_http_download_interactive([task])
+        elif source == "Configured git repository" and repo_url:
+            self._do_git_clone(base_path=str(base_path), repo_url=repo_url)
+        else:
+            logger.debug(f"Download not applicable for source type: {source}")
+
+    def _cleanup_http_download_worker(self) -> None:
+        """Disconnect signals, stop, and discard the current HTTP download worker."""
+        if self._http_download_worker is not None:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+                self._http_download_worker.quit()
+                self._http_download_worker.wait()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
+
+    def _start_http_download_silent(self, tasks: list[DatabaseDownloadTask]) -> None:
+        """Start an HTTP download worker in silent mode (no user dialogs)."""
+        self._cleanup_http_download_worker()
+
+        self._http_download_worker = HttpDownloadWorker(tasks)
+        self._http_download_worker.download_finished.connect(self._on_http_download_finished_silent)
+        self._http_download_worker.progress.connect(lambda msg: logger.info(f"HTTP DB update: {msg}"))
+        logger.info(f"Starting HTTP download for {len(tasks)} database(s)")
+        self._http_download_worker.start()
+
+    @Slot(dict)
+    def _on_http_download_finished_silent(self, results: dict[str, DownloadResult]) -> None:
+        """Handle HTTP download completion silently (log only)."""
+        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
+        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
+        if updated:
+            logger.info(f"HTTP DB update: {len(updated)} database(s) updated: {', '.join(updated)}")
+        if failed:
+            logger.warning(f"HTTP DB update: {len(failed)} database(s) failed: {', '.join(failed)}")
+        self._cleanup_http_download_worker()
+
+    def _start_http_download_interactive(self, tasks: list[DatabaseDownloadTask]) -> None:
+        """Start an HTTP download worker with user-facing result dialogs."""
+        self._cleanup_http_download_worker()
+
+        self._http_download_worker = HttpDownloadWorker(tasks)
+        self._http_download_worker.download_finished.connect(self._on_http_download_finished_interactive)
+        self._http_download_worker.progress.connect(lambda msg: logger.info(f"HTTP DB download: {msg}"))
+        self._http_download_worker.start()
+
+    @Slot(dict)
+    def _on_http_download_finished_interactive(self, results: dict[str, DownloadResult]) -> None:
+        """Handle HTTP download completion with user-facing dialogs."""
+        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
+        up_to_date = [name for name, r in results.items() if r == DownloadResult.UP_TO_DATE]
+        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
+
+        if failed:
+            InformationBox(
+                title=self.tr("Download failed"),
+                text=self.tr("Failed to download database(s): {names}").format(names=", ".join(failed)),
+                information=self.tr("Please check your internet connection and the configured URL."),
+            ).exec()
+        elif updated:
+            InformationBox(
+                title=self.tr("Download complete"),
+                text=self.tr("Database(s) downloaded successfully: {names}").format(names=", ".join(updated)),
+            ).exec()
+        elif up_to_date:
+            InformationBox(
+                title=self.tr("Already up to date"),
+                text=self.tr("Database(s) are already up to date: {names}").format(names=", ".join(up_to_date)),
+            ).exec()
+
+        self._cleanup_http_download_worker()
 
     def _start_git_clone_worker(self, repo_url: str, base_path: str, force: bool) -> None:
         """Initialize and start GitCloneWorker."""

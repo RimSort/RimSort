@@ -458,6 +458,9 @@ class SettingsDialog(QDialog):
         QRadioButton,
         QLineEdit,
         QToolButton,
+        QRadioButton,
+        QLineEdit,
+        QToolButton,
     ]:
         group = QGroupBox()
         tab_layout.addWidget(group, stretch=1)
@@ -519,6 +522,30 @@ class SettingsDialog(QDialog):
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
+
+        url_radio = QRadioButton(self.tr("URL"))
+        url_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
+        item_layout.addWidget(url_radio, stretch=2)
+
+        row_layout = QHBoxLayout()
+        row_layout.setSpacing(8)
+        item_layout.addLayout(row_layout, stretch=8)
+
+        url_input = QLineEdit()
+        url_input.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        url_input.setTextMargins(GUIInfo().text_field_margins)
+        url_input.setClearButtonEnabled(True)
+        url_input.setEnabled(False)
+        url_input.setPlaceholderText(self.tr("https://github.com/.../archive/refs/heads/main.zip"))
+        row_layout.addWidget(url_input)
+
+        url_download_button = QToolButton()
+        url_download_button.setText(self.tr("Download…"))
+        url_download_button.setEnabled(False)
+        row_layout.addWidget(url_download_button)
+
+        item_layout = QHBoxLayout()
+        section_layout.addLayout(item_layout, stretch=1)
         local_file_radio = QRadioButton(self.tr("Local File"))
         local_file_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
         item_layout.addWidget(local_file_radio, stretch=2)
@@ -556,6 +583,9 @@ class SettingsDialog(QDialog):
             github_url,
             github_upload_button,
             github_download_button,
+            url_radio,
+            url_input,
+            url_download_button,
             local_file_radio,
             local_file,
             local_file_choose_button,
@@ -572,6 +602,9 @@ class SettingsDialog(QDialog):
             self.community_rules_db_github_url,
             self.community_rules_db_github_upload_button,
             self.community_rules_db_github_download_button,
+            self.community_rules_db_url_radio,
+            self.community_rules_db_url_input,
+            self.community_rules_db_url_download_button,
             self.community_rules_db_local_file_radio,
             self.community_rules_db_local_file,
             self.community_rules_db_local_file_choose_button,
@@ -588,6 +621,9 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_github_url,
             self.steam_workshop_db_github_upload_button,
             self.steam_workshop_db_github_download_button,
+            self.steam_workshop_db_url_radio,
+            self.steam_workshop_db_url_input,
+            self.steam_workshop_db_url_download_button,
             self.steam_workshop_db_local_file_radio,
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
@@ -613,6 +649,9 @@ class SettingsDialog(QDialog):
             self.no_version_warning_db_github_url,
             self.no_version_warning_db_github_upload_button,
             self.no_version_warning_db_github_download_button,
+            self.no_version_warning_db_url_radio,
+            self.no_version_warning_db_url_input,
+            self.no_version_warning_db_url_download_button,
             self.no_version_warning_db_local_file_radio,
             self.no_version_warning_db_local_file,
             self.no_version_warning_db_local_file_choose_button,
@@ -628,6 +667,9 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_github_url,
             self.use_this_instead_db_github_upload_button,
             self.use_this_instead_db_github_download_button,
+            self.use_this_instead_db_url_radio,
+            self.use_this_instead_db_url_input,
+            self.use_this_instead_db_url_download_button,
             self.use_this_instead_db_local_file_radio,
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,

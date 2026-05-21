@@ -53,28 +53,40 @@ class Settings(QObject):
         self.check_for_update_startup: bool = True
 
         # Databases
-        self.external_steam_metadata_source: str = "None"
+        self.external_steam_metadata_source: str = "Configured URL"
         self.external_steam_metadata_file_path: str = str(AppInfo().app_storage_folder / "steamDB.json")
         self.external_steam_metadata_repo: str = "https://github.com/RimSort/Steam-Workshop-Database"
+        self.external_steam_metadata_url: str = (
+            "https://github.com/RimSort/Steam-Workshop-Database/archive/refs/heads/main.zip"
+        )
 
-        self.external_community_rules_metadata_source: str = "None"
+        self.external_community_rules_metadata_source: str = "Configured URL"
         self.external_community_rules_file_path: str = str(AppInfo().app_storage_folder / "communityRules.json")
         self.external_community_rules_repo: str = "https://github.com/RimSort/Community-Rules-Database"
+        self.external_community_rules_url: str = (
+            "https://github.com/RimSort/Community-Rules-Database/archive/refs/heads/main.zip"
+        )
 
         # Disable by default previously this was 7 days "604800"
         self.database_expiry: int = 0
         # Default (-1) means do not delete data from Aux Metadata DB
         self.aux_db_time_limit: int = -1
 
-        self.external_no_version_warning_metadata_source: str = "None"
+        self.external_no_version_warning_metadata_source: str = "Configured URL"
         self.external_no_version_warning_file_path: str = str(AppInfo().app_storage_folder / "ModIdsToFix.xml")
         self.external_no_version_warning_repo_path: str = "https://github.com/emipa606/NoVersionWarning"
+        self.external_no_version_warning_url: str = (
+            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/master.zip"
+        )
 
-        self.external_use_this_instead_metadata_source: str = "None"
+        self.external_use_this_instead_metadata_source: str = "Configured URL"
         self.external_use_this_instead_file_path: str = str(
             AppInfo().app_storage_folder / "UseThisInstead" / "replacements.json.gz"
         )
         self.external_use_this_instead_repo_path: str = "https://github.com/emipa606/UseThisInstead"
+        self.external_use_this_instead_url: str = (
+            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/master.zip"
+        )
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
