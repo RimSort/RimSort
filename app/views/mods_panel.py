@@ -842,24 +842,24 @@ class TagEditDialog(QDialog):
         self.setMinimumWidth(420)
         self.setMinimumHeight(360)
 
-        self.layout = QVBoxLayout()
+        self.dialog_layout = QVBoxLayout()
 
         self.info_label = QLabel(
             self.tr("Select existing tags and/or enter new tags separated by commas:")
         )
         self.info_label.setObjectName("TagEditDialogLabel")
         self.info_label.setWordWrap(True)
-        self.layout.addWidget(self.info_label)
+        self.dialog_layout.addWidget(self.info_label)
 
         self.new_tags_input = QLineEdit()
         self.new_tags_input.setObjectName("TagEditDialogInput")
         self.new_tags_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
-        self.layout.addWidget(self.new_tags_input)
+        self.dialog_layout.addWidget(self.new_tags_input)
 
         self.tags_list = QListWidget()
         self.tags_list.setObjectName("TagEditDialogList")
         self.tags_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.layout.addWidget(self.tags_list)
+        self.dialog_layout.addWidget(self.tags_list)
 
         self.buttons_layout = QHBoxLayout()
 
@@ -883,8 +883,8 @@ class TagEditDialog(QDialog):
         self.buttons_layout.addWidget(self.ok_button)
         self.buttons_layout.addWidget(self.cancel_button)
 
-        self.layout.addLayout(self.buttons_layout)
-        self.setLayout(self.layout)
+        self.dialog_layout.addLayout(self.buttons_layout)
+        self.setLayout(self.dialog_layout)
 
         self.populate_tags()
 
