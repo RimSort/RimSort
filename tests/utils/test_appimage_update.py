@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -226,6 +227,9 @@ class TestPrepareAppImageUpdate:
         with pytest.raises(UpdateExtractionError, match="Cannot determine AppImage path"):
             mgr._prepare_appimage_update()
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="chmod on directories does not reliably restrict write access on Windows"
+    )
     def test_raises_when_no_write_permission(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         fake = tmp_path / "readonly" / "RimSort.AppImage"
         fake.parent.mkdir()

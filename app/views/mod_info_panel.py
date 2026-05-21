@@ -22,12 +22,12 @@ from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.sort.mod_sorting import uuid_to_folder_size
 from app.utils.app_info import AppInfo
+from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.metadata import MetadataManager
 from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
-from app.utils.aux_db_utils import auxdb_get_mod_tags
 
 # Constants for layout proportions
 NAME_LABEL_RATIO = 20
@@ -180,11 +180,9 @@ class ModInfoPanel:
         self.mod_info_tags_label.setObjectName("summaryLabel")
         self.mod_info_tags_value = QLabel()
         self.mod_info_tags_value.setObjectName("summaryValue")
-        self.mod_info_tags_value.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse
-        )
+        self.mod_info_tags_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.mod_info_tags_value.setWordWrap(True)
-        
+
         self.mod_info_mod_version_label = QLabel(self.tr("Mod Version:"))
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()

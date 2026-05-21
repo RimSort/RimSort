@@ -179,6 +179,7 @@ def auxdb_update_all_mod_colors(
         if not session:
             local_session.close()
 
+
 def auxdb_get_mod_tags(
     settings_controller: SettingsController,
     uuid: str,
@@ -226,6 +227,7 @@ def auxdb_get_all_tags(
     finally:
         if not session:
             local_session.close()
+
 
 def _normalize_tags(tags: list[str]) -> list[str]:
     return sorted({tag.strip().lower() for tag in tags if tag.strip()})
@@ -285,6 +287,7 @@ def _update_mod_tags(
     finally:
         if not session:
             local_session.close()
+
 
 def auxdb_add_mod_tags(
     settings_controller: SettingsController,
