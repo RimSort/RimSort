@@ -436,3 +436,117 @@ class TestResponseRouting:
             assert sig.args[0]["mods"] == ["Core", "HugsLib"]
         finally:
             sock.close()
+
+
+# ---------------------------------------------------------------------------
+# TestEndToEnd
+# ---------------------------------------------------------------------------
+
+
+class TestEndToEnd:
+    def test_full_session(self, qtbot, server, event_bus) -> None:  # type: ignore[no-untyped-def]
+        """Simulate a full companion session: connect, handshake, heartbeat,
+        game state change, request/response, clean disconnect."""
+
+        # --- Step 1-2: Connect and handshake ---
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+
+        try:
+            with qtbot.waitSignal(event_bus.companion_connected, timeout=3000) as sig:
+                sock.connect(("127.0.0.1", server.port()))
+                _process_events()
+
+                handshake = create_request(
+                    "handshake",
+                    params={
+                        "protocol_version": PROTOCOL_VERSION,
+                        "mod_version": "1.0.0",
+                        "game_version": "1.5",
+                    },
+                )
+                sock.sendall(serialize_message(handshake))
+                qtbot.wait(100)
+
+            # Verify handshake signal carried the params
+            params = sig.args[0]
+            assert params["protocol_version"] == PROTOCOL_VERSION
+            assert params["mod_version"] == "1.0.0"
+
+            # Verify handshake response
+            resp = _read_message(sock)
+            assert "result" in resp
+            assert resp["result"]["protocol_version"] == PROTOCOL_VERSION
+            assert server.has_connection()
+
+            # --- Step 3: Send a heartbeat notification (main menu state) ---
+            heartbeat = create_notification(
+                "heartbeat",
+                params={"timestamp": 1234567890, "tick_count": None, "tps": None},
+            )
+
+            with qtbot.waitSignal(event_bus.companion_heartbeat, timeout=3000) as hb:
+                _send_message(sock, heartbeat)
+                qtbot.wait(100)
+
+            assert hb.args[0]["tick_count"] is None
+            assert hb.args[0]["tps"] is None
+
+            # --- Step 4-5: Send game.state_changed notification ---
+            state_change = create_notification(
+                "game.state_changed",
+                params={"state": "main_menu"},
+            )
+
+            with qtbot.waitSignal(
+                event_bus.companion_state_changed, timeout=3000
+            ) as sc:
+                _send_message(sock, state_change)
+                qtbot.wait(100)
+
+            assert sc.args[0] == "main_menu"
+
+            # --- Step 6-9: Server sends request, client responds ---
+            req_id = server.send_request("get.load_order")
+            assert req_id is not None
+
+            # Read the request on the raw socket
+            request_msg = _read_message(sock)
+            assert request_msg["method"] == "get.load_order"
+            assert request_msg["id"] == req_id
+            assert request_msg["jsonrpc"] == "2.0"
+
+            # Send a response back with a fake load order
+            fake_load_order = {
+                "mods": [
+                    {"packageId": "ludeon.rimworld", "name": "Core"},
+                    {"packageId": "brrainz.harmony", "name": "Harmony"},
+                    {"packageId": "unlimitedhugs.hugslib", "name": "HugsLib"},
+                ],
+            }
+            response = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": fake_load_order,
+            }
+
+            with qtbot.waitSignal(
+                event_bus.companion_load_order_received, timeout=3000
+            ) as lo:
+                _send_message(sock, response)
+                qtbot.wait(100)
+
+            assert lo.args[0]["mods"] == fake_load_order["mods"]
+            assert len(lo.args[0]["mods"]) == 3
+
+            # --- Step 10-11: Clean disconnect ---
+            with qtbot.waitSignal(event_bus.companion_disconnected, timeout=3000):
+                sock.close()
+                # Process events so the server detects the disconnect
+                qtbot.wait(200)
+
+            assert not server.has_connection()
+
+        except Exception:
+            sock.close()
+            raise
