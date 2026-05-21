@@ -313,7 +313,7 @@ class TestPanelButtonToServerWiring:
             panel.apply_mod_list_button.click()
 
         server.send_request.assert_called_once_with(
-            "apply.mod_list", {"mod_list": mod_list}
+            "apply.mod_list", {"mods": mod_list}
         )
 
     def test_apply_mod_list_no_list_does_not_send(

@@ -76,7 +76,7 @@ class CompanionController(QObject):
         )
         eb.companion_apply_result.connect(self._on_apply_result)
 
-    def _on_connected(self, handshake_data: dict) -> None:
+    def _on_connected(self, handshake_data: dict[str, Any]) -> None:
         """Handle companion connection established."""
         self._panel.show_connected(handshake_data)
 
@@ -111,7 +111,7 @@ class CompanionController(QObject):
         """Show the error on the panel's disconnected page."""
         self._panel.show_disconnected(error=error_msg)
 
-    def _on_apply_result(self, result: dict) -> None:
+    def _on_apply_result(self, result: dict[str, Any]) -> None:
         """Handle the apply.mod_list result notification."""
         self._panel.set_apply_pending(False)
 
@@ -145,7 +145,7 @@ class CompanionController(QObject):
             return
 
         self._panel.set_apply_pending(True)
-        self._server.send_request("apply.mod_list", {"mod_list": mod_list})
+        self._server.send_request("apply.mod_list", {"mods": mod_list})
 
     # ------------------------------------------------------------------
     # Public configuration

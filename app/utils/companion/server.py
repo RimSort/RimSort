@@ -11,6 +11,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtNetwork import QHostAddress, QTcpServer, QTcpSocket
 
+from app.utils.app_info import AppInfo
 from app.utils.companion.protocol import (
     ERR_VERSION_MISMATCH,
     PROTOCOL_VERSION,
@@ -35,6 +36,7 @@ HANDSHAKE_TIMEOUT_MS = 5000
 HEARTBEAT_INTERVAL_MS = 5000
 HEARTBEAT_MISS_LIMIT = 3
 APPLY_TIMEOUT_MS = 60000
+MAX_BUFFER_SIZE = 1_048_576  # 1 MB
 
 # Maps request method names to EventBus signal names for response routing
 _RESPONSE_SIGNAL_MAP: dict[str, str] = {
@@ -268,6 +270,11 @@ class CompanionServer(QObject):
 
         self._buffer += bytes(self._client.readAll())
 
+        if len(self._buffer) > MAX_BUFFER_SIZE:
+            logger.warning("Companion: buffer exceeded max size — disconnecting")
+            self._disconnect_client(emit_signal=True)
+            return
+
         while b"\n" in self._buffer:
             line, self._buffer = self._buffer.split(b"\n", 1)
             line = line.strip()
@@ -342,7 +349,7 @@ class CompanionServer(QObject):
         response = create_response(
             id=msg["id"],
             result={
-                "rimsort_version": "dev",
+                "rimsort_version": str(AppInfo().app_version),
                 "protocol_version": PROTOCOL_VERSION,
             },
         )
@@ -444,10 +451,11 @@ class CompanionServer(QObject):
     def _on_apply_timeout(self) -> None:
         """Handle apply.mod_list timeout."""
         logger.warning("Apply mod list request timed out")
+        timed_out_id = self._pending_apply_id
         self._pending_apply_id = None
         self._event_bus.companion_apply_result.emit(
             {
-                "request_id": None,
+                "request_id": timed_out_id,
                 "accepted": False,
                 "message": "Timed out waiting for mod list apply confirmation",
             }

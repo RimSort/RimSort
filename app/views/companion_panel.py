@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import Qt
@@ -176,11 +177,11 @@ class CompanionPanel(QWidget):
         else:
             self.error_label.hide()
 
-    def show_connected(self, handshake_data: dict) -> None:
+    def show_connected(self, handshake_data: dict[str, Any]) -> None:
         """
         Switch to the connected page and populate initial data.
 
-        :param handshake_data: dict from the companion handshake containing
+        :param handshake_data: dict[str, Any] from the companion handshake containing
             ``game_version`` and ``active_mods`` (count).
         """
         self.stack.setCurrentIndex(1)
@@ -207,11 +208,11 @@ class CompanionPanel(QWidget):
         display = state.replace("_", " ").title()
         self.game_state_label.setText(display)
 
-    def update_heartbeat(self, data: dict) -> None:
+    def update_heartbeat(self, data: dict[str, Any]) -> None:
         """
         Update the TPS label from heartbeat data.
 
-        :param data: dict with an optional ``tps`` key
+        :param data: dict[str, Any] with an optional ``tps`` key
         """
         tps = data.get("tps")
         if tps is None:
@@ -242,12 +243,12 @@ class CompanionPanel(QWidget):
         self.fetch_mod_errors_button.setEnabled(enabled)
         self.fetch_harmony_button.setEnabled(enabled)
 
-    def display_diagnostics(self, title: str, data: dict) -> None:
+    def display_diagnostics(self, title: str, data: dict[str, Any]) -> None:
         """
         Format diagnostic data as JSON and display it in the output area.
 
         :param title: heading shown above the JSON payload
-        :param data: dict to pretty-print
+        :param data: dict[str, Any] to pretty-print
         """
         formatted = json.dumps(data, indent=2, ensure_ascii=False)
         self.diagnostics_output.setText(f"--- {title} ---\n\n{formatted}")
