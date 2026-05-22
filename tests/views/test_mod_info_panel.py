@@ -160,7 +160,9 @@ def test_mouse_press_path_scenarios(
     else:
         mock_open.assert_not_called()
     if expected_log_level:
-        getattr(mock_logger, expected_log_level).assert_called_once_with(expected_log_msg)
+        getattr(mock_logger, expected_log_level).assert_called_once_with(
+            expected_log_msg
+        )
 
 
 def test_mouse_press_event_not_left_button(

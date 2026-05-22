@@ -126,8 +126,8 @@ class TroubleshootingDialog(QDialog):
 
     def _create_game_recovery_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the game files recovery section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Game Files Recovery")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(parent_layout, self.tr("Game Files Recovery"))
         )
 
         # Description
@@ -140,7 +140,9 @@ class TroubleshootingDialog(QDialog):
         description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content_layout.addWidget(description)
 
-        warning_label = QLabel(self.tr("Warning: These operations will delete selected files permanently!"))
+        warning_label = QLabel(
+            self.tr("Warning: These operations will delete selected files permanently!")
+        )
         warning_label.setObjectName("warningLabel")
         warning_label.setWordWrap(True)
         warning_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -169,19 +171,27 @@ class TroubleshootingDialog(QDialog):
         checkboxes_layout.addLayout(center_layout)
 
         self.integrity_delete_game_files = QCheckBox(
-            self.tr("Reset game files (Preserves local mods, deletes and redownloads game files)")
+            self.tr(
+                "Reset game files (Preserves local mods, deletes and redownloads game files)"
+            )
         )
         self.integrity_delete_game_files.setObjectName("styledCheckbox")
         self.integrity_delete_game_files.setToolTip(
-            self.tr("Deletes and redownloads game files but keeps your local mods intact.")
+            self.tr(
+                "Deletes and redownloads game files but keeps your local mods intact."
+            )
         )
         checkbox_items_layout.addWidget(self.integrity_delete_game_files)
 
         self.integrity_delete_steam_mods = QCheckBox(
-            self.tr("Reset Steam Workshop mods (Deletes and redownloads all Steam mods)")
+            self.tr(
+                "Reset Steam Workshop mods (Deletes and redownloads all Steam mods)"
+            )
         )
         self.integrity_delete_steam_mods.setObjectName("styledCheckbox")
-        self.integrity_delete_steam_mods.setToolTip(self.tr("Deletes all Steam Workshop mods and triggers redownload."))
+        self.integrity_delete_steam_mods.setToolTip(
+            self.tr("Deletes all Steam Workshop mods and triggers redownload.")
+        )
         checkbox_items_layout.addWidget(self.integrity_delete_steam_mods)
 
         self.integrity_delete_mod_configs = QCheckBox(
@@ -189,16 +199,22 @@ class TroubleshootingDialog(QDialog):
         )
         self.integrity_delete_mod_configs.setObjectName("styledCheckbox")
         self.integrity_delete_mod_configs.setToolTip(
-            self.tr("Deletes mod configuration files except ModsConfig.xml and Prefs.xml.")
+            self.tr(
+                "Deletes mod configuration files except ModsConfig.xml and Prefs.xml."
+            )
         )
         checkbox_items_layout.addWidget(self.integrity_delete_mod_configs)
 
         self.integrity_delete_game_configs = QCheckBox(
-            self.tr("Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*")
+            self.tr(
+                "Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*"
+            )
         )
         self.integrity_delete_game_configs.setObjectName("styledCheckbox")
         self.integrity_delete_game_configs.setToolTip(
-            self.tr("Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml.")
+            self.tr(
+                "Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml."
+            )
         )
         checkbox_items_layout.addWidget(self.integrity_delete_game_configs)
 
@@ -236,8 +252,10 @@ class TroubleshootingDialog(QDialog):
 
     def _create_mod_configuration_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the mod configuration section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Mod Configuration Options")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(
+                parent_layout, self.tr("Mod Configuration Options")
+            )
         )
 
         # Set specific spacing for this section
@@ -268,7 +286,9 @@ class TroubleshootingDialog(QDialog):
         export_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         export_layout.addWidget(export_label)
 
-        export_desc = QLabel(self.tr("Save your current mod list to a .xml file to share with others."))
+        export_desc = QLabel(
+            self.tr("Save your current mod list to a .xml file to share with others.")
+        )
         export_desc.setObjectName("sectionDescription")
         export_desc.setWordWrap(True)
         export_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -276,7 +296,9 @@ class TroubleshootingDialog(QDialog):
 
         self.mod_export_list_button = QPushButton(self.tr("Export List"))
         self.mod_export_list_button.setObjectName("actionButton")
-        self.mod_export_list_button.setToolTip(self.tr("Export your current mod list to a file"))
+        self.mod_export_list_button.setToolTip(
+            self.tr("Export your current mod list to a file")
+        )
         export_layout.addWidget(self.mod_export_list_button)
 
         # Import section
@@ -289,7 +311,9 @@ class TroubleshootingDialog(QDialog):
         import_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         import_layout.addWidget(import_label)
 
-        import_desc = QLabel(self.tr("Import a mod list in .xml format from another player"))
+        import_desc = QLabel(
+            self.tr("Import a mod list in .xml format from another player")
+        )
         import_desc.setObjectName("sectionDescription")
         import_desc.setWordWrap(True)
         import_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -317,7 +341,11 @@ class TroubleshootingDialog(QDialog):
         clear_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         clear_layout.addWidget(clear_label)
 
-        clear_warning = QLabel(self.tr("This will delete all mods in your Mods folder and reset to vanilla state"))
+        clear_warning = QLabel(
+            self.tr(
+                "This will delete all mods in your Mods folder and reset to vanilla state"
+            )
+        )
         clear_warning.setObjectName("warningLabel")
         clear_warning.setWordWrap(True)
         clear_warning.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -329,7 +357,9 @@ class TroubleshootingDialog(QDialog):
 
         self.clear_mods_button = QPushButton(self.tr("Clear All Mods"))
         self.clear_mods_button.setObjectName("dangerButton")
-        self.clear_mods_button.setToolTip(self.tr("Delete all mods and reset to vanilla state"))
+        self.clear_mods_button.setToolTip(
+            self.tr("Delete all mods and reset to vanilla state")
+        )
         clear_button_layout.addStretch()
         clear_button_layout.addWidget(self.clear_mods_button)
         clear_button_layout.addStretch()
@@ -338,13 +368,15 @@ class TroubleshootingDialog(QDialog):
 
     def _create_steam_utilities_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the Steam utilities section"""
-        section_frame, section_layout, content_widget, content_layout = self._setup_section_base(
-            parent_layout, self.tr("Steam Utilities")
+        section_frame, section_layout, content_widget, content_layout = (
+            self._setup_section_base(parent_layout, self.tr("Steam Utilities"))
         )
 
         # Description
         content_description = self._create_description_label(
-            self.tr("Steam-specific utilities to help resolve download and game file issues.")
+            self.tr(
+                "Steam-specific utilities to help resolve download and game file issues."
+            )
         )
         content_description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content_layout.addWidget(content_description)
@@ -373,10 +405,12 @@ class TroubleshootingDialog(QDialog):
         utilities_layout.addLayout(verify_layout)
         utilities_layout.addStretch()
 
-        self.steam_repair_library_button, repair_layout = self._create_button_with_layout(
-            self.tr("Repair Steam Library"),
-            self.tr("Verify integrity of all installed Steam games"),
-            "primaryButton",
+        self.steam_repair_library_button, repair_layout = (
+            self._create_button_with_layout(
+                self.tr("Repair Steam Library"),
+                self.tr("Verify integrity of all installed Steam games"),
+                "primaryButton",
+            )
         )
         utilities_layout.addLayout(repair_layout)
         utilities_layout.addStretch()

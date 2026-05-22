@@ -74,7 +74,9 @@ class TestParseCombinedUsage:
         assert result.game_args == []
 
     def test_env_wrapper_and_args(self) -> None:
-        result = parse_launch_command("DXVK_HUD=1 gamemoderun %command% -logfile /tmp/log")
+        result = parse_launch_command(
+            "DXVK_HUD=1 gamemoderun %command% -logfile /tmp/log"
+        )
         assert result.env_vars == {"DXVK_HUD": "1"}
         assert result.wrapper_commands == ["gamemoderun"]
         assert result.game_args == ["-logfile", "/tmp/log"]
@@ -175,7 +177,9 @@ class TestParseDataclass:
 
     def test_explicit_construction(self) -> None:
         """Test explicit construction of ParsedLaunchCommand."""
-        parsed = ParsedLaunchCommand(env_vars={"FOO": "bar"}, wrapper_commands=["wrapper"], game_args=["-arg"])
+        parsed = ParsedLaunchCommand(
+            env_vars={"FOO": "bar"}, wrapper_commands=["wrapper"], game_args=["-arg"]
+        )
         assert parsed.env_vars == {"FOO": "bar"}
         assert parsed.wrapper_commands == ["wrapper"]
         assert parsed.game_args == ["-arg"]
