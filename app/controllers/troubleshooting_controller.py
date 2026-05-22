@@ -9,6 +9,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
 from app.models.settings import Settings
+from app.utils.acf_utils import cleanup_orphaned_workshop_items
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.gui_info import (
@@ -39,6 +40,9 @@ class TroubleshootingController:
         self.dialog.steam_clear_cache_button.clicked.connect(self._on_steam_clear_cache_clicked)
         self.dialog.steam_verify_game_button.clicked.connect(self._on_steam_verify_game_clicked)
         self.dialog.steam_repair_library_button.clicked.connect(self._on_steam_repair_library_clicked)
+        self.dialog.steam_cleanup_orphaned_workshop_button.clicked.connect(
+            self._on_steam_cleanup_orphaned_workshop_clicked
+        )
 
     @property
     def game_location(self) -> Optional[str]:
@@ -688,6 +692,68 @@ class TroubleshootingController:
                     "Could not repair Steam library.\nPlease verify your games manually through Steam.\nDetails: {e}",
                 ).format(e=str(e)),
                 icon="warning",
+            )
+
+    def _on_steam_cleanup_orphaned_workshop_clicked(self) -> None:
+        """Clean orphaned entries from the Steam Workshop ACF metadata file."""
+        if not self.steam_mods_location:
+            self.show_steam_user_warning()
+            return
+
+        workshop_path = Path(self.steam_mods_location)
+        acf_path = workshop_path.parent.parent / "appworkshop_294100.acf"
+
+        if not acf_path.exists():
+            show_warning(
+                title=self.translate("TroubleshootingController", "ACF File Not Found"),
+                text=self.translate(
+                    "TroubleshootingController",
+                    "Could not find the Steam Workshop ACF file at:\n{acf_path}",
+                ).format(acf_path=acf_path),
+            )
+            return
+
+        if not show_dialogue_conditional(
+            title=self.translate("TroubleshootingController", "Clean Orphaned Workshop Items"),
+            text=self.translate(
+                "TroubleshootingController",
+                "This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.\n\nA backup will be created before any changes are made.\n\nContinue?",
+            ),
+            icon="warning",
+        ):
+            return
+
+        try:
+            removed_pfids = cleanup_orphaned_workshop_items(acf_path, workshop_path)
+
+            if removed_pfids:
+                backup_path = str(acf_path) + ".backup"
+                details = "\n".join(removed_pfids) + f"\n\nBackup saved to: {backup_path}"
+                show_information(
+                    title=self.translate("TroubleshootingController", "Cleanup Complete"),
+                    text=self.translate(
+                        "TroubleshootingController",
+                        "Removed {count} orphaned workshop entries.",
+                    ).format(count=len(removed_pfids)),
+                    details=details,
+                )
+            else:
+                show_information(
+                    title=self.translate("TroubleshootingController", "No Orphans Found"),
+                    text=self.translate(
+                        "TroubleshootingController",
+                        "No orphaned workshop entries were found. The ACF file is clean.",
+                    ),
+                )
+        except Exception as e:
+            logger.error(f"Failed to clean orphaned workshop items: {e}")
+            show_warning(
+                title=self.translate("TroubleshootingController", "Cleanup Failed"),
+                text=self.translate(
+                    "TroubleshootingController",
+                    "Failed to clean orphaned workshop items.",
+                ),
+                information=str(e),
             )
 
     def show_location_warning(self) -> None:

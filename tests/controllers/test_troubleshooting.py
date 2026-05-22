@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.models.instance import Instance
 from app.models.settings import Settings
+from app.utils.steam.steamfiles.wrapper import dict_to_acf
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
@@ -311,6 +312,148 @@ class TestSteamUtilities:
             assert mock_open.call_count == 2
             mock_open.assert_any_call("steam://validate/294100")
             mock_open.assert_any_call("steam://validate/123456")
+
+    def test_steam_cleanup_orphaned_workshop_no_steam_location(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that cleanup shows warning when steam location is not set."""
+        controller, _, _, _ = troubleshooting_controller
+        controller.settings.instances["default"].workshop_folder = ""
+
+        with patch("app.controllers.troubleshooting_controller.show_warning") as mock_warning:
+            controller._on_steam_cleanup_orphaned_workshop_clicked()
+            mock_warning.assert_called_once()
+
+    def test_steam_cleanup_orphaned_workshop_with_orphans(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+        tmp_path: Path,
+    ) -> None:
+        """Test successful cleanup of orphaned workshop entries."""
+        controller, _, _, _ = troubleshooting_controller
+
+        # Build proper directory structure for ACF path computation
+        workshop_base = tmp_path / "steamapps" / "workshop"
+        content_dir = workshop_base / "content" / "294100"
+        content_dir.mkdir(parents=True)
+
+        # Create some mod directories
+        (content_dir / "111").mkdir()
+        (content_dir / "222").mkdir()
+
+        # Write ACF file at the expected location
+        acf_path = workshop_base / "appworkshop_294100.acf"
+        acf_data = {
+            "AppWorkshop": {
+                "appid": "294100",
+                "SizeOnDisk": "0",
+                "NeedsUpdate": "0",
+                "NeedsDownload": "0",
+                "TimeLastUpdated": "0",
+                "TimeLastAppRan": "0",
+                "LastBuildID": "0",
+                "WorkshopItemsInstalled": {
+                    "111": {
+                        "size": "100",
+                        "timeupdated": "1700000000",
+                        "manifest": "123",
+                    },
+                    "222": {
+                        "size": "100",
+                        "timeupdated": "1700000000",
+                        "manifest": "123",
+                    },
+                    "333": {
+                        "size": "100",
+                        "timeupdated": "1700000000",
+                        "manifest": "123",
+                    },
+                },
+                "WorkshopItemDetails": {
+                    "111": {
+                        "manifest": "123",
+                        "timeupdated": "1700000000",
+                        "timetouched": "1700000000",
+                    },
+                    "222": {
+                        "manifest": "123",
+                        "timeupdated": "1700000000",
+                        "timetouched": "1700000000",
+                    },
+                    "333": {
+                        "manifest": "123",
+                        "timeupdated": "1700000000",
+                        "timetouched": "1700000000",
+                    },
+                },
+            }
+        }
+        dict_to_acf(data=acf_data, path=str(acf_path))
+
+        # Point the controller at our directory structure
+        controller.settings.instances["default"].workshop_folder = str(content_dir)
+
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("app.controllers.troubleshooting_controller.show_information") as mock_info,
+        ):
+            controller._on_steam_cleanup_orphaned_workshop_clicked()
+            mock_info.assert_called_once()
+            assert "Cleanup Complete" in str(mock_info.call_args)
+
+        # Verify the ACF file no longer contains "333"
+        from app.utils.acf_utils import load_acf_from_path
+
+        updated = load_acf_from_path(acf_path)
+        assert "333" not in updated["AppWorkshop"]["WorkshopItemsInstalled"]
+        assert "333" not in updated["AppWorkshop"]["WorkshopItemDetails"]
+        assert "111" in updated["AppWorkshop"]["WorkshopItemsInstalled"]
+        assert "222" in updated["AppWorkshop"]["WorkshopItemsInstalled"]
+
+    def test_steam_cleanup_orphaned_workshop_user_cancels(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+        tmp_path: Path,
+    ) -> None:
+        """Test that cancelling the confirmation dialog prevents cleanup."""
+        controller, _, _, _ = troubleshooting_controller
+
+        # Build proper directory structure so we reach the confirmation dialog
+        workshop_base = tmp_path / "steamapps" / "workshop"
+        content_dir = workshop_base / "content" / "294100"
+        content_dir.mkdir(parents=True)
+
+        acf_path = workshop_base / "appworkshop_294100.acf"
+        acf_data = {
+            "AppWorkshop": {
+                "appid": "294100",
+                "SizeOnDisk": "0",
+                "NeedsUpdate": "0",
+                "NeedsDownload": "0",
+                "TimeLastUpdated": "0",
+                "TimeLastAppRan": "0",
+                "LastBuildID": "0",
+                "WorkshopItemsInstalled": {},
+                "WorkshopItemDetails": {},
+            }
+        }
+        dict_to_acf(data=acf_data, path=str(acf_path))
+
+        controller.settings.instances["default"].workshop_folder = str(content_dir)
+
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=False,
+            ),
+            patch("app.controllers.troubleshooting_controller.cleanup_orphaned_workshop_items") as mock_cleanup,
+        ):
+            controller._on_steam_cleanup_orphaned_workshop_clicked()
+            mock_cleanup.assert_not_called()
 
 
 class TestEdgeCases:
