@@ -103,11 +103,11 @@ from app.utils.generic import (
 from app.utils.metadata import MetadataManager, ModMetadata
 from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
-from app.views.divider_widget import DividerItemInner
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_warning,
 )
+from app.views.divider_widget import DividerItemInner
 
 
 class ModListItemInner(QWidget):
