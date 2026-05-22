@@ -100,10 +100,14 @@ class TestModDeletionMenu:
             result = deletion_menu._confirm_deletion("Title", "Text", "Info")
             assert result is False
 
-    def test_perform_deletion_operation_no_mods(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_perform_deletion_operation_no_mods(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test deletion operation with no selected mods."""
         with patch("app.views.deletion_menu.show_information") as mock_info:
-            deletion_menu._perform_deletion_operation("Title", "Text", "Info", lambda x: True)
+            deletion_menu._perform_deletion_operation(
+                "Title", "Text", "Info", lambda x: True
+            )
             mock_info.assert_called_once()
 
     def test_perform_deletion_operation_with_mods(
@@ -113,13 +117,17 @@ class TestModDeletionMenu:
         deletion_menu.get_selected_mod_metadata = lambda: [sample_mod_metadata]
 
         with (
-            patch.object(deletion_menu, "_confirm_deletion", return_value=True) as mock_confirm,
+            patch.object(
+                deletion_menu, "_confirm_deletion", return_value=True
+            ) as mock_confirm,
             patch.object(deletion_menu, "_iterate_mods") as mock_iterate,
             patch.object(deletion_menu, "_process_deletion_result") as mock_process,
         ):
             mock_iterate.return_value = DeletionResult()
 
-            deletion_menu._perform_deletion_operation("Title", "Text", "Info", lambda x: True)
+            deletion_menu._perform_deletion_operation(
+                "Title", "Text", "Info", lambda x: True
+            )
 
             mock_confirm.assert_called_once()
             mock_iterate.assert_called_once()
@@ -183,7 +191,9 @@ class TestModDeletionMenu:
         mod = {"packageid": "author.modname", "data_source": "workshop"}
         assert deletion_menu._is_official_expansion(mod) is False
 
-    def test_process_deletion_result_success(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_process_deletion_result_success(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test processing successful deletion result."""
         result = DeletionResult()
         result.success_count = 2
@@ -192,7 +202,9 @@ class TestModDeletionMenu:
             deletion_menu._process_deletion_result(result)
             mock_info.assert_called_once()
 
-    def test_process_deletion_result_with_failures(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_process_deletion_result_with_failures(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test processing result with both success and failures."""
         result = DeletionResult()
         result.success_count = 1
@@ -218,10 +230,14 @@ class TestModDeletionMenu:
         ):
             deletion_menu._handle_steam_action("unsubscribe", mods)
 
-            mock_eventbus().do_steamworks_api_call.emit.assert_called_once_with(["unsubscribe", [123456789]])
+            mock_eventbus().do_steamworks_api_call.emit.assert_called_once_with(
+                ["unsubscribe", [123456789]]
+            )
             mock_info.assert_called_once()
 
-    def test_handle_steam_action_invalid_id(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_handle_steam_action_invalid_id(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test Steam action handling with invalid ID."""
         mod = {"publishedfileid": "invalid", "name": "Test"}
         mods = [mod]
@@ -230,7 +246,9 @@ class TestModDeletionMenu:
             deletion_menu._handle_steam_action("unsubscribe", mods)
             mock_logger.debug.assert_called_once()
 
-    def test_delete_mod_from_aux_db_time_limit_negative(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_delete_mod_from_aux_db_time_limit_negative(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test aux DB deletion when time limit is negative."""
         deletion_menu.settings_controller.settings.aux_db_time_limit = -1
 
@@ -238,7 +256,9 @@ class TestModDeletionMenu:
             deletion_menu.delete_mod_from_aux_db("/fake/path")
             mock_logger.debug.assert_called_once()
 
-    def test_delete_mod_from_aux_db_time_limit_positive(self, deletion_menu: ModDeletionMenu) -> None:
+    def test_delete_mod_from_aux_db_time_limit_positive(
+        self, deletion_menu: ModDeletionMenu
+    ) -> None:
         """Test aux DB marking as outdated when time limit is positive."""
         deletion_menu.settings_controller.settings.aux_db_time_limit = 1
 
@@ -252,7 +272,9 @@ class TestModDeletionMenu:
             deletion_menu.delete_mod_from_aux_db("/fake/path")
 
             # When time_limit > 0, it should call update with outdated=True
-            mock_instance.update.assert_called_once_with(mock_session, Path("/fake/path"), outdated=True)
+            mock_instance.update.assert_called_once_with(
+                mock_session, Path("/fake/path"), outdated=True
+            )
 
     def test_dummy_translations(self, deletion_menu: ModDeletionMenu) -> None:
         """Test dummy translations method."""
@@ -279,7 +301,9 @@ class TestModDeletionMenu:
         deletion_menu.metadata_manager = mock_metadata_manager
 
         # Patch the mod_deleted_signal.emit method to track calls
-        with patch.object(mock_metadata_manager.mod_deleted_signal, "emit") as mock_emit:
+        with patch.object(
+            mock_metadata_manager.mod_deleted_signal, "emit"
+        ) as mock_emit:
             deletion_menu._handle_uuid_removal(mod_metadata)
 
             # Assert that the UUID was added to mod_metadata

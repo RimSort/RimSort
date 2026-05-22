@@ -25,7 +25,9 @@ def _reset_appinfo_singleton() -> None:
 
 
 class TestAppInfoAppImage:
-    def test_is_appimage_when_env_set(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_is_appimage_when_env_set(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake_appimage = tmp_path / "RimSort.AppImage"
         fake_appimage.touch()
         monkeypatch.setenv("APPIMAGE", str(fake_appimage))
@@ -39,17 +41,23 @@ class TestAppInfoAppImage:
         monkeypatch.setenv("APPIMAGE", "")
         assert AppInfo().is_appimage is False
 
-    def test_appimage_path_returns_path(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_appimage_path_returns_path(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake = tmp_path / "RimSort.AppImage"
         fake.touch()
         monkeypatch.setenv("APPIMAGE", str(fake))
         assert AppInfo().appimage_path == fake
 
-    def test_appimage_path_returns_none_when_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_appimage_path_returns_none_when_unset(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.delenv("APPIMAGE", raising=False)
         assert AppInfo().appimage_path is None
 
-    def test_bak_cleanup_on_startup(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_bak_cleanup_on_startup(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake = tmp_path / "RimSort.AppImage"
         fake.touch()
         bak = tmp_path / "RimSort.AppImage.bak"
@@ -59,7 +67,9 @@ class TestAppInfoAppImage:
         AppInfo()
         assert not bak.exists()
 
-    def test_bak_cleanup_does_nothing_when_no_bak(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_bak_cleanup_does_nothing_when_no_bak(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake = tmp_path / "RimSort.AppImage"
         fake.touch()
         monkeypatch.setenv("APPIMAGE", str(fake))
@@ -104,7 +114,9 @@ class TestAssetSelection:
 
         # Bind the real methods so we can test them
         mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
-        mgr._get_platform_download_url = UpdateManager._get_platform_download_url.__get__(mgr)
+        mgr._get_platform_download_url = (
+            UpdateManager._get_platform_download_url.__get__(mgr)
+        )
         mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
         mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
         mgr._is_in_protected_path = MagicMock(return_value=False)
@@ -135,13 +147,19 @@ class TestAssetSelection:
         fake.touch()
         monkeypatch.setenv("APPIMAGE", str(fake))
 
-        assets_without_appimage = [a for a in SAMPLE_ASSETS if not a["name"].endswith(".AppImage")]
-        result = _linux_update_manager._get_platform_download_url(assets_without_appimage)
+        assets_without_appimage = [
+            a for a in SAMPLE_ASSETS if not a["name"].endswith(".AppImage")
+        ]
+        result = _linux_update_manager._get_platform_download_url(
+            assets_without_appimage
+        )
         assert result is not None
         assert result["is_appimage"] is False
         assert result["url"] == "https://example.com/ubuntu.zip"
 
-    def test_no_appimage_selection_when_not_appimage(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_appimage_selection_when_not_appimage(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.delenv("APPIMAGE", raising=False)
 
         mgr = MagicMock(spec=UpdateManager)
@@ -149,7 +167,9 @@ class TestAssetSelection:
         mgr._arch = "64bit"
         mgr._cached_patterns = UpdateManager._platform_patterns["Linux"]
         mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._get_platform_download_url = UpdateManager._get_platform_download_url.__get__(mgr)
+        mgr._get_platform_download_url = (
+            UpdateManager._get_platform_download_url.__get__(mgr)
+        )
         mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
         mgr._is_in_protected_path = MagicMock(return_value=False)
 
@@ -197,7 +217,9 @@ class TestFindAppImageAsset:
 
 
 class TestPrepareAppImageUpdate:
-    def test_writes_new_appimage_file(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_writes_new_appimage_file(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake = tmp_path / "RimSort.AppImage"
         fake.write_bytes(b"old content")
         monkeypatch.setenv("APPIMAGE", str(fake))
@@ -205,7 +227,9 @@ class TestPrepareAppImageUpdate:
         mgr = MagicMock(spec=UpdateManager)
         mgr._update_content = b"new appimage content"
         mgr._extracted_path = None
-        mgr._prepare_appimage_update = UpdateManager._prepare_appimage_update.__get__(mgr)
+        mgr._prepare_appimage_update = UpdateManager._prepare_appimage_update.__get__(
+            mgr
+        )
 
         result = mgr._prepare_appimage_update()
 
@@ -220,17 +244,24 @@ class TestPrepareAppImageUpdate:
 
         mgr = MagicMock(spec=UpdateManager)
         mgr._update_content = b"content"
-        mgr._prepare_appimage_update = UpdateManager._prepare_appimage_update.__get__(mgr)
+        mgr._prepare_appimage_update = UpdateManager._prepare_appimage_update.__get__(
+            mgr
+        )
 
         from app.utils.update_utils import UpdateExtractionError
 
-        with pytest.raises(UpdateExtractionError, match="Cannot determine AppImage path"):
+        with pytest.raises(
+            UpdateExtractionError, match="Cannot determine AppImage path"
+        ):
             mgr._prepare_appimage_update()
 
     @pytest.mark.skipif(
-        sys.platform == "win32", reason="chmod on directories does not reliably restrict write access on Windows"
+        sys.platform == "win32",
+        reason="chmod on directories does not reliably restrict write access on Windows",
     )
-    def test_raises_when_no_write_permission(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_raises_when_no_write_permission(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         fake = tmp_path / "readonly" / "RimSort.AppImage"
         fake.parent.mkdir()
         fake.touch()
@@ -241,7 +272,9 @@ class TestPrepareAppImageUpdate:
         try:
             mgr = MagicMock(spec=UpdateManager)
             mgr._update_content = b"content"
-            mgr._prepare_appimage_update = UpdateManager._prepare_appimage_update.__get__(mgr)
+            mgr._prepare_appimage_update = (
+                UpdateManager._prepare_appimage_update.__get__(mgr)
+            )
 
             from app.utils.update_utils import UpdateExtractionError
 

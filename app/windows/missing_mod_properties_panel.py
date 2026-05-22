@@ -130,7 +130,9 @@ class MissingModPropertiesPanel(BaseModsPanel):
             True if addition was successful, False otherwise
         """
         # Extract package IDs and categorize by validity
-        packageids_to_add, skipped_mods = self._extract_and_validate_packageids(selected_indices)
+        packageids_to_add, skipped_mods = self._extract_and_validate_packageids(
+            selected_indices
+        )
 
         if not packageids_to_add:
             self._show_no_valid_packageids_warning(skipped_mods)
@@ -178,7 +180,9 @@ class MissingModPropertiesPanel(BaseModsPanel):
             logger.warning(f"Failed to extract mod info for UUID {uuid}: {e}")
             return None
 
-    def _extract_and_validate_packageids(self, row_indices: Iterable[int]) -> tuple[list[str], list[str]]:
+    def _extract_and_validate_packageids(
+        self, row_indices: Iterable[int]
+    ) -> tuple[list[str], list[str]]:
         """
         Extract and validate package IDs from selected rows.
 
@@ -234,7 +238,9 @@ class MissingModPropertiesPanel(BaseModsPanel):
                 "warning",
             )
 
-    def _show_message(self, title: str, message: str, message_type: str = "information") -> None:
+    def _show_message(
+        self, title: str, message: str, message_type: str = "information"
+    ) -> None:
         """
         Show a message dialog with configurable type.
 

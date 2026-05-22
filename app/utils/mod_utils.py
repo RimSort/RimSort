@@ -130,7 +130,9 @@ def filter_eligible_mods_for_update(
         pfid = metadata.get("publishedfileid", "N/A")
 
         # Must be a workshop/steamcmd mod
-        is_workshop = metadata.get("steamcmd") or metadata.get("data_source") == "workshop"
+        is_workshop = (
+            metadata.get("steamcmd") or metadata.get("data_source") == "workshop"
+        )
         if not is_workshop:
             skipped_not_workshop += 1
             logger.debug(

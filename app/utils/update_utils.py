@@ -168,7 +168,12 @@ class ScriptConfig:
     def get_script_path(self) -> Path:
         """Get the script path for this platform."""
         if self.platform == "Darwin":
-            return Path(sys.argv[0]).parent.parent.parent / "Contents" / "MacOS" / self.script_name
+            return (
+                Path(sys.argv[0]).parent.parent.parent
+                / "Contents"
+                / "MacOS"
+                / self.script_name
+            )
         else:
             return AppInfo().application_folder / self.script_name
 
@@ -201,7 +206,9 @@ class ScriptConfig:
         elif install_dir and self.platform == "Linux":
             base_args.append(str(install_dir))
 
-        return self._build_platform_args(base_args, script_path, needs_elevation, update_manager)
+        return self._build_platform_args(
+            base_args, script_path, needs_elevation, update_manager
+        )
 
     @staticmethod
     def _build_bash_command(base_args: List[str], needs_elevation: bool) -> str:
@@ -223,7 +230,9 @@ class ScriptConfig:
             return quoted_args
 
     @staticmethod
-    def _build_terminal_command(terminal: str, base_args: List[str], needs_elevation: bool) -> str:
+    def _build_terminal_command(
+        terminal: str, base_args: List[str], needs_elevation: bool
+    ) -> str:
         """
         Build terminal-specific command string for launching update script.
         Used as fallback if direct bash execution is not available.
@@ -294,7 +303,9 @@ class ScriptConfig:
         """
         if self.platform == "Darwin":
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
-            terminal_cmd = f'/bin/bash {quoted_args}; read -p \\"Press enter to close\\"'
+            terminal_cmd = (
+                f'/bin/bash {quoted_args}; read -p \\"Press enter to close\\"'
+            )
             script_cmd = f"sudo {terminal_cmd}" if needs_elevation else terminal_cmd
             return f'osascript -e \'tell app "Terminal" to do script "{script_cmd}"\''
         elif self.platform == "Windows":
@@ -402,10 +413,14 @@ class UpdateManager(QObject):
         self._arch = platform.architecture()[0]
         # Cache platform patterns for performance
         self._cached_patterns = (
-            self._platform_patterns[self._system] if self._system in self._platform_patterns else None
+            self._platform_patterns[self._system]
+            if self._system in self._platform_patterns
+            else None
         )
         self._download_cancelled = False
-        self._detected_terminal: Optional[str] = None  # Cache detected terminal emulator (for fallback only)
+        self._detected_terminal: Optional[str] = (
+            None  # Cache detected terminal emulator (for fallback only)
+        )
         # Progress window for update operations
         self._progress_widget: Optional[TaskProgressWindow] = None
 
@@ -434,7 +449,9 @@ class UpdateManager(QObject):
                 return True
         else:
             # For non-Windows, use the original check
-            self._elevation_needed = not os.access(AppInfo().application_folder, os.W_OK)
+            self._elevation_needed = not os.access(
+                AppInfo().application_folder, os.W_OK
+            )
             return self._elevation_needed
 
     def _is_in_protected_path(self) -> bool:
@@ -444,7 +461,9 @@ class UpdateManager(QObject):
 
         for protected in WINDOWS_PROTECTED_PATHS:
             if protected in app_path_str:
-                logger.info(f"Application in protected path: {protected} - elevation required")
+                logger.info(
+                    f"Application in protected path: {protected} - elevation required"
+                )
                 return True
         return False
 
@@ -546,12 +565,16 @@ class UpdateManager(QObject):
         """
         # Check for disable flag
         if os.getenv("RIMSORT_DISABLE_UPDATER"):
-            logger.debug("RIMSORT_DISABLE_UPDATER is set, skipping update check silently.")
+            logger.debug(
+                "RIMSORT_DISABLE_UPDATER is set, skipping update check silently."
+            )
             return False
 
         # Check if running from compiled binary built by Nuitka or running from Python interpreter
         if "__compiled__" not in globals():
-            logger.debug("You are running from Python interpreter. Skipping update check...")
+            logger.debug(
+                "You are running from Python interpreter. Skipping update check..."
+            )
             dialogue.show_warning(
                 title=ERR_UPDATE_SKIPPED_TITLE,
                 text=ERR_UPDATE_SKIPPED_TEXT,
@@ -626,7 +649,9 @@ class UpdateManager(QObject):
         """
         try:
             if current_version == "Unknown version":
-                logger.warning(f"Current version is: {current_version}, assuming custom build")
+                logger.warning(
+                    f"Current version is: {current_version}, assuming custom build"
+                )
                 answer = dialogue.show_dialogue_conditional(
                     title=self.tr(UNKNOWN_VERSION_TITLE),
                     text=self.tr(UNKNOWN_VERSION_TEXT),
@@ -646,7 +671,9 @@ class UpdateManager(QObject):
             logger.warning(f"Failed to parse version '{current_version}': {e}")
             return version.parse("0.0.0")
 
-    def _prompt_user_for_update(self, latest_tag_name: str, current_version: str) -> bool:
+    def _prompt_user_for_update(
+        self, latest_tag_name: str, current_version: str
+    ) -> bool:
         """
         Prompt the user to confirm the update.
 
@@ -659,12 +686,12 @@ class UpdateManager(QObject):
         """
         answer = dialogue.show_dialogue_conditional(
             title=self.tr("RimSort update found"),
-            text=self.tr("An update to RimSort has been released: {latest_tag_name}").format(
-                latest_tag_name=latest_tag_name
-            ),
-            information=self.tr("You are running RimSort {current_version}\nDo you want to update now?").format(
-                current_version=current_version
-            ),
+            text=self.tr(
+                "An update to RimSort has been released: {latest_tag_name}"
+            ).format(latest_tag_name=latest_tag_name),
+            information=self.tr(
+                "You are running RimSort {current_version}\nDo you want to update now?"
+            ).format(current_version=current_version),
         )
         return answer == QMessageBox.StandardButton.Yes
 
@@ -690,7 +717,9 @@ class UpdateManager(QObject):
             logger.error(f"Unexpected error during update: {e}")
             raise UpdateError(f"Update failed: {e}") from e
 
-    def _get_latest_release_info(self, needs_elevation: bool = False) -> ReleaseInfo | None:
+    def _get_latest_release_info(
+        self, needs_elevation: bool = False
+    ) -> ReleaseInfo | None:
         """
         Get the latest release information from GitHub API.
 
@@ -719,12 +748,16 @@ class UpdateManager(QObject):
                 return None
 
             # Get platform-specific download URL
-            download_info = self._get_platform_download_url(release_data.get("assets", []), needs_elevation)
+            download_info = self._get_platform_download_url(
+                release_data.get("assets", []), needs_elevation
+            )
             if not download_info:
                 system_info = f"{platform.system()} {platform.architecture()[0]} {platform.processor()}"
                 dialogue.show_warning(
                     title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
-                    text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(system_info=system_info),
+                    text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(
+                        system_info=system_info
+                    ),
                 )
                 return None
 
@@ -786,7 +819,9 @@ class UpdateManager(QObject):
 
         # If architecture is required, check arch patterns
         if require_arch and arch_patterns:
-            if not any(pattern.lower() in asset_name_lower for pattern in arch_patterns):
+            if not any(
+                pattern.lower() in asset_name_lower for pattern in arch_patterns
+            ):
                 return False
 
         return True
@@ -809,7 +844,9 @@ class UpdateManager(QObject):
             return None
 
         system_patterns = cast(List[str], self._cached_patterns["patterns"])
-        arch_patterns_dict = cast(Dict[str, List[str]], self._cached_patterns["arch_patterns"])
+        arch_patterns_dict = cast(
+            Dict[str, List[str]], self._cached_patterns["arch_patterns"]
+        )
         arch_patterns = arch_patterns_dict.get(self._arch, [])
 
         # AppImage mode: prefer .AppImage asset, fall back to ZIP
@@ -824,14 +861,20 @@ class UpdateManager(QObject):
         if self._system == "Windows" and self._is_in_protected_path():
             preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
         else:
-            preferred_order = [ZIP_EXTENSION, MSI_EXTENSION] if self._system == "Windows" else [ZIP_EXTENSION]
+            preferred_order = (
+                [ZIP_EXTENSION, MSI_EXTENSION]
+                if self._system == "Windows"
+                else [ZIP_EXTENSION]
+            )
 
         logger.debug(
             f"Looking for asset matching system={self._system}, arch={self._arch}, patterns={system_patterns + arch_patterns}, order={preferred_order}"
         )
 
         for ext in preferred_order:
-            candidate = self._find_best_asset_match(assets, system_patterns, arch_patterns, ext)
+            candidate = self._find_best_asset_match(
+                assets, system_patterns, arch_patterns, ext
+            )
             if candidate:
                 return candidate
 
@@ -877,7 +920,9 @@ class UpdateManager(QObject):
                     arch_patterns=arch_patterns,
                 )
             ):
-                logger.debug(f"Found arch-specific matching asset: {asset_name} -> {download_url}")
+                logger.debug(
+                    f"Found arch-specific matching asset: {asset_name} -> {download_url}"
+                )
                 return cast(
                     DownloadInfo,
                     {
@@ -887,8 +932,12 @@ class UpdateManager(QObject):
                         "is_appimage": False,
                     },
                 )
-            elif download_url and self._asset_matches(asset, system_patterns, preferred_extension, require_arch=False):
-                logger.debug(f"Found system-only matching asset: {asset_name} -> {download_url}")
+            elif download_url and self._asset_matches(
+                asset, system_patterns, preferred_extension, require_arch=False
+            ):
+                logger.debug(
+                    f"Found system-only matching asset: {asset_name} -> {download_url}"
+                )
                 if candidate is None:  # Only set if no arch-specific found
                     candidate = cast(
                         DownloadInfo,
@@ -917,11 +966,15 @@ class UpdateManager(QObject):
         for asset in assets:
             asset_name = str(asset.get("name", ""))
             download_url = asset.get("browser_download_url")
-            if not download_url or not asset_name.lower().endswith(APPIMAGE_EXTENSION.lower()):
+            if not download_url or not asset_name.lower().endswith(
+                APPIMAGE_EXTENSION.lower()
+            ):
                 continue
 
             asset_name_lower = asset_name.lower()
-            if arch_patterns and any(p.lower() in asset_name_lower for p in arch_patterns):
+            if arch_patterns and any(
+                p.lower() in asset_name_lower for p in arch_patterns
+            ):
                 logger.debug(f"Found arch-specific AppImage asset: {asset_name}")
                 return cast(
                     DownloadInfo,
@@ -961,7 +1014,9 @@ class UpdateManager(QObject):
         except Exception as e:
             self.download_complete.emit(False, str(e))
 
-    def _perform_update(self, download_url: str, tag_name: str, is_msi: bool, is_appimage: bool = False) -> None:
+    def _perform_update(
+        self, download_url: str, tag_name: str, is_msi: bool, is_appimage: bool = False
+    ) -> None:
         """
         Download and extract the update, then launch the update script.
 
@@ -972,7 +1027,9 @@ class UpdateManager(QObject):
             is_appimage: Whether the update is an AppImage file
         """
         try:
-            logger.debug(f"Downloading & extracting RimSort release from: {download_url}")
+            logger.debug(
+                f"Downloading & extracting RimSort release from: {download_url}"
+            )
 
             # Download with progress widget
             self._download_cancelled = False
@@ -983,7 +1040,9 @@ class UpdateManager(QObject):
             )
             self._progress_widget.update_progress(
                 0,
-                self.tr("Downloading RimSort {tag_name} release...").format(tag_name=tag_name),
+                self.tr("Downloading RimSort {tag_name} release...").format(
+                    tag_name=tag_name
+                ),
             )
             self._progress_widget.cancel_requested.connect(self._on_download_cancel)
             self.update_progress.connect(self._progress_widget.update_progress)
@@ -1000,13 +1059,17 @@ class UpdateManager(QObject):
                         self._progress_widget.close()
                         # Remove from panel if it was added there
                         if self.mod_info_panel:
-                            self.mod_info_panel.panel.removeWidget(self._progress_widget)
+                            self.mod_info_panel.panel.removeWidget(
+                                self._progress_widget
+                            )
                 except Exception:
                     pass
 
             self.download_complete.connect(on_complete)
 
-            worker = threading.Thread(target=self._download_update_worker, args=(download_url,), daemon=True)
+            worker = threading.Thread(
+                target=self._download_update_worker, args=(download_url,), daemon=True
+            )
             worker.start()
 
             # Show progress widget in panel or as standalone window
@@ -1025,7 +1088,9 @@ class UpdateManager(QObject):
             if not download_result["success"] or self._update_content is None:
                 if self._download_cancelled:
                     raise UpdateDownloadError("Download cancelled by user")
-                raise UpdateDownloadError(download_result["error"] or "Download did not complete successfully")
+                raise UpdateDownloadError(
+                    download_result["error"] or "Download did not complete successfully"
+                )
 
             update_source_path: Path | None
             if is_appimage:
@@ -1044,7 +1109,9 @@ class UpdateManager(QObject):
             logger.info(f"Update prepared at: {update_source_path}")
 
             if update_source_path is None:
-                raise UpdateExtractionError("Extraction/preparation did not complete successfully")
+                raise UpdateExtractionError(
+                    "Extraction/preparation did not complete successfully"
+                )
 
             # Confirm installation
             answer = dialogue.show_dialogue_conditional(
@@ -1061,7 +1128,9 @@ class UpdateManager(QObject):
                 if is_appimage and update_source_path.exists():
                     try:
                         update_source_path.unlink()
-                        logger.debug(f"Cleaned up declined AppImage update: {update_source_path}")
+                        logger.debug(
+                            f"Cleaned up declined AppImage update: {update_source_path}"
+                        )
                     except OSError as e:
                         logger.warning(f"Failed to clean up {update_source_path}: {e}")
                 # Restore panel if it was hidden
@@ -1070,7 +1139,10 @@ class UpdateManager(QObject):
                 return
 
             # AppImage updates use .bak rename as the backup — skip ZIP backup
-            if not is_appimage and self.settings_controller.settings.enable_backup_before_update:
+            if (
+                not is_appimage
+                and self.settings_controller.settings.enable_backup_before_update
+            ):
                 # Create backup of current installation with progress window
                 self._create_backup_with_progress()
                 # Clean up old backups after successful backup creation
@@ -1082,7 +1154,9 @@ class UpdateManager(QObject):
             needs_elevation = self._check_needs_elevation()
 
             # Launch update script or MSI installer
-            self._launch_update_script(update_source_path, log_path, needs_elevation, is_msi)
+            self._launch_update_script(
+                update_source_path, log_path, needs_elevation, is_msi
+            )
 
         except UpdateDownloadError as e:
             logger.error(f"Update download failed: {e}")
@@ -1151,7 +1225,9 @@ class UpdateManager(QObject):
             return f"{int(size)} {units[i]}"
         return f"{size:.1f} {units[i]}"
 
-    def _download_with_progress(self, response: requests.Response, total_size: int) -> bytes:
+    def _download_with_progress(
+        self, response: requests.Response, total_size: int
+    ) -> bytes:
         """
         Download content with progress tracking.
 
@@ -1215,7 +1291,9 @@ class UpdateManager(QObject):
         if total_size > 0:
             self.update_progress.emit(100, "Download complete")
         else:
-            self.update_progress.emit(100, f"Download complete ({self._format_size(len(content))})")
+            self.update_progress.emit(
+                100, f"Download complete ({self._format_size(len(content))})"
+            )
         return bytes(content)
 
     def _validate_download(self, content: bytes) -> None:
@@ -1231,7 +1309,9 @@ class UpdateManager(QObject):
         if len(content) == 0:
             raise UpdateDownloadError("Downloaded file is empty")
         if len(content) < MIN_UPDATE_SIZE:
-            raise UpdateDownloadError(f"Downloaded file too small ({len(content)} bytes)")
+            raise UpdateDownloadError(
+                f"Downloaded file too small ({len(content)} bytes)"
+            )
 
     def _download_update(self, url: str) -> None:
         """
@@ -1279,7 +1359,10 @@ class UpdateManager(QObject):
         Returns:
             Path to the created temporary directory
         """
-        temp_base = Path(gettempdir()) / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        temp_base = (
+            Path(gettempdir())
+            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
         temp_base.mkdir(exist_ok=True)
         return temp_base
 
@@ -1353,7 +1436,9 @@ class UpdateManager(QObject):
                         self._progress_widget.close()
                         # Remove from panel if it was added there
                         if self.mod_info_panel:
-                            self.mod_info_panel.panel.removeWidget(self._progress_widget)
+                            self.mod_info_panel.panel.removeWidget(
+                                self._progress_widget
+                            )
                             # Restore panel visibility
                             self.mod_info_panel.info_panel_frame.show()
                 except Exception as e:
@@ -1375,12 +1460,16 @@ class UpdateManager(QObject):
             # Ensure thread is properly cleaned up before continuing
             extract_thread.wait(EXTRACTION_THREAD_TIMEOUT_MS)
             if extract_thread.isRunning():
-                logger.warning("Extraction thread still running after timeout, forcing quit")
+                logger.warning(
+                    "Extraction thread still running after timeout, forcing quit"
+                )
                 extract_thread.quit()
                 extract_thread.wait(2000)  # Final attempt to stop thread
 
             if not extraction_result["success"]:
-                raise UpdateExtractionError(f"Extraction failed: {extraction_result['error']}")
+                raise UpdateExtractionError(
+                    f"Extraction failed: {extraction_result['error']}"
+                )
 
             logger.info(f"Extracted {extracted_files} files from ZIP")
             return extracted_files
@@ -1455,7 +1544,9 @@ class UpdateManager(QObject):
             error = normalization_result["error"]
             if isinstance(error, UpdateExtractionError):
                 raise error
-            raise UpdateExtractionError(f"Structure normalization failed: {error}") from error
+            raise UpdateExtractionError(
+                f"Structure normalization failed: {error}"
+            ) from error
 
         logger.debug(f"Normalized update ready at: {temp_base}")
 
@@ -1471,7 +1562,9 @@ class UpdateManager(QObject):
         """
         appimage_path = AppInfo().appimage_path
         if appimage_path is None:
-            raise UpdateExtractionError("Cannot determine AppImage path from environment")
+            raise UpdateExtractionError(
+                "Cannot determine AppImage path from environment"
+            )
 
         if self._update_content is None:
             raise UpdateExtractionError("No update content available")
@@ -1507,7 +1600,9 @@ class UpdateManager(QObject):
         try:
             if self._update_content is None:
                 logger.error("No update content available")
-                raise UpdateExtractionError("No update content available for extraction")
+                raise UpdateExtractionError(
+                    "No update content available for extraction"
+                )
 
             if is_msi:
                 # For MSI, just save the file to temp location
@@ -1535,7 +1630,9 @@ class UpdateManager(QObject):
 
         except BadZipFile as e:
             logger.error(f"Invalid ZIP file: {e}")
-            raise UpdateExtractionError(f"Downloaded file is not a valid ZIP archive: {e}") from e
+            raise UpdateExtractionError(
+                f"Downloaded file is not a valid ZIP archive: {e}"
+            ) from e
         except UpdateError:
             raise
         except Exception as e:
@@ -1555,7 +1652,9 @@ class UpdateManager(QObject):
         top_dir_name = top_dir.name.lower()
 
         # Common wrapper patterns
-        if any(keyword in top_dir_name for keyword in ["app", "application", "release"]):
+        if any(
+            keyword in top_dir_name for keyword in ["app", "application", "release"]
+        ):
             return True
 
         # Version-like directory names
@@ -1603,7 +1702,9 @@ class UpdateManager(QObject):
                 continue
         return moved_items
 
-    def _validate_executable_presence(self, extract_path: Path, children: List[Path]) -> None:
+    def _validate_executable_presence(
+        self, extract_path: Path, children: List[Path]
+    ) -> None:
         """
         Validate that the expected executable is present in the extracted structure.
 
@@ -1622,14 +1723,18 @@ class UpdateManager(QObject):
             for child in children:
                 if child.is_dir() and child.name.endswith(".app"):
                     app_bundle = child
-                    executable_path = app_bundle / "Contents" / "MacOS" / expected_executable
+                    executable_path = (
+                        app_bundle / "Contents" / "MacOS" / expected_executable
+                    )
                     if executable_path.exists():
                         executable_found = True
                         logger.info("Found macOS executable")
                         break
             if not executable_found:
                 logger.error("RimSort.app bundle not found")
-                raise UpdateExtractionError("Expected RimSort.app bundle with executable not found after normalization")
+                raise UpdateExtractionError(
+                    "Expected RimSort.app bundle with executable not found after normalization"
+                )
         else:
             # Look for executable directly
             executable_path = extract_path / expected_executable
@@ -1654,14 +1759,20 @@ class UpdateManager(QObject):
                 all_files = []
                 for root, dirs, files in os.walk(extract_path):
                     for file in files:
-                        rel_path = os.path.relpath(os.path.join(root, file), extract_path)
+                        rel_path = os.path.relpath(
+                            os.path.join(root, file), extract_path
+                        )
                         all_files.append(rel_path)
-                logger.error(f"All files in extract_path: {all_files[:50]}...")  # Limit to first 50
+                logger.error(
+                    f"All files in extract_path: {all_files[:50]}..."
+                )  # Limit to first 50
                 raise UpdateExtractionError(
                     f"Expected executable '{expected_executable}' not found at expected location after normalization"
                 )
 
-    def _normalize_extracted_structure(self, extract_path: Path, num_files: int) -> None:
+    def _normalize_extracted_structure(
+        self, extract_path: Path, num_files: int
+    ) -> None:
         """
         Normalize the extracted ZIP structure by moving contents to root if wrapped.
 
@@ -1674,7 +1785,9 @@ class UpdateManager(QObject):
         """
         try:
             if not extract_path.exists():
-                raise UpdateExtractionError("Extracted path does not exist after extraction")
+                raise UpdateExtractionError(
+                    "Extracted path does not exist after extraction"
+                )
 
             children = list(extract_path.iterdir())
             logger.debug(f"Initial extracted children: {[c.name for c in children]}")
@@ -1686,17 +1799,25 @@ class UpdateManager(QObject):
                 top_dir = children[0]
 
                 if not self._should_unwrap_directory(top_dir):
-                    logger.debug(f"No unwrapping needed for '{top_dir.name}'; using existing structure")
+                    logger.debug(
+                        f"No unwrapping needed for '{top_dir.name}'; using existing structure"
+                    )
                     break
 
-                logger.debug(f"Detected wrapped structure in '{top_dir.name}'; normalizing")
-                logger.debug(f"Wrapper '{top_dir.name}' children: {[c.name for c in top_dir.iterdir()]}")
+                logger.debug(
+                    f"Detected wrapped structure in '{top_dir.name}'; normalizing"
+                )
+                logger.debug(
+                    f"Wrapper '{top_dir.name}' children: {[c.name for c in top_dir.iterdir()]}"
+                )
 
                 # Move all contents from top_dir to extract_path
                 moved_items = self._move_directory_contents(top_dir, extract_path)
 
                 if moved_items == 0:
-                    logger.warning("No items were successfully moved during normalization")
+                    logger.warning(
+                        "No items were successfully moved during normalization"
+                    )
                     break
 
                 # Remove empty top_dir if possible
@@ -1708,15 +1829,21 @@ class UpdateManager(QObject):
 
                 # Refresh children list after unwrapping
                 children = list(extract_path.iterdir())
-                logger.debug(f"Post-normalization children: {[c.name for c in children]}")
+                logger.debug(
+                    f"Post-normalization children: {[c.name for c in children]}"
+                )
 
             # Validate expected structure based on platform
             self._validate_executable_presence(extract_path, children)
         except Exception as e:
             logger.error(f"Unexpected error during structure normalization: {e}")
             logger.error(f"Extract path: {extract_path}")
-            logger.error(f"Children: {[c.name for c in extract_path.iterdir()] if extract_path.exists() else 'N/A'}")
-            raise UpdateExtractionError(f"Structure normalization failed: {str(e)}") from e
+            logger.error(
+                f"Children: {[c.name for c in extract_path.iterdir()] if extract_path.exists() else 'N/A'}"
+            )
+            raise UpdateExtractionError(
+                f"Structure normalization failed: {str(e)}"
+            ) from e
 
     def _launch_update_script(
         self,
@@ -1737,16 +1864,20 @@ class UpdateManager(QObject):
 
         if is_msi:
             if self._system != "Windows":
-                raise UpdateScriptLaunchError("MSI installers are only supported on Windows")
+                raise UpdateScriptLaunchError(
+                    "MSI installers are only supported on Windows"
+                )
             # Validate MSI path
             if not update_source_path.exists() or not update_source_path.is_file():
-                raise UpdateScriptLaunchError(f"MSI file not found or is not a file: {update_source_path}")
+                raise UpdateScriptLaunchError(
+                    f"MSI file not found or is not a file: {update_source_path}"
+                )
             self._launch_msi_installer(update_source_path, log_path, needs_elevation)
             return
 
         try:
-            script_path, args_repr, start_new_session, install_dir = self._get_script_info(
-                update_source_path, log_path, needs_elevation
+            script_path, args_repr, start_new_session, install_dir = (
+                self._get_script_info(update_source_path, log_path, needs_elevation)
             )
 
             # Validate script exists before proceeding
@@ -1756,7 +1887,9 @@ class UpdateManager(QObject):
             # For AppImage, the script lives inside the FUSE mount which goes
             # away when the app exits.  Copy it to a temp location first.
             if AppInfo().is_appimage:
-                fd, temp_script = tempfile.mkstemp(suffix=".sh", prefix="rimsort_update_")
+                fd, temp_script = tempfile.mkstemp(
+                    suffix=".sh", prefix="rimsort_update_"
+                )
                 os.close(fd)
                 shutil.copy2(str(script_path), temp_script)
                 os.chmod(temp_script, 0o755)
@@ -1781,7 +1914,9 @@ class UpdateManager(QObject):
                 # Copy update.bat to app storage folder
                 try:
                     shutil.copy2(str(script_path), str(temp_script_path))
-                    logger.debug(f"Copied update.bat to app storage: {temp_script_path}")
+                    logger.debug(
+                        f"Copied update.bat to app storage: {temp_script_path}"
+                    )
                     script_path = temp_script_path
 
                     # Rebuild args with new script path
@@ -1796,10 +1931,14 @@ class UpdateManager(QObject):
                     )
                     logger.debug(f"Updated script path to: {script_path}")
                 except Exception as e:
-                    logger.warning(f"Failed to copy update.bat to app storage, using original: {e}")
+                    logger.warning(
+                        f"Failed to copy update.bat to app storage, using original: {e}"
+                    )
 
             if self._system == "Windows":
-                p = self._launch_windows_update_script(script_path, args_repr, needs_elevation)
+                p = self._launch_windows_update_script(
+                    script_path, args_repr, needs_elevation
+                )
             else:
                 p = self._launch_posix_update_script(
                     script_path,
@@ -1923,7 +2062,9 @@ class UpdateManager(QObject):
 
         # For systems requiring elevation, copy script to temp location to avoid permission issues
         if needs_elevation:
-            fd, temp_script_path = tempfile.mkstemp(suffix=".sh", prefix="rimsort_update_")
+            fd, temp_script_path = tempfile.mkstemp(
+                suffix=".sh", prefix="rimsort_update_"
+            )
             os.close(fd)
             shutil.copy2(str(script_path), temp_script_path)
             os.chmod(temp_script_path, 0o700)
@@ -1948,12 +2089,16 @@ class UpdateManager(QObject):
                 shell=True,
                 cwd=str(AppInfo().application_folder),
             )
-            logger.info(f"Successfully launched update script with primary method (PID: {p.pid})")
+            logger.info(
+                f"Successfully launched update script with primary method (PID: {p.pid})"
+            )
             return p
         except Exception as e:
             # Fallback for Linux only - try terminal emulator if direct bash fails
             if self._system == "Linux":
-                logger.warning(f"Primary method failed on Linux ({e}), attempting terminal emulator fallback...")
+                logger.warning(
+                    f"Primary method failed on Linux ({e}), attempting terminal emulator fallback..."
+                )
                 try:
                     terminal = self._detect_terminal_emulator()
                     base_args = [
@@ -1965,7 +2110,9 @@ class UpdateManager(QObject):
                         base_args.append(str(install_dir))
 
                     config = self._script_configs["Linux"]
-                    fallback_cmd = config._build_terminal_command(terminal, base_args, needs_elevation)
+                    fallback_cmd = config._build_terminal_command(
+                        terminal, base_args, needs_elevation
+                    )
                     logger.info(f"Using terminal emulator fallback: {terminal}")
 
                     p = subprocess.Popen(
@@ -1973,19 +2120,27 @@ class UpdateManager(QObject):
                         shell=True,
                         cwd=str(AppInfo().application_folder),
                     )
-                    logger.info(f"Successfully launched update script with terminal fallback (PID: {p.pid})")
+                    logger.info(
+                        f"Successfully launched update script with terminal fallback (PID: {p.pid})"
+                    )
                     return p
                 except Exception as fallback_err:
-                    logger.error(f"Both primary and fallback methods failed: {e} -> {fallback_err}")
+                    logger.error(
+                        f"Both primary and fallback methods failed: {e} -> {fallback_err}"
+                    )
                     raise UpdateScriptLaunchError(
                         f"Failed to launch update script. Primary method: {e}. Fallback: {fallback_err}"
                     ) from fallback_err
             else:
                 # For macOS, no fallback - just raise the error
                 logger.error(f"Failed to launch update script on {self._system}: {e}")
-                raise UpdateScriptLaunchError(f"Failed to launch update script on {self._system}: {e}") from e
+                raise UpdateScriptLaunchError(
+                    f"Failed to launch update script on {self._system}: {e}"
+                ) from e
 
-    def _launch_msi_installer(self, msi_path: Path, log_path: Path, needs_elevation: bool) -> None:
+    def _launch_msi_installer(
+        self, msi_path: Path, log_path: Path, needs_elevation: bool
+    ) -> None:
         """
         Launch the MSI installer on Windows.
 
@@ -2120,7 +2275,9 @@ class UpdateManager(QObject):
         """Worker thread for extraction."""
         return self._extract_update(is_msi)
 
-    def _show_progress_widget(self, progress_widget: TaskProgressWindow, cancellable: bool = True) -> None:
+    def _show_progress_widget(
+        self, progress_widget: TaskProgressWindow, cancellable: bool = True
+    ) -> None:
         """Show progress widget in panel or as standalone window."""
         progress_widget.set_cancel_enabled(cancellable)
 
@@ -2133,7 +2290,9 @@ class UpdateManager(QObject):
         else:
             progress_widget.show()
 
-    def _hide_progress_widget(self, progress_widget: Optional[TaskProgressWindow]) -> None:
+    def _hide_progress_widget(
+        self, progress_widget: Optional[TaskProgressWindow]
+    ) -> None:
         """Close and remove progress widget from panel."""
         try:
             if progress_widget:
@@ -2151,7 +2310,9 @@ class UpdateManager(QObject):
             show_message=True,
             show_percent=True,
         )
-        self._progress_widget.set_message(self.tr("Creating backup... (this may take several minutes)"))
+        self._progress_widget.set_message(
+            self.tr("Creating backup... (this may take several minutes)")
+        )
 
         # Show progress widget (backup cannot be cancelled)
         self._show_progress_widget(self._progress_widget, cancellable=False)
@@ -2206,12 +2367,16 @@ class UpdateManager(QObject):
 
         try:
             # Create ZIP backup of the application folder with progress updates
-            create_zip_backup(app_folder, backup_path, progress_callback=update_backup_progress)
+            create_zip_backup(
+                app_folder, backup_path, progress_callback=update_backup_progress
+            )
 
             # Verify backup was created
             if backup_path.exists():
                 backup_size = backup_path.stat().st_size
-                logger.info(f"Backup created successfully ({backup_size / (1024 * 1024):.2f} MB)")
+                logger.info(
+                    f"Backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
+                )
             else:
                 logger.warning("Backup file not created")
 
@@ -2240,7 +2405,9 @@ class UpdateManager(QObject):
             # Get all backup files
             backup_files = list(app_backup_folder.glob("RimSort_Backup_*.zip"))
             if len(backup_files) <= max_backups:
-                logger.debug(f"Backup count ({len(backup_files)}) is within limit ({max_backups})")
+                logger.debug(
+                    f"Backup count ({len(backup_files)}) is within limit ({max_backups})"
+                )
                 return
 
             # Sort by modification time (newest first)
@@ -2253,9 +2420,13 @@ class UpdateManager(QObject):
                     backup_file.unlink()
                     logger.info(f"Removed old backup: {backup_file.name}")
                 except Exception as e:
-                    logger.warning(f"Failed to remove old backup {backup_file.name}: {e}")
+                    logger.warning(
+                        f"Failed to remove old backup {backup_file.name}: {e}"
+                    )
 
-            logger.info(f"Cleaned up {len(backups_to_remove)} old backups, keeping {max_backups} most recent")
+            logger.info(
+                f"Cleaned up {len(backups_to_remove)} old backups, keeping {max_backups} most recent"
+            )
 
         except Exception as e:
             logger.warning(f"Failed to cleanup old backups: {e}")

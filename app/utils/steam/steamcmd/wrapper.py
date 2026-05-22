@@ -57,26 +57,36 @@ class SteamcmdInterface:
             logger.debug("Initializing SteamcmdInterface")
             self.initialize_prefix(steamcmd_prefix, validate)
 
-            EventBus().do_clear_steamcmd_depot_cache.connect(lambda: self.clear_depot_cache())
+            EventBus().do_clear_steamcmd_depot_cache.connect(
+                lambda: self.clear_depot_cache()
+            )
             self.translate = QCoreApplication.translate
             logger.debug("Finished SteamcmdInterface initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
         self.steamcmd_prefix = steamcmd_prefix
         self.steamcmd_install_path = str(Path(self.steamcmd_prefix) / "steamcmd")
-        self.steamcmd_depotcache_path = str(Path(self.steamcmd_install_path) / "depotcache")
+        self.steamcmd_depotcache_path = str(
+            Path(self.steamcmd_install_path) / "depotcache"
+        )
         self.steamcmd_steam_path = str(Path(self.steamcmd_prefix) / "steam")
         self.system = platform.system()
         self.validate_downloads = validate
 
         if self.system == "Darwin":
-            self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
+            )
             self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
         elif self.system == "Linux":
-            self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
+            )
             self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
         elif self.system == "Windows":
-            self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
+            )
             self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.exe"))
         else:
             show_fatal_error(
@@ -87,14 +97,23 @@ class SteamcmdInterface:
 
         if not os.path.exists(self.steamcmd_install_path):
             os.makedirs(self.steamcmd_install_path)
-            logger.debug(f"SteamCMD does not exist. Creating path for installation: {self.steamcmd_install_path}")
+            logger.debug(
+                f"SteamCMD does not exist. Creating path for installation: {self.steamcmd_install_path}"
+            )
 
         if not os.path.exists(self.steamcmd_steam_path):
             os.makedirs(self.steamcmd_steam_path)
         self.steamcmd_appworkshop_acf_path = str(
-            (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "appworkshop_294100.acf")
+            (
+                Path(self.steamcmd_steam_path)
+                / "steamapps"
+                / "workshop"
+                / "appworkshop_294100.acf"
+            )
         )
-        self.steamcmd_content_path = str((Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content"))
+        self.steamcmd_content_path = str(
+            (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content")
+        )
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
@@ -185,7 +204,9 @@ class SteamcmdInterface:
 
         except Exception as e:
             if runner is not None:
-                runner.message(f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}")
+                runner.message(
+                    f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
+                )
             show_warning(
                 "Failed to Create Symlink",
                 f"Failed to create symlink for {sys.platform}",
@@ -334,7 +355,8 @@ class SteamcmdInterface:
         # finished() callback can chain them without needing a reference
         # back to this wrapper.
         batches: list[list[str]] = [
-            publishedfileids[i : i + STEAMCMD_BATCH_SIZE] for i in range(0, total, STEAMCMD_BATCH_SIZE)
+            publishedfileids[i : i + STEAMCMD_BATCH_SIZE]
+            for i in range(0, total, STEAMCMD_BATCH_SIZE)
         ]
 
         # Stash the queue on the runner instance so finished() can pop it.
@@ -346,7 +368,9 @@ class SteamcmdInterface:
         batch_num = 1
         num_batches = len(batches)
         first_batch = batches[0]
-        runner.message(f"\nBatch {batch_num}/{num_batches}: downloading {len(first_batch)} mod(s)...")
+        runner.message(
+            f"\nBatch {batch_num}/{num_batches}: downloading {len(first_batch)} mod(s)..."
+        )
         script_path = self._build_download_script(first_batch)
         runner.message(f"Compiled & using script: {script_path}")
         runner.execute(
@@ -384,7 +408,9 @@ class SteamcmdInterface:
             btn_text = ["&Yes", "&No"]
 
         # Translate button texts explicitly before passing to show_dialogue_conditional
-        translated_btn_text = [self.translate("SteamcmdInterface", btn) for btn in btn_text]
+        translated_btn_text = [
+            self.translate("SteamcmdInterface", btn) for btn in btn_text
+        ]
         answer = show_dialogue_conditional(
             title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
             text=self.translate(
@@ -423,20 +449,28 @@ class SteamcmdInterface:
         logger.info("Attempting steamCMD depot cache clear")
         if not self.setup:
             if runner is not None:
-                runner.message("Tried clearing depot cache but SteamCMD was not found. Please setup SteamCMD first!")
+                runner.message(
+                    "Tried clearing depot cache but SteamCMD was not found. Please setup SteamCMD first!"
+                )
 
             self.on_steamcmd_not_found(runner=runner)
             return False
 
         depot_cache = Path(self.steamcmd_install_path + "/depotcache")
         if not os.path.exists(depot_cache):
-            logger.info(f"Skipping depot cache clear. Could not find cache: {depot_cache}")
+            logger.info(
+                f"Skipping depot cache clear. Could not find cache: {depot_cache}"
+            )
             if runner is not None:
-                runner.message(f"Skipping depot cache clear. Could not find cache: {depot_cache}")
+                runner.message(
+                    f"Skipping depot cache clear. Could not find cache: {depot_cache}"
+                )
             else:
                 InformationBox(
                     title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
-                    text=self.translate("SteamcmdInterface", "SteamCMD depot cache was already cleared."),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache was already cleared."
+                    ),
                 ).exec()
             return False
 
@@ -447,7 +481,9 @@ class SteamcmdInterface:
             else:
                 InformationBox(
                     title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
-                    text=self.translate("SteamcmdInterface", "SteamCMD depot cache has been cleared."),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache has been cleared."
+                    ),
                 ).exec()
             return True
 
@@ -457,11 +493,15 @@ class SteamcmdInterface:
 
         return False
 
-    def setup_steamcmd(self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel) -> None:
+    def setup_steamcmd(
+        self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
+    ) -> None:
         installed = None
         if reinstall:
             runner.message("Existing steamcmd installation found!")
-            runner.message(f"Deleting existing installation from: {self.steamcmd_install_path}")
+            runner.message(
+                f"Deleting existing installation from: {self.steamcmd_install_path}"
+            )
             shutil.rmtree(
                 self.steamcmd_install_path,
                 ignore_errors=False,
@@ -470,16 +510,22 @@ class SteamcmdInterface:
             os.makedirs(self.steamcmd_install_path)
         if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
             try:
-                runner.message(f"Downloading & extracting steamcmd release from: {self.steamcmd_url}")
+                runner.message(
+                    f"Downloading & extracting steamcmd release from: {self.steamcmd_url}"
+                )
                 if ".zip" in self.steamcmd_url:
-                    with ZipFile(BytesIO(http.get(self.steamcmd_url).content)) as zipobj:
+                    with ZipFile(
+                        BytesIO(http.get(self.steamcmd_url).content)
+                    ) as zipobj:
                         zipobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
                     installed = True
                 elif ".tar.gz" in self.steamcmd_url:
                     with (
                         http.get(self.steamcmd_url, stream=True) as rx,
-                        tarfile.open(fileobj=BytesIO(rx.content), mode="r:gz") as tarobj,
+                        tarfile.open(
+                            fileobj=BytesIO(rx.content), mode="r:gz"
+                        ) as tarobj,
                     ):
                         tarobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
@@ -512,10 +558,14 @@ class SteamcmdInterface:
                 runner.message(
                     f"Workshop content path does not exist. Creating for symlinking:\n\n{self.steamcmd_content_path}\n"
                 )
-            symlink_destination_path = str((Path(self.steamcmd_content_path) / "294100"))
+            symlink_destination_path = str(
+                (Path(self.steamcmd_content_path) / "294100")
+            )
             runner.message(f"Symlink source : {symlink_source_path}")
             runner.message(f"Symlink destination: {symlink_destination_path}")
-            if symlink.is_junction_or_link(symlink_destination_path):  # Symlink/junction exists
+            if symlink.is_junction_or_link(
+                symlink_destination_path
+            ):  # Symlink/junction exists
                 runner.message(
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
@@ -540,8 +590,12 @@ class SteamcmdInterface:
                     + symlink_destination_path,
                 )
                 if answer == QMessageBox.StandardButton.Yes:  # Re-create symlink
-                    self.setup = self.create_symlink(symlink_source_path, symlink_destination_path, runner=runner)
-            elif os.path.exists(symlink_destination_path):  # A dir exists (not a symlink/junction)
+                    self.setup = self.create_symlink(
+                        symlink_source_path, symlink_destination_path, runner=runner
+                    )
+            elif os.path.exists(
+                symlink_destination_path
+            ):  # A dir exists (not a symlink/junction)
                 runner.message(
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
@@ -566,24 +620,34 @@ class SteamcmdInterface:
                     )
                     + symlink_destination_path,
                 )
-                if answer == QMessageBox.StandardButton.Yes:  # Re-create symlink/junction
-                    self.setup = self.create_symlink(symlink_source_path, symlink_destination_path, runner=runner)
+                if (
+                    answer == QMessageBox.StandardButton.Yes
+                ):  # Re-create symlink/junction
+                    self.setup = self.create_symlink(
+                        symlink_source_path, symlink_destination_path, runner=runner
+                    )
             else:  # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
                     self.translate("SteamcmdInterface", "Create Symlink?"),
-                    self.translate("SteamcmdInterface", "Do you want to create a symlink?"),
+                    self.translate(
+                        "SteamcmdInterface", "Do you want to create a symlink?"
+                    ),
                     self.translate(
                         "SteamcmdInterface",
                         "The symlink makes SteamCMD download mods to the local mods folder"
                         + " and is required for SteamCMD mod downloads to work correctly.",
                     ),
-                    self.translate("SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> ").format(
+                    self.translate(
+                        "SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> "
+                    ).format(
                         symlink_source_path=symlink_source_path,
                     )
                     + symlink_destination_path,
                 )
                 if answer == QMessageBox.StandardButton.Yes:
-                    self.setup = self.create_symlink(symlink_source_path, symlink_destination_path, runner=runner)
+                    self.setup = self.create_symlink(
+                        symlink_source_path, symlink_destination_path, runner=runner
+                    )
 
 
 if __name__ == "__main__":

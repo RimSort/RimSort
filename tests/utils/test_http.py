@@ -20,13 +20,18 @@ class TestHTTPWrappers:
     def test_get_passes_kwargs(self, mock_get: MagicMock) -> None:
         get("https://example.com", stream=True, headers={"X-Test": "1"})
         mock_get.assert_called_once_with(
-            "https://example.com", stream=True, headers={"X-Test": "1"}, timeout=DEFAULT_TIMEOUT
+            "https://example.com",
+            stream=True,
+            headers={"X-Test": "1"},
+            timeout=DEFAULT_TIMEOUT,
         )
 
     @patch("app.utils.http.requests.post")
     def test_post_default_timeout(self, mock_post: MagicMock) -> None:
         post("https://example.com", data={"key": "val"})
-        mock_post.assert_called_once_with("https://example.com", data={"key": "val"}, timeout=DEFAULT_TIMEOUT)
+        mock_post.assert_called_once_with(
+            "https://example.com", data={"key": "val"}, timeout=DEFAULT_TIMEOUT
+        )
 
     @patch("app.utils.http.requests.post")
     def test_post_tuple_timeout(self, mock_post: MagicMock) -> None:
@@ -36,4 +41,6 @@ class TestHTTPWrappers:
     @patch("app.utils.http.requests.head")
     def test_head_default_timeout(self, mock_head: MagicMock) -> None:
         head("https://example.com")
-        mock_head.assert_called_once_with("https://example.com", timeout=DEFAULT_TIMEOUT)
+        mock_head.assert_called_once_with(
+            "https://example.com", timeout=DEFAULT_TIMEOUT
+        )

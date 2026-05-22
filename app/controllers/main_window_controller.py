@@ -47,12 +47,18 @@ class MainWindowController(QObject):
             button.clicked.connect(signal.emit)
 
         # Connect check dependencies signal from mods panel
-        self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(self.check_dependencies)
+        self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(
+            self.check_dependencies
+        )
 
         # Connect EventBus signals to slots
         EventBus().do_button_animation.connect(self.on_button_animation)
-        EventBus().do_save_button_animation_stop.connect(self.on_save_button_animation_stop)
-        EventBus().list_updated_signal.connect(self.on_save_button_animation_start)  # Save btn animation
+        EventBus().do_save_button_animation_stop.connect(
+            self.on_save_button_animation_stop
+        )
+        EventBus().list_updated_signal.connect(
+            self.on_save_button_animation_start
+        )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
 
@@ -72,12 +78,18 @@ class MainWindowController(QObject):
             workshop_id = workshop_id.split("/")[0]
         return workshop_id
 
-    def _find_workshop_id_in_deps(self, deps_node: Element, target_pkg_id: str) -> str | None:
+    def _find_workshop_id_in_deps(
+        self, deps_node: Element, target_pkg_id: str
+    ) -> str | None:
         """Search a <modDependencies> or versioned child node for a matching packageId and return its Workshop ID."""
         target = target_pkg_id.lower()
         for dep in deps_node.findall("li"):
             package_id = dep.find("packageId")
-            if package_id is not None and package_id.text is not None and package_id.text.lower() == target:
+            if (
+                package_id is not None
+                and package_id.text is not None
+                and package_id.text.lower() == target
+            ):
                 workshop_url = dep.find("steamWorkshopUrl")
                 if workshop_url is not None and workshop_url.text is not None:
                     return self._parse_workshop_id(workshop_url.text)
@@ -85,13 +97,18 @@ class MainWindowController(QObject):
 
     def check_dependencies(self) -> None:
         # Get the active mods list
-        active_mods = set(self.main_window.main_content_panel.mods_panel.active_mods_list.uuids)
+        active_mods = set(
+            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+        )
 
         # Create a dictionary to store missing dependencies
         missing_deps: dict[str, set[str]] = {}
 
         # Precompute active package IDs for quick lookup
-        active_ids = {self.metadata_manager.internal_local_metadata[u].get("packageid") for u in active_mods}
+        active_ids = {
+            self.metadata_manager.internal_local_metadata[u].get("packageid")
+            for u in active_mods
+        }
 
         # Check each active mod's dependencies
         for uuid in active_mods:
@@ -113,7 +130,11 @@ class MainWindowController(QObject):
                 if isinstance(dep, tuple):
                     dep_id = dep[0]
                     alt_ids = set()
-                    if len(dep) > 1 and isinstance(dep[1], dict) and isinstance(dep[1].get("alternatives"), set):
+                    if (
+                        len(dep) > 1
+                        and isinstance(dep[1], dict)
+                        and isinstance(dep[1].get("alternatives"), set)
+                    ):
                         alt_ids = dep[1]["alternatives"]
                 else:
                     dep_id = dep
@@ -143,7 +164,9 @@ class MainWindowController(QObject):
                 for dep_id in selected_deps:
                     # First check if it exists locally
                     found_locally = False
-                    for mod_data in self.metadata_manager.internal_local_metadata.values():
+                    for (
+                        mod_data
+                    ) in self.metadata_manager.internal_local_metadata.values():
                         if mod_data.get("packageid") == dep_id:
                             local_mods.append(dep_id)
                             found_locally = True
@@ -158,7 +181,10 @@ class MainWindowController(QObject):
                                 pfid,
                                 metadata,
                             ) in self.metadata_manager.external_steam_metadata.items():
-                                if metadata.get("packageId", "").lower() == dep_id.lower():
+                                if (
+                                    metadata.get("packageId", "").lower()
+                                    == dep_id.lower()
+                                ):
                                     workshop_id = pfid
                                     break
 
@@ -168,12 +194,18 @@ class MainWindowController(QObject):
                             # If not in Steam metadata, try to find it in the mod's About.xml
                             # search through all active mods' About.xml files
                             for active_uuid in active_mods:
-                                active_mod_data = self.metadata_manager.internal_local_metadata[active_uuid]
+                                active_mod_data = (
+                                    self.metadata_manager.internal_local_metadata[
+                                        active_uuid
+                                    ]
+                                )
                                 mod_path = active_mod_data.get("path")
                                 if not mod_path:
                                     continue
 
-                                about_path = os.path.join(mod_path, "About", "About.xml")
+                                about_path = os.path.join(
+                                    mod_path, "About", "About.xml"
+                                )
                                 if os.path.exists(about_path):
                                     try:
                                         import xml.etree.ElementTree as ET
@@ -197,7 +229,11 @@ class MainWindowController(QObject):
                                         used_versioned = False
                                         if prefer_versioned:
                                             try:
-                                                major, minor = self.metadata_manager.game_version.split(".")[:2]
+                                                major, minor = (
+                                                    self.metadata_manager.game_version.split(
+                                                        "."
+                                                    )[:2]
+                                                )
                                                 target_keys = [
                                                     f"v{major}.{minor}",
                                                     f"{major}.{minor}",
@@ -205,8 +241,13 @@ class MainWindowController(QObject):
                                             except Exception:
                                                 target_keys = []
 
-                                            deps_by_version = root.find("modDependenciesByVersion")
-                                            if deps_by_version is not None and target_keys:
+                                            deps_by_version = root.find(
+                                                "modDependenciesByVersion"
+                                            )
+                                            if (
+                                                deps_by_version is not None
+                                                and target_keys
+                                            ):
                                                 # Try exact matches, then prefix matches
                                                 candidate = None
                                                 for child in list(deps_by_version):
@@ -215,7 +256,11 @@ class MainWindowController(QObject):
                                                         break
                                                 if candidate is None:
                                                     for child in list(deps_by_version):
-                                                        if any(child.tag.startswith(k) for k in target_keys if k):
+                                                        if any(
+                                                            child.tag.startswith(k)
+                                                            for k in target_keys
+                                                            if k
+                                                        ):
                                                             candidate = child
                                                             break
 
@@ -230,9 +275,13 @@ class MainWindowController(QObject):
                                                         logger.debug(
                                                             f"Prefer versioned tags: using dependencies from {candidate.tag} in {about_path}"
                                                         )
-                                                        workshop_id = self._find_workshop_id_in_deps(candidate, dep_id)
+                                                        workshop_id = self._find_workshop_id_in_deps(
+                                                            candidate, dep_id
+                                                        )
                                                         if workshop_id:
-                                                            mods_to_download.append(workshop_id)
+                                                            mods_to_download.append(
+                                                                workshop_id
+                                                            )
                                                             break
 
                                         if used_versioned:
@@ -244,7 +293,11 @@ class MainWindowController(QObject):
                                             if deps is None:
                                                 continue
 
-                                            workshop_id = self._find_workshop_id_in_deps(deps, dep_id)
+                                            workshop_id = (
+                                                self._find_workshop_id_in_deps(
+                                                    deps, dep_id
+                                                )
+                                            )
                                             if workshop_id:
                                                 mods_to_download.append(workshop_id)
                                                 break
@@ -266,29 +319,39 @@ class MainWindowController(QObject):
                                 break
 
                     # Update the active mods list with local mods
-                    self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(active_mods)
+                    self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(
+                        active_mods
+                    )
                     # Trigger list updated signal to refresh UI
                     self.main_window.main_content_panel.mods_panel.list_updated_signal.emit()
 
                 # If there are mods to download, check SteamCMD setup first
                 if mods_to_download:
                     # Check if SteamCMD is set up
-                    steamcmd_wrapper = self.main_window.main_content_panel.steamcmd_wrapper
+                    steamcmd_wrapper = (
+                        self.main_window.main_content_panel.steamcmd_wrapper
+                    )
 
                     if not steamcmd_wrapper.setup:
                         # Set up SteamCMD first
                         self.main_window.main_content_panel._do_setup_steamcmd()
                         # After setup, try downloading again if setup was successful
                         if steamcmd_wrapper.setup:
-                            self.main_window.main_content_panel._do_download_mods_with_steamcmd(mods_to_download)
+                            self.main_window.main_content_panel._do_download_mods_with_steamcmd(
+                                mods_to_download
+                            )
                             # Don't sort yet - let the download completion handler do it
                             return
                         else:
                             # Sort what we have so far
-                            self.main_window.main_content_panel._do_sort(check_deps=False)
+                            self.main_window.main_content_panel._do_sort(
+                                check_deps=False
+                            )
                     else:
                         # SteamCMD is already set up, proceed with download
-                        self.main_window.main_content_panel._do_download_mods_with_steamcmd(mods_to_download)
+                        self.main_window.main_content_panel._do_download_mods_with_steamcmd(
+                            mods_to_download
+                        )
                         # Don't sort yet - let the download completion handler do it
                         return
                 else:
@@ -303,7 +366,9 @@ class MainWindowController(QObject):
 
     # @Slot() # TODO: fix @slot() related MYPY errors once bug is fixed in https://bugreports.qt.io/browse/PYSIDE-2942
     def on_button_animation(self, button: QPushButton) -> None:
-        button.setObjectName("%s" % ("" if button.objectName() == "indicator" else "indicator"))
+        button.setObjectName(
+            "%s" % ("" if button.objectName() == "indicator" else "indicator")
+        )
         button.style().unpolish(button)
         button.style().polish(button)
 
@@ -314,11 +379,15 @@ class MainWindowController(QObject):
     @Slot()
     def on_refresh_finished(self) -> None:
         self.set_buttons_enabled(True)
-        self.main_window.game_version_label.setText("RimWorld version " + MetadataManager.instance().game_version)
+        self.main_window.game_version_label.setText(
+            "RimWorld version " + MetadataManager.instance().game_version
+        )
 
     @Slot()
     def on_save_button_animation_start(self) -> None:
-        logger.debug("Active mods list has been updated. Managing save button animation state.")
+        logger.debug(
+            "Active mods list has been updated. Managing save button animation state."
+        )
         if (
             # Compare current active list with last save to see if the list has changed
             self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
@@ -326,7 +395,9 @@ class MainWindowController(QObject):
         ):
             if not self.main_window.save_button_flashing_animation.isActive():
                 logger.debug("Starting save button animation")
-                self.main_window.save_button_flashing_animation.start(500)  # Blink every 500 milliseconds
+                self.main_window.save_button_flashing_animation.start(
+                    500
+                )  # Blink every 500 milliseconds
         else:
             self.on_save_button_animation_stop()
 
