@@ -6,6 +6,8 @@ requiring a real Steam client.
 """
 
 import time
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -43,7 +45,7 @@ def _make_mock_steamworks(loaded: bool = True) -> MagicMock:
 
 
 @pytest.fixture
-def mock_steamworks_class() -> MagicMock:
+def mock_steamworks_class() -> Generator[MagicMock]:
     """Patch the STEAMWORKS class constructor."""
     with patch("app.utils.steam.steamworks.wrapper.STEAMWORKS") as cls:
         mock_sw = _make_mock_steamworks()
@@ -69,7 +71,7 @@ class TestWorkerLifecycle:
         mock_sw = mock_steamworks_class._mock_instance
 
         # Make callbacks fire immediately by side-effecting the callback registration
-        def fire_subscribe_callback(*args, **kwargs):
+        def fire_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 12345
@@ -95,7 +97,7 @@ class TestWorkerLifecycle:
     ) -> None:
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_subscribe_callback(*args, **kwargs):
+        def fire_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 111
@@ -124,7 +126,7 @@ class TestWorkerLifecycle:
     def test_reinit_after_idle_shutdown(self, mock_steamworks_class: MagicMock) -> None:
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_subscribe_callback(*args, **kwargs):
+        def fire_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 222
@@ -169,7 +171,7 @@ class TestWorkerLifecycle:
     def test_operation_complete_signal(self, mock_steamworks_class: MagicMock) -> None:
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_subscribe_callback(*args, **kwargs):
+        def fire_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 555
@@ -207,7 +209,7 @@ class TestOperationHandling:
     ) -> None:
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_unsub_callback(*args, **kwargs):
+        def fire_unsub_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 777
@@ -273,7 +275,7 @@ class TestOperationHandling:
     ) -> None:
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_deps_callback(*args, **kwargs):
+        def fire_deps_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 444
@@ -302,24 +304,24 @@ class TestOperationHandling:
         mock_sw = mock_steamworks_class._mock_instance
         call_order: list[str] = []
 
-        def track_subscribe(*args, **kwargs):
+        def track_subscribe(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.result = 1
 
-            def on_subscribe_item(pfid):
+            def on_subscribe_item(pfid: int) -> None:
                 call_order.append(f"sub-{pfid}")
                 result_obj.publishedFileId = pfid
                 cb(result_obj)
 
             mock_sw.Workshop.SubscribeItem.side_effect = on_subscribe_item
 
-        def track_unsubscribe(*args, **kwargs):
+        def track_unsubscribe(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.result = 1
 
-            def on_unsubscribe_item(pfid):
+            def on_unsubscribe_item(pfid: int) -> None:
                 call_order.append(f"unsub-{pfid}")
                 result_obj.publishedFileId = pfid
                 cb(result_obj)
@@ -350,10 +352,10 @@ class TestOperationHandling:
         mock_sw = mock_steamworks_class._mock_instance
         subscribed_pfids: list[int] = []
 
-        def fire_subscribe_callback(*args, **kwargs):
+        def fire_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
 
-            def on_item(pfid):
+            def on_item(pfid: int) -> None:
                 subscribed_pfids.append(pfid)
                 result_obj = MagicMock()
                 result_obj.publishedFileId = pfid
@@ -386,7 +388,7 @@ class TestOperationHandling:
         """Callback with result != 1 should emit steam_operation_failed."""
         mock_sw = mock_steamworks_class._mock_instance
 
-        def fire_failed_callback(*args, **kwargs):
+        def fire_failed_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
             result_obj = MagicMock()
             result_obj.publishedFileId = 666
@@ -417,10 +419,10 @@ class TestOperationHandling:
         mock_sw = mock_steamworks_class._mock_instance
         stage_log: list[str] = []
 
-        def track_unsub_callback(*args, **kwargs):
+        def track_unsub_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
 
-            def on_unsub(pfid):
+            def on_unsub(pfid: int) -> None:
                 stage_log.append(f"unsub-{pfid}")
                 result_obj = MagicMock()
                 result_obj.publishedFileId = pfid
@@ -429,10 +431,10 @@ class TestOperationHandling:
 
             mock_sw.Workshop.UnsubscribeItem.side_effect = on_unsub
 
-        def track_sub_callback(*args, **kwargs):
+        def track_sub_callback(*args: Any, **kwargs: Any) -> None:
             cb = args[0]
 
-            def on_sub(pfid):
+            def on_sub(pfid: int) -> None:
                 stage_log.append(f"sub-{pfid}")
                 result_obj = MagicMock()
                 result_obj.publishedFileId = pfid
@@ -472,12 +474,12 @@ class TestOperationHandling:
     ) -> None:
         """Late callbacks from a previous operation should not affect the next one."""
         mock_sw = mock_steamworks_class._mock_instance
-        stored_callbacks: list = []
+        stored_callbacks: list[Any] = []
 
-        def capture_subscribe_callback(*args, **kwargs):
+        def capture_subscribe_callback(*args: Any, **kwargs: Any) -> None:
             stored_callbacks.append(args[0])
 
-            def on_item(pfid):
+            def on_item(pfid: int) -> None:
                 if pfid == 200:
                     cb = stored_callbacks[-1]
                     result_obj = MagicMock()

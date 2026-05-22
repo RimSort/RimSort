@@ -29,7 +29,7 @@ from queue import Empty, Queue
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QThread, Signal, SignalInstance
 
 from app.utils.generic import launch_game_process
 
@@ -228,7 +228,7 @@ class SteamworksWorker(QThread):
         if self._steamworks is None or not self._steamworks.loaded():
             return None
         try:
-            return self._steamworks.Workshop.GetItemDownloadInfo(pfid)  # type: ignore[no-any-return]
+            return self._steamworks.Workshop.GetItemDownloadInfo(pfid)
         except Exception:
             return None
 
@@ -296,6 +296,52 @@ class SteamworksWorker(QThread):
             self._pump_callbacks()
             time.sleep(_LOOP_INTERVAL)
 
+    def _tick_callback(self, gen: int) -> bool:
+        """Shared preamble for Steamworks callbacks: check generation, decrement
+        pending count, and refresh last-activity timestamp.
+
+        :return: True if callback is current and should be processed.
+        """
+        if gen != self._callback_generation:
+            return False
+        self._pending_callbacks = max(0, self._pending_callbacks - 1)
+        self._last_activity = time.monotonic()
+        return True
+
+    def _make_callback(
+        self,
+        gen: int,
+        op_label: str,
+        success_signal: SignalInstance | None = None,
+    ) -> Any:
+        """Build a Steamworks callback closure that handles generation checks,
+        pending-count bookkeeping, result logging, and signal emission.
+
+        :param gen: callback generation at time of registration
+        :param op_label: human-readable label for log lines (e.g. "Subscribe")
+        :param success_signal: optional signal(str) emitted on result==1
+        """
+
+        def _cb(*args: Any, **kwargs: Any) -> None:
+            if not self._tick_callback(gen):
+                return
+            try:
+                pfid = args[0].publishedFileId
+                result = args[0].result
+                if result == 1:
+                    logger.info(f"{op_label} succeeded for {pfid}")
+                    if success_signal is not None:
+                        success_signal.emit(str(pfid))
+                else:
+                    logger.error(f"{op_label} failed for {pfid}: result={result}")
+                    self.steam_operation_failed.emit(
+                        str(pfid), f"{op_label.lower()} failed"
+                    )
+            except Exception as e:
+                logger.error(f"Error in {op_label} callback: {e}")
+
+        return _cb
+
     def _execute_operation(self, op: SteamworksOperation) -> None:
         if isinstance(op, SubscribeOp):
             self._handle_subscribe(op)
@@ -320,29 +366,15 @@ class SteamworksWorker(QThread):
         if not self._ensure_initialized():
             self.operation_complete.emit("subscribe", False)
             return
+        assert self._steamworks is not None
 
         self._callback_generation += 1
         gen = self._callback_generation
         self._pending_callbacks = len(op.pfids)
 
-        def on_subscribed(*args: Any, **kwargs: Any) -> None:
-            if gen != self._callback_generation:
-                return
-            self._pending_callbacks = max(0, self._pending_callbacks - 1)
-            self._last_activity = time.monotonic()
-            try:
-                pfid = args[0].publishedFileId
-                result = args[0].result
-                if result == 1:
-                    logger.info(f"Subscribe succeeded for {pfid}")
-                    self.item_subscribed.emit(str(pfid))
-                else:
-                    logger.error(f"Subscribe failed for {pfid}: result={result}")
-                    self.steam_operation_failed.emit(str(pfid), "subscribe failed")
-            except Exception as e:
-                logger.error(f"Error in subscribe callback: {e}")
-
-        self._steamworks.Workshop.SetItemSubscribedCallback(on_subscribed)
+        self._steamworks.Workshop.SetItemSubscribedCallback(
+            self._make_callback(gen, "Subscribe", self.item_subscribed)
+        )
 
         for idx, pfid in enumerate(op.pfids):
             logger.debug(f"SubscribeItem({pfid})")
@@ -361,29 +393,15 @@ class SteamworksWorker(QThread):
         if not self._ensure_initialized():
             self.operation_complete.emit("unsubscribe", False)
             return
+        assert self._steamworks is not None
 
         self._callback_generation += 1
         gen = self._callback_generation
         self._pending_callbacks = len(op.pfids)
 
-        def on_unsubscribed(*args: Any, **kwargs: Any) -> None:
-            if gen != self._callback_generation:
-                return
-            self._pending_callbacks = max(0, self._pending_callbacks - 1)
-            self._last_activity = time.monotonic()
-            try:
-                pfid = args[0].publishedFileId
-                result = args[0].result
-                if result == 1:
-                    logger.info(f"Unsubscribe succeeded for {pfid}")
-                    self.item_unsubscribed.emit(str(pfid))
-                else:
-                    logger.error(f"Unsubscribe failed for {pfid}: result={result}")
-                    self.steam_operation_failed.emit(str(pfid), "unsubscribe failed")
-            except Exception as e:
-                logger.error(f"Error in unsubscribe callback: {e}")
-
-        self._steamworks.Workshop.SetItemUnsubscribedCallback(on_unsubscribed)
+        self._steamworks.Workshop.SetItemUnsubscribedCallback(
+            self._make_callback(gen, "Unsubscribe", self.item_unsubscribed)
+        )
 
         for idx, pfid in enumerate(op.pfids):
             logger.debug(f"UnsubscribeItem({pfid})")
@@ -408,53 +426,19 @@ class SteamworksWorker(QThread):
         if not self._ensure_initialized():
             self.operation_complete.emit("resubscribe", False)
             return
+        assert self._steamworks is not None
 
         # 2 callbacks per pfid: 1 unsub + 1 sub (download callbacks unreliable)
         self._callback_generation += 1
         gen = self._callback_generation
         self._pending_callbacks = len(op.pfids) * 2
 
-        def on_unsubscribed(*args: Any, **kwargs: Any) -> None:
-            if gen != self._callback_generation:
-                return
-            self._pending_callbacks = max(0, self._pending_callbacks - 1)
-            self._last_activity = time.monotonic()
-            try:
-                pfid = args[0].publishedFileId
-                result = args[0].result
-                if result == 1:
-                    logger.info(f"Resubscribe unsub succeeded for {pfid}")
-                else:
-                    logger.error(
-                        f"Resubscribe unsub failed for {pfid}: result={result}"
-                    )
-                    self.steam_operation_failed.emit(
-                        str(pfid), "resubscribe unsub failed"
-                    )
-            except Exception as e:
-                logger.error(f"Error in resubscribe unsub callback: {e}")
-
-        def on_subscribed(*args: Any, **kwargs: Any) -> None:
-            if gen != self._callback_generation:
-                return
-            self._pending_callbacks = max(0, self._pending_callbacks - 1)
-            self._last_activity = time.monotonic()
-            try:
-                pfid = args[0].publishedFileId
-                result = args[0].result
-                if result == 1:
-                    logger.info(f"Resubscribe sub succeeded for {pfid}")
-                    self.item_subscribed.emit(str(pfid))
-                else:
-                    logger.error(f"Resubscribe sub failed for {pfid}: result={result}")
-                    self.steam_operation_failed.emit(
-                        str(pfid), "resubscribe sub failed"
-                    )
-            except Exception as e:
-                logger.error(f"Error in resubscribe sub callback: {e}")
-
-        self._steamworks.Workshop.SetItemUnsubscribedCallback(on_unsubscribed)
-        self._steamworks.Workshop.SetItemSubscribedCallback(on_subscribed)
+        self._steamworks.Workshop.SetItemUnsubscribedCallback(
+            self._make_callback(gen, "Resubscribe unsub")
+        )
+        self._steamworks.Workshop.SetItemSubscribedCallback(
+            self._make_callback(gen, "Resubscribe sub", self.item_subscribed)
+        )
 
         # Stage 1: Unsubscribe ALL
         logger.info(f"RESUBSCRIBE Stage 1: Unsubscribing {len(op.pfids)} mod(s)")
@@ -480,40 +464,21 @@ class SteamworksWorker(QThread):
 
         # Stage 5: Force download ALL (preserving PR #1918 hasattr guard)
         logger.info(f"RESUBSCRIBE Stage 5: Downloading {len(op.pfids)} mod(s)")
-        if hasattr(self._steamworks.Workshop, "DownloadItem"):
-            for pfid in op.pfids:
-                try:
-                    self._steamworks.Workshop.DownloadItem(
-                        pfid,
-                        high_priority=True,
-                        callback=lambda *a, **kw: None,
-                        override_callback=True,
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to trigger download for {pfid}: {e}")
-        else:
-            logger.warning(
-                "DownloadItem skipped: not supported by SteamworksPy library."
-            )
+        self._try_download_items(op.pfids)
 
         success = self._wait_for_pending_callbacks(timeout=60)
         self.operation_complete.emit("resubscribe", success)
 
-    def _handle_force_download(self, op: ForceDownloadOp) -> None:
-        if not op.pfids:
-            self.operation_complete.emit("force_download", True)
-            return
-        logger.info(f"FORCE DOWNLOAD: {len(op.pfids)} mod(s)")
-        if not self._ensure_initialized():
-            self.operation_complete.emit("force_download", False)
-            return
-
-        if not hasattr(self._steamworks.Workshop, "DownloadItem"):
-            logger.warning("DownloadItem not supported by SteamworksPy library.")
-            self.operation_complete.emit("force_download", False)
-            return
-
-        for pfid in op.pfids:
+    def _try_download_items(self, pfids: list[int]) -> bool:
+        """Attempt DownloadItem for each pfid. Returns False if unsupported."""
+        if self._steamworks is None or not hasattr(
+            self._steamworks.Workshop, "DownloadItem"
+        ):
+            logger.warning(
+                "DownloadItem skipped: not supported by SteamworksPy library."
+            )
+            return False
+        for pfid in pfids:
             try:
                 self._steamworks.Workshop.DownloadItem(
                     pfid,
@@ -524,9 +489,20 @@ class SteamworksWorker(QThread):
             except Exception as e:
                 logger.error(f"Failed to trigger download for {pfid}: {e}")
                 self.steam_operation_failed.emit(str(pfid), f"download failed: {e}")
+        return True
 
+    def _handle_force_download(self, op: ForceDownloadOp) -> None:
+        if not op.pfids:
+            self.operation_complete.emit("force_download", True)
+            return
+        logger.info(f"FORCE DOWNLOAD: {len(op.pfids)} mod(s)")
+        if not self._ensure_initialized():
+            self.operation_complete.emit("force_download", False)
+            return
+
+        success = self._try_download_items(op.pfids)
         # No callback counting — download callbacks are unreliable
-        self.operation_complete.emit("force_download", True)
+        self.operation_complete.emit("force_download", success)
 
     def _handle_game_launch(self, op: GameLaunchOp) -> None:
         """Initialize Steamworks for Steam overlay, launch the game, then unload."""
@@ -545,6 +521,7 @@ class SteamworksWorker(QThread):
         if not self._ensure_initialized():
             op.result_future.set_result(None)
             return
+        assert self._steamworks is not None
 
         self._callback_generation += 1
         gen = self._callback_generation
@@ -552,10 +529,8 @@ class SteamworksWorker(QThread):
         results: dict[int, Any] = {}
 
         def on_result(*args: Any, **kwargs: Any) -> None:
-            if gen != self._callback_generation:
+            if not self._tick_callback(gen):
                 return
-            self._pending_callbacks = max(0, self._pending_callbacks - 1)
-            self._last_activity = time.monotonic()
             try:
                 pfid = args[0].publishedFileId
                 app_dependencies_list = args[0].get_app_dependencies_list()
