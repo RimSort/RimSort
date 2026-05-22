@@ -75,9 +75,10 @@ jobs:
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
           IGNORE_GITIGNORED_FILES: true
-          # Set your fix mode variables to true
-          FIX_PYTHON_RUFF: true
-          FIX_PYTHON_RUFF_FORMAT: true
+          # Set your fix mode variables to true to have super-linter automatically fix linting issues.
+          # currently set to false since the auto-fix mode is not working well
+          FIX_PYTHON_RUFF: false
+          FIX_PYTHON_RUFF_FORMAT: false
       - name: Commit and push linting fixes
         id: auto-commit
         # Run only on:
