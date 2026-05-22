@@ -63,9 +63,7 @@ def setup_test_controller(
 
     settings_dialog = SettingsDialog()
     settings_controller = SettingsController(model=settings, view=settings_dialog)
-    controller = FileSearchController(
-        settings=settings, settings_controller=settings_controller, dialog=dialog
-    )
+    controller = FileSearchController(settings=settings, settings_controller=settings_controller, dialog=dialog)
     if active_mod_ids is not None:
         controller.set_active_mod_ids(active_mod_ids)
 

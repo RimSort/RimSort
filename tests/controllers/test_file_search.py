@@ -53,9 +53,7 @@ def setup_test_controller(test_dir: str, mods: set[str]) -> MagicMock:
             if col == 0
             else MagicMock(text="About.xml")
             if col == 1
-            else MagicMock(
-                text=str(Path(test_dir) / f"TestMod{row + 1}/About/About.xml")
-            )
+            else MagicMock(text=str(Path(test_dir) / f"TestMod{row + 1}/About/About.xml"))
         )
     )
     mock_table.isRowHidden = MagicMock(side_effect=lambda row: False)
@@ -133,9 +131,7 @@ def setup_test_files(request: pytest.FixtureRequest) -> Generator[str, None, Non
     lang_dir2 = test_mod2 / "Languages" / "English"
     lang_dir2.mkdir(parents=True, exist_ok=True)
     strings_file2 = lang_dir2 / "Strings.xml"
-    strings_file2.write_text(
-        "<languagedata><teststring>test</teststring></languagedata>"
-    )
+    strings_file2.write_text("<languagedata><teststring>test</teststring></languagedata>")
     print(f"Created Strings.xml in {strings_file2}")
 
     # create test.png in TestMod2
@@ -237,11 +233,7 @@ def test_filter_results(setup_test_files: str) -> None:
             MagicMock(spec=QTableWidget, text=MagicMock(return_value="About.xml")),
             MagicMock(
                 spec=QTableWidget,
-                text=MagicMock(
-                    return_value=str(
-                        Path(setup_test_files) / "TestMod1/About/About.xml"
-                    )
-                ),
+                text=MagicMock(return_value=str(Path(setup_test_files) / "TestMod1/About/About.xml")),
             ),
         ],
         [
@@ -249,11 +241,7 @@ def test_filter_results(setup_test_files: str) -> None:
             MagicMock(spec=QTableWidget, text=MagicMock(return_value="About.xml")),
             MagicMock(
                 spec=QTableWidget,
-                text=MagicMock(
-                    return_value=str(
-                        Path(setup_test_files) / "TestMod2/About/About.xml"
-                    )
-                ),
+                text=MagicMock(return_value=str(Path(setup_test_files) / "TestMod2/About/About.xml")),
             ),
         ],
     ]
@@ -273,9 +261,7 @@ def test_filter_results(setup_test_files: str) -> None:
         mod_item = dialog.results_table.item(row, 0)
         return mod_item is not None and filter_text.lower() in mod_item.text().lower()
 
-    visible_rows = sum(
-        1 for row in range(dialog.results_table.rowCount()) if is_row_visible(row)
-    )
+    visible_rows = sum(1 for row in range(dialog.results_table.rowCount()) if is_row_visible(row))
 
     # Log visible rows
     for row in range(dialog.results_table.rowCount()):
@@ -289,13 +275,9 @@ def test_filter_results(setup_test_files: str) -> None:
             file_text = file_item.text() if file_item else "<None>"
             path_text = path_item.text() if path_item else "<None>"
 
-            print(
-                f"Visible after filter: mod={mod_text}, file={file_text}, path={path_text}"
-            )
+            print(f"Visible after filter: mod={mod_text}, file={file_text}, path={path_text}")
 
-    assert visible_rows == 1, (
-        f"Expected exactly one visible row after filtering, got {visible_rows}"
-    )
+    assert visible_rows == 1, f"Expected exactly one visible row after filtering, got {visible_rows}"
 
 
 def test_xml_search_only_xml_files(setup_test_files: str) -> None:
@@ -307,9 +289,7 @@ def test_xml_search_only_xml_files(setup_test_files: str) -> None:
     mock_settings_controller = MagicMock()
 
     # Patch the instance method of SteamcmdInterface
-    with patch(
-        "app.utils.steam.steamcmd.wrapper.SteamcmdInterface.instance"
-    ) as mock_instance_method:
+    with patch("app.utils.steam.steamcmd.wrapper.SteamcmdInterface.instance") as mock_instance_method:
         mock_instance_method.return_value = MagicMock()  # Return a mock instance
 
         # Create a FileSearch instance with mocked MetadataManager

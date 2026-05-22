@@ -66,9 +66,7 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
         return {}
 
 
-def refresh_acf_metadata(
-    metadata_manager: "MetadataManager", steamclient: bool = True, steamcmd: bool = True
-) -> None:
+def refresh_acf_metadata(metadata_manager: "MetadataManager", steamclient: bool = True, steamcmd: bool = True) -> None:
     """
     Load and cache ACF metadata from Steam and SteamCMD sources.
 
@@ -102,9 +100,7 @@ def refresh_acf_metadata(
 
     # Load SteamCMD appworkshop_294100.acf if enabled
     if steamcmd:
-        steamcmd_data = load_acf_from_path(
-            metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
+        steamcmd_data = load_acf_from_path(metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
         if steamcmd_data:
             metadata_manager.steamcmd_acf_data = steamcmd_data
             logger.info(
@@ -221,9 +217,7 @@ def _merge_workshop_items_from_sources(
             # Parse timestamp with validation
             timeupdated_int = parse_timeupdated(item.get("timeupdated"))
             if timeupdated_int is None and item.get("timeupdated") is not None:
-                logger.warning(
-                    f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}"
-                )
+                logger.warning(f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}")
             entries.append((pfid_str, steamcmd_source, timeupdated_int))
             seen_pfids.add(pfid_str)
 
@@ -236,9 +230,7 @@ def _merge_workshop_items_from_sources(
             # Parse timestamp with validation
             timeupdated_int = parse_timeupdated(item.get("timeupdated"))
             if timeupdated_int is None and item.get("timeupdated") is not None:
-                logger.warning(
-                    f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}"
-                )
+                logger.warning(f"Invalid timeupdated for PFID {pfid_str}: {item.get('timeupdated')}")
             entries.append((pfid_str, steam_source, timeupdated_int))
             seen_pfids.add(pfid_str)
 
@@ -275,21 +267,15 @@ def get_acf_workshop_items(
     """
     # Extract workshop items from cached SteamCMD ACF data
     steamcmd_items = (
-        get_workshop_items_from_acf(metadata_manager.steamcmd_acf_data)
-        if metadata_manager.steamcmd_acf_data
-        else {}
+        get_workshop_items_from_acf(metadata_manager.steamcmd_acf_data) if metadata_manager.steamcmd_acf_data else {}
     )
     # Extract workshop items from cached Steam ACF data
     workshop_items = (
-        get_workshop_items_from_acf(metadata_manager.workshop_acf_data)
-        if metadata_manager.workshop_acf_data
-        else {}
+        get_workshop_items_from_acf(metadata_manager.workshop_acf_data) if metadata_manager.workshop_acf_data else {}
     )
 
     # Merge items with source attribution and deduplication
-    entries = _merge_workshop_items_from_sources(
-        steamcmd_items, workshop_items, "SteamCMD", "Steam"
-    )
+    entries = _merge_workshop_items_from_sources(steamcmd_items, workshop_items, "SteamCMD", "Steam")
 
     return (
         entries,
@@ -324,9 +310,7 @@ def load_and_merge_acf_data(
         ValueError: If no ACF data could be loaded from either source.
     """
     # Load ACF files from both sources
-    steamcmd_acf_data = (
-        load_acf_from_path(steamcmd_acf_path) if steamcmd_acf_path else {}
-    )
+    steamcmd_acf_data = load_acf_from_path(steamcmd_acf_path) if steamcmd_acf_path else {}
     steam_acf_data = load_acf_from_path(steam_acf_path) if steam_acf_path else {}
 
     if not steamcmd_acf_data and not steam_acf_data:
@@ -340,16 +324,12 @@ def load_and_merge_acf_data(
         raise ValueError("Invalid workshop items data format")
 
     # Merge items with source attribution using shared helper
-    entries = _merge_workshop_items_from_sources(
-        steamcmd_items, steam_items, "SteamCMD", "Steam"
-    )
+    entries = _merge_workshop_items_from_sources(steamcmd_items, steam_items, "SteamCMD", "Steam")
 
     return entries, steamcmd_acf_data, steam_acf_data
 
 
-def _extract_manifest_ids_and_remove_pfid(
-    workshop_section: dict[str, Any] | None, delete_pfid: str
-) -> set[str]:
+def _extract_manifest_ids_and_remove_pfid(workshop_section: dict[str, Any] | None, delete_pfid: str) -> set[str]:
     """
     Extract manifest IDs from a workshop section and remove a PFID entry.
 
@@ -420,21 +400,15 @@ def steamcmd_purge_mods(
     acf_path = metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
     acf_metadata = load_acf_from_path(acf_path)
     if not acf_metadata:
-        logger.warning(
-            f"SteamCMD ACF file not found or failed to parse at: {acf_path}. Skipping mod removal."
-        )
+        logger.warning(f"SteamCMD ACF file not found or failed to parse at: {acf_path}. Skipping mod removal.")
         return
 
     # Get depotcache directory path for manifest file cleanup
     depotcache_path = metadata_manager.steamcmd_wrapper.steamcmd_depotcache_path
 
     # Extract workshop sections from ACF metadata
-    workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
-        "WorkshopItemsInstalled"
-    )
-    workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
-        "WorkshopItemDetails"
-    )
+    workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get("WorkshopItemsInstalled")
+    workshop_item_details = acf_metadata.get("AppWorkshop", {}).get("WorkshopItemDetails")
 
     # Collect manifest IDs associated with mods being removed
     mod_manifest_ids = set()
@@ -442,12 +416,8 @@ def steamcmd_purge_mods(
     # Process each PFID to be removed
     for delete_pfid in publishedfileids:
         # Extract manifest IDs from both sections and remove entries
-        manifest_ids_installed = _extract_manifest_ids_and_remove_pfid(
-            workshop_items_installed, delete_pfid
-        )
-        manifest_ids_details = _extract_manifest_ids_and_remove_pfid(
-            workshop_item_details, delete_pfid
-        )
+        manifest_ids_installed = _extract_manifest_ids_and_remove_pfid(workshop_items_installed, delete_pfid)
+        manifest_ids_details = _extract_manifest_ids_and_remove_pfid(workshop_item_details, delete_pfid)
         # Accumulate all manifest IDs found
         mod_manifest_ids.update(manifest_ids_installed)
         mod_manifest_ids.update(manifest_ids_details)
@@ -492,9 +462,7 @@ def validate_acf_file_exists(steam_mods_location: str) -> bool:
         return False
 
     try:
-        acf_file_path = (
-            Path(steam_mods_location).parent.parent / "appworkshop_294100.acf"
-        )
+        acf_file_path = Path(steam_mods_location).parent.parent / "appworkshop_294100.acf"
         exists = acf_file_path.exists() and acf_file_path.is_file()
 
         if exists:

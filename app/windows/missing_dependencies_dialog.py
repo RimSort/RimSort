@@ -191,15 +191,11 @@ class MissingDependenciesDialog(QDialog):
         dep_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
         checkbox = QCheckBox(dep_name)
         checkbox.setToolTip(self.tr("Package ID: {dep_id}").format(dep_id=dep_id))
-        checkbox.stateChanged.connect(
-            partial(self._toggle_mod_selection, mod_id=dep_id)
-        )
+        checkbox.stateChanged.connect(partial(self._toggle_mod_selection, mod_id=dep_id))
         group_layout.addWidget(checkbox)
         self.checkboxes[dep_id] = checkbox
 
-        requiring_label = QLabel(
-            self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods)
-        )
+        requiring_label = QLabel(self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods))
         requiring_label.setStyleSheet("color: gray; margin-left: 20px;")
         requiring_label.setWordWrap(True)
         group_layout.addWidget(requiring_label)

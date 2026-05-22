@@ -45,9 +45,7 @@ class IgnoreJsonEditor(QDialog):
         main_layout = QVBoxLayout(self)
 
         # Add description label
-        description_label = QLabel(
-            self.tr("Mods checked below will be removed from the ignore list.")
-        )
+        description_label = QLabel(self.tr("Mods checked below will be removed from the ignore list."))
         main_layout.addWidget(description_label)
 
         # Create list widget
@@ -92,8 +90,7 @@ class IgnoreJsonEditor(QDialog):
         indices_to_remove = [
             i
             for i in range(self.list_widget.count())
-            if (item := self.list_widget.item(i))
-            and item.checkState() == Qt.CheckState.Checked
+            if (item := self.list_widget.item(i)) and item.checkState() == Qt.CheckState.Checked
         ]
 
         # Remove in reverse order to maintain correct indices

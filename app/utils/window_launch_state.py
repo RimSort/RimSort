@@ -5,9 +5,7 @@ from loguru import logger
 from app.models.settings import Settings
 
 
-def apply_window_launch_state(
-    window: Any, launch_state: str, custom_width: int, custom_height: int
-) -> None:
+def apply_window_launch_state(window: Any, launch_state: str, custom_width: int, custom_height: int) -> None:
     """
     Apply the window launch state to the given window.
 
@@ -23,9 +21,7 @@ def apply_window_launch_state(
         window.showNormal()
     elif launch_state == "custom":
         # Validate custom size values
-        custom_width, custom_height = Settings.validate_window_custom_size(
-            custom_width, custom_height
-        )
+        custom_width, custom_height = Settings.validate_window_custom_size(custom_width, custom_height)
         window.resize(custom_width, custom_height)
         window.show()
     else:

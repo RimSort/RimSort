@@ -93,48 +93,34 @@ class MetadataMediator:
 
         for path in {self.local_mods_path, self.game_path}:
             if path is None or not path.exists() or not path.is_dir():
-                raise ValueError(
-                    "Essential paths are missing, invalid, or not directories"
-                )
+                raise ValueError("Essential paths are missing, invalid, or not directories")
 
         self._refresh_game_version()
 
         self._user_rules = read_rules_db(self.user_rules_path)
 
         self._community_rules = (
-            read_rules_db(self.community_rules_path)
-            if self.community_rules_path is not None
-            else None
+            read_rules_db(self.community_rules_path) if self.community_rules_path is not None else None
         )
-        self._steam_db = (
-            read_steam_db(self.steam_db_path)
-            if self.steam_db_path is not None
-            else None
-        )
+        self._steam_db = read_steam_db(self.steam_db_path) if self.steam_db_path is not None else None
 
         # Get all folders in the workshop and local mods paths
         mod_paths = list()
         if self.workshop_mods_path is not None:
             if not self.workshop_mods_path.exists():
-                logger.warning(
-                    f"Workshop mods path does not exist: {self.workshop_mods_path}"
-                )
+                logger.warning(f"Workshop mods path does not exist: {self.workshop_mods_path}")
             else:
                 mod_paths += list(self.workshop_mods_path.iterdir())
 
         if self.local_mods_path is not None:
             if not self.local_mods_path.exists():
-                logger.warning(
-                    f"Local mods path does not exist: {self.local_mods_path}"
-                )
+                logger.warning(f"Local mods path does not exist: {self.local_mods_path}")
             else:
                 mod_paths += list(self.local_mods_path.iterdir())
 
         if self.game_modules_path is not None:
             if not self.game_modules_path.exists():
-                logger.warning(
-                    f"Game modules path does not exist: {self.game_modules_path}"
-                )
+                logger.warning(f"Game modules path does not exist: {self.game_modules_path}")
             else:
                 mod_paths += list(self.game_modules_path.iterdir())
 
@@ -142,12 +128,8 @@ class MetadataMediator:
         threads = QThread.idealThreadCount()
         batch_size = max(len(mod_paths) // threads, 1)
 
-        logger.debug(
-            f"Creating {threads} threads for metadata parsing with batch size of {batch_size}"
-        )
-        mod_paths_batches = [
-            mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)
-        ]
+        logger.debug(f"Creating {threads} threads for metadata parsing with batch size of {batch_size}")
+        mod_paths_batches = [mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)]
 
         assert self.local_mods_path is not None
         assert self.game_path is not None
@@ -189,20 +171,14 @@ class MetadataMediator:
             try:
                 with open(version_file_path, encoding="utf-8") as f:
                     self._game_version = f.read().strip()
-                    logger.info(
-                        f"Retrieved game version from Version.txt: {self.game_version}"
-                    )
+                    logger.info(f"Retrieved game version from Version.txt: {self.game_version}")
                     return True
             except Exception:
-                logger.error(
-                    f"Unable to parse Version.txt from game folder: {version_file_path}"
-                )
+                logger.error(f"Unable to parse Version.txt from game folder: {version_file_path}")
                 self._game_version = "Unknown"
                 return False
         else:
-            logger.error(
-                f"The provided Version.txt path does not exist: {version_file_path}"
-            )
+            logger.error(f"The provided Version.txt path does not exist: {version_file_path}")
             self._game_version = "Unknown"
             return False
 
@@ -258,9 +234,7 @@ class MetadataMediator:
             self.mods_metadata = mods_metadata
 
         def run(self) -> None:
-            paths = (
-                self.mod_path if isinstance(self.mod_path, list) else [self.mod_path]
-            )
+            paths = self.mod_path if isinstance(self.mod_path, list) else [self.mod_path]
 
             results: dict[str, ListedMod] = {}
             for path in paths:
@@ -279,18 +253,12 @@ class MetadataMediator:
                         logger.warning(f"Mod at path {self.mod_path} is not valid")
 
                     if isinstance(mod, AboutXmlMod):
-                        if (
-                            self.user_rules is not None
-                            and mod.package_id in self.user_rules.rules
-                        ):
+                        if self.user_rules is not None and mod.package_id in self.user_rules.rules:
                             mod.user_rules = create_rules_from_external_rules(
                                 external_rule=self.user_rules.rules[mod.package_id]
                             )
 
-                        if (
-                            self.community_rules is not None
-                            and mod.package_id in self.community_rules.rules
-                        ):
+                        if self.community_rules is not None and mod.package_id in self.community_rules.rules:
                             mod.community_rules = create_rules_from_external_rules(
                                 external_rule=self.community_rules.rules[mod.package_id]
                             )

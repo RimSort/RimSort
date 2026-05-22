@@ -78,9 +78,7 @@ def handle_worker_error(operation_name: str, repo_path: str, error: Exception) -
     return error_msg
 
 
-def validate_repository(
-    repo_path: Path, config: GitOperationConfig, operation_name: str
-) -> Optional[str]:
+def validate_repository(repo_path: Path, config: GitOperationConfig, operation_name: str) -> Optional[str]:
     """Validate repository and return error message if invalid"""
     with git_utils.git_repository(repo_path, config) as repo:
         if repo is None:
@@ -121,21 +119,15 @@ def process_batch_repository(
             "corrupted",
             "pack corruption",
         ]
-        is_corrupted = any(
-            indicator in error_lower for indicator in corruption_indicators
-        )
+        is_corrupted = any(indicator in error_lower for indicator in corruption_indicators)
 
         if is_corrupted:
-            logger.warning(
-                f"Detected repository corruption in {repo_path}, attempting repair"
-            )
+            logger.warning(f"Detected repository corruption in {repo_path}, attempting repair")
             try:
                 # Attempt to repair the corrupted repository
                 repo_path_str = str(repo_path)
                 if git_utils._attempt_repository_repair(repo_path_str, repo=None):
-                    logger.info(
-                        f"Successfully repaired corrupted repository: {repo_path}"
-                    )
+                    logger.info(f"Successfully repaired corrupted repository: {repo_path}")
                     # Try the operation again after repair
                     try:
                         with git_utils.git_repository(repo_path, config) as repo:
@@ -171,15 +163,11 @@ def process_batch_repository(
 class BaseBatchWorker(QRunnable):
     """Base class for batch git operations"""
 
-    def __init__(
-        self, repos_paths: List[Path], config: Optional[GitOperationConfig] = None
-    ):
+    def __init__(self, repos_paths: List[Path], config: Optional[GitOperationConfig] = None):
         super().__init__()
         self.repos_paths = repos_paths
         # Create config with reasonable timeouts for batch operations
-        self.config = config or GitOperationConfig.create_with_timeout(
-            fetch_timeout=30, connection_timeout=10
-        )
+        self.config = config or GitOperationConfig.create_with_timeout(fetch_timeout=30, connection_timeout=10)
         self.signals = BaseBatchSignals()
 
     def execute_batch_operation(
@@ -211,15 +199,11 @@ class BaseGitWorker(QThread):
     progress = Signal(str)  # status message
     error = Signal(str)  # error message
 
-    def __init__(
-        self, repo_path: str | Path, config: Optional[GitOperationConfig] = None
-    ):
+    def __init__(self, repo_path: str | Path, config: Optional[GitOperationConfig] = None):
         super().__init__()
         self.repo_path = repo_path
         # Create config with reasonable timeouts
-        self.config = config or GitOperationConfig.create_with_timeout(
-            fetch_timeout=30, connection_timeout=10
-        )
+        self.config = config or GitOperationConfig.create_with_timeout(fetch_timeout=30, connection_timeout=10)
         self._is_cancelled = False
 
     def cancel(self) -> None:
@@ -275,9 +259,7 @@ class GitCloneWorker(BaseGitWorker):
         """Execute the git clone operation in background"""
         repo: Optional[Any] = None  # Initialize repo to None
         try:
-            logger.info(
-                f"Starting git clone in thread: {self.repo_url} to {self.repo_path}"
-            )
+            logger.info(f"Starting git clone in thread: {self.repo_url} to {self.repo_path}")
 
             if self.isInterruptionRequested():
                 return
@@ -297,9 +279,7 @@ class GitCloneWorker(BaseGitWorker):
                 return
 
             if result.is_successful():
-                self.emit_success(
-                    f"Repository cloned successfully to: {self.repo_path}"
-                )
+                self.emit_success(f"Repository cloned successfully to: {self.repo_path}")
             else:
                 self.emit_error(f"Clone failed: {result}")
 
@@ -364,9 +344,7 @@ class GitPushWorker(BaseGitWorker):
                     return
 
                 if result.is_successful():
-                    self.emit_success(
-                        f"Changes pushed successfully from: {self.repo_path}"
-                    )
+                    self.emit_success(f"Changes pushed successfully from: {self.repo_path}")
                 else:
                     self.emit_error(f"Push failed: {result}")
 
@@ -394,9 +372,7 @@ class GitStageCommitWorker(BaseGitWorker):
     def run(self) -> None:
         """Execute the git stage and commit operation in background"""
         try:
-            logger.info(
-                f"Starting git stage and commit in thread for: {self.repo_path}"
-            )
+            logger.info(f"Starting git stage and commit in thread for: {self.repo_path}")
 
             if self.isInterruptionRequested():
                 return
@@ -423,9 +399,7 @@ class GitStageCommitWorker(BaseGitWorker):
                     return
 
                 if result.is_successful():
-                    self.emit_success(
-                        f"Changes staged and committed successfully in: {self.repo_path}"
-                    )
+                    self.emit_success(f"Changes staged and committed successfully in: {self.repo_path}")
                 else:
                     self.emit_error(f"Stage and commit failed: {result}")
 
@@ -484,9 +458,7 @@ class GitCheckUpdatesWorker(BaseBatchWorker):
         errors: Dict[Path, str] = {}
 
         for repo_path in self.repos_paths:
-            success, commit_msgs, error_msg = check_repository_updates(
-                repo_path, self.config
-            )
+            success, commit_msgs, error_msg = check_repository_updates(repo_path, self.config)
 
             if not success:
                 if "Invalid git repository" in (error_msg or ""):
@@ -496,9 +468,7 @@ class GitCheckUpdatesWorker(BaseBatchWorker):
             elif commit_msgs:  # Only add if there are actual updates
                 updates[repo_path] = commit_msgs
 
-        results = GitCheckResults(
-            updates=updates, invalid_paths=invalid_paths, error=errors
-        )
+        results = GitCheckResults(updates=updates, invalid_paths=invalid_paths, error=errors)
         self.signals.finished.emit(results)
 
 
@@ -528,14 +498,12 @@ class GitBatchUpdateWorker(BaseBatchWorker):
         commit_info: Dict[str, str] = {}
 
         for repo_path in self.repos_paths:
-            success, error_msg = process_batch_repository(
-                repo_path, self.config, git_utils.git_pull, "pull"
-            )
+            success, error_msg = process_batch_repository(repo_path, self.config, git_utils.git_pull, "pull")
 
             if success:
                 successful.append(repo_path)
-                commit_success, latest_commit, commit_error = (
-                    git_utils.get_repository_latest_commit(repo_path, self.config)
+                commit_success, latest_commit, commit_error = git_utils.get_repository_latest_commit(
+                    repo_path, self.config
                 )
                 if commit_success and latest_commit:
                     commit_info[str(repo_path)] = latest_commit
@@ -544,9 +512,7 @@ class GitBatchUpdateWorker(BaseBatchWorker):
             else:
                 failed.append((repo_path, error_msg or "Unknown error"))
 
-        results = GitBatchUpdateResults(
-            successful=successful, failed=failed, commit_info=commit_info
-        )
+        results = GitBatchUpdateResults(successful=successful, failed=failed, commit_info=commit_info)
         self.signals.finished.emit(results)
 
 

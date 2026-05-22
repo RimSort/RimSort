@@ -33,17 +33,11 @@ class ThemeController:
 
     def _get_supported_themes(self) -> set[str]:
         """Retrieves a set of supported themes from the theme data and storage folders."""
-        theme_data_folders = self._get_theme_names_from_folder(
-            self.app_info.theme_data_folder
-        )
-        theme_storage_folders = self._get_theme_names_from_folder(
-            self.app_info.theme_storage_folder
-        )
+        theme_data_folders = self._get_theme_names_from_folder(self.app_info.theme_data_folder)
+        theme_storage_folders = self._get_theme_names_from_folder(self.app_info.theme_storage_folder)
         supported_themes = theme_data_folders | theme_storage_folders
         logger.info(f"Supported themes retrieved: {supported_themes}")
-        logger.debug(
-            f"Checking theme folders: {[self.app_info.theme_data_folder, self.app_info.theme_storage_folder]}"
-        )
+        logger.debug(f"Checking theme folders: {[self.app_info.theme_data_folder, self.app_info.theme_storage_folder]}")
         return supported_themes
 
     def _get_theme_names_from_folder(self, folder: Path) -> set[str]:
@@ -60,9 +54,7 @@ class ThemeController:
             for subfolder in folder.iterdir():
                 if subfolder.is_dir() and (subfolder / "style.qss").exists():
                     supported_themes.add(subfolder.name)
-                    logger.info(
-                        f"Found theme with stylesheet in {folder}: {subfolder.name}"
-                    )
+                    logger.info(f"Found theme with stylesheet in {folder}: {subfolder.name}")
         else:
             logger.warning(f"Folder does not exist: {folder}")
         return supported_themes
@@ -124,9 +116,7 @@ class ThemeController:
             potential_path = folder / theme_name / "style.qss"
             logger.debug(f"Checking for stylesheet at: {potential_path}")
             if potential_path.exists():
-                logger.info(
-                    f"Found stylesheet for theme '{theme_name}' at: {potential_path}"
-                )
+                logger.info(f"Found stylesheet for theme '{theme_name}' at: {potential_path}")
                 return potential_path
         logger.error(f"Stylesheet path does not exist for theme '{theme_name}'")
         show_warning(
@@ -141,9 +131,7 @@ class ThemeController:
         )
         return None
 
-    def apply_selected_theme(
-        self, enable_themes: bool, selected_theme_name: str
-    ) -> None:
+    def apply_selected_theme(self, enable_themes: bool, selected_theme_name: str) -> None:
         """Apply the selected theme without restarting the application.
 
         Args:
@@ -201,9 +189,7 @@ class ThemeController:
         available_themes = list(self._get_supported_themes())
         combobox.addItems(available_themes)
 
-    def setup_theme_dialog(
-        self, settings_dialog: "SettingsDialog", settings: "Settings"
-    ) -> None:
+    def setup_theme_dialog(self, settings_dialog: "SettingsDialog", settings: "Settings") -> None:
         """
         Set up the settings dialog with current settings.
         Reloading settings is required since ThemeController will reset to RimPy if the theme is invalid.
@@ -215,14 +201,10 @@ class ThemeController:
             current_index = settings_dialog.themes_combobox.findText(current_theme_name)
             current_font_family = settings.font_family
             current_font_size = settings.font_size
-            current_font_family_index = settings_dialog.font_family_combobox.findText(
-                current_font_family
-            )
+            current_font_family_index = settings_dialog.font_family_combobox.findText(current_font_family)
             settings_dialog.font_size_spinbox.setValue(current_font_size)
             if current_font_family_index != -1:
-                settings_dialog.font_family_combobox.setCurrentIndex(
-                    current_font_family_index
-                )
+                settings_dialog.font_family_combobox.setCurrentIndex(current_font_family_index)
             else:
                 settings_dialog.font_family_combobox.setCurrentIndex(-1)
             if current_index != -1:
@@ -239,6 +221,4 @@ class ThemeController:
                 self.apply_selected_theme(settings.enable_themes, default_theme)
         else:
             self.set_fusion_theme()
-            logger.info(
-                "Themes disabled, setting Fusion theme. Please enable themes to apply a theme."
-            )
+            logger.info("Themes disabled, setting Fusion theme. Please enable themes to apply a theme.")

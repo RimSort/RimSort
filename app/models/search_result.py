@@ -29,9 +29,7 @@ class SearchResult:
             if not self.file_size:
                 self.file_size = os.path.getsize(self.file_path)
             if not self.last_modified:
-                self.last_modified = datetime.fromtimestamp(
-                    os.path.getmtime(self.file_path)
-                )
+                self.last_modified = datetime.fromtimestamp(os.path.getmtime(self.file_path))
 
         # Set file_type based on extension if not provided
         if not self.file_type:

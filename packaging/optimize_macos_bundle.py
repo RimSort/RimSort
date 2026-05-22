@@ -94,9 +94,7 @@ def thin_fat_binaries(app_path: str, target_arch: str) -> int:
             filepath = os.path.join(root, filename)
             if not os.path.isfile(filepath) or os.path.islink(filepath):
                 continue
-            if not os.access(filepath, os.X_OK) and not filename.endswith(
-                (".dylib", ".so")
-            ):
+            if not os.access(filepath, os.X_OK) and not filename.endswith((".dylib", ".so")):
                 continue
             if not _is_fat_binary(filepath):
                 continue
@@ -109,14 +107,10 @@ def thin_fat_binaries(app_path: str, target_arch: str) -> int:
                 saved = original_size - new_size
                 total_saved += saved
                 thinned_count += 1
-                print(
-                    f"  Thinned {relpath}: {original_size:,} -> {new_size:,} (saved {saved:,})"
-                )
+                print(f"  Thinned {relpath}: {original_size:,} -> {new_size:,} (saved {saved:,})")
 
     if thinned_count > 0:
-        print(
-            f"  Thinned {thinned_count} binaries, saved {total_saved:,} bytes ({total_saved // 1048576} MB)"
-        )
+        print(f"  Thinned {thinned_count} binaries, saved {total_saved:,} bytes ({total_saved // 1048576} MB)")
     else:
         print("  No fat binaries found to thin")
 
@@ -153,9 +147,7 @@ def deduplicate_framework_data(app_path: str) -> int:
         os.symlink("../../Resources", versioned_resources)
 
         total_saved += size_before
-        print(
-            f"  Deduplicated {fw_name}/Versions/A/Resources/ -> symlink (saved {size_before:,} bytes)"
-        )
+        print(f"  Deduplicated {fw_name}/Versions/A/Resources/ -> symlink (saved {size_before:,} bytes)")
 
         top_helpers = os.path.join(fw_dir, "Helpers")
         versioned_helpers = os.path.join(fw_dir, "Versions", "A", "Helpers")
@@ -170,14 +162,10 @@ def deduplicate_framework_data(app_path: str) -> int:
             shutil.rmtree(versioned_helpers)
             os.symlink("../../Helpers", versioned_helpers)
             total_saved += size_before
-            print(
-                f"  Deduplicated {fw_name}/Versions/A/Helpers/ -> symlink (saved {size_before:,} bytes)"
-            )
+            print(f"  Deduplicated {fw_name}/Versions/A/Helpers/ -> symlink (saved {size_before:,} bytes)")
 
     if total_saved > 0:
-        print(
-            f"  Deduplicated framework data, saved {total_saved:,} bytes ({total_saved // 1048576} MB)"
-        )
+        print(f"  Deduplicated framework data, saved {total_saved:,} bytes ({total_saved // 1048576} MB)")
 
     return total_saved
 
@@ -212,9 +200,7 @@ def remove_locale_sources(app_path: str) -> int:
                 removed_count += 1
 
     if removed_count > 0:
-        print(
-            f"  Removed {removed_count} .ts source files, saved {total_saved:,} bytes ({total_saved // 1024} KB)"
-        )
+        print(f"  Removed {removed_count} .ts source files, saved {total_saved:,} bytes ({total_saved // 1024} KB)")
 
     return total_saved
 

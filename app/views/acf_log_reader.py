@@ -105,9 +105,7 @@ class AcfLogReader(BaseModsPanel):
         # Set up BaseModsPanel buttons (Refresh, etc.)
         button_configs = self._get_base_button_configs()
         self._extend_button_configs_with_steam_actions(button_configs)
-        button_configs.append(
-            self._create_delete_button_config(self.tr("Delete Selected Mods"))
-        )
+        button_configs.append(self._create_delete_button_config(self.tr("Delete Selected Mods")))
         self._setup_buttons_from_config(button_configs)
 
         # Set up custom ACF buttons above the table
@@ -137,16 +135,12 @@ class AcfLogReader(BaseModsPanel):
         for col_idx in self.SEARCHABLE_COLUMNS:
             col_name = ColumnIndex(col_idx).name.replace("_", " ").title()
             self.search_column_filter.addItem(col_name, col_idx)
-        self.search_column_filter.currentIndexChanged.connect(
-            self._on_search_column_changed
-        )
+        self.search_column_filter.currentIndexChanged.connect(self._on_search_column_changed)
         acf_buttons_layout.addWidget(self.search_column_filter)
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(
-            self.tr(
-                "Searches selected column or all searchable columns if set to 'All'"
-            )
+            self.tr("Searches selected column or all searchable columns if set to 'All'")
         )
         self.search_input.textChanged.connect(self._on_search_text_changed)
         acf_buttons_layout.addWidget(self.search_input, 1)
@@ -207,30 +201,16 @@ class AcfLogReader(BaseModsPanel):
                 name = metadata.get("name", f"Unknown (PFID: {pfid})")
                 authors = metadata.get("authors", "")
                 packageid = metadata.get("packageid", pfid)
-                supported_versions = ModInfo._parse_supported_versions_static(
-                    metadata.get("supportedversions")
-                )
+                supported_versions = ModInfo._parse_supported_versions_static(metadata.get("supportedversions"))
                 path = metadata.get("path", "")
 
                 # Format time displays
                 downloaded_time_raw = metadata.get("internal_time_touched")
-                downloaded_time = (
-                    format_time_display(int(downloaded_time_raw))[0]
-                    if downloaded_time_raw
-                    else ""
-                )
+                downloaded_time = format_time_display(int(downloaded_time_raw))[0] if downloaded_time_raw else ""
 
                 # Use timeupdated from ACF if provided, otherwise use metadata
-                update_time_raw = (
-                    timeupdated
-                    if timeupdated
-                    else metadata.get("external_time_updated")
-                )
-                updated_time = (
-                    format_time_display(int(update_time_raw))[0]
-                    if update_time_raw
-                    else ""
-                )
+                update_time_raw = timeupdated if timeupdated else metadata.get("external_time_updated")
+                updated_time = format_time_display(int(update_time_raw))[0] if update_time_raw else ""
 
                 workshop_url = ModInfo._generate_workshop_url(pfid)
 
@@ -282,19 +262,13 @@ class AcfLogReader(BaseModsPanel):
             path, workshop_url = row_metadata[i]
             if path and path.strip():
                 path_link = self._create_path_link(path, "pathLink")
-                path_index = self.editor_model.item(
-                    row_idx, ColumnIndex.PATH.value
-                ).index()
+                path_index = self.editor_model.item(row_idx, ColumnIndex.PATH.value).index()
                 self.editor_table_view.setIndexWidget(path_index, path_link)
 
             # Add workshop button if workshop URL exists
             if workshop_url:
-                workshop_button = self._create_workshop_button(
-                    workshop_url, "workshopButton"
-                )
-                workshop_index = self.editor_model.item(
-                    row_idx, ColumnIndex.WORKSHOP_PAGE.value
-                ).index()
+                workshop_button = self._create_workshop_button(workshop_url, "workshopButton")
+                workshop_index = self.editor_model.item(row_idx, ColumnIndex.WORKSHOP_PAGE.value).index()
                 self.editor_table_view.setIndexWidget(workshop_index, workshop_button)
 
     def _apply_sort_and_enable(self) -> None:
@@ -309,9 +283,7 @@ class AcfLogReader(BaseModsPanel):
         self.editor_table_view.setSortingEnabled(True)
 
         # Set sort indicator on the header (rows are already in correct order)
-        self.editor_table_view.horizontalHeader().setSortIndicator(
-            self.DEFAULT_SORT_COLUMN, self.DEFAULT_SORT_ORDER
-        )
+        self.editor_table_view.horizontalHeader().setSortIndicator(self.DEFAULT_SORT_COLUMN, self.DEFAULT_SORT_ORDER)
 
     def _update_active_pfids(self) -> None:
         """
@@ -374,9 +346,7 @@ class AcfLogReader(BaseModsPanel):
             )
 
             # Extract workshop items from both sources
-            acf_entries = self._extract_acf_entries(
-                steamcmd_acf_data, workshop_acf_data
-            )
+            acf_entries = self._extract_acf_entries(steamcmd_acf_data, workshop_acf_data)
 
             logger.info(f"ACF Log Reader: Populating with {len(acf_entries)} entries")
 
@@ -397,9 +367,7 @@ class AcfLogReader(BaseModsPanel):
             add_start = time.time()
             self._batch_add_acf_rows(acf_entries, pfid_to_mod)
             add_elapsed = time.time() - add_start
-            logger.info(
-                f"ACF Log Reader: Added {self.editor_model.rowCount()} rows in {add_elapsed:.3f}s"
-            )
+            logger.info(f"ACF Log Reader: Added {self.editor_model.rowCount()} rows in {add_elapsed:.3f}s")
 
             # Re-enable updates
             self.editor_table_view.setUpdatesEnabled(True)
@@ -441,12 +409,7 @@ class AcfLogReader(BaseModsPanel):
 
         # Extract from SteamCMD ACF
         if steamcmd_acf_data:
-            steamcmd_items = (
-                steamcmd_acf_data.get("AppWorkshop", {}).get(
-                    "WorkshopItemsInstalled", {}
-                )
-                or {}
-            )
+            steamcmd_items = steamcmd_acf_data.get("AppWorkshop", {}).get("WorkshopItemsInstalled", {}) or {}
             logger.debug(f"Found {len(steamcmd_items)} items in SteamCMD ACF")
             for pfid, item_data in steamcmd_items.items():
                 if isinstance(item_data, dict):
@@ -460,12 +423,7 @@ class AcfLogReader(BaseModsPanel):
 
         # Extract from Workshop ACF (avoid duplicates)
         if workshop_acf_data:
-            workshop_items = (
-                workshop_acf_data.get("AppWorkshop", {}).get(
-                    "WorkshopItemsInstalled", {}
-                )
-                or {}
-            )
+            workshop_items = workshop_acf_data.get("AppWorkshop", {}).get("WorkshopItemsInstalled", {}) or {}
             logger.debug(f"Found {len(workshop_items)} items in Workshop ACF")
             for pfid, item_data in workshop_items.items():
                 if pfid not in seen_pfids:
@@ -480,9 +438,7 @@ class AcfLogReader(BaseModsPanel):
 
         return entries
 
-    def _get_acf_mods_from_metadata(
-        self, acf_pfids: set[str]
-    ) -> dict[str, tuple[str, dict[str, Any]]]:
+    def _get_acf_mods_from_metadata(self, acf_pfids: set[str]) -> dict[str, tuple[str, dict[str, Any]]]:
         """
         Extract mod metadata for ACF PFIDs.
 
