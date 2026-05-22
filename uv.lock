@@ -973,7 +973,7 @@ dev = [
     { name = "types-greenlet", specifier = ">=3.5.0.20260508" },
     { name = "types-lxml", specifier = ">=2025.3.30" },
     { name = "types-networkx", specifier = ">=3.6.1.20260513" },
-    { name = "types-pexpect", specifier = ">=4.9.0.20260508" },
+    { name = "types-pexpect", specifier = ">=4.9.0.20260518" },
     { name = "types-psutil", specifier = ">=7.2.2.20260508" },
     { name = "types-pygit2", specifier = ">=1.15.0.20250319" },
     { name = "types-pygments", specifier = ">=2.20.0.20260518" },
@@ -1170,11 +1170,11 @@ wheels = [
 
 [[package]]
 name = "types-pexpect"
-version = "4.9.0.20260508"
+version = "4.9.0.20260518"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e6/e4/c6a3db57e1559ecd588cb8df809a6e29cbc9d8bd52b5357d0f6853cd5930/types_pexpect-4.9.0.20260508.tar.gz", hash = "sha256:1729c05eb86c3f2bf76652576fb9f632921b3392ed951a681f3b4457d78af198", size = 13513, upload-time = "2026-05-08T04:49:24.117Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/84/c52c4841aeaf1d56551f14335ca99a40e7e04b4f8358b402115910828e8e/types_pexpect-4.9.0.20260518.tar.gz", hash = "sha256:38c373798209428dd90988b6fd4b8839c68c7e3ed79215f1ab11fa42d7ff9427", size = 13568, upload-time = "2026-05-18T06:03:35.378Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/20/8592e3e3ceb6147101a8803cda4be5433da83a56dc562b8dc1c55e9ccbe3/types_pexpect-4.9.0.20260508-py3-none-any.whl", hash = "sha256:a215c07a3d317597b5dcf6ed6892c683a20c8488b2cd37001c885497928a8bdf", size = 17077, upload-time = "2026-05-08T04:49:22.811Z" },
+    { url = "https://files.pythonhosted.org/packages/01/11/17b1da645d5f2a12e4db83ae38dbb732fbac96fb3bd7416635c844f7d24e/types_pexpect-4.9.0.20260518-py3-none-any.whl", hash = "sha256:bf2422e825e4efe29cc4a1b7bdc3c375ae97d9c3046ce6b2018c100fb049c262", size = 17087, upload-time = "2026-05-18T06:03:34.14Z" },
 ]
 
 [[package]]
