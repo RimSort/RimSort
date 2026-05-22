@@ -2595,11 +2595,23 @@ class MainContent(QObject):
 
     def _on_steam_not_running(self) -> None:
         logger.warning("Steam is not running — Steamworks operations unavailable")
+        dialogue.show_warning(
+            title=self.tr("Steam Not Running"),
+            text=self.tr("Steam does not appear to be running."),
+            information=self.tr("Please start Steam and try again."),
+        )
 
     def _on_steamworks_operation_complete(self, op_type: str, success: bool) -> None:
-        logger.info(
-            f"Steamworks '{op_type}' completed: {'success' if success else 'failure'}"
-        )
+        status = "completed" if success else "failed"
+        logger.info(f"Steamworks '{op_type}' {status}")
+        if not success:
+            dialogue.show_warning(
+                title=self.tr("Steam Operation Failed"),
+                text=self.tr(
+                    "The Steam {op_type} operation did not complete successfully."
+                ).format(op_type=op_type),
+                information=self.tr("Check the log for details."),
+            )
 
     def _on_item_subscribed(self, pfid: str) -> None:
         EventBus().workshop_item_installed.emit(pfid)
@@ -3691,9 +3703,14 @@ class MainContent(QObject):
                 "Launching game via Steam protocol URI (steam://rungameid/294100)..."
             )
             platform_specific_open("steam://rungameid/294100")
+        elif steam_client_integration:
+            # Launch with Steamworks API initialized for Steam overlay
+            logger.info("Launching game process with Steamworks API...")
+            self._steamworks_worker.launch_game(
+                game_install_path=str(game_install_path), args=run_args
+            )
         else:
-            # Launch game executable directly
-            # This method ignores Steam overlay but respects custom run arguments
+            # Launch game executable directly without Steam integration
             logger.info("Launching game process without Steamworks API...")
             launch_game_process(game_install_path=game_install_path, args=run_args)
 

@@ -31,6 +31,8 @@ from typing import Any
 from loguru import logger
 from PySide6.QtCore import QThread, Signal
 
+from app.utils.generic import launch_game_process
+
 # Ensure SteamworksPy module is in Python path when running from interpreter
 if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
@@ -73,6 +75,12 @@ class ResubscribeOp(SteamworksOperation):
 @dataclass
 class ForceDownloadOp(SteamworksOperation):
     pfids: list[int] = field(default_factory=list)
+
+
+@dataclass
+class GameLaunchOp(SteamworksOperation):
+    game_install_path: str = ""
+    args: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -187,6 +195,9 @@ class SteamworksWorker(QThread):
     def force_download(self, pfids: list[int]) -> None:
         self.submit(ForceDownloadOp(pfids=pfids))
 
+    def launch_game(self, game_install_path: str, args: list[str]) -> None:
+        self.submit(GameLaunchOp(game_install_path=game_install_path, args=args))
+
     def query_app_dependencies(
         self, pfids: list[int]
     ) -> concurrent.futures.Future[dict[int, Any] | None]:
@@ -242,6 +253,7 @@ class SteamworksWorker(QThread):
 
     def _unload(self) -> None:
         if self._steamworks is not None:
+            self._callback_generation += 1
             try:
                 self._steamworks.unload()
             except Exception as e:
@@ -293,6 +305,8 @@ class SteamworksWorker(QThread):
             self._handle_resubscribe(op)
         elif isinstance(op, ForceDownloadOp):
             self._handle_force_download(op)
+        elif isinstance(op, GameLaunchOp):
+            self._handle_game_launch(op)
         elif isinstance(op, AppDependenciesOp):
             self._handle_app_dependencies(op)
         else:
@@ -513,6 +527,15 @@ class SteamworksWorker(QThread):
 
         # No callback counting — download callbacks are unreliable
         self.operation_complete.emit("force_download", True)
+
+    def _handle_game_launch(self, op: GameLaunchOp) -> None:
+        """Initialize Steamworks for Steam overlay, launch the game, then unload."""
+        logger.info("GAME LAUNCH: initializing Steamworks before launch")
+        self._ensure_initialized()
+        launch_game_process(game_install_path=Path(op.game_install_path), args=op.args)
+        # Unload immediately — don't hold the handle while the game runs
+        self._unload()
+        self.operation_complete.emit("game_launch", True)
 
     def _handle_app_dependencies(self, op: AppDependenciesOp) -> None:
         if not op.pfids:
