@@ -5,6 +5,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import time
@@ -44,6 +45,7 @@ DOWNLOAD_TIMEOUT = 30
 
 # File and archive constants
 ZIP_EXTENSION = ".zip"
+TAR_GZ_EXTENSION = ".tar.gz"
 MSI_EXTENSION = ".msi"
 APPIMAGE_EXTENSION = ".AppImage"
 DOWNLOAD_CHUNK_SIZE = 131072  # 128KB for better performance
@@ -134,6 +136,7 @@ class ReleaseInfo(TypedDict):
     download_url: str
     is_msi: bool
     is_appimage: bool
+    is_tar_gz: bool
 
 
 class DownloadInfo(TypedDict):
@@ -143,6 +146,7 @@ class DownloadInfo(TypedDict):
     name: str
     is_msi: bool
     is_appimage: bool
+    is_tar_gz: bool
 
 
 class PlatformPatterns(TypedDict):
@@ -635,6 +639,7 @@ class UpdateManager(QObject):
             "needs_elevation": needs_elevation,
             "is_msi": latest_release_info.get("is_msi", False),
             "is_appimage": latest_release_info.get("is_appimage", False),
+            "is_tar_gz": latest_release_info.get("is_tar_gz", False),
         }
 
     def _parse_current_version(self, current_version: str) -> version.Version:
@@ -707,9 +712,10 @@ class UpdateManager(QObject):
 
         is_msi = bool(update_info.get("is_msi", False))
         is_appimage = bool(update_info.get("is_appimage", False))
+        is_tar_gz = bool(update_info.get("is_tar_gz", False))
 
         try:
-            self._perform_update(download_url, tag_name, is_msi, is_appimage)
+            self._perform_update(download_url, tag_name, is_msi, is_appimage, is_tar_gz)
         except UpdateError as e:
             logger.error(f"Update process failed: {e}")
             raise
@@ -767,6 +773,7 @@ class UpdateManager(QObject):
                 "download_url": download_info["url"],
                 "is_msi": download_info.get("is_msi", False),
                 "is_appimage": download_info.get("is_appimage", False),
+                "is_tar_gz": download_info.get("is_tar_gz", False),
             }
 
         except requests.RequestException as e:
@@ -860,12 +867,10 @@ class UpdateManager(QObject):
         # Determine preferred extension order
         if self._system == "Windows" and self._is_in_protected_path():
             preferred_order = [MSI_EXTENSION, ZIP_EXTENSION]
+        elif self._system == "Windows":
+            preferred_order = [ZIP_EXTENSION, MSI_EXTENSION]
         else:
-            preferred_order = (
-                [ZIP_EXTENSION, MSI_EXTENSION]
-                if self._system == "Windows"
-                else [ZIP_EXTENSION]
-            )
+            preferred_order = [TAR_GZ_EXTENSION, ZIP_EXTENSION]
 
         logger.debug(
             f"Looking for asset matching system={self._system}, arch={self._arch}, patterns={system_patterns + arch_patterns}, order={preferred_order}"
@@ -930,6 +935,7 @@ class UpdateManager(QObject):
                         "name": asset_name,
                         "is_msi": preferred_extension == MSI_EXTENSION,
                         "is_appimage": False,
+                        "is_tar_gz": preferred_extension == TAR_GZ_EXTENSION,
                     },
                 )
             elif download_url and self._asset_matches(
@@ -946,6 +952,7 @@ class UpdateManager(QObject):
                             "name": asset_name,
                             "is_msi": preferred_extension == MSI_EXTENSION,
                             "is_appimage": False,
+                            "is_tar_gz": preferred_extension == TAR_GZ_EXTENSION,
                         },
                     )
 
@@ -983,6 +990,7 @@ class UpdateManager(QObject):
                         "name": asset_name,
                         "is_msi": False,
                         "is_appimage": True,
+                        "is_tar_gz": False,
                     },
                 )
 
@@ -999,6 +1007,7 @@ class UpdateManager(QObject):
                         "name": asset_name,
                         "is_msi": False,
                         "is_appimage": True,
+                        "is_tar_gz": False,
                     },
                 )
 
@@ -1015,7 +1024,12 @@ class UpdateManager(QObject):
             self.download_complete.emit(False, str(e))
 
     def _perform_update(
-        self, download_url: str, tag_name: str, is_msi: bool, is_appimage: bool = False
+        self,
+        download_url: str,
+        tag_name: str,
+        is_msi: bool,
+        is_appimage: bool = False,
+        is_tar_gz: bool = False,
     ) -> None:
         """
         Download and extract the update, then launch the update script.
@@ -1025,6 +1039,7 @@ class UpdateManager(QObject):
             tag_name: Tag name of the release
             is_msi: Whether the update is an MSI installer
             is_appimage: Whether the update is an AppImage file
+            is_tar_gz: Whether the update is a tar.gz archive
         """
         try:
             logger.debug(
@@ -1099,7 +1114,7 @@ class UpdateManager(QObject):
             else:
                 # Extract or save with progress window
                 try:
-                    self._extract_update_with_progress(is_msi)
+                    self._extract_update_with_progress(is_msi, is_tar_gz)
                 except Exception as e:
                     logger.error(f"Extraction/preparation failed: {e}")
                     raise UpdateExtractionError(f"Extraction failed: {str(e)}") from e
@@ -1484,6 +1499,79 @@ class UpdateManager(QObject):
                 except Exception as e:
                     logger.debug(f"Failed to clean up temp ZIP file: {e}")
 
+    def _extract_tar_gz(self, content: bytes, temp_base: Path) -> int:
+        """
+        Extract tar.gz content to the temporary directory with progress UI.
+
+        Args:
+            content: tar.gz file content as bytes
+            temp_base: Temporary directory to extract to
+
+        Returns:
+            Number of files extracted
+
+        Raises:
+            UpdateExtractionError: If the archive is corrupt or extraction fails
+        """
+        logger.info("Extracting update from tar.gz")
+
+        temp_tar_path = temp_base.parent / f"{temp_base.name}.tar.gz"
+        temp_tar_path.write_bytes(content)
+
+        try:
+            with tarfile.open(temp_tar_path, "r:gz") as tf:
+                members = tf.getmembers()
+                total = len(members)
+                logger.info(f"tar.gz contains {total} entries")
+
+                if total == 0:
+                    raise UpdateExtractionError("tar.gz archive is empty")
+
+                self._progress_widget = TaskProgressWindow(
+                    title="Extracting Update",
+                    show_message=True,
+                    show_percent=True,
+                )
+                self._progress_widget.set_message("Extracting files...")
+
+                if self.mod_info_panel:
+                    self.mod_info_panel.info_panel_frame.hide()
+                    self.mod_info_panel.panel.addWidget(self._progress_widget)
+                    self._progress_widget.show()
+                else:
+                    self._progress_widget.show()
+
+                for i, member in enumerate(members):
+                    tf.extract(member, temp_base, filter="data")
+                    if (i + 1) % 50 == 0 or i == total - 1:
+                        percent = int(((i + 1) / total) * 100)
+                        self._progress_widget.update_progress(
+                            percent, f"Extracting: {i + 1}/{total} files"
+                        )
+                        QApplication.processEvents()
+
+            logger.info(f"Extracted {total} entries from tar.gz")
+
+            try:
+                if self._progress_widget:
+                    self._progress_widget.close()
+                    if self.mod_info_panel:
+                        self.mod_info_panel.panel.removeWidget(self._progress_widget)
+                        self.mod_info_panel.info_panel_frame.show()
+            except Exception:
+                pass
+
+            return total
+
+        except tarfile.TarError as e:
+            raise UpdateExtractionError(f"Invalid tar.gz archive: {e}") from e
+        finally:
+            if temp_tar_path.exists():
+                try:
+                    temp_tar_path.unlink()
+                except Exception as e:
+                    logger.debug(f"Failed to clean up temp tar.gz file: {e}")
+
     def _normalize_structure(self, temp_base: Path, extracted_files: int) -> None:
         """
         Normalize the extracted structure by moving contents to root if wrapped.
@@ -1585,13 +1673,14 @@ class UpdateManager(QObject):
         logger.info(f"AppImage prepared ({len(self._update_content)} bytes)")
         return new_path
 
-    def _extract_update(self, is_msi: bool = False) -> Path:
+    def _extract_update(self, is_msi: bool = False, is_tar_gz: bool = False) -> Path:
         """
         Extract the downloaded update to a dedicated temporary directory and normalize structure,
         or save MSI file to temp location.
 
         Args:
             is_msi: Whether the update is an MSI installer (don't extract, just save)
+            is_tar_gz: Whether the update is a tar.gz archive
 
         Raises:
             UpdateExtractionError: If extraction or saving fails
@@ -1613,11 +1702,14 @@ class UpdateManager(QObject):
                 self._extracted_path = msi_path
                 return msi_path
             else:
-                # Create unique temp dir for ZIP extraction
                 temp_base = self._create_temp_dir()
 
-                # Extract ZIP content
-                extracted_files = self._extract_zip(self._update_content, temp_base)
+                if is_tar_gz:
+                    extracted_files = self._extract_tar_gz(
+                        self._update_content, temp_base
+                    )
+                else:
+                    extracted_files = self._extract_zip(self._update_content, temp_base)
                 logger.info(f"Extracted {extracted_files} files")
 
                 # Normalize structure
@@ -2257,7 +2349,9 @@ class UpdateManager(QObject):
 
         return script_path, args_repr, start_new_session, install_dir
 
-    def _extract_update_with_progress(self, is_msi: bool = False) -> None:
+    def _extract_update_with_progress(
+        self, is_msi: bool = False, is_tar_gz: bool = False
+    ) -> None:
         """
         Extract or prepare the update with a progress window.
 
@@ -2267,13 +2361,16 @@ class UpdateManager(QObject):
 
         Args:
             is_msi: Whether the update is an MSI installer
+            is_tar_gz: Whether the update is a tar.gz archive
         """
         # Run extraction on main thread (Qt operations require main thread)
-        self._extracted_path = self._extract_update_thread_worker(is_msi)
+        self._extracted_path = self._extract_update_thread_worker(is_msi, is_tar_gz)
 
-    def _extract_update_thread_worker(self, is_msi: bool = False) -> Path:
+    def _extract_update_thread_worker(
+        self, is_msi: bool = False, is_tar_gz: bool = False
+    ) -> Path:
         """Worker thread for extraction."""
-        return self._extract_update(is_msi)
+        return self._extract_update(is_msi, is_tar_gz)
 
     def _show_progress_widget(
         self, progress_widget: TaskProgressWindow, cancellable: bool = True

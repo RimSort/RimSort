@@ -101,6 +101,29 @@ SAMPLE_ASSETS: list[dict[str, Any]] = [
     ),
 ]
 
+SAMPLE_ASSETS_WITH_TAR_GZ: list[dict[str, Any]] = [
+    _make_asset(
+        "RimSort-1.2.3-Ubuntu-22.04_x86_64.tar.gz",
+        "https://example.com/ubuntu.tar.gz",
+    ),
+    _make_asset(
+        "RimSort-1.2.3-Ubuntu-22.04_x86_64.zip",
+        "https://example.com/ubuntu.zip",
+    ),
+    _make_asset(
+        "RimSort-1.2.3-x86_64.AppImage",
+        "https://example.com/rimsort.AppImage",
+    ),
+    _make_asset(
+        "RimSort-1.2.3-Darwin_arm.tar.gz",
+        "https://example.com/darwin.tar.gz",
+    ),
+    _make_asset(
+        "RimSort-1.2.3-Windows_x86_64.zip",
+        "https://example.com/windows.zip",
+    ),
+]
+
 
 class TestAssetSelection:
     @pytest.fixture
@@ -177,6 +200,81 @@ class TestAssetSelection:
         assert result is not None
         assert result["is_appimage"] is False
         assert "ubuntu.zip" in result["url"]
+
+
+# ---------------------------------------------------------------------------
+# tar.gz asset selection
+# ---------------------------------------------------------------------------
+
+
+class TestTarGzAssetSelection:
+    @pytest.fixture
+    def _linux_mgr(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
+        monkeypatch.delenv("APPIMAGE", raising=False)
+        mgr = MagicMock(spec=UpdateManager)
+        mgr._system = "Linux"
+        mgr._arch = "64bit"
+        mgr._cached_patterns = UpdateManager._platform_patterns["Linux"]
+        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
+        mgr._get_platform_download_url = (
+            UpdateManager._get_platform_download_url.__get__(mgr)
+        )
+        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
+        mgr._is_in_protected_path = MagicMock(return_value=False)
+        return mgr
+
+    @pytest.fixture
+    def _darwin_mgr(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
+        monkeypatch.delenv("APPIMAGE", raising=False)
+        mgr = MagicMock(spec=UpdateManager)
+        mgr._system = "Darwin"
+        mgr._arch = "ARM64"
+        mgr._cached_patterns = UpdateManager._platform_patterns["Darwin"]
+        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
+        mgr._get_platform_download_url = (
+            UpdateManager._get_platform_download_url.__get__(mgr)
+        )
+        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
+        mgr._is_in_protected_path = MagicMock(return_value=False)
+        return mgr
+
+    def test_linux_prefers_tar_gz_over_zip(self, _linux_mgr: UpdateManager) -> None:
+        result = _linux_mgr._get_platform_download_url(SAMPLE_ASSETS_WITH_TAR_GZ)
+        assert result is not None
+        assert result["is_tar_gz"] is True
+        assert result["url"] == "https://example.com/ubuntu.tar.gz"
+
+    def test_linux_falls_back_to_zip_when_no_tar_gz(
+        self, _linux_mgr: UpdateManager
+    ) -> None:
+        result = _linux_mgr._get_platform_download_url(SAMPLE_ASSETS)
+        assert result is not None
+        assert result["is_tar_gz"] is False
+        assert result["url"] == "https://example.com/ubuntu.zip"
+
+    def test_darwin_prefers_tar_gz(self, _darwin_mgr: UpdateManager) -> None:
+        result = _darwin_mgr._get_platform_download_url(SAMPLE_ASSETS_WITH_TAR_GZ)
+        assert result is not None
+        assert result["is_tar_gz"] is True
+        assert result["url"] == "https://example.com/darwin.tar.gz"
+
+    def test_windows_ignores_tar_gz(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("APPIMAGE", raising=False)
+        mgr = MagicMock(spec=UpdateManager)
+        mgr._system = "Windows"
+        mgr._arch = "64bit"
+        mgr._cached_patterns = UpdateManager._platform_patterns["Windows"]
+        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
+        mgr._get_platform_download_url = (
+            UpdateManager._get_platform_download_url.__get__(mgr)
+        )
+        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
+        mgr._is_in_protected_path = MagicMock(return_value=False)
+
+        result = mgr._get_platform_download_url(SAMPLE_ASSETS_WITH_TAR_GZ)
+        assert result is not None
+        assert result["is_tar_gz"] is False
+        assert result["url"] == "https://example.com/windows.zip"
 
 
 # ---------------------------------------------------------------------------
@@ -282,3 +380,79 @@ class TestPrepareAppImageUpdate:
                 mgr._prepare_appimage_update()
         finally:
             fake.parent.chmod(0o755)
+
+
+# ---------------------------------------------------------------------------
+# _extract_tar_gz
+# ---------------------------------------------------------------------------
+
+
+class TestExtractTarGz:
+    @pytest.fixture(autouse=True)
+    def _mock_progress_widget(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Mock TaskProgressWindow to avoid needing a QApplication."""
+        monkeypatch.setattr("app.utils.update_utils.TaskProgressWindow", MagicMock)
+
+    def _create_tar_gz(self, tmp_path: Path) -> bytes:
+        """Create a minimal tar.gz archive containing a dummy file."""
+        import io
+        import tarfile as tf
+
+        buf = io.BytesIO()
+        with tf.open(fileobj=buf, mode="w:gz") as tar:
+            data = b"#!/bin/sh\necho hello"
+            info = tf.TarInfo(name="RimSort")
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+        return buf.getvalue()
+
+    def test_extracts_tar_gz_content(self, tmp_path: Path) -> None:
+        content = self._create_tar_gz(tmp_path)
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        mgr = MagicMock(spec=UpdateManager)
+        mgr.mod_info_panel = None
+        mgr._progress_widget = None
+        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
+
+        count = mgr._extract_tar_gz(content, extract_dir)
+
+        assert count == 1
+        assert (extract_dir / "RimSort").exists()
+
+    def test_raises_on_invalid_tar_gz(self, tmp_path: Path) -> None:
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        mgr = MagicMock(spec=UpdateManager)
+        mgr.mod_info_panel = None
+        mgr._progress_widget = None
+        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
+
+        from app.utils.update_utils import UpdateExtractionError
+
+        with pytest.raises(UpdateExtractionError, match="Invalid tar.gz"):
+            mgr._extract_tar_gz(b"not a tarball", extract_dir)
+
+    def test_raises_on_empty_tar_gz(self, tmp_path: Path) -> None:
+        import io
+        import tarfile as tf
+
+        buf = io.BytesIO()
+        with tf.open(fileobj=buf, mode="w:gz"):
+            pass  # empty archive
+        content = buf.getvalue()
+
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        mgr = MagicMock(spec=UpdateManager)
+        mgr.mod_info_panel = None
+        mgr._progress_widget = None
+        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
+
+        from app.utils.update_utils import UpdateExtractionError
+
+        with pytest.raises(UpdateExtractionError, match="empty"):
+            mgr._extract_tar_gz(content, extract_dir)
