@@ -83,7 +83,7 @@ class DividerItemInner(QWidget):
         self.count_label.setText(f"({count} mods)")
 
     def _update_arrow(self) -> None:
-        self.arrow_label.setText("\u25B6" if self._collapsed else "\u25BC")
+        self.arrow_label.setText("\u25b6" if self._collapsed else "\u25bc")
 
     def set_selected(self, selected: bool) -> None:
         pass
