@@ -76,6 +76,7 @@ class ClickablePathLabel(QLabel):
             # If path looks like a URL, open in browser
             if self.path.startswith("http://") or self.path.startswith("https://"):
                 import webbrowser
+
                 try:
                     webbrowser.open(self.path)
                     logger.info(f"Opening URL: {self.path}")
@@ -243,7 +244,9 @@ class ModInfoPanel:
         self.mod_info_steam_url_label.setObjectName("summaryLabel")
         self.mod_info_steam_url_value = ClickablePathLabel()
         self.mod_info_steam_url_value.setObjectName("summaryValue")
-        self.mod_info_steam_url_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.mod_info_steam_url_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_steam_url_value.setWordWrap(True)
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
@@ -363,8 +366,8 @@ class ModInfoPanel:
             self.mod_info_name_value,
             self.mod_info_path_label,
             self.mod_info_path_value,
-                self.mod_info_steam_url_label,
-                self.mod_info_steam_url_value,
+            self.mod_info_steam_url_label,
+            self.mod_info_steam_url_value,
         ]
 
         self.base_mod_info_widgets = [
@@ -646,19 +649,24 @@ class ModInfoPanel:
         self, mod_metadata: dict[str, Any], render_unity_rt: bool
     ) -> None:
         """Set the mod description with version-specific handling."""
-        self.mod_info_path_value.setPath(mod_info.get("path"))
+        self.mod_info_path_value.setPath(mod_metadata.get("path"))
         # Set Steam URL value
-        steam_url = None
-        pfid = mod_info.get("pfid")
-        if pfid:
-            steam_url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-        elif mod_info.get("steam_url"):
-            steam_url = mod_info.get("steam_url")
-        elif mod_info.get("url"):
-            steam_url = mod_info.get("url")
+        steam_url: str | None = None
+        pfid = mod_metadata.get("pfid")
+        if isinstance(pfid, str) and pfid:
+            steam_url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + pfid
+        else:
+            steam_url_candidate = mod_metadata.get("steam_url") or mod_metadata.get(
+                "url"
+            )
+            if isinstance(steam_url_candidate, str) and steam_url_candidate:
+                steam_url = steam_url_candidate
         self.mod_info_steam_url_value.setPath(steam_url)
+
         if steam_url:
-            self.mod_info_steam_url_value.setToolTip(f"Click to open Steam Workshop: {steam_url}")
+            self.mod_info_steam_url_value.setToolTip(
+                f"Click to open Steam Workshop: {steam_url}"
+            )
         else:
             self.mod_info_steam_url_value.setToolTip("")
         # Set the scrolling description for the Mod Info Panel

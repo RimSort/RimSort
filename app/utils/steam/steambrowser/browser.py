@@ -19,6 +19,7 @@ from PySide6.QtWebEngineCore import (
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
+    QDialog,
     QHBoxLayout,
     QLabel,
     QLayout,
@@ -29,10 +30,12 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSizePolicy,
+    QTextEdit,
     QToolBar,
     QVBoxLayout,
     QWidget,
 )
+from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
 
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
@@ -259,29 +262,31 @@ class SteamBrowser(QWidget):
         self._launch_browser_window()
         logger.debug("Finished Browser Window initialization")
 
-    def _show_add_mods_by_id_dialog(self):
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel
-        from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
-
+    def _show_add_mods_by_id_dialog(self) -> None:
         dialog = QDialog(self)
         dialog.setWindowTitle(self.tr("Add Mods by Workshop ID"))
         layout = QVBoxLayout(dialog)
-        label = QLabel(self.tr("Enter one or more Workshop IDs (one per line or separated by commas):"))
+        label = QLabel(
+            self.tr(
+                "Enter one or more Workshop IDs (one per line or separated by commas):"
+            )
+        )
         layout.addWidget(label)
         text_edit = QTextEdit()
         layout.addWidget(text_edit)
-        buttons = ButtonBox(ButtonBox.StandardButton.Ok | ButtonBox.StandardButton.Cancel)
+        buttons = ButtonBox(
+            ButtonBox.StandardButton.Ok | ButtonBox.StandardButton.Cancel
+        )
         layout.addWidget(buttons)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
             ids_text = text_edit.toPlainText()
-            ids = re.split(r'[\s,]+', ids_text.strip())
+            ids = re.split(r"[\s,]+", ids_text.strip())
             ids = [id_.strip() for id_ in ids if id_.strip()]
             for workshop_id in ids:
                 self._add_mod_to_list(publishedfileid=workshop_id)
-
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
