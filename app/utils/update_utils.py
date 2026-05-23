@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Union, c
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QEventLoop, QObject, Signal
+from PySide6.QtCore import QEventLoop, QObject, QThread, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 import app.views.dialogue as dialogue
@@ -349,6 +349,64 @@ class ScriptConfig:
             return cmd
         else:
             raise ValueError(f"Unsupported platform: {self.platform}")
+
+
+class TarExtractThread(QThread):
+    """Extract tar.gz files in a separate thread with progress reporting.
+
+    Mirrors :class:`ZipExtractThread` so the update manager can drive both
+    archive types through the same QEventLoop pattern.
+    """
+
+    progress = Signal(int, str)
+    finished = Signal(bool, str)
+
+    def __init__(self, tar_path: str, target_path: str) -> None:
+        super().__init__()
+        self.tar_path = tar_path
+        self.target_path = target_path
+        self._should_abort = False
+
+    def run(self) -> None:
+        start = time.perf_counter()
+        try:
+            with tarfile.open(self.tar_path, "r:gz") as tf:
+                members = tf.getmembers()
+                total = len(members)
+
+                if total == 0:
+                    self.finished.emit(False, "tar.gz archive is empty")
+                    return
+
+                update_interval = max(1, total // 100)
+
+                for i, member in enumerate(members):
+                    if self._should_abort:
+                        self.finished.emit(False, "Operation aborted")
+                        return
+
+                    tf.extract(member, self.target_path, filter="data")
+
+                    if i % update_interval == 0 or i == total - 1:
+                        percent = int((i + 1) / total * 100)
+                        self.progress.emit(
+                            percent, f"Extracting: {i + 1} / {total} files"
+                        )
+
+            elapsed = time.perf_counter() - start
+            self.finished.emit(
+                True,
+                f"{self.tar_path} → {self.target_path}\n"
+                f"Time elapsed: {elapsed:.2f} seconds",
+            )
+
+        except Exception as e:
+            logger.error(f"tar.gz extraction failed: {e}")
+            self.finished.emit(False, f"Extraction error: {str(e)}")
+
+    def stop(self) -> None:
+        """Signal the thread to abort extraction on next iteration."""
+        self._should_abort = True
 
 
 class UpdateManager(QObject):
@@ -1501,14 +1559,18 @@ class UpdateManager(QObject):
 
     def _extract_tar_gz(self, content: bytes, temp_base: Path) -> int:
         """
-        Extract tar.gz content to the temporary directory with progress UI.
+        Extract tar.gz content to the temporary directory using
+        TarExtractThread with UI progress.
+
+        Mirrors the QThread + QEventLoop pattern used by :meth:`_extract_zip`
+        so the UI stays responsive and extraction can be aborted.
 
         Args:
             content: tar.gz file content as bytes
             temp_base: Temporary directory to extract to
 
         Returns:
-            Number of files extracted
+            Number of entries extracted
 
         Raises:
             UpdateExtractionError: If the archive is corrupt or extraction fails
@@ -1519,51 +1581,88 @@ class UpdateManager(QObject):
         temp_tar_path.write_bytes(content)
 
         try:
-            with tarfile.open(temp_tar_path, "r:gz") as tf:
-                members = tf.getmembers()
-                total = len(members)
-                logger.info(f"tar.gz contains {total} entries")
-
-                if total == 0:
-                    raise UpdateExtractionError("tar.gz archive is empty")
-
-                self._progress_widget = TaskProgressWindow(
-                    title="Extracting Update",
-                    show_message=True,
-                    show_percent=True,
-                )
-                self._progress_widget.set_message("Extracting files...")
-
-                if self.mod_info_panel:
-                    self.mod_info_panel.info_panel_frame.hide()
-                    self.mod_info_panel.panel.addWidget(self._progress_widget)
-                    self._progress_widget.show()
-                else:
-                    self._progress_widget.show()
-
-                for i, member in enumerate(members):
-                    tf.extract(member, temp_base, filter="data")
-                    if (i + 1) % 50 == 0 or i == total - 1:
-                        percent = int(((i + 1) / total) * 100)
-                        self._progress_widget.update_progress(
-                            percent, f"Extracting: {i + 1}/{total} files"
-                        )
-                        QApplication.processEvents()
-
-            logger.info(f"Extracted {total} entries from tar.gz")
-            return total
-
-        except tarfile.TarError as e:
-            raise UpdateExtractionError(f"Invalid tar.gz archive: {e}") from e
-        finally:
+            # Validate and count members before spawning the thread
             try:
+                with tarfile.open(temp_tar_path, "r:gz") as tf:
+                    extracted_files = len(tf.getmembers())
+            except tarfile.TarError as e:
+                raise UpdateExtractionError(f"Invalid tar.gz archive: {e}") from e
+
+            if extracted_files == 0:
+                raise UpdateExtractionError("tar.gz archive is empty")
+
+            logger.info(f"tar.gz contains {extracted_files} entries")
+
+            # Create and display extraction progress widget
+            self._progress_widget = TaskProgressWindow(
+                title="Extracting Update",
+                show_message=True,
+                show_percent=True,
+            )
+            self._progress_widget.set_message("Extracting files...")
+
+            if self.mod_info_panel:
+                self.mod_info_panel.info_panel_frame.hide()
+                self.mod_info_panel.panel.addWidget(self._progress_widget)
+                self._progress_widget.show()
+            else:
+                self._progress_widget.show()
+
+            # Create and run extraction thread
+            extraction_result: dict[str, Any] = {
+                "success": False,
+                "error": "",
+            }
+            loop = QEventLoop()
+
+            def on_extraction_progress(percent: int, message: str) -> None:
                 if self._progress_widget:
-                    self._progress_widget.close()
-                    if self.mod_info_panel:
-                        self.mod_info_panel.panel.removeWidget(self._progress_widget)
-                        self.mod_info_panel.info_panel_frame.show()
-            except Exception:
-                pass
+                    self._progress_widget.update_progress(percent, message)
+
+            def on_extraction_finished(success: bool, message: str) -> None:
+                extraction_result["success"] = success
+                extraction_result["error"] = message
+                loop.quit()
+                try:
+                    if self._progress_widget:
+                        self._progress_widget.close()
+                        if self.mod_info_panel:
+                            self.mod_info_panel.panel.removeWidget(
+                                self._progress_widget
+                            )
+                            self.mod_info_panel.info_panel_frame.show()
+                except Exception as e:
+                    logger.debug(f"Error closing progress widget: {e}")
+
+            extract_thread = TarExtractThread(
+                tar_path=str(temp_tar_path),
+                target_path=str(temp_base),
+            )
+            extract_thread.progress.connect(on_extraction_progress)
+            extract_thread.finished.connect(on_extraction_finished)
+            extract_thread.start()
+
+            # Wait for extraction to complete without blocking event loop
+            loop.exec()
+
+            # Ensure thread is properly cleaned up before continuing
+            extract_thread.wait(EXTRACTION_THREAD_TIMEOUT_MS)
+            if extract_thread.isRunning():
+                logger.warning(
+                    "Extraction thread still running after timeout, forcing quit"
+                )
+                extract_thread.quit()
+                extract_thread.wait(2000)
+
+            if not extraction_result["success"]:
+                raise UpdateExtractionError(
+                    f"Extraction failed: {extraction_result['error']}"
+                )
+
+            logger.info(f"Extracted {extracted_files} entries from tar.gz")
+            return extracted_files
+
+        finally:
             if temp_tar_path.exists():
                 try:
                     temp_tar_path.unlink()

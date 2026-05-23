@@ -387,39 +387,120 @@ class TestPrepareAppImageUpdate:
 # ---------------------------------------------------------------------------
 
 
-class TestExtractTarGz:
-    @pytest.fixture(autouse=True)
-    def _mock_progress_widget(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Mock TaskProgressWindow to avoid needing a QApplication."""
-        monkeypatch.setattr("app.utils.update_utils.TaskProgressWindow", MagicMock)
+class TestTarExtractThread:
+    """Test TarExtractThread directly — no QApplication needed since we call run()."""
 
-    def _create_tar_gz(self, tmp_path: Path) -> bytes:
-        """Create a minimal tar.gz archive containing a dummy file."""
+    def _create_tar_gz_file(self, tmp_path: Path, name: str = "RimSort") -> Path:
+        """Create a tar.gz file on disk with a single entry."""
         import io
         import tarfile as tf
 
-        buf = io.BytesIO()
-        with tf.open(fileobj=buf, mode="w:gz") as tar:
+        tar_path = tmp_path / "test.tar.gz"
+        with tf.open(str(tar_path), "w:gz") as tar:
             data = b"#!/bin/sh\necho hello"
-            info = tf.TarInfo(name="RimSort")
+            info = tf.TarInfo(name=name)
             info.size = len(data)
             tar.addfile(info, io.BytesIO(data))
-        return buf.getvalue()
+        return tar_path
 
-    def test_extracts_tar_gz_content(self, tmp_path: Path) -> None:
-        content = self._create_tar_gz(tmp_path)
+    def test_extracts_content(self, tmp_path: Path) -> None:
+        from app.utils.update_utils import TarExtractThread
+
+        tar_path = self._create_tar_gz_file(tmp_path)
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        mgr = MagicMock(spec=UpdateManager)
-        mgr.mod_info_panel = None
-        mgr._progress_widget = None
-        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
+        results: list[tuple[bool, str]] = []
+        thread = TarExtractThread(str(tar_path), str(extract_dir))
+        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
+        thread.run()
 
-        count = mgr._extract_tar_gz(content, extract_dir)
-
-        assert count == 1
+        assert len(results) == 1
+        assert results[0][0] is True
         assert (extract_dir / "RimSort").exists()
+
+    def test_reports_progress(self, tmp_path: Path) -> None:
+        from app.utils.update_utils import TarExtractThread
+
+        tar_path = self._create_tar_gz_file(tmp_path)
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        progress_updates: list[tuple[int, str]] = []
+        thread = TarExtractThread(str(tar_path), str(extract_dir))
+        thread.progress.connect(lambda p, m: progress_updates.append((p, m)))
+        thread.run()
+
+        assert len(progress_updates) >= 1
+        assert progress_updates[-1][0] == 100
+
+    def test_emits_failure_on_invalid_archive(self, tmp_path: Path) -> None:
+        from app.utils.update_utils import TarExtractThread
+
+        bad_tar = tmp_path / "bad.tar.gz"
+        bad_tar.write_bytes(b"not a tarball")
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        results: list[tuple[bool, str]] = []
+        thread = TarExtractThread(str(bad_tar), str(extract_dir))
+        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
+        thread.run()
+
+        assert len(results) == 1
+        assert results[0][0] is False
+
+    def test_emits_failure_on_empty_archive(self, tmp_path: Path) -> None:
+        import tarfile as tf
+
+        from app.utils.update_utils import TarExtractThread
+
+        empty_tar = tmp_path / "empty.tar.gz"
+        with tf.open(str(empty_tar), "w:gz"):
+            pass
+
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        results: list[tuple[bool, str]] = []
+        thread = TarExtractThread(str(empty_tar), str(extract_dir))
+        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
+        thread.run()
+
+        assert len(results) == 1
+        assert results[0][0] is False
+        assert "empty" in results[0][1]
+
+    def test_abort_stops_extraction(self, tmp_path: Path) -> None:
+        import io
+        import tarfile as tf
+
+        from app.utils.update_utils import TarExtractThread
+
+        tar_path = tmp_path / "multi.tar.gz"
+        with tf.open(str(tar_path), "w:gz") as tar:
+            for i in range(10):
+                data = b"x" * 100
+                info = tf.TarInfo(name=f"file_{i}")
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+
+        extract_dir = tmp_path / "extract"
+        extract_dir.mkdir()
+
+        thread = TarExtractThread(str(tar_path), str(extract_dir))
+        thread.stop()  # abort before starting
+        results: list[tuple[bool, str]] = []
+        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
+        thread.run()
+
+        assert len(results) == 1
+        assert results[0][0] is False
+        assert "aborted" in results[0][1].lower()
+
+
+class TestExtractTarGzIntegration:
+    """Test _extract_tar_gz validation logic (thread interaction is mocked)."""
 
     def test_raises_on_invalid_tar_gz(self, tmp_path: Path) -> None:
         extract_dir = tmp_path / "extract"
@@ -441,7 +522,7 @@ class TestExtractTarGz:
 
         buf = io.BytesIO()
         with tf.open(fileobj=buf, mode="w:gz"):
-            pass  # empty archive
+            pass
         content = buf.getvalue()
 
         extract_dir = tmp_path / "extract"
