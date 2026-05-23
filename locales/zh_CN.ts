@@ -1470,6 +1470,34 @@ Destination: {dest}</source>
         <translation>更新现有仓库</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>下载失败</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>无法下载数据库：{names}</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>请检查您的互联网连接和配置的 URL。</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>下载完成</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>数据库下载成功：{names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>已经是最新的了</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>数据库已是最新的：{names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>仓库已检索</translation>
     </message>
@@ -2644,6 +2672,10 @@ Do you want to proceed?</source>
         <translation>作者：</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>标签：</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>模组版本：</translation>
     </message>
@@ -2658,6 +2690,10 @@ Do you want to proceed?</source>
     <message>
         <source>Path:</source>
         <translation>路径：</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>蒸汽网址：</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2678,6 +2714,10 @@ Do you want to proceed?</source>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>在这里填写你的个人模组备注！</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>没有任何</translation>
     </message>
 </context>
 <context>
@@ -2732,6 +2772,18 @@ Do you want to proceed?</source>
     <message>
         <source>Open folder</source>
         <translation>打开文件夹</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>添加新标签...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>替换所有标签...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>删除所有标签</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2838,6 +2890,10 @@ Do you want to proceed?</source>
         <translation>取消订阅 Steam 模组</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>标签</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>其他选项</translation>
     </message>
@@ -2848,6 +2904,18 @@ Do you want to proceed?</source>
     <message>
         <source>Workshop mods options</source>
         <translation>创意工坊模组选项</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>在此添加分隔线</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>添加分隔线</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>分频器名称：</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2942,6 +3010,38 @@ Do you want to proceed?</source>
     <message>
         <source>This will remove the selected mod, </source>
         <translation>这将会移除所有选择的模组</translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation>替换标签</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>添加标签</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>重命名分隔线</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>扩张</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>坍塌</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>删除分隔线</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>重命名分隔线</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>新名称：</translation>
     </message>
     <message>
         <source>
@@ -3048,6 +3148,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Active [0]</source>
         <translation>启用 [0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>标签</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>标签过滤器已禁用</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>启用/禁用标签过滤器</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>所有标签</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>标签过滤器已启用</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4080,6 +4200,14 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>下载</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>网址</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>本地文件</translation>
     </message>
@@ -4734,6 +4862,10 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>按创意工坊 ID 添加模组</translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation>模组下载器</translation>
     </message>
@@ -4756,6 +4888,10 @@ Please choose one of the following options to proceed.</source>
     <message>
         <source>Add to list</source>
         <translation>添加到列表</translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>输入一个或多个创意工坊 ID（每行一个或以逗号分隔）：</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
@@ -4899,6 +5035,88 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>选择现有标签和/或输入以逗号分隔的新标签：</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>新标签、质量、框架</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>选择全部</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>不选择</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>好的</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>标签： 全部</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>按一个或多个用户标签过滤</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>选择全部</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>不选择</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>没有标签</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>标签： 无</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>尚未创建用户标签</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>显示所有标签和未标记的模组</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>标签： 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>没有选择标签</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>标签： 没有标签</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>显示没有标签的模组</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>标签： {count}</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5035,6 +5253,56 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Export Mod List</source>
         <translation>导出模组列表</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>未找到 ACF 文件</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>无法在以下位置找到 Steam 创意工坊 ACF 文件：
+ {acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>清理孤儿工坊物品</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>这将从 ACF 元数据文件中删除磁盘上不再存在的模组的陈旧创意工坊条目。
+
+在进行任何更改之前将创建备份。
+
+继续？</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>清理完成</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>删除了 {count} 个孤立的创意工坊条目。</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>未发现孤儿</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>未找到孤立的研讨会条目。 ACF 文件是干净的。</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>清理失败</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>无法清理废弃的工坊物品。</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5252,6 +5520,14 @@ Details: {e}</source>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>将当前的模组列表保存为 .xml 文件以便与他人分享。</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>清理孤立的模组</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>删除磁盘上不再存在的模组的陈旧创意工坊条目</translation>
     </message>
     <message>
         <source>Export Mod List</source>

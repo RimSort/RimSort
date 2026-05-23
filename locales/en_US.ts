@@ -1414,6 +1414,34 @@ Destination: {dest}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2533,6 +2561,10 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2546,6 +2578,10 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Path:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2566,6 +2602,10 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Put your personal mod notes here!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2620,6 +2660,18 @@ Do you want to proceed?</source>
     <name>ModListWidget</name>
     <message>
         <source>Open folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2727,6 +2779,10 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2736,6 +2792,18 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Workshop mods options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2827,6 +2895,38 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>This will remove the selected mod, </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2926,6 +3026,26 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Active [0]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3956,6 +4076,14 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4570,6 +4698,10 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4591,6 +4723,10 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Add to list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4727,6 +4863,88 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -4849,6 +5067,51 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     </message>
     <message>
         <source>Export Mod List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5057,6 +5320,14 @@ Details: {e}</source>
     </message>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

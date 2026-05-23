@@ -1470,6 +1470,34 @@ Destination: {dest}</source>
         <translation>기존 업데이트</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>다운로드 실패</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>데이터베이스 다운로드 실패: {names}</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>인터넷 연결과 구성된 URL을 확인하세요.</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>다운로드 완료</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>데이터베이스가 성공적으로 다운로드되었습니다: {names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>이미 최신 상태입니다.</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>데이터베이스가 이미 최신 상태입니다: {names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>리포지토리를 가져왔습니다</translation>
     </message>
@@ -2633,6 +2661,10 @@ Do you want to proceed?</source>
         <translation>작성자:</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>태그:</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>모듈 버전:</translation>
     </message>
@@ -2647,6 +2679,10 @@ Do you want to proceed?</source>
     <message>
         <source>Path:</source>
         <translation>경로:</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>스팀 URL:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2667,6 +2703,10 @@ Do you want to proceed?</source>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>여기에 개인 모드 메모를 입력하세요.</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>없음</translation>
     </message>
 </context>
 <context>
@@ -2721,6 +2761,18 @@ Do you want to proceed?</source>
     <message>
         <source>Open folder</source>
         <translation>폴더 열기</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>새 태그 추가...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>모든 태그 교체...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>모든 태그 제거</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2827,6 +2879,10 @@ Do you want to proceed?</source>
         <translation>Steam에서 모드 구독 해제</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>태그</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>기타 옵션</translation>
     </message>
@@ -2837,6 +2893,18 @@ Do you want to proceed?</source>
     <message>
         <source>Workshop mods options</source>
         <translation>창작마당 모드 옵션</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>여기에 구분선 추가</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>구분선 추가</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>구분선 이름:</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2931,6 +2999,38 @@ Do you want to proceed?</source>
     <message>
         <source>This will remove the selected mod, </source>
         <translation>이로 인해 선택한 모드가 삭제됩니다.</translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation>태그 교체</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>태그 추가</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>구분선 이름 바꾸기</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>확장하다</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>무너지다</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>구분선 삭제</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>구분선 이름 바꾸기</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>새 이름:</translation>
     </message>
     <message>
         <source>
@@ -3035,6 +3135,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Active [0]</source>
         <translation>활성[0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>태그</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>태그 필터가 비활성화되었습니다.</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>태그 필터 활성화/비활성화</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>모든 태그</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>태그 필터가 활성화되었습니다.</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4066,6 +4186,14 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>다운로드 중…</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>로컬 파일</translation>
     </message>
@@ -4718,6 +4846,10 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>워크샵 ID로 모드 추가</translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation>모드 다운로더</translation>
     </message>
@@ -4740,6 +4872,10 @@ Please choose one of the following options to proceed.</source>
     <message>
         <source>Add to list</source>
         <translation>목록에 추가</translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>하나 이상의 창작마당 ID를 입력하세요(한 줄에 하나씩 또는 쉼표로 구분).</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
@@ -4884,6 +5020,88 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>기존 태그를 선택하거나 쉼표로 구분된 새 태그를 입력하세요.</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>새 태그, qol, 프레임워크</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>모두 선택</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>없음을 선택하세요</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>좋아요</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>태그: 모두</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>하나 이상의 사용자 태그로 필터링</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>모두 선택</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>없음을 선택하세요</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>태그 없음</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>태그: 없음</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>아직 생성된 사용자 태그가 없습니다.</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>모든 태그 및 태그가 지정되지 않은 모드 표시</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>태그: 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>선택한 태그가 없습니다.</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>태그: 태그 없음</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>태그 없이 모드 표시</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>태그: {count}</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5020,6 +5238,56 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Export Mod List</source>
         <translation>모드 내보내기</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>ACF 파일을 찾을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>다음 위치에서 Steam 창작마당 ACF 파일을 찾을 수 없습니다.
+{acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>고아가 된 작업장 아이템 청소하기</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>이렇게 하면 디스크에 더 이상 존재하지 않는 모드에 대한 ACF 메타데이터 파일에서 오래된 워크샵 항목이 제거됩니다.
+
+변경이 이루어지기 전에 백업이 생성됩니다.
+
+계속하다?</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>정리 완료</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>{count}개의 고아 작업장 항목을 제거했습니다.</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>고아를 찾을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>고아 작업장 항목을 찾을 수 없습니다. ACF 파일이 깨끗합니다.</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>정리 실패</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>고아 작업장 아이템을 청소하지 못했습니다.</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5238,6 +5506,14 @@ Details: {e}</source>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>현재 모드 리스트를 .xml 파일로 저장하여 다른 사람과 공유합니다.</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>고아 모드 청소</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>더 이상 디스크에 없는 모드에 대한 오래된 워크샵 항목 제거</translation>
     </message>
     <message>
         <source>Export Mod List</source>

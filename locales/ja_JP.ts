@@ -1470,6 +1470,34 @@ Destination: {dest}</source>
         <translation>既存の更新</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>ダウンロードに失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>データベースのダウンロードに失敗しました: {names}</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>インターネット接続と設定された URL を確認してください。</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>ダウンロード完了</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>データベースが正常にダウンロードされました: {names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>すでに最新です</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>データベースはすでに最新です: {names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>リポジトリが取得されました</translation>
     </message>
@@ -2633,6 +2661,10 @@ Do you want to proceed?</source>
         <translation>著者:</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>タグ:</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>モジュールのバージョン:</translation>
     </message>
@@ -2647,6 +2679,10 @@ Do you want to proceed?</source>
     <message>
         <source>Path:</source>
         <translation>パス：</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>スチームURL:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2667,6 +2703,10 @@ Do you want to proceed?</source>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>個人的な MOD メモをここに記入してください。</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>なし</translation>
     </message>
 </context>
 <context>
@@ -2721,6 +2761,18 @@ Do you want to proceed?</source>
     <message>
         <source>Open folder</source>
         <translation>フォルダを開く</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>新しいタグを追加...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>すべてのタグを置き換えます...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>すべてのタグを削除します</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2827,6 +2879,10 @@ Do you want to proceed?</source>
         <translation>Steamでモッドを購読解除</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>タグ</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>その他のオプション</translation>
     </message>
@@ -2837,6 +2893,18 @@ Do you want to proceed?</source>
     <message>
         <source>Workshop mods options</source>
         <translation>Workshopモッドのオプション</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>ここに仕切りを追加します</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>ディバイダの追加</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>ディバイダー名:</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2931,6 +2999,38 @@ Do you want to proceed?</source>
     <message>
         <source>This will remove the selected mod, </source>
         <translation>これにより、選択したMODが削除されます。</translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation>タグを置換する</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>タグを追加する</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>区切り線の名前を変更する</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>拡大する</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>崩壊</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>区切り線の削除</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>ディバイダーの名前を変更</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>新しい名前:</translation>
     </message>
     <message>
         <source>
@@ -3035,6 +3135,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Active [0]</source>
         <translation>アクティブ[0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>タグ</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>タグフィルターが無効になっています</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>タグフィルターの有効化/無効化</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>すべてのタグ</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>タグフィルターが有効になっています</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4066,6 +4186,14 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>ダウンロード…</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>ローカルファイル</translation>
     </message>
@@ -4718,6 +4846,10 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>ワークショップIDでMODを追加</translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation>MODダウンローダー</translation>
     </message>
@@ -4740,6 +4872,10 @@ Please choose one of the following options to proceed.</source>
     <message>
         <source>Add to list</source>
         <translation>リストに追加</translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>1 つ以上のワークショップ ID を入力します (1 行に 1 つ、またはカンマで区切ります)。</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
@@ -4884,6 +5020,88 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>既存のタグを選択するか、カンマで区切って新しいタグを入力します。</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>新しいタグ、QOL、フレームワーク</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>すべて選択</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>何も選択しない</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>わかりました</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>キャンセル</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>タグ: すべて</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>1 つ以上のユーザー タグでフィルタリングする</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>すべて選択</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>何も選択しない</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>タグなし</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>タグ: なし</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>ユーザータグはまだ作成されていません</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>すべてのタグとタグなしの MOD を表示します</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>タグ: 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>タグが選択されていません</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>タグ: タグなし</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>タグなしの MOD を表示する</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>タグ: {count}</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5020,6 +5238,56 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Export Mod List</source>
         <translation>モッドのエクスポート</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>ACF ファイルが見つかりません</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>次の場所に Steam ワークショップ ACF ファイルが見つかりませんでした。
+{acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>孤立したワークショップアイテムをクリーンアップする</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>これにより、ディスク上に存在しなくなった MOD の古いワークショップ エントリが ACF メタデータ ファイルから削除されます。
+
+変更を加える前にバックアップが作成されます。
+
+続く？</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>クリーンアップが完了しました</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>{count} 個の孤立したワークショップ エントリを削除しました。</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>孤児は見つかりませんでした</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>孤立したワークショップのエントリは見つかりませんでした。 ACF ファイルはクリーンです。</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>クリーンアップに失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>孤立したワークショップアイテムのクリーニングに失敗しました。</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5238,6 +5506,14 @@ Details: {e}</source>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>現在のモッドリストを.xmlファイルに保存して他の人と共有します。</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>孤立した Mod をクリーンアップする</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>ディスク上に存在しない MOD の古いワークショップ エントリを削除します</translation>
     </message>
     <message>
         <source>Export Mod List</source>
