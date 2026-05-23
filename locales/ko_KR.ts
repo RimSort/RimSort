@@ -319,7 +319,7 @@ Examples:
         <translation>정규 표현식을 사용하면 다음과 같은 예를 찾을 수 있습니다:
 - 'def.*\(': 함수 정의 찾기
 - '&amp;lt;[^&amp;gt;]+&amp;gt;': XML 태그 찾기
-- '\d+\.\d+(\.\d+)?': 버전 번호 찾기</translation>
+- '\d+\.\d+(\.\d+)?': 버전 번호 찾기 &lt;[^&gt;</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -1459,7 +1459,7 @@ Destination: {dest}</source>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
-        <translation>{repo_folder}&amp;lt;br/&amp;gt;어떻게 처리하시겠습니까? 옵션을 선택해 주세요:&amp;lt;br/&amp;gt;&amp;lt;br/&amp;gt;1) 새 저장소 복제 (기존 저장소를 삭제하고 교체)&amp;lt;br/&amp;gt;2) 기존 저장소 업데이트 (인플레이스 강제 업데이트)</translation>
+        <translation>{repo_folder}&amp;lt;br/&amp;gt;어떻게 처리하시겠습니까? 옵션을 선택해 주세요:&amp;lt;br/&amp;gt;&amp;lt;br/&amp;gt;1) 새 저장소 복제 (기존 저장소를 삭제하고 교체)&amp;lt;br/&amp;gt;2) 기존 저장소 업데이트 (인플레이스 강제 업데이트) &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt;</translation>
     </message>
     <message>
         <source>Clone new</source>
@@ -1864,7 +1864,7 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
     </message>
     <message>
         <source>&lt;h3&gt;Would you like to enable Steam Client Integration for this instance?&lt;/h3&gt;</source>
-        <translation>&amp;lt;h3&amp;gt;이 인스턴스에 Steam 클라이언트 통합을 활성화하시겠습니까?&amp;lt;/h3&amp;gt;</translation>
+        <translation>&amp;lt;h3&amp;gt;이 인스턴스에 Steam 클라이언트 통합을 활성화하시겠습니까?&amp;lt;/h3&amp;gt; &lt;h3&gt; &lt;/h3&gt;</translation>
     </message>
     <message>
         <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
@@ -1872,7 +1872,7 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
                 You can change this in the settings under the Advanced tab.</source>
         <translation>이를 통해 Steam 클라이언트 기능을 사용할 수 있게 됩니다. 여기에는 창작마당 모드 구독 해제 및 Steam 클라이언트를 통한 창작마당 링크 열기 등이 포함됩니다.
                 &amp;lt;br&amp;gt;&amp;lt;br&amp;gt;
-                이 설정은 설정의 고급 탭에서 변경할 수 있습니다.</translation>
+                이 설정은 설정의 고급 탭에서 변경할 수 있습니다. &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Create new instance</source>
