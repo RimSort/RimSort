@@ -1470,6 +1470,34 @@ Destination: {dest}</source>
         <translation>Обновить существующий</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>Загрузка не удалась</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>Не удалось загрузить базы данных: {names}.</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>Пожалуйста, проверьте подключение к Интернету и настроенный URL-адрес.</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>Загрузка завершена</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>Базы данных успешно загружены: {names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>Уже в курсе</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>Базы данных уже обновлены: {names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>Репозиторий получен</translation>
     </message>
@@ -2631,6 +2659,10 @@ Do you want to proceed?</source>
         <translation>Авторы:</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>Теги:</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>Версия мода:</translation>
     </message>
@@ -2645,6 +2677,10 @@ Do you want to proceed?</source>
     <message>
         <source>Path:</source>
         <translation>Путь:</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>URL-адрес Steam:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2665,6 +2701,10 @@ Do you want to proceed?</source>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>Поместите сюда свои личные заметки о моде!</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Никто</translation>
     </message>
 </context>
 <context>
@@ -2719,6 +2759,18 @@ Do you want to proceed?</source>
     <message>
         <source>Open folder</source>
         <translation>Открыть папку</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>Добавить новые теги...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>Заменить все теги...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>Удалить все теги</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2825,6 +2877,10 @@ Do you want to proceed?</source>
         <translation>Отменить подписку на мод(ы) через Steam</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>Теги</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>Разные параметры</translation>
     </message>
@@ -2835,6 +2891,18 @@ Do you want to proceed?</source>
     <message>
         <source>Workshop mods options</source>
         <translation>Параметры модов Workshop</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>Добавьте сюда разделитель</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>Добавить разделитель</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>Название разделителя:</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2892,6 +2960,38 @@ Do you want to proceed?</source>
     <message>
         <source>This will remove the selected mod, </source>
         <translation>Это удалит выбранный мод, </translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation>Заменить теги</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>Добавить теги</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>Переименовать разделитель</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>Расширять</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>Крах</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>Удалить разделитель</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>Переименовать разделитель</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Новое имя:</translation>
     </message>
     <message>
         <source>
@@ -3040,6 +3140,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Inactive [0]</source>
         <translation>Неактивные [0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>Теги</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>Фильтр тегов отключен</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>Включить/отключить фильтр тегов</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>Все теги</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>Фильтр тегов включен</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4064,6 +4184,14 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Скачать…</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>URL-адрес</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>Локальный файл</translation>
     </message>
@@ -4718,6 +4846,10 @@ Please choose one of the following options to proceed.</source>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>Добавить моды по идентификатору мастерской</translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation>Загрузчик модов</translation>
     </message>
@@ -4740,6 +4872,10 @@ Please choose one of the following options to proceed.</source>
     <message>
         <source>Add to list</source>
         <translation>Добавить в список</translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>Введите один или несколько идентификаторов мастерской (по одному в строке или через запятую):</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
@@ -4884,6 +5020,88 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>Выберите существующие теги и/или введите новые теги через запятую:</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>новый тег, qol, фреймворк</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Выбрать все</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Выбрать нет</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>ХОРОШО</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>Теги: Все</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>Фильтрация по одному или нескольким тегам пользователя</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Выбрать все</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Выбрать нет</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>Нет тегов</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>Теги: Нет</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>Пользовательские теги еще не созданы</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>Показаны все теги и непомеченные моды</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>Теги: 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>Теги не выбраны</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>Теги: Нет тегов</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>Показаны моды без тегов</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>Теги: {count}</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5020,6 +5238,56 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     <message>
         <source>Export Mod List</source>
         <translation>Экспортировать список модов</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>Файл ACF не найден</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>Не удалось найти файл ACF Steam Workshop по адресу:
+{acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>Очистить потерянные предметы мастерской</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>Это удалит устаревшие записи мастерской из файла метаданных ACF для модов, которые больше не существуют на диске.
+
+Резервная копия будет создана перед внесением каких-либо изменений.
+
+Продолжать?</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>Очистка завершена</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>Удалены потерянные записи мастерской: {count}.</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>Сирот не найдено</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>Бесхозных записей мастерских обнаружено не было. Файл ACF чист.</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>Очистка не удалась</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>Не удалось очистить потерянные предметы мастерской.</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5237,6 +5505,14 @@ Details: {e}</source>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>Сохраните текущий список модов в файл .xml, чтобы поделиться им с другими.</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>Чистые потерянные моды</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>Удалите устаревшие записи мастерской для модов, которых больше нет на диске.</translation>
     </message>
     <message>
         <source>Export Mod List</source>

@@ -1470,6 +1470,34 @@ Destino: {dest}</translation>
         <translation>Atualizar existente</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>Falha no download</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>Falha ao fazer download dos bancos de dados: {names}</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>Verifique sua conexão com a Internet e o URL configurado.</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>Download concluído</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>Bancos de dados baixados com sucesso: {names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>Já atualizado</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>Os bancos de dados já estão atualizados:  {names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>Repositório obtido</translation>
     </message>
@@ -2633,6 +2661,10 @@ Você quer prosseguir? {action_capitalized}</translation>
         <translation>Autores:</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>Etiquetas:</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>Versão modificada:</translation>
     </message>
@@ -2647,6 +2679,10 @@ Você quer prosseguir? {action_capitalized}</translation>
     <message>
         <source>Path:</source>
         <translation>Caminho:</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>URL do Steam:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2667,6 +2703,10 @@ Você quer prosseguir? {action_capitalized}</translation>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>Coloque suas notas pessoais de mod aqui!</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nenhum</translation>
     </message>
 </context>
 <context>
@@ -2721,6 +2761,18 @@ Você quer prosseguir? {action_capitalized}</translation>
     <message>
         <source>Open folder</source>
         <translation>Abrir pasta</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>Adicionar novas tags...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>Substitua todas as tags...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>Remover todas as tags</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2827,6 +2879,10 @@ Você quer prosseguir? {action_capitalized}</translation>
         <translation>Cancelar inscrição de mod(s) na Steam</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>Etiquetas</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>Opções diversas</translation>
     </message>
@@ -2837,6 +2893,18 @@ Você quer prosseguir? {action_capitalized}</translation>
     <message>
         <source>Workshop mods options</source>
         <translation>Opções de mods do Workshop</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>Adicione divisor aqui</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>Adicionar divisor</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>Nome do divisor:</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2931,6 +2999,38 @@ Deseja continuar?</translation>
     <message>
         <source>This will remove the selected mod, </source>
         <translation>Isto irá remover o mod selecionado, </translation>
+    </message>
+    <message>
+        <source>Replace tags</source>
+        <translation>Substituir tags</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>Adicionar tags</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>Renomear divisor</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>Expandir</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>Colapso</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>Excluir divisor</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>Renomear divisor</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Novo nome:</translation>
     </message>
     <message>
         <source>
@@ -3038,6 +3138,26 @@ Um mod alternativo atualizado é recomendado:
     <message>
         <source>Active [0]</source>
         <translation>Ativo [0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>Etiquetas</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>Filtro de tags desativado</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>Ativar/desativar filtro de tags</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>Todas as tags</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>Filtro de tags ativado</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4070,6 +4190,14 @@ Clique em “Mostrar Detalhes” para ver a lista de mods que falharam.</transla
         <translation>Baixar...</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>Arquivo local</translation>
     </message>
@@ -4724,6 +4852,10 @@ Escolha uma das opções a seguir para continuar.</translation>
 <context>
     <name>SteamBrowser</name>
     <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>Adicionar Mods por ID do Workshop</translation>
+    </message>
+    <message>
         <source>Mod Downloader</source>
         <translation>Baixador de Mod</translation>
     </message>
@@ -4746,6 +4878,10 @@ Escolha uma das opções a seguir para continuar.</translation>
     <message>
         <source>Add to list</source>
         <translation>Adicionar a lista</translation>
+    </message>
+    <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>Insira um ou mais IDs de Workshop (um por linha ou separados por vírgulas):</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
@@ -4890,6 +5026,88 @@ Novo link simbólico:
     </message>
 </context>
 <context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>Selecione tags existentes e/ou insira novas tags separadas por vírgulas:</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>nova tag, qol, estrutura</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Selecionar tudo</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Selecione nenhum</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>Marcações: Todos</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>Filtrar por uma ou mais tags de usuário</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Selecionar tudo</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Selecione nenhum</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>Sem tags</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>Tags: Nenhum</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>Nenhuma tag de usuário foi criada ainda</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>Mostrando todas as tags e mods não marcados</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>Etiquetas: 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>Nenhuma tag selecionada</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>Tags: Sem tags</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>Mostrando mods sem tags</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>Tags:  {count}</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5026,6 +5244,56 @@ AVISO: Isso excluirá permanentemente todos os mods na sua pasta Mods e restaura
     <message>
         <source>Export Mod List</source>
         <translation>Exportar Lista de Mod</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>Arquivo ACF não encontrado</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>Não foi possível encontrar o arquivo Steam Workshop ACF em:
+{acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>Limpar itens de oficina órfãos</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>Isso removerá entradas obsoletas do workshop do arquivo de metadados ACF para mods que não existem mais no disco.
+
+Um backup será criado antes de qualquer alteração ser feita.
+
+Continuar?</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>Limpeza concluída</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>Foram removidas {count} entradas órfãs do workshop.</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>Nenhum órfão encontrado</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>Nenhuma entrada de workshop órfã foi encontrada. O arquivo ACF está limpo.</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>Falha na limpeza</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>Falha ao limpar itens órfãos da oficina.</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5243,6 +5511,14 @@ Detalhes: {e}</translation>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>Salvar sua lista atual de mods em um arquivo .xml para compartilhar com outras pessoas.</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>Limpar Mods Órfãos</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>Remova entradas obsoletas do workshop para mods que não estão mais no disco</translation>
     </message>
     <message>
         <source>Export Mod List</source>

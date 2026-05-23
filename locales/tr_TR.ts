@@ -1440,6 +1440,34 @@ Ortaya çıkan veritabanı, C, kullanıcı tarafından belirlenen bir yola kayde
         <translation>Mevcut Güncelleme</translation>
     </message>
     <message>
+        <source>Download failed</source>
+        <translation>İndirme başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to download database(s): {names}</source>
+        <translation>Veritabanları indirilemedi: {names}</translation>
+    </message>
+    <message>
+        <source>Please check your internet connection and the configured URL.</source>
+        <translation>Lütfen internet bağlantınızı ve yapılandırılmış URL'yi kontrol edin.</translation>
+    </message>
+    <message>
+        <source>Download complete</source>
+        <translation>İndirme tamamlandı</translation>
+    </message>
+    <message>
+        <source>Database(s) downloaded successfully: {names}</source>
+        <translation>Veritabanları başarıyla indirildi: {names}</translation>
+    </message>
+    <message>
+        <source>Already up to date</source>
+        <translation>Zaten güncel</translation>
+    </message>
+    <message>
+        <source>Database(s) are already up to date: {names}</source>
+        <translation>Veritabanları zaten güncel: {names}</translation>
+    </message>
+    <message>
         <source>Repo retrieved</source>
         <translation>Repo aldı</translation>
     </message>
@@ -2624,6 +2652,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Yazarlar:</translation>
     </message>
     <message>
+        <source>Tags:</source>
+        <translation>Etiketler:</translation>
+    </message>
+    <message>
         <source>Mod Version:</source>
         <translation>Mod Sürümü:</translation>
     </message>
@@ -2638,6 +2670,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Path:</source>
         <translation>Yol:</translation>
+    </message>
+    <message>
+        <source>Steam URL:</source>
+        <translation>Buhar URL'si:</translation>
     </message>
     <message>
         <source>Last Touched:</source>
@@ -2658,6 +2694,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Put your personal mod notes here!</source>
         <translation>Kişisel mod notlarınızı buraya koyun!</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Hiçbiri</translation>
     </message>
 </context>
 <context>
@@ -2712,6 +2752,18 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Open folder</source>
         <translation>Klasör</translation>
+    </message>
+    <message>
+        <source>Add new tags...</source>
+        <translation>Yeni etiketler ekleyin...</translation>
+    </message>
+    <message>
+        <source>Replace all tags...</source>
+        <translation>Tüm etiketleri değiştir...</translation>
+    </message>
+    <message>
+        <source>Remove all tags</source>
+        <translation>Tüm etiketleri kaldır</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
@@ -2818,6 +2870,10 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Buharla abonelik mod (lar)</translation>
     </message>
     <message>
+        <source>Tags</source>
+        <translation>Etiketler</translation>
+    </message>
+    <message>
         <source>Miscellaneous options</source>
         <translation>Çeşitli Seçenekler</translation>
     </message>
@@ -2828,6 +2884,18 @@ Devam etmek ister misin? {action_capitalized}</translation>
     <message>
         <source>Workshop mods options</source>
         <translation>Atölye Modları Seçenekleri</translation>
+    </message>
+    <message>
+        <source>Add divider here</source>
+        <translation>Ayırıcıyı buraya ekleyin</translation>
+    </message>
+    <message>
+        <source>Add Divider</source>
+        <translation>Bölücü Ekle</translation>
+    </message>
+    <message>
+        <source>Divider name:</source>
+        <translation>Bölücü adı:</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -2929,6 +2997,38 @@ Do you want to proceed?</source>
         <translation>Bu, seçilen modu kaldıracaktır,</translation>
     </message>
     <message>
+        <source>Replace tags</source>
+        <translation>Etiketleri değiştir</translation>
+    </message>
+    <message>
+        <source>Add tags</source>
+        <translation>Etiket ekle</translation>
+    </message>
+    <message>
+        <source>Rename divider</source>
+        <translation>Bölücüyü yeniden adlandır</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>Genişletmek</translation>
+    </message>
+    <message>
+        <source>Collapse</source>
+        <translation>Yıkılmak</translation>
+    </message>
+    <message>
+        <source>Delete divider</source>
+        <translation>Bölücüyü sil</translation>
+    </message>
+    <message>
+        <source>Rename Divider</source>
+        <translation>Bölücüyü Yeniden Adlandır</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Yeni isim:</translation>
+    </message>
+    <message>
         <source>
 Missing Dependencies:</source>
         <translation>Eksik bağımlılıklar:</translation>
@@ -3019,6 +3119,26 @@ An alternative updated mod is recommended:
     <message>
         <source>Active [0]</source>
         <translation>Etkin [0]</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>Etiketler</translation>
+    </message>
+    <message>
+        <source>Tag filter disabled</source>
+        <translation>Etiket filtresi devre dışı bırakıldı</translation>
+    </message>
+    <message>
+        <source>Enable/disable tag filter</source>
+        <translation>Etiket filtresini etkinleştirme/devre dışı bırakma</translation>
+    </message>
+    <message>
+        <source>All tags</source>
+        <translation>Tüm etiketler</translation>
+    </message>
+    <message>
+        <source>Tag filter enabled</source>
+        <translation>Etiket filtresi etkinleştirildi</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4051,6 +4171,14 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>İndir...</translation>
     </message>
     <message>
+        <source>URL</source>
+        <translation>URL'si</translation>
+    </message>
+    <message>
+        <source>https://github.com/.../archive/refs/heads/main.zip</source>
+        <translation>https://github.com/.../archive/refs/heads/main.zip</translation>
+    </message>
+    <message>
         <source>Local File</source>
         <translation>Yerel Dosya</translation>
     </message>
@@ -4728,6 +4856,10 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Listeye Ekle</translation>
     </message>
     <message>
+        <source>Enter one or more Workshop IDs (one per line or separated by commas):</source>
+        <translation>Bir veya daha fazla Atölye Kimliği girin (her satıra bir tane veya virgülle ayrılmış olarak):</translation>
+    </message>
+    <message>
         <source>No publishedfileid found</source>
         <translation>Yayınlanmış fileid bulunamadı</translation>
     </message>
@@ -4774,6 +4906,10 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
     <message>
         <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
         <translation>Koleksiyondan tüm modları veya yalnızca yüklemediğiniz modları eklemeyi seçebilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Add Mods by Workshop ID</source>
+        <translation>Atölye Kimliğine Göre Mod Ekle</translation>
     </message>
     <message>
         <source>Please reach out to us on Github Issues page or
@@ -4866,6 +5002,88 @@ Yeni Symlink:
 [{symlink_source_path}] -&gt; </source>
         <translation>Yeni Symlink:
 [{symlink_source_path}] -&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TagEditDialog</name>
+    <message>
+        <source>Select existing tags and/or enter new tags separated by commas:</source>
+        <translation>Mevcut etiketleri seçin ve/veya virgülle ayırarak yeni etiketleri girin:</translation>
+    </message>
+    <message>
+        <source>new-tag, qol, framework</source>
+        <translation>yeni etiket, qol, çerçeve</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Tümünü seç</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Hiçbirini seçme</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>TAMAM</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>İptal etmek</translation>
+    </message>
+</context>
+<context>
+    <name>TagFilterButton</name>
+    <message>
+        <source>Tags: All</source>
+        <translation>Etiketler: Hepsi</translation>
+    </message>
+    <message>
+        <source>Filter by one or more user tags</source>
+        <translation>Bir veya daha fazla kullanıcı etiketine göre filtreleyin</translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation>Tümünü seç</translation>
+    </message>
+    <message>
+        <source>Select none</source>
+        <translation>Hiçbirini seçme</translation>
+    </message>
+    <message>
+        <source>No tags</source>
+        <translation>Etiket yok</translation>
+    </message>
+    <message>
+        <source>Tags: None</source>
+        <translation>Etiketler: Yok</translation>
+    </message>
+    <message>
+        <source>No user tags have been created yet</source>
+        <translation>Henüz kullanıcı etiketi oluşturulmadı</translation>
+    </message>
+    <message>
+        <source>Showing all tags and untagged mods</source>
+        <translation>Tüm etiketler ve etiketsiz modlar gösteriliyor</translation>
+    </message>
+    <message>
+        <source>Tags: 0</source>
+        <translation>Etiketler: 0</translation>
+    </message>
+    <message>
+        <source>No tags selected</source>
+        <translation>Hiçbir etiket seçilmedi</translation>
+    </message>
+    <message>
+        <source>Tags: No tags</source>
+        <translation>Etiketler: Etiket yok</translation>
+    </message>
+    <message>
+        <source>Showing mods without tags</source>
+        <translation>Modlar etiketsiz gösteriliyor</translation>
+    </message>
+    <message>
+        <source>Tags: {count}</source>
+        <translation>Etiketler: {count}</translation>
     </message>
 </context>
 <context>
@@ -4967,6 +5185,56 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     <message>
         <source>Export Mod List</source>
         <translation>Dışa Aktar Mod Listesi</translation>
+    </message>
+    <message>
+        <source>ACF File Not Found</source>
+        <translation>ACF Dosyası Bulunamadı</translation>
+    </message>
+    <message>
+        <source>Could not find the Steam Workshop ACF file at:
+{acf_path}</source>
+        <translation>Steam Workshop ACF dosyası şu adreste bulunamadı:
+{acf_path}</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Workshop Items</source>
+        <translation>Yetim Atölye Öğelerini Temizleyin</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
+
+A backup will be created before any changes are made.
+
+Continue?</source>
+        <translation>Bu, artık diskte bulunmayan modlar için ACF meta veri dosyasından eski atölye girişlerini kaldıracaktır.
+
+Herhangi bir değişiklik yapılmadan önce bir yedek oluşturulacaktır.
+
+Devam etmek?</translation>
+    </message>
+    <message>
+        <source>Cleanup Complete</source>
+        <translation>Temizleme Tamamlandı</translation>
+    </message>
+    <message>
+        <source>Removed {count} orphaned workshop entries.</source>
+        <translation>{count} yetim atölye girişi kaldırıldı.</translation>
+    </message>
+    <message>
+        <source>No Orphans Found</source>
+        <translation>Yetim Bulunamadı</translation>
+    </message>
+    <message>
+        <source>No orphaned workshop entries were found. The ACF file is clean.</source>
+        <translation>Hiçbir yetim atölye girişi bulunamadı. ACF dosyası temiz.</translation>
+    </message>
+    <message>
+        <source>Cleanup Failed</source>
+        <translation>Temizleme Başarısız</translation>
+    </message>
+    <message>
+        <source>Failed to clean orphaned workshop items.</source>
+        <translation>Yetim kalan atölye öğeleri temizlenemedi.</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5211,6 +5479,14 @@ Ayrıntılar: {e}</translation>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
         <translation>Mevcut mod listenizi diğerleriyle paylaşmak için bir .xml dosyasına kaydedin.</translation>
+    </message>
+    <message>
+        <source>Clean Orphaned Mods</source>
+        <translation>Yetim Modları Temizleyin</translation>
+    </message>
+    <message>
+        <source>Remove stale workshop entries for mods no longer on disk</source>
+        <translation>Artık diskte olmayan modlar için eski atölye girişlerini kaldırın</translation>
     </message>
     <message>
         <source>Export Mod List</source>
