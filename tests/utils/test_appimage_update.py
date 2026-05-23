@@ -125,25 +125,34 @@ SAMPLE_ASSETS_WITH_TAR_GZ: list[dict[str, Any]] = [
 ]
 
 
+def _make_platform_mgr(
+    system: str,
+    arch: str = "64bit",
+    *,
+    bind_appimage: bool = False,
+) -> UpdateManager:
+    """Build a mock UpdateManager with real asset-selection methods bound."""
+    mgr = MagicMock(spec=UpdateManager)
+    mgr._system = system
+    mgr._arch = arch
+    mgr._cached_patterns = UpdateManager._platform_patterns[system]
+    mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
+    mgr._get_platform_download_url = UpdateManager._get_platform_download_url.__get__(
+        mgr
+    )
+    mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
+    mgr._is_in_protected_path = MagicMock(return_value=False)
+    if bind_appimage:
+        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
+    return mgr
+
+
 class TestAssetSelection:
     @pytest.fixture
     def _linux_update_manager(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
-        """Create an UpdateManager-like object with Linux platform settings."""
+        """Create an UpdateManager-like object with Linux AppImage settings."""
         monkeypatch.setenv("APPIMAGE", "/home/user/RimSort.AppImage")
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._system = "Linux"
-        mgr._arch = "64bit"
-        mgr._cached_patterns = UpdateManager._platform_patterns["Linux"]
-
-        # Bind the real methods so we can test them
-        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
-        mgr._get_platform_download_url = (
-            UpdateManager._get_platform_download_url.__get__(mgr)
-        )
-        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-        mgr._is_in_protected_path = MagicMock(return_value=False)
-        return mgr
+        return _make_platform_mgr("Linux", bind_appimage=True)
 
     def test_prefers_appimage_when_running_as_appimage(
         self,
@@ -184,17 +193,7 @@ class TestAssetSelection:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.delenv("APPIMAGE", raising=False)
-
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._system = "Linux"
-        mgr._arch = "64bit"
-        mgr._cached_patterns = UpdateManager._platform_patterns["Linux"]
-        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._get_platform_download_url = (
-            UpdateManager._get_platform_download_url.__get__(mgr)
-        )
-        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-        mgr._is_in_protected_path = MagicMock(return_value=False)
+        mgr = _make_platform_mgr("Linux")
 
         result = mgr._get_platform_download_url(SAMPLE_ASSETS)
         assert result is not None
@@ -211,32 +210,12 @@ class TestTarGzAssetSelection:
     @pytest.fixture
     def _linux_mgr(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
         monkeypatch.delenv("APPIMAGE", raising=False)
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._system = "Linux"
-        mgr._arch = "64bit"
-        mgr._cached_patterns = UpdateManager._platform_patterns["Linux"]
-        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._get_platform_download_url = (
-            UpdateManager._get_platform_download_url.__get__(mgr)
-        )
-        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-        mgr._is_in_protected_path = MagicMock(return_value=False)
-        return mgr
+        return _make_platform_mgr("Linux")
 
     @pytest.fixture
     def _darwin_mgr(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
         monkeypatch.delenv("APPIMAGE", raising=False)
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._system = "Darwin"
-        mgr._arch = "ARM64"
-        mgr._cached_patterns = UpdateManager._platform_patterns["Darwin"]
-        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._get_platform_download_url = (
-            UpdateManager._get_platform_download_url.__get__(mgr)
-        )
-        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-        mgr._is_in_protected_path = MagicMock(return_value=False)
-        return mgr
+        return _make_platform_mgr("Darwin", arch="ARM64")
 
     def test_linux_prefers_tar_gz_over_zip(self, _linux_mgr: UpdateManager) -> None:
         result = _linux_mgr._get_platform_download_url(SAMPLE_ASSETS_WITH_TAR_GZ)
@@ -260,16 +239,7 @@ class TestTarGzAssetSelection:
 
     def test_windows_ignores_tar_gz(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("APPIMAGE", raising=False)
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._system = "Windows"
-        mgr._arch = "64bit"
-        mgr._cached_patterns = UpdateManager._platform_patterns["Windows"]
-        mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-        mgr._get_platform_download_url = (
-            UpdateManager._get_platform_download_url.__get__(mgr)
-        )
-        mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-        mgr._is_in_protected_path = MagicMock(return_value=False)
+        mgr = _make_platform_mgr("Windows")
 
         result = mgr._get_platform_download_url(SAMPLE_ASSETS_WITH_TAR_GZ)
         assert result is not None
