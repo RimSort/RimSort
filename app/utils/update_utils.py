@@ -1551,7 +1551,11 @@ class UpdateManager(QObject):
                         QApplication.processEvents()
 
             logger.info(f"Extracted {total} entries from tar.gz")
+            return total
 
+        except tarfile.TarError as e:
+            raise UpdateExtractionError(f"Invalid tar.gz archive: {e}") from e
+        finally:
             try:
                 if self._progress_widget:
                     self._progress_widget.close()
@@ -1560,12 +1564,6 @@ class UpdateManager(QObject):
                         self.mod_info_panel.info_panel_frame.show()
             except Exception:
                 pass
-
-            return total
-
-        except tarfile.TarError as e:
-            raise UpdateExtractionError(f"Invalid tar.gz archive: {e}") from e
-        finally:
             if temp_tar_path.exists():
                 try:
                     temp_tar_path.unlink()
