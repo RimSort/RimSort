@@ -34,13 +34,17 @@ class AuxMetadataEntry(Base):
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 
     user_notes: Mapped[str] = mapped_column(String, default="")
-    color_hex: Mapped[str] = mapped_column(String, default=None, nullable=True)  # None/NULL means use theme default
+    color_hex: Mapped[str] = mapped_column(
+        String, default=None, nullable=True
+    )  # None/NULL means use theme default
     ignore_warnings: Mapped[bool] = mapped_column(Boolean, default=False)
 
     outdated: Mapped[bool] = mapped_column(Boolean, default=False)
     db_time_touched = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    tags: Mapped[list["TagsEntry"]] = relationship(secondary=tags_table, back_populates="mods")
+    tags: Mapped[list["TagsEntry"]] = relationship(
+        secondary=tags_table, back_populates="mods"
+    )
 
     def __repr__(self) -> str:
         return f"Path: {self.path}, Time Touched: {self.acf_time_touched}, Time Updated: {self.acf_time_updated}"
@@ -52,7 +56,9 @@ class TagsEntry(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     tag: Mapped[str] = mapped_column(String, unique=True)
 
-    mods: Mapped[list[AuxMetadataEntry]] = relationship(secondary=tags_table, back_populates="tags")
+    mods: Mapped[list[AuxMetadataEntry]] = relationship(
+        secondary=tags_table, back_populates="tags"
+    )
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, TagsEntry) and self.tag == other.tag:

@@ -72,6 +72,7 @@ jobs:
           GITHUB_ACTIONS_COMMAND_ARGS: >-
             -ignore 'unknown permission scope "attestations"'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
+          PYTHON_RUFF_FORMAT_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
           IGNORE_GITIGNORED_FILES: true
