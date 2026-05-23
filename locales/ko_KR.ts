@@ -319,7 +319,7 @@ Examples:
         <translation>정규 표현식을 사용하면 다음과 같은 예를 찾을 수 있습니다:
 - 'def.*\(': 함수 정의 찾기
 - '&amp;lt;[^&amp;gt;]+&amp;gt;': XML 태그 찾기
-- '\d+\.\d+(\.\d+)?': 버전 번호 찾기</translation>
+- '\d+\.\d+(\.\d+)?': 버전 번호 찾기 &lt;[^&gt;</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -1459,7 +1459,7 @@ Destination: {dest}</source>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
-        <translation>{repo_folder}&amp;lt;br/&amp;gt;어떻게 처리하시겠습니까? 옵션을 선택해 주세요:&amp;lt;br/&amp;gt;&amp;lt;br/&amp;gt;1) 새 저장소 복제 (기존 저장소를 삭제하고 교체)&amp;lt;br/&amp;gt;2) 기존 저장소 업데이트 (인플레이스 강제 업데이트)</translation>
+        <translation>{repo_folder}&amp;lt;br/&amp;gt;어떻게 처리하시겠습니까? 옵션을 선택해 주세요:&amp;lt;br/&amp;gt;&amp;lt;br/&amp;gt;1) 새 저장소 복제 (기존 저장소를 삭제하고 교체)&amp;lt;br/&amp;gt;2) 기존 저장소 업데이트 (인플레이스 강제 업데이트) &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt;</translation>
     </message>
     <message>
         <source>Clone new</source>
@@ -1864,7 +1864,7 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
     </message>
     <message>
         <source>&lt;h3&gt;Would you like to enable Steam Client Integration for this instance?&lt;/h3&gt;</source>
-        <translation>&amp;lt;h3&amp;gt;이 인스턴스에 Steam 클라이언트 통합을 활성화하시겠습니까?&amp;lt;/h3&amp;gt;</translation>
+        <translation>&amp;lt;h3&amp;gt;이 인스턴스에 Steam 클라이언트 통합을 활성화하시겠습니까?&amp;lt;/h3&amp;gt; &lt;h3&gt; &lt;/h3&gt;</translation>
     </message>
     <message>
         <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
@@ -1872,7 +1872,7 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
                 You can change this in the settings under the Advanced tab.</source>
         <translation>이를 통해 Steam 클라이언트 기능을 사용할 수 있게 됩니다. 여기에는 창작마당 모드 구독 해제 및 Steam 클라이언트를 통한 창작마당 링크 열기 등이 포함됩니다.
                 &amp;lt;br&amp;gt;&amp;lt;br&amp;gt;
-                이 설정은 설정의 고급 탭에서 변경할 수 있습니다.</translation>
+                이 설정은 설정의 고급 탭에서 변경할 수 있습니다. &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Create new instance</source>
@@ -3174,7 +3174,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>0 new</source>
-        <translation>0개 신규</translation>
+        <translation>0개의 신규 항목</translation>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
@@ -3190,7 +3190,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation>{count}개의 새로운 {padding}</translation>
+        <translation>{padding}{count}개의 신규 항목</translation>
     </message>
 </context>
 <context>
@@ -4051,7 +4051,7 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>No {none_lbl} will be used.</source>
-        <translation>없음의 {none_lbl}이(가) 사용됩니다.</translation>
+        <translation>{none_lbl}은(는) 사용되지 않습니다.</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -4107,11 +4107,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
     </message>
     <message>
         <source>Alphabetically</source>
-        <translation>알파벳순</translation>
+        <translation>알파벳</translation>
     </message>
     <message>
         <source>Topologically</source>
-        <translation>위상</translation>
+        <translation>우선순위</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4549,7 +4549,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation>최솟값은 이고, 최댓값은 입니다. 이 범위를 벗어나는 값은 기본값으로 재설정됩니다. {MIN_SIZE} {MAX_SIZE}</translation>
+        <translation>최솟값은 {MIN_SIZE} 이고, 최댓값은 {MAX_SIZE} 입니다. 이 범위를 벗어나는 값은 기본값으로 재설정됩니다. </translation>
     </message>
     <message>
         <source>Maximized</source>
