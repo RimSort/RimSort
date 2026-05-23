@@ -3174,7 +3174,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>0 new</source>
-        <translation>0개 신규</translation>
+        <translation>0개의 신규 항목</translation>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
@@ -3190,7 +3190,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation>{count}개의 새로운 {padding}</translation>
+        <translation>{padding}{count}개의 신규 항목</translation>
     </message>
 </context>
 <context>
