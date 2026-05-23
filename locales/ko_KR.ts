@@ -4051,7 +4051,7 @@ Click 'Show Details' to see a list of mods that failed.</source>
     </message>
     <message>
         <source>No {none_lbl} will be used.</source>
-        <translation>없음의 {none_lbl}이(가) 사용됩니다.</translation>
+        <translation>{none_lbl}은(는) 사용되지 않습니다.</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -4107,11 +4107,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
     </message>
     <message>
         <source>Alphabetically</source>
-        <translation>알파벳순</translation>
+        <translation>알파벳</translation>
     </message>
     <message>
         <source>Topologically</source>
-        <translation>위상</translation>
+        <translation>우선순위</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4549,7 +4549,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
-        <translation>최솟값은 이고, 최댓값은 입니다. 이 범위를 벗어나는 값은 기본값으로 재설정됩니다. {MIN_SIZE} {MAX_SIZE}</translation>
+        <translation>최솟값은 {MIN_SIZE} 이고, 최댓값은 {MAX_SIZE} 입니다. 이 범위를 벗어나는 값은 기본값으로 재설정됩니다. </translation>
     </message>
     <message>
         <source>Maximized</source>
