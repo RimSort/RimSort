@@ -24,19 +24,19 @@ test-coverage: dev-setup
 
 # Check code for linting issues
 lint:
-    uv run ruff check .
+    uv run ruff check --config pyproject.toml .
 
 # Check and automatically fix linting issues
 lint-fix:
-    uv run ruff check . --fix
+    uv run ruff check --config pyproject.toml . --fix
 
 # Check code formatting without making changes
 format:
-    uv run ruff format . --check
+    uv run ruff format --config pyproject.toml . --check
 
 # Format code automatically
 format-fix:
-    uv run ruff format .
+    uv run ruff format --config pyproject.toml .
 
 # Run type checking with mypy
 typecheck:
