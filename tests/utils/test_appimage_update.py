@@ -357,6 +357,27 @@ class TestPrepareAppImageUpdate:
 # ---------------------------------------------------------------------------
 
 
+def _run_tar_thread(tar_path: Path, extract_dir: Path) -> tuple[bool, str]:
+    """Run a TarExtractThread synchronously and return (success, message)."""
+    from app.utils.update_utils import TarExtractThread
+
+    results: list[tuple[bool, str]] = []
+    thread = TarExtractThread(str(tar_path), str(extract_dir))
+    thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
+    thread.run()
+    assert len(results) == 1
+    return results[0]
+
+
+def _make_extract_mgr() -> UpdateManager:
+    """Build a mock UpdateManager with _extract_tar_gz bound."""
+    mgr = MagicMock(spec=UpdateManager)
+    mgr.mod_info_panel = None
+    mgr._progress_widget = None
+    mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
+    return mgr
+
+
 class TestTarExtractThread:
     """Test TarExtractThread directly — no QApplication needed since we call run()."""
 
@@ -374,19 +395,12 @@ class TestTarExtractThread:
         return tar_path
 
     def test_extracts_content(self, tmp_path: Path) -> None:
-        from app.utils.update_utils import TarExtractThread
-
         tar_path = self._create_tar_gz_file(tmp_path)
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        results: list[tuple[bool, str]] = []
-        thread = TarExtractThread(str(tar_path), str(extract_dir))
-        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
-        thread.run()
-
-        assert len(results) == 1
-        assert results[0][0] is True
+        success, _ = _run_tar_thread(tar_path, extract_dir)
+        assert success is True
         assert (extract_dir / "RimSort").exists()
 
     def test_reports_progress(self, tmp_path: Path) -> None:
@@ -405,25 +419,16 @@ class TestTarExtractThread:
         assert progress_updates[-1][0] == 100
 
     def test_emits_failure_on_invalid_archive(self, tmp_path: Path) -> None:
-        from app.utils.update_utils import TarExtractThread
-
         bad_tar = tmp_path / "bad.tar.gz"
         bad_tar.write_bytes(b"not a tarball")
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        results: list[tuple[bool, str]] = []
-        thread = TarExtractThread(str(bad_tar), str(extract_dir))
-        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
-        thread.run()
-
-        assert len(results) == 1
-        assert results[0][0] is False
+        success, _ = _run_tar_thread(bad_tar, extract_dir)
+        assert success is False
 
     def test_emits_failure_on_empty_archive(self, tmp_path: Path) -> None:
         import tarfile as tf
-
-        from app.utils.update_utils import TarExtractThread
 
         empty_tar = tmp_path / "empty.tar.gz"
         with tf.open(str(empty_tar), "w:gz"):
@@ -432,14 +437,9 @@ class TestTarExtractThread:
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        results: list[tuple[bool, str]] = []
-        thread = TarExtractThread(str(empty_tar), str(extract_dir))
-        thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
-        thread.run()
-
-        assert len(results) == 1
-        assert results[0][0] is False
-        assert "empty" in results[0][1]
+        success, msg = _run_tar_thread(empty_tar, extract_dir)
+        assert success is False
+        assert "empty" in msg
 
     def test_abort_stops_extraction(self, tmp_path: Path) -> None:
         import io
@@ -459,7 +459,7 @@ class TestTarExtractThread:
         extract_dir.mkdir()
 
         thread = TarExtractThread(str(tar_path), str(extract_dir))
-        thread.stop()  # abort before starting
+        thread.stop()
         results: list[tuple[bool, str]] = []
         thread.finished.connect(lambda ok, msg: results.append((ok, msg)))
         thread.run()
@@ -476,15 +476,10 @@ class TestExtractTarGzIntegration:
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        mgr = MagicMock(spec=UpdateManager)
-        mgr.mod_info_panel = None
-        mgr._progress_widget = None
-        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
-
         from app.utils.update_utils import UpdateExtractionError
 
         with pytest.raises(UpdateExtractionError, match="Invalid tar.gz"):
-            mgr._extract_tar_gz(b"not a tarball", extract_dir)
+            _make_extract_mgr()._extract_tar_gz(b"not a tarball", extract_dir)
 
     def test_raises_on_empty_tar_gz(self, tmp_path: Path) -> None:
         import io
@@ -493,17 +488,11 @@ class TestExtractTarGzIntegration:
         buf = io.BytesIO()
         with tf.open(fileobj=buf, mode="w:gz"):
             pass
-        content = buf.getvalue()
 
         extract_dir = tmp_path / "extract"
         extract_dir.mkdir()
 
-        mgr = MagicMock(spec=UpdateManager)
-        mgr.mod_info_panel = None
-        mgr._progress_widget = None
-        mgr._extract_tar_gz = UpdateManager._extract_tar_gz.__get__(mgr)
-
         from app.utils.update_utils import UpdateExtractionError
 
         with pytest.raises(UpdateExtractionError, match="empty"):
-            mgr._extract_tar_gz(content, extract_dir)
+            _make_extract_mgr()._extract_tar_gz(buf.getvalue(), extract_dir)
