@@ -219,23 +219,49 @@ def remove_locale_sources(app_path: str) -> int:
     return total_saved
 
 
+def fixup_steamworkspy(app_path: str) -> None:
+    """Ensure generic-named SteamworksPy.dylib exists in the bundle.
+
+    Nuitka bundles the arch-suffixed variant (e.g. SteamworksPy_arm.dylib) but
+    the runtime expects ``SteamworksPy.dylib``.  Copy the suffixed file to the
+    generic name if it is missing.
+    """
+    macos_dir = os.path.join(app_path, "Contents", "MacOS")
+    generic = os.path.join(macos_dir, "SteamworksPy.dylib")
+    if os.path.exists(generic):
+        print("  SteamworksPy.dylib already exists")
+        return
+
+    candidates = [
+        os.path.join(macos_dir, f)
+        for f in os.listdir(macos_dir)
+        if f.startswith("SteamworksPy_") and f.endswith(".dylib")
+    ]
+    if candidates:
+        shutil.copyfile(candidates[0], generic)
+        print(f"  Created SteamworksPy.dylib from {os.path.basename(candidates[0])}")
+    else:
+        print("  WARNING: No SteamworksPy dylib found in bundle")
+
+
 def optimize_bundle(app_path: str, target_arch: str) -> None:
     total_saved = 0
 
-    print("\n[1/3] Thinning fat binaries...")
+    print("\n[1/4] Fixing up SteamworksPy...")
+    fixup_steamworkspy(app_path)
+
+    print("\n[2/4] Thinning fat binaries...")
     total_saved += thin_fat_binaries(app_path, target_arch)
 
-    print("\n[2/3] Deduplicating framework data files...")
+    print("\n[3/4] Deduplicating framework data files...")
     total_saved += deduplicate_framework_data(app_path)
 
-    print("\n[3/3] Removing locale source files...")
+    print("\n[4/4] Removing locale source files...")
     total_saved += remove_locale_sources(app_path)
 
     if total_saved > 0:
         print(f"\nTotal saved: {total_saved:,} bytes ({total_saved // 1048576} MB)")
-        _sign_bundle(app_path)
-    else:
-        print("\nNo optimizations applied")
+    _sign_bundle(app_path)
 
 
 def main() -> None:

@@ -191,31 +191,6 @@ jobs:
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 
-      - name: Fixup SteamworksPy in macOS bundle
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          APP_BUNDLE=$(find build/ -name "*.app" -maxdepth 2 | head -n 1)
-          if [ -z "$APP_BUNDLE" ]; then
-            echo "No .app bundle found, skipping SteamworksPy fixup"
-            exit 0
-          fi
-          MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
-          GENERIC="$MACOS_DIR/SteamworksPy.dylib"
-          if [ -f "$GENERIC" ]; then
-            echo "SteamworksPy.dylib already exists in bundle"
-            exit 0
-          fi
-          # Find arch-specific variant and copy to generic name
-          CANDIDATE=$(find "$MACOS_DIR" -name "SteamworksPy_*.dylib" | head -n 1)
-          if [ -n "$CANDIDATE" ]; then
-            cp "$CANDIDATE" "$GENERIC"
-            echo "Created SteamworksPy.dylib from $(basename "$CANDIDATE")"
-          else
-            echo "WARNING: No SteamworksPy dylib found in bundle!"
-            exit 1
-          fi
-
       - name: Optimize macOS bundle
         if: runner.os == 'macOS'
         shell: bash
