@@ -42,6 +42,10 @@ format-fix:
 typecheck:
     uv run mypy --config-file pyproject.toml .
 
+# Detect copy-paste code duplication (matches CI's jscpd check)
+jscpd:
+    npx jscpd@latest app/ tests/ --threshold 0
+
 # Run all code quality checks (lint, format, typecheck)
 check: lint format typecheck
 
