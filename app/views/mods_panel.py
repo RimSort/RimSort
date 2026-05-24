@@ -3147,7 +3147,8 @@ class ModListWidget(QListWidget):
                 if isinstance(widget, DividerItemInner):
                     widget.set_collapsed(collapsed)
             else:
-                item.setHidden(collapsed)
+                hidden_by_filter = getattr(data, "hidden_by_filter", False)
+                item.setHidden(collapsed or hidden_by_filter)
         self._update_divider_mod_counts()
 
     def get_dividers_data(self) -> list[dict[str, Any]]:
