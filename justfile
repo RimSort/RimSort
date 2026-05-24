@@ -46,8 +46,12 @@ typecheck:
 jscpd:
     npx jscpd@latest app/ tests/ --threshold 0
 
-# Run all code quality checks (lint, format, typecheck, jscpd)
-check: lint format typecheck jscpd
+# Check shell script formatting
+shfmt:
+    shfmt -d update.sh packaging/
+
+# Run all code quality checks (lint, format, typecheck, jscpd, shfmt)
+check: lint format typecheck jscpd shfmt
 
 # Automatically fix linting and formatting issues
 fix: lint-fix format-fix

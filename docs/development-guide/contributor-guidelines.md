@@ -102,13 +102,14 @@ Key recipes for contributors:
 
 | Command | Description |
 | :--- | :--- |
-| `just check` | Run all code quality checks (lint, format, typecheck, jscpd) |
+| `just check` | Run all code quality checks (lint, format, typecheck, jscpd, shfmt) |
 | `just fix` | Auto-fix linting and formatting issues |
 | `just test` | Run tests with coverage reporting |
 | `just lint` | Check for linting issues with ruff |
 | `just format` | Check code formatting with ruff |
 | `just typecheck` | Run mypy type checking |
 | `just jscpd` | Detect copy-paste code duplication |
+| `just shfmt` | Check shell script formatting |
 
 **Run `just check` before submitting a PR.** CI runs all of these checks and will fail if any report issues.
 
