@@ -94,18 +94,42 @@ To mitigate this issue, the version info for the release pipeline is grabbed fir
 
 Please ensure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the GitHub repo's "Issues" tab. If it is not already in the issues tab, you can discuss this with maintainers first through the RimSort Discord server.
 
-## Misc Coding Style
+## Task Runner
 
-- The preferred Python formatter is: [ruff](https://docs.astral.sh/ruff/) (`pip install ruff`)
-  - Here is the Ruff extension for [VS Code](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
-  - Note that Ruff replaces isort, flake8 as well as black. If you have these, make sure to disable them to prevent conflicts.
+We use [just](https://just.systems/) as our task runner. Run `just` with no arguments to list all available recipes.
+
+Key recipes for contributors:
+
+| Command | Description |
+| :--- | :--- |
+| `just check` | Run all code quality checks (lint, format, typecheck, jscpd) |
+| `just fix` | Auto-fix linting and formatting issues |
+| `just test` | Run tests with coverage reporting |
+| `just lint` | Check for linting issues with ruff |
+| `just format` | Check code formatting with ruff |
+| `just typecheck` | Run mypy type checking |
+| `just jscpd` | Detect copy-paste code duplication |
+
+**Run `just check` before submitting a PR.** CI runs all of these checks and will fail if any report issues.
+
+## Coding Style
+
+### Linting and Formatting
+
+- **[Ruff](https://docs.astral.sh/ruff/)** is used for both linting and formatting (`just lint`, `just format`).
+  - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
+  - Ruff replaces isort, flake8, and black. Disable those if you have them installed.
+  - Configuration is in `pyproject.toml`.
+- **[mypy](https://mypy.readthedocs.io/en/stable/)** is used for static type checking (`just typecheck`).
+  - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=matangover.mypy)
+- **[JSCPD](https://github.com/kucherenko/jscpd)** is used for copy-paste detection (`just jscpd`).
+  - CI enforces a 0% duplication threshold. If you have similar code blocks, extract a shared helper.
+- For shell scripts, we use [shfmt](https://github.com/mvdan/sh#shfmt).
+  - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
+
+### Conventions
+
 - The preferred docstring format is: [Sphinx reST](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html)
 - Type annotations should be added to function/method signatures.
-  - Use Python 3.10+ standards. (Avoid importing Typing. [Pep604](https://peps.python.org/pep-0604/) instead of Optional)
-- We use [mypy](https://mypy.readthedocs.io/en/stable/) for static type checking.
-  - Grab [this extension](https://marketplace.visualstudio.com/items?itemName=matangover.mypy) for VS Code/VS Codium!
-- For quick setup, you can install some of the dependencies described above along with additional modules for typing to automate your development:
-  - `pip install -r requirements_develop.txt`
+  - Use Python 3.10+ standards. (Avoid importing Typing. [PEP 604](https://peps.python.org/pep-0604/) instead of Optional)
 - VS Code workspace settings are included
-- For shell scripts, we use [shfmt](https://github.com/mvdan/sh#shfmt)
-  - [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
