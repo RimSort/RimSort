@@ -67,16 +67,17 @@ git submodule update --init --recursive
 
 RimSort uses the Python package and project manager [uv](https://docs.astral.sh/uv/).
 
-To get started, in the project root, simply run: 
+The easiest way to set up everything (submodules, venv, dev + build dependencies) is:
 ```shell
-uv sync
+just dev-setup
 ```
 
-Note that by default, `uv` will also install the dev dependency group.
+This runs `uv sync --locked --dev --group build`, which installs all runtime, dev, and build dependencies (including linters like ruff and mypy).
 
-If you wish to also build the executables locally, you'll need to also install the `build` dependency group:
+If you prefer to do it manually:
 ```shell
-uv sync --group build
+uv sync --dev            # install runtime + dev dependencies (linters, test tools)
+uv sync --group build    # also install build dependencies (nuitka, etc.)
 ```
 
 ## Automated build process
