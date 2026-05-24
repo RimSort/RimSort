@@ -34,9 +34,17 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
 
 ### Tools and Software 
 
+**Required:**
 - [git](https://git-scm.com/)
 - [Python](https://python.org/) 3.12 (Can be installed with uv if you'd like)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [just](https://just.systems/man/en/installation.html) — task runner for development commands
+
+**For code quality checks** (used by `just check` and CI):
+- [Node.js / npx](https://nodejs.org/) — needed for [JSCPD](https://github.com/kucherenko/jscpd) copy-paste detection (`just jscpd`)
+- [shfmt](https://github.com/mvdan/sh#shfmt) — shell script formatter (`just shfmt`)
+
+Python linters (ruff, mypy) are installed automatically by `uv sync` — no manual setup needed.
 
 ### Cloning the repository
 RimSort uses submodules that are hosted in other repositories that need to be cloned. 
@@ -59,16 +67,17 @@ git submodule update --init --recursive
 
 RimSort uses the Python package and project manager [uv](https://docs.astral.sh/uv/).
 
-To get started, in the project root, simply run: 
+The easiest way to set up everything (submodules, venv, dev + build dependencies) is:
 ```shell
-uv sync
+just dev-setup
 ```
 
-Note that by default, `uv` will also install the dev dependency group.
+This runs `uv sync --locked --dev --group build`, which installs all runtime, dev, and build dependencies (including linters like ruff and mypy).
 
-If you wish to also build the executables locally, you'll need to also install the `build` dependency group:
+If you prefer to do it manually:
 ```shell
-uv sync --group build
+uv sync --dev            # install runtime + dev dependencies (linters, test tools)
+uv sync --group build    # also install build dependencies (nuitka, etc.)
 ```
 
 ## Automated build process
