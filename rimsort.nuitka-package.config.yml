@@ -41,11 +41,19 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "SteamworksPy"
+          - "*arm"
         suffixes:
           - "dylib"
       dest_path: "."
-      when: "macos"
+      when: "macos and arch_arm64"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "*i386"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos and arch_amd64"
     - from_filenames:
         relative_path: "../libs"
         prefixes:
