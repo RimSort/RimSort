@@ -1840,6 +1840,19 @@ class UpdateManager(QObject):
         """
         top_dir_name = top_dir.name.lower()
 
+        # Platform-specific preserve rules take priority over generic patterns.
+        # On macOS the .app bundle must not be unwrapped even though its name
+        # contains the substring "app".
+        if self._system == "Darwin":
+            if top_dir_name.endswith(".app"):
+                return False
+            return True
+        elif self._system == "Linux":
+            if top_dir_name in ["rimsort", "rimsort.app"]:
+                return False
+        elif self._system == "Windows":
+            pass
+
         # Common wrapper patterns
         if any(
             keyword in top_dir_name for keyword in ["app", "application", "release"]
@@ -1850,15 +1863,7 @@ class UpdateManager(QObject):
         if VERSION_PATTERN.match(top_dir_name):
             return True
 
-        # Platform-specific rules
-        if self._system == "Darwin":
-            return top_dir_name != "rimsort.app"
-        elif self._system == "Windows":
-            return True
-        elif self._system == "Linux":
-            return top_dir_name.lower() not in ["rimsort", "rimsort.app"]
-
-        return False
+        return self._system == "Windows"
 
     def _move_directory_contents(self, source_dir: Path, dest_dir: Path) -> int:
         """
