@@ -1,3 +1,4 @@
+import sys
 from typing import Generator
 from unittest.mock import MagicMock, patch
 
@@ -75,7 +76,9 @@ class TestBinaryChoiceDialog:
                 # Unexpected error
                 raise
 
-            assert dialog.windowTitle() == title
+            # QMessageBox.windowTitle() returns empty on macOS (native dialogs don't use it)
+            if sys.platform != "darwin":
+                assert dialog.windowTitle() == title
             if dialog.textFormat() == Qt.TextFormat.RichText:
                 assert dialog.text() == f"<b>{text}</b>"
             else:
