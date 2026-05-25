@@ -549,7 +549,7 @@ class SteamworksWorker(QThread):
             logger.debug(f"GetAppDependencies({pfid})")
             self._steamworks.Workshop.GetAppDependencies(pfid)
             if idx < len(op.pfids) - 1:
-                time.sleep(1)
+                self._wait_with_callbacks(1)
 
         self._wait_for_pending_callbacks(timeout=60)
         op.result_future.set_result(results)

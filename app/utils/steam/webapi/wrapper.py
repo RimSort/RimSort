@@ -2,7 +2,6 @@ import sys
 import traceback
 from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
@@ -756,20 +755,29 @@ class DynamicQuery(QObject):
             temporary_worker = True
 
         try:
-            # Process in chunks for progress reporting
-            num_chunks = max(1, cpu_count())
-            chunk_size = max(1, ceil(len(publishedfileids) / num_chunks))
+            # Process in chunks for progress reporting.
+            # Each mod takes ~1s (sleep between API calls), so timeout
+            # must scale with chunk size. Use small chunks for responsive
+            # progress updates and reasonable per-chunk timeouts.
+            chunk_size = 200
             pfids_appid_deps: dict[int, list[int]] = {}
+            total = len(publishedfileids)
+            processed = 0
 
             for chunk in chunks(_list=publishedfileids, limit=chunk_size):
                 int_chunk = [int(str_pfid) for str_pfid in chunk]
                 future = worker.query_app_dependencies(int_chunk)
                 try:
-                    result = future.result(timeout=120)
+                    chunk_timeout = len(int_chunk) + 120
+                    result = future.result(timeout=chunk_timeout)
                     if result is not None:
                         pfids_appid_deps.update(result)
                 except Exception as e:
                     logger.error(f"AppDependencies query failed for chunk: {e}")
+                processed += len(int_chunk)
+                self._emit_message(
+                    f"ISteamUGC/GetAppDependencies progress [{processed}/{total}]"
+                )
 
             self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
 
