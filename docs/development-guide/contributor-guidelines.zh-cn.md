@@ -32,9 +32,9 @@ lang: zh-cn
 
 5. 所有 PR 必须关联对应的 Issue 或子任务。这旨在确保开发过程透明化，便于社区协作追踪进度。
    - 任何人都可以向 RimSort 做贡献，但作为一个社区，这些准则有助于鼓励和加强一致性，帮助 RimSort 成长
-   - 无论是否具有维护者身份都可以提交 PR！如果你愿意做出贡献，请不要犹豫，从 fork 仓库或其他东西开始吧。
+   - 维护者与否都不影响你提交 PR！请不要犹豫，如果你喜欢从 fork 仓库或其他方式开始贡献，那也完全可以。
 
-6. 通常不应提交仅更新依赖版本的 PR。基本的依赖更新由 dependabot 自动进行，例外情况需在相关 Issue 中说明必要性。
+6. 在 99% 的情况下，你不应该提交仅更新依赖版本的 Pull Request。基本的依赖更新由 dependabot 自动处理。
 
 ## 版本管理与发布
 
@@ -42,7 +42,7 @@ lang: zh-cn
 
 **手动覆盖标签时应使用 `v` 作为前缀并遵循发布格式规范，例如：`v1.1.1`**
 
-**语义版本控制只会监控特定目录的变更，以确定隐含的提交目的。**此举旨在确保与代码功能无关的仓库变更，不会影响应用程序版本。
+**SemVer 将仅监控特定目录的变更，以确定隐含的提交目的。**此举旨在确保与代码功能无关的仓库变更，不会影响应用程序版本。
 
 <details>
 <summary> 当前监控目录 </summary>
@@ -56,56 +56,88 @@ lang: zh-cn
 
 ### 发布说明和流水线
 
-|    发布类型    |                        版本号格式                         | 何时触发 | 描述                                                                                                                                      |
+|    类型    |                        版本号格式                         | 触发 | 描述                                                                                                                                      |
 | :--------: | :-----------------------------------------------------------: | :-----: | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-|  稳定版（Release）   |                v\${major}.\${minor}.\${patch}                 | 手动  | 可以安全使用，被认为稳定的版本。                                                                                      |
-|    前瞻版（Edge）    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | 手动  | 频繁发布的版本，包含最新功能和修复，但可能存在重大的破坏性 Bug。                      |
-| 自动构建 | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  自动   | 自动构建流水线生成的版本，由每个 Pull Request 和向 main 分支的推送触发。这些构建版本不会正式发布，生成的构建产物将以 artifact 保留。 |
+|  Release   |                v\${major}.\${minor}.\${patch}                 | 手动  | 可以安全使用，被认为稳定的版本。                                                                                      |
+|    Edge    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | 手动  | 这些版本发布频繁，包含最新功能和修复，但可能存在显著的破坏性 Bug。                      |
+| Auto-Build | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  自动   | 自动构建流水线在每个 Pull Request 和向 main 分支推送时触发生成的版本。不会正式发布，构建产物以 artifact 形式保留。 | 
 
-正式版需要通过手动触发相关的 GitHub 工作流操作来创建。为确保安全，发布仅创建为草稿。
+正式版通过手动触发相关 GitHub 工作流操作创建。为保证安全，建议将发布流程设置为仅创建草稿。
 
-前瞻版会被覆盖，每次将创建新的前瞻版标签并完全删除旧的发布，而稳定版不会被覆盖。默认情况下，非草稿的稳定版受到保护，已存在相同版本号的发布时，自动操作将会失败。
+前瞻版会被覆盖：每次都会创建新的前瞻版标签并删除旧的 release，而稳定版不会被覆盖。默认情况下，非草稿稳定版会受到保护，当已存在相同版本号的发布时，自动操作将会失败。
 
-若构建步骤已完成，但发布流水线的后续步骤失败，你可以通过提供运行 ID 来重新运行工作流（跳过构建步骤），系统将从指定运行记录中获取构建产物进行发布。
+如果构建步骤完成了，但发布流水线后续步骤失败，可以通过提供工作流的运行 ID 来重新运行该工作流并跳过构建步骤；系统会从对应运行记录中获取构建产物用于发布。
 
-注意，如果在启动新发布与实际发布完成期间，目标分支又有新的提交，这可能导致构建产物与发布信息的提交版本不匹配。默认情况下，发布流水线会检测到这种情况，会终止操作以保持发布信息的准确性。**构建产物中的 version 文件和 version.xml 始终包含正确版本信息。**
+注意：如果在开始尝试发布与实际完成发布之间，目标分支又有新的提交，那么构建使用的提交版本与发布信息可能不一致。默认情况下，发布流水线会检测到这种提交不匹配并失败，以保证发布信息正确。**构建产物中的 version 文件和 version.xml 始终是正确的。**
 
 ### 版本关键词与模式
 
-|   类型    |     模式      | 描述                                                                                    |
-| :-------: | :-----------: | -------------------------------------------------------------------------------------- |
-|   major   |    (major)    | 重大且破坏性的更新                                                                      |
-|   minor   |    (minor)    | 次要更新。预计不会造成破坏性变动，但可能引入新功能或大量错误修复                        |
-|   patch   | n/a（隐式）   | 非破坏性的小改动。当没有其他模式时，在合并请求时递增                                    |
-| increment | n/a（隐式）   | 自上次版本变更以来的提交次数                                                            |
-| short-sha | n/a（隐式）   | 构建所对应提交 sha 标识的前七位字符                                                       |
+|   类型    |    模式     | 描述                                                                                               |
+| :-------: | :----------: | --------------------------------------------------------------------------------------------------------- |
+|   major   |    (major)  | 重大且具有破坏性的更新                                                                                |
+|   minor   |    (minor)  | 次要更新。通常不期望造成破坏，但可能引入新功能或大量错误修复                                        |
+|   patch   | n/a（隐式） | 非破坏性的小改动。如果没有其他关键词匹配，在合并 PR 时自动递增版本号                                        |
+| increment | n/a（隐式） | 距离上次版本变更以来的提交次数                                                                      |
+| short-sha | n/a（隐式） | 构建所对应的提交 SHA 的前七位字符                                                                    |
 
 ### 注意事项与潜在问题
 
 #### 潜在竞态条件
 
-由于 GitHub runner 环境的工作机制，当构建发布流程正在运行的代码分支有新提交时，可能会出现竞态条件。如果工作流运行期间分支内容发生变化，根据工作流所处的阶段，可能会导致发布版本信息与构建所用提交版本之间存在差异。在极端情况下，若某个构建目标的运行器已完成代码检出，而其他目标的运行器在开始前又收到了新提交，则不同构建目标可能会基于不同的代码提交进行构建。
+由于 GitHub runner 环境的工作方式，如果在工作流运行期间对所构建分支又进行了提交，可能会出现竞态条件。根据工作流运行到的步骤不同，可能会导致发布的版本信息与实际用于构建的提交版本不一致。
 
-**注意：实际的 version.xml 文件和程序报告的版本号始终是准确的。**
+如果在最不理想的情况下，某个构建目标的 runner 已完成检出并开始构建，而在其他目标 runner 开始之前又发生提交，那么各构建目标最终可能基于不同的提交。
 
-为缓解此问题，发布流程会首先获取版本信息（早于构建和测试步骤）。此外，在发布前会进行提交一致性检查。如果任何构建产物的目标提交与发布提交不匹配，工作流默认会终止并报错。
+**注意：实际的 version.xml 文件以及随后的应用程序报告版本始终会是正确的。**
+
+为缓解此问题，发布流水线会在构建和测试开始之前就先获取版本信息。同时，在发布前会执行提交一致性检查。如果任意构建产物的目标提交与发布时记录的提交不匹配，工作流默认会失败。
 
 ## 功能开发指南
 
-提交新功能请求前，请先确认是否已有相关计划。我们通过 GitHub 仓库的「Issues」页追踪 RimSort 的功能需求和问题报告。若尚未存在相关 Issue，建议先通过 RimSort Discord 服务器与维护团队讨论。
+提交新功能请求前，请先确认是否已有相应计划。我们会在 GitHub 仓库的「Issues」页跟踪 RimSort 的功能和问题。如果在 Issues 页没有找到对应条目，建议先通过 RimSort Discord 服务器与维护者进行讨论。
 
-## 编码风格指南
+## 任务执行器
 
-- 推荐使用 Python 格式化工具：[ruff](https://docs.astral.sh/ruff/) (`pip install ruff`)
-  - VS Code 用户可安装 [Ruff 扩展](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
-  - 注意：Ruff 已替代 isort、flake8 和 black，确保禁用这些工具以避免冲突
-- 文档字符串格式建议采用：[Sphinx reST](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html)
-- 函数/方法签名需添加类型注解
-  - 使用 Python 3.10+ 标准（避免导入 Typing 模块，采用 [PEP604](https://peps.python.org/pep-0604/) 的 `| None` 代替 `Optional`）
-- 静态类型检查使用：[mypy](https://mypy.readthedocs.io/en/stable/)
-  - VS Code/VS Codium 用户推荐安装 [mypy 扩展](https://marketplace.visualstudio.com/items?itemName=matangover.mypy)
-- 为了快速配置开发环境，你可以安装上面描述的一些依赖项，以及用于类型检查的其他模块，实现开发自动化
-  - `pip install -r requirements_develop.txt`
-- 仓库包含预置的 VS Code 工作区设置
-- Shell 脚本格式化使用：[shfmt](https://github.com/mvdan/sh#shfmt)
-  - [VS Code 扩展](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
+我们使用 [just](https://just.systems/) 作为任务运行器。你可以直接运行 `just` 查看所有可用 recipes。
+
+给贡献者的关键命令：
+
+| Command | Description |
+| :--- | :--- |
+| `just check` | 运行所有代码质量检查（lint、format、typecheck、jscpd、shfmt） |
+| `just fix` | 自动修复 lint 和格式化问题 |
+| `just test` | 运行测试并生成覆盖率报告 |
+| `just lint` | 检查 ruff 的 lint 问题 |
+| `just format` | 使用 ruff 检查代码格式 |
+| `just typecheck` | 运行 mypy 的类型检查 |
+| `just jscpd` | 检测代码拷贝粘贴重复 |
+| `just shfmt` | 格式化并检查 Shell 脚本格式（shfmt） |
+
+
+**提交 PR 前请先运行 `just check`。**CI 会执行全部这些检查，并且若检测到问题将失败。
+
+## 代码风格
+
+### Linting 与格式化
+
+- **[Ruff](https://docs.astral.sh/ruff/)** 同时用于 lint 和格式化（`just lint`、`just format`）。
+  - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff>
+  - Ruff 替代 isort、flake8 和 black。请确保禁用这些工具以避免冲突。
+  - 配置位于 `pyproject.toml`。
+
+- **[mypy](https://mypy.readthedocs.io/en/stable/)** 用于静态类型检查（`just typecheck`）。
+  - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=matangover.mypy>
+
+- **[JSCPD](https://github.com/kucherenko/jscpd)** 用于检测代码拷贝粘贴（`just jscpd`）。
+  - CI 会强制要求 0% 重复率。如果你的代码块相似，请抽取为共享 helper。
+
+- 对于 shell 脚本，我们使用 [shfmt](https://github.com/mvdan/sh#shfmt)。
+  - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt>
+
+### 约定
+
+- 推荐的 docstring 格式是： [Sphinx reST](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html)
+- 函数/方法的签名需要添加类型注解。
+  - 使用 Python 3.10+ 标准。（避免导入 Typing；使用 [PEP 604](https://peps.python.org/pep-0604/) 的 `| None` 代替 Optional）
+- 已包含 VS Code 工作区设置
+

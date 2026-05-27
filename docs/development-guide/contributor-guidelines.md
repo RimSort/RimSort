@@ -109,7 +109,7 @@ Key recipes for contributors:
 | `just format` | Check code formatting with ruff |
 | `just typecheck` | Run mypy type checking |
 | `just jscpd` | Detect copy-paste code duplication |
-| `just shfmt` | Check shell script formatting |
+| `just shfmt` | Format + check shell script formatting (shfmt) |
 
 **Run `just check` before submitting a PR.** CI runs all of these checks and will fail if any report issues.
 
@@ -134,3 +134,4 @@ Key recipes for contributors:
 - Type annotations should be added to function/method signatures.
   - Use Python 3.10+ standards. (Avoid importing Typing. [PEP 604](https://peps.python.org/pep-0604/) instead of Optional)
 - VS Code workspace settings are included
+
