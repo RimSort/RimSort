@@ -167,6 +167,25 @@ class AppInfo:
         return self._application_folder
 
     @property
+    def libs_folder(self) -> Path:
+        """
+        Get the path to the folder containing prebuilt Steamworks libraries.
+
+        In compiled (Nuitka) builds, libraries are placed at the application folder root:
+        - macOS: Inside the ``.app`` bundle at ``RimSort.app/Contents/MacOS/``
+        - Linux: Alongside the executable
+        - Windows: Alongside the executable
+
+        In source/development mode, they reside in the ``libs/`` subdirectory.
+
+        Returns:
+            Path: The path to the prebuilt libraries folder.
+        """
+        if "__compiled__" in globals():
+            return self._application_folder
+        return self._application_folder / "libs"
+
+    @property
     def app_storage_folder(self) -> Path:
         """
         Get the path to the folder where user-specific data for the application is stored.

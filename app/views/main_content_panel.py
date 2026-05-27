@@ -2556,7 +2556,7 @@ class MainContent(QObject):
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         # use prebuilt libs path
-        libs_path = str((AppInfo().application_folder / "libs"))
+        libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]

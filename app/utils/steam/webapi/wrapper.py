@@ -741,7 +741,7 @@ class DynamicQuery(QObject):
                 SteamworksAppDependenciesQuery(
                     pfid_or_pfids=[int(str_pfid) for str_pfid in chunk],
                     interval=1,
-                    _libs=str((AppInfo().application_folder / "libs")),
+                    _libs=str(AppInfo().libs_folder),
                 )
                 for chunk in list(
                     chunks(
