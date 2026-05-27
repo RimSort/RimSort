@@ -1,3 +1,6 @@
+# Configure shell for Windows to avoid requiring `sh` (just's default on some setups)
+set shell := ["powershell", "-NoProfile", "-Command"]
+
 # List all available recipes (default)
 @default:
     just --list
@@ -48,7 +51,9 @@ jscpd:
 
 # Check shell script formatting
 shfmt:
-    shfmt -d update.sh packaging/
+    shfmt -w .
+    shfmt -d .
+
 
 # Run all code quality checks (lint, format, typecheck, jscpd, shfmt)
 check: lint format typecheck jscpd shfmt
