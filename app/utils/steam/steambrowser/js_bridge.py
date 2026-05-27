@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Slot
 
@@ -13,7 +13,7 @@ class JavaScriptBridge(QObject):
     """
 
     def __init__(
-        self, browser_instance: "SteamBrowser", parent: Optional[QObject] = None
+        self, browser_instance: "SteamBrowser", parent: QObject | None = None
     ) -> None:
         super().__init__(parent)
         self._browser_instance = browser_instance

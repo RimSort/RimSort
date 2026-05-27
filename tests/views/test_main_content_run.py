@@ -32,6 +32,10 @@ class DummySettings:
         self.active_mods_data_source_filter_index = 0
         self.inactive_mods_data_source_filter_index = 0
         self.active_mods_dividers: list[dict[str, object]] = []
+        # Steam API
+        self.steam_api_idle_timeout = 15
+        # SteamCMD
+        self.steamcmd_validate_downloads = True
         # Instance data with dummy game_folder, config_folder and run_args
         self.instances = {
             "inst1": SimpleNamespace(
@@ -40,6 +44,7 @@ class DummySettings:
                 run_args=["--test"],
                 steam_client_integration=False,
                 launch_via_steam_protocol=False,
+                steamcmd_install_path="",
             )
         }
 
@@ -85,6 +90,19 @@ def patch_steamcmd(monkeypatch: pytest.MonkeyPatch) -> None:
             lambda cls: SimpleNamespace(setup=True, steamcmd_appworkshop_acf_path="")
         ),
     )
+
+
+@pytest.fixture(autouse=True)
+def patch_steamworks_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Prevent SteamworksWorker from initializing the Steamworks API during tests."""
+    from unittest.mock import MagicMock
+
+    from app.views import main_content_panel
+
+    mock_worker_cls = MagicMock()
+    mock_worker_instance = MagicMock()
+    mock_worker_cls.return_value = mock_worker_instance
+    monkeypatch.setattr(main_content_panel, "SteamworksWorker", mock_worker_cls)
 
 
 @pytest.fixture(autouse=True)

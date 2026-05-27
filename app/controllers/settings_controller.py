@@ -972,6 +972,11 @@ class SettingsController(QObject):
             self.settings.steam_apikey
         )
 
+        # Steam API
+        self.settings_dialog.steam_api_idle_timeout_spinbox.setValue(
+            self.settings.steam_api_idle_timeout
+        )
+
         # SteamCMD tab
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
             self.settings.steamcmd_validate_downloads
@@ -1367,6 +1372,11 @@ class SettingsController(QObject):
         self.settings.build_steam_database_update_toggle = self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
         self.settings.steam_apikey = (
             self.settings_dialog.db_builder_steam_api_key.text()
+        )
+
+        # Steam API
+        self.settings.steam_api_idle_timeout = (
+            self.settings_dialog.steam_api_idle_timeout_spinbox.value()
         )
 
         # SteamCMD tab

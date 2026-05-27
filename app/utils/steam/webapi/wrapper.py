@@ -2,7 +2,6 @@ import sys
 import traceback
 from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
@@ -18,7 +17,7 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
-from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.utils.steam.steamworks.wrapper import SteamworksWorker
 from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
@@ -719,64 +718,89 @@ class DynamicQuery(QObject):
         self, publishedfileids: list[str], query: Dict[str, Any]
     ) -> None:
         """
-        Given a list of PublishedFileIds and a query, return the query after looking up
-        and appending DLC dependency data from the Steamworks API.
+        Query DLC dependency data via Steamworks API through the worker thread.
 
-        https://partner.steamgames.com/doc/api/ISteamUGC#GetAppDependencies
+        Replaces the previous multiprocessing.Pool approach with sequential
+        chunk submissions to SteamworksWorker, which serializes all Steamworks
+        API calls through a single handle.
 
         :param publishedfileids: a list of PublishedFileIds to query metadata for
-        :param json_to_update: a Dict of json data, containing a query to update in
-        RimPy db_data["database"] format, or the skeleton of one from local_metadata
-        :return: Dict containing the updated json data from PublishedFileIds query
+        :param query: a Dict containing a database to update with dependency data
         """
         self._emit_message(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing "
+            f"for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
-        # Maximum processes
-        num_processes = cpu_count()
-        # Create a pool of worker processes
-        with Pool(processes=num_processes) as pool:
-            # Create instances of SteamworksAppDependenciesQuery for each chunk
-            queries = [
-                SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[int(str_pfid) for str_pfid in chunk],
-                    interval=1,
-                    _libs=str((AppInfo().application_folder / "libs")),
+
+        # Get or create a SteamworksWorker
+        worker: SteamworksWorker | None = None
+        temporary_worker = False
+        try:
+            from app.views.main_content_panel import MainContent
+
+            if MainContent._instance is not None:
+                worker = MainContent._instance._steamworks_worker
+        except Exception:
+            pass
+
+        if worker is None:
+            # CLI mode or no MainContent — create a temporary worker
+            if QCoreApplication.instance() is None:
+                QCoreApplication([])
+            worker = SteamworksWorker(
+                idle_timeout=300,
+                libs_path=str(AppInfo().application_folder / "libs"),
+            )
+            worker.start()
+            temporary_worker = True
+
+        try:
+            # Process in chunks for progress reporting.
+            # Each mod takes ~1s (sleep between API calls), so timeout
+            # must scale with chunk size. Use small chunks for responsive
+            # progress updates and reasonable per-chunk timeouts.
+            chunk_size = 200
+            pfids_appid_deps: dict[int, list[int]] = {}
+            total = len(publishedfileids)
+            processed = 0
+
+            for chunk in chunks(_list=publishedfileids, limit=chunk_size):
+                int_chunk = [int(str_pfid) for str_pfid in chunk]
+                future = worker.query_app_dependencies(int_chunk)
+                try:
+                    chunk_timeout = len(int_chunk) + 120
+                    result = future.result(timeout=chunk_timeout)
+                    if result is not None:
+                        pfids_appid_deps.update(result)
+                except Exception as e:
+                    logger.error(f"AppDependencies query failed for chunk: {e}")
+                processed += len(int_chunk)
+                self._emit_message(
+                    f"ISteamUGC/GetAppDependencies progress [{processed}/{total}]"
                 )
-                for chunk in list(
-                    chunks(
-                        _list=publishedfileids,
-                        limit=ceil(len(publishedfileids) / num_processes),
-                    )
-                )
-            ]
-            # Map the execution of the queries to the pool of processes
-            results = pool.map(SteamworksAppDependenciesQuery.run, queries)
-        # Merge the results from all processes into a single dictionary
-        self._emit_message("Processes completed!\nCollecting results")
-        pfids_appid_deps: dict[int, list[int]] = {}
-        for result in results:
-            if result is not None:
-                pfids_appid_deps.update(result)
-        self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
-        # Uncomment to see the total metadata returned from all Processes
-        # logger.debug(pfids_appid_deps)
-        # Add our metadata to the query...
-        logger.debug("Populating AppID dependency information into database from query")
-        for pfid in query["database"].keys():
-            if int(pfid) in pfids_appid_deps:
-                for appid in pfids_appid_deps[int(pfid)]:
-                    if str(appid) in RIMWORLD_DLC_METADATA.keys():
-                        if not query["database"][pfid].get("dependencies"):
-                            query["database"][pfid]["dependencies"] = {}
-                        query["database"][pfid]["dependencies"].update(
-                            {
-                                str(appid): [
-                                    RIMWORLD_DLC_METADATA[str(appid)]["name"],
-                                    RIMWORLD_DLC_METADATA[str(appid)]["steam_url"],
-                                ]
-                            }
-                        )
+
+            self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
+
+            logger.debug(
+                "Populating AppID dependency information into database from query"
+            )
+            for pfid in query["database"].keys():
+                if int(pfid) in pfids_appid_deps:
+                    for appid in pfids_appid_deps[int(pfid)]:
+                        if str(appid) in RIMWORLD_DLC_METADATA.keys():
+                            if not query["database"][pfid].get("dependencies"):
+                                query["database"][pfid]["dependencies"] = {}
+                            query["database"][pfid]["dependencies"].update(
+                                {
+                                    str(appid): [
+                                        RIMWORLD_DLC_METADATA[str(appid)]["name"],
+                                        RIMWORLD_DLC_METADATA[str(appid)]["steam_url"],
+                                    ]
+                                }
+                            )
+        finally:
+            if temporary_worker:
+                worker.shutdown()
 
 
 def ISteamRemoteStorage_GetCollectionDetails(
