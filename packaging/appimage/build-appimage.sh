@@ -12,14 +12,14 @@ APPIMAGETOOL_VERSION="1.9.1"
 # Detect architecture from the host or allow override via ARCH env var
 ARCH="${ARCH:-$(uname -m)}"
 case "$ARCH" in
-    x86_64)  APPIMAGE_ARCH="x86_64" ;;
-    aarch64) APPIMAGE_ARCH="aarch64" ;;
-    armv7l)  APPIMAGE_ARCH="armhf" ;;
-    i686)    APPIMAGE_ARCH="i686" ;;
-    *)
-        echo "ERROR: Unsupported architecture: ${ARCH}" >&2
-        exit 1
-        ;;
+x86_64) APPIMAGE_ARCH="x86_64" ;;
+aarch64) APPIMAGE_ARCH="aarch64" ;;
+armv7l) APPIMAGE_ARCH="armhf" ;;
+i686) APPIMAGE_ARCH="i686" ;;
+*)
+	echo "ERROR: Unsupported architecture: ${ARCH}" >&2
+	exit 1
+	;;
 esac
 
 APP_DIST="$(cd "$APP_DIST" && pwd)"
@@ -38,20 +38,20 @@ echo "  AppDir:   ${APPDIR}"
 
 # Validate inputs
 if [[ ! -d "$APP_DIST" ]]; then
-    echo "ERROR: app.dist directory not found: ${APP_DIST}" >&2
-    exit 1
+	echo "ERROR: app.dist directory not found: ${APP_DIST}" >&2
+	exit 1
 fi
 
 if [[ ! -f "${APP_DIST}/RimSort" ]]; then
-    echo "ERROR: RimSort executable not found in ${APP_DIST}" >&2
-    exit 1
+	echo "ERROR: RimSort executable not found in ${APP_DIST}" >&2
+	exit 1
 fi
 
 for f in "$DESKTOP_FILE" "$ICON_FILE" "$METAINFO_FILE"; do
-    if [[ ! -f "$f" ]]; then
-        echo "ERROR: Required file not found: $f" >&2
-        exit 1
-    fi
+	if [[ ! -f "$f" ]]; then
+		echo "ERROR: Required file not found: $f" >&2
+		exit 1
+	fi
 done
 
 # Clean previous AppDir
@@ -86,7 +86,7 @@ cp "${REPO_ROOT}/update.sh" "${APPDIR}/usr/share/RimSort/"
 # Create AppRun entry point — a wrapper that sets cwd to the AppDir root and
 # execs the Nuitka binary. We use a custom AppRun instead of linuxdeploy's
 # --executable flag to avoid patchelf rewriting Nuitka's RPATH layout.
-cat > "${APPDIR}/AppRun" << 'APPRUN_EOF'
+cat >"${APPDIR}/AppRun" <<'APPRUN_EOF'
 #!/usr/bin/env bash
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 HERE="${SELF%/*}"
@@ -103,10 +103,10 @@ cp "${REPO_ROOT}/themes/default-icons/AppIcon_a.png" "${APPDIR}/.DirIcon"
 
 # Download appimagetool if not present
 if [[ ! -f "$APPIMAGETOOL" ]]; then
-    echo "Downloading appimagetool ${APPIMAGETOOL_VERSION} (${APPIMAGE_ARCH})..."
-    curl -fSL -o "$APPIMAGETOOL" \
-        "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-${APPIMAGE_ARCH}.AppImage"
-    chmod +x "$APPIMAGETOOL"
+	echo "Downloading appimagetool ${APPIMAGETOOL_VERSION} (${APPIMAGE_ARCH})..."
+	curl -fSL -o "$APPIMAGETOOL" \
+		"https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-${APPIMAGE_ARCH}.AppImage"
+	chmod +x "$APPIMAGETOOL"
 fi
 
 # Determine how to run appimagetool.
@@ -117,24 +117,24 @@ APPIMAGETOOL_CMD="$APPIMAGETOOL"
 export APPIMAGE_EXTRACT_AND_RUN=1
 
 if ! "$APPIMAGETOOL_CMD" --version &>/dev/null; then
-    echo "Direct execution failed, extracting appimagetool..."
-    if ! (cd "$BUILD_DIR" && "$APPIMAGETOOL" --appimage-extract); then
-        echo "WARNING: --appimage-extract returned non-zero" >&2
-    fi
-    APPIMAGETOOL_CMD="${BUILD_DIR}/squashfs-root/AppRun"
-    if [[ ! -f "$APPIMAGETOOL_CMD" ]]; then
-        echo "ERROR: Failed to extract appimagetool" >&2
-        exit 1
-    fi
+	echo "Direct execution failed, extracting appimagetool..."
+	if ! (cd "$BUILD_DIR" && "$APPIMAGETOOL" --appimage-extract); then
+		echo "WARNING: --appimage-extract returned non-zero" >&2
+	fi
+	APPIMAGETOOL_CMD="${BUILD_DIR}/squashfs-root/AppRun"
+	if [[ ! -f "$APPIMAGETOOL_CMD" ]]; then
+		echo "ERROR: Failed to extract appimagetool" >&2
+		exit 1
+	fi
 fi
 
 # Remove .ts translation source files — only compiled .qm files are needed at runtime
 echo "Removing .ts locale source files..."
 find "${APPDIR}" -name "*.ts" -type f | while read -r ts_file; do
-    qm_file="${ts_file%.ts}.qm"
-    if [[ -f "$qm_file" ]]; then
-        rm -f "$ts_file"
-    fi
+	qm_file="${ts_file%.ts}.qm"
+	if [[ -f "$qm_file" ]]; then
+		rm -f "$ts_file"
+	fi
 done
 
 # Build the AppImage using appimagetool directly.
@@ -143,8 +143,8 @@ done
 echo "Running appimagetool..."
 export VERSION
 ARCH="$APPIMAGE_ARCH" "$APPIMAGETOOL_CMD" \
-    --mksquashfs-opt -Xcompression-level --mksquashfs-opt 19 \
-    "$APPDIR" "$OUTPUT"
+	--mksquashfs-opt -Xcompression-level --mksquashfs-opt 19 \
+	"$APPDIR" "$OUTPUT"
 
 echo "=== AppImage built successfully ==="
 ls -lh "$OUTPUT"
