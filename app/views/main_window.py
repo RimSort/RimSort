@@ -47,6 +47,7 @@ from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.acf_log_reader import AcfLogReader
+from app.views.companion_panel import CompanionPanel
 from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_conditional,
@@ -202,6 +203,10 @@ class MainWindow(QMainWindow):
         )
         self.troubleshooting_layout.addWidget(self.troubleshooting_dialog)
         self.tab_widget.addTab(self.troubleshooting_tab, self.tr("Troubleshooting"))
+
+        # Create and add the Companion tab
+        self.companion_panel = CompanionPanel()
+        self.tab_widget.addTab(self.companion_panel, self.tr("Companion"))
 
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()

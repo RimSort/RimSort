@@ -215,6 +215,10 @@ class Settings(QObject):
         # Player Log
         self.auto_load_player_log_on_startup: bool = False
 
+        # Companion
+        self.companion_port: int = 29515
+        self.companion_auto_fetch: bool = True
+
         # Instances
         self.current_instance: str = DEFAULT_INSTANCE_NAME
         self.current_instance_path: str = str(

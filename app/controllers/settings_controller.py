@@ -1187,6 +1187,10 @@ class SettingsController(QObject):
         self.settings_dialog.run_args.setText(run_args_str)
         self.settings_dialog.run_args.setCursorPosition(0)
 
+        # Companion
+        self.settings_dialog.companion_port_input.setValue(self.settings.companion_port)
+        self.settings_dialog.companion_auto_fetch_checkbox.setChecked(self.settings.companion_auto_fetch)
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -1529,6 +1533,10 @@ class SettingsController(QObject):
         )
         run_args_str = run_args_list[0] if run_args_list else ""
         self.settings_dialog.run_args.setText(run_args_str)
+
+        # Companion
+        self.settings.companion_port = self.settings_dialog.companion_port_input.value()
+        self.settings.companion_auto_fetch = self.settings_dialog.companion_auto_fetch_checkbox.isChecked()
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
