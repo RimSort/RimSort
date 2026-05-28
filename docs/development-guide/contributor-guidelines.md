@@ -8,17 +8,20 @@ permalink: development-guide/contributor-guidelines
 
 
 # Contributor Guidelines
+
 {: .no_toc}
 
 Please follow the following guidelines when contributing to RimSort.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
 {:toc}
 
 ## Basic Guidelines
+
 1. Pull Requests need to be made AFTER all guidelines are met. It's OK to miss some stuff because we can catch it in review, but we should be proactive with docstrings, code formatting, etc. If not ready, use a draft.
 
 2. Please submit Pull Requests which contain feature-specific changes only. PRs should not lump multiple changes into one thing. This so we can be more selective in discussion. This is a requirement, and deviation will cause PR to be closed.
@@ -102,14 +105,28 @@ Key recipes for contributors:
 
 | Command | Description |
 | :--- | :--- |
-| `just check` | Run all code quality checks (lint, format, typecheck, jscpd, shfmt) |
+| `just check` | Run all code quality checks (ruff, ruff-format, typecheck, jscpd, shfmt) |
 | `just fix` | Auto-fix linting and formatting issues |
-| `just test` | Run tests with coverage reporting |
-| `just lint` | Check for linting issues with ruff |
-| `just format` | Check code formatting with ruff |
-| `just typecheck` | Run mypy type checking |
-| `just jscpd` | Detect copy-paste code duplication |
-| `just shfmt` | Format + check shell script formatting (shfmt) |
+| `just test` | Run tests with doctest modules enabled |
+| `just test-coverage` | Run tests with coverage reports (XML, HTML, terminal) |
+| `just test-verbose` | Run tests with verbose output and short tracebacks |
+| `just ruff` | Check code for linting issues (ruff check) |
+| `just ruff-format` | Check code for formatting issues (ruff format) |
+| `just ruff-fix` | Auto-fix linting issues (ruff check --fix) |
+| `just ruff-format-fix` | Auto-fix formatting issues (ruff format) |
+| `just typecheck` | Run static type checking (mypy) |
+| `just jscpd` | Detect copy-paste code duplication (zero-tolerance) |
+| `just shfmt` | Check shell script formatting (shfmt, diff-only) |
+| `just shfmt-fix` | Auto-fix shell script formatting issues (shfmt -w) |
+| `just clean` | Remove build artifacts, caches, and generated files |
+| `just run` | Run the RimSort application |
+| `just dev-setup` | Install all dependencies including dev and build groups |
+| `just build` | Build RimSort executable (inits submodules, runs checks) |
+| `just build-version VERSION` | Build with a specific version string, e.g. "1.2.3.4" |
+| `just update` | Update all dependencies to latest compatible versions |
+| `just submodules-init` | Initialize and update git submodules (after cloning) |
+| `just build-help` | Show help for distribute.py build script |
+| `just ci` | Run full CI pipeline locally (checks + tests + coverage) |
 
 **Run `just check` before submitting a PR.** CI runs all of these checks and will fail if any report issues.
 
@@ -117,7 +134,7 @@ Key recipes for contributors:
 
 ### Linting and Formatting
 
-- **[Ruff](https://docs.astral.sh/ruff/)** is used for both linting and formatting (`just lint`, `just format`).
+- **[Ruff](https://docs.astral.sh/ruff/)** is used for both linting and formatting (`just ruff` + `just ruff-format`).
   - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
   - Ruff replaces isort, flake8, and black. Disable those if you have them installed.
   - Configuration is in `pyproject.toml`.
@@ -134,4 +151,3 @@ Key recipes for contributors:
 - Type annotations should be added to function/method signatures.
   - Use Python 3.10+ standards. (Avoid importing Typing. [PEP 604](https://peps.python.org/pep-0604/) instead of Optional)
 - VS Code workspace settings are included
-
