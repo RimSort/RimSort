@@ -5,6 +5,7 @@ description: "Frequently asked questions"
 layout: default
 ---
 # Frequently Asked Questions
+
 {: .no_toc }
 Here are answers/solutions to common questions/solutions
 
@@ -17,14 +18,13 @@ Here are answers/solutions to common questions/solutions
 {:toc}
 </details>
 
-
 ## macOS gatekeeper/Windows Defender tells me that RimSort is damaged/unsafe to run/is malware
 
 RimSort is not malware and is safe to use. You can safely override any AV (Anti-virus) detections.
 
 Unfortunately, because RimSort is compiled Python, it has a tendency to trigger false detections, especially for new releases. There are ways for us to mitigate these detections, but it requires expensive code signing certificates. If you are still unsure, you can scan the executable/files using virus total. Typically, there may be a few false detections, but the vast majority of scans will return negative.
 
-For **_windows defender (WD)_** specifically, we tend to try and send samples to Microsoft to whitelist the RimSort release if there are any false detections. This process can still take at least a full day, and needs to be repeated every release. Thus, if WD is false flagging RimSort, we still appreciate a quick report, but it should be safe to override WD. 
+For **_windows defender (WD)_** specifically, we tend to try and send samples to Microsoft to whitelist the RimSort release if there are any false detections. This process can still take at least a full day, and needs to be repeated every release. Thus, if WD is false flagging RimSort, we still appreciate a quick report, but it should be safe to override WD.
 
 For **_macOS_,** we'd require a similar yet separate yearly fee to sign apps on macOS. Mac users can, for now, use [this workaround](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing#macos). There is no solution for us on macOS other than paying Apple.
 
@@ -55,4 +55,4 @@ Go to `Settings > Advanced > Enable Steam client integration` and check the chec
 
 First, make sure you have `Steam client integration` enabled in RimSort's settings. Additionally, ensure that Steam is running and authenticated with the user that owns RimWorld.
 
-If the previous steps did not work, then try launching RimWorld from Steam instead of RimSort as a workaround. Unless you are using special run arguments, the mod list you created in RimSort should be the one used by RimWorld even if launched via Steam directly. If you use custom run arguments, you may need to pass them via Steam if launching from Steam. 
+If the previous steps did not work, then try launching RimWorld from Steam instead of RimSort as a workaround. Unless you are using special run arguments, the mod list you created in RimSort should be the one used by RimWorld even if launched via Steam directly. If you use custom run arguments, you may need to pass them via Steam if launching from Steam.

@@ -18,7 +18,6 @@ lang: zh-cn
 [开始使用](user-guide){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [前往 GitHub Releases 下载][Releases]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
-
 {% assign lang = site.active_lang %}
 
 <p>

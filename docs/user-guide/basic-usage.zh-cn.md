@@ -7,9 +7,11 @@ permalink: user-guide/basic-usage
 lang: zh-cn
 ---
 # 基本用法
+
 {: .no_toc}
 
 ## 目录
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -30,6 +32,7 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 ### 最低必要设置
 
 至少需要设置以下路径：
+
 - RimWorld 安装目录（RimWorld install directory）
 - RimWorld 配置目录（RimWorld Config directory）
 - 本地 Mods 目录（Local Mods）
@@ -43,6 +46,7 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 ## Mod 列表
 
 会根据以下因素生成错误/警告提示：
+
 - 依赖项是否存在
 - Mod 兼容性问题
 - 加载顺序规则
@@ -56,6 +60,7 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 RimSort 利用外部元数据来增强其功能，它们提供了已下载 Mod 的 `About.xml` 文件所含信息之外的附加数据。RimSort 中的外部元数据是用户可扩展的，可共享的。
 
 ### Steam 创意工坊元数据（`steamDB.json`）
+
 {: .d-inline-block}
 
 Steam 创意工坊元数据
@@ -73,6 +78,7 @@ Steam 创意工坊元数据
       - 当导入包含本地未下载 Mod 的 Mod 列表时，需要 SteamDB 实现 PackageId -> PublishedFileId 的查询
 
 ### 规则元数据（社区规则数据库，用户规则）
+
 {: .d-inline-block}
 
 规则元数据
@@ -88,7 +94,7 @@ Steam 创意工坊元数据
   > 为什么需要这个？
 
   通过自定义排序规则，我们可以解决 Mod 开发者响应不及时导致的兼容性问题。用户可以添加被社区广泛认可的额外排序规则。传统上 Paladin 通过 RimPy 社区数据库分发这些规则，而 RimSort 选择通过 git 进行分发。
-   
+
    - `loadAfter` 和 `loadBefore`
       - RimWorld 原生支持的规则类型，通常定义在 Mod 的 About.xml 文件中
     - `loadBottom` - 由 Paladin 在 RimPy 社区规则数据库中首创

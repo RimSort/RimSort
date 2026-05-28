@@ -6,9 +6,11 @@ parent: Development Guide
 permalink: development-guide/development-setup
 ---
 # Development Setup & Building
+
 {: .no_toc }
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -19,10 +21,13 @@ permalink: development-guide/development-setup
 RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/) module, as well as several others. Some modules require special care in order to be built. It is compiled and packaged using [Nuikta](https://nuitka.net/).
 
 ## Prerequisites
+
 ### OS
+
 RimSort presently runs on Windows, MacOS, and Linux, though we presently only create builds for Ubuntu. It may work for other Linux distributions, but Ubuntu is our baseline.
 
 Your OS needs to be one that PySide6 supports. As an example, we use the following GitHub runners to make our release builds:
+
 - Linux:
   - `ubuntu-22.04`
   - `ubuntu-24.04`
@@ -32,33 +37,39 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
 - Windows:
   - `windows-latest` (Windows 2022 at the time of writing)
 
-### Tools and Software 
+### Tools and Software
 
 **Required:**
+
 - [git](https://git-scm.com/)
 - [Python](https://python.org/) 3.12 (Can be installed with uv if you'd like)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [just](https://just.systems/man/en/installation.html) — task runner for development commands
 
 **For code quality checks** (used by `just check` and CI):
+
 - [Node.js / npx](https://nodejs.org/) — needed for [JSCPD](https://github.com/kucherenko/jscpd) copy-paste detection (`just jscpd`)
 - [shfmt](https://github.com/mvdan/sh#shfmt) — shell script formatter (`just shfmt`)
 
 Python linters (ruff, mypy) are installed automatically by `uv sync` — no manual setup needed.
 
 ### Cloning the repository
-RimSort uses submodules that are hosted in other repositories that need to be cloned. 
+
+RimSort uses submodules that are hosted in other repositories that need to be cloned.
+
 - [steamfiles](https://github.com/RimSort/steamfiles): used to parse Steam client acf/appinfo/manifest information
 - [SteamworksPy](https://github.com/philippj/SteamworksPy): used for interactions with the local Steam client
   - SteamworksPy is a python module built to interface directly with the [Steamworks API](https://partner.steamgames.com/doc/api)
   - This allows certain interactions with the local Steam client to be initiated through the Steamworks API via Python (such as subscribing/unsubscribing to/from Steam mods via RimSort)
 
 To clone with submodules run:
+
 ```shell
 git clone --recurse-submodules -j8 https://github.com/RimSort/RimSort
 ```
 
 Should you need to update these submodules, or you forgot to clone with `--recurse-submodules`, run:
+
 ```shell
 git submodule update --init --recursive
 ```
@@ -68,6 +79,7 @@ git submodule update --init --recursive
 RimSort uses the Python package and project manager [uv](https://docs.astral.sh/uv/).
 
 The easiest way to set up everything (submodules, venv, dev + build dependencies) is:
+
 ```shell
 just dev-setup
 ```
@@ -75,22 +87,26 @@ just dev-setup
 This runs `uv sync --locked --dev --group build`, which installs all runtime, dev, and build dependencies (including linters like ruff and mypy).
 
 If you prefer to do it manually:
+
 ```shell
 uv sync --dev            # install runtime + dev dependencies (linters, test tools)
 uv sync --group build    # also install build dependencies (nuitka, etc.)
 ```
 
 ## Automated build process
+
 - For a (mostly automated) experience building RimSort, please execute the provided script:
   - Run `uv run python distribute.py`
     - This will build RimSort for your platform and output a build for your platform (Including all requirements and submodules)
     - For additional options such as disabling certain steps, see `uv run python distribute.py --help`
 
 ## Manually building
+
 Ensure that build requirements are installed by running `uv sync --group build`.
 
 ### Setting up additional dependencies
- RimSort uses Python, and depends on several Python modules. You can install/view most of the above dependencies via `pyproject.tom`. These would have been set up in the prior environment setup step. However, the **SteamworksPy** dependency is a special case that has requires special handling. 
+
+ RimSort uses Python, and depends on several Python modules. You can install/view most of the above dependencies via `pyproject.tom`. These would have been set up in the prior environment setup step. However, the **SteamworksPy** dependency is a special case that has requires special handling.
 
 See their respective sections for information on how to set them up. Alternatively, use `distribute.py` to do so automatically. By default, the script will build RimSort, but it can be configured to enable or disable various steps including building. See `uv run python distribute.py --help` for more info.
 
@@ -109,6 +125,7 @@ See their respective sections for information on how to set them up. Alternative
 ### Using SteamworksPy binaries
 
 For RimSort to actually USE the SteamworksPy module, you need the compiled library for your platform, as well as the binaries from the steamworks SDK in the RimSort project root - in conjunction the python module included at: `SteamworksPy/steamworks`.
+
   - Repo maintainers will provide pre-built binaries for the `SteamworksPy` library, as well as the redistributables from the steamworks-sdk in-repo as well as in each platform's respective release.
   - On Linux, you will want to copy `SteamworksPy_*.so` (where \* is your CPU) to `SteamworksPy.so`
   - On macOS, you will want to copy `SteamworksPy_*.dylib` (where \* is your CPU) to `SteamworksPy.dylib`
@@ -150,16 +167,19 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 After following all the prior steps, from the RimSort project root directory, first add the `SteamworksPy` submodule to the Python path:
 
 On Linux/macOS:
+
 ```shell
 PYTHONPATH=./submodules/SteamworksPy
 ```
 
 On Windows (Powershell):
+
 ```powershell
 $env:PYTHONPATH = ".\submodules\SteamworksPy"
 ```
 
 Then build with nuitka:
+
 ```shell
 uv run nuitka app/__main__.py
 ```

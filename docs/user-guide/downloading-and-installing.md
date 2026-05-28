@@ -6,6 +6,7 @@ permalink: user-guide/downloading-and-installing
 ---
 
 # Downloading and Installing
+
 {: .no_toc}
 
 {: .warning }
@@ -20,12 +21,14 @@ When downloading a release, make sure to select the file more appropriate for yo
 [Edge Release][Edge Release]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
 {:toc}
 
 ## Windows
+
 {: .d-inline-block}
 
 Windows
@@ -36,14 +39,13 @@ Windows
 >
 > Unfortunately this is a side effect of using [Nuikta](https://nuitka.net/) to compile a Python program into an easy to distribute executable, and not signing it. Signing the release costs a significant amount of money and is a re-occuring cost which is infeasible for us. It is safe to override your anti-virus to allow RimSort. If you are unsure about this, feel free to scan the executable using [Virus Total](https://www.virustotal.com/gui/) which will give you the opinion of multiple anti-virus solutions and then form your own opinion.
 
-
-
 - Download and extract the `Windows x86-64` release
 - Run the executable: `RimSort.exe`
 
 ![](../assets/images/previews/windows_preview.png)
 
 ## macOS
+
 {: .d-inline-block}
 
 macOS
@@ -74,6 +76,7 @@ macOS
 <img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/28567881/7731911b-cc7c-47c8-9c34-6f925fc5b188">
 
 ## Linux
+
 {: .d-inline-block}
 
 Linux
@@ -82,7 +85,7 @@ Linux
 {: .warning }
 
 > Certain Linux distros/flavors may not have all the required shared libraries for QT, the graphics library that RimSort uses. Namely, `xcb/libxcb`. If you get an error about loading these when attempting to launch RimSort, you will need to install one or the other. Even after installing the library, there may be additional files that are missing that need to be downloaded separately. For example, `libxcb-cursor-dev`
-> 
+>
 > The easiest way to find what package has the library you need is the command `apt-file`.
 >
 > A mismatch of kernel versions may lead to version errors for shared libraries such as `glibc`
@@ -90,8 +93,6 @@ Linux
 {: .important }
 
 > We only release compiled releases for Ubuntu. If you use a different distribution or a special flavor, you may run into unexpected issues. If none of our offered pre-built releases work for you, you may need to [build RimSort yourself from the source code, or run RimSort from the Python interpreter](../development-guide/development-setup).
-
-
 
 - Download and extract the appropriate Linux release
 - Run the executable: `./RimSort`

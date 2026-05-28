@@ -17,7 +17,6 @@ A free and open source, multi-platform mod manager for RimWorld.
 [Get started now](user-guide){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Get Releases on GitHub][Releases]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
-
 {% assign lang = site.active_lang %}
 
 <p>

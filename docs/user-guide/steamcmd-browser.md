@@ -5,6 +5,7 @@ parent: User Guide
 permalink: user-guide/steamcmd-browser
 ---
 # SteamCMD and Workshop Browser
+
 {: .no_toc}
 
 [SteamCMD][SteamCMD] is a tool released by Valve that RimSort optionally integrates with in order to download Steam Workshop mods without Steam and or a copy of RimWorld on steam. RimSort's built in Workshop Browser allows you to navigate the Steam Workshop directly and select mods to download via SteamCMD.
@@ -12,6 +13,7 @@ permalink: user-guide/steamcmd-browser
 RimSort supports updating of mods installed via SteamCMD, meaning that you can have finer control over whenever or not you wish to update Steam Workshop mods versus directly using Steam.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC

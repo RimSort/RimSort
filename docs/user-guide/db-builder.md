@@ -6,6 +6,7 @@ parent: User Guide
 permalink: user-guide/db-builder
 ---
 # Steam Database Builder
+
 {: .no_toc}
 
 The Steam Database Builder is a special tool used to create and update your local copy of a steam workshop metadata database.
@@ -16,6 +17,7 @@ The Steam Database Builder is a special tool used to create and update your loca
 ![DB Builder settings preview](../assets/images/previews/settings/db_builder.png)
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -67,6 +69,7 @@ Please review the following sections describing each mode, and why it is useful:
   - You can create DB this way without any mods downloaded, and update local metadata to entries in the list via subsequent "All Mods" queries.
 
 ### Query DLC dependency data with Steamworks API
+
 {: .d-inline-block}
 Recommended Option
 {: .label .label-green }
@@ -74,6 +77,7 @@ Recommended Option
 If you wish to include DLC dependency data in your database, ensure that you have the Steam client running & authenticated. Also, enable `Query DLC dependency data with Steamworks API` setting under `DB Builder`.
 
 ### Update database instead of overwriting
+
 {: .d-inline-block}
 Recommended Option
 {: .label .label-green }

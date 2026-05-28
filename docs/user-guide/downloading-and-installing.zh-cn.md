@@ -7,6 +7,7 @@ lang: zh-cn
 ---
 
 # 下载和安装
+
 {: .no_toc}
 
 {: .warning }
@@ -21,12 +22,14 @@ RimSort 提供两种发行版本：稳定版（stable releases）和前瞻版（
 [前瞻版][前瞻版]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ## 目录
+
 {: .no_toc .text-delta }
 
 1. TOC
 {:toc}
 
 ## Windows
+
 {: .d-inline-block}
 
 Windows
@@ -37,13 +40,13 @@ Windows
 >
 > 这是使用 [Nuikta](https://nuitka.net/) 将 Python 程序编译为易于分发的可执行文件，且未进行数字签名所产生的副作用。为发布程序进行数字签名需要高昂且持续的费用，这对我们而言并不现实。您可以安全地配置反病毒软件，以允许 RimSort 运行。若对此存疑，建议使用 Virus Total 扫描该可执行文件，该平台会综合多家反病毒软件的检测结果供您参考判断。
 
-
 - 下载并解压 `Windows x86-64` 版本
 - 运行程序：`RimSort.exe`
 
 ![](../assets/images/previews/windows_preview.png)
 
 ## macOS
+
 {: .d-inline-block}
 
 macOS
@@ -74,6 +77,7 @@ macOS
 <img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/28567881/7731911b-cc7c-47c8-9c34-6f925fc5b188">
 
 ## Linux
+
 {: .d-inline-block}
 
 Linux
@@ -90,8 +94,6 @@ Linux
 {: .important }
 
 > 我们目前仅提供适用于 Ubuntu 的预编译版本。如果你使用其他 Linux 发行版或特殊定制版本，可能会遇到预期外的问题。如果所有预构建版本都无法在你的系统上运行，你可能需要 [从源代码自行构建 RimSort 或通过 Python 解释器运行](../development-guide/development-setup.zh-cn)。
-
-
 
 - 下载并解压适用于 Linux 的版本
 - 运行可执行文件：`./RimSort`
