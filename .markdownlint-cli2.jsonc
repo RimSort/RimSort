@@ -1,0 +1,21 @@
+// markdownlint-cli2 configuration (stored centrally, used for both check and fix modes)
+// Configuration is applied via justfile recipes: markdownlint (check) and markdownlint-fix (fix)
+{
+  "noProgress": true,
+  "noBanner": true,
+  "config": {
+    // Disable everything by default, then explicitly enable the fixable subset
+    "default": false,
+    // Whitespace and blank-line fixers
+    "MD009": true,  // no-trailing-spaces
+    "MD012": true,  // no-multiple-blanks
+    "MD022": true,  // blanks-around-headings
+    "MD031": true,  // blanks-around-fences
+    "MD032": true,  // blanks-around-lists
+    // File-ending fixable
+    "MD047": true   // single-trailing-newline
+  },
+  "globs": [
+    "docs/**/*.md"
+  ]
+}

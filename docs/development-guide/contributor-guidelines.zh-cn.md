@@ -107,7 +107,7 @@ lang: zh-cn
 
 | 命令 | 描述 |
 | :--- | :--- |
-| `just check` | 运行所有代码质量检查（ruff、ruff-format、typecheck、jscpd、shfmt） |
+| `just check` | 运行所有代码质量检查（ruff、ruff-format、typecheck、jscpd、shfmt、markdownlint） |
 | `just fix` | 自动修复 lint 和格式化问题 |
 | `just test` | 运行测试（启用 doctest 模块） |
 | `just test-coverage` | 运行测试并生成覆盖率报告（XML、HTML、终端） |
@@ -120,6 +120,8 @@ lang: zh-cn
 | `just jscpd` | 检测代码拷贝粘贴重复（零容忍） |
 | `just shfmt` | 检查 Shell 脚本格式（shfmt，仅显示差异） |
 | `just shfmt-fix` | 自动修复 Shell 脚本格式问题（shfmt -w） |
+| `just markdownlint` | 检查 Markdown 文件 lint 问题（markdownlint-cli2） |
+| `just markdownlint-fix` | 自动修复 Markdown lint 问题（markdownlint-cli2 --fix） |
 | `just clean` | 删除构建产物、缓存和生成的文件 |
 | `just run` | 运行 RimSort 应用程序 |
 | `just dev-setup` | 安装所有依赖（包括 dev 和 build 组） |
@@ -149,6 +151,10 @@ lang: zh-cn
 
 - 对于 shell 脚本，我们使用 [shfmt](https://github.com/mvdan/sh#shfmt)。
   - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt>
+
+- **[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)** 用于 Markdown lint 检查（`just markdownlint`）。
+  - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint>
+  - 配置位于 `.markdownlint-cli2.jsonc`。
 
 ### 约定
 

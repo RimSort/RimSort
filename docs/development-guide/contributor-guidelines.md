@@ -105,7 +105,7 @@ Key recipes for contributors:
 
 | Command | Description |
 | :--- | :--- |
-| `just check` | Run all code quality checks (ruff, ruff-format, typecheck, jscpd, shfmt) |
+| `just check` | Run all code quality checks (ruff, ruff-format, typecheck, jscpd, shfmt, markdownlint) |
 | `just fix` | Auto-fix linting and formatting issues |
 | `just test` | Run tests with doctest modules enabled |
 | `just test-coverage` | Run tests with coverage reports (XML, HTML, terminal) |
@@ -118,6 +118,8 @@ Key recipes for contributors:
 | `just jscpd` | Detect copy-paste code duplication (zero-tolerance) |
 | `just shfmt` | Check shell script formatting (shfmt, diff-only) |
 | `just shfmt-fix` | Auto-fix shell script formatting issues (shfmt -w) |
+| `just markdownlint` | Check Markdown files for linting issues (markdownlint-cli2) |
+| `just markdownlint-fix` | Auto-fix Markdown linting issues (markdownlint-cli2 --fix) |
 | `just clean` | Remove build artifacts, caches, and generated files |
 | `just run` | Run the RimSort application |
 | `just dev-setup` | Install all dependencies including dev and build groups |
@@ -144,6 +146,9 @@ Key recipes for contributors:
   - CI enforces a 0% duplication threshold. If you have similar code blocks, extract a shared helper.
 - For shell scripts, we use [shfmt](https://github.com/mvdan/sh#shfmt).
   - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
+- **[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)** is used for Markdown linting (`just markdownlint`).
+  - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
+  - Configuration is in `.markdownlint-cli2.jsonc`.
 
 ### Conventions
 

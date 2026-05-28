@@ -53,6 +53,14 @@ ruff-fix:
 ruff-format-fix:
     uv run ruff format {{ruff_config}} .
 
+# Check Markdown documentation for linting issues (markdownlint-cli2)
+markdownlint:
+    npx markdownlint-cli2@latest
+
+# Fix Markdown documentation issues (markdownlint-cli2 --fix)
+markdownlint-fix:
+    npx markdownlint-cli2@latest --fix
+
 # Run static type checking (mypy)
 typecheck:
     uv run mypy --config-file pyproject.toml .
@@ -71,12 +79,12 @@ shfmt:
 shfmt-fix:
     shfmt -w .
 
-# Run all code quality checks: ruff + ruff-format + typecheck + jscpd + shfmt
-check: ruff ruff-format typecheck jscpd shfmt
+# Run all code quality checks: ruff + ruff-format + typecheck + jscpd + shfmt + markdown lint
+check: ruff ruff-format typecheck jscpd shfmt markdownlint
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w)
-fix: ruff-fix ruff-format-fix shfmt-fix
+# Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
+fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
