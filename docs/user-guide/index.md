@@ -5,4 +5,4 @@ nav_order: 3
 
 # User Guide
 
-Welcome to the User Guide for RimSort! 
+Welcome to the User Guide for RimSort!

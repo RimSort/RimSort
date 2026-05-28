@@ -6,11 +6,13 @@ parent: User Guide
 permalink: user-guide/cli-reference
 ---
 # CLI Reference
+
 {: .no_toc}
 
 RimSort provides a command-line interface for headless operation of key features. This enables automation workflows, CI/CD integration, and scripting without requiring the graphical interface.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -26,6 +28,7 @@ The RimSort CLI is designed for users who need to automate RimSort functionality
 - **Works without Qt dependencies** - Lightweight operation with minimal system requirements
 
 Currently available commands:
+
 - `build-db` - Build Steam Workshop metadata databases
 
 Additional commands may be added in future versions to support more RimSort functionality.
@@ -39,6 +42,7 @@ If you have RimSort installed from a release build:
 ```
 
 or on windows:
+
 ```bash
 RimSort.exe build-db --help
 ```
@@ -51,7 +55,9 @@ python -m app build-db --help
 # Or with uv:
 uv run python -m app build-db --help
 ```
+
 ## Commands
+
 ### `build-db`
 
 Build a Steam Workshop metadata database by querying the Steam WebAPI. The resulting database contains mod names, URLs, dependencies, and optional DLC requirements in a JSON format compatible with RimSort and RimPy.
@@ -116,6 +122,7 @@ The `build-db` command uses standard exit codes for automation:
 ##### **`Error: Steam API key is required`**
 
 The command cannot find a valid API key. Provide it via:
+
 - `--api-key` command line option
 - `RIMSORT_STEAM_API_KEY` environment variable
 - Configure in RimSort GUI (saved to `settings.json`)
@@ -123,8 +130,6 @@ The command cannot find a valid API key. Provide it via:
 ##### **`Error: Invalid Steam WebAPI key! Key must be 32 characters`**
 
 Your API key is not the correct length. Check your key at [https://steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Common issue: extra spaces or newlines when copying the key.
-
-
 
 ##### **`Error: Cannot update non-existent database`**
 
@@ -141,6 +146,7 @@ RimSort build-db --output steamDB.json --update
 ##### **`DLC data collection fails silently`**
 
 DLC dependency data requires the Steamworks API, which needs:
+
 - Steam client running and authenticated
 - RimWorld owned on your Steam account
 

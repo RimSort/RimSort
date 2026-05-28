@@ -7,6 +7,7 @@ permalink: development-guide/documentation-guidelines
 ---
 
 # Documentation Guidelines
+
 {: .no_toc}
 
 User documentation is hosted via [GitHub Pages](https://pages.github.com/) using the [Jekyll][Jekyll] theme, [Just the Docs](https://github.com/just-the-docs/just-the-docs). It is deployed via a GitHub action automatically whenever a change to documentation under the folder `docs` is merged into the main branch.
@@ -14,6 +15,7 @@ User documentation is hosted via [GitHub Pages](https://pages.github.com/) using
 Contributions should follow the [Contributor Guidelines](../development-guide/contributor-guidelines) and be submitted via a pull request.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -52,13 +54,14 @@ Navigation info such as `File > Settings` and filenames such as `About.xml` shou
 {: .note}
 > Parent pages will automatically generate and include a table of contents consisting of its children pages. Do not disable this.
 
-Most content pages should include a table of contents (TOC). The TOC should be the first second level header item after the primary page header and any contents belonging to that. 
+Most content pages should include a table of contents (TOC). The TOC should be the first second level header item after the primary page header and any contents belonging to that.
 
 Both the page header and the table of contents header should not be a part of the table of contents, and should just be marked with `.not_toc`. All other headers within the page should be a part of the table of contents.
 
 The table of contents header should be marked with `.text-delta` such that it is set as delta text.
 
 To generate the table of contents, include the following code (markdown):
+
 ```markdown{% raw %}
 ## Table of Contents
 {: .no_toc .text-delta }

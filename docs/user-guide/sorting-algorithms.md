@@ -5,14 +5,16 @@ parent: User Guide
 permalink: user-guide/sorting-algorithms
 ---
 # Sorting Algorithms
+
 RimSort exposes two sorting algorithms by default for sorting the active mod list. The default as of `v1.0.10` is [topological](#topological-sorting).
 
 {: .warning}
-> Different sorting Algorithms may result in different orderings that are both "correct". 
-> 
+> Different sorting Algorithms may result in different orderings that are both "correct".
+>
 > A correct ordering in terms of sorting is just one that follows all the defined rules (results in no order warnings in RimSort). It is likely that if you encounter issues in game when using certain algorithms that there is a "missing" order rule that went under the radar. You'll need to manually define that rule using the rule editor. In this case, we strongly suggest you report this new rule to the mod authors, and the community rules database!
 
 ---
+
 ## Alphabetical Sorting Algorithm
 
 The first algorithm, `Alphabetical`, which is a more simplistic approach to properly sorting. This method alphabetizes your mods after splitting it into tiers.
@@ -49,6 +51,7 @@ Assuming there are no conflicting load order rules, this algorithm guarantees th
 ---
 
 ## Topological sorting
+
 {: .d-inline-block}
 
 Default (v1.0.10)

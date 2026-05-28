@@ -7,6 +7,7 @@ permalink: faq/
 lang: zh-cn
 ---
 # 常见问题
+
 {: .no_toc }
 以下是常见问题及解决方案
 
@@ -18,7 +19,6 @@ lang: zh-cn
 1. TOC
 {:toc}
 </details>
-
 
 ## macOS Gatekeeper/Windows Defender 提示 RimSort 已损坏/不安全/是恶意软件
 

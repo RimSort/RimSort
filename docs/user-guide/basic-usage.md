@@ -6,9 +6,11 @@ parent: User Guide
 permalink: user-guide/basic-usage
 ---
 # Basic Usage
+
 {: .no_toc}
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
@@ -24,7 +26,7 @@ The main menu bar is, depending on your operating system and desktop environment
 
 ## Settings panel
 
-You can enter the settings panel from the main menu bar using `File > Settings... ` In this window, you'll find multiple tabs, each labeled. 
+You can enter the settings panel from the main menu bar using `File > Settings... ` In this window, you'll find multiple tabs, each labeled.
 
 ### Minimum Required Settings
 
@@ -46,6 +48,7 @@ Certain errors/warnings are produced based on dependency presence, incompatibili
 RimSort uses external metadata in order to enhance its functionality. The metadata provides it with additional information beyond the information present in a downloaded mod's `About.xml` file. External Metadata in RimSort is designed to be highly user extendable and sharable.
 
 ### Steam Workshop Metadata (`steamDB.json`)
+
 {: .d-inline-block}
 
 Steam Workshop Metadata
@@ -63,12 +66,13 @@ Steam Workshop Metadata
       - When trying to import a mod list that contains mods that are not already available locally, in order to try to lookup PackageId -> PublishedFileId, SteamDB is necessary.
 
 ### Rules Metadata (Community Rules Database, User Rules)
+
 {: .d-inline-block}
 
 Rules Metadata
 {: .label .label-red }
 
-  There are two external rules databases that RimSort uses, `userRules.json` and `communityRules.json`. They both provide the same functionality, but one is community driven and intended to be shared, and the other is intended for your own personal load order rules. 
+  There are two external rules databases that RimSort uses, `userRules.json` and `communityRules.json`. They both provide the same functionality, but one is community driven and intended to be shared, and the other is intended for your own personal load order rules.
   
   Both of these databases uses a schema compatible with Paladin's RimPy Mod Manager Database communityRules.json.
 

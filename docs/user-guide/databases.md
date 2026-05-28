@@ -6,6 +6,7 @@ permalink: user-guide/databases
 ---
 
 # Databases
+
 {: .no_toc}
 
 RimSort uses external databases in order to improve certain functions like sorting and dependency handling. They are not included with the releases, but we provide tools to easily install and update them. They are completely optional and are not required for basic operations, but the extra data they provide RimSort can greatly improve the user experience.
@@ -13,6 +14,7 @@ RimSort uses external databases in order to improve certain functions like sorti
 Databases can be configured in the settings under `Databases`.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
