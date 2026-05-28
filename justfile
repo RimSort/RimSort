@@ -1,105 +1,139 @@
-# Configure shell for Windows to avoid requiring `sh` (just's default on some setups)
-set shell := ["powershell", "-NoProfile", "-Command"]
+# ─── Shell Configuration ─────────────────────────────────────────────────
+# Use PowerShell 7 (pwsh) as the default shell — it's cross-platform
+# (available on Windows, Linux, and macOS). If pwsh is not installed on
+# your system, change to: set shell := ["sh", "-c"]
+set shell := ["pwsh", "-NoProfile", "-Command"]
 
-# List all available recipes (default)
+# ─── Global Variables ────────────────────────────────────────────────────
+# Shared flag values to keep recipes DRY and consistent.
+ruff_config := "--config pyproject.toml"
+pytest_opts := "--doctest-modules --no-qt-log"
+
+# ─── Default Target (lists all available recipes) ────────────────────────
 @default:
     just --list
 
+# ═══════════════════════════════════════════════════════════════════════════
 # Core Development
+# ═══════════════════════════════════════════════════════════════════════════
 
 # Run the RimSort application
 run: dev-setup
     uv run python -m app
 
-# Run tests with coverage reporting to terminal
+# Run tests with doctest modules enabled
 test: dev-setup
-    uv run pytest --doctest-modules -s --no-qt-log
+    uv run pytest {{pytest_opts}} -s
 
 # Run tests with verbose output and short tracebacks
 test-verbose: dev-setup
-    uv run pytest --doctest-modules -v --tb=short -s --no-qt-log
+    uv run pytest {{pytest_opts}} -v --tb=short -s
 
 # Run tests with full coverage reports (XML, HTML, and terminal)
 test-coverage: dev-setup
-    uv run pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing --no-qt-log
+    uv run pytest {{pytest_opts}} --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing
 
+# ═══════════════════════════════════════════════════════════════════════════
 # Code Quality
+# ═══════════════════════════════════════════════════════════════════════════
 
-# Check code for linting issues
-lint:
-    uv run ruff check --config pyproject.toml .
+# Check code for linting issues (ruff check)
+ruff:
+    uv run ruff check {{ruff_config}} .
 
-# Check and automatically fix linting issues
-lint-fix:
-    uv run ruff check --config pyproject.toml . --fix
+# Check code for formatting issues (ruff format)
+ruff-format:
+    uv run ruff format {{ruff_config}} . --check
 
-# Check code formatting without making changes
-format:
-    uv run ruff format --config pyproject.toml . --check
+# Check and automatically fix linting issues (ruff check --fix)
+ruff-fix:
+    uv run ruff check {{ruff_config}} . --fix
 
-# Format code automatically
-format-fix:
-    uv run ruff format --config pyproject.toml .
+# Automatically fix formatting issues (ruff format)
+ruff-format-fix:
+    uv run ruff format {{ruff_config}} .
 
-# Run type checking with mypy
+# Run static type checking (mypy)
 typecheck:
     uv run mypy --config-file pyproject.toml .
 
-# Detect copy-paste code duplication (matches CI's jscpd check)
+# Detect copy-paste code duplication (jscpd) — exits with error if any
+# clones are found (--threshold 0 means zero tolerance for duplicates).
+# Matches the CI's jscpd check configuration.
 jscpd:
     npx jscpd@latest app/ tests/ --threshold 0
 
-# Check shell script formatting
+# Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
 shfmt:
-    shfmt -w .
     shfmt -d .
 
+# Automatically fix shell script formatting issues (shfmt)
+shfmt-fix:
+    shfmt -w .
 
-# Run all code quality checks (lint, format, typecheck, jscpd, shfmt)
-check: lint format typecheck jscpd shfmt
+# Run all code quality checks: ruff + ruff-format + typecheck + jscpd + shfmt
+check: ruff ruff-format typecheck jscpd shfmt
+    @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Automatically fix linting and formatting issues
-fix: lint-fix format-fix
+# Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w)
+fix: ruff-fix ruff-format-fix shfmt-fix
     @echo "Auto-fixes applied!"
 
-# Run full CI pipeline (all checks + tests with coverage)
+# Run full CI pipeline locally: all quality checks + tests with coverage
 ci: check test-coverage
     @echo "CI simulation complete!"
 
-## Dependency Management
-# Install all dependencies including dev and build groups
+# ═══════════════════════════════════════════════════════════════════════════
+# Dependency Management
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Install all dependencies (including dev and build groups) after ensuring
+# git submodules are initialized.
 dev-setup: submodules-init
     uv venv --allow-existing
     uv sync --locked --dev --group build
 
-# Update all dependencies to latest compatible versions
+# Update all dependencies to their latest compatible versions
 update:
     uv lock --upgrade
 
 # Remove all build artifacts, caches, and generated files
+[unix]
 clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
     rm -rf build/ dist/ *.egg-info
     rm -rf .pytest_cache .mypy_cache .ruff_cache
     rm -rf htmlcov .coverage coverage.xml
     rm -rf junit/
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-# Build/Distribution
+[windows]
+clean:
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue build, dist, *.egg-info, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov, .coverage, coverage.xml, junit
+    Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
 
-# Build RimSort executable
+# ═══════════════════════════════════════════════════════════════════════════
+# Build / Distribution
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Build RimSort executable (inits submodules and runs all checks first)
 build *ARGS='': submodules-init check
     uv run python distribute.py {{ARGS}}
 
-# Build RimSort executable with specific version (e.g., "1.2.3.4")
+# Build RimSort executable with a specific version string, e.g. "1.2.3.4"
+# (inits submodules and runs all checks first)
 build-version VERSION: submodules-init check
     uv run python distribute.py --product-version="{{VERSION}}"
 
-# Create source tarball with submodules for RPM building
+# Create source tarball including submodules for RPM building
+[linux]
 rpm-tarball VERSION='1.0.0':
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # Auto-append .1 if version has only 3 parts (for Nuitka compatibility)
+    # Nuitka requires a 4-part version (e.g. "1.0.0.1"), so auto-append ".1"
+    # when only 3 parts are provided.
     PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
     if [ "$PART_COUNT" -eq 3 ]; then
         FULL_VERSION="{{VERSION}}.1"
@@ -107,33 +141,36 @@ rpm-tarball VERSION='1.0.0':
         FULL_VERSION="{{VERSION}}"
     fi
 
-    TARBALL="$HOME/rpmbuild/SOURCES/rimsort-$FULL_VERSION.tar.gz"
+    TARBALL="$HOME/rpmbuild/SOURCES/rimsort-${FULL_VERSION}.tar.gz"
 
-    echo "Creating source tarball with submodules for version $FULL_VERSION..."
+    echo "Creating source tarball with submodules for version ${FULL_VERSION}..."
 
-    # Create temporary directory
     TMPDIR=$(mktemp -d)
     trap 'rm -rf "$TMPDIR"' EXIT
 
     # Archive main repository
-    git archive --prefix="RimSort-$FULL_VERSION/" HEAD | tar -x -C "$TMPDIR"
+    git archive --prefix="RimSort-${FULL_VERSION}/" HEAD | tar -x -C "$TMPDIR"
 
-    # Archive submodules
-    git submodule foreach --quiet "git archive --prefix=\"RimSort-$FULL_VERSION/\$displaypath/\" HEAD | tar -x -C \"$TMPDIR\""
+    # Archive each git submodule into the correct path under the prefix
+    git submodule foreach --quiet \
+        "git archive --prefix=\"RimSort-${FULL_VERSION}/\$displaypath/\" HEAD \
+         | tar -x -C \"$TMPDIR\""
 
-    # Create the final tarball
-    cd "$TMPDIR"
-    tar -czf "$TARBALL" "RimSort-$FULL_VERSION"
+    # Package everything into a single tarball
+    tar -czf "$TARBALL" -C "$TMPDIR" "RimSort-${FULL_VERSION}"
 
-    echo "Tarball created: $TARBALL"
+    echo "Tarball created: ${TARBALL}"
     ls -lh "$TARBALL"
 
-# Build RPM package for Fedora/RHEL (e.g., just build-rpm 1.0.63 or just build-rpm 1.0.63.1)
+# Build RPM package for Fedora/RHEL (e.g. "just build-rpm 1.0.63" or "just build-rpm 1.0.63.1")
+# Note: version normalization logic is duplicated from rpm-tarball because
+# bash shebang recipes cannot invoke other just recipes.
+[linux]
 build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # Auto-append .1 if version has only 3 parts (for Nuitka compatibility)
+    # Auto-append ".1" if version has only 3 parts (Nuitka compatibility)
     PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
     if [ "$PART_COUNT" -eq 3 ]; then
         FULL_VERSION="{{VERSION}}.1"
@@ -144,25 +181,28 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
     echo "Setting up RPM build environment..."
     mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
-    echo "Building RPM package for version $FULL_VERSION..."
-    rpmbuild -bb packaging/rpm/rimsort.spec --define "version $FULL_VERSION"
+    echo "Building RPM package for version ${FULL_VERSION}..."
+    rpmbuild -bb packaging/rpm/rimsort.spec --define "version ${FULL_VERSION}"
 
     echo "RPM build complete!"
-    RPM_FILE=$(find ~/rpmbuild/RPMS/x86_64/ -name "rimsort-$FULL_VERSION-*.rpm" | head -n 1)
+    RPM_FILE=$(find ~/rpmbuild/RPMS/x86_64/ -name "rimsort-${FULL_VERSION}-*.rpm" | head -n 1)
     if [ -n "$RPM_FILE" ]; then
-        echo "Built RPM: $RPM_FILE"
+        echo "Built RPM: ${RPM_FILE}"
         ls -lh "$RPM_FILE"
     else
         echo "Warning: Could not find built RPM"
     fi
 
 # Build AppImage from existing Nuitka output (Linux only)
+[linux]
 build-appimage VERSION='1.0.0':
     bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
 
+# ═══════════════════════════════════════════════════════════════════════════
 # Utilities
+# ═══════════════════════════════════════════════════════════════════════════
 
-# Initialize and update git submodules (run after cloning)
+# Initialize and update git submodules (required after the first clone)
 submodules-init:
     git submodule update --init --recursive
 

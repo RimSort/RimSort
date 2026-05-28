@@ -9,17 +9,20 @@ lang: zh-cn
 
 
 # 贡献指南
+
 {: .no_toc}
 
 为 Rimsort 做出贡献时，请遵循以下准则。
 
 ## 目录
+
 {: .no_toc .text-delta }
 
 1. TOC
 {:toc}
 
 ## 基本准则
+
 1. 请在满足所有准则要求后再提交 Pull Request。允许存在少量疏漏（我们会在审核时修正），但请确保文档注释、代码格式等基础事项已妥善处理。如未准备就绪，请使用草案（Draft）模式提交。
 
 2. Pull Request 必须仅包含单一功能的相关改动。请勿将多项改动混杂在一个 PR 中，这有助于更高效地开展讨论。未遵守此要求的 PR 将被关闭。
@@ -60,7 +63,7 @@ lang: zh-cn
 | :--------: | :-----------------------------------------------------------: | :-----: | :----------------------------------------------------------------------------------------------------------------------------------------------- |
 |  Release   |                v\${major}.\${minor}.\${patch}                 | 手动  | 可以安全使用，被认为稳定的版本。                                                                                      |
 |    Edge    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | 手动  | 这些版本发布频繁，包含最新功能和修复，但可能存在显著的破坏性 Bug。                      |
-| Auto-Build | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  自动   | 自动构建流水线在每个 Pull Request 和向 main 分支推送时触发生成的版本。不会正式发布，构建产物以 artifact 形式保留。 | 
+| Auto-Build | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  自动   | 自动构建流水线在每个 Pull Request 和向 main 分支推送时触发生成的版本。不会正式发布，构建产物以 artifact 形式保留。 |
 
 正式版通过手动触发相关 GitHub 工作流操作创建。为保证安全，建议将发布流程设置为仅创建草稿。
 
@@ -102,17 +105,30 @@ lang: zh-cn
 
 给贡献者的关键命令：
 
-| Command | Description |
+| 命令 | 描述 |
 | :--- | :--- |
-| `just check` | 运行所有代码质量检查（lint、format、typecheck、jscpd、shfmt） |
+| `just check` | 运行所有代码质量检查（ruff、ruff-format、typecheck、jscpd、shfmt） |
 | `just fix` | 自动修复 lint 和格式化问题 |
-| `just test` | 运行测试并生成覆盖率报告 |
-| `just lint` | 检查 ruff 的 lint 问题 |
-| `just format` | 使用 ruff 检查代码格式 |
-| `just typecheck` | 运行 mypy 的类型检查 |
-| `just jscpd` | 检测代码拷贝粘贴重复 |
-| `just shfmt` | 格式化并检查 Shell 脚本格式（shfmt） |
-
+| `just test` | 运行测试（启用 doctest 模块） |
+| `just test-coverage` | 运行测试并生成覆盖率报告（XML、HTML、终端） |
+| `just test-verbose` | 运行测试（详细输出和简短回溯） |
+| `just ruff` | 检查代码 lint 问题（ruff check） |
+| `just ruff-format` | 检查代码格式问题（ruff format） |
+| `just ruff-fix` | 自动修复 lint 问题（ruff check --fix） |
+| `just ruff-format-fix` | 自动修复格式问题（ruff format） |
+| `just typecheck` | 运行静态类型检查（mypy） |
+| `just jscpd` | 检测代码拷贝粘贴重复（零容忍） |
+| `just shfmt` | 检查 Shell 脚本格式（shfmt，仅显示差异） |
+| `just shfmt-fix` | 自动修复 Shell 脚本格式问题（shfmt -w） |
+| `just clean` | 删除构建产物、缓存和生成的文件 |
+| `just run` | 运行 RimSort 应用程序 |
+| `just dev-setup` | 安装所有依赖（包括 dev 和 build 组） |
+| `just build` | 构建 RimSort 可执行文件（初始化子模块并运行检查） |
+| `just build-version VERSION` | 使用指定版本字符串构建，例如 "1.2.3.4" |
+| `just update` | 将所有依赖更新至最新兼容版本 |
+| `just submodules-init` | 初始化和更新 git 子模块（克隆后需要运行） |
+| `just build-help` | 显示 distribute.py 构建脚本的帮助信息 |
+| `just ci` | 本地运行完整 CI 流水线（检查 + 测试 + 覆盖率） |
 
 **提交 PR 前请先运行 `just check`。**CI 会执行全部这些检查，并且若检测到问题将失败。
 
@@ -120,7 +136,7 @@ lang: zh-cn
 
 ### Linting 与格式化
 
-- **[Ruff](https://docs.astral.sh/ruff/)** 同时用于 lint 和格式化（`just lint`、`just format`）。
+- **[Ruff](https://docs.astral.sh/ruff/)** 同时用于 lint 和格式化（`just ruff` + `just ruff-format`）。
   - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff>
   - Ruff 替代 isort、flake8 和 black。请确保禁用这些工具以避免冲突。
   - 配置位于 `pyproject.toml`。
@@ -140,4 +156,3 @@ lang: zh-cn
 - 函数/方法的签名需要添加类型注解。
   - 使用 Python 3.10+ 标准。（避免导入 Typing；使用 [PEP 604](https://peps.python.org/pep-0604/) 的 `| None` 代替 Optional）
 - 已包含 VS Code 工作区设置
-
