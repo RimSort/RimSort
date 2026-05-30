@@ -48,18 +48,21 @@ class TestValidateRimworldModsList:
         data = {"ModsConfigData": {"activeMods": {"li": "ludeon.rimworld"}}}
         result = validate_rimworld_mods_list(data)
         assert result == ["ludeon.rimworld"]
+        mock_warn.assert_not_called()
 
     @patch("app.utils.schema.show_warning")
     def test_savegame_format(self, mock_warn: MagicMock, qapp: Any) -> None:
         data = {"savegame": {"meta": {"modIds": {"li": ["ludeon.rimworld"]}}}}
         result = validate_rimworld_mods_list(data)
         assert result == ["ludeon.rimworld"]
+        mock_warn.assert_not_called()
 
     @patch("app.utils.schema.show_warning")
     def test_saved_mod_list_format(self, mock_warn: MagicMock, qapp: Any) -> None:
         data = {"savedModList": {"meta": {"modIds": {"li": ["ludeon.rimworld"]}}}}
         result = validate_rimworld_mods_list(data)
         assert result == ["ludeon.rimworld"]
+        mock_warn.assert_not_called()
 
     @patch("app.utils.schema.show_warning")
     def test_invalid_format_returns_default(
