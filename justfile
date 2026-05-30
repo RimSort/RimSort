@@ -115,11 +115,13 @@ clean:
     rm -rf .pytest_cache .mypy_cache .ruff_cache
     rm -rf htmlcov .coverage coverage.xml
     rm -rf junit/
+    rm -f locales/*.qm
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 [windows]
 clean:
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue build, dist, *.egg-info, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov, .coverage, coverage.xml, junit
+    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm
     Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
 
 # ═══════════════════════════════════════════════════════════════════════════
