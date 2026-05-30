@@ -1,8 +1,8 @@
 # ─── Shell Configuration ─────────────────────────────────────────────────
-# Use PowerShell 7 (pwsh) as the default shell — it's cross-platform
-# (available on Windows, Linux, and macOS). If pwsh is not installed on
-# your system, change to: set shell := ["sh", "-c"]
-set shell := ["pwsh", "-NoProfile", "-Command"]
+# Unix: just's default (sh -c). Windows: powershell.exe (ships with all
+# modern Windows). Multi-line recipes use [unix]/[windows] guards with
+# shebang overrides where needed.
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 # ─── Global Variables ────────────────────────────────────────────────────
 # Shared flag values to keep recipes DRY and consistent.
