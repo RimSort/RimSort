@@ -100,6 +100,7 @@ ci: check test-coverage
 dev-setup: submodules-init
     uv venv --allow-existing
     uv sync --locked --dev --group build
+    just i18n-compile
 
 # Update all dependencies to their latest compatible versions
 update:
@@ -126,12 +127,12 @@ clean:
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Build RimSort executable (inits submodules and runs all checks first)
-build *ARGS='': submodules-init check
+build *ARGS='': submodules-init check i18n-compile
     uv run python distribute.py {{ARGS}}
 
 # Build RimSort executable with a specific version string, e.g. "1.2.3.4"
 # (inits submodules and runs all checks first)
-build-version VERSION: submodules-init check
+build-version VERSION: submodules-init check i18n-compile
     uv run python distribute.py --product-version="{{VERSION}}"
 
 # Create source tarball including submodules for RPM building
@@ -205,6 +206,35 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
 [linux]
 build-appimage VERSION='1.0.0':
     bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Internationalization
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Compile translation .ts files into .qm binary files (required for app to load translations)
+[unix]
+i18n-compile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for ts_file in locales/*.ts; do
+        qm_file="${ts_file%.ts}.qm"
+        uv run pyside6-lrelease "$ts_file" -qm "$qm_file"
+    done
+
+[windows]
+i18n-compile:
+    Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
+
+# Extract translatable strings from source code into .ts files (for translators)
+[unix]
+i18n-update:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run pyside6-lupdate app/ -ts locales/*.ts
+
+[windows]
+i18n-update:
+    uv run pyside6-lupdate app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Utilities
