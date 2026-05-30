@@ -210,6 +210,11 @@ build-appimage VERSION='1.0.0':
 # Utilities
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Install shared git hooks (pre-commit quality gate)
+install-hooks:
+    git config core.hooksPath .githooks
+    @echo "Git hooks installed — commits will run 'just check' automatically."
+
 # Initialize and update git submodules (required after the first clone)
 submodules-init:
     git submodule update --init --recursive

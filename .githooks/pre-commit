@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Pre-commit hook: run full quality gate before allowing a commit.
+# Install with: just install-hooks
+
+set -euo pipefail
+
+echo "Running pre-commit quality checks..."
+
+if ! just check 2>&1; then
+	echo ""
+	echo "BLOCKED: quality checks failed. Run 'just fix' to auto-fix what's fixable."
+	exit 1
+fi
+
+echo "All pre-commit checks passed."
