@@ -4,7 +4,7 @@ from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
-from time import time
+from time import sleep, time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 from urllib.parse import urlparse
 
@@ -825,49 +825,117 @@ def ISteamRemoteStorage_GetCollectionDetails(
     return metadata
 
 
+_RETRYABLE_HTTP_CODES = {429, 500, 502, 503, 504}
+_MAX_CHUNK_ATTEMPTS = 3
+
+
 def ISteamRemoteStorage_GetPublishedFileDetails(
     publishedfileids: list[str],
-) -> list[Any] | None:
+) -> tuple[list[Any], list[str], list[str]]:
     """
-    Given a list of PublishedFileIds, return a dict of json data queried
-    from Steam WebAPI, containing data to be parsed.
+    Query Steam WebAPI for published file details with per-chunk retry.
 
     https://steamapi.xpaw.me/#ISteamRemoteStorage/GetPublishedFileDetails
 
-    :param publishedfileids: a list of 1 or more publishedfileids to lookup metadata for
-    :return: a JSON object that is the response from your WebAPI query
+    :param publishedfileids: PublishedFileIds to look up
+    :return: Tuple of (metadata_list, failed_pfids, error_descriptions)
     """
-    # Construct the URL to retrieve information about the mod
     url = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-    metadata = []
-    # Construct arguments to pass to the API call
-    for chunk in list(chunks(_list=publishedfileids, limit=5000)):
-        logger.debug(f"Querying details for {len(chunk)} mod(s) via Steam WebAPI")
-        # Construct arguments to pass to the API call
-        data = {"itemcount": f"{str(len(chunk))}"}
-        for publishedfileid in chunk:
-            count = chunk.index(publishedfileid)
-            data[f"publishedfileids[{count}]"] = publishedfileid
-        # jscpd:ignore-start
-        try:  # Make a request to the Steam Web API
-            request = http.post(url, data=data, timeout=(5, 60))
-        except Exception as e:
-            logger.debug(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
-            )
-            return None
-        # jscpd:ignore-end
-        try:  # Parse the JSON response
-            json_response = request.json()
-            if json_response.get("response", {}).get("resultcount", 0) > 0:
-                for mod_metadata in json_response["response"]["publishedfiledetails"]:
-                    metadata.append(mod_metadata)
-        except requests.exceptions.JSONDecodeError as e:
-            logger.error(f"Invalid JSON response: {e}")
-        finally:
-            logger.debug(f"Received WebAPI response {request.status_code} from query")
+    metadata: list[Any] = []
+    failed_pfids: list[str] = []
+    errors: list[str] = []
+    total = len(publishedfileids)
+    chunks_processed = 0
 
-    return metadata
+    for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+        chunk_size = len(chunk)
+        chunks_processed += chunk_size
+
+        data: dict[str, str] = {"itemcount": str(chunk_size)}
+        for i, publishedfileid in enumerate(chunk):
+            data[f"publishedfileids[{i}]"] = publishedfileid
+
+        last_error_desc = ""
+
+        for attempt in range(_MAX_CHUNK_ATTEMPTS):
+            try:
+                request = http.post(url, data=data, timeout=(5, 60))
+
+                if request.status_code in _RETRYABLE_HTTP_CODES:
+                    last_error_desc = f"Steam API returned HTTP {request.status_code}"
+                    raise requests.exceptions.HTTPError(
+                        last_error_desc, response=request
+                    )
+
+                if request.status_code >= 400:
+                    last_error_desc = f"Steam API returned HTTP {request.status_code}"
+                    logger.error(
+                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                        f"{last_error_desc} (non-retryable)"
+                    )
+                    failed_pfids.extend(chunk)
+                    errors.append(f"{last_error_desc} for {chunk_size} mods")
+                    break
+
+                json_response = request.json()
+                if json_response.get("response", {}).get("resultcount", 0) > 0:
+                    for mod_metadata in json_response["response"][
+                        "publishedfiledetails"
+                    ]:
+                        metadata.append(mod_metadata)
+                logger.debug(
+                    f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                    f"HTTP {request.status_code}, "
+                    f"{json_response.get('response', {}).get('resultcount', 0)} results"
+                )
+                break
+
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError,
+            ) as e:
+                if not last_error_desc:
+                    last_error_desc = f"{e.__class__.__name__}: {e}"
+
+                if attempt < _MAX_CHUNK_ATTEMPTS - 1:
+                    delay = 2**attempt  # 1s, 2s
+                    logger.warning(
+                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}] "
+                        f"failed (attempt {attempt + 1}/{_MAX_CHUNK_ATTEMPTS}): "
+                        f"{last_error_desc}. Retrying in {delay}s..."
+                    )
+                    sleep(delay)
+                    last_error_desc = ""
+                else:
+                    logger.error(
+                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}] "
+                        f"failed after {_MAX_CHUNK_ATTEMPTS} attempts: {last_error_desc}"
+                    )
+                    failed_pfids.extend(chunk)
+                    errors.append(
+                        f"{last_error_desc} for {chunk_size} mods "
+                        f"after {_MAX_CHUNK_ATTEMPTS} attempts"
+                    )
+
+            except requests.exceptions.JSONDecodeError as e:
+                last_error_desc = f"Invalid JSON response (HTTP {request.status_code})"
+                logger.error(
+                    f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                    f"{last_error_desc}: {e}"
+                )
+                failed_pfids.extend(chunk)
+                errors.append(f"{last_error_desc} for {chunk_size} mods")
+                break
+
+    succeeded = total - len(failed_pfids)
+    if total > 0:
+        logger.info(
+            f"GetPublishedFileDetails complete: queried {total} mods, "
+            f"{succeeded} succeeded, {len(failed_pfids)} failed"
+        )
+
+    return metadata, failed_pfids, errors
 
 
 if __name__ == "__main__":
