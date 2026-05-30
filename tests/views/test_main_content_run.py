@@ -37,7 +37,7 @@ class DummySettings:
             "inst1": SimpleNamespace(
                 game_folder="/fake/path",
                 config_folder="/fake/config",
-                run_args=["--test"],
+                run_args="--test",
                 steam_client_integration=False,
                 launch_via_steam_protocol=False,
             )
@@ -58,14 +58,14 @@ def patch_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
 
 
 @pytest.fixture(autouse=True)
-def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, List[str]]]:
+def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, str]]:
     # Fake launch_game_process in main_content_panel to capture calls
     from app.views import main_content_panel
 
-    calls: List[Tuple[Path, List[str]]] = []
+    calls: List[Tuple[Path, str]] = []
 
-    def fake_launch_game_process(game_install_path: str, args: List[str]) -> None:
-        calls.append((Path(game_install_path), args))
+    def fake_launch_game_process(game_install_path: str, run_args: str = "") -> None:
+        calls.append((Path(game_install_path), run_args))
 
     monkeypatch.setattr(
         main_content_panel, "launch_game_process", fake_launch_game_process
@@ -140,8 +140,8 @@ def unsaved_main_content(
     "dialogue_return, expected_save_calls, expected_launch",
     [
         (QMessageBox.StandardButton.Cancel, [], []),
-        ("Run Anyway", [], [(Path("/fake/path"), ["--test"])]),
-        ("Save and Run", [True], [(Path("/fake/path"), ["--test"])]),
+        ("Run Anyway", [], [(Path("/fake/path"), "--test")]),
+        ("Save and Run", [True], [(Path("/fake/path"), "--test")]),
     ],
 )
 def test_run_game_with_unsaved_changes(
@@ -176,4 +176,4 @@ def test_run_without_unsaved(
     # Dialogue not shown
     assert patch_dialogue.return_value is None
     assert save_calls == []
-    assert patch_launch == [(Path("/fake/path"), ["--test"])]
+    assert patch_launch == [(Path("/fake/path"), "--test")]
