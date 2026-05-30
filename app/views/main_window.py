@@ -759,7 +759,7 @@ class MainWindow(QMainWindow):
                 + f"\nWorkshop mods folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
                 + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
                 + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n"
-                + f"\nRun arguments:\n{'[' + ' '.join(existing_instance_run_args) + ']' if existing_instance_run_args else '<None>'}\n",
+                + f"\nRun arguments:\n{existing_instance_run_args if existing_instance_run_args else '<None>'}\n",
             )
             if answer.exec_is_positive():
                 # Clone the RimWorld game_folder to the new instance
@@ -923,7 +923,7 @@ class MainWindow(QMainWindow):
                         "local_folder": target_local_folder,
                         "workshop_folder": target_workshop_folder,
                         "config_folder": target_config_folder,
-                        "run_args": existing_instance_run_args or [],
+                        "run_args": existing_instance_run_args,
                         "steamcmd_install_path": str(
                             AppInfo().app_storage_folder
                             / INSTANCE_FOLDER_NAME
@@ -980,16 +980,12 @@ class MainWindow(QMainWindow):
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
             # Get run args from instance data, autogenerate additional config items if desired
-            run_args = []
-            generated_instance_run_args = []
+            run_args = ""
             if instance_data.get("game_folder") and instance_data.get("config_folder"):
-                # Generate preview of run args
-                preview_generated_run_args = [
-                    "-logfile",
-                    str(instance_path / "RimWorld.log"),
-                    f"-savedatafolder={str(instance_path / 'InstanceData')}",
-                ]
-                preview_text = " ".join(preview_generated_run_args)
+                # Generate preview of run args as a single string
+                log_path = (instance_path / "RimWorld.log").as_posix()
+                savedata_path = (instance_path / "InstanceData").as_posix()
+                preview_text = f"-logfile {log_path} -savedatafolder={savedata_path}"
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(
                     title=self.tr("Create new instance [{instance_name}]"),
@@ -1002,10 +998,16 @@ class MainWindow(QMainWindow):
                     ).format(preview=preview_text),
                 )
                 if answer == QMessageBox.StandardButton.Yes:
-                    # Use the preview generated run args
-                    generated_instance_run_args = preview_generated_run_args
-                run_args.extend(generated_instance_run_args)
-                run_args.extend(instance_data.get("run_args", []))
+                    run_args = preview_text
+                    # Align config_folder with -savedatafolder so _do_save()
+                    # writes ModsConfig.xml where the game will read it
+                    config_path = instance_path / "InstanceData" / "Config"
+                    config_path.mkdir(parents=True, exist_ok=True)
+                    instance_data["config_folder"] = str(config_path)
+                # Append any existing run_args from cloned instance
+                existing_args = instance_data.get("run_args", "")
+                if existing_args:
+                    run_args = f"{run_args} {existing_args}".strip()
             # Add new instance to Settings
             self.settings_controller.create_instance(
                 instance_name=instance_name,
