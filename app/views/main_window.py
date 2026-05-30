@@ -986,8 +986,8 @@ class MainWindow(QMainWindow):
                 # Generate preview of run args
                 preview_generated_run_args = [
                     "-logfile",
-                    str(instance_path / "RimWorld.log"),
-                    f"-savedatafolder={str(instance_path / 'InstanceData')}",
+                    (instance_path / "RimWorld.log").as_posix(),
+                    f"-savedatafolder={(instance_path / 'InstanceData').as_posix()}",
                 ]
                 preview_text = " ".join(preview_generated_run_args)
                 # Prompt the user if they would like to automatically generate run args for the instance
