@@ -28,11 +28,13 @@ Setup environment
 
 _ARCH = platform.architecture()[0]
 _CWD = os.getcwd()
-_PROCESSOR = platform.machine()
-if _PROCESSOR == "":
-    _PROCESSOR = platform.processor()
-
 _SYSTEM = platform.system()
+_MACHINE = platform.machine() or platform.processor()
+# Normalize to match pre-built binary and todds asset naming on macOS
+if _SYSTEM == "Darwin":
+    _PROCESSOR = {"arm64": "arm", "x86_64": "i386"}.get(_MACHINE, _MACHINE)
+else:
+    _PROCESSOR = _MACHINE
 
 PY_CMD = sys.executable
 
