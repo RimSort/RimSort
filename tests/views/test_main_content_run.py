@@ -146,11 +146,11 @@ def unsaved_main_content(
 )
 def test_run_game_with_unsaved_changes(
     patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
+    patch_launch: List[Tuple[Path, str]],
     unsaved_main_content: Tuple[MainContent, List[bool]],
     dialogue_return: QMessageBox.StandardButton | str,
     expected_save_calls: List[bool],
-    expected_launch: List[Tuple[Path, List[str]]],
+    expected_launch: List[Tuple[Path, str]],
 ) -> None:
     mc, save_calls = unsaved_main_content
     patch_dialogue.return_value = (
@@ -165,7 +165,7 @@ def test_run_game_with_unsaved_changes(
 
 def test_run_without_unsaved(
     patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
+    patch_launch: List[Tuple[Path, str]],
     main_content: Tuple[MainContent, List[bool]],
 ) -> None:
     mc, save_calls = main_content

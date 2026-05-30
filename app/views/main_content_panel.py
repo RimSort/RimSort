@@ -2568,7 +2568,7 @@ class MainContent(QObject):
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
                         game_install_path=instruction[1][0],
-                        args=instruction[1][1],
+                        run_args=instruction[1][1],
                         _libs=libs_path,
                     )
                     # Start the Steamworks API Process
