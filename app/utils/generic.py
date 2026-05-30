@@ -281,7 +281,7 @@ def get_executable_path(game_install_path: Path) -> str | None:
         return None
 
 
-def launch_game_process(game_install_path: Path, args: list[str]) -> None:
+def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
@@ -291,8 +291,8 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     The game will be launched with the game install path being the working directory.
 
     :param game_install_path: is a path to the game folder
-    :param args: is a list containing a single launch command string with Steam-style
-                 %command% syntax (e.g., ["PROTON_LOG=1 gamemoderun %command% -logfile /tmp/log"])
+    :param run_args: a launch command string with optional Steam-style
+                     %command% syntax (e.g., "PROTON_LOG=1 gamemoderun %command% -logfile /tmp/log")
     """
     if not game_install_path:
         logger.error("The path to the game folder is empty")
@@ -327,12 +327,10 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         )
         return
 
-    # Parse the launch command if args is non-empty
-    if args and len(args) > 0:
-        # Treat first element as full command string with %command% syntax
-        command_string = args[0]
-        logger.info(f"Parsing launch command: {command_string}")
-        parsed = parse_launch_command(command_string)
+    # Parse the launch command if run_args is non-empty
+    if run_args:
+        logger.info(f"Parsing launch command: {run_args}")
+        parsed = parse_launch_command(run_args)
         env_vars = parsed.env_vars
         wrapper_commands = parsed.wrapper_commands
         game_args = parsed.game_args

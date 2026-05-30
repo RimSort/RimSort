@@ -3676,12 +3676,9 @@ class MainContent(QObject):
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder
         )
-        # Run args is inconsistent and is sometimes a string and sometimes a list
-        run_args: list[str] | str = self.settings_controller.settings.instances[
+        run_args = self.settings_controller.settings.instances[
             current_instance
         ].run_args
-
-        run_args = [run_args] if isinstance(run_args, str) else run_args
 
         # Retrieve Steam-related settings for this instance
         steam_client_integration = self.settings_controller.settings.instances[
@@ -3737,7 +3734,7 @@ class MainContent(QObject):
             # Launch game executable directly
             # This method ignores Steam overlay but respects custom run arguments
             logger.info("Launching game process without Steamworks API...")
-            launch_game_process(game_install_path=game_install_path, args=run_args)
+            launch_game_process(game_install_path=game_install_path, run_args=run_args)
 
     @Slot()
     def _use_this_instead_clicked(self) -> None:
