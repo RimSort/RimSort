@@ -152,6 +152,14 @@ jobs:
         shell: bash
         run: uv sync --locked --no-dev --group build
 
+      - name: Compile translations
+        shell: bash
+        run: |
+          for ts_file in locales/*.ts; do
+            qm_file="${ts_file%.ts}.qm"
+            uv run --frozen pyside6-lrelease "$ts_file" -qm "$qm_file"
+          done
+
       - name: Build Actions
         shell: bash
         run: |
