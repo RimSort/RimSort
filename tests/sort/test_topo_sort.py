@@ -4,7 +4,12 @@ import pytest
 from toposort import CircularDependencyError
 
 from app.sort.topo_sort import do_topo_sort
-from tests.sort.conftest import make_mod
+from tests.sort.conftest import (
+    assert_diamond_ordering,
+    diamond_fixture,
+    make_mod,
+    three_mod_alpha_fixture,
+)
 
 
 class TestDoTopoSort:
@@ -35,17 +40,9 @@ class TestDoTopoSort:
         self, metadata_manager_mock: MagicMock
     ) -> None:
         """Mods at the same topological level are sorted alphabetically by name."""
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_z": make_mod("mod.z", name="Zebra"),
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-            "uuid_m": make_mod("mod.m", name="Middle"),
-        }
-        graph: dict[str, set[str]] = {
-            "mod.z": set(),
-            "mod.a": set(),
-            "mod.m": set(),
-        }
-        result = do_topo_sort(graph, {"uuid_z", "uuid_a", "uuid_m"})
+        metadata, graph, active = three_mod_alpha_fixture()
+        metadata_manager_mock.internal_local_metadata = metadata
+        result = do_topo_sort(graph, active)
         assert result == ["uuid_a", "uuid_m", "uuid_z"]
 
     def test_graph_entry_not_in_active_mods_skipped(
@@ -88,23 +85,10 @@ class TestDoTopoSort:
 
     def test_complex_dag(self, metadata_manager_mock: MagicMock) -> None:
         """Diamond: D depends on B and C, both depend on A."""
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-            "uuid_b": make_mod("mod.b", name="Beta"),
-            "uuid_c": make_mod("mod.c", name="Charlie"),
-            "uuid_d": make_mod("mod.d", name="Delta"),
-        }
-        graph: dict[str, set[str]] = {
-            "mod.a": set(),
-            "mod.b": {"mod.a"},
-            "mod.c": {"mod.a"},
-            "mod.d": {"mod.b", "mod.c"},
-        }
-        result = do_topo_sort(graph, {"uuid_a", "uuid_b", "uuid_c", "uuid_d"})
-        assert result.index("uuid_a") < result.index("uuid_b")
-        assert result.index("uuid_a") < result.index("uuid_c")
-        assert result.index("uuid_b") < result.index("uuid_d")
-        assert result.index("uuid_c") < result.index("uuid_d")
+        metadata, graph, active = diamond_fixture()
+        metadata_manager_mock.internal_local_metadata = metadata
+        result = do_topo_sort(graph, active)
+        assert_diamond_ordering(result)
 
     def test_empty_graph(self, metadata_manager_mock: MagicMock) -> None:
         metadata_manager_mock.internal_local_metadata = {}

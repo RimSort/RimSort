@@ -31,6 +31,43 @@ def make_mod(
     return mod
 
 
+def three_mod_alpha_fixture() -> tuple[dict[str, Any], dict[str, set[str]], set[str]]:
+    """Metadata, graph, and active_mods for a 3-mod alphabetical test."""
+    metadata = {
+        "uuid_z": make_mod("mod.z", name="Zebra"),
+        "uuid_a": make_mod("mod.a", name="Alpha"),
+        "uuid_m": make_mod("mod.m", name="Middle"),
+    }
+    graph: dict[str, set[str]] = {"mod.z": set(), "mod.a": set(), "mod.m": set()}
+    return metadata, graph, {"uuid_z", "uuid_a", "uuid_m"}
+
+
+def diamond_fixture() -> tuple[dict[str, Any], dict[str, set[str]], set[str]]:
+    """Metadata, graph, and active_mods for a diamond dependency test."""
+    metadata = {
+        "uuid_a": make_mod("mod.a", name="Alpha"),
+        "uuid_b": make_mod("mod.b", name="Beta"),
+        "uuid_c": make_mod("mod.c", name="Charlie"),
+        "uuid_d": make_mod("mod.d", name="Delta"),
+    }
+    graph: dict[str, set[str]] = {
+        "mod.a": set(),
+        "mod.b": {"mod.a"},
+        "mod.c": {"mod.a"},
+        "mod.d": {"mod.b", "mod.c"},
+    }
+    return metadata, graph, {"uuid_a", "uuid_b", "uuid_c", "uuid_d"}
+
+
+def assert_diamond_ordering(result: list[str]) -> None:
+    """Verify diamond dependency ordering: A before B,C before D."""
+    assert len(result) == 4
+    assert result.index("uuid_a") < result.index("uuid_b")
+    assert result.index("uuid_a") < result.index("uuid_c")
+    assert result.index("uuid_b") < result.index("uuid_d")
+    assert result.index("uuid_c") < result.index("uuid_d")
+
+
 @pytest.fixture
 def metadata_manager_mock() -> Generator[MagicMock, None, None]:
     """Mock MetadataManager.instance() for sorting tests.

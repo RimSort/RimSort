@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
@@ -261,7 +262,7 @@ class TestGenTierZeroDepsGraph:
 
 class TestGenTierOneDepsGraph:
     @pytest.fixture(autouse=True)
-    def _protect_known_tier_one_mods(self) -> None:
+    def _protect_known_tier_one_mods(self) -> Generator[None]:
         """Snapshot and restore KNOWN_TIER_ONE_MODS.
 
         gen_tier_one_deps_graph mutates the module-level constant via alias
@@ -270,7 +271,7 @@ class TestGenTierOneDepsGraph:
         from app.utils.constants import KNOWN_TIER_ONE_MODS
 
         original = KNOWN_TIER_ONE_MODS.copy()
-        yield  # type: ignore[misc]
+        yield
         KNOWN_TIER_ONE_MODS.clear()
         KNOWN_TIER_ONE_MODS.update(original)
 
