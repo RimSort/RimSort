@@ -979,15 +979,14 @@ class MainWindow(QMainWindow):
             )
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
-            # Fall back to current instance's folders if not provided (e.g., Create Instance)
-            if not instance_data.get("game_folder") or not instance_data.get(
-                "config_folder"
-            ):
-                current_inst = self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ]
-                instance_data.setdefault("game_folder", current_inst.game_folder)
-                instance_data.setdefault("config_folder", current_inst.config_folder)
+            # Fall back to current instance's folders if missing or empty (e.g., Create Instance)
+            current_inst = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ]
+            if not instance_data.get("game_folder"):
+                instance_data["game_folder"] = current_inst.game_folder
+            if not instance_data.get("config_folder"):
+                instance_data["config_folder"] = current_inst.config_folder
             # Get run args from instance data, autogenerate additional config items if desired
             run_args = ""
             if instance_data.get("game_folder") and instance_data.get("config_folder"):
