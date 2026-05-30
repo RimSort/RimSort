@@ -28,9 +28,9 @@ Setup environment
 
 _ARCH = platform.architecture()[0]
 _CWD = os.getcwd()
-_PROCESSOR = platform.processor()
+_PROCESSOR = platform.machine()
 if _PROCESSOR == "":
-    _PROCESSOR = platform.machine()
+    _PROCESSOR = platform.processor()
 
 _SYSTEM = platform.system()
 

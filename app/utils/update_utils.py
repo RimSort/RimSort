@@ -816,7 +816,7 @@ class UpdateManager(QObject):
                 release_data.get("assets", []), needs_elevation
             )
             if not download_info:
-                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.processor()}"
+                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.machine()}"
                 dialogue.show_warning(
                     title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
                     text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(
