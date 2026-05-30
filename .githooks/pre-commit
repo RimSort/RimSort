@@ -4,9 +4,22 @@
 
 set -euo pipefail
 
+if ! command -v just &>/dev/null; then
+	echo "BLOCKED: 'just' is not installed or not on PATH."
+	echo "Install it: https://just.systems/man/en/installation.html"
+	exit 1
+fi
+
+if ! command -v pwsh &>/dev/null; then
+	echo "BLOCKED: 'pwsh' (PowerShell 7) is not installed or not on PATH."
+	echo "The justfile requires pwsh. Install it: https://aka.ms/install-powershell"
+	echo "Or change the justfile shell: set shell := [\"sh\", \"-c\"]"
+	exit 1
+fi
+
 echo "Running pre-commit quality checks..."
 
-if ! just check 2>&1; then
+if ! just check; then
 	echo ""
 	echo "BLOCKED: quality checks failed. Run 'just fix' to auto-fix what's fixable."
 	exit 1
