@@ -2874,6 +2874,7 @@ def query_workshop_update_data(mods: dict[str, Any]) -> WorkshopUpdateResult:
             mods[uuid]["external_time_updated"] = workshop_mod_metadata["time_updated"]
         mods_updated += 1
 
+    status: Literal["success", "no_workshop_mods", "partial", "failed"]
     if failed_pfids and mods_updated > 0:
         status = "partial"
     elif failed_pfids:

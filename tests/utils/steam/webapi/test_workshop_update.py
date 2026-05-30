@@ -1,4 +1,5 @@
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from app.utils.metadata import WorkshopUpdateResult, query_workshop_update_data
 
@@ -34,7 +35,9 @@ class TestQueryWorkshopUpdateData:
         assert result.status == "no_workshop_mods"
 
     @patch("app.utils.metadata.ISteamRemoteStorage_GetPublishedFileDetails")
-    def test_successful_query_returns_success(self, mock_get_details) -> None:
+    def test_successful_query_returns_success(
+        self, mock_get_details: MagicMock
+    ) -> None:
         """All pfids queried successfully should return 'success'."""
         mock_get_details.return_value = (
             [
@@ -52,7 +55,7 @@ class TestQueryWorkshopUpdateData:
             [],  # no failed pfids
             [],  # no errors
         )
-        mods = {
+        mods: dict[str, Any] = {
             "uuid-1": {
                 "data_source": "workshop",
                 "publishedfileid": "111",
@@ -73,7 +76,7 @@ class TestQueryWorkshopUpdateData:
         assert mods["uuid-2"]["external_time_updated"] == 3000
 
     @patch("app.utils.metadata.ISteamRemoteStorage_GetPublishedFileDetails")
-    def test_partial_failure_returns_partial(self, mock_get_details) -> None:
+    def test_partial_failure_returns_partial(self, mock_get_details: MagicMock) -> None:
         """Some pfids failed but some succeeded → partial status."""
         mock_get_details.return_value = (
             [
@@ -104,7 +107,7 @@ class TestQueryWorkshopUpdateData:
         assert len(result.errors) == 1
 
     @patch("app.utils.metadata.ISteamRemoteStorage_GetPublishedFileDetails")
-    def test_total_failure_returns_failed(self, mock_get_details) -> None:
+    def test_total_failure_returns_failed(self, mock_get_details: MagicMock) -> None:
         """All pfids failed → failed status."""
         mock_get_details.return_value = (
             [],  # no metadata

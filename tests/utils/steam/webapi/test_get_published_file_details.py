@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -22,7 +23,7 @@ VALID_RESPONSE_JSON = {
 
 
 def _make_mock_response(
-    status_code: int = 200, json_data: dict | None = None
+    status_code: int = 200, json_data: dict[str, Any] | None = None
 ) -> MagicMock:
     resp = MagicMock(spec=requests.Response)
     resp.status_code = status_code
