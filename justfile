@@ -100,7 +100,7 @@ ci: check test-coverage
 dev-setup: submodules-init
     uv venv --allow-existing
     uv sync --locked --dev --group build
-    just i18n-compile
+    just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
 
 # Update all dependencies to their latest compatible versions
 update:
@@ -216,6 +216,7 @@ build-appimage VERSION='1.0.0':
 i18n-compile:
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s nullglob
     for ts_file in locales/*.ts; do
         qm_file="${ts_file%.ts}.qm"
         uv run pyside6-lrelease "$ts_file" -qm "$qm_file"
@@ -230,6 +231,7 @@ i18n-compile:
 i18n-update:
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s nullglob
     uv run pyside6-lupdate app/ -ts locales/*.ts
 
 [windows]
