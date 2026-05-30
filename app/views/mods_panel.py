@@ -4628,9 +4628,8 @@ class ModsPanel(QWidget):
                 reverse=self.inactive_sort_descending,
             )
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
-                self._size_progress_dialog.setLabelText(self.tr("Rebuilding list..."))
-                self._size_progress_dialog.setRange(0, len(sorted_uuids))
-                self._size_progress_dialog.setValue(0)
+                self._size_progress_dialog.close()
+                self._size_progress_dialog = None
 
             lw = self.inactive_mods_list
             # Disconnect model signals during rebuild to prevent cascading updates and duplicate items
@@ -4669,11 +4668,6 @@ class ModsPanel(QWidget):
                     data.__dict__["show_tags"] = lw.show_tags
                     list_item.setData(Qt.ItemDataRole.UserRole, data)
                     lw.addItem(list_item)
-                    if (
-                        hasattr(self, "_size_progress_dialog")
-                        and self._size_progress_dialog
-                    ):
-                        self._size_progress_dialog.setValue(idx)
             lw.uuids = sorted_uuids
 
             # Reconnect model signals
@@ -4784,15 +4778,14 @@ class ModsPanel(QWidget):
             is_heavy = sort_key == ModsPanelSortKey.FOLDER_SIZE
             if is_heavy:
                 # Background calculation required for folder size sorting
-                dlg = QProgressDialog(self)
+                dlg = QProgressDialog(self.window())
                 dlg.setLabelText(self.tr("Calculating folder sizes..."))
-                # Set up dialog without cancel button (calculation cannot be interrupted)
                 dlg.setCancelButton(None)
                 dlg.setRange(0, len(current_uuids))
-                dlg.setWindowModality(Qt.WindowModality.WindowModal)
                 dlg.setMinimumDuration(0)
                 dlg.setAutoClose(True)
-                dlg.setAutoReset(True)
+                dlg.setAutoReset(False)
+                dlg.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
                 dlg.setValue(0)
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
                 # Start worker thread
