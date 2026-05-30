@@ -1,5 +1,5 @@
 import subprocess
-from typing import Generator, Union
+from typing import Any, Generator, Union
 from unittest.mock import patch
 
 import pytest
@@ -18,20 +18,19 @@ def _block_steam_urls(request: pytest.FixtureRequest) -> Generator[None, None, N
     platform_specific_open is patched at the wrong import location.
     """
 
-    def _guarded_popen(
-        args: object, *a: object, **kw: object
-    ) -> subprocess.Popen[bytes]:
+    def _guarded_popen(*args: Any, **kw: Any) -> subprocess.Popen[Any]:
+        popen_args = args[0] if args else kw.get("args", "")
         cmd_str = (
-            " ".join(str(x) for x in args)
-            if isinstance(args, (list, tuple))
-            else str(args)
+            " ".join(str(x) for x in popen_args)
+            if isinstance(popen_args, (list, tuple))
+            else str(popen_args)
         )
         if "steam://" in cmd_str:
             raise RuntimeError(
                 f"Test {request.node.nodeid} tried to open a steam:// URL "
                 f"via subprocess: {cmd_str}"
             )
-        return _real_popen(args, *a, **kw)  # type: ignore[arg-type]
+        return _real_popen(*args, **kw)
 
     with patch.object(subprocess, "Popen", _guarded_popen):
         yield
