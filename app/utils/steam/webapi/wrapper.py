@@ -461,7 +461,7 @@ class DynamicQuery(QObject):
         a list of any missing children's PublishedFileIds to consider for additional queries
             OR None, None -  which indicates a critical failure in an ongoing Dynamic Query
         """
-        chunks_processed = 0
+        items_processed = 0
         total = len(publishedfileids)
         self._emit_message(
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
@@ -477,7 +477,7 @@ class DynamicQuery(QObject):
             _list=publishedfileids, limit=213
         ):  # Chunk limit appears to be 213 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
-            chunks_processed += chunk_total
+            items_processed += chunk_total
             # Uncomment to see the pfids from each chunk
             # logger.debug(f"{chunk_total} PublishedFileIds in chunk: {chunk}")
             try:
@@ -609,10 +609,10 @@ class DynamicQuery(QObject):
                         - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                     ]
                 logger.error(
-                    f"IPublishedFileService/GetDetails errored querying batch [{chunks_processed}/{total}]: {stacktrace}"
+                    f"IPublishedFileService/GetDetails errored querying batch [{items_processed}/{total}]: {stacktrace}"
                 )
             self._emit_message(
-                f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]"
+                f"IPublishedFileService/GetDetails chunk [{items_processed}/{total}]"
             )
         for missing_child in missing_children:
             if result["database"].get(missing_child) and result["database"][
@@ -845,11 +845,11 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     failed_pfids: list[str] = []
     errors: list[str] = []
     total = len(publishedfileids)
-    chunks_processed = 0
+    items_processed = 0
 
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):
         chunk_size = len(chunk)
-        chunks_processed += chunk_size
+        items_processed += chunk_size
 
         data: dict[str, str] = {"itemcount": str(chunk_size)}
         for i, publishedfileid in enumerate(chunk):
@@ -870,7 +870,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                 if request.status_code >= 400:
                     last_error_desc = f"Steam API returned HTTP {request.status_code}"
                     logger.error(
-                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                        f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
                         f"{last_error_desc} (non-retryable)"
                     )
                     failed_pfids.extend(chunk)
@@ -884,7 +884,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                     ]:
                         metadata.append(mod_metadata)
                 logger.debug(
-                    f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                    f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
                     f"HTTP {request.status_code}, "
                     f"{json_response.get('response', {}).get('resultcount', 0)} results"
                 )
@@ -901,7 +901,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                 if attempt < _MAX_CHUNK_ATTEMPTS - 1:
                     delay = 2**attempt  # 1s, 2s
                     logger.warning(
-                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}] "
+                        f"GetPublishedFileDetails chunk [{items_processed}/{total}] "
                         f"failed (attempt {attempt + 1}/{_MAX_CHUNK_ATTEMPTS}): "
                         f"{last_error_desc}. Retrying in {delay}s..."
                     )
@@ -909,7 +909,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                     last_error_desc = ""
                 else:
                     logger.error(
-                        f"GetPublishedFileDetails chunk [{chunks_processed}/{total}] "
+                        f"GetPublishedFileDetails chunk [{items_processed}/{total}] "
                         f"failed after {_MAX_CHUNK_ATTEMPTS} attempts: {last_error_desc}"
                     )
                     failed_pfids.extend(chunk)
@@ -921,7 +921,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             except requests.exceptions.JSONDecodeError as e:
                 last_error_desc = f"Invalid JSON response (HTTP {request.status_code})"
                 logger.error(
-                    f"GetPublishedFileDetails chunk [{chunks_processed}/{total}]: "
+                    f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
                     f"{last_error_desc}: {e}"
                 )
                 failed_pfids.extend(chunk)

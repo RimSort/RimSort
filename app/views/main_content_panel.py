@@ -1598,8 +1598,8 @@ class MainContent(QObject):
         if len(pfids) > 0:  # No empty queries...
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
-            webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            if webapi_response is not None:
+            webapi_response, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+            if webapi_response:
                 for metadata in webapi_response:
                     pfid = metadata["publishedfileid"]
                     if metadata["result"] != 1:
@@ -2373,7 +2373,7 @@ class MainContent(QObject):
                 text=self.tr(
                     "RimSort was unable to check your Workshop mods for updates."
                 ),
-                information="\n".join(result.errors) if result.errors else None,
+                details="\n".join(result.errors) if result.errors else None,
             )
             return
 
