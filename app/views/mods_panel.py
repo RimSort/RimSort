@@ -1242,14 +1242,14 @@ class ModListWidget(QListWidget):
         for index in selected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget and hasattr(widget, "set_selected"):
-                widget.set_selected(True)
+            if widget and (set_selected := getattr(widget, "set_selected", None)):
+                set_selected(True)
 
         for index in deselected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget and hasattr(widget, "set_selected"):
-                widget.set_selected(False)
+            if widget and (set_selected := getattr(widget, "set_selected", None)):
+                set_selected(False)
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
