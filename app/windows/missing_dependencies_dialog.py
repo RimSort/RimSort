@@ -17,7 +17,13 @@ from app.utils.metadata import MetadataManager
 
 class MissingDependenciesDialog(QDialog):
     """
-    Dialog to display missing mod dependencies and allow user to select which to add.
+    Dialog to display all mod dependencies and allow user to select
+    which missing ones (local/download) to add.
+
+    Shows three groups per mod:
+        - Satisfied dependencies (already active)
+        - Local dependencies (available but not active)
+        - Dependencies that need to be downloaded
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -41,7 +47,7 @@ class MissingDependenciesDialog(QDialog):
 
         description = QLabel(
             self.tr(
-                "Some mods in your active list require other mods to work properly.\n"
+                "Showing dependencies of your active mods.\n"
                 "Select which missing dependencies to add to your active mods list."
             )
         )
@@ -79,20 +85,27 @@ class MissingDependenciesDialog(QDialog):
         # Set the window size
         self.resize(900, 600)
 
-    def show_dialog(self, missing_deps: dict[str, set[str]]) -> set[str]:
+    def show_dialog(
+        self,
+        deps_summary: dict[str, dict[str, set[str]]],
+        missing_deps: dict[str, set[str]],
+    ) -> set[str]:
         """
-        Show the dialog with missing dependencies and return selected mods.
+        Show the dialog with all dependencies (satisfied + missing) for each mod.
 
         Args:
-            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
+            deps_summary: dict mapping each mod package ID to a dict with keys:
+                - "satisfied": set of dep package IDs already active
+                - "local": set of dep package IDs available locally but not active
+                - "download": set of dep package IDs that need to be downloaded
+            missing_deps: dict mapping mod package IDs to sets of missing
+                          dependency package IDs (same as before, used to
+                          determine if there are any missing deps at all)
 
         Returns:
             Set of selected mod package IDs if user accepted, empty set otherwise.
         """
-        if not missing_deps:
-            return set()
-
-        self._populate_dependencies(missing_deps)
+        self._populate_dependencies(deps_summary)
 
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
@@ -100,67 +113,195 @@ class MissingDependenciesDialog(QDialog):
         else:
             return set()
 
-    def _populate_dependencies(self, missing_deps: dict[str, set[str]]) -> None:
+    def _populate_dependencies(
+        self, deps_summary: dict[str, dict[str, set[str]]]
+    ) -> None:
         """
-        Populate the dialog with missing dependencies grouped by local and download.
+        Populate the dialog with all dependencies grouped by mod.
+        Each mod shows: satisfied, local, and download dependencies.
 
         Args:
-            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
+            deps_summary: dict mapping each mod package ID to a dict with keys:
+                - "satisfied": set of dep package IDs already active
+                - "local": set of dep package IDs available locally but not active
+                - "download": set of dep package IDs that need to be downloaded
         """
         self.clear_dependencies()
 
-        local_deps, download_deps = self._classify_dependencies(missing_deps)
+        if not deps_summary:
+            label = QLabel(self.tr("No dependencies found for any active mod."))
+            label.setWordWrap(True)
+            self.scroll_layout.addWidget(label)
+            return
 
-        if local_deps:
-            local_label = QLabel(self.tr("Local mods (available but not active):"))
-            local_label.setObjectName("localDepsLabel")
-            self.scroll_layout.addWidget(local_label)
+        # --- Compute summary stats ---
+        total_satisfied = 0
+        total_local = 0
+        total_download = 0
+        total_missing_per_mod = 0  # number of mods that have at least one missing dep
+        mods_with_deps = 0
 
-            for dep_id, requiring_mods in local_deps.items():
-                self._add_dependency_group(dep_id, requiring_mods)
+        for mod_id, deps in deps_summary.items():
+            satisfied = deps.get("satisfied", set())
+            local = deps.get("local", set())
+            download = deps.get("download", set())
 
-            self.scroll_layout.addSpacing(20)
+            total_satisfied += len(satisfied)
+            total_local += len(local)
+            total_download += len(download)
 
-        if download_deps:
-            download_label = QLabel(self.tr("Mods that need to be downloaded:"))
-            download_label.setObjectName("downloadDepsLabel")
-            self.scroll_layout.addWidget(download_label)
+            if satisfied or local or download:
+                mods_with_deps += 1
 
-            for dep_id, requiring_mods in download_deps.items():
-                self._add_dependency_group(dep_id, requiring_mods)
+            if local or download:
+                total_missing_per_mod += 1
+
+        total_deps = total_satisfied + total_local + total_download
+        total_missing = total_local + total_download
+        has_missing = total_missing > 0
+
+        # --- Summary header ---
+        if has_missing:
+            summary_text = self.tr(
+                "<b>Summary:</b> {total_deps} total dependencies across {mods_with_deps} mods — "
+                "✅ {total_satisfied} fulfilled, "
+                "⚠️ {total_missing} missing ({total_local} local, {total_download} download) across {total_missing_per_mod} mod(s)"
+            ).format(
+                total_deps=total_deps,
+                mods_with_deps=mods_with_deps,
+                total_satisfied=total_satisfied,
+                total_missing=total_missing,
+                total_local=total_local,
+                total_download=total_download,
+                total_missing_per_mod=total_missing_per_mod,
+            )
+            summary_color = "#cc8800"  # amber/warning
+        else:
+            summary_text = self.tr(
+                "<b>Summary:</b> {total_deps} total dependencies across {mods_with_deps} mods — "
+                "✅ All {total_satisfied} dependencies fulfilled"
+            ).format(
+                total_deps=total_deps,
+                mods_with_deps=mods_with_deps,
+                total_satisfied=total_satisfied,
+            )
+            summary_color = "green"
+
+        summary_label = QLabel(summary_text)
+        summary_label.setWordWrap(True)
+        summary_label.setTextFormat(Qt.TextFormat.RichText)
+        summary_label.setStyleSheet(
+            f"color: {summary_color}; font-size: 13px; padding: 8px; "
+            f"background-color: #f5f5f5; border: 1px solid {summary_color}; "
+            f"border-radius: 4px; margin-bottom: 10px;"
+        )
+        self.scroll_layout.addWidget(summary_label)
+        self.scroll_layout.addSpacing(5)
+
+        # Sort mods alphabetically for consistent display
+        for mod_id in sorted(deps_summary.keys()):
+            deps = deps_summary[mod_id]
+            satisfied = deps.get("satisfied", set())
+            local = deps.get("local", set())
+            download = deps.get("download", set())
+
+            mod_name = self.metadata_manager.get_mod_name_from_package_id(mod_id)
+
+            # --- Mod header with per-mod badge ---
+            mod_header_parts = [f"<b>{mod_name}</b>  ({mod_id})"]
+            if local or download:
+                dep_count = len(satisfied)
+                missing_count = len(local) + len(download)
+                mod_header_parts.append(
+                    f"<span style='color:#cc8800;'>  [{dep_count} fulfilled, {missing_count} missing]</span>"
+                )
+            else:
+                dep_count = len(satisfied)
+                mod_header_parts.append(
+                    f"<span style='color:green;'>  [{dep_count} fulfilled]</span>"
+                )
+
+            header_label = QLabel("".join(mod_header_parts))
+            header_label.setWordWrap(True)
+            header_label.setTextFormat(Qt.TextFormat.RichText)
+            self.scroll_layout.addWidget(header_label)
+
+            # --- Satisfied deps (read-only) ---
+            if satisfied:
+                satisfied_label = QLabel(
+                    self.tr("  ✅ Satisfied: ") + ", ".join(sorted(satisfied))
+                )
+                satisfied_label.setStyleSheet("color: green; margin-left: 20px;")
+                satisfied_label.setWordWrap(True)
+                self.scroll_layout.addWidget(satisfied_label)
+
+            # --- Local deps (checkable) ---
+            if local:
+                for dep_id in sorted(local):
+                    dep_name = self.metadata_manager.get_mod_name_from_package_id(
+                        dep_id
+                    )
+                    checkbox = QCheckBox(f"  📦 {dep_name}  ({dep_id})")
+                    checkbox.setToolTip(
+                        self.tr("Available locally - add to active list")
+                    )
+                    checkbox.stateChanged.connect(
+                        partial(self._toggle_mod_selection, mod_id=dep_id)
+                    )
+                    self.scroll_layout.addWidget(checkbox)
+                    self.checkboxes[dep_id] = checkbox
+
+            # --- Download deps (checkable) ---
+            if download:
+                for dep_id in sorted(download):
+                    dep_name = self.metadata_manager.get_mod_name_from_package_id(
+                        dep_id
+                    )
+                    checkbox = QCheckBox(f"  🌐 {dep_name}  ({dep_id})")
+                    checkbox.setToolTip(
+                        self.tr("Needs to be downloaded - requires SteamCMD")
+                    )
+                    checkbox.stateChanged.connect(
+                        partial(self._toggle_mod_selection, mod_id=dep_id)
+                    )
+                    self.scroll_layout.addWidget(checkbox)
+                    self.checkboxes[dep_id] = checkbox
+
+            # Add a separator between mods
+            self.scroll_layout.addSpacing(10)
+
+        if not has_missing:
+            no_missing_label = QLabel(
+                self.tr(
+                    "\nAll dependencies are satisfied. No missing dependencies found."
+                )
+            )
+            no_missing_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+            no_missing_label.setWordWrap(True)
+            self.scroll_layout.addWidget(no_missing_label)
+            # Hide the add/sort buttons since there's nothing to add
+            self._set_action_buttons_visible(False)
 
         self.scroll_layout.addStretch()
 
-    def _classify_dependencies(
-        self, missing_deps: dict[str, set[str]]
-    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-        """
-        Classify missing dependencies into local and download groups.
-
-        Args:
-            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
-
-        Returns:
-            Tuple of two dicts:
-            - local_deps: dependencies that exist locally but aren't active
-            - download_deps: dependencies that need to be downloaded
-        """
-        local_deps: dict[str, list[str]] = {}
-        download_deps: dict[str, list[str]] = {}
-
-        for mod_id, deps in missing_deps.items():
-            mod_name = self.metadata_manager.get_mod_name_from_package_id(mod_id)
-            for dep_id in deps:
-                exists_locally = any(
-                    mod_data.get("packageid") == dep_id
-                    for mod_data in self.metadata_manager.internal_local_metadata.values()
-                )
-                target_dict = local_deps if exists_locally else download_deps
-                if dep_id not in target_dict:
-                    target_dict[dep_id] = []
-                target_dict[dep_id].append(mod_name)
-
-        return local_deps, download_deps
+    def _set_action_buttons_visible(self, visible: bool) -> None:
+        """Show or hide the action buttons in the button layout."""
+        # The button layout is the last item in the main layout
+        layout = self.layout()
+        if layout is None:
+            return
+        item = layout.itemAt(layout.count() - 1)
+        if item is None:
+            return
+        btn_layout = item.layout()
+        if btn_layout is None:
+            return
+        for i in range(btn_layout.count()):
+            item = btn_layout.itemAt(i)
+            if item is not None:
+                w = item.widget()
+                if w is not None:
+                    w.setVisible(visible)
 
     def clear_dependencies(self) -> None:
         """
@@ -175,38 +316,6 @@ class MissingDependenciesDialog(QDialog):
                 widget.deleteLater()
         self.checkboxes.clear()
         self.selected_mods.clear()
-
-    def _add_dependency_group(self, dep_id: str, requiring_mods: list[str]) -> None:
-        """
-        Add a dependency group widget to the dialog.
-
-        Args:
-            dep_id: The package ID of the dependency.
-            requiring_mods: List of mod names that require this dependency.
-        """
-        group_widget = QWidget()
-        group_widget.setObjectName("dependencyGroupWidget")
-        group_layout = QVBoxLayout(group_widget)
-
-        dep_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
-        checkbox = QCheckBox(dep_name)
-        checkbox.setToolTip(self.tr("Package ID: {dep_id}").format(dep_id=dep_id))
-        checkbox.stateChanged.connect(
-            partial(self._toggle_mod_selection, mod_id=dep_id)
-        )
-        group_layout.addWidget(checkbox)
-        self.checkboxes[dep_id] = checkbox
-
-        requiring_label = QLabel(
-            self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods)
-        )
-        requiring_label.setStyleSheet("color: gray; margin-left: 20px;")
-        requiring_label.setWordWrap(True)
-        group_layout.addWidget(requiring_label)
-
-        group_layout.addSpacing(10)
-
-        self.scroll_layout.addWidget(group_widget)
 
     def select_all(self) -> None:
         """
