@@ -648,7 +648,8 @@ class MainContent(QObject):
 
         Workshop mods without a Publish Field ID cannot support automatic
         redownloads or update checking. This check intentionally excludes
-        RimWorld core content and DLC since they are not published mods.
+        RimWorld core content, DLC, and local mods since they are not
+        published to Steam Workshop.
 
         :return: List of internal UUIDs for mods with missing Publish Field ID.
         """
@@ -656,7 +657,8 @@ class MainContent(QObject):
         return [
             uuid
             for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("publishedfileid") is None
+            if mod_metadata.get("data_source") == "workshop"
+            and mod_metadata.get("publishedfileid") is None
             and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
             and mod_metadata.get("packageid") not in ignored_mods
         ]

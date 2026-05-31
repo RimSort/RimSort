@@ -30,7 +30,7 @@ from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
-from app.utils.mod_info import ModInfo
+from app.utils.mod_info import STEAM, STEAM_CMD, ModInfo
 from app.utils.mod_utils import get_mod_path_from_pfid
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.mod_info_panel import ClickablePathLabel
@@ -1397,7 +1397,12 @@ class BaseModsPanel(QWidget):
             )
         else:
             pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)
-            return bool(pfid_item and not pfid_item.text().strip())
+            source_item = self.editor_model.item(row, ColumnIndex.SOURCE.value)
+            if not pfid_item or not source_item:
+                return False
+            source_text = source_item.text().strip()
+            is_workshop = source_text in (STEAM, STEAM_CMD)
+            return is_workshop and not pfid_item.text().strip()
 
     def _show_missing_pfid_notification(self, missing_pfid_mods: list[str]) -> None:
         """Show notification about mods without Publish Field ID."""
