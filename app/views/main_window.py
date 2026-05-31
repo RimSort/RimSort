@@ -991,8 +991,8 @@ class MainWindow(QMainWindow):
             run_args = ""
             if instance_data.get("game_folder") and instance_data.get("config_folder"):
                 # Generate preview of run args as a single string
-                log_path = (instance_path / "RimWorld.log").as_posix()
-                savedata_path = (instance_path / "InstanceData").as_posix()
+                log_path = str(instance_path / "RimWorld.log")
+                savedata_path = str(instance_path / "InstanceData")
                 preview_text = f"-logfile {log_path} -savedatafolder={savedata_path}"
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(

@@ -5,6 +5,8 @@ Tests the parsing of Steam-style %command% syntax including environment
 variables, wrapper executables, and game arguments.
 """
 
+from unittest.mock import patch
+
 from app.utils.launch_command_parser import ParsedLaunchCommand, parse_launch_command
 
 
@@ -163,6 +165,69 @@ class TestParseEdgeCases:
             "/home/user/logs/rimworld.log",
             "-popupwindow",
         ]
+
+
+class TestParseWindowsBackslashPaths:
+    """Tests for Windows backslash path handling (shlex fix)."""
+
+    @patch("app.utils.launch_command_parser.sys")
+    def test_backslash_path_preserved(self, mock_sys: object) -> None:
+        """Backslash paths should not be mangled on Windows."""
+        mock_sys.platform = "win32"  # type: ignore[attr-defined]
+        result = parse_launch_command(
+            r"-popupwindow -logfile C:\Users\lione\AppData\Local\RimSort"
+        )
+        assert result.game_args == [
+            "-popupwindow",
+            "-logfile",
+            r"C:\Users\lione\AppData\Local\RimSort",
+        ]
+
+    @patch("app.utils.launch_command_parser.sys")
+    def test_savedatafolder_backslash_path(self, mock_sys: object) -> None:
+        mock_sys.platform = "win32"  # type: ignore[attr-defined]
+        result = parse_launch_command(
+            r"-logfile C:\Users\user\log.txt -savedatafolder=C:\Users\user\saves"
+        )
+        assert result.game_args == [
+            "-logfile",
+            r"C:\Users\user\log.txt",
+            r"-savedatafolder=C:\Users\user\saves",
+        ]
+
+    @patch("app.utils.launch_command_parser.sys")
+    def test_quoted_path_with_spaces(self, mock_sys: object) -> None:
+        mock_sys.platform = "win32"  # type: ignore[attr-defined]
+        result = parse_launch_command(r'-logfile "C:\Program Files\RimWorld\log.txt"')
+        assert result.game_args == [
+            "-logfile",
+            r"C:\Program Files\RimWorld\log.txt",
+        ]
+
+    @patch("app.utils.launch_command_parser.sys")
+    def test_command_placeholder_with_backslash_args(self, mock_sys: object) -> None:
+        mock_sys.platform = "win32"  # type: ignore[attr-defined]
+        result = parse_launch_command(
+            r"%command% -logfile C:\Users\user\rimworld.log -popupwindow"
+        )
+        assert result.env_vars == {}
+        assert result.wrapper_commands == []
+        assert result.game_args == [
+            "-logfile",
+            r"C:\Users\user\rimworld.log",
+            "-popupwindow",
+        ]
+
+    @patch("app.utils.launch_command_parser.sys")
+    def test_unc_path_preserved(self, mock_sys: object) -> None:
+        mock_sys.platform = "win32"  # type: ignore[attr-defined]
+        result = parse_launch_command(r"-logfile \\server\share\log.txt")
+        assert result.game_args == ["-logfile", r"\\server\share\log.txt"]
+
+    def test_unix_not_affected(self) -> None:
+        """Verify the fix is Windows-only and doesn't change Unix behavior."""
+        result = parse_launch_command("-logfile /tmp/log -popupwindow")
+        assert result.game_args == ["-logfile", "/tmp/log", "-popupwindow"]
 
 
 class TestParseDataclass:
