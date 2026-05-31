@@ -107,7 +107,7 @@ lang: zh-cn
 
 | 命令 | 描述 |
 | :--- | :--- |
-| `just check` | 运行所有代码质量检查（ruff、ruff-format、typecheck、jscpd、shfmt、markdownlint） |
+| `just check` | 运行所有代码质量检查（ruff、ruff-format、typecheck、pyright、jscpd、shfmt、markdownlint） |
 | `just fix` | 自动修复 lint 和格式化问题 |
 | `just test` | 运行测试（启用 doctest 模块） |
 | `just test-coverage` | 运行测试并生成覆盖率报告（XML、HTML、终端） |
@@ -117,6 +117,7 @@ lang: zh-cn
 | `just ruff-fix` | 自动修复 lint 问题（ruff check --fix） |
 | `just ruff-format-fix` | 自动修复格式问题（ruff format） |
 | `just typecheck` | 运行静态类型检查（mypy） |
+| `just pyright` | 运行静态类型检查（pyright） |
 | `just jscpd` | 检测代码拷贝粘贴重复（零容忍） |
 | `just shfmt` | 检查 Shell 脚本格式（shfmt，仅显示差异） |
 | `just shfmt-fix` | 自动修复 Shell 脚本格式问题（shfmt -w） |
