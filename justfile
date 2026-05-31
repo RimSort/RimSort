@@ -65,6 +65,10 @@ markdownlint-fix:
 typecheck:
     uv run mypy --config-file pyproject.toml .
 
+# Run Pyright type checker on app and tests
+pyright:
+    uv run pyright -p pyproject.toml .
+
 # Detect copy-paste code duplication (jscpd) — exits with error if any
 # clones are found (--threshold 0 means zero tolerance for duplicates).
 # Matches the CI's jscpd check configuration.
@@ -79,8 +83,8 @@ shfmt:
 shfmt-fix:
     shfmt -w .
 
-# Run all code quality checks: ruff + ruff-format + typecheck + jscpd + shfmt + markdown lint
-check: ruff ruff-format typecheck jscpd shfmt markdownlint
+# Run all code quality checks: ruff + ruff-format + typecheck + pyright + jscpd + shfmt + markdown lint
+check: ruff ruff-format typecheck pyright jscpd shfmt markdownlint
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
