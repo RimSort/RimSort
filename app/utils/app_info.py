@@ -33,6 +33,24 @@ class AppInfo:
             cls._instance = super(AppInfo, cls).__new__(cls)
         return cls._instance
 
+    @staticmethod
+    def _resolve_dev_mode() -> bool:
+        """Determine whether the application is running in development mode.
+
+        Resolution order:
+
+        1. ``RIMSORT_DEV`` env var (highest priority):
+           ``"1"`` / ``"true"`` -> True;  ``"0"`` / ``"false"`` -> False.
+        2. Fallback: ``"__compiled__" not in globals()`` — running from
+           source means dev mode.
+        """
+        env = os.environ.get("RIMSORT_DEV", "").lower()
+        if env in ("1", "true"):
+            return True
+        if env in ("0", "false"):
+            return False
+        return "__compiled__" not in globals()
+
     def __init__(self) -> None:
         """
         Initialize the `AppInfo` instance, setting application metadata and determining important directories.
@@ -56,6 +74,8 @@ class AppInfo:
             else Path(main_file).resolve().parent.parent
         )
 
+        self._is_dev_mode = self._resolve_dev_mode()
+
         # Application metadata
         self._app_name = "RimSort"
         self._app_copyright = ""
@@ -74,10 +94,21 @@ class AppInfo:
                 if commit is not None and commit.text is not None:
                     self._app_version += f"+{commit[:7]}"
 
-        # Define important directories using platformdirs
-        platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
-        self._app_storage_folder: Path = Path(platform_dirs.user_data_dir)
-        self._user_log_folder: Path = Path(platform_dirs.user_log_dir)
+        # Define important directories — dev mode redirects to a local folder
+        # so that running from source never touches production data.
+        if self._is_dev_mode:
+            dev_dir_env = os.environ.get("RIMSORT_DEV_DIR")
+            dev_root = (
+                Path(dev_dir_env) if dev_dir_env else self._application_folder / "dev"
+            )
+            self._dev_root: Path | None = dev_root
+            self._app_storage_folder: Path = dev_root / "data"
+            self._user_log_folder: Path = dev_root / "logs"
+        else:
+            platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
+            self._dev_root = None
+            self._app_storage_folder = Path(platform_dirs.user_data_dir)
+            self._user_log_folder = Path(platform_dirs.user_log_dir)
 
         # Derive some secondary directory paths
         self._databases_folder: Path = self._app_storage_folder / "dbs"
@@ -145,6 +176,16 @@ class AppInfo:
             str: The version of the application.
         """
         return self._app_version
+
+    @property
+    def is_dev_mode(self) -> bool:
+        """Whether the application is running in development mode."""
+        return self._is_dev_mode
+
+    @property
+    def dev_root(self) -> Path | None:
+        """The dev data root directory, or None if not in dev mode."""
+        return self._dev_root if self._is_dev_mode else None
 
     @property
     def app_copyright(self) -> str:
