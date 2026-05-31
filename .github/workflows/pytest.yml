@@ -58,6 +58,7 @@ jobs:
         shell: bash
         env:
           QT_DEBUG_PLUGINS: "1"
+          PYTHONIOENCODING: "utf-8"
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v7
