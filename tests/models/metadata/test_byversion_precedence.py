@@ -299,3 +299,47 @@ def test_byversion_multi_version_keys_only_matching() -> None:
     assert "current.mod" in rules.load_after
     assert "old.mod" not in rules.load_after
     assert "base.mod.a" not in rules.load_after
+
+
+# ── Missing packageId sentinel ───────────────────────────────────────
+
+
+def test_missing_packageid_gets_sentinel() -> None:
+    """Mods with missing packageId get the sentinel value, not marked invalid."""
+    from app.models.metadata.metadata_factory import create_about_mod
+    from app.utils.constants import DEFAULT_MISSING_PACKAGEID
+
+    mod_data = {
+        "name": "Test Mod Without PackageId",
+    }
+    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    assert mod.package_id == DEFAULT_MISSING_PACKAGEID
+    assert mod.valid is True
+
+
+def test_empty_packageid_gets_sentinel() -> None:
+    """Mods with empty packageId get the sentinel value, not marked invalid."""
+    from app.models.metadata.metadata_factory import create_about_mod
+    from app.utils.constants import DEFAULT_MISSING_PACKAGEID
+
+    mod_data = {
+        "name": "Test Mod With Empty PackageId",
+        "packageId": "   ",  # Only whitespace
+    }
+    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    assert mod.package_id == DEFAULT_MISSING_PACKAGEID
+    assert mod.valid is True
+
+
+def test_non_string_packageid_gets_sentinel() -> None:
+    """Mods with non-string packageId get the sentinel value, not marked invalid."""
+    from app.models.metadata.metadata_factory import create_about_mod
+    from app.utils.constants import DEFAULT_MISSING_PACKAGEID
+
+    mod_data = {
+        "name": "Test Mod With Non-String PackageId",
+        "packageId": 12345,  # Integer instead of string
+    }
+    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    assert mod.package_id == DEFAULT_MISSING_PACKAGEID
+    assert mod.valid is True

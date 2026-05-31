@@ -25,7 +25,7 @@ from app.models.metadata.metadata_structure import (
     ScenarioMod,
     SteamDbSchema,
 )
-from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.constants import DEFAULT_MISSING_PACKAGEID, RIMWORLD_DLC_METADATA
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
@@ -262,19 +262,19 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
 def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     """
     Parse the basic fields from the mod_data and set them on the mod object.
-    If package_id cannot be parsed correctly, the mod is considered invalid.
+    If package_id is missing or invalid, the sentinel value is assigned instead.
 
     :param mod_data: Dictionary with string keys to be used as the data source.
     :param mod: ListedMod the Listed mod that is the target of data being filled.
     :return: The filled out ListedMod
     """
     package_id = value_extractor(mod_data.get("packageId", False))
-    if isinstance(package_id, str):
+    if isinstance(package_id, str) and package_id.strip():
         mod.package_id = CaseInsensitiveStr(package_id)
     else:
-        _set_mod_invalid(
-            mod,
-            f"packageId was not a string: {package_id}. This mod will be considered invalid by RimWorld.",
+        mod.package_id = CaseInsensitiveStr(DEFAULT_MISSING_PACKAGEID)
+        logger.warning(
+            f"packageId missing or invalid: {package_id}. Assigned sentinel '{DEFAULT_MISSING_PACKAGEID}'."
         )
 
     # Prioritize app id from about.xml over hardcoded DLC app id
