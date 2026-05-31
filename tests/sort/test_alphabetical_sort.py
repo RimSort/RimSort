@@ -102,7 +102,7 @@ class TestDoAlphabeticalSort:
         assert result == ["uuid_lower", "uuid_upper"]
 
     def test_non_string_name_handled(self, metadata_manager_mock: MagicMock) -> None:
-        """Mods with non-string name values don't crash the sort."""
+        """Mods with non-string name values don't crash and sort after valid names."""
         metadata_manager_mock.internal_local_metadata = {
             "uuid_a": {"packageid": "mod.a", "name": None},
             "uuid_b": make_mod("mod.b", name="Beta"),
@@ -113,3 +113,6 @@ class TestDoAlphabeticalSort:
         }
         result = do_alphabetical_sort(graph, {"uuid_a", "uuid_b"})
         assert len(result) == 2
+        # "Beta" sorts before the fallback "name error in mod about.xml"
+        assert result[0] == "uuid_b"
+        assert result[1] == "uuid_a"
