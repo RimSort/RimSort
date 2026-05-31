@@ -25,7 +25,7 @@ lang: zh-cn
 RimSort 使用 Qt 翻译系统，包含以下组件：
 
 - **`.ts` 文件**：源翻译文件（XML 格式），供翻译者编辑
-- **`.qm` 文件**：编译后的二进制翻译文件，供应用程序使用
+- **`.qm` 文件**：编译后的二进制翻译文件，供应用程序使用（生成的，不提交）
 - **QTranslator**：Qt 的翻译引擎，加载和应用翻译
 
 ## 项目结构
@@ -47,6 +47,35 @@ RimSort/
     └── controllers/
         └── language_controller.py  # 语言管理
 ```
+
+## 构建翻译文件
+
+翻译源文件（`.ts`）必须编译为二进制 `.qm` 文件，应用程序才能加载它们。
+`.qm` 文件不会提交到代码库中——它们作为构建产物生成。
+
+### 编译翻译
+
+修改任何 `.ts` 文件后，编译所有翻译：
+
+```sh
+just i18n-compile
+```
+
+这会先删除已有的 `.qm` 文件（清理因重命名或删除 `.ts` 文件而残留的旧文件），
+然后对 `locales/` 中的每个 `.ts` 文件运行 `pyside6-lrelease` 以生成对应的 `.qm` 文件。
+`dev-setup` 和 `build` 命令会自动运行此操作。
+
+### 提取新的源字符串
+
+当在 Python 源代码中添加新的可翻译字符串（通过 `QCoreApplication.translate()`）时，
+更新 `.ts` 文件以包含它们：
+
+```sh
+just i18n-update
+```
+
+这会运行 `pyside6-lupdate` 扫描 `app/` 并将新字符串合并到所有现有的 `.ts` 文件中。
+翻译人员可以随后填写新条目。
 
 ## 当前支持的语言
 
@@ -216,7 +245,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
    - 选择"检查翻译完整性"查看需要翻译的内容
    - 选择"自动翻译缺失字符串"使用 AI 自动填充
    - 选择"完整流程"一次性更新、翻译和编译
-5. **提交代码**：提交 `.ts` 和 `.qm` 文件
+5. **提交代码**：提交 `.ts` 文件（`.qm` 文件会自动生成）
 
 ### 选项 2：命令行模式
 
@@ -226,7 +255,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
 4. **编辑翻译**：找到 `type="unfinished"` 的条目进行翻译
 5. **自动翻译剩余字符串**（可选）：运行 `python translation_helper.py auto-translate YOUR_LANGUAGE --service google`
 6. **编译测试**：运行 `python translation_helper.py compile YOUR_LANGUAGE`
-7. **提交代码**：提交 `.ts` 和 `.qm` 文件
+7. **提交代码**：提交 `.ts` 文件（`.qm` 文件会自动生成）
 
 详细步骤请参考下面的完整指南。
 
@@ -454,7 +483,7 @@ python translation_helper.py stats
    pyside6-lrelease locales/YOUR_LANGUAGE.ts
    ```
 
-   **注意**：编译后会在 `locales/` 目录中生成对应的 `.qm` 文件。在本项目中，这些 `.qm` 文件也需要提交到版本控制系统中，以确保用户下载后可以直接使用翻译功能。
+   **注意**：编译后会在 `locales/` 目录中生成对应的 `.qm` 文件。这些文件是构建产物，由 `just dev-setup` 和 `just build` 自动生成，不需要提交到版本控制。
 
 #### 5.3 在应用程序中测试
 
@@ -484,15 +513,14 @@ python translation_helper.py stats
 1. **提交更改**：
 
    ```bash
-   # 添加翻译文件（包括 .ts 源文件和编译后的 .qm 文件）
+   # 仅添加翻译源文件（.qm 文件会自动生成）
    git add locales/YOUR_LANGUAGE.ts
-   git add locales/YOUR_LANGUAGE.qm
    # 如果添加了新语言，也要更新语言控制器
    git add app/controllers/language_controller.py
    git commit -m "添加/更新 [语言名称] 翻译"
    ```
 
-   **注意**：在本项目中，需要同时提交 `.ts` 源文件和编译后的 `.qm` 文件，以确保用户可以直接使用翻译功能而无需额外的编译步骤。
+   **注意**：只需提交 `.ts` 源文件。编译后的 `.qm` 文件是构建产物，由 `just i18n-compile` 自动生成。
 
 2. **推送到你的 fork**：
 
@@ -533,6 +561,12 @@ python translation_helper.py stats
 ```bash
 # 更新翻译文件以包含最新的可翻译字符串
 python translation_helper.py update-ts YOUR_LANGUAGE
+```
+
+你也可以使用 just 命令一次性更新所有语言：
+
+```sh
+just i18n-update
 ```
 
 更新后，你只需要翻译新增的或被修改的字符串，已有的翻译内容会保持不变。

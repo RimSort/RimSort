@@ -7,10 +7,14 @@ on:
 permissions: {}
 
 jobs:
-  pytest:
+  run-tests:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@main
       - name: Setup Python
@@ -38,6 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install missing Linux libs for gui tests
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libegl-dev libgl1 libglx-mesa0 libglib2.0-0 xvfb libxcb-cursor-dev
@@ -46,13 +51,32 @@ jobs:
 
       - name: Test with pytest
         run: |
-          export QT_DEBUG_PLUGINS=1
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            export QT_QPA_PLATFORM=offscreen
+          fi
           uv run pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html -s --no-qt-log
+        shell: bash
+        env:
+          QT_DEBUG_PLUGINS: "1"
+          PYTHONIOENCODING: "utf-8"
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v7
         with:
-          name: pytest-results
+          name: pytest-results-${{ matrix.os }}
           path: junit/test-results.xml
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
+
+  pytest:
+    needs: [run-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "$RESULT" != "success" ]; then
+            echo "Tests failed on one or more platforms"
+            exit 1
+          fi
+        env:
+          RESULT: ${{ needs.run-tests.result }}

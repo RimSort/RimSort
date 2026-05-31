@@ -1041,7 +1041,17 @@ class MainContent(QObject):
             if missing_deps:
                 dialog = MissingDependenciesDialog()
                 self._child_windows.append(dialog)
-                selected_deps = dialog.show_dialog(missing_deps)
+
+                # Build a deps_summary from the missing deps for the dialog display
+                deps_summary: dict[str, dict[str, set[str]]] = {}
+                for mod_id, deps in missing_deps.items():
+                    deps_summary[mod_id] = {
+                        "satisfied": set(),
+                        "local": set(),
+                        "download": deps,
+                    }
+
+                selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
                 if selected_deps:
                     # Add selected mods to active mods
@@ -2602,7 +2612,7 @@ class MainContent(QObject):
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
                         game_install_path=instruction[1][0],
-                        args=instruction[1][1],
+                        run_args=instruction[1][1],
                         _libs=libs_path,
                     )
                     # Start the Steamworks API Process
@@ -3710,12 +3720,9 @@ class MainContent(QObject):
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder
         )
-        # Run args is inconsistent and is sometimes a string and sometimes a list
-        run_args: list[str] | str = self.settings_controller.settings.instances[
+        run_args = self.settings_controller.settings.instances[
             current_instance
         ].run_args
-
-        run_args = [run_args] if isinstance(run_args, str) else run_args
 
         # Retrieve Steam-related settings for this instance
         steam_client_integration = self.settings_controller.settings.instances[
@@ -3771,7 +3778,7 @@ class MainContent(QObject):
             # Launch game executable directly
             # This method ignores Steam overlay but respects custom run arguments
             logger.info("Launching game process without Steamworks API...")
-            launch_game_process(game_install_path=game_install_path, args=run_args)
+            launch_game_process(game_install_path=game_install_path, run_args=run_args)
 
     @Slot()
     def _use_this_instead_clicked(self) -> None:

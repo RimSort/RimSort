@@ -1242,14 +1242,14 @@ class ModListWidget(QListWidget):
         for index in selected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget and hasattr(widget, "set_selected"):
-                widget.set_selected(True)
+            if widget and (set_selected := getattr(widget, "set_selected", None)):
+                set_selected(True)
 
         for index in deselected.indexes():
             item = self.item(index.row())
             widget = self.itemWidget(item)
-            if widget and hasattr(widget, "set_selected"):
-                widget.set_selected(False)
+            if widget and (set_selected := getattr(widget, "set_selected", None)):
+                set_selected(False)
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -1265,32 +1265,29 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
-        # Get source widget of dropEvent
         source_widget = event.source()
-        # Get the drop action
         drop_action = event.dropAction()
-        # Check if the drop action is MoveAction
-        if drop_action == Qt.DropAction.MoveAction:
-            # Get the new indexes of the dropped items
+        # Only manipulate UUIDs for within-list reorder (same source and dest).
+        # For cross-list drops, handle_rows_inserted (queued) handles UUID
+        # insertion exclusively — doing it here too creates duplicates that
+        # break the count guard in handle_rows_inserted.
+        if drop_action == Qt.DropAction.MoveAction and source_widget == self:
             new_indexes = [index.row() for index in self.selectedIndexes()]
-            # Get the UUIDs of the dropped items
             uuids = [
                 item.data(Qt.ItemDataRole.UserRole)["uuid"]
                 for item in self.selectedItems()
             ]
-            # Insert the UUIDs at the respective new indexes
             for idx, uuid in zip(new_indexes, uuids):
-                if uuid in self.uuids:  # Remove the uuid if it exists in the list
+                if uuid in self.uuids:
                     self.uuids.remove(uuid)
-                # Reinsert uuid at it's new index
                 self.uuids.insert(idx, uuid)
         # Re-apply divider collapse states after reorder
         self.apply_collapse_states()
-        # Update list signal
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
         )
-        # Only emit "drop" signal if a mod was dragged and dropped within the same modlist
+        # Emit signal for within-list drops. Cross-list drops will emit
+        # from handle_rows_inserted once the queued insertion completes.
         if source_widget == self:
             self.list_update_signal.emit("drop")
 
@@ -3956,8 +3953,6 @@ class ModsPanel(QWidget):
     active/inactive mods list panel on the GUI.
     """
 
-    list_updated_signal = Signal()
-    save_btn_animation_signal = Signal()
     check_dependencies_signal = Signal()
 
     # OPTIMIZATION: Class-level constant for sort text to enum mapping
@@ -4628,9 +4623,8 @@ class ModsPanel(QWidget):
                 reverse=self.inactive_sort_descending,
             )
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
-                self._size_progress_dialog.setLabelText(self.tr("Rebuilding list..."))
-                self._size_progress_dialog.setRange(0, len(sorted_uuids))
-                self._size_progress_dialog.setValue(0)
+                self._size_progress_dialog.close()
+                self._size_progress_dialog = None
 
             lw = self.inactive_mods_list
             # Disconnect model signals during rebuild to prevent cascading updates and duplicate items
@@ -4669,11 +4663,6 @@ class ModsPanel(QWidget):
                     data.__dict__["show_tags"] = lw.show_tags
                     list_item.setData(Qt.ItemDataRole.UserRole, data)
                     lw.addItem(list_item)
-                    if (
-                        hasattr(self, "_size_progress_dialog")
-                        and self._size_progress_dialog
-                    ):
-                        self._size_progress_dialog.setValue(idx)
             lw.uuids = sorted_uuids
 
             # Reconnect model signals
@@ -4784,15 +4773,14 @@ class ModsPanel(QWidget):
             is_heavy = sort_key == ModsPanelSortKey.FOLDER_SIZE
             if is_heavy:
                 # Background calculation required for folder size sorting
-                dlg = QProgressDialog(self)
+                dlg = QProgressDialog(self.window())
                 dlg.setLabelText(self.tr("Calculating folder sizes..."))
-                # Set up dialog without cancel button (calculation cannot be interrupted)
                 dlg.setCancelButton(None)
                 dlg.setRange(0, len(current_uuids))
-                dlg.setWindowModality(Qt.WindowModality.WindowModal)
                 dlg.setMinimumDuration(0)
                 dlg.setAutoClose(True)
-                dlg.setAutoReset(True)
+                dlg.setAutoReset(False)
+                dlg.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
                 dlg.setValue(0)
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
                 # Start worker thread
@@ -4840,8 +4828,6 @@ class ModsPanel(QWidget):
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(list_type=list_type)
-        # Signal save button animation
-        self.save_btn_animation_signal.emit()
         if recalculate_list_errors_warnings:
             # Update the mod list widget errors and warnings
             self.recalculate_list_errors_warnings(list_type=list_type)

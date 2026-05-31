@@ -105,7 +105,7 @@ Key recipes for contributors:
 
 | Command | Description |
 | :--- | :--- |
-| `just check` | Run all code quality checks (ruff, ruff-format, typecheck, jscpd, shfmt, markdownlint) |
+| `just check` | Run all code quality checks (ruff, ruff-format, typecheck, pyright, jscpd, shfmt, markdownlint) |
 | `just fix` | Auto-fix linting and formatting issues |
 | `just test` | Run tests with doctest modules enabled |
 | `just test-coverage` | Run tests with coverage reports (XML, HTML, terminal) |
@@ -115,6 +115,7 @@ Key recipes for contributors:
 | `just ruff-fix` | Auto-fix linting issues (ruff check --fix) |
 | `just ruff-format-fix` | Auto-fix formatting issues (ruff format) |
 | `just typecheck` | Run static type checking (mypy) |
+| `just pyright` | Run static type checking (pyright) |
 | `just jscpd` | Detect copy-paste code duplication (zero-tolerance) |
 | `just shfmt` | Check shell script formatting (shfmt, diff-only) |
 | `just shfmt-fix` | Auto-fix shell script formatting issues (shfmt -w) |
