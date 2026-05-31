@@ -49,6 +49,10 @@ class AppInfo:
             return True
         if env in ("0", "false"):
             return False
+        if env:
+            logger.warning(
+                f"Unrecognized RIMSORT_DEV value '{env}' — expected 1/true/0/false, falling back to auto-detect"
+            )
         return "__compiled__" not in globals()
 
     def __init__(self) -> None:
@@ -99,7 +103,9 @@ class AppInfo:
         if self._is_dev_mode:
             dev_dir_env = os.environ.get("RIMSORT_DEV_DIR")
             dev_root = (
-                Path(dev_dir_env) if dev_dir_env else self._application_folder / "dev"
+                Path(dev_dir_env).resolve()
+                if dev_dir_env
+                else self._application_folder / "dev"
             )
             self._dev_root: Path | None = dev_root
             self._app_storage_folder: Path = dev_root / "data"

@@ -18,12 +18,26 @@ def _reset_app_info_singleton() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def _suppress_mock_app_info(mock_app_info: None) -> None:
+def _suppress_mock_app_info(
+    mock_app_info: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Disable the autouse mock_app_info fixture for these tests.
 
     We need real AppInfo.__init__ to run so we can test its dev-mode
     logic. Re-reset the singleton so our test creates a fresh one.
+
+    Also redirects ``__main__.__file__`` into ``tmp_path`` so that
+    ``AppInfo.__init__`` resolves ``_application_folder`` to a temp
+    directory, keeping all created dirs (dev/data, dev/logs, etc.)
+    hermetic — nothing is written outside the test's temp directory.
     """
+    import sys
+
+    fake_app_dir = tmp_path / "fake_repo" / "app"
+    fake_app_dir.mkdir(parents=True)
+    fake_main = fake_app_dir / "__main__.py"
+    fake_main.touch()
+    monkeypatch.setattr(sys.modules["__main__"], "__file__", str(fake_main))
     AppInfo._instance = None
 
 
