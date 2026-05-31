@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QMutex, QRunnable, QThread, QThreadPool
@@ -26,6 +27,8 @@ class MetadataMediator:
     _steam_db: SteamDbSchema | None
     _mods_metadata: dict[str, ListedMod]
     _game_version: str = "Unknown"
+    _no_version_warning: list[str] | None
+    _use_this_instead: dict[str, Any] | None
 
     def __init__(
         self,
@@ -35,6 +38,8 @@ class MetadataMediator:
         workshop_mods_path: Path | None,
         local_mods_path: Path | None,
         game_path: Path | None,
+        no_version_warning_path: Path | None = None,
+        use_this_instead_path: Path | None = None,
     ):
         self.user_rules_path = user_rules_path
         self.community_rules_path = community_rules_path
@@ -42,6 +47,8 @@ class MetadataMediator:
         self.workshop_mods_path = workshop_mods_path
         self.local_mods_path = local_mods_path
         self.game_path = game_path
+        self.no_version_warning_path = no_version_warning_path
+        self.use_this_instead_path = use_this_instead_path
 
         self.parser_threadpool = QThreadPool.globalInstance()
 
@@ -88,6 +95,68 @@ class MetadataMediator:
     def game_version(self) -> str:
         return self._game_version
 
+    @property
+    def no_version_warning(self) -> list[str] | None:
+        if not hasattr(self, "_no_version_warning"):
+            return None
+        return self._no_version_warning
+
+    @property
+    def use_this_instead(self) -> dict[str, Any] | None:
+        if not hasattr(self, "_use_this_instead"):
+            return None
+        return self._use_this_instead
+
+    def _load_no_version_warning(self) -> None:
+        """Load No Version Warning DB (ModIdsToFix.xml)."""
+        if (
+            self.no_version_warning_path is None
+            or not self.no_version_warning_path.exists()
+        ):
+            self._no_version_warning = None
+            return
+        try:
+            from app.utils.xml import xml_path_to_json
+
+            data = xml_path_to_json(str(self.no_version_warning_path))
+            mod_ids = data.get("ModIdsToFix", {}).get("li", [])
+            if isinstance(mod_ids, str):
+                mod_ids = [mod_ids]
+            self._no_version_warning = [str(mid).lower() for mid in mod_ids]
+            logger.info(
+                f"Loaded {len(self._no_version_warning)} No Version Warning entries"
+            )
+        except Exception as e:
+            logger.error(f"Failed to load No Version Warning DB: {e}")
+            self._no_version_warning = None
+
+    def _load_use_this_instead(self) -> None:
+        """Load Use This Instead replacements DB (JSON, possibly gzip)."""
+        if (
+            self.use_this_instead_path is None
+            or not self.use_this_instead_path.exists()
+        ):
+            self._use_this_instead = None
+            return
+        try:
+            import gzip
+            import json
+
+            path = self.use_this_instead_path
+            if str(path).endswith(".gz"):
+                with gzip.open(path, "rt", encoding="utf-8") as f:
+                    self._use_this_instead = json.load(f)
+            else:
+                with open(path, encoding="utf-8") as f:
+                    self._use_this_instead = json.load(f)
+            if self._use_this_instead is not None:
+                logger.info(
+                    f"Loaded {len(self._use_this_instead)} Use This Instead entries"
+                )
+        except Exception as e:
+            logger.error(f"Failed to load Use This Instead DB: {e}")
+            self._use_this_instead = None
+
     def refresh_metadata(self, prefer_versioned: bool = True) -> None:
         """Force refreshes the internal metadata.
 
@@ -116,6 +185,10 @@ class MetadataMediator:
             if self.steam_db_path is not None
             else None
         )
+
+        # Load additional external metadata
+        self._load_no_version_warning()
+        self._load_use_this_instead()
 
         # Get all folders in the workshop and local mods paths
         mod_paths = list()
