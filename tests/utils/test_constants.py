@@ -26,16 +26,23 @@ class TestRimworldDlcMetadata:
             assert "name" in meta, f"Missing name for {app_id}"
             assert "steam_url" in meta, f"Missing steam_url for {app_id}"
 
-    def test_package_ids_derived_correctly(self) -> None:
-        expected = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
+    def test_package_ids_match_known_values(self) -> None:
+        expected = [
+            "ludeon.rimworld",
+            "ludeon.rimworld.royalty",
+            "ludeon.rimworld.ideology",
+            "ludeon.rimworld.biotech",
+            "ludeon.rimworld.anomaly",
+            "ludeon.rimworld.odyssey",
+        ]
         assert RIMWORLD_PACKAGE_IDS == expected
 
     def test_base_game_included(self) -> None:
         assert "ludeon.rimworld" in RIMWORLD_PACKAGE_IDS
 
-    def test_known_dlc_count(self) -> None:
-        # Base game + 5 DLCs = 6 entries
-        assert len(RIMWORLD_DLC_METADATA) == 6
+    def test_no_dlcs_accidentally_removed(self) -> None:
+        # Guard against accidental deletion; update when new DLCs are added
+        assert len(RIMWORLD_DLC_METADATA) >= 6
 
 
 class TestKnownMods:
