@@ -3220,8 +3220,8 @@ Alternative Dependencies:</source>
         <translation>Color</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>Comprobar dependencias</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">Comprobar dependencias</translation>
     </message>
     <message>
         <source>Active</source>

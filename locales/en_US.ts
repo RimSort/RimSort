@@ -3137,7 +3137,7 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
+        <source>Add Missing Dependencies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

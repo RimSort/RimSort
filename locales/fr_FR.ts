@@ -3259,8 +3259,8 @@ Alternative Dependencies:</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>Vérifier les dépendances</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">Vérifier les dépendances</translation>
     </message>
     <message>
         <source>Active</source>

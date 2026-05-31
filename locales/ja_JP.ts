@@ -3277,8 +3277,8 @@ Alternative Dependencies:</source>
         <translation>色</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>依存関係を確認</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">依存関係を確認</translation>
     </message>
     <message>
         <source>Active</source>

@@ -3243,8 +3243,8 @@ Alternative Dependencies:</source>
         <translation>檢查『改用此項』資料庫</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>檢查依賴項</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">檢查依賴項</translation>
     </message>
     <message>
         <source>Active</source>

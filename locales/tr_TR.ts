@@ -3225,8 +3225,8 @@ An alternative updated mod is recommended:
         <translation>Renk</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>Gerekli Modları Kontrol Et</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">Gerekli Modları Kontrol Et</translation>
     </message>
     <message>
         <source>Active</source>

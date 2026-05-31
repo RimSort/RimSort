@@ -3254,8 +3254,8 @@ Alternative Dependencies:</source>
         <translation>查看"替代为此"数据库</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>查看依赖</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">查看依赖</translation>
     </message>
     <message>
         <source>Active</source>

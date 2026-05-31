@@ -3277,8 +3277,8 @@ Alternative Dependencies:</source>
         <translation>색상</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>의존성 확인</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">의존성 확인</translation>
     </message>
     <message>
         <source>Active</source>

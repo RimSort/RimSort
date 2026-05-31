@@ -3274,8 +3274,8 @@ Alternative Dependencies:</source>
         <translation>Цвет</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>Проверьте зависимости</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">Проверьте зависимости</translation>
     </message>
     <message>
         <source>Active</source>

@@ -3244,8 +3244,8 @@ Um mod alternativo atualizado é recomendado:
         <translation>Cor</translation>
     </message>
     <message>
-        <source>Check Dependencies</source>
-        <translation>Verificar Dependências</translation>
+        <source>Add Missing Dependencies</source>
+        <translation type="unfinished">Verificar Dependências</translation>
     </message>
     <message>
         <source>Active</source>
