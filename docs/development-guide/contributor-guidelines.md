@@ -39,6 +39,8 @@ Please follow the following guidelines when contributing to RimSort.
 
 6. In 99% of situations, you should not submit pull requests that are only dependency bumps. Basic dependency bumps are handled automatically using dependabot.
 
+7. When running RimSort from source, dev mode is active by default. Your development data is stored in the `dev/` subdirectory of the repo — your production RimSort configuration is never touched. See [Development Setup](development-setup.md#dev-mode-data-isolation) for details and env var overrides.
+
 ## Versioning and Releases
 
 We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines.
