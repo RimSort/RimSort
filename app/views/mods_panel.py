@@ -4796,6 +4796,16 @@ class ModsPanel(QWidget):
                 thr.start()
                 self._size_progress_dialog = dlg
                 dlg.show()
+                # Save the sort key immediately if enabled (don't wait for worker)
+                if (
+                    self.settings_controller.settings.inactive_mods_sorting
+                    and self.settings_controller.settings.save_inactive_mods_sort_state
+                ):
+                    self.settings_controller.settings.inactive_mods_sort_key = (
+                        sort_key.name
+                    )
+                    self.settings_controller.settings.save()
+                self.inactive_mods_sort_key = sort_key.name
             else:
                 # Non-heavy sorts use debouncing to prevent rapid rebuilds
                 # Store pending sort parameters
