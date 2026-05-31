@@ -39,6 +39,7 @@ steamfiles = { git = "https://github.com/RimSort/steamfiles" }
 dev = [
     "lxml-stubs>=0.5.1",
     "mypy>=1.20.2",
+    "pyright>=1.1.409",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=6.2.1",
@@ -107,4 +108,10 @@ testpaths = ['tests']
 norecursedirs = ['submodules']
 
 [tool.pyright]
+# Type checking mode: basic, standard or strict
 pythonPlatform = "All"
+typeCheckingMode = "standard"
+useLibraryCodeForTypes = true
+stubPath = ""
+exclude = ['venv', '.venv', 'submodules', '**/node_modules', '**/__pycache__', '**/.*']
+
