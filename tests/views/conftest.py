@@ -18,6 +18,7 @@ from app.models.settings import Settings
 def mock_settings_controller(
     tmp_path: Any,
     mock_app_info: None,
+    fresh_event_bus: None,
     qapp: Union[QApplication, QCoreApplication],
 ) -> MagicMock:
     """MagicMock(spec=SettingsController) with a real Settings model."""
