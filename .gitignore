@@ -166,6 +166,7 @@ pyvenv.cfg
 
 # RimSort
 DEBUG
+dev/
 .DS_Store
 *.build/
 *.dist/
