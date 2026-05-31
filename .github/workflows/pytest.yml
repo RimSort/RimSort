@@ -7,7 +7,7 @@ on:
 permissions: {}
 
 jobs:
-  pytest:
+  run-tests:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
@@ -67,3 +67,16 @@ jobs:
           path: junit/test-results.xml
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
+
+  pytest:
+    needs: [run-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "$RESULT" != "success" ]; then
+            echo "Tests failed on one or more platforms"
+            exit 1
+          fi
+        env:
+          RESULT: ${{ needs.run-tests.result }}
