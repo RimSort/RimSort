@@ -1,52 +1,14 @@
 # tests/views/test_main_content_run.py
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Generator, List, Tuple
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-import app.utils.metadata as metadata
-import app.utils.steam.steamcmd.wrapper as steamcmd_wrapper
 import app.views.dialogue as dialogue
 from app.views.main_content_panel import MainContent
-
-
-# Dummy settings and controller to initialize MainContent
-class DummySettings:
-    def __init__(self) -> None:
-        self.current_instance = "inst1"
-        # Mod list options
-        self.try_download_missing_mods = True
-        self.duplicate_mods_warning = True
-        self.mod_type_filter = True
-        self.hide_invalid_mods_when_filtering = False
-        self.backup_saves_on_launch = False
-        self.auto_run_todds_before_launch = False
-        # Inactive mods sort settings
-        self.inactive_mods_sorting = True
-        self.save_inactive_mods_sort_state = False
-        self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
-        self.inactive_mods_sort_descending = True
-        self.active_mods_data_source_filter_index = 0
-        self.inactive_mods_data_source_filter_index = 0
-        self.active_mods_dividers: list[dict[str, object]] = []
-        # Instance data with dummy game_folder, config_folder and run_args
-        self.instances = {
-            "inst1": SimpleNamespace(
-                game_folder="/fake/path",
-                config_folder="/fake/config",
-                run_args="--test",
-                steam_client_integration=False,
-                launch_via_steam_protocol=False,
-            )
-        }
-
-
-class DummySettingsController:
-    def __init__(self) -> None:
-        self.settings = DummySettings()
 
 
 @pytest.fixture(autouse=True)
@@ -75,39 +37,22 @@ def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, str]]:
     return calls
 
 
-@pytest.fixture(autouse=True)
-def patch_steamcmd(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Prevent SteamcmdInterface __init__ requiring args
-    monkeypatch.setattr(
-        steamcmd_wrapper.SteamcmdInterface,
-        "instance",
-        classmethod(
-            lambda cls: SimpleNamespace(setup=True, steamcmd_appworkshop_acf_path="")
-        ),
-    )
-
-
-@pytest.fixture(autouse=True)
-def patch_metadata_manager(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Patch MetadataManager to avoid initialization issues."""
-    # Create a mock MetadataManager instance
-    mock_metadata_manager = Mock()
-
-    # Patch the MetadataManager.instance method
-    monkeypatch.setattr(
-        metadata.MetadataManager,
-        "instance",
-        classmethod(lambda cls: mock_metadata_manager),
-    )
-
-
 @pytest.fixture
 def main_content(
-    monkeypatch: pytest.MonkeyPatch, qapp: QApplication
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: QApplication,
+    mock_settings_controller: MagicMock,
+    mock_metadata_manager: MagicMock,
+    mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:
-    # Initialize MainContent with dummy settings
-    sc = DummySettingsController()
-    mc = MainContent(sc)  # type: ignore[arg-type]
+    # Ensure active_mods_dividers is set on the settings object
+    QObject.__setattr__(mock_settings_controller.settings, "active_mods_dividers", [])
+    # Set game_folder and run_args on the instance to match test expectations
+    instance = mock_settings_controller.settings.instances["Default"]
+    instance.game_folder = "/fake/path"
+    instance.run_args = "--test"
+    # Initialize MainContent with the shared mock settings controller
+    mc = MainContent(mock_settings_controller)
     # Patch _do_save to capture calls
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))

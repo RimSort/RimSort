@@ -1,0 +1,91 @@
+"""Shared fixtures for view and widget tests."""
+
+import uuid as uuid_module
+from typing import Any, Union
+from unittest.mock import MagicMock
+
+import pytest
+from PySide6.QtCore import QCoreApplication, QObject
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication
+
+from app.controllers.settings_controller import SettingsController
+from app.models.instance import Instance
+from app.models.settings import Settings
+
+
+@pytest.fixture
+def mock_settings_controller(
+    tmp_path: Any,
+    mock_app_info: None,
+    fresh_event_bus: None,
+    qapp: Union[QApplication, QCoreApplication],
+) -> MagicMock:
+    """MagicMock(spec=SettingsController) with a real Settings model."""
+    settings = Settings()
+
+    instance = Instance(
+        name="Default",
+        game_folder=str(tmp_path / "game"),
+        config_folder=str(tmp_path / "config"),
+        local_folder=str(tmp_path / "local_mods"),
+        workshop_folder=str(tmp_path / "workshop"),
+    )
+    QObject.__setattr__(settings, "instances", {"Default": instance})
+    QObject.__setattr__(settings, "current_instance", "Default")
+
+    controller = MagicMock(spec=SettingsController)
+    controller.settings = settings
+    controller.active_instance = instance
+    return controller
+
+
+def make_mod_data(
+    name: str = "Test Mod",
+    package_id: str = "test.author.testmod",
+    uuid: str | None = None,
+    data_source: str = "local",
+    authors: str = "Test Author",
+    path: str = "/fake/mods/TestMod",
+    publishedfileid: str = "",
+    version: str = "1.0",
+    supported_versions: list[str] | None = None,
+    dependencies: list[Any] | None = None,
+    load_after: list[Any] | None = None,
+    load_before: list[Any] | None = None,
+    incompatibilities: list[str] | None = None,
+    csharp: bool | None = None,
+    git_repo: bool = False,
+    steamcmd: bool = False,
+    invalid: bool = False,
+    url: str = "",
+    description: str = "A test mod.",
+    mod_color: QColor | None = None,
+) -> dict[str, Any]:
+    """Factory for mod metadata dicts matching the internal_local_metadata structure."""
+    if uuid is None:
+        uuid = str(uuid_module.uuid4())
+
+    return {
+        "uuid": uuid,
+        "name": name,
+        "packageid": package_id,
+        "authors": authors,
+        "path": path,
+        "data_source": data_source,
+        "publishedfileid": publishedfileid,
+        "version": version,
+        "supported_versions": supported_versions or ["1.5"],
+        "dependencies": dependencies or [],
+        "loadTheseBefore": load_before or [],
+        "loadTheseAfter": load_after or [],
+        "incompatibilities": incompatibilities or [],
+        "csharp": csharp,
+        "git_repo": git_repo,
+        "steamcmd": steamcmd,
+        "invalid": invalid,
+        "url": url,
+        "description": description,
+        "mod_color": mod_color,
+        "alternative": None,
+    }
