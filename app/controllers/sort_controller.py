@@ -28,6 +28,10 @@ class Sorter:
             logger.info(f"Created sorter instance with {sort_method} sort method")
 
             if sort_method == SortMethod.ALPHABETICAL:
+                logger.warning(
+                    "Alphabetical sort is deprecated and may produce incorrect results "
+                    "with complex mod lists. Consider switching to Topological sort."
+                )
                 self.sort_method = do_alphabetical_sort
             elif sort_method == SortMethod.TOPOLOGICAL:
                 self.sort_method = do_topo_sort

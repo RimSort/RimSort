@@ -776,6 +776,12 @@ This basically preserves your mod coloring, user notes etc. for this many second
         sort_group_box_layout.addWidget(sorting_label)
 
         self.sorting_alphabetical_radio = QRadioButton(self.tr("Alphabetically"))
+        self.sorting_alphabetical_radio.setToolTip(
+            self.tr(
+                "Alphabetical sorting may produce incorrect results with complex mod lists. "
+                "Topological sorting is recommended."
+            )
+        )
         sort_group_box_layout.addWidget(self.sorting_alphabetical_radio)
 
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
