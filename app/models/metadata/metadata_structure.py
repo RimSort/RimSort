@@ -261,6 +261,8 @@ class ListedMod(BaseMod):
 
     _mod_path: Path | None = None
     _mod_type: ModType = ModType.UNKNOWN
+    obsolete: bool = False
+    db_builder_no_name: bool = False
 
     @property
     def mod_path(self) -> Path | None:
@@ -506,6 +508,18 @@ class AboutXmlMod(ListedMod, PackageIdMod):
             del self.overall_rules_with_deps
         except AttributeError:
             pass
+
+
+@dataclass
+class CompiledDependencyData:
+    """Standalone compiled dependency data built by MetadataController."""
+
+    deps_graph: dict[str, set[str]] = field(default_factory=dict)
+    rev_deps_graph: dict[str, set[str]] = field(default_factory=dict)
+    tier_zero_mods: set[str] = field(default_factory=set)
+    tier_one_mods: set[str] = field(default_factory=set)
+    tier_three_mods: set[str] = field(default_factory=set)
+    incompatibilities: dict[str, set[str]] = field(default_factory=dict)
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):
