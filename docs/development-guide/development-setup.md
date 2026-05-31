@@ -86,6 +86,12 @@ just dev-setup
 
 This runs `uv sync --locked --dev --group build`, which installs all runtime, dev, and build dependencies (including linters like ruff and mypy).
 
+After setup, install the shared git hooks so that `just check` runs automatically before each commit:
+
+```shell
+just install-hooks
+```
+
 If you prefer to do it manually:
 
 ```shell
