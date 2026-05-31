@@ -325,8 +325,6 @@ class MainWindowController(QObject):
                     self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(
                         active_mods
                     )
-                    # Trigger list updated signal to refresh UI
-                    self.main_window.main_content_panel.mods_panel.list_updated_signal.emit()
 
                 # If there are mods to download, check SteamCMD setup first
                 if mods_to_download:
