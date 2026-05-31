@@ -7,7 +7,7 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -273,6 +273,19 @@ class MainWindow(QMainWindow):
             return
         for widget in q_app.allWidgets():
             widget.setEnabled(enable)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Clean up child windows and resources before closing.
+
+        :param event: The close event to handle.
+        """
+        # Stop filesystem watchdog if running
+        self.stop_watchdog_if_running()
+
+        # Close all child windows
+        self.main_content_panel.close_child_windows()
+
+        event.accept()
 
     def showEvent(self, event: QShowEvent) -> None:
         # Call the original showEvent handler

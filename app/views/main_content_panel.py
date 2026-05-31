@@ -349,6 +349,9 @@ class MainContent(QObject):
             # Progress widget for extraction operations
             self._extract_progress_widget: Optional[TaskProgressWindow] = None
 
+            # Track child windows for cleanup on main window close
+            self._child_windows: list[QWidget] = []
+
             logger.info("Finished MainContent initialization")
             self.initialized = True
 
@@ -359,6 +362,33 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    def close_child_windows(self) -> None:
+        """Close all tracked child windows.
+
+        Called when the main window is closing to ensure no orphan
+        windows remain on screen.
+        """
+        # Close instance-variable windows
+        for attr_name in (
+            "missing_mods_prompt",
+            "rule_editor",
+            "ignore_json_editor",
+            "steamcmd_runner",
+            "query_runner",
+            "todds_runner",
+            "use_this_instead_dialog",
+            "steam_browser",
+        ):
+            window = getattr(self, attr_name, None)
+            if window is not None:
+                window.close()
+
+        # Close tracked windows (created as local vars elsewhere)
+        for window in self._child_windows:
+            if window is not None:
+                window.close()
+        self._child_windows.clear()
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
@@ -595,6 +625,7 @@ class MainContent(QObject):
             duplicate_mods_panel = DuplicateModsPanel(
                 self.duplicate_mods, self.settings_controller
             )
+            self._child_windows.append(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
         else:
@@ -702,6 +733,7 @@ class MainContent(QObject):
                 missing_publishfieldid_mods=missing_publishfieldid_uuids,
                 settings_controller=self.settings_controller,
             )
+            self._child_windows.append(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
             missing_mod_properties_panel.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -1008,6 +1040,8 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
+                self._child_windows.append(dialog)
+
                 # Build a deps_summary from the missing deps for the dialog display
                 deps_summary: dict[str, dict[str, set[str]]] = {}
                 for mod_id, deps in missing_deps.items():
@@ -1016,6 +1050,7 @@ class MainContent(QObject):
                         "local": set(),
                         "download": deps,
                     }
+
                 selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
                 if selected_deps:
@@ -2383,6 +2418,7 @@ class MainContent(QObject):
             )
             return
         workshop_mod_updater = WorkshopModUpdaterPanel()
+        self._child_windows.append(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
