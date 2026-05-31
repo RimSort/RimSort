@@ -47,9 +47,9 @@ class MainWindowController(QObject):
         ):
             button.clicked.connect(signal.emit)
 
-        # Connect check dependencies signal from mods panel
-        self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(
-            self.check_dependencies
+        # Connect add missing dependencies signal from mods panel
+        self.main_window.main_content_panel.mods_panel.add_missing_dependencies_signal.connect(
+            self.add_missing_dependencies
         )
 
         # Connect EventBus signals to slots
@@ -96,7 +96,7 @@ class MainWindowController(QObject):
                     return self._parse_workshop_id(workshop_url.text)
         return None
 
-    def check_dependencies(self) -> None:
+    def add_missing_dependencies(self) -> None:
         # Get the active mods list (exclude dividers)
         active_mods = {
             u

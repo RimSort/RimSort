@@ -3958,7 +3958,7 @@ class ModsPanel(QWidget):
 
     list_updated_signal = Signal()
     save_btn_animation_signal = Signal()
-    check_dependencies_signal = Signal()
+    add_missing_dependencies_signal = Signal()
 
     # OPTIMIZATION: Class-level constant for sort text to enum mapping
     # Centralizes the text->enum conversion logic
@@ -4083,14 +4083,21 @@ class ModsPanel(QWidget):
         )
         self.button_panel.addWidget(self.use_this_instead_button)
 
-        # Create and add Check Dependencies button
-        self.check_dependencies_button: QPushButton = QPushButton(
-            self.tr("Check Dependencies")
+        # Create and add Add Missing Dependencies button
+        self.add_missing_dependencies_button: QPushButton = QPushButton(
+            self.tr("Add Missing Dependencies")
         )
-        self.check_dependencies_button.setObjectName("CheckDependenciesButton")
-        self.button_panel.addWidget(self.check_dependencies_button)
-        self.check_dependencies_button.clicked.connect(
-            self.check_dependencies_signal.emit
+        self.add_missing_dependencies_button.setToolTip(
+            self.tr(
+                "Find and resolve missing mod dependencies by activating local mods or downloading from Steam Workshop"
+            )
+        )
+        self.add_missing_dependencies_button.setObjectName(
+            "AddMissingDependenciesButton"
+        )
+        self.button_panel.addWidget(self.add_missing_dependencies_button)
+        self.add_missing_dependencies_button.clicked.connect(
+            self.add_missing_dependencies_signal.emit
         )
         self.button_panel_frame.setLayout(self.button_panel)
 
