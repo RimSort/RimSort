@@ -61,7 +61,8 @@ RimSort/
 just i18n-compile
 ```
 
-这会对 `locales/` 中的每个 `.ts` 文件运行 `pyside6-lrelease` 以生成对应的 `.qm` 文件。
+这会先删除已有的 `.qm` 文件（清理因重命名或删除 `.ts` 文件而残留的旧文件），
+然后对 `locales/` 中的每个 `.ts` 文件运行 `pyside6-lrelease` 以生成对应的 `.qm` 文件。
 `dev-setup` 和 `build` 命令会自动运行此操作。
 
 ### 提取新的源字符串

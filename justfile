@@ -219,6 +219,7 @@ i18n-compile:
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
+    rm -f locales/*.qm
     for ts_file in locales/*.ts; do
         qm_file="${ts_file%.ts}.qm"
         uv run pyside6-lrelease "$ts_file" -qm "$qm_file"
@@ -226,7 +227,7 @@ i18n-compile:
 
 [windows]
 i18n-compile:
-    Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
+    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm; Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
 
 # Extract translatable strings from source code into .ts files (for translators)
 [unix]

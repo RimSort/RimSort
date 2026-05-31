@@ -156,6 +156,7 @@ jobs:
         shell: bash
         run: |
           shopt -s nullglob
+          rm -f locales/*.qm
           for ts_file in locales/*.ts; do
             qm_file="${ts_file%.ts}.qm"
             uv run --frozen pyside6-lrelease "$ts_file" -qm "$qm_file"

@@ -61,9 +61,10 @@ After modifying any `.ts` file, compile all translations:
 just i18n-compile
 ```
 
-This runs `pyside6-lrelease` on each `.ts` file in `locales/` to produce
-the corresponding `.qm` file. The `dev-setup` and `build` recipes run this
-automatically.
+This removes any existing `.qm` files first (to clean up stale artifacts
+from renamed or deleted `.ts` files), then runs `pyside6-lrelease` on each
+`.ts` file in `locales/` to produce the corresponding `.qm` file. The
+`dev-setup` and `build` recipes run this automatically.
 
 ### Extracting new source strings
 
