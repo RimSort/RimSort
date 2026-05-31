@@ -3977,7 +3977,15 @@ class ModsPanel(QWidget):
         Update the inactive mods sort UI elements from settings.
 
         Restores the saved sort key and direction to the UI combobox and button.
+        Toggles visibility of sort widgets based on whether sorting is enabled.
         """
+        sorting_enabled = self.settings_controller.settings.inactive_mods_sorting
+        self.inactive_mods_sort_combobox.setVisible(sorting_enabled)
+        self.inactive_mods_sort_order_button.setVisible(sorting_enabled)
+
+        if not sorting_enabled:
+            return
+
         self.inactive_mods_sort_key = (
             self.settings_controller.settings.inactive_mods_sort_key
         )
@@ -4519,9 +4527,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
         # Set initial visibility based on settings
-        if self.settings_controller.settings.inactive_mods_sorting:
-            self.inactive_mods_sort_combobox.setVisible(True)
-            self.inactive_mods_sort_order_button.setVisible(True)
+        sorting_enabled = self.settings_controller.settings.inactive_mods_sorting
+        self.inactive_mods_sort_combobox.setVisible(sorting_enabled)
+        self.inactive_mods_sort_order_button.setVisible(sorting_enabled)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
