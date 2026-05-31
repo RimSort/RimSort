@@ -118,3 +118,23 @@ def test_tags(temp_db: AuxMetadataController) -> None:
         entry = temp_db.get(session, item_path)
         assert entry is not None
         assert entry.tags == ["tag1", "tag3"]
+
+
+def test_aux_metadata_webapi_timestamp_fields(tmp_path: Path) -> None:
+    """WebAPI timestamp columns exist and default to -1."""
+    from app.controllers.metadata_db_controller import AuxMetadataController
+
+    controller = AuxMetadataController(tmp_path / "test.db")
+    with controller.Session() as session:
+        entry = controller.get_or_create(session, "/test/mod/path")
+        assert entry.external_time_created == -1
+        assert entry.external_time_updated == -1
+        entry.external_time_created = 1234567890
+        entry.external_time_updated = 1234567891
+        session.commit()
+
+    with controller.Session() as session:
+        fetched = controller.get(session, "/test/mod/path")
+        assert fetched is not None
+        assert fetched.external_time_created == 1234567890
+        assert fetched.external_time_updated == 1234567891
