@@ -88,8 +88,13 @@ class MetadataMediator:
     def game_version(self) -> str:
         return self._game_version
 
-    def refresh_metadata(self) -> None:
-        """Force refreshes the internal metadata."""
+    def refresh_metadata(self, prefer_versioned: bool = True) -> None:
+        """Force refreshes the internal metadata.
+
+        :param prefer_versioned: When True (default), ByVersion keys in mod
+            About.xml override base values non-additively. When False, all
+            ByVersion keys are ignored and only base values are used.
+        """
 
         for path in {self.local_mods_path, self.game_path}:
             if path is None or not path.exists() or not path.is_dir():
@@ -166,6 +171,7 @@ class MetadataMediator:
                 self.steam_db,
                 metadata_mutex,
                 self._mods_metadata,
+                prefer_versioned,
             )
             for mod_path_batch in mod_paths_batches
         ]
@@ -219,6 +225,7 @@ class MetadataMediator:
             steam_db: SteamDbSchema | None,
             mutex: QMutex,
             mods_metadata: dict[str, ListedMod],
+            prefer_versioned: bool = True,
         ):
             """Creates a worker to parse mods in a separate thread. Mutates the mods_metadata dict.
 
@@ -242,6 +249,9 @@ class MetadataMediator:
             :type mutex: QMutex
             :param mods_metadata: Dict of mods metadata
             :type mods_metadata: dict[str, ListedMod]
+            :param prefer_versioned: When True, ByVersion keys override base
+                values non-additively. When False, ByVersion keys are ignored.
+            :type prefer_versioned: bool
             """
             super().__init__()
             self.mod_path = mod_path
@@ -256,6 +266,7 @@ class MetadataMediator:
 
             self.mutex = mutex
             self.mods_metadata = mods_metadata
+            self.prefer_versioned = prefer_versioned
 
         def run(self) -> None:
             paths = (
@@ -273,6 +284,7 @@ class MetadataMediator:
                         self.local_path,
                         self.rimworld_path,
                         self.workshop_path,
+                        self.prefer_versioned,
                     )
 
                     if not valid:
