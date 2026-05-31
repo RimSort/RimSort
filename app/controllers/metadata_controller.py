@@ -1,6 +1,9 @@
-from pathlib import Path
+from __future__ import annotations
 
-from PySide6.QtCore import QObject, Slot
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
@@ -16,9 +19,22 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 
+if TYPE_CHECKING:
+    from app.models.metadata.metadata_structure import (
+        ExternalRulesSchema,
+        SteamDbSchema,
+    )
+
 
 class MetadataController(QObject):
     """Controller class for metadata."""
+
+    _instance: MetadataController | None = None
+
+    mod_created_signal = Signal(str)
+    mod_deleted_signal = Signal(str)
+    mod_metadata_updated_signal = Signal(str)
+    show_warning_signal = Signal(str, str, str, str)
 
     def __init__(
         self,
@@ -42,10 +58,32 @@ class MetadataController(QObject):
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
 
+    @classmethod
+    def instance(
+        cls,
+        settings_controller: SettingsController | None = None,
+        metadata_db_controller: AuxMetadataController | None = None,
+    ) -> MetadataController:
+        """Get or create the singleton instance.
+
+        :param settings_controller: Required on first call
+        :param metadata_db_controller: Required on first call
+        :return: The singleton instance
+        :raises RuntimeError: If called before initialization
+        """
+        if cls._instance is None:
+            if settings_controller is None or metadata_db_controller is None:
+                raise RuntimeError(
+                    "MetadataController.instance() called before initialization"
+                )
+            cls._instance = cls(settings_controller, metadata_db_controller)
+        return cls._instance
+
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
-        self.metadata_mediator.refresh_metadata()
+        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
         self._refresh_metadata_db()
 
         with self.metadata_db_controller.Session() as session:
@@ -125,6 +163,119 @@ class MetadataController(QObject):
 
         for p in path:
             self.metadata_mediator.mods_metadata.pop(str(p), None)
+
+    def compile(
+        self,
+        use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids_as_satisfying_dependencies: bool = True,
+    ) -> CompiledDependencyData:
+        """Compile dependency data from current metadata state.
+
+        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter
+        :param use_alternative_package_ids_as_satisfying_dependencies: Use alt package IDs
+        :return: Compiled dependency data
+        """
+        return self._build_compiled_data(
+            self.metadata_mediator.mods_metadata,
+            use_moddependencies_as_loadTheseBefore,
+            use_alternative_package_ids_as_satisfying_dependencies,
+        )
+
+    @property
+    def mods_metadata(self) -> dict[str, ListedMod]:
+        """Get the current mods metadata dictionary."""
+        return self.metadata_mediator.mods_metadata
+
+    @property
+    def packageid_to_paths(self) -> dict[str, set[str]]:
+        """Build a mapping from package IDs to sets of mod paths."""
+        result: dict[str, set[str]] = {}
+        for path, mod in self.mods_metadata.items():
+            if isinstance(mod, AboutXmlMod):
+                pid = str(mod.package_id)
+                result.setdefault(pid, set()).add(path)
+        return result
+
+    @property
+    def game_version(self) -> str:
+        """Get the current game version."""
+        return self.metadata_mediator.game_version
+
+    @property
+    def steam_db(self) -> SteamDbSchema | None:
+        """Get the loaded Steam database, if any."""
+        return self.metadata_mediator.steam_db
+
+    @property
+    def community_rules(self) -> ExternalRulesSchema | None:
+        """Get the loaded community rules, if any."""
+        return self.metadata_mediator.community_rules
+
+    @property
+    def steamdb_packageid_to_name(self) -> dict[str, str]:
+        """Build a mapping from package IDs to Steam names from the Steam DB."""
+        if self.metadata_mediator.steam_db is None:
+            return {}
+        return {
+            pid: entry.steamName or entry.name
+            for pid, entry in self.metadata_mediator.steam_db.database.items()
+            if entry.steamName or entry.name
+        }
+
+    def get_missing_dependencies(
+        self, active_mod_paths: set[str]
+    ) -> dict[str, set[str]]:
+        """Compute missing dependencies for the given active mod paths.
+
+        :param active_mod_paths: Set of active mod paths
+        :return: Mapping from package ID to set of missing dependency package IDs
+        """
+        active_package_ids: set[str] = set()
+        for path in active_mod_paths:
+            mod = self.mods_metadata.get(path)
+            if isinstance(mod, AboutXmlMod):
+                active_package_ids.add(str(mod.package_id))
+
+        missing: dict[str, set[str]] = {}
+        for path in active_mod_paths:
+            mod = self.mods_metadata.get(path)
+            if not isinstance(mod, AboutXmlMod):
+                continue
+            pid = str(mod.package_id)
+            for dep_id in mod.overall_rules.dependencies:
+                dep_str = str(dep_id)
+                if dep_str not in active_package_ids:
+                    missing.setdefault(pid, set()).add(dep_str)
+        return missing
+
+    def is_version_mismatch(self, path: str) -> bool:
+        """Check if a mod has version mismatch with the current game version.
+
+        :param path: Mod path
+        :return: True if version mismatch, False otherwise
+        """
+        mod = self.mods_metadata.get(path)
+        if not isinstance(mod, AboutXmlMod):
+            return False
+        if not mod.supported_versions:
+            return False
+        game_major_minor = ".".join(self.game_version.split(".")[:2])
+        return game_major_minor not in mod.supported_versions
+
+    def has_alternative_mod(self, path: str) -> dict[str, str] | None:
+        """Check if a mod has a recommended replacement from Use This Instead DB.
+
+        :param path: Mod path
+        :return: Replacement info dict or None
+        """
+        mod = self.mods_metadata.get(path)
+        if not isinstance(mod, AboutXmlMod):
+            return None
+        use_this_instead = self.metadata_mediator.use_this_instead
+        if use_this_instead is None:
+            return None
+        pid = str(mod.package_id)
+        return use_this_instead.get(pid)
 
     @staticmethod
     def _build_compiled_data(
