@@ -1,3 +1,5 @@
+import gzip
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -22,14 +24,6 @@ from app.models.metadata.metadata_structure import (
 class MetadataMediator:
     "Mediator class for metadata."
 
-    _user_rules: ExternalRulesSchema | None
-    _community_rules: ExternalRulesSchema | None
-    _steam_db: SteamDbSchema | None
-    _mods_metadata: dict[str, ListedMod]
-    _game_version: str = "Unknown"
-    _no_version_warning: list[str] | None
-    _use_this_instead: dict[str, Any] | None
-
     def __init__(
         self,
         user_rules_path: Path,
@@ -50,24 +44,26 @@ class MetadataMediator:
         self.no_version_warning_path = no_version_warning_path
         self.use_this_instead_path = use_this_instead_path
 
+        self._user_rules: ExternalRulesSchema | None = None
+        self._community_rules: ExternalRulesSchema | None = None
+        self._steam_db: SteamDbSchema | None = None
+        self._mods_metadata: dict[str, ListedMod] | None = None
+        self._game_version: str = "Unknown"
+        self._no_version_warning: list[str] | None = None
+        self._use_this_instead: dict[str, Any] | None = None
+
         self.parser_threadpool = QThreadPool.globalInstance()
 
     @property
     def user_rules(self) -> ExternalRulesSchema | None:
-        if hasattr(self, "_user_rules") is False:
-            return None
         return self._user_rules
 
     @property
     def community_rules(self) -> ExternalRulesSchema | None:
-        if hasattr(self, "_community_rules") is False:
-            return None
         return self._community_rules
 
     @property
     def steam_db(self) -> SteamDbSchema | None:
-        if hasattr(self, "_steam_db") is False:
-            return None
         return self._steam_db
 
     @property
@@ -75,20 +71,18 @@ class MetadataMediator:
         """Mods_metadata is a dict representation of all the listedmods, where the key is
         the path to the mod.
 
-        :raises ValueError: Raised when mods_metadata has not been initated
-        :return: A dict represented of ListedMods, where the key is the path to the mod.
+        :raises ValueError: Raised when mods_metadata has not been initiated
+        :return: A dict of ListedMods keyed by mod path.
         :rtype: dict[str, ListedMod]
         """
-        if hasattr(self, "_mods_metadata") is False or self._mods_metadata is None:
+        if self._mods_metadata is None:
             raise ValueError("Mods metadata have not been initiated")
-
         return self._mods_metadata
 
     @property
     def game_modules_path(self) -> Path:
         if self.game_path is not None:
             return self.game_path / "Data"
-
         raise ValueError("Game path is not set")
 
     @property
@@ -97,14 +91,10 @@ class MetadataMediator:
 
     @property
     def no_version_warning(self) -> list[str] | None:
-        if not hasattr(self, "_no_version_warning"):
-            return None
         return self._no_version_warning
 
     @property
     def use_this_instead(self) -> dict[str, Any] | None:
-        if not hasattr(self, "_use_this_instead"):
-            return None
         return self._use_this_instead
 
     def _load_no_version_warning(self) -> None:
@@ -126,7 +116,7 @@ class MetadataMediator:
             logger.info(
                 f"Loaded {len(self._no_version_warning)} No Version Warning entries"
             )
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             logger.error(f"Failed to load No Version Warning DB: {e}")
             self._no_version_warning = None
 
@@ -139,9 +129,6 @@ class MetadataMediator:
             self._use_this_instead = None
             return
         try:
-            import gzip
-            import json
-
             path = self.use_this_instead_path
             if str(path).endswith(".gz"):
                 with gzip.open(path, "rt", encoding="utf-8") as f:
@@ -153,7 +140,7 @@ class MetadataMediator:
                 logger.info(
                     f"Loaded {len(self._use_this_instead)} Use This Instead entries"
                 )
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load Use This Instead DB: {e}")
             self._use_this_instead = None
 

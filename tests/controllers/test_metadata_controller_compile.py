@@ -14,6 +14,7 @@ from app.models.metadata.metadata_structure import (
     BaseRules,
     CaseInsensitiveSet,
     CaseInsensitiveStr,
+    CompiledDependencyData,
     DependencyMod,
     ListedMod,
     Rules,
@@ -43,7 +44,7 @@ def _make_mod(
     return mod
 
 
-def _compile(mods: dict[str, ListedMod], **kwargs: bool) -> "CompiledDependencyData":  # type: ignore[name-defined]  # noqa: F821
+def _compile(mods: dict[str, ListedMod], **kwargs: bool) -> CompiledDependencyData:
     """Shorthand for MetadataController._build_compiled_data."""
     return MetadataController._build_compiled_data(mods, **kwargs)
 

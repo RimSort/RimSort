@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -137,6 +137,12 @@ class MetadataController(QObject):
         self.metadata_mediator.workshop_mods_path = workshop_mods_path
         self.metadata_mediator.local_mods_path = local_mods_path
         self.metadata_mediator.game_path = game_path
+        self.metadata_mediator.no_version_warning_path = _get_path(
+            active_settings.external_no_version_warning_file_path
+        )
+        self.metadata_mediator.use_this_instead_path = _get_path(
+            active_settings.external_use_this_instead_file_path
+        )
 
     def get_metadata_with_path(
         self, path: str | Path
@@ -167,18 +173,15 @@ class MetadataController(QObject):
     def compile(
         self,
         use_moddependencies_as_loadTheseBefore: bool = False,
-        use_alternative_package_ids_as_satisfying_dependencies: bool = True,
     ) -> CompiledDependencyData:
         """Compile dependency data from current metadata state.
 
         :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter
-        :param use_alternative_package_ids_as_satisfying_dependencies: Use alt package IDs
         :return: Compiled dependency data
         """
         return self._build_compiled_data(
             self.metadata_mediator.mods_metadata,
             use_moddependencies_as_loadTheseBefore,
-            use_alternative_package_ids_as_satisfying_dependencies,
         )
 
     @property
@@ -262,7 +265,7 @@ class MetadataController(QObject):
         game_major_minor = ".".join(self.game_version.split(".")[:2])
         return game_major_minor not in mod.supported_versions
 
-    def has_alternative_mod(self, path: str) -> dict[str, str] | None:
+    def has_alternative_mod(self, path: str) -> dict[str, Any] | None:
         """Check if a mod has a recommended replacement from Use This Instead DB.
 
         :param path: Mod path
@@ -281,7 +284,6 @@ class MetadataController(QObject):
     def _build_compiled_data(
         mods_metadata: dict[str, ListedMod],
         use_moddependencies_as_loadTheseBefore: bool = False,
-        use_alternative_package_ids_as_satisfying_dependencies: bool = True,
     ) -> CompiledDependencyData:
         """Build compiled dependency data from parsed mods.
 
@@ -294,9 +296,6 @@ class MetadataController(QObject):
             objects, as produced by ``MetadataMediator``.
         :param use_moddependencies_as_loadTheseBefore: When *True*, treat
             declared ``modDependencies`` as implicit ``loadAfter`` edges.
-        :param use_alternative_package_ids_as_satisfying_dependencies: When
-            *True*, alternative package IDs on ``DependencyMod`` objects are
-            considered valid satisfiers when building the dependency graph.
         :return: A fully-populated ``CompiledDependencyData`` instance.
         """
         compiled = CompiledDependencyData()
