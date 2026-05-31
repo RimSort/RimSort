@@ -1,8 +1,8 @@
 # ─── Shell Configuration ─────────────────────────────────────────────────
-# Use PowerShell 7 (pwsh) as the default shell — it's cross-platform
-# (available on Windows, Linux, and macOS). If pwsh is not installed on
-# your system, change to: set shell := ["sh", "-c"]
-set shell := ["pwsh", "-NoProfile", "-Command"]
+# Unix: just's default (sh -c). Windows: powershell.exe (ships with all
+# modern Windows). Multi-line recipes use [unix]/[windows] guards with
+# shebang overrides where needed.
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 # ─── Global Variables ────────────────────────────────────────────────────
 # Shared flag values to keep recipes DRY and consistent.
@@ -104,6 +104,7 @@ ci: check test-coverage
 dev-setup: submodules-init
     uv venv --allow-existing
     uv sync --locked --dev --group build
+    just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
 
 # Update all dependencies to their latest compatible versions
 update:
@@ -118,11 +119,13 @@ clean:
     rm -rf .pytest_cache .mypy_cache .ruff_cache
     rm -rf htmlcov .coverage coverage.xml
     rm -rf junit/
+    rm -f locales/*.qm
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 [windows]
 clean:
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue build, dist, *.egg-info, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov, .coverage, coverage.xml, junit
+    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm
     Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -130,12 +133,12 @@ clean:
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Build RimSort executable (inits submodules and runs all checks first)
-build *ARGS='': submodules-init check
+build *ARGS='': submodules-init check i18n-compile
     uv run python distribute.py {{ARGS}}
 
 # Build RimSort executable with a specific version string, e.g. "1.2.3.4"
 # (inits submodules and runs all checks first)
-build-version VERSION: submodules-init check
+build-version VERSION: submodules-init check i18n-compile
     uv run python distribute.py --product-version="{{VERSION}}"
 
 # Create source tarball including submodules for RPM building
@@ -209,6 +212,38 @@ build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
 [linux]
 build-appimage VERSION='1.0.0':
     bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Internationalization
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Compile translation .ts files into .qm binary files (required for app to load translations)
+[unix]
+i18n-compile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    rm -f locales/*.qm
+    for ts_file in locales/*.ts; do
+        qm_file="${ts_file%.ts}.qm"
+        uv run pyside6-lrelease "$ts_file" -qm "$qm_file"
+    done
+
+[windows]
+i18n-compile:
+    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm; Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
+
+# Extract translatable strings from source code into .ts files (for translators)
+[unix]
+i18n-update:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    uv run pyside6-lupdate app/ -ts locales/*.ts
+
+[windows]
+i18n-update:
+    uv run pyside6-lupdate app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Utilities
