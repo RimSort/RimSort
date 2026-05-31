@@ -265,19 +265,19 @@ class SteamworksAppDependenciesQuery:
 
 class SteamworksGameLaunch(Process):
     def __init__(
-        self, game_install_path: str, args: list[str], _libs: str | None = None
+        self, game_install_path: str, run_args: str = "", _libs: str | None = None
     ) -> None:
         Process.__init__(self)
         self._libs = _libs
         self.game_install_path = game_install_path
-        self.args = args
+        self.run_args = run_args
 
     def run(self) -> None:
         """
         Handle SW game launch; instructions received from connected signals
 
         :param game_install_path: is a string path to the game folder
-        :param args: is a string representing the args to pass to the generated executable path
+        :param run_args: is a string representing the args to pass to the generated executable path
         """
         logger.info("Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
@@ -285,7 +285,7 @@ class SteamworksGameLaunch(Process):
 
         # Launch the game
         launch_game_process(
-            game_install_path=Path(self.game_install_path), args=self.args
+            game_install_path=Path(self.game_install_path), run_args=self.run_args
         )
         # If we had an API initialization, try to unload it
         if (

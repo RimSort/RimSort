@@ -19,7 +19,7 @@ class Instance(msgspec.Struct):
     config_folder: str = ""
     local_folder: str = ""
     workshop_folder: str = ""
-    run_args: list[str] = msgspec.field(default_factory=list)
+    run_args: str = ""
     steamcmd_auto_clear_depot_cache: bool = True
     steamcmd_install_path: str = str(
         Path(

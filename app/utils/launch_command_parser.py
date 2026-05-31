@@ -7,6 +7,7 @@ wrapper executables, and game arguments.
 """
 
 import shlex
+import sys
 from dataclasses import dataclass, field
 
 
@@ -64,7 +65,10 @@ def parse_launch_command(command_string: str) -> ParsedLaunchCommand:
         return ParsedLaunchCommand()
 
     try:
-        # Use shlex to tokenize - handles quotes, spaces, and escaping
+        if sys.platform == "win32":
+            # On Windows, backslashes are path separators, not escape chars.
+            # Double them so shlex.split() (which uses POSIX escaping) preserves them.
+            command_string = command_string.replace("\\", "\\\\")
         tokens = shlex.split(command_string)
     except ValueError:
         # If shlex fails (e.g., unclosed quotes), treat as game args
