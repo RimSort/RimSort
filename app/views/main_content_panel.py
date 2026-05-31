@@ -1040,6 +1040,7 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
+                self._child_windows.append(dialog)
                 selected_deps = dialog.show_dialog(missing_deps)
 
                 if selected_deps:
