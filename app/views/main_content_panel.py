@@ -1008,7 +1008,15 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
-                selected_deps = dialog.show_dialog(missing_deps)
+                # Build a deps_summary from the missing deps for the dialog display
+                deps_summary: dict[str, dict[str, set[str]]] = {}
+                for mod_id, deps in missing_deps.items():
+                    deps_summary[mod_id] = {
+                        "satisfied": set(),
+                        "local": set(),
+                        "download": deps,
+                    }
+                selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
                 if selected_deps:
                     # Add selected mods to active mods
