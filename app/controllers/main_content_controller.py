@@ -31,6 +31,14 @@ from app.utils.git_worker import (
     GitStageCommitWorker,
     PushConfig,
 )
+from app.utils.github.provider import (
+    GitHubProvider,
+    GitHubRateLimitError,
+    ReleaseAsset,
+    ReleaseInfo,
+    parse_github_url,
+)
+from app.utils.github.worker import GitHubInstallWorker
 from app.utils.http_downloader import (
     DatabaseDownloadTask,
     DownloadResult,
@@ -57,6 +65,7 @@ class MainContentController(QObject):
         self._git_push_worker: Optional[GitPushWorker] = None
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
         self._http_download_worker: Optional[HttpDownloadWorker] = None
+        self._github_install_worker: Optional[GitHubInstallWorker] = None
 
         # Thread pool for concurrent tasks
         self.thread_pool = QThreadPool.globalInstance()
@@ -221,13 +230,38 @@ class MainContentController(QObject):
         else:
             logger.debug("User declined batch update.")
 
+    def _filter_non_github_repos(self, repos_paths: List[Path]) -> List[Path]:
+        """Filter out paths tracked as GitHub mods in the current instance."""
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        try:
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            with aux_controller.Session() as session:
+                github_paths = {
+                    entry.mod_path for entry in session.query(GitHubModEntry).all()
+                }
+        except Exception as e:
+            logger.debug(f"Could not check GitHub mods table: {e}")
+            return list(repos_paths)
+
+        return [p for p in repos_paths if str(p) not in github_paths]
+
     def _on_update_repos(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories."""
+        filtered_paths = self._filter_non_github_repos(repos_paths)
+        if not filtered_paths:
+            logger.debug("All repos are GitHub mods, skipping batch update.")
+            return
         logger.debug(
-            f"Scheduling concurrent update for {len(repos_paths)} repositories."
+            f"Scheduling concurrent update for {len(filtered_paths)} repositories "
+            f"({len(repos_paths) - len(filtered_paths)} GitHub mods excluded)."
         )
         config = GitOperationConfig(notify_errors=True)
-        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker = GitBatchUpdateWorker(filtered_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results)
         self.thread_pool.start(worker)
 
@@ -551,11 +585,14 @@ class MainContentController(QObject):
 
     def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories silently."""
+        filtered_paths = self._filter_non_github_repos(repos_paths)
+        if not filtered_paths:
+            return
         logger.debug(
-            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
+            f"Scheduling silent concurrent update for {len(filtered_paths)} repositories."
         )
         config = GitOperationConfig(notify_errors=False)
-        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker = GitBatchUpdateWorker(filtered_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results_silent)
         self.thread_pool.start(worker)
 
@@ -751,23 +788,233 @@ class MainContentController(QObject):
 
     @Slot()
     def _do_git_install_mod(self) -> None:
-        """Prompt user for repo URL and trigger clone."""
+        """Prompt user for repo URL and trigger clone or GitHub install."""
         args, ok = QInputDialog().getText(
             self.view.mods_panel,
             self.tr("Enter git repo"),
             self.tr("Enter a git repository url (http/https) to clone to local mods:"),
         )
-        if ok and args:
-            self._do_git_clone(
-                base_path=str(
-                    self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].local_folder
-                ),
-                repo_url=args,
+        if not ok or not args:
+            logger.debug("Cancelled git install mod.")
+            return
+
+        base_path = str(
+            self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].local_folder
+        )
+
+        parsed = parse_github_url(args)
+        if parsed is not None:
+            owner, repo = parsed
+            self._do_github_install_flow(f"{owner}/{repo}", args, base_path)
+        else:
+            self._do_git_clone(base_path=base_path, repo_url=args)
+
+    def _do_github_install_flow(
+        self, owner_repo: str, repo_url: str, base_path: str
+    ) -> None:
+        """Handle GitHub URL: query releases, offer choice dialog, install."""
+        if not check_internet_connection():
+            return
+
+        settings = self.settings_controller.settings
+        provider = GitHubProvider(github_token=settings.github_token or None)
+
+        try:
+            releases = provider.get_releases(owner_repo, force_refresh=True)
+        except GitHubRateLimitError as e:
+            InformationBox(
+                title=self.tr("GitHub Rate Limit"),
+                text=str(e),
+            ).exec()
+            releases = []
+        except Exception as e:
+            logger.error(f"Failed to query GitHub releases: {e}")
+            releases = []
+
+        if releases:
+            dialog_text = self.tr(
+                "This repository is hosted on GitHub. You can install it as a "
+                "GitHub Mod to track releases and manage versions, or clone it "
+                "directly as a standard git mod."
             )
         else:
-            logger.debug("Cancelled git install mod.")
+            dialog_text = self.tr(
+                "No releases found for this repository. You can install it as a "
+                "GitHub Mod tracking the latest commit (you'll be notified if "
+                "releases are published in the future), or clone it directly "
+                "as a standard git mod."
+            )
+
+        choice = BinaryChoiceDialog(
+            title=self.tr("GitHub Repository Detected"),
+            text=dialog_text,
+            information=self.tr("Repository: {owner_repo}").format(
+                owner_repo=owner_repo
+            ),
+            positive_text=self.tr("Install as GitHub Mod"),
+            negative_text=self.tr("Clone as Git Mod"),
+        )
+
+        if not choice.exec_is_positive():
+            self._do_git_clone(base_path=base_path, repo_url=repo_url)
+            return
+
+        version_labels: list[str] = []
+        releases_by_label: dict[str, ReleaseInfo | None] = {}
+
+        for r in releases:
+            label = f"{r.tag} (pre-release)" if r.prerelease else r.tag
+            version_labels.append(label)
+            releases_by_label[label] = r
+
+        version_labels.append("HEAD (latest commit)")
+        releases_by_label["HEAD (latest commit)"] = None
+
+        stable = [r for r in releases if not r.prerelease]
+        if stable:
+            default_label = stable[0].tag
+        elif releases:
+            default_label = version_labels[0]
+        else:
+            default_label = "HEAD (latest commit)"
+
+        chosen_label, ok = QInputDialog().getItem(
+            self.view.mods_panel,
+            self.tr("Select Version"),
+            self.tr("Choose a version to install:"),
+            version_labels,
+            version_labels.index(default_label),
+            False,
+        )
+        if not ok:
+            return
+
+        target_release = releases_by_label.get(chosen_label)
+        target_asset: ReleaseAsset | None = None
+
+        if target_release is not None:
+            custom_zips = target_release.get_custom_zip_assets()
+            if len(custom_zips) == 1:
+                target_asset = custom_zips[0]
+            elif len(custom_zips) > 1:
+                asset_names = [a.name for a in custom_zips]
+                chosen_asset, ok = QInputDialog().getItem(
+                    self.view.mods_panel,
+                    self.tr("Select Asset"),
+                    self.tr("Multiple release assets found. Choose one:"),
+                    asset_names,
+                    0,
+                    False,
+                )
+                if not ok:
+                    return
+                target_asset = custom_zips[asset_names.index(chosen_asset)]
+            else:
+                answer = show_dialogue_conditional(
+                    title=self.tr("No Release ZIP Found"),
+                    text=self.tr(
+                        "Release {tag} has no ZIP assets. "
+                        "Install from HEAD (latest commit) instead?"
+                    ).format(tag=target_release.tag),
+                    information=self.tr(
+                        "The release only contains source archives, which may "
+                        "not work as a RimWorld mod."
+                    ),
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
+                target_release = None
+
+        repo_name = owner_repo.split("/")[1]
+        target_dir = str(Path(base_path) / repo_name)
+
+        if Path(target_dir).exists():
+            answer = show_dialogue_conditional(
+                title=self.tr("Existing mod found"),
+                text=self.tr(
+                    "A mod folder already exists at this location: {path}"
+                ).format(path=target_dir),
+                information=self.tr("Replace it with the GitHub mod?"),
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+            import shutil
+
+            shutil.rmtree(target_dir, ignore_errors=True)
+
+        self._github_install_worker = GitHubInstallWorker(
+            owner_repo=owner_repo,
+            release=target_release,
+            asset=target_asset,
+            repo_url=repo_url,
+            target_dir=target_dir,
+        )
+        self._github_install_worker.finished.connect(
+            lambda ok, msg, path: self._on_github_install_finished(
+                ok, msg, path, owner_repo, target_release, target_asset
+            )
+        )
+        self._github_install_worker.start()
+
+    def _on_github_install_finished(
+        self,
+        success: bool,
+        message: str,
+        mod_path: str,
+        owner_repo: str,
+        release: ReleaseInfo | None,
+        asset: ReleaseAsset | None,
+    ) -> None:
+        """Handle completed GitHub mod install -- record metadata and refresh."""
+        if not success:
+            InformationBox(
+                title=self.tr("GitHub Install Failed"),
+                text=self.tr("Failed to install GitHub mod: {error}").format(
+                    error=message
+                ),
+            ).exec()
+            return
+
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.models.metadata.metadata_db import Base
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+
+        # Ensure the github_mods table exists (GitHubModEntry shares
+        # the same Base as AuxMetadataEntry, but the controller may
+        # have been created before this model was imported).
+        Base.metadata.create_all(aux_controller.engine)
+
+        with aux_controller.Session() as session:
+            AuxMetadataController.get_or_create(session, mod_path)
+            session.commit()
+
+            version = "HEAD" if release is None else release.tag
+            asset_name = asset.name if asset else None
+
+            entry = GitHubModEntry(
+                owner_repo=owner_repo,
+                mod_path=mod_path,
+                installed_version=version,
+                installed_asset_name=asset_name,
+            )
+            session.add(entry)
+            session.commit()
+
+        InformationBox(
+            title=self.tr("GitHub Mod Installed"),
+            text=self.tr("Successfully installed {owner_repo} ({version})").format(
+                owner_repo=owner_repo, version=version
+            ),
+        ).exec()
+
+        EventBus().do_refresh_mods_lists.emit()
 
     @Slot(str, str)
     def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:
