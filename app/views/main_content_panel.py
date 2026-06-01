@@ -2234,6 +2234,22 @@ class MainContent(QObject):
 
         The operation runs asynchronously in a UI panel showing progress.
         """
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Confirm texture deletion"),
+            text=self.tr(
+                "This will delete all optimized .dds textures from your active mods"
+            ),
+            information=self.tr(
+                "Are you sure you want to delete all .dds textures? "
+                "You can re-optimize them later if needed."
+            ),
+            button_text_override=[
+                self.tr("Delete textures"),
+            ],
+        )
+        if self.tr("Delete textures") not in str(answer):
+            return
+
         logger.info("Deleting .dds textures with todds...")
 
         # Create todds interface with clean preset (removes .dds files)
