@@ -1,7 +1,13 @@
+from collections.abc import Mapping
+
 import pytest
 
 from app.controllers.sort_controller import Sorter
-from app.models.metadata.metadata_structure import CompiledDependencyData
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    CompiledDependencyData,
+    ListedMod,
+)
 from app.utils.constants import SortMethod
 from tests.sort.conftest import make_listed_mod
 
@@ -20,6 +26,39 @@ def _build_compiled(
         tier_one_mods=tier_one or set(),
         tier_three_mods=tier_three or set(),
     )
+
+
+def _build_four_tier_scenario() -> tuple[
+    dict[str, ListedMod], CompiledDependencyData, set[str]
+]:
+    """Build a standard 4-tier mod scenario (core/fw/regular/bottom)."""
+    mods: dict[str, ListedMod] = {
+        "/mods/core": make_listed_mod(
+            "/mods/core", name="Core", package_id="ludeon.rimworld"
+        ),
+        "/mods/fw": make_listed_mod(
+            "/mods/fw", name="Framework", package_id="author.framework"
+        ),
+        "/mods/reg": make_listed_mod(
+            "/mods/reg", name="Regular", package_id="author.regular"
+        ),
+        "/mods/bottom": make_listed_mod(
+            "/mods/bottom", name="Bottom", package_id="author.bottom"
+        ),
+    }
+    compiled = _build_compiled(
+        deps={
+            "ludeon.rimworld": set(),
+            "author.framework": set(),
+            "author.regular": set(),
+            "author.bottom": set(),
+        },
+        tier_zero={"ludeon.rimworld"},
+        tier_one={"author.framework"},
+        tier_three={"author.bottom"},
+    )
+    active = {"/mods/core", "/mods/fw", "/mods/reg", "/mods/bottom"}
+    return mods, compiled, active
 
 
 class TestSorterBasic:
@@ -279,6 +318,179 @@ class TestSorterActiveOnlyFiltering:
         success, result = sorter.sort()
         assert success
         assert "/mods/inactive_fw" not in result
+
+
+class TestCrossTierInteractions:
+    def test_tier_two_depending_on_tier_one_mod(self) -> None:
+        """A regular mod (tier two) depending on a framework (tier one)."""
+        mods = {
+            "/mods/fw": make_listed_mod(
+                "/mods/fw", name="Framework", package_id="author.framework"
+            ),
+            "/mods/reg": make_listed_mod(
+                "/mods/reg", name="Regular", package_id="author.regular"
+            ),
+        }
+        compiled = _build_compiled(
+            deps={
+                "author.framework": set(),
+                "author.regular": {"author.framework"},
+            },
+            rev_deps={"author.framework": {"author.regular"}},
+            tier_one={"author.framework"},
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL, compiled, mods, {"/mods/fw", "/mods/reg"}
+        )
+        success, result = sorter.sort()
+        assert success
+        assert result.index("/mods/fw") < result.index("/mods/reg")
+
+    def test_tier_one_dep_pulled_from_tier_two(self) -> None:
+        """A mod that is a dependency of a tier-one mod gets pulled into tier one."""
+        mods = {
+            "/mods/fw": make_listed_mod(
+                "/mods/fw", name="Framework", package_id="author.framework"
+            ),
+            "/mods/lib": make_listed_mod(
+                "/mods/lib", name="Library", package_id="author.lib"
+            ),
+            "/mods/reg": make_listed_mod(
+                "/mods/reg", name="Regular", package_id="author.regular"
+            ),
+        }
+        compiled = _build_compiled(
+            deps={
+                "author.framework": {"author.lib"},
+                "author.lib": set(),
+                "author.regular": set(),
+            },
+            tier_one={"author.framework"},
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL,
+            compiled,
+            mods,
+            {"/mods/fw", "/mods/lib", "/mods/reg"},
+        )
+        success, result = sorter.sort()
+        assert success
+        assert result.index("/mods/lib") < result.index("/mods/reg")
+        assert result.index("/mods/fw") < result.index("/mods/reg")
+
+    def test_mod_in_both_tier_one_and_tier_three(self) -> None:
+        """A mod in both tier_one and tier_three appears exactly once."""
+        mods = {
+            "/mods/weird": make_listed_mod(
+                "/mods/weird", name="Weird", package_id="author.weird"
+            ),
+            "/mods/reg": make_listed_mod(
+                "/mods/reg", name="Regular", package_id="author.regular"
+            ),
+        }
+        compiled = _build_compiled(
+            deps={"author.weird": set(), "author.regular": set()},
+            tier_one={"author.weird"},
+            tier_three={"author.weird"},
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL,
+            compiled,
+            mods,
+            {"/mods/weird", "/mods/reg"},
+        )
+        success, result = sorter.sort()
+        assert success
+        assert len(result) == 2
+        assert result.count("/mods/weird") == 1
+
+    def test_all_four_tiers_present(self) -> None:
+        """Full 4-tier sort: zero < one < two < three."""
+        mods, compiled, active = _build_four_tier_scenario()
+        sorter = Sorter(SortMethod.TOPOLOGICAL, compiled, mods, active)
+        success, result = sorter.sort()
+        assert success
+        assert result.index("/mods/core") < result.index("/mods/fw")
+        assert result.index("/mods/fw") < result.index("/mods/reg")
+        assert result.index("/mods/reg") < result.index("/mods/bottom")
+
+
+class TestSorterCustomCallable:
+    def test_custom_sort_method_used(self) -> None:
+        """Passing a raw callable as sort_method — Sorter uses it directly."""
+
+        def reverse_sort(
+            graph: dict[str, set[str]],
+            active: set[str],
+            metadata: Mapping[str, ListedMod],
+        ) -> list[str]:
+            packageid_to_path = {}
+            for path in active:
+                mod = metadata.get(path)
+                if isinstance(mod, AboutXmlMod):
+                    packageid_to_path[str(mod.package_id)] = path
+            return sorted(
+                [packageid_to_path[pid] for pid in graph if pid in packageid_to_path],
+                reverse=True,
+            )
+
+        mods = {
+            "/mods/a": make_listed_mod("/mods/a", name="A", package_id="mod.a"),
+            "/mods/b": make_listed_mod("/mods/b", name="B", package_id="mod.b"),
+            "/mods/c": make_listed_mod("/mods/c", name="C", package_id="mod.c"),
+        }
+        compiled = _build_compiled(
+            deps={"mod.a": set(), "mod.b": set(), "mod.c": set()}
+        )
+        sorter = Sorter(
+            sort_method=reverse_sort,
+            compiled_data=compiled,
+            mods_metadata=mods,
+            active_mod_paths={"/mods/a", "/mods/b", "/mods/c"},
+        )
+        success, result = sorter.sort()
+        assert success
+        assert result == ["/mods/c", "/mods/b", "/mods/a"]
+
+
+class TestGenerateDependencyGraphsPartition:
+    def test_four_tier_partition_correctness(self) -> None:
+        """generate_dependency_graphs() returns 4 graphs with correct mod sets."""
+        mods, compiled, active = _build_four_tier_scenario()
+        sorter = Sorter(SortMethod.TOPOLOGICAL, compiled, mods, active)
+        graphs = sorter.generate_dependency_graphs()
+        assert len(graphs) == 4
+
+        t0_keys, t1_keys, t2_keys, t3_keys = (set(g.keys()) for g in graphs)
+        assert t0_keys == {"ludeon.rimworld"}
+        assert t1_keys == {"author.framework"}
+        assert t2_keys == {"author.regular"}
+        assert t3_keys == {"author.bottom"}
+
+    def test_partition_is_exhaustive_and_disjoint(self) -> None:
+        """Every active mod appears in exactly one tier graph."""
+        mods = {
+            f"/mods/{i}": make_listed_mod(
+                f"/mods/{i}", name=f"Mod{i}", package_id=f"mod.{i}"
+            )
+            for i in range(10)
+        }
+        compiled = _build_compiled(
+            deps={f"mod.{i}": set() for i in range(10)},
+            tier_zero={"mod.0"},
+            tier_one={"mod.1", "mod.2"},
+            tier_three={"mod.9"},
+        )
+        active = set(mods.keys())
+        sorter = Sorter(SortMethod.TOPOLOGICAL, compiled, mods, active)
+        graphs = sorter.generate_dependency_graphs()
+
+        all_keys = [set(g.keys()) for g in graphs]
+        union = set().union(*all_keys)
+        assert union == {f"mod.{i}" for i in range(10)}
+        for i in range(4):
+            for j in range(i + 1, 4):
+                assert all_keys[i] & all_keys[j] == set()
 
 
 class TestSorterRegressions:
