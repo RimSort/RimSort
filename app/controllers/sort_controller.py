@@ -134,16 +134,12 @@ class Sorter:
 
         return [tier_zero_graph, tier_one_graph, tier_two_graph, tier_three_graph]
 
-    def sort(
-        self, dependency_graphs: list[dict[str, set[str]]] | None = None
-    ) -> tuple[bool, list[str]]:
+    def sort(self) -> tuple[bool, list[str]]:
         """Sort mods using the configured sort method.
 
-        :param dependency_graphs: Pre-built tier graphs, or None to generate.
         :return: (success, sorted_mod_paths)
         """
-        if dependency_graphs is None:
-            dependency_graphs = self.generate_dependency_graphs()
+        dependency_graphs = self.generate_dependency_graphs()
 
         sorted_paths: list[str] = []
         try:
