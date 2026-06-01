@@ -200,3 +200,55 @@ def test_compile_deps_as_load_order_off() -> None:
     """use_moddependencies_as_loadTheseBefore=False (default) does not create load edges."""
     compiled = _compile(_make_dep_mods(), use_moddependencies_as_loadTheseBefore=False)
     assert "mod.b" not in compiled.deps_graph.get("mod.a", set())
+
+
+# --- Conflict resolution tests ---
+
+
+def test_compile_explicit_wins_over_conflicting_inferred() -> None:
+    """Explicit rule A->B blocks inferred B->A from creating a cycle.
+
+    mod.a has explicit load_after mod.b (A loads after B, so A -> B edge).
+    mod.b has dependency on mod.a (inferred: B loads after A, so B -> A edge).
+    The inferred edge conflicts — it would create a cycle. It gets dropped.
+    """
+    mod_a = _make_mod("mod.a", "/mods/a", load_after=["mod.b"])
+    mod_b = _make_mod("mod.b", "/mods/b")
+    mod_b.about_rules.dependencies[CaseInsensitiveStr("mod.a")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.a")
+    )
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/b": mod_b}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+
+    # Explicit: mod.a depends on mod.b (mod.a -> mod.b edge)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    # Inferred: mod.b depends on mod.a would conflict — should be dropped
+    assert "mod.a" not in compiled.deps_graph.get("mod.b", set())
+
+
+def test_compile_non_conflicting_inferred_kept() -> None:
+    """Inferred edges that don't conflict with explicit edges are kept."""
+    mod_a = _make_mod("mod.a", "/mods/a")
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("mod.b")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.b")
+    )
+    mod_b = _make_mod("mod.b", "/mods/b")
+    mod_c = _make_mod("mod.c", "/mods/c", load_after=["mod.a"])
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/b": mod_b, "/mods/c": mod_c}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+
+    # Inferred: mod.a -> mod.b (no conflict)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    # Explicit: mod.c -> mod.a
+    assert "mod.a" in compiled.deps_graph.get("mod.c", set())
+
+
+def test_compile_overall_rules_not_mutated() -> None:
+    """Calling compile with deps-as-load-order must NOT mutate mod.overall_rules."""
+    mods = _make_dep_mods()
+    mod_a = mods["/mods/a"]
+    assert isinstance(mod_a, AboutXmlMod)
+
+    original_load_after = set(mod_a.overall_rules.load_after)
+    _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+    assert set(mod_a.overall_rules.load_after) == original_load_after

@@ -480,32 +480,10 @@ class AboutXmlMod(ListedMod, PackageIdMod):
 
         return overall_rules
 
-    @functools.cached_property
-    def overall_rules_with_deps(self) -> Rules:
-        """Returns the overall rules while applying the dependencies as load after rules.
-
-        Cached property
-
-        :return: The overall rules with dependencies applied.
-        :rtype: Rules
-        """
-        overall_rules = self.overall_rules
-
-        # Apply dependencies as load after
-        for dep in overall_rules.dependencies.values():
-            overall_rules.load_after.add(dep.package_id)
-
-        return overall_rules
-
     def clear_cache(self) -> None:
         """Clear the cached properties."""
         try:
             del self.overall_rules
-        except AttributeError:
-            pass
-
-        try:
-            del self.overall_rules_with_deps
         except AttributeError:
             pass
 
