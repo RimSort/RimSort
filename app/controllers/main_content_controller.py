@@ -185,19 +185,125 @@ class MainContentController(QObject):
             logger.info("All GitHub mods are up to date")
             return
 
-        mod_names = ", ".join(u.owner_repo for u in updates[:5])
-        suffix = f" and {len(updates) - 5} more" if len(updates) > 5 else ""
-        logger.info(f"GitHub updates available: {mod_names}{suffix}")
+        auto = [u for u in updates if u.auto_update]
+        manual = [u for u in updates if not u.auto_update]
 
-        InformationBox(
-            title=self.tr("GitHub Mod Updates Available"),
-            text=self.tr("{count} GitHub mod(s) have updates available.").format(
-                count=len(updates)
-            ),
-            information=self.tr(
-                "Use Download → GitHub Mods to view and install updates."
-            ),
-        ).exec()
+        if manual:
+            names = ", ".join(u.owner_repo for u in manual[:5])
+            suffix = f" and {len(manual) - 5} more" if len(manual) > 5 else ""
+            logger.info(f"GitHub updates available (manual): {names}{suffix}")
+            InformationBox(
+                title=self.tr("GitHub Mod Updates Available"),
+                text=self.tr("{count} GitHub mod(s) have updates available.").format(
+                    count=len(manual)
+                ),
+                information=self.tr(
+                    "Use Download → GitHub Mods to view and install updates."
+                ),
+            ).exec()
+
+        if auto:
+            logger.info(
+                f"Auto-updating {len(auto)} GitHub mod(s): "
+                + ", ".join(u.owner_repo for u in auto)
+            )
+            self._github_auto_update_queue = list(auto)
+            self._github_auto_update_results: list[tuple[str, bool]] = []
+            self._process_next_auto_update()
+        elif not manual:
+            logger.info("All GitHub mods are up to date")
+
+    def _process_next_auto_update(self) -> None:
+        """Process the next mod in the auto-update queue."""
+        if not self._github_auto_update_queue:
+            self._on_auto_updates_complete()
+            return
+
+        update = self._github_auto_update_queue.pop(0)
+        release = update.latest_release
+        if release is None:
+            self._github_auto_update_results.append((update.owner_repo, False))
+            self._process_next_auto_update()
+            return
+
+        target_asset = None
+        custom_zips = release.get_custom_zip_assets()
+        if len(custom_zips) >= 1:
+            target_asset = custom_zips[0]
+
+        repo_url = f"https://github.com/{update.owner_repo}.git"
+        worker = GitHubVersionSwitchWorker(
+            mod_path=update.mod_path,
+            owner_repo=update.owner_repo,
+            repo_url=repo_url,
+            target_release=release if target_asset else None,
+            target_asset=target_asset,
+        )
+        owner_repo = update.owner_repo
+        worker.finished.connect(
+            lambda ok, ver, path: self._on_auto_update_one_finished(
+                ok, ver, path, owner_repo
+            )
+        )
+        self._github_version_switch_worker = worker
+        worker.start()
+
+    def _on_auto_update_one_finished(
+        self, success: bool, new_version: str, mod_path: str, owner_repo: str
+    ) -> None:
+        """Handle completion of a single auto-update, then process the next."""
+        self._github_auto_update_results.append((owner_repo, success))
+
+        if success:
+            from app.controllers.metadata_db_controller import AuxMetadataController
+            from app.utils.github.models import GitHubModEntry
+
+            settings = self.settings_controller.settings
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            version = "HEAD" if new_version.startswith("HEAD") else new_version
+            with aux_controller.Session() as session:
+                entry = (
+                    session.query(GitHubModEntry)
+                    .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                    .first()
+                )
+                if entry is not None:
+                    entry.installed_version = version
+                    session.commit()
+            logger.info(f"Auto-updated {owner_repo} to {version}")
+        else:
+            logger.warning(f"Auto-update failed for {owner_repo}: {new_version}")
+
+        self._process_next_auto_update()
+
+    def _on_auto_updates_complete(self) -> None:
+        """Show results after all auto-updates finish and offer to refresh."""
+        results = self._github_auto_update_results
+        succeeded = [r for r, ok in results if ok]
+        failed = [r for r, ok in results if not ok]
+
+        summary_parts = []
+        if succeeded:
+            summary_parts.append(
+                self.tr("Updated: {mods}").format(mods=", ".join(succeeded))
+            )
+        if failed:
+            summary_parts.append(
+                self.tr("Failed: {mods}").format(mods=", ".join(failed))
+            )
+
+        refresh_now = show_dialogue_conditional(
+            title=self.tr("GitHub Auto-Update Complete"),
+            text=self.tr(
+                "{count} mod(s) were auto-updated.\n\n{summary}\n\n"
+                "The updated versions won't appear until you refresh. "
+                "Refresh now?"
+            ).format(count=len(succeeded), summary="\n".join(summary_parts)),
+        )
+        if refresh_now:
+            EventBus().do_refresh_mods_lists.emit()
 
     def _connect_signals(self) -> None:
         # Bind install mod signal

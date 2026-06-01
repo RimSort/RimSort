@@ -30,6 +30,7 @@ class UpdateAvailable:
     latest_version: str
     release_notes: str
     latest_release: ReleaseInfo | None = None
+    auto_update: bool = False
 
 
 def check_for_updates(
@@ -76,45 +77,32 @@ def check_for_updates(
 
         if mod.installed_version == "HEAD":
             updates.append(
-                UpdateAvailable(
-                    owner_repo=mod.owner_repo,
-                    mod_path=mod.mod_path,
-                    installed_version="HEAD",
-                    latest_version=latest_stable.tag,
-                    release_notes=_truncate(latest_stable.body, 200),
-                    latest_release=latest_stable,
-                )
+                _make_update(mod, latest_stable),
             )
             continue
 
         installed_release = _find_release_by_tag(releases, mod.installed_version)
         if installed_release is None:
-            # Installed tag not found in releases -- treat as outdated
-            updates.append(
-                UpdateAvailable(
-                    owner_repo=mod.owner_repo,
-                    mod_path=mod.mod_path,
-                    installed_version=mod.installed_version,
-                    latest_version=latest_stable.tag,
-                    release_notes=_truncate(latest_stable.body, 200),
-                    latest_release=latest_stable,
-                )
-            )
+            updates.append(_make_update(mod, latest_stable))
             continue
 
         if latest_stable.published_at > installed_release.published_at:
-            updates.append(
-                UpdateAvailable(
-                    owner_repo=mod.owner_repo,
-                    mod_path=mod.mod_path,
-                    installed_version=mod.installed_version,
-                    latest_version=latest_stable.tag,
-                    release_notes=_truncate(latest_stable.body, 200),
-                    latest_release=latest_stable,
-                )
-            )
+            updates.append(_make_update(mod, latest_stable))
 
     return updates
+
+
+def _make_update(mod: GitHubModEntry, latest: ReleaseInfo) -> UpdateAvailable:
+    """Build an ``UpdateAvailable`` from a DB entry and the latest release."""
+    return UpdateAvailable(
+        owner_repo=mod.owner_repo,
+        mod_path=mod.mod_path,
+        installed_version=mod.installed_version,
+        latest_version=latest.tag,
+        release_notes=_truncate(latest.body, 200),
+        latest_release=latest,
+        auto_update=mod.auto_update,
+    )
 
 
 def _find_release_by_tag(releases: list[ReleaseInfo], tag: str) -> ReleaseInfo | None:
