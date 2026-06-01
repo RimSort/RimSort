@@ -445,6 +445,10 @@ class ModInfoPanel:
 
         self.hide_github_info()
 
+        from app.utils.event_bus import EventBus
+
+        EventBus().do_refresh_mods_lists.connect(self._refresh_github_info)
+
         logger.debug("Finished ModInfo initialization")
 
     def show_github_info(
@@ -505,6 +509,15 @@ class ModInfoPanel:
         self.mod_info_github_version_label.setVisible(visible)
         self.mod_info_github_version_combo.setVisible(visible)
         self.mod_info_github_update_label.setVisible(visible)
+
+    def _refresh_github_info(self) -> None:
+        """Re-check GitHub info for the currently displayed mod after a version switch."""
+        try:
+            mod_path = getattr(self, "_github_mod_path", None)
+            if mod_path:
+                self._update_github_info(mod_path)
+        except Exception:
+            logger.debug("Could not refresh GitHub info for current mod")
 
     def _update_github_info(self, mod_path: str | None) -> None:
         """Check if mod is GitHub-tracked and show/hide info accordingly."""
