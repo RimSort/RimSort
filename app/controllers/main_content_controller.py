@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import json
 import time
@@ -52,6 +54,8 @@ from app.views.dialogue import (
 from app.views.main_content_panel import MainContent
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
     from app.windows.github_mods_panel import GitHubModsPanel
 
 
@@ -165,6 +169,18 @@ class MainContentController(QObject):
         EventBus().github_version_switch_requested.connect(
             self._on_github_version_switch
         )
+
+    def _get_github_cache_session(self) -> Session:
+        """Create a session for the global GitHub release cache DB."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        from app.utils.github.models import CacheBase
+
+        cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
+        engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
+        CacheBase.metadata.create_all(engine)
+        return sessionmaker(bind=engine)()
 
     def _on_open_github_mods_panel(self) -> None:
         """Open the GitHub Mods panel, reusing the existing window if open."""
@@ -845,7 +861,11 @@ class MainContentController(QObject):
             return
 
         settings = self.settings_controller.settings
-        provider = GitHubProvider(github_token=settings.github_token or None)
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
 
         try:
             releases = provider.get_releases(owner_repo, force_refresh=True)
@@ -1072,7 +1092,11 @@ class MainContentController(QObject):
                 return
             owner_repo = entry.owner_repo
 
-        provider = GitHubProvider(github_token=settings.github_token or None)
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
         releases = provider.get_releases(owner_repo)
 
         target_release = None

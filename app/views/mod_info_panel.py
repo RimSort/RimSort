@@ -515,7 +515,6 @@ class ModInfoPanel:
         try:
             from app.models.metadata.metadata_db import Base
             from app.utils.github.models import GitHubModEntry
-            from app.utils.github.provider import GitHubProvider
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 self.settings_controller.settings.aux_db_path
@@ -535,42 +534,49 @@ class ModInfoPanel:
 
             versions = [installed_version]
             update_available = False
+
             try:
                 from sqlalchemy import create_engine
                 from sqlalchemy.orm import sessionmaker as sa_sessionmaker
 
-                from app.utils.github.models import CacheBase
+                from app.utils.github.models import CacheBase, GitHubReleaseCache
+                from app.utils.github.provider import (
+                    GitHubProvider,
+                    _releases_from_json,
+                )
 
                 cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
                 cache_engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
                 CacheBase.metadata.create_all(cache_engine)
                 cache_session = sa_sessionmaker(bind=cache_engine)()
                 try:
-                    token = self.settings_controller.settings.github_token or None
-                    provider = GitHubProvider(
-                        github_token=token, cache_session=cache_session
+                    cached = (
+                        cache_session.query(GitHubReleaseCache)
+                        .filter_by(owner_repo=owner_repo)
+                        .first()
                     )
-                    releases = provider.get_releases(owner_repo)
-                    if releases:
-                        versions = [r.tag for r in releases]
-                        versions.append("HEAD (latest commit)")
-                        latest = provider.get_latest_stable_release(releases)
-                        if latest and installed_version != "HEAD":
-                            installed_rel = next(
-                                (r for r in releases if r.tag == installed_version),
-                                None,
-                            )
-                            if (
-                                installed_rel
-                                and latest.published_at > installed_rel.published_at
-                            ):
+                    if cached is not None:
+                        releases = _releases_from_json(cached.releases_json)
+                        if releases:
+                            versions = [r.tag for r in releases]
+                            versions.append("HEAD (latest commit)")
+                            latest = GitHubProvider.get_latest_stable_release(releases)
+                            if latest and installed_version != "HEAD":
+                                installed_rel = next(
+                                    (r for r in releases if r.tag == installed_version),
+                                    None,
+                                )
+                                if (
+                                    installed_rel
+                                    and latest.published_at > installed_rel.published_at
+                                ):
+                                    update_available = True
+                            elif latest and installed_version == "HEAD":
                                 update_available = True
-                        elif latest and installed_version == "HEAD":
-                            update_available = True
                 finally:
                     cache_session.close()
             except Exception:
-                logger.debug("Could not fetch releases for {}", owner_repo)
+                logger.debug("Could not load cached releases for {}", owner_repo)
 
             self.show_github_info(
                 owner_repo=owner_repo,
