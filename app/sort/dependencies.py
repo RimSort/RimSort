@@ -207,7 +207,7 @@ def gen_tier_three_deps_graph(
             # Some known tier three mods might not actually be active
             tier_three_mods.add(known_tier_three_mod)
             rev_dependencies_set = get_reverse_dependencies_recursive(
-                known_tier_three_mod, reverse_dependencies_graph
+                known_tier_three_mod, reverse_dependencies_graph, set()
             )
             tier_three_mods.update(rev_dependencies_set)
     logger.info(
@@ -228,20 +228,21 @@ def gen_tier_three_deps_graph(
 
 
 def get_reverse_dependencies_recursive(
-    package_id: str, active_mods_rev_dependencies: dict[str, set[str]]
+    package_id: str,
+    active_mods_rev_dependencies: dict[str, set[str]],
+    processed_ids: set[str],
 ) -> set[str]:
-    reverse_dependencies_set = set()
-    # Should always be true since all active ids get initialized with a set()
+    reverse_dependencies_set: set[str] = set()
     if package_id in active_mods_rev_dependencies:
         for dependent_id in active_mods_rev_dependencies[package_id]:
-            reverse_dependencies_set.add(
-                dependent_id
-            )  # Safe, as should refer to active id
-            reverse_dependencies_set.update(  # Safe, as should refer to active ids
-                get_reverse_dependencies_recursive(
-                    dependent_id, active_mods_rev_dependencies
+            if dependent_id not in processed_ids:
+                processed_ids.add(dependent_id)
+                reverse_dependencies_set.add(dependent_id)
+                reverse_dependencies_set.update(
+                    get_reverse_dependencies_recursive(
+                        dependent_id, active_mods_rev_dependencies, processed_ids
+                    )
                 )
-            )
     return reverse_dependencies_set
 
 

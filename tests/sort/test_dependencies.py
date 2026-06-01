@@ -90,7 +90,7 @@ class TestGetDependenciesRecursive:
 class TestGetReverseDependenciesRecursive:
     def test_no_reverse_deps(self) -> None:
         graph: dict[str, set[str]] = {"mod_a": set()}
-        result = get_reverse_dependencies_recursive("mod_a", graph)
+        result = get_reverse_dependencies_recursive("mod_a", graph, set())
         assert result == set()
 
     def test_direct_reverse_deps(self) -> None:
@@ -99,7 +99,7 @@ class TestGetReverseDependenciesRecursive:
             "mod_b": set(),
             "mod_c": set(),
         }
-        result = get_reverse_dependencies_recursive("mod_a", graph)
+        result = get_reverse_dependencies_recursive("mod_a", graph, set())
         assert result == {"mod_b", "mod_c"}
 
     def test_transitive_reverse_deps(self) -> None:
@@ -108,27 +108,22 @@ class TestGetReverseDependenciesRecursive:
             "mod_b": {"mod_c"},
             "mod_c": set(),
         }
-        result = get_reverse_dependencies_recursive("mod_a", graph)
+        result = get_reverse_dependencies_recursive("mod_a", graph, set())
         assert result == {"mod_b", "mod_c"}
 
     def test_unknown_package_returns_empty(self) -> None:
         graph: dict[str, set[str]] = {"mod_a": set()}
-        result = get_reverse_dependencies_recursive("nonexistent", graph)
+        result = get_reverse_dependencies_recursive("nonexistent", graph, set())
         assert result == set()
 
-    def test_circular_reverse_deps_causes_recursion_error(self) -> None:
-        """Circular reverse deps cause infinite recursion — no processed_ids guard.
-
-        Unlike get_dependencies_recursive, this function has no cycle protection.
-        This test documents the production bug: if reverse dependency data ever
-        contains a cycle, the app will crash with RecursionError.
-        """
+    def test_circular_reverse_deps_terminates(self) -> None:
+        """Regression test for #2042: circular reverse deps must not crash."""
         graph: dict[str, set[str]] = {
             "mod_a": {"mod_b"},
             "mod_b": {"mod_a"},
         }
-        with pytest.raises(RecursionError):
-            get_reverse_dependencies_recursive("mod_a", graph)
+        result = get_reverse_dependencies_recursive("mod_a", graph, set())
+        assert result == {"mod_b", "mod_a"}
 
 
 # ---------------------------------------------------------------------------
