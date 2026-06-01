@@ -38,7 +38,7 @@ from app.utils.github.provider import (
     ReleaseInfo,
     parse_github_url,
 )
-from app.utils.github.worker import GitHubInstallWorker
+from app.utils.github.worker import GitHubInstallWorker, GitHubVersionSwitchWorker
 from app.utils.http_downloader import (
     DatabaseDownloadTask,
     DownloadResult,
@@ -69,6 +69,7 @@ class MainContentController(QObject):
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
         self._http_download_worker: Optional[HttpDownloadWorker] = None
         self._github_install_worker: Optional[GitHubInstallWorker] = None
+        self._github_version_switch_worker: Optional[GitHubVersionSwitchWorker] = None
         self._github_mods_panel: Optional[GitHubModsPanel] = None
 
         # Thread pool for concurrent tasks
@@ -160,6 +161,9 @@ class MainContentController(QObject):
         )
         EventBus().do_upload_community_rules_db_to_github.connect(
             self._on_do_upload_community_db_to_github
+        )
+        EventBus().github_version_switch_requested.connect(
+            self._on_github_version_switch
         )
 
     def _on_open_github_mods_panel(self) -> None:
@@ -1041,6 +1045,120 @@ class MainContentController(QObject):
         InformationBox(
             title=self.tr("GitHub Mod Installed"),
             text=self.tr("Successfully installed {owner_repo} ({version})").format(
+                owner_repo=owner_repo, version=version
+            ),
+        ).exec()
+
+        EventBus().do_refresh_mods_lists.emit()
+
+    @Slot(str, str)
+    def _on_github_version_switch(self, mod_path: str, selected_tag: str) -> None:
+        """Handle version switch request from the mod info panel combo box."""
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.models.metadata.metadata_db import Base
+        from app.utils.github.models import GitHubModEntry
+        from app.utils.github.worker import GitHubVersionSwitchWorker
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+        Base.metadata.create_all(aux_controller.engine)
+
+        with aux_controller.Session() as session:
+            entry = session.query(GitHubModEntry).filter_by(mod_path=mod_path).first()
+            if entry is None:
+                logger.warning(f"No GitHub mod entry for {mod_path}")
+                return
+            owner_repo = entry.owner_repo
+
+        provider = GitHubProvider(github_token=settings.github_token or None)
+        releases = provider.get_releases(owner_repo)
+
+        target_release = None
+        target_asset = None
+
+        if selected_tag != "HEAD (latest commit)":
+            target_release = next((r for r in releases if r.tag == selected_tag), None)
+            if target_release is not None:
+                custom_zips = target_release.get_custom_zip_assets()
+                if len(custom_zips) == 1:
+                    target_asset = custom_zips[0]
+                elif len(custom_zips) > 1:
+                    asset_names = [a.name for a in custom_zips]
+                    chosen_asset, ok = QInputDialog().getItem(
+                        self.view.mods_panel,
+                        self.tr("Select Asset"),
+                        self.tr("Multiple release assets found. Choose one:"),
+                        asset_names,
+                        0,
+                        False,
+                    )
+                    if not ok:
+                        return
+                    target_asset = custom_zips[asset_names.index(chosen_asset)]
+                else:
+                    answer = show_dialogue_conditional(
+                        title=self.tr("No Release ZIP Found"),
+                        text=self.tr(
+                            "Release {tag} has no ZIP assets. Switch to HEAD instead?"
+                        ).format(tag=selected_tag),
+                    )
+                    if answer != QMessageBox.StandardButton.Yes:
+                        return
+                    target_release = None
+
+        repo_url = f"https://github.com/{owner_repo}.git"
+
+        self._github_version_switch_worker = GitHubVersionSwitchWorker(
+            mod_path=mod_path,
+            owner_repo=owner_repo,
+            repo_url=repo_url,
+            target_release=target_release,
+            target_asset=target_asset,
+        )
+        self._github_version_switch_worker.finished.connect(
+            lambda ok, ver, path: self._on_github_version_switch_finished(
+                ok, ver, path, owner_repo
+            )
+        )
+        self._github_version_switch_worker.start()
+
+    def _on_github_version_switch_finished(
+        self, success: bool, new_version: str, mod_path: str, owner_repo: str
+    ) -> None:
+        """Handle completed version switch."""
+        if not success:
+            InformationBox(
+                title=self.tr("Version Switch Failed"),
+                text=self.tr("Failed to switch version: {error}").format(
+                    error=new_version
+                ),
+            ).exec()
+            return
+
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+
+        version = "HEAD" if new_version.startswith("HEAD") else new_version
+        with aux_controller.Session() as session:
+            entry = (
+                session.query(GitHubModEntry)
+                .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                .first()
+            )
+            if entry is not None:
+                entry.installed_version = version
+                session.commit()
+
+        InformationBox(
+            title=self.tr("Version Switched"),
+            text=self.tr("Switched {owner_repo} to {version}").format(
                 owner_repo=owner_repo, version=version
             ),
         ).exec()

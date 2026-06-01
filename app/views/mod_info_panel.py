@@ -453,14 +453,29 @@ class ModInfoPanel:
         installed_version: str,
         available_versions: list[str],
         update_available: bool,
+        mod_path: str = "",
     ) -> None:
         """Show GitHub source info for a GitHub-tracked mod."""
+        self._github_owner_repo = owner_repo
+        self._github_installed_version = installed_version
+        self._github_mod_path = mod_path
+
         self.mod_info_github_source_value.setText(owner_repo)
+
+        try:
+            self.mod_info_github_version_combo.activated.disconnect()
+        except RuntimeError:
+            pass
+
         self.mod_info_github_version_combo.clear()
         self.mod_info_github_version_combo.addItems(available_versions)
         idx = self.mod_info_github_version_combo.findText(installed_version)
         if idx >= 0:
             self.mod_info_github_version_combo.setCurrentIndex(idx)
+
+        self.mod_info_github_version_combo.activated.connect(
+            self._on_github_version_selected
+        )
 
         if update_available:
             self.mod_info_github_update_label.setText(self.tr("(Update available)"))
@@ -469,6 +484,16 @@ class ModInfoPanel:
             self.mod_info_github_update_label.hide()
 
         self._set_github_row_visible(True)
+
+    def _on_github_version_selected(self, index: int) -> None:
+        """Handle user selecting a different version in the combo box."""
+        from app.utils.event_bus import EventBus
+
+        selected = self.mod_info_github_version_combo.itemText(index)
+        if selected == self._github_installed_version:
+            return
+
+        EventBus().github_version_switch_requested.emit(self._github_mod_path, selected)
 
     def hide_github_info(self) -> None:
         """Hide GitHub info row for non-GitHub mods."""
@@ -537,6 +562,7 @@ class ModInfoPanel:
                 installed_version=installed_version,
                 available_versions=versions,
                 update_available=update_available,
+                mod_path=mod_path,
             )
         except Exception:
             logger.debug("Could not check GitHub mod status for {}", mod_path)
