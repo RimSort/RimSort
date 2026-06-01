@@ -536,24 +536,39 @@ class ModInfoPanel:
             versions = [installed_version]
             update_available = False
             try:
-                token = self.settings_controller.settings.github_token or None
-                provider = GitHubProvider(github_token=token)
-                releases = provider.get_releases(owner_repo)
-                if releases:
-                    versions = [r.tag for r in releases]
-                    versions.append("HEAD (latest commit)")
-                    latest = provider.get_latest_stable_release(releases)
-                    if latest and installed_version != "HEAD":
-                        installed_rel = next(
-                            (r for r in releases if r.tag == installed_version), None
-                        )
-                        if (
-                            installed_rel
-                            and latest.published_at > installed_rel.published_at
-                        ):
+                from sqlalchemy import create_engine
+                from sqlalchemy.orm import sessionmaker as sa_sessionmaker
+
+                from app.utils.github.models import CacheBase
+
+                cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
+                cache_engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
+                CacheBase.metadata.create_all(cache_engine)
+                cache_session = sa_sessionmaker(bind=cache_engine)()
+                try:
+                    token = self.settings_controller.settings.github_token or None
+                    provider = GitHubProvider(
+                        github_token=token, cache_session=cache_session
+                    )
+                    releases = provider.get_releases(owner_repo)
+                    if releases:
+                        versions = [r.tag for r in releases]
+                        versions.append("HEAD (latest commit)")
+                        latest = provider.get_latest_stable_release(releases)
+                        if latest and installed_version != "HEAD":
+                            installed_rel = next(
+                                (r for r in releases if r.tag == installed_version),
+                                None,
+                            )
+                            if (
+                                installed_rel
+                                and latest.published_at > installed_rel.published_at
+                            ):
+                                update_available = True
+                        elif latest and installed_version == "HEAD":
                             update_available = True
-                    elif latest and installed_version == "HEAD":
-                        update_available = True
+                finally:
+                    cache_session.close()
             except Exception:
                 logger.debug("Could not fetch releases for {}", owner_repo)
 
