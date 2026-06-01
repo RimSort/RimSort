@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -283,7 +284,7 @@ class MetadataController(QObject):
 
     @staticmethod
     def _build_compiled_data(
-        mods_metadata: dict[str, ListedMod],
+        mods_metadata: Mapping[str, ListedMod],
         use_moddependencies_as_loadTheseBefore: bool = False,
     ) -> CompiledDependencyData:
         """Build compiled dependency data from parsed mods.

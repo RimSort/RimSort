@@ -1,118 +1,83 @@
-from unittest.mock import MagicMock
-
 from app.sort.alphabetical_sort import do_alphabetical_sort
 from tests.sort.conftest import (
     assert_diamond_ordering,
-    diamond_fixture,
-    make_mod,
-    three_mod_alpha_fixture,
+    diamond_mods,
+    make_listed_mod,
+    three_mod_alpha_mods,
 )
 
 
 class TestDoAlphabeticalSort:
-    def test_single_mod(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-        }
-        result = do_alphabetical_sort({"mod.a": set()}, {"uuid_a"})
-        assert result == ["uuid_a"]
+    def test_single_mod(self) -> None:
+        mods = {"/mods/a": make_listed_mod("/mods/a", name="Alpha", package_id="mod.a")}
+        result = do_alphabetical_sort({"mod.a": set()}, {"/mods/a"}, mods)
+        assert result == ["/mods/a"]
 
-    def test_alphabetical_no_dependencies(
-        self, metadata_manager_mock: MagicMock
-    ) -> None:
-        """Without dependencies, mods are sorted alphabetically by name."""
-        metadata, graph, active = three_mod_alpha_fixture()
-        metadata_manager_mock.internal_local_metadata = metadata
-        result = do_alphabetical_sort(graph, active)
-        names = [
-            metadata_manager_mock.internal_local_metadata[u]["name"] for u in result
-        ]
+    def test_alphabetical_no_dependencies(self) -> None:
+        mods, graph, active = three_mod_alpha_mods()
+        result = do_alphabetical_sort(graph, active, mods)
+        names = [mods[p].name for p in result]
         assert names == ["Alpha", "Middle", "Zebra"]
 
-    def test_dependency_placed_before_dependent(
-        self, metadata_manager_mock: MagicMock
-    ) -> None:
-        """A mod's dependency appears before it even if alphabetically later."""
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-            "uuid_z": make_mod("mod.z", name="Zebra"),
+    def test_dependency_placed_before_dependent(self) -> None:
+        mods = {
+            "/mods/a": make_listed_mod("/mods/a", name="Alpha", package_id="mod.a"),
+            "/mods/z": make_listed_mod("/mods/z", name="Zebra", package_id="mod.z"),
         }
-        # Alpha depends on Zebra
-        graph: dict[str, set[str]] = {
-            "mod.a": {"mod.z"},
-            "mod.z": set(),
-        }
-        result = do_alphabetical_sort(graph, {"uuid_a", "uuid_z"})
-        assert result.index("uuid_z") < result.index("uuid_a")
+        graph: dict[str, set[str]] = {"mod.a": {"mod.z"}, "mod.z": set()}
+        result = do_alphabetical_sort(graph, {"/mods/a", "/mods/z"}, mods)
+        assert result.index("/mods/z") < result.index("/mods/a")
 
-    def test_transitive_deps_placed_before(
-        self, metadata_manager_mock: MagicMock
-    ) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-            "uuid_b": make_mod("mod.b", name="Beta"),
-            "uuid_c": make_mod("mod.c", name="Charlie"),
+    def test_transitive_deps_placed_before(self) -> None:
+        mods = {
+            "/mods/a": make_listed_mod("/mods/a", name="Alpha", package_id="mod.a"),
+            "/mods/b": make_listed_mod("/mods/b", name="Beta", package_id="mod.b"),
+            "/mods/c": make_listed_mod("/mods/c", name="Charlie", package_id="mod.c"),
         }
-        # Alpha -> Beta -> Charlie
         graph: dict[str, set[str]] = {
             "mod.a": {"mod.b"},
             "mod.b": {"mod.c"},
             "mod.c": set(),
         }
-        result = do_alphabetical_sort(graph, {"uuid_a", "uuid_b", "uuid_c"})
-        assert result.index("uuid_c") < result.index("uuid_b")
-        assert result.index("uuid_b") < result.index("uuid_a")
+        result = do_alphabetical_sort(graph, {"/mods/a", "/mods/b", "/mods/c"}, mods)
+        assert result.index("/mods/c") < result.index("/mods/b")
+        assert result.index("/mods/b") < result.index("/mods/a")
 
-    def test_graph_entries_not_in_active_mods_excluded(
-        self, metadata_manager_mock: MagicMock
-    ) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": make_mod("mod.a", name="Alpha"),
-        }
-        graph: dict[str, set[str]] = {
-            "mod.a": set(),
-            "mod.ghost": set(),
-        }
-        result = do_alphabetical_sort(graph, {"uuid_a"})
-        assert result == ["uuid_a"]
+    def test_graph_entries_not_in_active_excluded(self) -> None:
+        mods = {"/mods/a": make_listed_mod("/mods/a", name="Alpha", package_id="mod.a")}
+        graph: dict[str, set[str]] = {"mod.a": set(), "mod.ghost": set()}
+        result = do_alphabetical_sort(graph, {"/mods/a"}, mods)
+        assert result == ["/mods/a"]
 
-    def test_empty_graph(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {}
-        result = do_alphabetical_sort({}, set())
+    def test_empty_graph(self) -> None:
+        result = do_alphabetical_sort({}, set(), {})
         assert result == []
 
-    def test_diamond_dependency(self, metadata_manager_mock: MagicMock) -> None:
-        """Diamond: D depends on B and C, both depend on A. A appears once and first."""
-        metadata, graph, active = diamond_fixture()
-        metadata_manager_mock.internal_local_metadata = metadata
-        result = do_alphabetical_sort(graph, active)
+    def test_diamond_dependency(self) -> None:
+        mods, graph, active = diamond_mods()
+        result = do_alphabetical_sort(graph, active, mods)
         assert_diamond_ordering(result)
 
-    def test_case_insensitive_sort(self, metadata_manager_mock: MagicMock) -> None:
-        """Alphabetical sorting is case-insensitive."""
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_upper": make_mod("mod.upper", name="ZEBRA"),
-            "uuid_lower": make_mod("mod.lower", name="alpha"),
+    def test_case_insensitive_sort(self) -> None:
+        mods = {
+            "/mods/upper": make_listed_mod(
+                "/mods/upper", name="ZEBRA", package_id="mod.upper"
+            ),
+            "/mods/lower": make_listed_mod(
+                "/mods/lower", name="alpha", package_id="mod.lower"
+            ),
         }
-        graph: dict[str, set[str]] = {
-            "mod.upper": set(),
-            "mod.lower": set(),
-        }
-        result = do_alphabetical_sort(graph, {"uuid_upper", "uuid_lower"})
-        assert result == ["uuid_lower", "uuid_upper"]
+        graph: dict[str, set[str]] = {"mod.upper": set(), "mod.lower": set()}
+        result = do_alphabetical_sort(graph, {"/mods/upper", "/mods/lower"}, mods)
+        assert result == ["/mods/lower", "/mods/upper"]
 
-    def test_non_string_name_handled(self, metadata_manager_mock: MagicMock) -> None:
-        """Mods with non-string name values don't crash and sort after valid names."""
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid_a": {"packageid": "mod.a", "name": None},
-            "uuid_b": make_mod("mod.b", name="Beta"),
-        }
-        graph: dict[str, set[str]] = {
-            "mod.a": set(),
-            "mod.b": set(),
-        }
-        result = do_alphabetical_sort(graph, {"uuid_a", "uuid_b"})
+    def test_non_string_name_handled(self) -> None:
+        mod_a = make_listed_mod("/mods/a", name="Alpha", package_id="mod.a")
+        object.__setattr__(mod_a, "name", None)
+        mod_b = make_listed_mod("/mods/b", name="Beta", package_id="mod.b")
+        mods = {"/mods/a": mod_a, "/mods/b": mod_b}
+        graph: dict[str, set[str]] = {"mod.a": set(), "mod.b": set()}
+        result = do_alphabetical_sort(graph, {"/mods/a", "/mods/b"}, mods)
         assert len(result) == 2
-        # "Beta" sorts before the fallback "name error in mod about.xml"
-        assert result[0] == "uuid_b"
-        assert result[1] == "uuid_a"
+        assert result[0] == "/mods/b"
+        assert result[1] == "/mods/a"

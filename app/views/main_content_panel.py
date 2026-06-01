@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
@@ -1068,21 +1069,27 @@ class MainContent(QObject):
                                     active_mods.add(uuid)
                                 break
 
-        # Get package IDs for active mods
-        active_package_ids = set()
+        # Compile dependency data from MetadataController
+        metadata_controller = MetadataController.instance()
+        compiled_data = metadata_controller.compile(
+            use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+        )
+
+        # Bridge: translate old UUIDs to paths for the new sort system
+        active_mod_paths: set[str] = set()
         for uuid in active_mods:
-            active_package_ids.add(
-                self.metadata_manager.internal_local_metadata[uuid]["packageid"]
-            )
+            mod_data = self.metadata_manager.internal_local_metadata.get(uuid)
+            if mod_data and mod_data.get("path"):
+                active_mod_paths.add(mod_data["path"])
 
         # Get the current order of active mods list and create a copy for comparison
         current_order = active_mods
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
-                active_package_ids=active_package_ids,
-                active_uuids=active_mods,
-                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                compiled_data=compiled_data,
+                mods_metadata=metadata_controller.mods_metadata,
+                active_mod_paths=active_mod_paths,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
@@ -1100,7 +1107,15 @@ class MainContent(QObject):
             logger.error(f"Sort failed. Sorting algorithm not implemented: {e}")
             return
 
-        success, new_order = sorter.sort()
+        success, new_order_paths = sorter.sort()
+
+        # Bridge: translate paths back to UUIDs for the list widget
+        path_to_uuid: dict[str, str] = {}
+        for uuid, mod_data in self.metadata_manager.internal_local_metadata.items():
+            p = mod_data.get("path")
+            if p:
+                path_to_uuid[p] = uuid
+        new_order = [path_to_uuid[p] for p in new_order_paths if p in path_to_uuid]
 
         # Log the sort result and the order
         logger.debug(
