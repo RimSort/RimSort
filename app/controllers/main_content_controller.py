@@ -40,7 +40,11 @@ from app.utils.github.provider import (
     ReleaseInfo,
     parse_github_url,
 )
-from app.utils.github.worker import GitHubInstallWorker, GitHubVersionSwitchWorker
+from app.utils.github.worker import (
+    GitHubInstallWorker,
+    GitHubUpdateCheckWorker,
+    GitHubVersionSwitchWorker,
+)
 from app.utils.http_downloader import (
     DatabaseDownloadTask,
     DownloadResult,
@@ -56,6 +60,7 @@ from app.views.main_content_panel import MainContent
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
+    from app.utils.github.updater import UpdateAvailable
     from app.windows.github_mods_panel import GitHubModsPanel
 
 
@@ -74,6 +79,7 @@ class MainContentController(QObject):
         self._http_download_worker: Optional[HttpDownloadWorker] = None
         self._github_install_worker: Optional[GitHubInstallWorker] = None
         self._github_version_switch_worker: Optional[GitHubVersionSwitchWorker] = None
+        self._github_update_check_worker: Optional[GitHubUpdateCheckWorker] = None
         self._github_mods_panel: Optional[GitHubModsPanel] = None
 
         # Thread pool for concurrent tasks
@@ -126,6 +132,72 @@ class MainContentController(QObject):
         }
 
         self._connect_signals()
+        self._start_github_update_check()
+
+    def _start_github_update_check(self) -> None:
+        """Run a background GitHub update check if enabled in settings."""
+        from app.utils.github.worker import GitHubUpdateCheckWorker
+
+        settings = self.settings_controller.settings
+        if not settings.github_update_check_enabled:
+            return
+
+        try:
+            from app.controllers.metadata_db_controller import AuxMetadataController
+            from app.models.metadata.metadata_db import Base
+            from app.utils.github.models import GitHubModEntry
+
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            Base.metadata.create_all(aux_controller.engine)
+
+            with aux_controller.Session() as session:
+                count = session.query(GitHubModEntry).count()
+            if count == 0:
+                return
+        except Exception:
+            return
+
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
+
+        self._github_update_check_worker = GitHubUpdateCheckWorker(
+            provider=provider,
+            instance_session_factory=aux_controller.Session,
+            check_interval_hours=settings.github_update_check_interval_hours,
+        )
+        self._github_update_check_worker.finished.connect(
+            self._on_github_update_check_finished
+        )
+        self._github_update_check_worker.error.connect(
+            lambda msg: logger.warning(f"GitHub update check failed: {msg}")
+        )
+        self._github_update_check_worker.start()
+        logger.info(f"Started background GitHub update check for {count} mod(s)")
+
+    def _on_github_update_check_finished(self, updates: list[UpdateAvailable]) -> None:
+        """Handle results from background GitHub update check."""
+        if not updates:
+            logger.info("All GitHub mods are up to date")
+            return
+
+        mod_names = ", ".join(u.owner_repo for u in updates[:5])
+        suffix = f" and {len(updates) - 5} more" if len(updates) > 5 else ""
+        logger.info(f"GitHub updates available: {mod_names}{suffix}")
+
+        InformationBox(
+            title=self.tr("GitHub Mod Updates Available"),
+            text=self.tr("{count} GitHub mod(s) have updates available.").format(
+                count=len(updates)
+            ),
+            information=self.tr(
+                "Use Download → GitHub Mods to view and install updates."
+            ),
+        ).exec()
 
     def _connect_signals(self) -> None:
         # Bind install mod signal
