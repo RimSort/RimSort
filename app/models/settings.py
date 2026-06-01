@@ -209,6 +209,10 @@ class Settings(QObject):
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # GitHub Mod Updates
+        self.github_update_check_enabled: bool = True
+        self.github_update_check_interval_hours: int = 24
+
         # Auxiliary Metadata DB
         self.enable_aux_db_behavior_editing: bool = False
 
