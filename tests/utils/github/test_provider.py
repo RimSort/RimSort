@@ -1,12 +1,12 @@
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from github import GithubException
+from sqlalchemy.orm import Session
 
-from app.utils.github.models import CacheBase, GitHubReleaseCache
+from app.utils.github.models import GitHubReleaseCache
 from app.utils.github.provider import (
     GitHubProvider,
     GitHubRateLimitError,
@@ -104,14 +104,6 @@ class TestGitHubRateLimitError:
 
 
 class TestGitHubProvider:
-    @pytest.fixture
-    def cache_session(self) -> Generator[Session, None, None]:
-        engine = create_engine("sqlite:///:memory:")
-        CacheBase.metadata.create_all(engine)
-        session = sessionmaker(bind=engine)()
-        yield session
-        session.close()
-
     def test_get_releases_uses_cache_when_fresh(self, cache_session: Session) -> None:
         now = datetime.now(tz=timezone.utc)
         cached = GitHubReleaseCache(
@@ -172,3 +164,186 @@ class TestGitHubProvider:
         latest = provider.get_latest_stable_release(releases)
         assert latest is not None
         assert latest.tag == "v1.0.0"
+
+    def test_get_latest_stable_release_empty_list(self) -> None:
+        result = GitHubProvider.get_latest_stable_release([])
+        assert result is None
+
+    def test_get_latest_stable_release_all_prereleases(self) -> None:
+        now = datetime.now(tz=timezone.utc)
+        releases = [
+            ReleaseInfo(
+                tag="v2.0.0-beta",
+                name="Beta",
+                published_at=now,
+                prerelease=True,
+                assets=[],
+                body="",
+            ),
+        ]
+        result = GitHubProvider.get_latest_stable_release(releases)
+        assert result is not None
+        assert result.tag == "v2.0.0-beta"
+
+
+def _make_mock_asset(name: str, url: str, size: int = 1000) -> MagicMock:
+    asset = MagicMock()
+    asset.name = name
+    asset.browser_download_url = url
+    asset.size = size
+    return asset
+
+
+def _make_mock_release(
+    tag: str,
+    name: str | None = None,
+    published_at: datetime | None = None,
+    prerelease: bool = False,
+    draft: bool = False,
+    body: str = "",
+    assets: list[MagicMock] | None = None,
+) -> MagicMock:
+    rel = MagicMock()
+    rel.tag_name = tag
+    rel.name = name or tag
+    rel.published_at = published_at or datetime.now(tz=timezone.utc)
+    rel.prerelease = prerelease
+    rel.draft = draft
+    rel.body = body
+    rel.get_assets.return_value = assets or []
+    return rel
+
+
+class TestFetchReleasesFromApi:
+    """Tests for GitHubProvider._fetch_releases_from_api with mocked PyGitHub."""
+
+    @patch("app.utils.github.provider.Github")
+    def test_successful_fetch_returns_releases(
+        self, mock_github_cls: MagicMock
+    ) -> None:
+        now = datetime.now(tz=timezone.utc)
+        mock_asset = _make_mock_asset("Mod.zip", "https://github.com/dl/Mod.zip")
+        mock_release = _make_mock_release(
+            tag="v1.0.0",
+            published_at=now,
+            assets=[mock_asset],
+            body="Release notes",
+        )
+
+        mock_repo = MagicMock()
+        mock_repo.get_releases.return_value = [mock_release]
+        mock_github_cls.return_value.get_repo.return_value = mock_repo
+
+        provider = GitHubProvider()
+        releases = provider.get_releases("author/Mod", force_refresh=True)
+
+        assert len(releases) == 1
+        assert releases[0].tag == "v1.0.0"
+        assert releases[0].body == "Release notes"
+        assert len(releases[0].assets) == 1
+        assert releases[0].assets[0].name == "Mod.zip"
+
+    @patch("app.utils.github.provider.Github")
+    def test_successful_fetch_updates_cache(
+        self, mock_github_cls: MagicMock, cache_session: Session
+    ) -> None:
+        now = datetime.now(tz=timezone.utc)
+        mock_release = _make_mock_release(tag="v1.0.0", published_at=now)
+        mock_repo = MagicMock()
+        mock_repo.get_releases.return_value = [mock_release]
+        mock_github_cls.return_value.get_repo.return_value = mock_repo
+
+        provider = GitHubProvider(cache_session=cache_session)
+        provider.get_releases("author/Mod", force_refresh=True)
+
+        cached = (
+            cache_session.query(GitHubReleaseCache)
+            .filter_by(owner_repo="author/Mod")
+            .first()
+        )
+        assert cached is not None
+        assert "v1.0.0" in cached.releases_json
+
+    @patch("app.utils.github.provider.Github")
+    def test_rate_limit_raises_error(self, mock_github_cls: MagicMock) -> None:
+        mock_github_cls.return_value.get_repo.side_effect = GithubException(
+            403, {"message": "rate limit"}, None
+        )
+
+        provider = GitHubProvider()
+        with pytest.raises(GitHubRateLimitError):
+            provider.get_releases("author/Mod", force_refresh=True)
+
+    @patch("app.utils.github.provider.Github")
+    def test_429_raises_rate_limit_error(self, mock_github_cls: MagicMock) -> None:
+        mock_github_cls.return_value.get_repo.side_effect = GithubException(
+            429, {"message": "too many requests"}, None
+        )
+
+        provider = GitHubProvider()
+        with pytest.raises(GitHubRateLimitError):
+            provider.get_releases("author/Mod", force_refresh=True)
+
+    @patch("app.utils.github.provider.Github")
+    def test_404_returns_empty_list(self, mock_github_cls: MagicMock) -> None:
+        mock_github_cls.return_value.get_repo.side_effect = GithubException(
+            404, {"message": "not found"}, None
+        )
+
+        provider = GitHubProvider()
+        releases = provider.get_releases("author/Mod", force_refresh=True)
+        assert releases == []
+
+    @patch("app.utils.github.provider.Github")
+    def test_other_github_exception_propagates(
+        self, mock_github_cls: MagicMock
+    ) -> None:
+        mock_github_cls.return_value.get_repo.side_effect = GithubException(
+            500, {"message": "server error"}, None
+        )
+
+        provider = GitHubProvider()
+        with pytest.raises(GithubException):
+            provider.get_releases("author/Mod", force_refresh=True)
+
+    @patch("app.utils.github.provider.Github")
+    def test_naive_datetime_gets_utc_timezone(self, mock_github_cls: MagicMock) -> None:
+        naive_dt = datetime(2024, 1, 1, 12, 0, 0)
+        mock_release = _make_mock_release(tag="v1.0.0", published_at=naive_dt)
+        mock_repo = MagicMock()
+        mock_repo.get_releases.return_value = [mock_release]
+        mock_github_cls.return_value.get_repo.return_value = mock_repo
+
+        provider = GitHubProvider()
+        releases = provider.get_releases("author/Mod", force_refresh=True)
+
+        assert releases[0].published_at.tzinfo is not None
+        assert releases[0].published_at.tzinfo == timezone.utc
+
+    @patch("app.utils.github.provider.Github")
+    def test_release_with_none_name_uses_tag(self, mock_github_cls: MagicMock) -> None:
+        mock_release = _make_mock_release(tag="v1.0.0")
+        mock_release.name = None
+        mock_repo = MagicMock()
+        mock_repo.get_releases.return_value = [mock_release]
+        mock_github_cls.return_value.get_repo.return_value = mock_repo
+
+        provider = GitHubProvider()
+        releases = provider.get_releases("author/Mod", force_refresh=True)
+
+        assert releases[0].name == "v1.0.0"
+
+    @patch("app.utils.github.provider.Github")
+    def test_release_with_none_body_uses_empty_string(
+        self, mock_github_cls: MagicMock
+    ) -> None:
+        mock_release = _make_mock_release(tag="v1.0.0")
+        mock_release.body = None
+        mock_repo = MagicMock()
+        mock_repo.get_releases.return_value = [mock_release]
+        mock_github_cls.return_value.get_repo.return_value = mock_repo
+
+        provider = GitHubProvider()
+        releases = provider.get_releases("author/Mod", force_refresh=True)
+
+        assert releases[0].body == ""

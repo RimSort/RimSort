@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
 from app.utils.github.models import (
-    CacheBase,
     GitHubModEntry,
     GitHubReleaseCache,
 )
@@ -17,16 +16,6 @@ def instance_session() -> Generator[Session, None, None]:
     """Session for the per-instance DB (aux_metadata + github_mods)."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
-    session = sessionmaker(bind=engine)()
-    yield session
-    session.close()
-
-
-@pytest.fixture
-def cache_session() -> Generator[Session, None, None]:
-    """Session for the global cache DB (github_release_cache)."""
-    engine = create_engine("sqlite:///:memory:")
-    CacheBase.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
     yield session
     session.close()

@@ -2,7 +2,7 @@ import datetime
 import json
 import time
 from pathlib import Path
-from typing import Any, List, Optional, cast
+from typing import TYPE_CHECKING, List, Optional, cast
 
 from github import Github, Repository
 from loguru import logger
@@ -51,6 +51,9 @@ from app.views.dialogue import (
 )
 from app.views.main_content_panel import MainContent
 
+if TYPE_CHECKING:
+    from app.windows.github_mods_panel import GitHubModsPanel
+
 
 class MainContentController(QObject):
     """Controller with concurrent checking/updating and improved structure."""
@@ -66,7 +69,7 @@ class MainContentController(QObject):
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
         self._http_download_worker: Optional[HttpDownloadWorker] = None
         self._github_install_worker: Optional[GitHubInstallWorker] = None
-        self._github_mods_panel: Any = None
+        self._github_mods_panel: Optional[GitHubModsPanel] = None
 
         # Thread pool for concurrent tasks
         self.thread_pool = QThreadPool.globalInstance()
@@ -160,10 +163,20 @@ class MainContentController(QObject):
         )
 
     def _on_open_github_mods_panel(self) -> None:
-        """Open the GitHub Mods panel."""
+        """Open the GitHub Mods panel, reusing the existing window if open."""
         from app.windows.github_mods_panel import GitHubModsPanel
 
+        if self._github_mods_panel is not None and self._github_mods_panel.isVisible():
+            self._github_mods_panel.raise_()
+            self._github_mods_panel.activateWindow()
+            return
+
+        if self._github_mods_panel is not None:
+            self._github_mods_panel.close()
+            self._github_mods_panel.deleteLater()
+
         self._github_mods_panel = GitHubModsPanel()
+        self.view._child_windows.append(self._github_mods_panel)
         self._github_mods_panel.show()
 
     @Slot(list)
@@ -1007,13 +1020,22 @@ class MainContentController(QObject):
             version = "HEAD" if release is None else release.tag
             asset_name = asset.name if asset else None
 
-            entry = GitHubModEntry(
-                owner_repo=owner_repo,
-                mod_path=mod_path,
-                installed_version=version,
-                installed_asset_name=asset_name,
+            existing = (
+                session.query(GitHubModEntry)
+                .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                .first()
             )
-            session.add(entry)
+            if existing is not None:
+                existing.installed_version = version
+                existing.installed_asset_name = asset_name
+            else:
+                entry = GitHubModEntry(
+                    owner_repo=owner_repo,
+                    mod_path=mod_path,
+                    installed_version=version,
+                    installed_asset_name=asset_name,
+                )
+                session.add(entry)
             session.commit()
 
         InformationBox(
