@@ -469,7 +469,7 @@ class ModInfoPanel:
         try:
             self.mod_info_github_version_combo.activated.disconnect()
         except RuntimeError:
-            pass
+            pass  # No prior connection exists; safe to ignore
 
         self.mod_info_github_version_combo.clear()
         self.mod_info_github_version_combo.addItems(available_versions)

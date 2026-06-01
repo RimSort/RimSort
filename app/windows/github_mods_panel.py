@@ -17,7 +17,6 @@ from app.windows.base_mods_panel import (
 
 # Column indices (after the checkbox column 0 added by BaseModsPanel)
 _COL_NAME = 1
-_COL_REPO = 2
 _COL_INSTALLED = 3
 _COL_LATEST = 4
 _COL_AUTO_UPDATE = 5
@@ -68,7 +67,7 @@ class GitHubModsPanel(BaseModsPanel):
         try:
             EventBus().do_refresh_mods_lists.disconnect(self._populate_from_mods)
         except RuntimeError:
-            pass
+            logger.debug("Signal already disconnected during close")
         if self._update_worker is not None and self._update_worker.isRunning():
             self._update_worker.quit()
             self._update_worker.wait(5000)
