@@ -490,6 +490,7 @@ class ModInfoPanel:
         try:
             from app.models.metadata.metadata_db import Base
             from app.utils.github.models import GitHubModEntry
+            from app.utils.github.provider import GitHubProvider
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 self.settings_controller.settings.aux_db_path
@@ -504,12 +505,39 @@ class ModInfoPanel:
                     self.hide_github_info()
                     return
 
-                self.show_github_info(
-                    owner_repo=entry.owner_repo,
-                    installed_version=entry.installed_version,
-                    available_versions=[entry.installed_version],
-                    update_available=False,
-                )
+                owner_repo = entry.owner_repo
+                installed_version = entry.installed_version
+
+            versions = [installed_version]
+            update_available = False
+            try:
+                token = self.settings_controller.settings.github_token or None
+                provider = GitHubProvider(github_token=token)
+                releases = provider.get_releases(owner_repo)
+                if releases:
+                    versions = [r.tag for r in releases]
+                    versions.append("HEAD (latest commit)")
+                    latest = provider.get_latest_stable_release(releases)
+                    if latest and installed_version != "HEAD":
+                        installed_rel = next(
+                            (r for r in releases if r.tag == installed_version), None
+                        )
+                        if (
+                            installed_rel
+                            and latest.published_at > installed_rel.published_at
+                        ):
+                            update_available = True
+                    elif latest and installed_version == "HEAD":
+                        update_available = True
+            except Exception:
+                logger.debug("Could not fetch releases for {}", owner_repo)
+
+            self.show_github_info(
+                owner_repo=owner_repo,
+                installed_version=installed_version,
+                available_versions=versions,
+                update_available=update_available,
+            )
         except Exception:
             logger.debug("Could not check GitHub mod status for {}", mod_path)
             self.hide_github_info()
