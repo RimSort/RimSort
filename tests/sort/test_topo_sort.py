@@ -80,3 +80,70 @@ class TestDoTopoSort:
             {"mod.a": set(), "mod.b": set()}, {"/mods/a", "/mods/b"}, mods
         )
         assert len(result) == 2
+
+
+class TestTopoSortEdgeCases:
+    def test_wide_graph_alphabetical_tiebreak(self) -> None:
+        """10 independent mods at the same level sort alphabetically."""
+        names = [
+            "Jester",
+            "Apple",
+            "Banana",
+            "Fox",
+            "Eagle",
+            "Cherry",
+            "Dog",
+            "Grape",
+            "Hippo",
+            "Ice",
+        ]
+        mods = {}
+        graph: dict[str, set[str]] = {}
+        active = set()
+        for i, name in enumerate(names):
+            path = f"/mods/{i}"
+            pid = f"mod.{i}"
+            mods[path] = make_listed_mod(path, name=name, package_id=pid)
+            graph[pid] = set()
+            active.add(path)
+
+        result = do_topo_sort(graph, active, mods)
+        result_names = [mods[p].name for p in result]
+        assert result_names == sorted(names, key=str.lower)
+
+    def test_multiple_roots_with_shared_dep(self) -> None:
+        """Two root mods depending on the same leaf."""
+        mods = {
+            "/mods/r1": make_listed_mod("/mods/r1", name="Root1", package_id="mod.r1"),
+            "/mods/r2": make_listed_mod("/mods/r2", name="Root2", package_id="mod.r2"),
+            "/mods/leaf": make_listed_mod(
+                "/mods/leaf", name="Leaf", package_id="mod.leaf"
+            ),
+        }
+        graph: dict[str, set[str]] = {
+            "mod.r1": {"mod.leaf"},
+            "mod.r2": {"mod.leaf"},
+            "mod.leaf": set(),
+        }
+        result = do_topo_sort(graph, {"/mods/r1", "/mods/r2", "/mods/leaf"}, mods)
+        assert result.index("/mods/leaf") < result.index("/mods/r1")
+        assert result.index("/mods/leaf") < result.index("/mods/r2")
+
+    def test_disconnected_subgraphs(self) -> None:
+        """Two independent groups sort alphabetically within each level."""
+        mods = {
+            "/mods/a1": make_listed_mod("/mods/a1", name="A1", package_id="g1.a1"),
+            "/mods/a2": make_listed_mod("/mods/a2", name="A2", package_id="g1.a2"),
+            "/mods/b1": make_listed_mod("/mods/b1", name="B1", package_id="g2.b1"),
+            "/mods/b2": make_listed_mod("/mods/b2", name="B2", package_id="g2.b2"),
+        }
+        graph: dict[str, set[str]] = {
+            "g1.a1": {"g1.a2"},
+            "g1.a2": set(),
+            "g2.b1": {"g2.b2"},
+            "g2.b2": set(),
+        }
+        active = set(mods.keys())
+        result = do_topo_sort(graph, active, mods)
+        assert result.index("/mods/a2") < result.index("/mods/a1")
+        assert result.index("/mods/b2") < result.index("/mods/b1")

@@ -516,3 +516,51 @@ class TestSorterRegressions:
 
         assert KNOWN_TIER_ONE_MODS == original
         assert "author.framework" in compiled.tier_one_mods
+
+    def test_output_has_no_duplicates(self) -> None:
+        """Even if a mod appears in multiple tier graphs, output has no duplicates."""
+        mods = {
+            "/mods/a": make_listed_mod("/mods/a", name="A", package_id="mod.a"),
+            "/mods/b": make_listed_mod("/mods/b", name="B", package_id="mod.b"),
+        }
+        compiled = _build_compiled(
+            deps={"mod.a": set(), "mod.b": set()},
+            tier_one={"mod.a"},
+            tier_three={"mod.a"},
+        )
+        sorter = Sorter(SortMethod.TOPOLOGICAL, compiled, mods, {"/mods/a", "/mods/b"})
+        success, result = sorter.sort()
+        assert success
+        assert len(result) == len(set(result))
+
+    def test_reverse_deps_cycle_does_not_crash_tier_three(self) -> None:
+        """Regression test for #2042: circular reverse deps in tier three expansion."""
+        paths_and_ids = [
+            ("alpha", "mod.alpha"),
+            ("beta", "mod.beta"),
+            ("gamma", "mod.gamma"),
+        ]
+        mods = {
+            f"/mods/{name}": make_listed_mod(
+                f"/mods/{name}", name=name.title(), package_id=pid
+            )
+            for name, pid in paths_and_ids
+        }
+        compiled = _build_compiled(
+            deps={pid: set() for _, pid in paths_and_ids},
+            rev_deps={
+                "mod.alpha": {"mod.beta"},
+                "mod.beta": {"mod.alpha"},
+                "mod.gamma": set(),
+            },
+            tier_three={"mod.alpha"},
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL,
+            compiled,
+            mods,
+            {"/mods/alpha", "/mods/beta", "/mods/gamma"},
+        )
+        success, result = sorter.sort()
+        assert success
+        assert len(result) == 3

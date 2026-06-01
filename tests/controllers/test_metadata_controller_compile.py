@@ -252,3 +252,49 @@ def test_compile_overall_rules_not_mutated() -> None:
     original_load_after = set(mod_a.overall_rules.load_after)
     _compile(mods, use_moddependencies_as_loadTheseBefore=True)
     assert set(mod_a.overall_rules.load_after) == original_load_after
+
+
+def test_compile_load_before_and_load_after_same_pair() -> None:
+    """A loads_before B AND A loads_after B → both edges exist (cycle)."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod(
+            "mod.a", "/mods/a", load_before=["mod.b"], load_after=["mod.b"]
+        ),
+        "/mods/b": _make_mod("mod.b", "/mods/b"),
+    }
+    compiled = _compile(mods)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    assert "mod.a" in compiled.deps_graph.get("mod.b", set())
+
+
+def test_compile_load_first_and_load_last_same_mod() -> None:
+    """A mod with both load_first and load_last ends up in both tier sets."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", load_first=True, load_last=True),
+    }
+    compiled = _compile(mods)
+    assert "mod.a" in compiled.tier_one_mods
+    assert "mod.a" in compiled.tier_three_mods
+
+
+def test_compile_many_mods_all_depend_on_one() -> None:
+    """Fan-in: 20 mods all depending on one shared base mod."""
+    base = _make_mod("mod.base", "/mods/base")
+    mods: dict[str, ListedMod] = {"/mods/base": base}
+    for i in range(20):
+        mods[f"/mods/{i}"] = _make_mod(
+            f"mod.{i}", f"/mods/{i}", load_after=["mod.base"]
+        )
+    compiled = _compile(mods)
+    assert len(compiled.rev_deps_graph.get("mod.base", set())) == 20
+    for i in range(20):
+        assert "mod.base" in compiled.deps_graph.get(f"mod.{i}", set())
+
+
+def test_compile_self_referencing_load_after() -> None:
+    """A mod with load_after referencing itself → self-edge in graph."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", load_after=["mod.a"]),
+    }
+    compiled = _compile(mods)
+    assert "mod.a" in compiled.deps_graph.get("mod.a", set())
