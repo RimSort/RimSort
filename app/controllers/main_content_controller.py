@@ -2,7 +2,7 @@ import datetime
 import json
 import time
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from github import Github, Repository
 from loguru import logger
@@ -66,6 +66,7 @@ class MainContentController(QObject):
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
         self._http_download_worker: Optional[HttpDownloadWorker] = None
         self._github_install_worker: Optional[GitHubInstallWorker] = None
+        self._github_mods_panel: Any = None
 
         # Thread pool for concurrent tasks
         self.thread_pool = QThreadPool.globalInstance()
@@ -121,6 +122,7 @@ class MainContentController(QObject):
     def _connect_signals(self) -> None:
         # Bind install mod signal
         EventBus().do_add_git_mod.connect(self._do_git_install_mod)
+        EventBus().do_open_github_mods_panel.connect(self._on_open_github_mods_panel)
 
         # Bind update check signals
         update_targets = [
@@ -156,6 +158,13 @@ class MainContentController(QObject):
         EventBus().do_upload_community_rules_db_to_github.connect(
             self._on_do_upload_community_db_to_github
         )
+
+    def _on_open_github_mods_panel(self) -> None:
+        """Open the GitHub Mods panel."""
+        from app.windows.github_mods_panel import GitHubModsPanel
+
+        self._github_mods_panel = GitHubModsPanel()
+        self._github_mods_panel.show()
 
     @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
