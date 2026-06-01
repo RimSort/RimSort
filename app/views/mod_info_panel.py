@@ -8,6 +8,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -248,6 +249,27 @@ class ModInfoPanel:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_steam_url_value.setWordWrap(True)
+        # GitHub source and version
+        self.mod_info_github_source_label = QLabel(self.tr("GitHub:"))
+        self.mod_info_github_source_label.setObjectName("summaryLabel")
+        self.mod_info_github_source_value = QLabel()
+        self.mod_info_github_source_value.setObjectName("summaryValue")
+        self.mod_info_github_source_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_github_source_value.setWordWrap(True)
+
+        self.mod_info_github_version_label = QLabel(self.tr("GitHub Version:"))
+        self.mod_info_github_version_label.setObjectName("summaryLabel")
+        self.mod_info_github_version_combo = QComboBox()
+        self.mod_info_github_version_combo.setObjectName("githubVersionCombo")
+        self.mod_info_github_version_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
+
+        self.mod_info_github_update_label = QLabel()
+        self.mod_info_github_update_label.setObjectName("githubUpdateBadge")
+        self.mod_info_github_update_label.hide()
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
         self.mod_info_last_touched_value = QLabel()
@@ -354,6 +376,14 @@ class ModInfoPanel:
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_label, 20)
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_steam_url_layout)
+        self.mod_info_github_layout = QHBoxLayout()
+        self.mod_info_github_layout.addWidget(self.mod_info_github_source_label, 20)
+        self.mod_info_github_layout.addWidget(self.mod_info_github_source_value, 30)
+        self.mod_info_github_layout.addWidget(self.mod_info_github_version_label)
+        self.mod_info_github_layout.addWidget(self.mod_info_github_version_combo)
+        self.mod_info_github_layout.addWidget(self.mod_info_github_update_label)
+        self.mod_info_github_layout.addStretch()
+        self.mod_info_layout.addLayout(self.mod_info_github_layout)
         self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
@@ -404,7 +434,43 @@ class ModInfoPanel:
         ):
             widget.hide()
 
+        self.hide_github_info()
+
         logger.debug("Finished ModInfo initialization")
+
+    def show_github_info(
+        self,
+        owner_repo: str,
+        installed_version: str,
+        available_versions: list[str],
+        update_available: bool,
+    ) -> None:
+        """Show GitHub source info for a GitHub-tracked mod."""
+        self.mod_info_github_source_value.setText(owner_repo)
+        self.mod_info_github_version_combo.clear()
+        self.mod_info_github_version_combo.addItems(available_versions)
+        idx = self.mod_info_github_version_combo.findText(installed_version)
+        if idx >= 0:
+            self.mod_info_github_version_combo.setCurrentIndex(idx)
+
+        if update_available:
+            self.mod_info_github_update_label.setText(self.tr("(Update available)"))
+            self.mod_info_github_update_label.show()
+        else:
+            self.mod_info_github_update_label.hide()
+
+        self._set_github_row_visible(True)
+
+    def hide_github_info(self) -> None:
+        """Hide GitHub info row for non-GitHub mods."""
+        self._set_github_row_visible(False)
+
+    def _set_github_row_visible(self, visible: bool) -> None:
+        self.mod_info_github_source_label.setVisible(visible)
+        self.mod_info_github_source_value.setVisible(visible)
+        self.mod_info_github_version_label.setVisible(visible)
+        self.mod_info_github_version_combo.setVisible(visible)
+        self.mod_info_github_update_label.setVisible(visible)
 
     def update_user_mod_notes(self) -> None:
         if self.current_mod_item is None:
