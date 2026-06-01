@@ -35,6 +35,22 @@ class AuxMetadataController(MetadataDbController):
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
         Base.metadata.create_all(self.engine)
+        self._migrate_schema()
+
+    def _migrate_schema(self) -> None:
+        """Add columns that may be missing from older database versions."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(text("PRAGMA table_info(auxiliary_metadata)"))
+            existing_columns = {row[1] for row in rows}
+            for col in ("external_time_created", "external_time_updated"):
+                if col not in existing_columns:
+                    conn.execute(
+                        text(
+                            f"ALTER TABLE auxiliary_metadata ADD COLUMN {col} INTEGER DEFAULT -1"
+                        )
+                    )
+                    logger.info(f"Migrated auxiliary_metadata: added column '{col}'")
+            conn.commit()
 
     @classmethod
     def get_or_create_cached_instance(cls, db_path: Path) -> "AuxMetadataController":

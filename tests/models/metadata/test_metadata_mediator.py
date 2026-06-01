@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -77,3 +78,70 @@ def test_user_rules_addition(mediator: MetadataMediator) -> None:
 
     assert mod.user_rules.load_last
     assert mod.overall_rules.load_last
+
+
+def test_mediator_no_version_warning_defaults_none(tmp_path: Path) -> None:
+    """no_version_warning is None when no path configured."""
+    mediator = MetadataMediator(
+        user_rules_path=tmp_path / "rules.json",
+        community_rules_path=None,
+        steam_db_path=None,
+        workshop_mods_path=None,
+        local_mods_path=None,
+        game_path=None,
+    )
+    assert mediator.no_version_warning is None
+
+
+def test_mediator_use_this_instead_defaults_none(tmp_path: Path) -> None:
+    """use_this_instead is None when no path configured."""
+    mediator = MetadataMediator(
+        user_rules_path=tmp_path / "rules.json",
+        community_rules_path=None,
+        steam_db_path=None,
+        workshop_mods_path=None,
+        local_mods_path=None,
+        game_path=None,
+    )
+    assert mediator.use_this_instead is None
+
+
+def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
+    """Mediator loads No Version Warning from XML file."""
+    xml_content = '<?xml version="1.0" encoding="utf-8"?>\n<ModIdsToFix><li>mod.a</li><li>mod.b</li></ModIdsToFix>'
+    nvw_path = tmp_path / "ModIdsToFix.xml"
+    nvw_path.write_text(xml_content)
+
+    mediator = MetadataMediator(
+        user_rules_path=tmp_path / "rules.json",
+        community_rules_path=None,
+        steam_db_path=None,
+        workshop_mods_path=None,
+        local_mods_path=None,
+        game_path=None,
+        no_version_warning_path=nvw_path,
+    )
+    mediator._load_no_version_warning()
+    assert mediator.no_version_warning is not None
+    assert "mod.a" in mediator.no_version_warning
+    assert "mod.b" in mediator.no_version_warning
+
+
+def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:
+    """Mediator loads Use This Instead from JSON file."""
+    uti_data = {"old.mod.a": {"replacement": "new.mod.b"}}
+    uti_path = tmp_path / "use_this_instead.json"
+    uti_path.write_text(json.dumps(uti_data))
+
+    mediator = MetadataMediator(
+        user_rules_path=tmp_path / "rules.json",
+        community_rules_path=None,
+        steam_db_path=None,
+        workshop_mods_path=None,
+        local_mods_path=None,
+        game_path=None,
+        use_this_instead_path=uti_path,
+    )
+    mediator._load_use_this_instead()
+    assert mediator.use_this_instead is not None
+    assert "old.mod.a" in mediator.use_this_instead

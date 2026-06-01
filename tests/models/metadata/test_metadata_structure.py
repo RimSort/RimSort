@@ -216,3 +216,25 @@ def test_about_xml_mod_overall_rules() -> None:
 def test_listed_mod_c_sharp_mod_default() -> None:
     mod = ListedMod()
     assert not mod.c_sharp_mod
+
+
+def test_compiled_dependency_data_defaults() -> None:
+    from app.models.metadata.metadata_structure import CompiledDependencyData
+
+    compiled = CompiledDependencyData()
+    assert compiled.deps_graph == {}
+    assert compiled.rev_deps_graph == {}
+    assert compiled.tier_zero_mods == set()
+    assert compiled.tier_one_mods == set()
+    assert compiled.tier_three_mods == set()
+    assert compiled.incompatibilities == {}
+
+
+def test_listed_mod_new_fields() -> None:
+    mod = ListedMod()
+    assert mod.obsolete is False
+    assert mod.db_builder_no_name is False
+    mod.obsolete = True
+    mod.db_builder_no_name = True
+    assert mod.obsolete is True
+    assert mod.db_builder_no_name is True

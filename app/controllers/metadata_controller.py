@@ -1,18 +1,40 @@
-from pathlib import Path
+from __future__ import annotations
 
-from PySide6.QtCore import QObject, Slot
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_mediator import MetadataMediator
-from app.models.metadata.metadata_structure import ListedMod, ModType
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    CompiledDependencyData,
+    ListedMod,
+    ModType,
+)
 from app.utils.app_info import AppInfo
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+
+if TYPE_CHECKING:
+    from app.models.metadata.metadata_structure import (
+        ExternalRulesSchema,
+        SteamDbSchema,
+    )
 
 
 class MetadataController(QObject):
     """Controller class for metadata."""
+
+    _instance: MetadataController | None = None
+
+    mod_created_signal = Signal(str)
+    mod_deleted_signal = Signal(str)
+    mod_metadata_updated_signal = Signal(str)
+    show_warning_signal = Signal(str, str, str, str)
 
     def __init__(
         self,
@@ -36,10 +58,32 @@ class MetadataController(QObject):
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
 
+    @classmethod
+    def instance(
+        cls,
+        settings_controller: SettingsController | None = None,
+        metadata_db_controller: AuxMetadataController | None = None,
+    ) -> MetadataController:
+        """Get or create the singleton instance.
+
+        :param settings_controller: Required on first call
+        :param metadata_db_controller: Required on first call
+        :return: The singleton instance
+        :raises RuntimeError: If called before initialization
+        """
+        if cls._instance is None:
+            if settings_controller is None or metadata_db_controller is None:
+                raise RuntimeError(
+                    "MetadataController.instance() called before initialization"
+                )
+            cls._instance = cls(settings_controller, metadata_db_controller)
+        return cls._instance
+
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
-        self.metadata_mediator.refresh_metadata()
+        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
         self._refresh_metadata_db()
 
         with self.metadata_db_controller.Session() as session:
@@ -93,6 +137,12 @@ class MetadataController(QObject):
         self.metadata_mediator.workshop_mods_path = workshop_mods_path
         self.metadata_mediator.local_mods_path = local_mods_path
         self.metadata_mediator.game_path = game_path
+        self.metadata_mediator.no_version_warning_path = _get_path(
+            active_settings.external_no_version_warning_file_path
+        )
+        self.metadata_mediator.use_this_instead_path = _get_path(
+            active_settings.external_use_this_instead_file_path
+        )
 
     def get_metadata_with_path(
         self, path: str | Path
@@ -119,3 +169,193 @@ class MetadataController(QObject):
 
         for p in path:
             self.metadata_mediator.mods_metadata.pop(str(p), None)
+
+    def compile(
+        self,
+        use_moddependencies_as_loadTheseBefore: bool = False,
+    ) -> CompiledDependencyData:
+        """Compile dependency data from current metadata state.
+
+        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter
+        :return: Compiled dependency data
+        """
+        return self._build_compiled_data(
+            self.metadata_mediator.mods_metadata,
+            use_moddependencies_as_loadTheseBefore,
+        )
+
+    @property
+    def mods_metadata(self) -> dict[str, ListedMod]:
+        """Get the current mods metadata dictionary."""
+        return self.metadata_mediator.mods_metadata
+
+    @property
+    def packageid_to_paths(self) -> dict[str, set[str]]:
+        """Build a mapping from package IDs to sets of mod paths."""
+        result: dict[str, set[str]] = {}
+        for path, mod in self.mods_metadata.items():
+            if isinstance(mod, AboutXmlMod):
+                pid = str(mod.package_id)
+                result.setdefault(pid, set()).add(path)
+        return result
+
+    @property
+    def game_version(self) -> str:
+        """Get the current game version."""
+        return self.metadata_mediator.game_version
+
+    @property
+    def steam_db(self) -> SteamDbSchema | None:
+        """Get the loaded Steam database, if any."""
+        return self.metadata_mediator.steam_db
+
+    @property
+    def community_rules(self) -> ExternalRulesSchema | None:
+        """Get the loaded community rules, if any."""
+        return self.metadata_mediator.community_rules
+
+    @property
+    def steamdb_packageid_to_name(self) -> dict[str, str]:
+        """Build a mapping from package IDs to Steam names from the Steam DB."""
+        if self.metadata_mediator.steam_db is None:
+            return {}
+        return {
+            pid: entry.steamName or entry.name
+            for pid, entry in self.metadata_mediator.steam_db.database.items()
+            if entry.steamName or entry.name
+        }
+
+    def get_missing_dependencies(
+        self, active_mod_paths: set[str]
+    ) -> dict[str, set[str]]:
+        """Compute missing dependencies for the given active mod paths.
+
+        :param active_mod_paths: Set of active mod paths
+        :return: Mapping from package ID to set of missing dependency package IDs
+        """
+        active_package_ids: set[str] = set()
+        for path in active_mod_paths:
+            mod = self.mods_metadata.get(path)
+            if isinstance(mod, AboutXmlMod):
+                active_package_ids.add(str(mod.package_id))
+
+        missing: dict[str, set[str]] = {}
+        for path in active_mod_paths:
+            mod = self.mods_metadata.get(path)
+            if not isinstance(mod, AboutXmlMod):
+                continue
+            pid = str(mod.package_id)
+            for dep_id in mod.overall_rules.dependencies:
+                dep_str = str(dep_id)
+                if dep_str not in active_package_ids:
+                    missing.setdefault(pid, set()).add(dep_str)
+        return missing
+
+    def is_version_mismatch(self, path: str) -> bool:
+        """Check if a mod has version mismatch with the current game version.
+
+        :param path: Mod path
+        :return: True if version mismatch, False otherwise
+        """
+        mod = self.mods_metadata.get(path)
+        if not isinstance(mod, AboutXmlMod):
+            return False
+        if not mod.supported_versions:
+            return False
+        game_major_minor = ".".join(self.game_version.split(".")[:2])
+        return game_major_minor not in mod.supported_versions
+
+    def has_alternative_mod(self, path: str) -> dict[str, Any] | None:
+        """Check if a mod has a recommended replacement from Use This Instead DB.
+
+        :param path: Mod path
+        :return: Replacement info dict or None
+        """
+        mod = self.mods_metadata.get(path)
+        if not isinstance(mod, AboutXmlMod):
+            return None
+        use_this_instead = self.metadata_mediator.use_this_instead
+        if use_this_instead is None:
+            return None
+        pid = str(mod.package_id)
+        return use_this_instead.get(pid)
+
+    @staticmethod
+    def _build_compiled_data(
+        mods_metadata: dict[str, ListedMod],
+        use_moddependencies_as_loadTheseBefore: bool = False,
+    ) -> CompiledDependencyData:
+        """Build compiled dependency data from parsed mods.
+
+        This is the core compilation step that replaces the old
+        ``MetadataManager.compile_metadata()`` method.  It is a pure
+        function (static method) so that it can be tested without
+        instantiating any Qt objects or singletons.
+
+        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``
+            objects, as produced by ``MetadataMediator``.
+        :param use_moddependencies_as_loadTheseBefore: When *True*, treat
+            declared ``modDependencies`` as implicit ``loadAfter`` edges.
+        :return: A fully-populated ``CompiledDependencyData`` instance.
+        """
+        compiled = CompiledDependencyData()
+
+        # CRITICAL: copy the known-tier sets so we never mutate the module-level constants.
+        compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()
+        compiled.tier_one_mods = KNOWN_TIER_ONE_MODS.copy()
+
+        # --- Step 1: Build packageid -> set[path] index and collect all known pids ---
+        packageid_to_paths: dict[str, set[str]] = {}
+        all_package_ids: set[str] = set()
+
+        for path_str, mod in mods_metadata.items():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+            pid = str(mod.package_id)
+            all_package_ids.add(pid)
+            packageid_to_paths.setdefault(pid, set()).add(path_str)
+
+        # --- Step 2 & 3: Build forward and reverse dependency graphs ---
+        for mod in mods_metadata.values():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+
+            pid = str(mod.package_id)
+
+            # Choose rules variant based on the deps-as-load-order flag
+            if use_moddependencies_as_loadTheseBefore:
+                rules = mod.overall_rules_with_deps
+            else:
+                rules = mod.overall_rules
+
+            # load_after: "I (pid) load after dep" -> pid depends on dep
+            for dep_ci in rules.load_after:
+                dep = str(dep_ci)
+                if dep not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(pid, set()).add(dep)
+                compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            # load_before: "I (pid) load before target" -> target depends on pid
+            for target_ci in rules.load_before:
+                target = str(target_ci)
+                if target not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(target, set()).add(pid)
+                compiled.rev_deps_graph.setdefault(pid, set()).add(target)
+
+            # --- Step 4: Record incompatibilities (only between existing mods) ---
+            for incompat_ci in rules.incompatible_with:
+                incompat = str(incompat_ci)
+                if incompat not in all_package_ids:
+                    continue
+                compiled.incompatibilities.setdefault(pid, set()).add(incompat)
+
+            # --- Step 5: Tier classification ---
+            if rules.load_first and pid not in compiled.tier_zero_mods:
+                compiled.tier_one_mods.add(pid)
+
+            if rules.load_last:
+                compiled.tier_three_mods.add(pid)
+
+        return compiled

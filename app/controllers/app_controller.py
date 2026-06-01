@@ -42,6 +42,8 @@ class AppController(QObject):
         self.do_dds_cleanup()
         # Initialize the metadata manager
         self.initialize_metadata_manager()
+        # Initialize the new MetadataController (runs alongside MetadataManager)
+        self.initialize_metadata_controller()
         # Initialize the main window controller
         self.initialize_main_window()
 
@@ -118,6 +120,19 @@ class AppController(QObject):
         """Initializes the MetadataManager."""
         self.metadata_manager = MetadataManager.instance(
             settings_controller=self.settings_controller
+        )
+
+    def initialize_metadata_controller(self) -> None:
+        """Initializes the new MetadataController alongside MetadataManager."""
+        from app.controllers.metadata_controller import MetadataController
+        from app.controllers.metadata_db_controller import AuxMetadataController
+
+        aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
+            self.settings_controller.settings.aux_db_path
+        )
+        self.metadata_controller = MetadataController.instance(
+            settings_controller=self.settings_controller,
+            metadata_db_controller=aux_db_controller,
         )
 
     def initialize_main_window(self) -> None:

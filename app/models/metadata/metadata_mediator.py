@@ -1,5 +1,8 @@
+import gzip
+import json
 import os
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QMutex, QRunnable, QThread, QThreadPool
@@ -21,12 +24,6 @@ from app.models.metadata.metadata_structure import (
 class MetadataMediator:
     "Mediator class for metadata."
 
-    _user_rules: ExternalRulesSchema | None
-    _community_rules: ExternalRulesSchema | None
-    _steam_db: SteamDbSchema | None
-    _mods_metadata: dict[str, ListedMod]
-    _game_version: str = "Unknown"
-
     def __init__(
         self,
         user_rules_path: Path,
@@ -35,6 +32,8 @@ class MetadataMediator:
         workshop_mods_path: Path | None,
         local_mods_path: Path | None,
         game_path: Path | None,
+        no_version_warning_path: Path | None = None,
+        use_this_instead_path: Path | None = None,
     ):
         self.user_rules_path = user_rules_path
         self.community_rules_path = community_rules_path
@@ -42,25 +41,29 @@ class MetadataMediator:
         self.workshop_mods_path = workshop_mods_path
         self.local_mods_path = local_mods_path
         self.game_path = game_path
+        self.no_version_warning_path = no_version_warning_path
+        self.use_this_instead_path = use_this_instead_path
+
+        self._user_rules: ExternalRulesSchema | None = None
+        self._community_rules: ExternalRulesSchema | None = None
+        self._steam_db: SteamDbSchema | None = None
+        self._mods_metadata: dict[str, ListedMod] | None = None
+        self._game_version: str = "Unknown"
+        self._no_version_warning: list[str] | None = None
+        self._use_this_instead: dict[str, Any] | None = None
 
         self.parser_threadpool = QThreadPool.globalInstance()
 
     @property
     def user_rules(self) -> ExternalRulesSchema | None:
-        if hasattr(self, "_user_rules") is False:
-            return None
         return self._user_rules
 
     @property
     def community_rules(self) -> ExternalRulesSchema | None:
-        if hasattr(self, "_community_rules") is False:
-            return None
         return self._community_rules
 
     @property
     def steam_db(self) -> SteamDbSchema | None:
-        if hasattr(self, "_steam_db") is False:
-            return None
         return self._steam_db
 
     @property
@@ -68,28 +71,86 @@ class MetadataMediator:
         """Mods_metadata is a dict representation of all the listedmods, where the key is
         the path to the mod.
 
-        :raises ValueError: Raised when mods_metadata has not been initated
-        :return: A dict represented of ListedMods, where the key is the path to the mod.
+        :raises ValueError: Raised when mods_metadata has not been initiated
+        :return: A dict of ListedMods keyed by mod path.
         :rtype: dict[str, ListedMod]
         """
-        if hasattr(self, "_mods_metadata") is False or self._mods_metadata is None:
+        if self._mods_metadata is None:
             raise ValueError("Mods metadata have not been initiated")
-
         return self._mods_metadata
 
     @property
     def game_modules_path(self) -> Path:
         if self.game_path is not None:
             return self.game_path / "Data"
-
         raise ValueError("Game path is not set")
 
     @property
     def game_version(self) -> str:
         return self._game_version
 
-    def refresh_metadata(self) -> None:
-        """Force refreshes the internal metadata."""
+    @property
+    def no_version_warning(self) -> list[str] | None:
+        return self._no_version_warning
+
+    @property
+    def use_this_instead(self) -> dict[str, Any] | None:
+        return self._use_this_instead
+
+    def _load_no_version_warning(self) -> None:
+        """Load No Version Warning DB (ModIdsToFix.xml)."""
+        if (
+            self.no_version_warning_path is None
+            or not self.no_version_warning_path.exists()
+        ):
+            self._no_version_warning = None
+            return
+        try:
+            from app.utils.xml import xml_path_to_json
+
+            data = xml_path_to_json(str(self.no_version_warning_path))
+            mod_ids = data.get("ModIdsToFix", {}).get("li", [])
+            if isinstance(mod_ids, str):
+                mod_ids = [mod_ids]
+            self._no_version_warning = [str(mid).lower() for mid in mod_ids]
+            logger.info(
+                f"Loaded {len(self._no_version_warning)} No Version Warning entries"
+            )
+        except (OSError, ValueError, KeyError) as e:
+            logger.error(f"Failed to load No Version Warning DB: {e}")
+            self._no_version_warning = None
+
+    def _load_use_this_instead(self) -> None:
+        """Load Use This Instead replacements DB (JSON, possibly gzip)."""
+        if (
+            self.use_this_instead_path is None
+            or not self.use_this_instead_path.exists()
+        ):
+            self._use_this_instead = None
+            return
+        try:
+            path = self.use_this_instead_path
+            if str(path).endswith(".gz"):
+                with gzip.open(path, "rt", encoding="utf-8") as f:
+                    self._use_this_instead = json.load(f)
+            else:
+                with open(path, encoding="utf-8") as f:
+                    self._use_this_instead = json.load(f)
+            if self._use_this_instead is not None:
+                logger.info(
+                    f"Loaded {len(self._use_this_instead)} Use This Instead entries"
+                )
+        except (OSError, ValueError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to load Use This Instead DB: {e}")
+            self._use_this_instead = None
+
+    def refresh_metadata(self, prefer_versioned: bool = True) -> None:
+        """Force refreshes the internal metadata.
+
+        :param prefer_versioned: When True (default), ByVersion keys in mod
+            About.xml override base values non-additively. When False, all
+            ByVersion keys are ignored and only base values are used.
+        """
 
         for path in {self.local_mods_path, self.game_path}:
             if path is None or not path.exists() or not path.is_dir():
@@ -111,6 +172,10 @@ class MetadataMediator:
             if self.steam_db_path is not None
             else None
         )
+
+        # Load additional external metadata
+        self._load_no_version_warning()
+        self._load_use_this_instead()
 
         # Get all folders in the workshop and local mods paths
         mod_paths = list()
@@ -166,6 +231,7 @@ class MetadataMediator:
                 self.steam_db,
                 metadata_mutex,
                 self._mods_metadata,
+                prefer_versioned,
             )
             for mod_path_batch in mod_paths_batches
         ]
@@ -219,6 +285,7 @@ class MetadataMediator:
             steam_db: SteamDbSchema | None,
             mutex: QMutex,
             mods_metadata: dict[str, ListedMod],
+            prefer_versioned: bool = True,
         ):
             """Creates a worker to parse mods in a separate thread. Mutates the mods_metadata dict.
 
@@ -242,6 +309,9 @@ class MetadataMediator:
             :type mutex: QMutex
             :param mods_metadata: Dict of mods metadata
             :type mods_metadata: dict[str, ListedMod]
+            :param prefer_versioned: When True, ByVersion keys override base
+                values non-additively. When False, ByVersion keys are ignored.
+            :type prefer_versioned: bool
             """
             super().__init__()
             self.mod_path = mod_path
@@ -256,6 +326,7 @@ class MetadataMediator:
 
             self.mutex = mutex
             self.mods_metadata = mods_metadata
+            self.prefer_versioned = prefer_versioned
 
         def run(self) -> None:
             paths = (
@@ -273,6 +344,7 @@ class MetadataMediator:
                         self.local_path,
                         self.rimworld_path,
                         self.workshop_path,
+                        self.prefer_versioned,
                     )
 
                     if not valid:
