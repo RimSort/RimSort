@@ -259,7 +259,7 @@ class ModInfoPanel:
         )
         self.mod_info_github_source_value.setWordWrap(True)
 
-        self.mod_info_github_version_label = QLabel(self.tr("GitHub Version:"))
+        self.mod_info_github_version_label = QLabel(self.tr("Version:"))
         self.mod_info_github_version_label.setObjectName("summaryLabel")
         self.mod_info_github_version_combo = QComboBox()
         self.mod_info_github_version_combo.setObjectName("githubVersionCombo")
@@ -376,14 +376,23 @@ class ModInfoPanel:
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_label, 20)
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_steam_url_layout)
-        self.mod_info_github_layout = QHBoxLayout()
-        self.mod_info_github_layout.addWidget(self.mod_info_github_source_label, 20)
-        self.mod_info_github_layout.addWidget(self.mod_info_github_source_value, 30)
-        self.mod_info_github_layout.addWidget(self.mod_info_github_version_label)
-        self.mod_info_github_layout.addWidget(self.mod_info_github_version_combo)
-        self.mod_info_github_layout.addWidget(self.mod_info_github_update_label)
-        self.mod_info_github_layout.addStretch()
-        self.mod_info_layout.addLayout(self.mod_info_github_layout)
+        self.mod_info_github_source_row = QHBoxLayout()
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_layout.addLayout(self.mod_info_github_source_row)
+        self.mod_info_github_version_row = QHBoxLayout()
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_combo, NAME_VALUE_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(self.mod_info_github_update_label)
+        self.mod_info_layout.addLayout(self.mod_info_github_version_row)
         self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
