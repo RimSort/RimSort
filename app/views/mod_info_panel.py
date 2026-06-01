@@ -472,6 +472,39 @@ class ModInfoPanel:
         self.mod_info_github_version_combo.setVisible(visible)
         self.mod_info_github_update_label.setVisible(visible)
 
+    def _update_github_info(self, mod_path: str | None) -> None:
+        """Check if mod is GitHub-tracked and show/hide info accordingly."""
+        if not mod_path:
+            self.hide_github_info()
+            return
+
+        try:
+            from app.models.metadata.metadata_db import Base
+            from app.utils.github.models import GitHubModEntry
+
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                self.settings_controller.settings.aux_db_path
+            )
+            Base.metadata.create_all(aux_controller.engine)
+
+            with aux_controller.Session() as session:
+                entry = (
+                    session.query(GitHubModEntry).filter_by(mod_path=mod_path).first()
+                )
+                if entry is None:
+                    self.hide_github_info()
+                    return
+
+                self.show_github_info(
+                    owner_repo=entry.owner_repo,
+                    installed_version=entry.installed_version,
+                    available_versions=[entry.installed_version],
+                    update_available=False,
+                )
+        except Exception:
+            logger.debug("Could not check GitHub mod status for {}", mod_path)
+            self.hide_github_info()
+
     def update_user_mod_notes(self) -> None:
         if self.current_mod_item is None:
             return
@@ -882,6 +915,9 @@ class ModInfoPanel:
 
         # Set path
         self.mod_info_path_value.setPath(mod_metadata.get("path"))
+
+        # Show or hide GitHub info based on whether this mod is tracked
+        self._update_github_info(mod_metadata.get("path"))
 
         # Set description
         self._set_description(mod_metadata, render_unity_rt)
