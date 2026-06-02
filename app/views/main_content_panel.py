@@ -8,7 +8,6 @@ import traceback
 import webbrowser
 from functools import partial
 from pathlib import Path
-from tempfile import gettempdir
 from typing import Any, Callable, Literal, Optional, cast, overload
 from urllib.parse import urlparse
 
@@ -36,6 +35,7 @@ import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
+from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
 from app.sort.mod_sorting import ModsPanelSortKey
@@ -69,7 +69,6 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from app.utils.system_info import SystemInfo
-from app.utils.todds.wrapper import ToddsInterface
 from app.utils.update_utils import UpdateManager
 from app.utils.xml import json_to_xml_write
 from app.utils.zip_extractor import (
@@ -347,6 +346,9 @@ class MainContent(QObject):
 
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
+            self.todds_controller: (
+                ToddsController  # Set by MainWindow after construction
+            )
 
             # Progress widget for extraction operations
             self._extract_progress_widget: Optional[TaskProgressWindow] = None
@@ -2032,101 +2034,7 @@ class MainContent(QObject):
             )
 
     # TODDS ACTIONS
-    def _do_generate_todds_txt(self) -> tuple[str, int]:
-        """
-        Generate the todds.txt path-list file that todds uses as input.
-
-        Only paths that actually exist on disk are written to the file so that
-        todds never receives a path it cannot iterate (which would cause a
-        ``filesystem::recursive_directory_iterator`` crash).  If no valid
-        paths are found a warning dialog is shown to the user.
-
-        Returns:
-            tuple[str, int]: Absolute path to the generated todds.txt file,
-                and the number of valid paths written.  Callers should abort
-                when the count is zero.
-        """
-        logger.info("Generating todds.txt...")
-        # Create or overwrite todds.txt in temp directory
-        todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
-        if os.path.exists(todds_txt_path):
-            os.remove(todds_txt_path)
-
-        paths_written = 0
-
-        if not self.settings_controller.settings.todds_active_mods_target:
-            local_mods_target = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].local_folder
-            if local_mods_target and local_mods_target != "":
-                abs_local = os.path.abspath(local_mods_target)
-                if os.path.isdir(abs_local):
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(abs_local + "\n")
-                    paths_written += 1
-                else:
-                    logger.warning(
-                        f"Local mods folder does not exist, skipping for todds: {abs_local}"
-                    )
-
-            workshop_mods_target = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].workshop_folder
-            if workshop_mods_target and workshop_mods_target != "":
-                abs_workshop = os.path.abspath(workshop_mods_target)
-                if os.path.isdir(abs_workshop):
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(abs_workshop + "\n")
-                    paths_written += 1
-                else:
-                    logger.warning(
-                        f"Workshop mods folder does not exist, skipping for todds: {abs_workshop}"
-                    )
-        else:
-            with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                for uuid in self.mods_panel.active_mods_list.uuids:
-                    if is_divider_uuid(uuid):
-                        continue
-                    mod_path = os.path.abspath(
-                        self.metadata_manager.internal_local_metadata[uuid]["path"]
-                    )
-                    if os.path.isdir(mod_path):
-                        todds_txt_file.write(mod_path + "\n")
-                        paths_written += 1
-                    else:
-                        logger.warning(
-                            f"Mod path does not exist, skipping for todds: {mod_path}"
-                        )
-
-        if paths_written == 0:
-            logger.error("No valid mod paths found for todds texture optimization.")
-            dialogue.show_warning(
-                title=self.tr("No valid paths for todds"),
-                text=self.tr("todds could not find any valid mod folders to process."),
-                information=self.tr(
-                    "None of the configured mod folder paths exist on disk. "
-                    "Please verify your Local Mods and Workshop folders are correctly "
-                    "set in Settings, then try again."
-                ),
-            )
-
-        logger.info(
-            f"Generated todds.txt at: {todds_txt_path} ({paths_written} path(s) written)"
-        )
-        return todds_txt_path, paths_written
-
     def _create_todds_runner(self, is_pre_launch: bool) -> RunnerPanel:
-        """
-        Create and configure the todds runner UI panel.
-
-        Args:
-            is_pre_launch: If True, panel auto-closes on completion and shows "(pre-launch)"
-                          suffix. If False, panel shows completion dialog and is stored
-                          as self.todds_runner for manual access.
-
-        Returns:
-            RunnerPanel: Configured and visible runner panel for todds output display.
-        """
         runner = RunnerPanel(
             todds_dry_run_support=self.settings_controller.settings.todds_dry_run,
             auto_close_on_complete=is_pre_launch,
@@ -2137,106 +2045,59 @@ class MainContent(QObject):
         runner.setWindowTitle(f"{base_title}{suffix}")
 
         if not is_pre_launch:
-            self.todds_runner = runner  # Store for manual runs
+            self.todds_runner = runner
 
         runner.show()
         return runner
 
-    def _wait_for_todds_completion(self, runner: RunnerPanel) -> tuple[bool, int]:
-        """
-        Block execution until todds process completes and return exit status.
-
-        Creates an event loop that waits for the todds process to finish, then logs
-        the result and returns the status. This is used for synchronous operations
-        like pre-launch optimization where we need to wait before starting the game.
-
-        Args:
-            runner: RunnerPanel instance with an active todds process.
-
-        Returns:
-            tuple[bool, int]: (success, exit_code) where success is True if exit_code == 0.
-        """
-        loop = QEventLoop()
-        runner.process.finished.connect(loop.quit)
-        loop.exec_()
-
-        exit_code = runner.process.exitCode()
-        success = exit_code == 0
-
-        if success:
-            logger.info("todds process completed successfully")
-        else:
-            logger.warning(f"todds process failed with exit code: {exit_code}")
-
-        return success, exit_code
-
-    @overload  # Blocking call: returns (success, exit_code)
+    @overload
     def _do_optimize_textures(
         self, block_until_complete: Literal[True]
     ) -> tuple[bool, int]: ...
 
-    @overload  # Async call (default): returns None immediately
+    @overload
     def _do_optimize_textures(self) -> None: ...
 
     def _do_optimize_textures(
         self, block_until_complete: bool = False
     ) -> tuple[bool, int] | None:
-        """
-        Run todds texture optimization with optional blocking.
-
-        Generates a todds configuration file, executes the optimization process
-        in the UI, and optionally blocks until completion. Useful for automatic
-        texture optimization before game launch or manual optimization runs.
-
-        Args:
-            block_until_complete: If True, blocks execution until todds finishes
-                                 and returns (success, exit_code). If False (default),
-                                 launches asynchronously and returns None immediately.
-
-        Returns:
-            tuple[bool, int] | None: (success, exit_code) when blocking=True,
-                                    None when blocking=False (async execution).
-        """
         logger.info("Optimizing textures with todds...")
+        todds_runner = self._create_todds_runner(block_until_complete)
+        active_uuids = list(self.mods_panel.active_mods_list.uuids)
 
-        # Initialize todds interface with current user settings
-        todds_interface = ToddsInterface(
-            preset=self.settings_controller.settings.todds_preset,
-            dry_run=self.settings_controller.settings.todds_dry_run,
-            overwrite=self.settings_controller.settings.todds_overwrite,
-            custom_command=self.settings_controller.settings.todds_custom_command,
+        started = self.todds_controller.optimize_textures(
+            runner=todds_runner,
+            active_mod_uuids=active_uuids,
         )
 
-        # Create and display runner UI (auto-closes if pre-launch, shows dialog if manual)
-        todds_runner = self._create_todds_runner(block_until_complete)
-        todds_txt_path, paths_written = self._do_generate_todds_txt()
-
-        # Bail out early if no valid paths — warning already shown by generator
-        if paths_written == 0:
+        if not started:
             todds_runner.close()
+            dialogue.show_warning(
+                title=self.tr("No valid paths for todds"),
+                text=self.tr("todds could not find any valid mod folders to process."),
+                information=self.tr(
+                    "None of the configured mod folder paths exist on disk. "
+                    "Please verify your Local Mods and Workshop folders are correctly "
+                    "set in Settings, then try again."
+                ),
+            )
             return (False, -1) if block_until_complete else None
 
-        # Execute the todds command
-        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+        if block_until_complete:
+            loop = QEventLoop()
+            todds_runner.process.finished.connect(loop.quit)
+            loop.exec_()
+            exit_code = todds_runner.process.exitCode()
+            success = exit_code == 0
+            if success:
+                logger.info("todds process completed successfully")
+            else:
+                logger.warning(f"todds process failed with exit code: {exit_code}")
+            return success, exit_code
 
-        # Block and return status if needed, otherwise return immediately
-        return (
-            self._wait_for_todds_completion(todds_runner)
-            if block_until_complete
-            else None
-        )
+        return None
 
     def _do_delete_dds_textures(self) -> None:
-        """
-        Delete all .dds texture files using todds clean preset.
-
-        Generates a todds configuration file for the active mods and executes
-        the clean operation to remove compiled .dds textures. This is useful
-        when texture optimization is no longer needed or you want to reset
-        to original texture sources.
-
-        The operation runs asynchronously in a UI panel showing progress.
-        """
         answer = dialogue.show_dialogue_conditional(
             title=self.tr("Confirm texture deletion"),
             text=self.tr(
@@ -2254,24 +2115,25 @@ class MainContent(QObject):
             return
 
         logger.info("Deleting .dds textures with todds...")
+        todds_runner = self._create_todds_runner(is_pre_launch=False)
+        active_uuids = list(self.mods_panel.active_mods_list.uuids)
 
-        # Create todds interface with clean preset (removes .dds files)
-        todds_interface = ToddsInterface(
-            preset="clean",
-            dry_run=self.settings_controller.settings.todds_dry_run,
+        started = self.todds_controller.delete_dds_textures(
+            runner=todds_runner,
+            active_mod_uuids=active_uuids,
         )
 
-        # Create and display runner UI (shows completion dialog after finishing)
-        todds_runner = self._create_todds_runner(is_pre_launch=False)
-        todds_txt_path, paths_written = self._do_generate_todds_txt()
-
-        # Bail out early if no valid paths — warning already shown by generator
-        if paths_written == 0:
+        if not started:
             todds_runner.close()
-            return
-
-        # Execute the todds command
-        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+            dialogue.show_warning(
+                title=self.tr("No valid paths for todds"),
+                text=self.tr("todds could not find any valid mod folders to process."),
+                information=self.tr(
+                    "None of the configured mod folder paths exist on disk. "
+                    "Please verify your Local Mods and Workshop folders are correctly "
+                    "set in Settings, then try again."
+                ),
+            )
 
     # STEAM{CMD, WORKS} ACTIONS
     def _do_import_steamcmd_acf_data(self) -> None:

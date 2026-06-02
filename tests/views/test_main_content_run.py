@@ -60,6 +60,7 @@ def main_content(
     monkeypatch.setattr(
         mc, "check_if_essential_paths_are_set", lambda prompt=True: True
     )
+    mc.todds_controller = MagicMock()
 
     yield mc, save_calls
 
