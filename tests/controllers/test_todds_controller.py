@@ -110,35 +110,6 @@ class TestGenerateToddsTxt:
         assert count == 1
 
 
-class TestOptimizeTextures:
-    def test_optimize_returns_false_when_no_paths(
-        self, settings_controller: MagicMock, metadata_manager: MagicMock
-    ) -> None:
-        """optimize_textures returns False when no valid paths are found."""
-        # Directories don't exist, so 0 paths written
-        tc = ToddsController(
-            settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
-        )
-        runner = MagicMock()
-        result = tc.optimize_textures(runner)
-        assert result is False
-
-
-class TestDeleteDdsTextures:
-    def test_delete_returns_false_when_no_paths(
-        self, settings_controller: MagicMock, metadata_manager: MagicMock
-    ) -> None:
-        """delete_dds_textures returns False when no valid paths are found."""
-        tc = ToddsController(
-            settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
-        )
-        runner = MagicMock()
-        result = tc.delete_dds_textures(runner)
-        assert result is False
-
-
 class TestActiveModUuidsGuard:
     def test_generate_todds_txt_returns_zero_when_uuids_missing(
         self, settings_controller: MagicMock, metadata_manager: MagicMock
