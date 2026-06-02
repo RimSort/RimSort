@@ -6,7 +6,6 @@ import sys
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
-from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.windows.runner_panel import RunnerPanel
 
@@ -33,9 +32,6 @@ class ToddsInterface:
         self.system = platform.system()
         if "custom" in preset:
             preset = "custom"
-            settings: Settings = Settings()
-            settings.load()
-            self.custom_command = settings.todds_custom_command
         elif "clean" in preset:
             preset = "clean"
         else:

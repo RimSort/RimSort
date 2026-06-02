@@ -2204,6 +2204,7 @@ class MainContent(QObject):
             preset=self.settings_controller.settings.todds_preset,
             dry_run=self.settings_controller.settings.todds_dry_run,
             overwrite=self.settings_controller.settings.todds_overwrite,
+            custom_command=self.settings_controller.settings.todds_custom_command,
         )
 
         # Create and display runner UI (auto-closes if pre-launch, shows dialog if manual)
