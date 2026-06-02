@@ -18,8 +18,11 @@ class ToddsRunner(Protocol):
 
     def execute(
         self, command: str, args: Sequence[str], progress_bar: int | None = None
-    ) -> None: ...
-    def message(self, line: str) -> None: ...
+    ) -> None:
+        pass
+
+    def message(self, line: str) -> None:
+        pass
 
 
 class ToddsInterface:
