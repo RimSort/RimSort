@@ -1356,8 +1356,6 @@ class SettingsController(QObject):
         ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
-        if self.settings_dialog.todds_preset_optimized_radio.isChecked():
-            self.settings.todds_preset = "optimized"
         if self.settings_dialog.todds_preset_custom_radio.isChecked():
             self.settings.todds_preset = "custom"
             self.settings.todds_custom_command = (
