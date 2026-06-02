@@ -926,17 +926,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
         inactive_mods_sorting_group_box_layout.addWidget(inactive_mods_sorting_label)
 
         # Inactive mods sorting options checkbox
-        self.enable_inactive_mods_sorting_checkbox = QCheckBox(
+        self.inactive_mods_sorting_checkbox = QCheckBox(
             self.tr("Enable inactive mods sorting")
         )
-        self.enable_inactive_mods_sorting_checkbox.setToolTip(
+        self.inactive_mods_sorting_checkbox.setToolTip(
             self.tr(
                 "Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods \n"
                 "Disabling this can improve performance by avoiding heavy calculations."
             )
         )
         inactive_mods_sorting_group_box_layout.addWidget(
-            self.enable_inactive_mods_sorting_checkbox
+            self.inactive_mods_sorting_checkbox
         )
 
         self.save_inactive_mods_sort_state_checkbox = QCheckBox(
