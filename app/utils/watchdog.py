@@ -22,9 +22,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
     mod_deleted = Signal(str, str, str)
     mod_updated = Signal(bool, bool, str, str, str)
 
-    def __init__(
-        self, settings_controller: SettingsController, targets: list[str]
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """Initialize the WatchdogHandler.
 
         The WatchdogHandler is a subclass of :class:`watchdog.events.FileSystemEventHandler`
@@ -35,8 +33,6 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         instances. It also sets up the signals that are emitted when a change is detected.
 
         :param settings_controller: The settings controller for the application
-        :param targets: The list of target paths to monitor
-        :type targets: list[str]
 
         :return: None
         """
@@ -58,6 +54,48 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.cooldown_timers: dict[str, Any] = {}
         self.__add_acf_observers()
         self.__add_mod_observers(self.settings_controller.get_mod_paths())
+
+    def start(self) -> None:
+        """Start all configured observers.
+
+        Each observer is only started if it exists and is not already alive.
+        Logs a warning if an observer is None or already running.
+        """
+        try:
+            if self.watchdog_acf_observer is not None:
+                if self.watchdog_acf_observer.is_alive():
+                    logger.warning("Watchdog Steam .acf Observer is already running.")
+                else:
+                    self.watchdog_acf_observer.start()
+            else:
+                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
+            if self.watchdog_mods_observer is not None:
+                if self.watchdog_mods_observer.is_alive():
+                    logger.warning("Watchdog Mods Observer is already running.")
+                else:
+                    self.watchdog_mods_observer.start()
+            else:
+                logger.warning("Watchdog Mods Observer is None. Unable to start.")
+        except Exception as e:
+            logger.warning(
+                f"Unable to start Watchdog Observer(s) due to exception: {str(e)}"
+            )
+
+    def stop(self) -> None:
+        """Stop all observers and cancel pending cooldown timers."""
+        if self.watchdog_acf_observer is not None:
+            if self.watchdog_acf_observer.is_alive():
+                self.watchdog_acf_observer.stop()
+                self.watchdog_acf_observer.join()
+            self.watchdog_acf_observer = None
+        if self.watchdog_mods_observer is not None:
+            if self.watchdog_mods_observer.is_alive():
+                self.watchdog_mods_observer.stop()
+                self.watchdog_mods_observer.join()
+            self.watchdog_mods_observer = None
+        for timer in self.cooldown_timers.values():
+            timer.cancel()
+        self.cooldown_timers.clear()
 
     def __add_acf_observers(self) -> None:
         """Add observers to the watchdog observer for applicable Steam .acf files.
@@ -304,33 +342,3 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             #     f"[event_scr_path_str: {event_scr_path_str}, uuid: {uuid}"
             # )
             return
-
-    def on_moved(self, event: FileSystemEvent) -> None:
-        """A function called when a file or directory is moved or renamed.
-
-        :param event: The event object representing the file or directory move event.
-        :type event: FileSystemEvent
-
-        :return: None
-        """
-        # logger.debug(f"File moved: {event.src_path} to {event.dest_path}")
-
-    def on_closed(self, event: FileSystemEvent) -> None:
-        """A function called when a file or directory is closed.
-
-        :param event: The event object representing the file or directory close event.
-        :type event: FileSystemEvent
-
-        :return: None
-        """
-        # logger.debug(f"File closed: {event.src_path}")
-
-    def on_opened(self, event: FileSystemEvent) -> None:
-        """A function called when a file or directory is opened.
-
-        :param event: The event object representing the file or directory open event.
-        :type event: FileSystemEvent
-
-        :return: None
-        """
-        # logger.debug(f"File opened: {event.src_path}")

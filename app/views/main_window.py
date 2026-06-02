@@ -1145,25 +1145,8 @@ class MainWindow(QMainWindow):
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
         # Instantiate event handler
         # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
-        current_instance = self.settings_controller.settings.current_instance
         self.watchdog_event_handler = WatchdogHandler(
             settings_controller=self.settings_controller,
-            targets=[
-                str(
-                    Path(
-                        self.settings_controller.settings.instances[
-                            current_instance
-                        ].game_folder
-                    )
-                    / "Data"
-                ),
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].local_folder,
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].workshop_folder,
-            ],
         )
         # Connect watchdog to MetadataManager for ACF changes
         self.watchdog_event_handler.acf_changed.connect(
