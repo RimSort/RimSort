@@ -7,7 +7,15 @@ from pathlib import Path
 from typing import Callable, Deque, List, Optional, Tuple
 
 from loguru import logger
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QTimer, Signal
+from PySide6.QtCore import (
+    QObject,
+    QPoint,
+    QRegularExpression,
+    Qt,
+    QTimer,
+    Signal,
+    SignalInstance,
+)
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -35,14 +43,27 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
 
 from app.controllers.settings_controller import SettingsController
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
+
+
+class PlayerLogEventHandler(FileSystemEventHandler):
+    """Watchdog event handler that emits a Qt signal when the monitored file is modified."""
+
+    def __init__(self, signal: SignalInstance) -> None:
+        super().__init__()
+        self._signal = signal
+
+    def on_modified(self, event: FileSystemEvent) -> None:
+        logger.debug("Player log file modified event: {}", event.src_path)
+        self._signal.emit()
 
 
 class LogPatternManager:
@@ -352,6 +373,9 @@ class PlayerLogTab(QWidget):
             1000
         )  # 1000ms debounce interval less than 1000ms breaks log updates
         self._file_change_debounce_timer.timeout.connect(self._process_file_change)
+
+        self._observer: BaseObserver | None = None
+        self.file_changed_signal.connect(self.on_file_changed)
 
         self.init_ui()
         # Delay loading the log by 5 seconds after initialization
@@ -910,59 +934,45 @@ class PlayerLogTab(QWidget):
 
     def toggle_real_time_monitoring(self, enabled: bool) -> None:
         """Start or stop real-time monitoring of the player log file."""
-
-        class PlayerLogEventHandler(FileSystemEventHandler, QObject):
-            def __init__(self, parent: "PlayerLogTab") -> None:
-                FileSystemEventHandler.__init__(self)
-                QObject.__init__(self)
-                self._parent = parent
-
-            def on_modified(self, event: object) -> None:
-                logger.debug(f"File modified event received: {event}")
-                self._parent.file_changed_signal.emit()
-
         if enabled:
-            self._observer = Observer()
-            if (
-                hasattr(self, "_observer")
-                and self._observer is not None
-                and self._observer.is_alive()
-            ):
-                logger.debug("Real-time monitoring already running.")
-                return
-            if self.player_log_path is None:
-                show_warning("Player log path is not set.")
-                self.real_time_monitor_checkbox.setChecked(False)
-                return
-            # Stop existing observer if any before creating a new one
-            if hasattr(self, "_observer") and self._observer is not None:
-                if self._observer.is_alive():
-                    logger.debug("Stopping existing observer before starting new one.")
-                    self._observer.stop()
-                    self._observer.join()
-            event_handler = PlayerLogEventHandler(self)
-            self.file_changed_signal.connect(self.on_file_changed)
-            try:
-                self._observer.schedule(
-                    event_handler, str(self.player_log_path.parent), recursive=False
-                )
-                self._observer.start()
-                logger.info(
-                    f"Started real-time monitoring of Player.log at {self.player_log_path}"
-                )
-            except Exception as e:
-                logger.error(f"Failed to start observer: {e}")
-                show_warning(f"Failed to start real-time monitoring: {e}")
-                self.real_time_monitor_checkbox.setChecked(False)
+            self._start_monitoring()
         else:
-            if (
-                hasattr(self, "_observer")
-                and self._observer is not None
-                and self._observer.is_alive()
-            ):
-                self._observer.stop()
-                self._observer.join()
-                logger.info("Stopped real-time monitoring of Player.log.")
+            self._stop_monitoring()
+
+    def _start_monitoring(self) -> None:
+        """Start the watchdog observer for real-time log monitoring."""
+        if self._observer is not None and self._observer.is_alive():
+            logger.debug("Real-time monitoring already running.")
+            return
+        if self.player_log_path is None:
+            show_warning("Player log path is not set.")
+            self.real_time_monitor_checkbox.setChecked(False)
+            return
+        # Clean up any dead observer before creating a new one
+        self._stop_monitoring()
+        self._observer = Observer()
+        event_handler = PlayerLogEventHandler(self.file_changed_signal)
+        try:
+            self._observer.schedule(
+                event_handler, str(self.player_log_path.parent), recursive=False
+            )
+            self._observer.start()
+            logger.info(
+                f"Started real-time monitoring of Player.log at {self.player_log_path}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to start observer: {e}")
+            show_warning(f"Failed to start real-time monitoring: {e}")
+            self._observer = None
+            self.real_time_monitor_checkbox.setChecked(False)
+
+    def _stop_monitoring(self) -> None:
+        """Stop the watchdog observer if running."""
+        if self._observer is not None and self._observer.is_alive():
+            self._observer.stop()
+            self._observer.join()
+            logger.info("Stopped real-time monitoring of Player.log.")
+        self._observer = None
 
     def disable_options(self, skip_mod_filter_input: bool = False) -> None:
         """Disable options that require a loaded log."""

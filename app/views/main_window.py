@@ -282,6 +282,9 @@ class MainWindow(QMainWindow):
         # Stop filesystem watchdog if running
         self.stop_watchdog_if_running()
 
+        # Stop player log monitoring if running
+        self.player_log_widget._stop_monitoring()
+
         # Close all child windows
         self.main_content_panel.close_child_windows()
 
