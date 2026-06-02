@@ -7,7 +7,15 @@ from pathlib import Path
 from typing import Callable, Deque, List, Optional, Tuple
 
 from loguru import logger
-from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QTimer, Signal
+from PySide6.QtCore import (
+    QObject,
+    QPoint,
+    QRegularExpression,
+    Qt,
+    QTimer,
+    Signal,
+    SignalInstance,
+)
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -43,6 +51,17 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
+
+
+class PlayerLogEventHandler(FileSystemEventHandler):
+    """Watchdog event handler that emits a Qt signal when the monitored file is modified."""
+
+    def __init__(self, signal: SignalInstance) -> None:
+        super().__init__()
+        self._signal = signal
+
+    def on_modified(self, event: object) -> None:
+        self._signal.emit()
 
 
 class LogPatternManager:
@@ -910,17 +929,6 @@ class PlayerLogTab(QWidget):
 
     def toggle_real_time_monitoring(self, enabled: bool) -> None:
         """Start or stop real-time monitoring of the player log file."""
-
-        class PlayerLogEventHandler(FileSystemEventHandler, QObject):
-            def __init__(self, parent: "PlayerLogTab") -> None:
-                FileSystemEventHandler.__init__(self)
-                QObject.__init__(self)
-                self._parent = parent
-
-            def on_modified(self, event: object) -> None:
-                logger.debug(f"File modified event received: {event}")
-                self._parent.file_changed_signal.emit()
-
         if enabled:
             self._observer = Observer()
             if (
@@ -940,7 +948,7 @@ class PlayerLogTab(QWidget):
                     logger.debug("Stopping existing observer before starting new one.")
                     self._observer.stop()
                     self._observer.join()
-            event_handler = PlayerLogEventHandler(self)
+            event_handler = PlayerLogEventHandler(self.file_changed_signal)
             self.file_changed_signal.connect(self.on_file_changed)
             try:
                 self._observer.schedule(
