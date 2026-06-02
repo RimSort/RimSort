@@ -391,13 +391,13 @@ class SettingsDialog(QDialog):
         scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
         self.tab_widget.addTab(scroll_area, self.tr("Databases"))
 
-        content = QWidget()
-        scroll_area.setWidget(content)
-        content.setAutoFillBackground(False)
+        tab = QWidget()
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
         scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout()
-        content.setLayout(tab_layout)
+        tab.setLayout(tab_layout)
 
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
