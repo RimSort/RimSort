@@ -58,9 +58,12 @@ class TestToddsInterfaceInit:
 class TestToddsExecute:
     def test_execute_calls_runner_when_binary_exists(self, tmp_path: Path) -> None:
         """When todds binary exists, execute_todds_cmd calls runner.execute."""
+        import platform
+
         todds_dir = tmp_path / "todds"
         todds_dir.mkdir()
-        todds_bin = todds_dir / "todds"
+        exe_name = "todds.exe" if platform.system() == "Windows" else "todds"
+        todds_bin = todds_dir / exe_name
         todds_bin.touch()
 
         ti = ToddsInterface(preset="optimized")
