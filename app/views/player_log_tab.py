@@ -4,7 +4,10 @@ import re
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Deque, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Deque, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from watchdog.observers.api import BaseObserver
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -371,6 +374,9 @@ class PlayerLogTab(QWidget):
             1000
         )  # 1000ms debounce interval less than 1000ms breaks log updates
         self._file_change_debounce_timer.timeout.connect(self._process_file_change)
+
+        self._observer: Optional["BaseObserver"] = None
+        self.file_changed_signal.connect(self.on_file_changed)
 
         self.init_ui()
         # Delay loading the log by 5 seconds after initialization
@@ -949,7 +955,6 @@ class PlayerLogTab(QWidget):
                     self._observer.stop()
                     self._observer.join()
             event_handler = PlayerLogEventHandler(self.file_changed_signal)
-            self.file_changed_signal.connect(self.on_file_changed)
             try:
                 self._observer.schedule(
                     event_handler, str(self.player_log_path.parent), recursive=False
