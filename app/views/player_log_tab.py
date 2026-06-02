@@ -4,10 +4,7 @@ import re
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Deque, List, Optional, Tuple
-
-if TYPE_CHECKING:
-    from watchdog.observers.api import BaseObserver
+from typing import Callable, Deque, List, Optional, Tuple
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -46,8 +43,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
 
 from app.controllers.settings_controller import SettingsController
 from app.utils import http
@@ -63,7 +61,8 @@ class PlayerLogEventHandler(FileSystemEventHandler):
         super().__init__()
         self._signal = signal
 
-    def on_modified(self, event: object) -> None:
+    def on_modified(self, event: FileSystemEvent) -> None:
+        logger.debug("Player log file modified event: {}", event.src_path)
         self._signal.emit()
 
 
@@ -375,7 +374,7 @@ class PlayerLogTab(QWidget):
         )  # 1000ms debounce interval less than 1000ms breaks log updates
         self._file_change_debounce_timer.timeout.connect(self._process_file_change)
 
-        self._observer: Optional["BaseObserver"] = None
+        self._observer: BaseObserver | None = None
         self.file_changed_signal.connect(self.on_file_changed)
 
         self.init_ui()
@@ -949,6 +948,7 @@ class PlayerLogTab(QWidget):
             show_warning("Player log path is not set.")
             self.real_time_monitor_checkbox.setChecked(False)
             return
+        # Clean up any dead observer before creating a new one
         self._stop_monitoring()
         self._observer = Observer()
         event_handler = PlayerLogEventHandler(self.file_changed_signal)
@@ -973,11 +973,6 @@ class PlayerLogTab(QWidget):
             self._observer.join()
             logger.info("Stopped real-time monitoring of Player.log.")
         self._observer = None
-
-    def closeEvent(self, event: object) -> None:
-        """Stop monitoring and clean up before the widget is destroyed."""
-        self._stop_monitoring()
-        super().closeEvent(event)  # type: ignore[arg-type]
 
     def disable_options(self, skip_mod_filter_input: bool = False) -> None:
         """Disable options that require a loaded log."""
