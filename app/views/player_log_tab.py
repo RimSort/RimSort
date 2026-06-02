@@ -974,6 +974,11 @@ class PlayerLogTab(QWidget):
             logger.info("Stopped real-time monitoring of Player.log.")
         self._observer = None
 
+    def closeEvent(self, event: object) -> None:
+        """Stop monitoring and clean up before the widget is destroyed."""
+        self._stop_monitoring()
+        super().closeEvent(event)  # type: ignore[arg-type]
+
     def disable_options(self, skip_mod_filter_input: bool = False) -> None:
         """Disable options that require a loaded log."""
         self.load_default_button.setEnabled(False)
