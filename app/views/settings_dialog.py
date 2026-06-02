@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QSizePolicy,
     QSpinBox,
     QTabWidget,
@@ -73,7 +74,6 @@ class SettingsDialog(QDialog):
         self._do_locations_tab()
         self._do_game_launch_tab()
         self._do_databases_tab()
-        self._do_cross_version_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
@@ -386,22 +386,21 @@ class SettingsDialog(QDialog):
         tab_layout.addStretch()
 
     def _do_databases_tab(self) -> None:
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.tab_widget.addTab(scroll_area, self.tr("Databases"))
+
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Databases"))
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
+        scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
 
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
-
-    def _do_cross_version_databases_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Additional Databases"))
-
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
-
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
 
