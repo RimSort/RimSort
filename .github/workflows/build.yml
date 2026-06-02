@@ -179,7 +179,7 @@ jobs:
       - name: Build
         uses: Nuitka/Nuitka-Action@main
         with:
-          nuitka-version: 4.0.8
+          nuitka-version: 4.1.1
           script-name: app/
           python-flag: -m
           mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
