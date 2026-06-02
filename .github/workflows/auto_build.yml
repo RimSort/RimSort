@@ -23,23 +23,47 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
     outputs:
-      app_changed: ${{ steps.filter.outputs.app }}
+      app_changed: ${{ steps.check.outputs.app_changed }}
     steps:
       - uses: actions/checkout@main
-      - uses: dorny/paths-filter@v3
-        id: filter
         with:
-          filters: |
-            app:
-              - '**'
-              - '!docs/**'
-              - '!**/*.md'
-              - '!.github/ISSUE_TEMPLATE/**'
-              - '!.github/release.yml'
-              - '!.github/labeler.yml'
-              - '!LICENSE*'
+          fetch-depth: 0
+      - name: Check for app-relevant changes
+        id: check
+        env:
+          GH_EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          MG_BASE: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$GH_EVENT" == "pull_request" ]]; then
+            CHANGED=$(git diff --name-only "$PR_BASE"..."$PR_HEAD")
+          elif [[ "$GH_EVENT" == "merge_group" ]]; then
+            CHANGED=$(git diff --name-only "$MG_BASE"..."$MG_HEAD")
+          else
+            CHANGED=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_SHA")
+          fi
+
+          APP_CHANGED=$(echo "$CHANGED" \
+            | grep -v -E '^docs/' \
+            | grep -v -E '\.md$' \
+            | grep -v -E '^\.github/ISSUE_TEMPLATE/' \
+            | grep -v -E '^\.github/(release|labeler)\.yml$' \
+            | grep -v -E '^LICENSE' \
+            || true)
+
+          if [[ -n "$APP_CHANGED" ]]; then
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+            echo "App-relevant files changed:"
+            echo "$APP_CHANGED"
+          else
+            echo "app_changed=false" >> "$GITHUB_OUTPUT"
+            echo "Only documentation files changed — builds will be skipped"
+          fi
 
   pre-pyright:
     permissions:
