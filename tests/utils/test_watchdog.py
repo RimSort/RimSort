@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from threading import Timer
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from PySide6.QtCore import QObject
@@ -14,8 +14,8 @@ def _make_handler(acf_alive: bool = True, mods_alive: bool = True) -> Any:
     """Create a WatchdogHandler without real observers."""
     from app.utils.watchdog import WatchdogHandler
 
-    with patch.object(WatchdogHandler, "__init__", lambda self: QObject.__init__(self)):
-        handler = WatchdogHandler()  # type: ignore[call-arg]
+    handler = WatchdogHandler.__new__(WatchdogHandler)
+    QObject.__init__(handler)
 
     handler.watchdog_acf_observer = MagicMock()
     handler.watchdog_acf_observer.is_alive.return_value = acf_alive
