@@ -1,5 +1,6 @@
 ---
 title: Contributor Guidelines
+description: Guidelines for contributing to RimSort
 nav_order: 2
 layout: default
 parent: Development Guide
