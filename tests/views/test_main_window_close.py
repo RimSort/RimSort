@@ -34,6 +34,7 @@ def _make_stub_main_window() -> MainWindow:
     instance.main_content_panel = MagicMock()
     instance.watchdog_event_handler = None
     instance.stop_watchdog_if_running = MagicMock()  # type: ignore[method-assign]
+    instance.player_log_widget = MagicMock()
 
     return instance
 
@@ -59,6 +60,15 @@ class TestMainWindowCloseEvent:
         window.closeEvent(event)
 
         window.stop_watchdog_if_running.assert_called_once()  # type: ignore[attr-defined]
+
+    def test_close_event_stops_player_log_monitoring(self, qapp: object) -> None:
+        """Verify closeEvent stops player log monitoring if running."""
+        window = _make_stub_main_window()
+
+        event = QCloseEvent()
+        window.closeEvent(event)
+
+        window.player_log_widget._stop_monitoring.assert_called_once()  # type: ignore[attr-defined]
 
     def test_close_event_accepts(self, qapp: object) -> None:
         """Verify closeEvent accepts the event to allow window closure."""
