@@ -1215,10 +1215,11 @@ class MainWindow(QMainWindow):
                 self.watchdog_event_handler.watchdog_acf_observer.join()
                 self.watchdog_event_handler.watchdog_acf_observer = None
             # Handle Mod Directory Observer shutdown
-            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+            if self.watchdog_event_handler.watchdog_mods_observer.is_alive():
                 self.watchdog_event_handler.watchdog_mods_observer.stop()
                 self.watchdog_event_handler.watchdog_mods_observer.join()
                 self.watchdog_event_handler.watchdog_mods_observer = None
-                for timer in self.watchdog_event_handler.cooldown_timers.values():
-                    timer.cancel()
+            # Cancel all pending cooldown timers to prevent callbacks on stale handler
+            for timer in self.watchdog_event_handler.cooldown_timers.values():
+                timer.cancel()
             self.watchdog_event_handler = None
