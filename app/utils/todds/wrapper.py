@@ -2,12 +2,24 @@ import os
 import platform
 import shlex
 import sys
+from collections.abc import Sequence
+from typing import Protocol
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
 from app.utils.app_info import AppInfo
-from app.windows.runner_panel import RunnerPanel
+
+
+class ToddsRunner(Protocol):
+    """Minimal interface for a process runner that todds can use."""
+
+    todds_dry_run_support: bool
+
+    def execute(
+        self, command: str, args: Sequence[str], progress_bar: int | None = None
+    ) -> None: ...
+    def message(self, line: str) -> None: ...
 
 
 class ToddsInterface:
@@ -82,9 +94,9 @@ class ToddsInterface:
                 self.todds_presets[preset].append("-v")
                 self.todds_presets[preset].append("-dr")
 
-    def execute_todds_cmd(self, target_path: str, runner: RunnerPanel) -> None:
+    def execute_todds_cmd(self, target_path: str, runner: ToddsRunner) -> None:
         """
-        This function launches a todds command using a RunnerPanel (uses QProcess)
+        This function launches a todds command using a ToddsRunner (uses QProcess)
 
         https://github.com/joseasoler/todds/wiki/Example:-RimWorld
 

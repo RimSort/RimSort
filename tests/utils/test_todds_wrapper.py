@@ -1,5 +1,8 @@
 """Tests for app/utils/todds/wrapper.py."""
 
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 from app.utils.todds.wrapper import ToddsInterface
 
 
@@ -50,3 +53,39 @@ class TestToddsInterfaceInit:
         assert "-p" not in args
         assert "-v" in args
         assert "-dr" in args
+
+
+class TestToddsExecute:
+    def test_execute_calls_runner_when_binary_exists(self, tmp_path: Path) -> None:
+        """When todds binary exists, execute_todds_cmd calls runner.execute."""
+        todds_dir = tmp_path / "todds"
+        todds_dir.mkdir()
+        todds_bin = todds_dir / "todds"
+        todds_bin.touch()
+
+        ti = ToddsInterface(preset="optimized")
+
+        runner = MagicMock()
+        runner.todds_dry_run_support = False
+
+        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
+            mock_app_info.return_value.application_folder = tmp_path
+            ti.execute_todds_cmd("/some/target", runner)
+
+        runner.execute.assert_called_once()
+        args = runner.execute.call_args
+        assert str(todds_bin) == args[0][0]
+
+    def test_execute_shows_error_when_binary_missing(self, tmp_path: Path) -> None:
+        """When todds binary is missing, execute_todds_cmd sends error message."""
+        ti = ToddsInterface(preset="optimized")
+        runner = MagicMock()
+        runner.todds_dry_run_support = False
+
+        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
+            mock_app_info.return_value.application_folder = tmp_path
+            ti.execute_todds_cmd("/some/target", runner)
+
+        runner.execute.assert_not_called()
+        runner.message.assert_called_once()
+        assert "ERROR" in runner.message.call_args[0][0]
