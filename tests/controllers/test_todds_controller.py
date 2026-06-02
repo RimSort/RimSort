@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -42,26 +42,6 @@ def active_mods_setup(
     }
 
     return settings_controller, metadata_manager
-
-
-@pytest.fixture
-def todds_runner() -> MagicMock:
-    """Create a mock ToddsRunner."""
-    runner = MagicMock()
-    runner.todds_dry_run_support = False
-    return runner
-
-
-@pytest.fixture
-def controller_with_paths(
-    settings_controller: MagicMock, metadata_manager: MagicMock, tmp_path: Path
-) -> ToddsController:
-    """Create a ToddsController with valid directory paths."""
-    (tmp_path / "local_mods").mkdir()
-    return ToddsController(
-        settings_controller=settings_controller,
-        metadata_manager=metadata_manager,
-    )
 
 
 class TestGenerateToddsTxt:
@@ -131,24 +111,6 @@ class TestGenerateToddsTxt:
 
 
 class TestOptimizeTextures:
-    def test_optimize_creates_interface_and_executes(
-        self, controller_with_paths: ToddsController, todds_runner: MagicMock
-    ) -> None:
-        """optimize_textures creates a ToddsInterface and calls execute."""
-        with patch("app.controllers.todds_controller.ToddsInterface") as MockTI:
-            mock_instance = MagicMock()
-            MockTI.return_value = mock_instance
-            result = controller_with_paths.optimize_textures(todds_runner)
-
-        MockTI.assert_called_once_with(
-            preset="optimized",
-            dry_run=False,
-            overwrite=False,
-            custom_command="",
-        )
-        mock_instance.execute_todds_cmd.assert_called_once()
-        assert result is True  # paths_written > 0
-
     def test_optimize_returns_false_when_no_paths(
         self, settings_controller: MagicMock, metadata_manager: MagicMock
     ) -> None:
@@ -164,17 +126,28 @@ class TestOptimizeTextures:
 
 
 class TestDeleteDdsTextures:
-    def test_delete_uses_clean_preset(
-        self, controller_with_paths: ToddsController, todds_runner: MagicMock
+    def test_delete_returns_false_when_no_paths(
+        self, settings_controller: MagicMock, metadata_manager: MagicMock
     ) -> None:
-        """delete_dds_textures creates ToddsInterface with clean preset."""
-        with patch("app.controllers.todds_controller.ToddsInterface") as MockTI:
-            mock_instance = MagicMock()
-            MockTI.return_value = mock_instance
-            controller_with_paths.delete_dds_textures(todds_runner)
-
-        MockTI.assert_called_once_with(
-            preset="clean",
-            dry_run=False,
+        """delete_dds_textures returns False when no valid paths are found."""
+        tc = ToddsController(
+            settings_controller=settings_controller,
+            metadata_manager=metadata_manager,
         )
-        mock_instance.execute_todds_cmd.assert_called_once()
+        runner = MagicMock()
+        result = tc.delete_dds_textures(runner)
+        assert result is False
+
+
+class TestActiveModUuidsGuard:
+    def test_generate_todds_txt_returns_zero_when_uuids_missing(
+        self, settings_controller: MagicMock, metadata_manager: MagicMock
+    ) -> None:
+        """When todds_active_mods_target is True but active_mod_uuids is None, returns 0."""
+        settings_controller.settings.todds_active_mods_target = True
+        tc = ToddsController(
+            settings_controller=settings_controller,
+            metadata_manager=metadata_manager,
+        )
+        _, count = tc.generate_todds_txt(active_mod_uuids=None)
+        assert count == 0

@@ -15,7 +15,7 @@ class ToddsController:
     def __init__(
         self,
         settings_controller: SettingsController,
-        metadata_manager: object,
+        metadata_manager: object,  # TODO(debt): type as a protocol once MetadataManager is refactored (#2051)
     ) -> None:
         self.settings_controller = settings_controller
         self.metadata_manager = metadata_manager

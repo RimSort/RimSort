@@ -2072,15 +2072,7 @@ class MainContent(QObject):
 
         if not started:
             todds_runner.close()
-            dialogue.show_warning(
-                title=self.tr("No valid paths for todds"),
-                text=self.tr("todds could not find any valid mod folders to process."),
-                information=self.tr(
-                    "None of the configured mod folder paths exist on disk. "
-                    "Please verify your Local Mods and Workshop folders are correctly "
-                    "set in Settings, then try again."
-                ),
-            )
+            self._show_todds_no_paths_warning()
             return (False, -1) if block_until_complete else None
 
         if block_until_complete:
@@ -2125,15 +2117,18 @@ class MainContent(QObject):
 
         if not started:
             todds_runner.close()
-            dialogue.show_warning(
-                title=self.tr("No valid paths for todds"),
-                text=self.tr("todds could not find any valid mod folders to process."),
-                information=self.tr(
-                    "None of the configured mod folder paths exist on disk. "
-                    "Please verify your Local Mods and Workshop folders are correctly "
-                    "set in Settings, then try again."
-                ),
-            )
+            self._show_todds_no_paths_warning()
+
+    def _show_todds_no_paths_warning(self) -> None:
+        dialogue.show_warning(
+            title=self.tr("No valid paths for todds"),
+            text=self.tr("todds could not find any valid mod folders to process."),
+            information=self.tr(
+                "None of the configured mod folder paths exist on disk. "
+                "Please verify your Local Mods and Workshop folders are correctly "
+                "set in Settings, then try again."
+            ),
+        )
 
     # STEAM{CMD, WORKS} ACTIONS
     def _do_import_steamcmd_acf_data(self) -> None:
