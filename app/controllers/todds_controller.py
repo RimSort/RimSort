@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
+from app.utils.todds.wrapper import ToddsInterface, ToddsRunner
 
 
 class ToddsController:
@@ -82,3 +83,59 @@ class ToddsController:
             f"Generated todds.txt at: {todds_txt_path} ({paths_written} path(s) written)"
         )
         return todds_txt_path, paths_written
+
+    def optimize_textures(
+        self,
+        runner: ToddsRunner,
+        active_mod_uuids: list[str] | None = None,
+    ) -> bool:
+        """
+        Run todds texture optimization.
+
+        :param runner: Process runner that satisfies the ToddsRunner protocol.
+        :param active_mod_uuids: UUIDs of active mods (used when
+            todds_active_mods_target is True).
+        :return: True if todds was executed (paths found), False otherwise.
+        """
+        settings = self.settings_controller.settings
+
+        todds_interface = ToddsInterface(
+            preset=settings.todds_preset,
+            dry_run=settings.todds_dry_run,
+            overwrite=settings.todds_overwrite,
+            custom_command=settings.todds_custom_command,
+        )
+
+        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_uuids)
+        if paths_written == 0:
+            return False
+
+        todds_interface.execute_todds_cmd(todds_txt_path, runner)
+        return True
+
+    def delete_dds_textures(
+        self,
+        runner: ToddsRunner,
+        active_mod_uuids: list[str] | None = None,
+    ) -> bool:
+        """
+        Delete .dds textures using todds clean preset.
+
+        :param runner: Process runner that satisfies the ToddsRunner protocol.
+        :param active_mod_uuids: UUIDs of active mods (used when
+            todds_active_mods_target is True).
+        :return: True if todds was executed (paths found), False otherwise.
+        """
+        settings = self.settings_controller.settings
+
+        todds_interface = ToddsInterface(
+            preset="clean",
+            dry_run=settings.todds_dry_run,
+        )
+
+        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_uuids)
+        if paths_written == 0:
+            return False
+
+        todds_interface.execute_todds_cmd(todds_txt_path, runner)
+        return True
