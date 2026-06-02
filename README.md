@@ -4,6 +4,9 @@
     Built from the ground up to be reliable and community managed.<br>
     Includes support for Linux, Mac, and Windows.</p>
     <p align="center"><strong><a href="https://github.com/RimSort/RimSort/releases">Releases</a> | <a href="https://rimsort.github.io/RimSort/">Wiki</a> | <a href="https://discord.gg/aV7g69JmR2">Discord</a></strong> </p>
+    <p align="center">
+        <a href="https://codecov.io/gh/RimSort/RimSort"><img src="https://codecov.io/gh/RimSort/RimSort/graph/badge.svg" alt="codecov"></a>
+    </p>
     <br><br><br>
 </p>
 
