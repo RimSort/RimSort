@@ -88,5 +88,5 @@ RimSort 采用 [GPL-3.0 协议](https://github.com/RimSort/RimSort/tree/main/LIC
 [Wiki]: https://rimsort.github.io
 [Repo]: https://github.com/RimSort/RimSort
 [Issues]: https://github.com/RimSort/RimSort/issues
-[Releases]: https://github.com/oceancabbage/RimSort/releases
+[Releases]: https://github.com/RimSort/RimSort/releases
 [Discord]: https://discord.gg/aV7g69JmR2

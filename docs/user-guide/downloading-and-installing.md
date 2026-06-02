@@ -99,6 +99,6 @@ Linux
 
 <img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
 
-[Releases]: https://github.com/oceancabbage/RimSort/releases
-[Stable Release]: https://github.com/oceancabbage/RimSort/releases/latest
+[Releases]: https://github.com/RimSort/RimSort/releases
+[Stable Release]: https://github.com/RimSort/RimSort/releases/latest
 [Edge Release]: https://github.com/RimSort/RimSort/releases/tag/Edge

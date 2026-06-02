@@ -87,5 +87,5 @@ We aim to foster a welcoming community.
 [Wiki]: https://rimsort.github.io
 [Repo]: https://github.com/RimSort/RimSort
 [Issues]: https://github.com/RimSort/RimSort/issues
-[Releases]: https://github.com/oceancabbage/RimSort/releases
+[Releases]: https://github.com/RimSort/RimSort/releases
 [Discord]: https://discord.gg/aV7g69JmR2
