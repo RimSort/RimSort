@@ -24,13 +24,14 @@ class TestMainWindowCloseEvent:
     def test_close_event_stops_watchdog(self, qapp: object) -> None:
         """Verify closeEvent stops the watchdog if running."""
         window = make_stub_main_window()
-        window.watchdog_event_handler = MagicMock()
-        window.stop_watchdog_if_running = MagicMock()  # type: ignore[method-assign]
+        handler = MagicMock()
+        window.watchdog_event_handler = handler
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        window.stop_watchdog_if_running.assert_called_once()
+        handler.stop.assert_called_once()
+        assert window.watchdog_event_handler is None
 
     def test_close_event_accepts(self, qapp: object) -> None:
         """Verify closeEvent accepts the event to allow window closure."""

@@ -281,7 +281,7 @@ class MainWindow(QMainWindow):
         :param event: The close event to handle.
         """
         # Stop filesystem watchdog if running
-        self.stop_watchdog_if_running()
+        self.shutdown_watchdog()
 
         # Close all child windows
         self.main_content_panel.close_child_windows()
@@ -1119,7 +1119,7 @@ class MainWindow(QMainWindow):
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""
-        self.stop_watchdog_if_running()
+        self.shutdown_watchdog()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
         instance_path = str(InstanceController.get_instance_folder_path(instance))
@@ -1159,10 +1159,6 @@ class MainWindow(QMainWindow):
             self.main_content_panel.metadata_manager.process_update
         )
         self.watchdog_event_handler.start()
-
-    def stop_watchdog_if_running(self) -> None:
-        if self.watchdog_event_handler is not None:
-            self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if self.watchdog_event_handler is not None:

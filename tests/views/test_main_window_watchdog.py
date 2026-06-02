@@ -27,21 +27,3 @@ class TestShutdownWatchdog:
         window.shutdown_watchdog()
 
         assert window.watchdog_event_handler is None
-
-    def test_stop_if_running_delegates(self, qapp: object) -> None:
-        """stop_watchdog_if_running calls shutdown when handler exists."""
-        window = make_stub_main_window()
-        handler = MagicMock()
-        window.watchdog_event_handler = handler
-
-        window.stop_watchdog_if_running()
-
-        handler.stop.assert_called_once()
-        assert window.watchdog_event_handler is None
-
-    def test_stop_if_running_noop_when_none(self, qapp: object) -> None:
-        """stop_watchdog_if_running is a noop when handler is None."""
-        window = make_stub_main_window()
-        window.watchdog_event_handler = None
-
-        window.stop_watchdog_if_running()  # should not raise

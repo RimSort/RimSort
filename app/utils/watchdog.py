@@ -93,9 +93,10 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 self.watchdog_mods_observer.stop()
                 self.watchdog_mods_observer.join()
             self.watchdog_mods_observer = None
-        for timer in self.cooldown_timers.values():
-            timer.cancel()
+        timers = list(self.cooldown_timers.values())
         self.cooldown_timers.clear()
+        for timer in timers:
+            timer.cancel()
 
     def __add_acf_observers(self) -> None:
         """Add observers to the watchdog observer for applicable Steam .acf files.
