@@ -70,5 +70,19 @@ jobs:
       - non-attested-build
     if: always()
     steps:
-      - name: Set status check
-        run: echo "All required jobs have completed."
+      - name: Verify all required jobs succeeded
+        run: |
+          results=(
+            "${{ needs.pre-pyright.result }}"
+            "${{ needs.pre-test.result }}"
+            "${{ needs.pre-build.result }}"
+            "${{ needs.attested-build.result }}"
+            "${{ needs.non-attested-build.result }}"
+          )
+          for r in "${results[@]}"; do
+            if [[ "$r" == "failure" || "$r" == "cancelled" ]]; then
+              echo "::error::A required job finished with result: $r"
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded or were skipped."
