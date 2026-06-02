@@ -183,6 +183,3 @@ ltex.dictionary*
 # Translation cache
 .translation_cache.json
 nuitka-crash-report.xml
-
-# Compiled Qt translation files — generated from .ts sources via `just i18n-compile`
-locales/*.qm

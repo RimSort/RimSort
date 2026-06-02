@@ -24,7 +24,7 @@ This guide explains how to contribute translations to RimSort. The project uses 
 RimSort uses Qt's translation system with the following components:
 
 - **`.ts` files**: Source translation files (XML format) that translators edit
-- **`.qm` files**: Compiled binary translation files used by the application (generated, not committed)
+- **`.qm` files**: Compiled binary translation files used by the application (also generated automatically using github actions but are not committed)
 - **QTranslator**: Qt's translation engine that loads and applies translations
 
 ## Project Structure
@@ -267,7 +267,7 @@ If you want to get started quickly with translation work, you have two options:
    - Select "Check translation completeness" to see what needs translation
    - Select "Auto-translate missing strings" to fill in gaps with AI
    - Select "Full process" to update, translate, and compile all at once
-5. **Submit code**: Commit your `.ts` files (`.qm` files are generated automatically)
+5. **Submit code**: Commit both `.ts` and `.qm` files (`.qm` files are also generated automatically using github actions but are not committed)
 
 ### Option 2: Command-Line Mode
 
@@ -277,8 +277,7 @@ If you want to get started quickly with translation work, you have two options:
 4. **Edit translations**: Find entries marked as `type="unfinished"` and translate them
 5. **Auto-translate remaining strings** (optional): Run `python translation_helper.py auto-translate YOUR_LANGUAGE --service google`
 6. **Compile and test**: Run `python translation_helper.py compile YOUR_LANGUAGE`
-7. **Submit code**: Commit your `.ts` files (`.qm` files are generated automatically)
-
+7. **Submit code**: Commit both `.ts` and `.qm` files (`.qm` files are also generated automatically using github actions but are not committed)
 For detailed steps, please refer to the complete guide below.
 
 ## How to Contribute Translations
@@ -505,7 +504,11 @@ Use the translation helper tool for file validation:
    pyside6-lrelease locales/YOUR_LANGUAGE.ts
    ```
 
-   **Note**: Compilation generates corresponding `.qm` files in the `locales/` directory. These files are build artifacts and are not committed to version control. They are generated automatically by `just dev-setup` and `just build`.
+   **Note**:
+   1. Compilation generates corresponding `.qm` files in the `locales/` directory.
+   2. These files are also generated using github actions and can be build artifacts in such case .qm files are not committed to version control.
+   3. They are generated automatically by `just dev-setup` and `just build`.
+   4. In this project, these `.qm` files are also committed to version control to ensure users can directly use translation features after downloading without additional compilation steps.(still needs to be generated and commited by a user, will be automated in the future)
 
 #### 5.3 Test in Application
 
@@ -535,14 +538,18 @@ Use the translation helper tool for file validation:
 1. **Commit your changes**:
 
    ```bash
-   # Add translation source files only (.qm files are generated automatically)
+   # Add translation files (including .ts source files and compiled .qm files if .qm files are generated automatically using github actions are not commited)
    git add locales/YOUR_LANGUAGE.ts
    # If you added a new language, also update the language controller
    git add app/controllers/language_controller.py
    git commit -m "Add/Update [Language Name] translation"
    ```
 
-   **Note**: Only `.ts` source files are committed. The compiled `.qm` files are generated automatically during the build process via `just i18n-compile`.
+   **Note**:
+   1. Compilation generates corresponding `.qm` files in the `locales/` directory.
+   2. These files are also generated using github actions and can be build artifacts in such case .qm files are not committed to version control.
+   3. They are generated automatically by `just dev-setup` and `just build`.
+   4. In this project, these `.qm` files are also committed to version control to ensure users can directly use translation features after downloading without additional compilation steps.(still needs to be generated and commited by a user, will be automated in the future)
 
 2. **Push to your fork**:
 
