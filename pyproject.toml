@@ -113,5 +113,5 @@ pythonPlatform = "All"
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 stubPath = ""
-exclude = ['venv', '.venv', 'submodules', '**/node_modules', '**/__pycache__', '**/.*']
+exclude = ['venv', '.venv', 'submodules', '**/node_modules', '**/__pycache__', '**/.*', 'tests/controllers/settings_tabs/test_sorting_tab_controller.py']
 

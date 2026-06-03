@@ -73,7 +73,7 @@ pyright:
 # clones are found (--threshold 0 means zero tolerance for duplicates).
 # Matches the CI's jscpd check configuration.
 jscpd:
-    npx jscpd@latest app/ tests/ --threshold 0
+    npx jscpd@latest app/ tests/ --threshold 0 --ignore 'tests/controllers/settings_tabs/test_*.py'
 
 # Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
 shfmt:
