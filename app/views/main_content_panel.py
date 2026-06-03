@@ -1071,9 +1071,18 @@ class MainContent(QObject):
 
         # Compile dependency data from MetadataController
         metadata_controller = MetadataController.instance()
-        compiled_data = metadata_controller.compile(
-            use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
-        )
+        try:
+            compiled_data = metadata_controller.compile(
+                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+            )
+        except ValueError:
+            dialogue.show_warning(
+                title=self.tr("Metadata not loaded"),
+                text=self.tr(
+                    "Mod metadata has not finished loading. Please wait and try again."
+                ),
+            )
+            return
 
         # Bridge: translate old UUIDs to paths for the new sort system
         active_mod_paths: set[str] = set()
