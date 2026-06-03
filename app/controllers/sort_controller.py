@@ -81,9 +81,12 @@ class Sorter:
         """
         tier_mods: set[str] = set()
         for mod_id in known_tier_mods:
-            if mod_id in deps_graph:
+            if mod_id in self._active_package_ids:
                 tier_mods.add(mod_id)
-                tier_mods.update(get_dependencies_recursive(mod_id, deps_graph, set()))
+                if mod_id in deps_graph:
+                    tier_mods.update(
+                        get_dependencies_recursive(mod_id, deps_graph, set())
+                    )
         return tier_mods & self._active_package_ids
 
     def _collect_tier_three_mods(

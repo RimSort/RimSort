@@ -564,3 +564,58 @@ class TestSorterRegressions:
         success, result = sorter.sort()
         assert success
         assert len(result) == 3
+
+
+class TestTierModsWithNoEdges:
+    def test_tier_zero_mod_without_graph_entry(self) -> None:
+        """Tier-zero mod with no dependency edges must still sort in tier zero.
+
+        Uses name "Zzz Core" so alphabetical ordering would place it AFTER "Alpha" —
+        only tier-based ordering makes it appear first, proving the fix works.
+        """
+        mods = {
+            "/mods/core": make_listed_mod(
+                "/mods/core", name="Zzz Core", package_id="ludeon.rimworld"
+            ),
+            "/mods/regular": make_listed_mod(
+                "/mods/regular", name="Alpha Regular", package_id="author.regular"
+            ),
+        }
+        compiled = _build_compiled(
+            deps={"author.regular": set()}, tier_zero={"ludeon.rimworld"}
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL, compiled, mods, {"/mods/core", "/mods/regular"}
+        )
+        success, result = sorter.sort()
+        assert success
+        assert result.index("/mods/core") < result.index("/mods/regular")
+        graphs = sorter.generate_dependency_graphs()
+        assert "ludeon.rimworld" in graphs[0]
+        assert "ludeon.rimworld" not in graphs[2]
+
+    def test_tier_one_mod_without_graph_entry(self) -> None:
+        """Tier-one mod with no edges must still sort in tier one.
+
+        Uses name "Zzz Framework" so alphabetical ordering would place it AFTER "Alpha".
+        """
+        mods = {
+            "/mods/fw": make_listed_mod(
+                "/mods/fw", name="Zzz Framework", package_id="author.framework"
+            ),
+            "/mods/regular": make_listed_mod(
+                "/mods/regular", name="Alpha Regular", package_id="author.regular"
+            ),
+        }
+        compiled = _build_compiled(
+            deps={"author.regular": set()}, tier_one={"author.framework"}
+        )
+        sorter = Sorter(
+            SortMethod.TOPOLOGICAL, compiled, mods, {"/mods/fw", "/mods/regular"}
+        )
+        success, result = sorter.sort()
+        assert success
+        assert result.index("/mods/fw") < result.index("/mods/regular")
+        graphs = sorter.generate_dependency_graphs()
+        assert "author.framework" in graphs[1]
+        assert "author.framework" not in graphs[2]
