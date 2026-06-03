@@ -40,6 +40,11 @@ class Sorter:
             if isinstance(mod, AboutXmlMod):
                 self._active_package_ids.add(str(mod.package_id))
 
+        # TODO(debt): Both do_topo_sort and do_alphabetical_sort re-derive
+        # packageid_to_path and name lookup dicts from these same inputs.
+        # Precompute them here and pass down when sort function signatures
+        # are finalized in PR 3.
+
         if isinstance(sort_method, SortMethod) or isinstance(sort_method, str):
             logger.info(f"Created sorter instance with {sort_method} sort method")
 
