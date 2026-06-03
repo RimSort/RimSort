@@ -1,9 +1,12 @@
 from pathlib import Path
 
+from loguru import logger
+
 from app.utils.log_setup import (
     _anonymize_path,
     _obfuscate_message,
     _rotate_session_logs,
+    setup_logging,
 )
 
 
@@ -132,3 +135,70 @@ def test_rotate_legacy_old_log_deleted_when_full(tmp_path: Path) -> None:
     (tmp_path / "RimSort.old.log").write_text("legacy")
     _rotate_session_logs(tmp_path, "RimSort.log")
     assert not (tmp_path / "RimSort.old.log").exists()
+
+
+def test_setup_logging_creates_log_file(tmp_path: Path) -> None:
+    """setup_logging creates the log file and writes to it."""
+    setup_logging(log_dir=tmp_path, debug=False)
+    logger.info("test message")
+    logger.complete()
+    log_file = tmp_path / "RimSort.log"
+    assert log_file.exists()
+    content = log_file.read_text()
+    assert "test message" in content
+    logger.remove()
+
+
+def test_setup_logging_debug_level(tmp_path: Path) -> None:
+    """When debug=True, DEBUG messages appear in the log file."""
+    setup_logging(log_dir=tmp_path, debug=True)
+    logger.debug("debug msg")
+    logger.complete()
+    content = (tmp_path / "RimSort.log").read_text()
+    assert "debug msg" in content
+    logger.remove()
+
+
+def test_setup_logging_info_level_no_debug(tmp_path: Path) -> None:
+    """When debug=False, DEBUG messages do NOT appear in the log file."""
+    setup_logging(log_dir=tmp_path, debug=False)
+    logger.debug("should not appear")
+    logger.info("should appear")
+    logger.complete()
+    content = (tmp_path / "RimSort.log").read_text()
+    assert "should not appear" not in content
+    assert "should appear" in content
+    logger.remove()
+
+
+def test_setup_logging_obfuscates_paths(tmp_path: Path) -> None:
+    """Log file output has paths obfuscated."""
+    setup_logging(log_dir=tmp_path, debug=False)
+    logger.info("File at /home/john/Documents/mod.xml")
+    logger.complete()
+    content = (tmp_path / "RimSort.log").read_text()
+    assert "/home/john/" not in content
+    assert "/home/.../" in content
+    logger.remove()
+
+
+def test_setup_logging_rotates_existing(tmp_path: Path) -> None:
+    """Calling setup_logging rotates existing log files."""
+    (tmp_path / "RimSort.log").write_text("old session")
+    setup_logging(log_dir=tmp_path, debug=False)
+    assert (tmp_path / "RimSort.1.log").read_text() == "old session"
+    logger.remove()
+
+
+def test_setup_logging_exception_rendered(tmp_path: Path) -> None:
+    """Exceptions are rendered in the log file (not silently dropped)."""
+    setup_logging(log_dir=tmp_path, debug=True)
+    try:
+        raise ValueError("test error")
+    except ValueError:
+        logger.exception("caught error")
+    logger.complete()
+    content = (tmp_path / "RimSort.log").read_text()
+    assert "ValueError" in content
+    assert "test error" in content
+    logger.remove()

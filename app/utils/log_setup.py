@@ -5,6 +5,12 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+from loguru import logger
+
+if TYPE_CHECKING:
+    import loguru as loguru_module
 
 
 def _obfuscate_message(message: str, anonymize_path: bool = True) -> str:
@@ -96,3 +102,44 @@ def _rotate_session_logs(log_dir: Path, base_name: str) -> None:
                 old_legacy.unlink()
             except OSError:
                 pass
+
+
+def _formatter(record: "loguru_module.Record") -> str:
+    """Custom formatter for loguru logger with obfuscation and exception support."""
+    format_string = "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}][{thread.name}][{module}][{function}][{line}] : "
+    record["extra"]["obfuscated_message"] = _obfuscate_message(record["message"])
+    return format_string + "{extra[obfuscated_message]}\n{exception}"
+
+
+def setup_logging(
+    log_dir: Path,
+    debug: bool = False,
+) -> None:
+    """
+    Configure loguru sinks for the application.
+
+    :param log_dir: Directory for log files
+    :param debug: Enable DEBUG level logging (otherwise INFO)
+    """
+    logger.remove()
+
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    _rotate_session_logs(log_dir, "RimSort.log")
+
+    file_level = "DEBUG" if debug else "INFO"
+    log_file = log_dir / "RimSort.log"
+    logger.add(
+        log_file,
+        level=file_level,
+        format=_formatter,
+        enqueue=True,
+    )
+
+    logger.add(
+        sys.stderr,
+        level="WARNING",
+        format=_formatter,
+        colorize=False,
+        enqueue=True,
+    )
