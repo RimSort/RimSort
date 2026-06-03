@@ -31,6 +31,7 @@ from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.todds_controller import ToddsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils import globals
 from app.utils.acf_utils import refresh_acf_metadata
@@ -235,6 +236,12 @@ class MainWindow(QMainWindow):
             view=self.main_content_panel,
             settings_controller=self.settings_controller,
         )
+
+        self.todds_controller = ToddsController(
+            settings_controller=self.settings_controller,
+            metadata_manager=self.main_content_panel.metadata_manager,
+        )
+        self.main_content_panel.todds_controller = self.todds_controller
 
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)

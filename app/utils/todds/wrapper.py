@@ -2,13 +2,27 @@ import os
 import platform
 import shlex
 import sys
+from collections.abc import Sequence
+from typing import Protocol
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
-from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.windows.runner_panel import RunnerPanel
+
+
+class ToddsRunner(Protocol):
+    """Minimal interface for a process runner that todds can use."""
+
+    todds_dry_run_support: bool
+
+    def execute(
+        self, command: str, args: Sequence[str], progress_bar: int | None = None
+    ) -> None:
+        pass
+
+    def message(self, line: str) -> None:
+        pass
 
 
 class ToddsInterface:
@@ -33,9 +47,6 @@ class ToddsInterface:
         self.system = platform.system()
         if "custom" in preset:
             preset = "custom"
-            settings: Settings = Settings()
-            settings.load()
-            self.custom_command = settings.todds_custom_command
         elif "clean" in preset:
             preset = "clean"
         else:
@@ -86,9 +97,9 @@ class ToddsInterface:
                 self.todds_presets[preset].append("-v")
                 self.todds_presets[preset].append("-dr")
 
-    def execute_todds_cmd(self, target_path: str, runner: RunnerPanel) -> None:
+    def execute_todds_cmd(self, target_path: str, runner: ToddsRunner) -> None:
         """
-        This function launches a todds command using a RunnerPanel (uses QProcess)
+        This function launches a todds command using a ToddsRunner (uses QProcess)
 
         https://github.com/joseasoler/todds/wiki/Example:-RimWorld
 
@@ -125,7 +136,7 @@ class ToddsInterface:
                 runner.message("Courtesy of joseasoler#1824")
                 runner.message(f"Using configured preset: {self.preset}\n\n")
             runner.execute(todds_exe_path, args, -1)
-            logger.warning(f"Executing todds with arguments: {args} in {self.cwd}")
+            logger.info(f"Executing todds with arguments: {args} in {self.cwd}")
         else:
             logger.error("Todds executable not found.")
             development_guide_url = (
