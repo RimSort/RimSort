@@ -77,11 +77,11 @@ jscpd:
 
 # Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
 shfmt:
-    shfmt -d .
+    fd -e sh --exclude .venv --exclude submodules -x shfmt -d {}
 
 # Automatically fix shell script formatting issues (shfmt)
 shfmt-fix:
-    shfmt -w .
+    fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
 # Run all code quality checks: ruff + ruff-format + typecheck + pyright + jscpd + shfmt + markdown lint
 check: ruff ruff-format typecheck pyright jscpd shfmt markdownlint
