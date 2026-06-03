@@ -136,7 +136,7 @@ class ToddsInterface:
                 runner.message("Courtesy of joseasoler#1824")
                 runner.message(f"Using configured preset: {self.preset}\n\n")
             runner.execute(todds_exe_path, args, -1)
-            logger.warning(f"Executing todds with arguments: {args} in {self.cwd}")
+            logger.info(f"Executing todds with arguments: {args} in {self.cwd}")
         else:
             logger.error("Todds executable not found.")
             development_guide_url = (
