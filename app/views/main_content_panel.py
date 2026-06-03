@@ -1074,6 +1074,7 @@ class MainContent(QObject):
         try:
             compiled_data = metadata_controller.compile(
                 use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                use_alternative_package_ids=self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies,
             )
         except ValueError:
             dialogue.show_warning(

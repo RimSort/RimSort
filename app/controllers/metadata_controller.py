@@ -175,15 +175,18 @@ class MetadataController(QObject):
     def compile(
         self,
         use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
     ) -> CompiledDependencyData:
         """Compile dependency data from current metadata state.
 
         :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps
         :return: Compiled dependency data
         """
         return self._build_compiled_data(
             self.metadata_mediator.mods_metadata,
             use_moddependencies_as_loadTheseBefore,
+            use_alternative_package_ids,
         )
 
     @property
@@ -286,6 +289,7 @@ class MetadataController(QObject):
     def _build_compiled_data(
         mods_metadata: Mapping[str, ListedMod],
         use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
     ) -> CompiledDependencyData:
         """Build compiled dependency data from parsed mods.
 
@@ -297,6 +301,7 @@ class MetadataController(QObject):
 
         :param mods_metadata: Mapping of mod-path strings to ``ListedMod``.
         :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter.
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
         :return: A fully-populated ``CompiledDependencyData`` instance.
         """
         compiled = CompiledDependencyData()
@@ -354,15 +359,34 @@ class MetadataController(QObject):
                 compiled.tier_three_mods.add(pid)
 
         # --- Step 5: Inferred edges from dependencies (with conflict resolution) ---
+        # Matches old gen_tier_two_deps_graph: skip tier-one and tier-three mods
+        # (both as source and target). Tier-zero is NOT excluded — the old code
+        # allowed inferred edges involving Core/DLCs within tier-two processing.
         if use_moddependencies_as_loadTheseBefore:
+            excluded_tiers = compiled.tier_one_mods | compiled.tier_three_mods
             conflicts_ignored = 0
             for mod in mods_metadata.values():
                 if not isinstance(mod, AboutXmlMod):
                     continue
                 pid = str(mod.package_id)
+                if pid in excluded_tiers:
+                    continue
                 for dep_mod in mod.overall_rules.dependencies.values():
                     dep = str(dep_mod.package_id)
+                    # Resolve: prefer primary, fall back to alternative if enabled
                     if dep not in all_package_ids:
+                        if not use_alternative_package_ids:
+                            continue
+                        resolved = None
+                        for alt in dep_mod.alternative_package_ids:
+                            alt_str = str(alt)
+                            if alt_str in all_package_ids:
+                                resolved = alt_str
+                                break
+                        if resolved is None:
+                            continue
+                        dep = resolved
+                    if dep in excluded_tiers:
                         continue
                     # Conflict check: would adding pid -> dep contradict
                     # an existing explicit edge dep -> pid?
