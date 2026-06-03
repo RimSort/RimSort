@@ -35,12 +35,10 @@ from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
 from typing import Type
 
-import loguru
 from loguru import logger
 
 from app.controllers.app_controller import AppController
 from app.utils.app_info import AppInfo
-from app.utils.obfuscate_message import obfuscate_message
 from app.views.dialogue import show_fatal_error
 
 SYSTEM = platform.system()
@@ -175,45 +173,12 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
-    # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
     debug_file_path = AppInfo().app_storage_folder / "DEBUG"
-    if debug_file_path.exists() and debug_file_path.is_file():
-        DEBUG_MODE = True
-    else:
-        DEBUG_MODE = False
+    DEBUG_MODE = debug_file_path.exists() and debug_file_path.is_file()
 
-    # We have log_file (foo.log) and old_log_file (foo.old.log). If old_log_file exists,
-    # remove it. If log_file exists, rename it to old_log_file. When we pass log_file to
-    # the logger as an argument, it will automatically be created.
-    log_file = AppInfo().user_log_folder / (AppInfo().app_name + ".log")
-    old_log_file = AppInfo().user_log_folder / (AppInfo().app_name + ".old.log")
-    if old_log_file.exists() and old_log_file.is_file():
-        old_log_file.unlink()
-    if log_file.exists() and log_file.is_file():
-        log_file.rename(old_log_file)
+    from app.utils.log_setup import setup_logging
 
-    # Define the log format string
-
-    def formatter(record: "loguru.Record") -> str:
-        """Custom formatter for loguru logger"""
-        format_string = "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}][{thread.name}][{module}][{function}][{line}] : "
-
-        record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
-        return format_string + "{extra[obfuscated_message]}\n"
-
-    # Remove the default stderr logger
-    logger.remove()
-
-    # Create the file logger
-    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=formatter)
-
-    # Add a "WARNING" or higher stderr logger
-    logger.add(
-        sys.stderr,
-        level="WARNING",
-        format=formatter,
-        colorize=False,
-    )
+    setup_logging(log_dir=AppInfo().user_log_folder, debug=DEBUG_MODE)
 
     if "__compiled__" not in globals():
         logger.debug("Running using Python interpreter")
