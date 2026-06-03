@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
@@ -397,6 +398,7 @@ class MainContent(QObject):
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
         self.metadata_manager.refresh_cache()
+        MetadataController.instance().refresh_metadata()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
@@ -915,6 +917,9 @@ class MainContent(QObject):
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
 
+            # Refresh MetadataController alongside MetadataManager
+            MetadataController.instance().refresh_metadata()
+
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
@@ -1070,21 +1075,37 @@ class MainContent(QObject):
                                     active_mods.add(uuid)
                                 break
 
-        # Get package IDs for active mods
-        active_package_ids = set()
-        for uuid in active_mods:
-            active_package_ids.add(
-                self.metadata_manager.internal_local_metadata[uuid]["packageid"]
+        # Compile dependency data from MetadataController
+        metadata_controller = MetadataController.instance()
+        try:
+            compiled_data = metadata_controller.compile(
+                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                use_alternative_package_ids=self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies,
             )
+        except ValueError:
+            dialogue.show_warning(
+                title=self.tr("Metadata not loaded"),
+                text=self.tr(
+                    "Mod metadata has not finished loading. Please wait and try again."
+                ),
+            )
+            return
+
+        # Bridge: translate old UUIDs to paths for the new sort system
+        active_mod_paths: set[str] = set()
+        for uuid in active_mods:
+            mod_data = self.metadata_manager.internal_local_metadata.get(uuid)
+            if mod_data and mod_data.get("path"):
+                active_mod_paths.add(mod_data["path"])
 
         # Get the current order of active mods list and create a copy for comparison
         current_order = active_mods
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
-                active_package_ids=active_package_ids,
-                active_uuids=active_mods,
-                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                compiled_data=compiled_data,
+                mods_metadata=metadata_controller.mods_metadata,
+                active_mod_paths=active_mod_paths,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
@@ -1102,7 +1123,15 @@ class MainContent(QObject):
             logger.error(f"Sort failed. Sorting algorithm not implemented: {e}")
             return
 
-        success, new_order = sorter.sort()
+        success, new_order_paths = sorter.sort()
+
+        # Bridge: translate paths back to UUIDs for the list widget
+        path_to_uuid: dict[str, str] = {}
+        for uuid, mod_data in self.metadata_manager.internal_local_metadata.items():
+            p = mod_data.get("path")
+            if p:
+                path_to_uuid[p] = uuid
+        new_order = [path_to_uuid[p] for p in new_order_paths if p in path_to_uuid]
 
         # Log the sort result and the order
         logger.debug(

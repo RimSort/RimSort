@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
@@ -112,6 +114,25 @@ class MetadataController(QObject):
 
             session.commit()
 
+    @staticmethod
+    def _resolve_db_path(
+        source: str, file_path: str, repo_url: str, file_name: str
+    ) -> Path | None:
+        """Resolve the actual on-disk path for an external DB file.
+
+        Mirrors the path resolution logic from ExternalMetadataLoader._get_repo_path:
+        when the source is a URL or git repo, the download lands in
+        ``AppInfo().databases_folder / <repo-name> / <file_name>``, not
+        at the settings default.
+        """
+        if source == "Disabled":
+            return None
+        if source == "Configured file path":
+            return Path(file_path) if file_path else None
+        # "Configured URL" or "Configured git repository"
+        repo_name = Path(repo_url).name
+        return AppInfo().databases_folder / repo_name / file_name
+
     @Slot()
     def reset_paths(self) -> None:
         """Reset the paths.
@@ -126,8 +147,18 @@ class MetadataController(QObject):
         active_instance = self.settings_controller.active_instance
         active_settings = self.settings_controller.settings
 
-        cr_path = _get_path(active_settings.external_community_rules_file_path)
-        steam_db_path = _get_path(active_settings.external_steam_metadata_file_path)
+        cr_path = self._resolve_db_path(
+            active_settings.external_community_rules_metadata_source,
+            active_settings.external_community_rules_file_path,
+            active_settings.external_community_rules_repo,
+            "communityRules.json",
+        )
+        steam_db_path = self._resolve_db_path(
+            active_settings.external_steam_metadata_source,
+            active_settings.external_steam_metadata_file_path,
+            active_settings.external_steam_metadata_repo,
+            "steamDB.json",
+        )
         workshop_mods_path = _get_path(active_instance.workshop_folder)
         local_mods_path = _get_path(active_instance.local_folder)
         game_path = _get_path(active_instance.game_folder)
@@ -173,15 +204,18 @@ class MetadataController(QObject):
     def compile(
         self,
         use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
     ) -> CompiledDependencyData:
         """Compile dependency data from current metadata state.
 
         :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps
         :return: Compiled dependency data
         """
         return self._build_compiled_data(
             self.metadata_mediator.mods_metadata,
             use_moddependencies_as_loadTheseBefore,
+            use_alternative_package_ids,
         )
 
     @property
@@ -282,25 +316,25 @@ class MetadataController(QObject):
 
     @staticmethod
     def _build_compiled_data(
-        mods_metadata: dict[str, ListedMod],
+        mods_metadata: Mapping[str, ListedMod],
         use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
     ) -> CompiledDependencyData:
         """Build compiled dependency data from parsed mods.
 
-        This is the core compilation step that replaces the old
-        ``MetadataManager.compile_metadata()`` method.  It is a pure
-        function (static method) so that it can be tested without
-        instantiating any Qt objects or singletons.
+        When ``use_moddependencies_as_loadTheseBefore`` is True, declared
+        ``modDependencies`` are treated as implicit ``loadAfter`` edges.
+        Explicit load-order rules always take precedence: if an explicit
+        rule says A loads after B, an inferred rule saying B loads after A
+        is silently dropped to avoid creating a cycle.
 
-        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``
-            objects, as produced by ``MetadataMediator``.
-        :param use_moddependencies_as_loadTheseBefore: When *True*, treat
-            declared ``modDependencies`` as implicit ``loadAfter`` edges.
+        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``.
+        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter.
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
         :return: A fully-populated ``CompiledDependencyData`` instance.
         """
         compiled = CompiledDependencyData()
 
-        # CRITICAL: copy the known-tier sets so we never mutate the module-level constants.
         compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()
         compiled.tier_one_mods = KNOWN_TIER_ONE_MODS.copy()
 
@@ -315,18 +349,13 @@ class MetadataController(QObject):
             all_package_ids.add(pid)
             packageid_to_paths.setdefault(pid, set()).add(path_str)
 
-        # --- Step 2 & 3: Build forward and reverse dependency graphs ---
+        # --- Step 2: Build explicit forward and reverse dependency graphs ---
         for mod in mods_metadata.values():
             if not isinstance(mod, AboutXmlMod):
                 continue
 
             pid = str(mod.package_id)
-
-            # Choose rules variant based on the deps-as-load-order flag
-            if use_moddependencies_as_loadTheseBefore:
-                rules = mod.overall_rules_with_deps
-            else:
-                rules = mod.overall_rules
+            rules = mod.overall_rules
 
             # load_after: "I (pid) load after dep" -> pid depends on dep
             for dep_ci in rules.load_after:
@@ -344,18 +373,66 @@ class MetadataController(QObject):
                 compiled.deps_graph.setdefault(target, set()).add(pid)
                 compiled.rev_deps_graph.setdefault(pid, set()).add(target)
 
-            # --- Step 4: Record incompatibilities (only between existing mods) ---
+            # --- Step 3: Record incompatibilities ---
             for incompat_ci in rules.incompatible_with:
                 incompat = str(incompat_ci)
                 if incompat not in all_package_ids:
                     continue
                 compiled.incompatibilities.setdefault(pid, set()).add(incompat)
 
-            # --- Step 5: Tier classification ---
+            # --- Step 4: Tier classification ---
             if rules.load_first and pid not in compiled.tier_zero_mods:
                 compiled.tier_one_mods.add(pid)
 
             if rules.load_last:
                 compiled.tier_three_mods.add(pid)
+
+        # --- Step 5: Inferred edges from dependencies (with conflict resolution) ---
+        # Matches old gen_tier_two_deps_graph: skip tier-one and tier-three mods
+        # (both as source and target). Tier-zero is NOT excluded — the old code
+        # allowed inferred edges involving Core/DLCs within tier-two processing.
+        if use_moddependencies_as_loadTheseBefore:
+            excluded_tiers = compiled.tier_one_mods | compiled.tier_three_mods
+            conflicts_ignored = 0
+            for mod in mods_metadata.values():
+                if not isinstance(mod, AboutXmlMod):
+                    continue
+                pid = str(mod.package_id)
+                if pid in excluded_tiers:
+                    continue
+                for dep_mod in mod.overall_rules.dependencies.values():
+                    dep = str(dep_mod.package_id)
+                    # Resolve: prefer primary, fall back to alternative if enabled
+                    if dep not in all_package_ids:
+                        if not use_alternative_package_ids:
+                            continue
+                        resolved = None
+                        for alt in dep_mod.alternative_package_ids:
+                            alt_str = str(alt)
+                            if alt_str in all_package_ids:
+                                resolved = alt_str
+                                break
+                        if resolved is None:
+                            continue
+                        dep = resolved
+                    if dep in excluded_tiers:
+                        continue
+                    # Conflict check: would adding pid -> dep contradict
+                    # an existing explicit edge dep -> pid?
+                    if pid in compiled.deps_graph.get(dep, set()):
+                        logger.warning(
+                            f"Ignoring inferred dependency {pid} -> {dep}: "
+                            f"conflicts with explicit rule {dep} -> {pid}"
+                        )
+                        conflicts_ignored += 1
+                        continue
+                    compiled.deps_graph.setdefault(pid, set()).add(dep)
+                    compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            if conflicts_ignored > 0:
+                logger.info(
+                    f"Resolved {conflicts_ignored} conflicts by prioritizing "
+                    f"explicit load order rules over inferred dependencies"
+                )
 
         return compiled

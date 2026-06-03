@@ -200,3 +200,198 @@ def test_compile_deps_as_load_order_off() -> None:
     """use_moddependencies_as_loadTheseBefore=False (default) does not create load edges."""
     compiled = _compile(_make_dep_mods(), use_moddependencies_as_loadTheseBefore=False)
     assert "mod.b" not in compiled.deps_graph.get("mod.a", set())
+
+
+# --- Conflict resolution tests ---
+
+
+def test_compile_explicit_wins_over_conflicting_inferred() -> None:
+    """Explicit rule A->B blocks inferred B->A from creating a cycle.
+
+    mod.a has explicit load_after mod.b (A loads after B, so A -> B edge).
+    mod.b has dependency on mod.a (inferred: B loads after A, so B -> A edge).
+    The inferred edge conflicts — it would create a cycle. It gets dropped.
+    """
+    mod_a = _make_mod("mod.a", "/mods/a", load_after=["mod.b"])
+    mod_b = _make_mod("mod.b", "/mods/b")
+    mod_b.about_rules.dependencies[CaseInsensitiveStr("mod.a")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.a")
+    )
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/b": mod_b}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+
+    # Explicit: mod.a depends on mod.b (mod.a -> mod.b edge)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    # Inferred: mod.b depends on mod.a would conflict — should be dropped
+    assert "mod.a" not in compiled.deps_graph.get("mod.b", set())
+
+
+def test_compile_non_conflicting_inferred_kept() -> None:
+    """Inferred edges that don't conflict with explicit edges are kept."""
+    mod_a = _make_mod("mod.a", "/mods/a")
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("mod.b")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.b")
+    )
+    mod_b = _make_mod("mod.b", "/mods/b")
+    mod_c = _make_mod("mod.c", "/mods/c", load_after=["mod.a"])
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/b": mod_b, "/mods/c": mod_c}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+
+    # Inferred: mod.a -> mod.b (no conflict)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    # Explicit: mod.c -> mod.a
+    assert "mod.a" in compiled.deps_graph.get("mod.c", set())
+
+
+def test_compile_overall_rules_not_mutated() -> None:
+    """Calling compile with deps-as-load-order must NOT mutate mod.overall_rules."""
+    mods = _make_dep_mods()
+    mod_a = mods["/mods/a"]
+    assert isinstance(mod_a, AboutXmlMod)
+
+    original_load_after = set(mod_a.overall_rules.load_after)
+    _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+    assert set(mod_a.overall_rules.load_after) == original_load_after
+
+
+def test_compile_load_before_and_load_after_same_pair() -> None:
+    """A loads_before B AND A loads_after B → both edges exist (cycle)."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod(
+            "mod.a", "/mods/a", load_before=["mod.b"], load_after=["mod.b"]
+        ),
+        "/mods/b": _make_mod("mod.b", "/mods/b"),
+    }
+    compiled = _compile(mods)
+    assert "mod.b" in compiled.deps_graph.get("mod.a", set())
+    assert "mod.a" in compiled.deps_graph.get("mod.b", set())
+
+
+def test_compile_load_first_and_load_last_same_mod() -> None:
+    """A mod with both load_first and load_last ends up in both tier sets."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", load_first=True, load_last=True),
+    }
+    compiled = _compile(mods)
+    assert "mod.a" in compiled.tier_one_mods
+    assert "mod.a" in compiled.tier_three_mods
+
+
+def test_compile_many_mods_all_depend_on_one() -> None:
+    """Fan-in: 20 mods all depending on one shared base mod."""
+    base = _make_mod("mod.base", "/mods/base")
+    mods: dict[str, ListedMod] = {"/mods/base": base}
+    for i in range(20):
+        mods[f"/mods/{i}"] = _make_mod(
+            f"mod.{i}", f"/mods/{i}", load_after=["mod.base"]
+        )
+    compiled = _compile(mods)
+    assert len(compiled.rev_deps_graph.get("mod.base", set())) == 20
+    for i in range(20):
+        assert "mod.base" in compiled.deps_graph.get(f"mod.{i}", set())
+
+
+def test_compile_self_referencing_load_after() -> None:
+    """A mod with load_after referencing itself → self-edge in graph."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", load_after=["mod.a"]),
+    }
+    compiled = _compile(mods)
+    assert "mod.a" in compiled.deps_graph.get("mod.a", set())
+
+
+# --- Alternative package ID tests ---
+
+
+def _make_alt_dep_mods() -> dict[str, ListedMod]:
+    """Create mods where mod.a depends on mod.primary with mod.alt as alternative.
+
+    mod.primary is NOT in the returned dict — only mod.a and mod.alt are present.
+    """
+    mod_a = _make_mod("mod.a", "/mods/a")
+    dep = DependencyMod(package_id=CaseInsensitiveStr("mod.primary"))
+    dep.alternative_package_ids = {CaseInsensitiveStr("mod.alt")}
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("mod.primary")] = dep
+    mod_alt = _make_mod("mod.alt", "/mods/alt")
+    return {"/mods/a": mod_a, "/mods/alt": mod_alt}
+
+
+def test_compile_alternative_package_id_used_when_primary_absent() -> None:
+    """When primary dep is absent but an alternative is present, create the inferred edge."""
+    compiled = _compile(
+        _make_alt_dep_mods(),
+        use_moddependencies_as_loadTheseBefore=True,
+        use_alternative_package_ids=True,
+    )
+    assert "mod.alt" in compiled.deps_graph.get("mod.a", set())
+
+
+def test_compile_alternative_package_id_not_used_when_disabled() -> None:
+    """When the alternative setting is disabled, don't fall back to alternatives."""
+    compiled = _compile(
+        _make_alt_dep_mods(),
+        use_moddependencies_as_loadTheseBefore=True,
+        use_alternative_package_ids=False,
+    )
+    assert "mod.alt" not in compiled.deps_graph.get("mod.a", set())
+
+
+def test_compile_primary_preferred_over_alternative() -> None:
+    """When both primary and alternative are present, use the primary."""
+    mod_a = _make_mod("mod.a", "/mods/a")
+    dep = DependencyMod(package_id=CaseInsensitiveStr("mod.primary"))
+    dep.alternative_package_ids = {CaseInsensitiveStr("mod.alt")}
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("mod.primary")] = dep
+    mod_primary = _make_mod("mod.primary", "/mods/primary")
+    mod_alt = _make_mod("mod.alt", "/mods/alt")
+    mods: dict[str, ListedMod] = {
+        "/mods/a": mod_a,
+        "/mods/primary": mod_primary,
+        "/mods/alt": mod_alt,
+    }
+    compiled = _compile(
+        mods,
+        use_moddependencies_as_loadTheseBefore=True,
+        use_alternative_package_ids=True,
+    )
+    assert "mod.primary" in compiled.deps_graph.get("mod.a", set())
+    assert "mod.alt" not in compiled.deps_graph.get("mod.a", set())
+
+
+# --- Tier exclusion tests ---
+
+
+def test_compile_inferred_edges_skip_tier_one_source() -> None:
+    """Inferred deps are not added when the source mod is tier-one."""
+    mod_fw = _make_mod("mod.framework", "/mods/fw", load_first=True)
+    mod_fw.about_rules.dependencies[CaseInsensitiveStr("mod.dep")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.dep")
+    )
+    mod_dep = _make_mod("mod.dep", "/mods/dep")
+    mods: dict[str, ListedMod] = {"/mods/fw": mod_fw, "/mods/dep": mod_dep}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+    assert "mod.dep" not in compiled.deps_graph.get("mod.framework", set())
+
+
+def test_compile_inferred_edges_skip_tier_one_target() -> None:
+    """Inferred deps targeting tier-one mods are not added."""
+    mod_a = _make_mod("mod.a", "/mods/a")
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("mod.framework")] = DependencyMod(
+        package_id=CaseInsensitiveStr("mod.framework")
+    )
+    mod_fw = _make_mod("mod.framework", "/mods/fw", load_first=True)
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/fw": mod_fw}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+    assert "mod.framework" not in compiled.deps_graph.get("mod.a", set())
+
+
+def test_compile_inferred_edges_allow_tier_zero_target() -> None:
+    """Inferred deps targeting tier-zero mods ARE allowed (matches old behavior)."""
+    mod_a = _make_mod("mod.a", "/mods/a")
+    mod_a.about_rules.dependencies[CaseInsensitiveStr("ludeon.rimworld")] = (
+        DependencyMod(package_id=CaseInsensitiveStr("ludeon.rimworld"))
+    )
+    mod_core = _make_mod("ludeon.rimworld", "/mods/core")
+    mods: dict[str, ListedMod] = {"/mods/a": mod_a, "/mods/core": mod_core}
+    compiled = _compile(mods, use_moddependencies_as_loadTheseBefore=True)
+    assert "ludeon.rimworld" in compiled.deps_graph.get("mod.a", set())
