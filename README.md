@@ -10,7 +10,7 @@
     <br><br><br>
 </p>
 
-![RimSort Preview](./docs/rimsort_preview.png)
+![RimSort Preview](./docs/assets/images/rimsort_preview.png)
 
 ## Installation
 
