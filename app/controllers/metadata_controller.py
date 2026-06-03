@@ -114,6 +114,25 @@ class MetadataController(QObject):
 
             session.commit()
 
+    @staticmethod
+    def _resolve_db_path(
+        source: str, file_path: str, repo_url: str, file_name: str
+    ) -> Path | None:
+        """Resolve the actual on-disk path for an external DB file.
+
+        Mirrors the path resolution logic from ExternalMetadataLoader._get_repo_path:
+        when the source is a URL or git repo, the download lands in
+        ``AppInfo().databases_folder / <repo-name> / <file_name>``, not
+        at the settings default.
+        """
+        if source == "Disabled":
+            return None
+        if source == "Configured file path":
+            return Path(file_path) if file_path else None
+        # "Configured URL" or "Configured git repository"
+        repo_name = Path(repo_url).name
+        return AppInfo().databases_folder / repo_name / file_name
+
     @Slot()
     def reset_paths(self) -> None:
         """Reset the paths.
@@ -128,8 +147,18 @@ class MetadataController(QObject):
         active_instance = self.settings_controller.active_instance
         active_settings = self.settings_controller.settings
 
-        cr_path = _get_path(active_settings.external_community_rules_file_path)
-        steam_db_path = _get_path(active_settings.external_steam_metadata_file_path)
+        cr_path = self._resolve_db_path(
+            active_settings.external_community_rules_metadata_source,
+            active_settings.external_community_rules_file_path,
+            active_settings.external_community_rules_repo,
+            "communityRules.json",
+        )
+        steam_db_path = self._resolve_db_path(
+            active_settings.external_steam_metadata_source,
+            active_settings.external_steam_metadata_file_path,
+            active_settings.external_steam_metadata_repo,
+            "steamDB.json",
+        )
         workshop_mods_path = _get_path(active_instance.workshop_folder)
         local_mods_path = _get_path(active_instance.local_folder)
         game_path = _get_path(active_instance.game_folder)

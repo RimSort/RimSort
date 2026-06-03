@@ -793,6 +793,7 @@ def read_rules_db(
             json_string = f.read()
             logger.info("Reading info from rules DB")
             rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
+            rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
             logger.info(f"Loaded {len(rule_data.rules)} additional rules")
             return rule_data
     else:  # Assume db_data_missing
@@ -839,6 +840,7 @@ def read_steam_db(path: Path) -> SteamDbSchema | None:
             json_string = f.read()
             logger.info("Reading info from SteamDB")
             steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
+            steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
             logger.info(
                 f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
             )

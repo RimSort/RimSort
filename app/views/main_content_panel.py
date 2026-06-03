@@ -396,6 +396,7 @@ class MainContent(QObject):
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
         self.metadata_manager.refresh_cache()
+        MetadataController.instance().refresh_metadata()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
@@ -913,6 +914,9 @@ class MainContent(QObject):
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
+
+            # Refresh MetadataController alongside MetadataManager
+            MetadataController.instance().refresh_metadata()
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
