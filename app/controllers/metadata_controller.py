@@ -219,6 +219,8 @@ class MetadataController(QObject):
         for p in path:
             self.metadata_mediator.mods_metadata.pop(str(p), None)
 
+        self._packageid_to_paths_cache = None
+
     def compile(
         self,
         use_moddependencies_as_loadTheseBefore: bool = False,
