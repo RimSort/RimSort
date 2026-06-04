@@ -9,7 +9,6 @@ import webbrowser
 from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, cast, overload
-from urllib.parse import urlparse
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -39,6 +38,7 @@ from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
+from app.services.import_export_service import ImportExportService
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
 from app.utils.app_info import AppInfo
@@ -56,22 +56,17 @@ from app.utils.generic import (
     upload_data_to_0x0_st,
 )
 from app.utils.ignore_manager import IgnoreManager
-from app.utils.metadata import MetadataManager, SettingsController
-from app.utils.rentry.wrapper import RentryImport, RentryUpload
-from app.utils.schema import generate_rimworld_mods_list
+from app.utils.metadata import SettingsController
+from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from app.utils.steam.webapi.wrapper import (
-    CollectionImport,
-    ISteamRemoteStorage_GetPublishedFileDetails,
-)
+from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.system_info import SystemInfo
 from app.utils.update_utils import UpdateManager
-from app.utils.xml import json_to_xml_write
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
@@ -240,6 +235,9 @@ class MainContent(QObject):
 
             # Initialize MetadataManager
             self.metadata_manager = metadata.MetadataManager.instance()
+            self._import_export_service = ImportExportService(
+                self.metadata_manager, self.settings_controller
+            )
 
             # BASE LAYOUT
             self.main_layout = QHBoxLayout()
@@ -1230,44 +1228,11 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            logger.info("Exporting current active mods to ModsConfig.xml format")
-            active_mods = []
-            for uuid in self.mods_panel.active_mods_list.uuids:
-                if is_divider_uuid(uuid):
-                    continue
-                package_id = self.metadata_manager.internal_local_metadata[uuid][
-                    "packageid"
-                ]
-                if package_id in active_mods:  # This should NOT be happening
-                    logger.critical(
-                        f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
-                    )
-                    continue
-                else:  # Otherwise, proceed with adding the mod package_id
-                    if (
-                        package_id in self.duplicate_mods.keys()
-                    ):  # Check if mod has duplicates
-                        if (
-                            self.metadata_manager.internal_local_metadata[uuid][
-                                "data_source"
-                            ]
-                            == "workshop"
-                        ):
-                            active_mods.append(package_id + "_steam")
-                            continue  # Append `_steam` suffix if Steam mod, continue to next mod
-                    active_mods.append(package_id)
-            logger.info(f"Collected {len(active_mods)} active mods for export")
-            mods_config_data = generate_rimworld_mods_list(
-                self.metadata_manager.game_version, active_mods
+            data = self._import_export_service.collect_active_mods(
+                self.mods_panel.active_mods_list.uuids, self.duplicate_mods
             )
             try:
-                logger.info(
-                    f"Saving generated ModsConfig.xml style list to selected path: {file_path}"
-                )
-                if not file_path.endswith(".xml"):
-                    json_to_xml_write(mods_config_data, file_path + ".xml")
-                else:
-                    json_to_xml_write(mods_config_data, file_path)
+                self._import_export_service.export_to_xml(data.active_mods, file_path)
             except Exception:
                 dialogue.show_fatal_error(
                     title=self.tr("Failed to export to file"),
@@ -1491,227 +1456,45 @@ class MainContent(QObject):
         readable format. The current list does not need to have been saved.
         """
         logger.info("Generating report to export mod list to clipboard")
-        # Build our lists
-        active_mods = []
-        active_mods_packageid_to_uuid = {}
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = self.metadata_manager.internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    "Tried to export more than 1 identical package ids to the same mod list. "
-                    + f"Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                active_mods.append(package_id)
-                active_mods_packageid_to_uuid[package_id] = uuid
-        logger.info(f"Collected {len(active_mods)} active mods for export")
-        # Build our report
-        active_mods_clipboard_report = (
-            f"Created with RimSort {AppInfo().app_version}"
-            + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
-            + f"\nTotal # of mods: {len(active_mods)}\n"
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
         )
-        for package_id in active_mods:
-            uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
-                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
-            else:
-                name = "No name specified"
-            if self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-            elif self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
-                url = self.metadata_manager.internal_local_metadata[uuid]["steam_url"]
-            else:
-                url = "No url specified"
-            active_mods_clipboard_report = (
-                active_mods_clipboard_report
-                + f"\n{name} "
-                + f"[{package_id}]"
-                + f"[{url}]"
-            )
-        # Copy report to clipboard
+        report = self._import_export_service.build_clipboard_report(
+            data.active_mods, data.packageid_to_uuid
+        )
         dialogue.show_information(
             title=self.tr("Export active mod list"),
             text=self.tr("Copied active mod list report to clipboard..."),
             information=self.tr('Click "Show Details" to see the full report!'),
-            details=f"{active_mods_clipboard_report}",
+            details=report,
         )
-        copy_to_clipboard_safely(active_mods_clipboard_report)
-
-    def _build_rentry_report(
-        self,
-        mods: list[str],
-        active_mods_packageid_to_uuid: dict[str, str],
-        active_steam_mods_packageid_to_pfid: dict[str, str],
-        active_steam_mods_pfid_to_preview_url: dict[str, str],
-        truncated: bool = False,
-    ) -> str:
-        truncated_note = " (truncated)" if truncated else ""
-        active_mods_rentry_report = (
-            "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {AppInfo().app_version}"
-            + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
-            + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
-            + f"\n\n\n\n!!! note Mod list length: `{len(mods)}`{truncated_note}\n"
-        )
-        # Add a line for each mod
-        for package_id in mods:
-            count = mods.index(package_id) + 1
-            uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
-                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
-            else:
-                name = "No name specified"
-            if (
-                self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
-                or self.metadata_manager.internal_local_metadata[uuid]["data_source"]
-                == "workshop"
-            ) and active_steam_mods_packageid_to_pfid.get(package_id):
-                pfid = active_steam_mods_packageid_to_pfid[package_id]
-                if active_steam_mods_pfid_to_preview_url.get(pfid):
-                    preview_url = (
-                        active_steam_mods_pfid_to_preview_url[pfid]
-                        + "?imw=100&imh=100&impolicy=Letterbox"
-                    )
-                else:
-                    preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
-                if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                else:
-                    url = None
-                if url is None:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageid: {package_id}"
-                        )
-                else:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
-                        )
-            else:
-                if self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                elif self.metadata_manager.internal_local_metadata[uuid].get(
-                    "steam_url"
-                ):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                else:
-                    url = None
-                if url is None:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} {name} "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-                else:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-        return active_mods_rentry_report
+        copy_to_clipboard_safely(report)
 
     def _do_upload_list_rentry(self) -> None:
         """
         Export the current list of active mods to the clipboard in a
         readable format. The current list does not need to have been saved.
         """
-        # Define our lists
-        active_mods = []
-        active_mods_packageid_to_uuid = {}
-        active_steam_mods_packageid_to_pfid = {}
-        active_steam_mods_pfid_to_preview_url = {}
-        pfids = []
-        # Build our lists
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = MetadataManager.instance().internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    "Tried to export more than 1 identical package ids to the same mod list. "
-                    + f"Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                active_mods.append(package_id)
-                active_mods_packageid_to_uuid[package_id] = uuid
-                if (
-                    self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
-                    or self.metadata_manager.internal_local_metadata[uuid][
-                        "data_source"
-                    ]
-                    == "workshop"
-                ) and self.metadata_manager.internal_local_metadata[uuid].get(
-                    "publishedfileid"
-                ):
-                    publishedfileid = self.metadata_manager.internal_local_metadata[
-                        uuid
-                    ]["publishedfileid"]
-                    active_steam_mods_packageid_to_pfid[package_id] = publishedfileid
-                    pfids.append(publishedfileid)
-        logger.info(f"Collected {len(active_mods)} active mods for export")
-        if len(pfids) > 0:  # No empty queries...
-            # Compile list of Steam Workshop publishing preview images that correspond
-            # to a Steam mod in the active mod list
-            webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            if webapi_response is not None:
-                for metadata in webapi_response:
-                    pfid = metadata["publishedfileid"]
-                    if metadata["result"] != 1:
-                        logger.warning("Rentry.co export: Unable to get data for mod!")
-                        logger.warning(
-                            f"Invalid result returned from WebAPI for mod {pfid}"
-                        )
-                    else:
-                        # Retrieve the preview image URL from the response
-                        active_steam_mods_pfid_to_preview_url[pfid] = metadata[
-                            "preview_url"
-                        ]
-        # Build our report using the helper method
-        active_mods_rentry_report = self._build_rentry_report(
-            active_mods,
-            active_mods_packageid_to_uuid,
-            active_steam_mods_packageid_to_pfid,
-            active_steam_mods_pfid_to_preview_url,
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+        )
+        data.pfid_to_preview_url = self._import_export_service.fetch_steam_preview_urls(
+            data.pfids
+        )
+        report = self._import_export_service.build_rentry_report(
+            data.active_mods,
+            data.packageid_to_uuid,
+            data.steam_packageid_to_pfid,
+            data.pfid_to_preview_url,
         )
         # Check report length and offer truncation if necessary
-        if len(active_mods_rentry_report) > 200000:
-            # Calculate the maximum number of mods that can fit within 200,000 characters
-            max_mods = 0
-            for i in range(1, len(active_mods) + 1):
-                test_mods = active_mods[:i]
-                test_report = self._build_rentry_report(
-                    test_mods,
-                    active_mods_packageid_to_uuid,
-                    active_steam_mods_packageid_to_pfid,
-                    active_steam_mods_pfid_to_preview_url,
-                    truncated=True,
-                )
-                if len(test_report) > 200000:
-                    max_mods = i - 1
-                    break
-                max_mods = i
+        if len(report) > 200000:
+            max_mods = self._import_export_service.calculate_rentry_max_mods(
+                data.active_mods,
+                data.packageid_to_uuid,
+                data.steam_packageid_to_pfid,
+                data.pfid_to_preview_url,
+            )
             if max_mods == 0:
                 dialogue.show_warning(
                     title=self.tr("Report too long"),
@@ -1736,35 +1519,28 @@ class MainContent(QObject):
             if answer == self.tr("Truncate to the first {max_mods} mods").format(
                 max_mods=max_mods
             ):
-                # Rebuild report with the maximum number of mods that fit
-                truncated_mods = active_mods[:max_mods]
-                active_mods_rentry_report = self._build_rentry_report(
+                truncated_mods = data.active_mods[:max_mods]
+                report = self._import_export_service.build_rentry_report(
                     truncated_mods,
-                    active_mods_packageid_to_uuid,
-                    active_steam_mods_packageid_to_pfid,
-                    active_steam_mods_pfid_to_preview_url,
+                    data.packageid_to_uuid,
+                    data.steam_packageid_to_pfid,
+                    data.pfid_to_preview_url,
                     truncated=True,
                 )
             else:
                 logger.info("USER ACTION: cancelled truncation, passing")
                 return
         # Upload the report to Rentry.co
-        rentry_uploader = RentryUpload(active_mods_rentry_report)
-        successful = rentry_uploader.upload_success
-        host = (
-            urlparse(rentry_uploader.url).hostname
-            if successful and (rentry_uploader.url is not None)
-            else None
-        )
-        if rentry_uploader.url and host and host.endswith("rentry.co"):
-            copy_to_clipboard_safely(rentry_uploader.url)
+        success, url = self._import_export_service.upload_rentry_report(report)
+        if success and url:
+            copy_to_clipboard_safely(url)
             dialogue.show_information(
                 title=self.tr("Uploaded active mod list"),
                 text=self.tr(
-                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}"
-                ).format(rentry_uploader=rentry_uploader),
+                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{url}"
+                ).format(url=url),
                 information=self.tr('Click "Show Details" to see the full report!'),
-                details=f"{active_mods_rentry_report}",
+                details=report,
             )
         else:
             dialogue.show_warning(
@@ -1967,56 +1743,23 @@ class MainContent(QObject):
             self.mods_panel.active_mods_list.get_dividers_data()
         )
         self.settings_controller.settings.save()
-        active_mods = []
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = self.metadata_manager.internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                if (
-                    package_id in self.duplicate_mods.keys()
-                ):  # Check if mod has duplicates
-                    if (
-                        self.metadata_manager.internal_local_metadata[uuid][
-                            "data_source"
-                        ]
-                        == "workshop"
-                    ):
-                        active_mods.append(package_id + "_steam")
-                        continue  # Append `_steam` suffix if Steam mod, continue to next mod
-                active_mods.append(package_id)
+
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+        )
         active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
-            mod_list=active_mods
+            mod_list=data.active_mods
         )
         self.active_mods_uuids_last_save = active_mods_uuids
-        logger.info(f"Collected {len(active_mods)} active mods for saving")
+        logger.info(f"Collected {len(data.active_mods)} active mods for saving")
 
-        mods_config_data = generate_rimworld_mods_list(
-            self.metadata_manager.game_version, active_mods
-        )
-        mods_config_path = str(
-            Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            )
-            / "ModsConfig.xml"
-        )
         try:
-            json_to_xml_write(mods_config_data, mods_config_path)
+            self._import_export_service.save_to_mods_config(data.active_mods)
         except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
                 title=self.tr("Could not save active mods"),
                 text=self.tr("Failed to save active mods to file:"),
-                information=f"{mods_config_path}",
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
