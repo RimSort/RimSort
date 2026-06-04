@@ -119,7 +119,6 @@ def setup_logging(
         log_file,
         level=file_level,
         format=_formatter,
-        enqueue=True,
     )
 
     logger.add(
@@ -127,5 +126,4 @@ def setup_logging(
         level="WARNING",
         format=_formatter,
         colorize=False,
-        enqueue=True,
     )
