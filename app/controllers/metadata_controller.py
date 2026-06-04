@@ -56,16 +56,16 @@ class MetadataController(QObject):
             local_mods_path=None,
             game_path=None,
         )
-        self.reset_paths()
 
         self._steamdb_packageid_to_name_cache: dict[str, str] | None = None
         self._packageid_to_paths_cache: dict[str, set[str]] | None = None
-
         self.workshop_acf_data: dict[str, Any] = {}
         self.steamcmd_acf_data: dict[str, Any] = {}
 
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
+
+        self.reset_paths()
 
     @classmethod
     def instance(
