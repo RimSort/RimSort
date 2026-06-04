@@ -73,9 +73,8 @@ def handle_exception(
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
     else:  # Anything else, we want to log an error and notify the user
-        logger.error(
-            "The main application loop has failed with an uncaught exception",
-            exc_info=(exc_type, exc_value, exc_traceback),
+        logger.opt(exception=(exc_type, exc_value, exc_traceback)).error(
+            "The main application loop has failed with an uncaught exception"
         )
         show_fatal_error(
             title="RimSort crashed",

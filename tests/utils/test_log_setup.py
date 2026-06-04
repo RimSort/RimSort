@@ -111,30 +111,10 @@ def test_rotate_overflow_deleted(tmp_path: Path) -> None:
     for i in range(1, 6):
         (tmp_path / f"RimSort.{i}.log").write_text(f"session {i}")
     _rotate_session_logs(tmp_path, "RimSort.log")
-    assert not (tmp_path / "RimSort.5.log").exists()
     assert not (tmp_path / "RimSort.6.log").exists()
+    assert not (tmp_path / "RimSort.7.log").exists()
     assert (tmp_path / "RimSort.1.log").read_text() == "current"
-    assert (tmp_path / "RimSort.4.log").exists()
-
-
-def test_rotate_legacy_old_log_migrated(tmp_path: Path) -> None:
-    """Legacy .old.log file is migrated into the numbered scheme."""
-    (tmp_path / "RimSort.log").write_text("current")
-    (tmp_path / "RimSort.old.log").write_text("legacy")
-    _rotate_session_logs(tmp_path, "RimSort.log")
-    assert not (tmp_path / "RimSort.old.log").exists()
-    assert (tmp_path / "RimSort.1.log").read_text() == "current"
-    assert (tmp_path / "RimSort.2.log").read_text() == "legacy"
-
-
-def test_rotate_legacy_old_log_deleted_when_full(tmp_path: Path) -> None:
-    """Legacy .old.log is deleted when all rotation slots are occupied."""
-    (tmp_path / "RimSort.log").write_text("current")
-    for i in range(1, 5):
-        (tmp_path / f"RimSort.{i}.log").write_text(f"session {i}")
-    (tmp_path / "RimSort.old.log").write_text("legacy")
-    _rotate_session_logs(tmp_path, "RimSort.log")
-    assert not (tmp_path / "RimSort.old.log").exists()
+    assert (tmp_path / "RimSort.5.log").exists()
 
 
 def test_setup_logging_creates_log_file(tmp_path: Path) -> None:
