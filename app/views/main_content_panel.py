@@ -778,21 +778,8 @@ class MainContent(QObject):
             # Reset the data source filters to default and clear searches
             # Avoid recalculating warnings/errors when clearing search
             # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Active",
-            )
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Inactive",
-            )
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
@@ -849,14 +836,8 @@ class MainContent(QObject):
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
         # Metadata to insert
         active_mods_uuids: list[str] = []
         inactive_mods_uuids: list[str] = []
@@ -914,16 +895,8 @@ class MainContent(QObject):
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.debug("Starting sorting mods")
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_active_mods_search_data_source_filter()
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_inactive_mods_search_data_source_filter()
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Get active mods (exclude dividers)
         active_mods = {
@@ -1077,16 +1050,8 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Active")
-            self.mods_panel.signal_clear_search(list_type="Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Inactive")
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_uuids,
@@ -1156,16 +1121,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         if rentry_import.publishedfileids:
             # Get set of publishedfileids already present locally
@@ -1307,16 +1264,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Log the attempt to import mods list from Workshop collection
         logger.info(
@@ -1468,16 +1417,8 @@ class MainContent(QObject):
             return
 
         # Clear searches and data source filters just like XML import
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         logger.info(f"Trying to import mods list from save file: {file_path}")
         (
@@ -1669,16 +1610,8 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state
             and self.inactive_mods_uuids_restore_state
         ):
-            self.mods_panel.signal_clear_search("Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_active_mods_search_data_source_filter()
-            self.mods_panel.signal_clear_search("Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_inactive_mods_search_data_source_filter()
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
