@@ -58,6 +58,7 @@ class MetadataController(QObject):
         self.reset_paths()
 
         self._steamdb_packageid_to_name_cache: dict[str, str] | None = None
+        self._packageid_to_paths_cache: dict[str, set[str]] | None = None
 
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
@@ -104,6 +105,10 @@ class MetadataController(QObject):
                     / "appworkshop_294100.acf",
                     ModType.STEAM_WORKSHOP,
                 )
+
+        # Invalidate cached derived data (must be AFTER mediator refresh completes)
+        self._packageid_to_paths_cache = None
+        self._steamdb_packageid_to_name_cache = None
 
     def _refresh_metadata_db(self) -> None:
         """Refresh the metadata database."""
@@ -227,13 +232,15 @@ class MetadataController(QObject):
 
     @property
     def packageid_to_paths(self) -> dict[str, set[str]]:
-        """Build a mapping from package IDs to sets of mod paths."""
-        result: dict[str, set[str]] = {}
-        for path, mod in self.mods_metadata.items():
-            if isinstance(mod, AboutXmlMod):
-                pid = str(mod.package_id)
-                result.setdefault(pid, set()).add(path)
-        return result
+        """Build a mapping from package IDs to sets of mod paths (cached)."""
+        if self._packageid_to_paths_cache is None:
+            result: dict[str, set[str]] = {}
+            for path, mod in self.mods_metadata.items():
+                if isinstance(mod, AboutXmlMod):
+                    pid = str(mod.package_id)
+                    result.setdefault(pid, set()).add(path)
+            self._packageid_to_paths_cache = result
+        return self._packageid_to_paths_cache
 
     @property
     def game_version(self) -> str:

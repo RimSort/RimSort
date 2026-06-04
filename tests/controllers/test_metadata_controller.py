@@ -197,6 +197,39 @@ def test_steamdb_packageid_to_name_empty_when_no_db(
     assert result1 is not result2
 
 
+def test_packageid_to_paths_is_cached(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify packageid_to_paths returns the same object on repeated calls (cached)."""
+    metadata_controller_p.refresh_metadata()
+    result1 = metadata_controller_p.packageid_to_paths
+    result2 = metadata_controller_p.packageid_to_paths
+    assert result1 is result2
+    assert len(result1) > 0
+
+
+def test_packageid_to_paths_invalidated_on_refresh(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify cache is invalidated after refresh_metadata()."""
+    metadata_controller_p.refresh_metadata()
+    result1 = metadata_controller_p.packageid_to_paths
+    metadata_controller_p.refresh_metadata()
+    result2 = metadata_controller_p.packageid_to_paths
+    assert result1 is not result2
+
+
+def test_steamdb_packageid_to_name_invalidated_on_refresh(
+    metadata_controller_with_steamdb: MetadataController,
+) -> None:
+    """Verify steamdb cache is invalidated after refresh_metadata()."""
+    metadata_controller_with_steamdb.refresh_metadata()
+    result1 = metadata_controller_with_steamdb.steamdb_packageid_to_name
+    metadata_controller_with_steamdb.refresh_metadata()
+    result2 = metadata_controller_with_steamdb.steamdb_packageid_to_name
+    assert result1 is not result2
+
+
 def test_metadata_controller_delete_mod(
     metadata_controller_p: MetadataController,
 ) -> None:
