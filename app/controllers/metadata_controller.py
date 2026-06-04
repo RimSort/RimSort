@@ -258,6 +258,11 @@ class MetadataController(QObject):
         return self.metadata_mediator.community_rules
 
     @property
+    def user_rules(self) -> ExternalRulesSchema | None:
+        """Get the loaded user rules, if any."""
+        return self.metadata_mediator.user_rules
+
+    @property
     def steamdb_packageid_to_name(self) -> dict[str, str]:
         """Build a mapping from package IDs to Steam names from the Steam DB (cached).
 

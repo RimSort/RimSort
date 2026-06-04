@@ -230,6 +230,15 @@ def test_steamdb_packageid_to_name_invalidated_on_refresh(
     assert result1 is not result2
 
 
+def test_user_rules_property(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify user_rules delegates to mediator."""
+    metadata_controller_p.refresh_metadata()
+    result = metadata_controller_p.user_rules
+    assert result is metadata_controller_p.metadata_mediator.user_rules
+
+
 def test_metadata_controller_delete_mod(
     metadata_controller_p: MetadataController,
 ) -> None:
