@@ -57,6 +57,8 @@ class MetadataController(QObject):
         )
         self.reset_paths()
 
+        self._steamdb_packageid_to_name_cache: dict[str, str] | None = None
+
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
 
@@ -250,14 +252,19 @@ class MetadataController(QObject):
 
     @property
     def steamdb_packageid_to_name(self) -> dict[str, str]:
-        """Build a mapping from package IDs to Steam names from the Steam DB."""
-        if self.metadata_mediator.steam_db is None:
-            return {}
-        return {
-            pid: entry.steamName or entry.name
-            for pid, entry in self.metadata_mediator.steam_db.database.items()
-            if entry.steamName or entry.name
-        }
+        """Build a mapping from package IDs to Steam names from the Steam DB (cached).
+
+        Keys are actual packageIds (lowercased), NOT published file IDs.
+        """
+        if self._steamdb_packageid_to_name_cache is None:
+            if self.metadata_mediator.steam_db is None:
+                return {}
+            self._steamdb_packageid_to_name_cache = {
+                entry.packageId.lower(): entry.steamName or entry.name
+                for entry in self.metadata_mediator.steam_db.database.values()
+                if entry.packageId and (entry.steamName or entry.name)
+            }
+        return self._steamdb_packageid_to_name_cache
 
     def get_missing_dependencies(
         self, active_mod_paths: set[str]

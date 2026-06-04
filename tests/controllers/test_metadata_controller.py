@@ -151,6 +151,52 @@ def test_metadata_controller_get_metadata_with_path(
     assert aux_metadata.acf_time_touched > 0
 
 
+@pytest.fixture
+def metadata_controller_with_steamdb(
+    metadata_controller_p: MetadataController,
+) -> MetadataController:
+    """metadata_controller_p with Steam DB source enabled."""
+    metadata_controller_p.settings_controller.settings.external_steam_metadata_source = "Configured file path"
+    metadata_controller_p.reset_paths()
+    return metadata_controller_p
+
+
+def test_steamdb_packageid_to_name_uses_packageid_not_pfid(
+    metadata_controller_with_steamdb: MetadataController,
+) -> None:
+    """Verify mapping keys are actual packageIds, not published file IDs."""
+    metadata_controller_with_steamdb.refresh_metadata()
+    mapping = metadata_controller_with_steamdb.steamdb_packageid_to_name
+    # The test steamDB.json has entries with packageId like "packageId1",
+    # NOT keyed by the dict keys like "basic_mod1-multiversion-..."
+    assert "packageid1" in mapping
+    assert "basic_mod1-multiversion-multiauthor-nodependencies" not in mapping
+
+
+def test_steamdb_packageid_to_name_is_cached(
+    metadata_controller_with_steamdb: MetadataController,
+) -> None:
+    """Verify steamdb_packageid_to_name returns the same object on repeated calls."""
+    metadata_controller_with_steamdb.refresh_metadata()
+    result1 = metadata_controller_with_steamdb.steamdb_packageid_to_name
+    result2 = metadata_controller_with_steamdb.steamdb_packageid_to_name
+    assert result1 is result2
+    assert len(result1) > 0
+
+
+def test_steamdb_packageid_to_name_empty_when_no_db(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify empty dict returned when steam DB is not loaded (not cached)."""
+    metadata_controller_p.refresh_metadata()
+    result1 = metadata_controller_p.steamdb_packageid_to_name
+    result2 = metadata_controller_p.steamdb_packageid_to_name
+    assert result1 == {}
+    assert result2 == {}
+    # Not cached when DB is None — each call returns a fresh empty dict
+    assert result1 is not result2
+
+
 def test_metadata_controller_delete_mod(
     metadata_controller_p: MetadataController,
 ) -> None:
