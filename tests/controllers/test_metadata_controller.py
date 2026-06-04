@@ -279,6 +279,23 @@ def test_workshop_acf_path_when_no_workshop(
     assert acf_path is None
 
 
+def test_acf_data_populated_after_refresh(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify ACF data dicts are populated during refresh."""
+    metadata_controller_p.refresh_metadata()
+    assert isinstance(metadata_controller_p.steamcmd_acf_data, dict)
+    assert isinstance(metadata_controller_p.workshop_acf_data, dict)
+
+
+def test_acf_data_empty_before_refresh(
+    metadata_controller: MetadataController,
+) -> None:
+    """Verify ACF data dicts are empty before refresh."""
+    assert metadata_controller.steamcmd_acf_data == {}
+    assert metadata_controller.workshop_acf_data == {}
+
+
 def test_user_rules_property(
     metadata_controller_p: MetadataController,
 ) -> None:

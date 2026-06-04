@@ -17,6 +17,7 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     ModType,
 )
+from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
 from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -59,6 +60,9 @@ class MetadataController(QObject):
 
         self._steamdb_packageid_to_name_cache: dict[str, str] | None = None
         self._packageid_to_paths_cache: dict[str, set[str]] | None = None
+
+        self.workshop_acf_data: dict[str, Any] = {}
+        self.steamcmd_acf_data: dict[str, Any] = {}
 
         self.metadata_db_controller = metadata_db_controller
         self.steamcmd_wrapper = SteamcmdInterface.instance()
@@ -104,6 +108,14 @@ class MetadataController(QObject):
                     self.workshop_acf_path,
                     ModType.STEAM_WORKSHOP,
                 )
+
+        self.steamcmd_acf_data = load_acf_from_path(
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
+        if self.workshop_acf_path is not None:
+            self.workshop_acf_data = load_acf_from_path(self.workshop_acf_path)
+        else:
+            self.workshop_acf_data = {}
 
         # Invalidate cached derived data (must be AFTER mediator refresh completes)
         self._packageid_to_paths_cache = None
