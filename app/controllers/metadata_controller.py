@@ -333,6 +333,28 @@ class MetadataController(QObject):
         pid = str(mod.package_id)
         return use_this_instead.get(pid)
 
+    def get_mod_name_from_package_id(self, package_id: str) -> str:
+        """Get a mod's display name from its package ID.
+
+        Resolution order:
+        1. Check parsed mods metadata (packageid_to_paths + mods_metadata)
+        2. Fall back to Steam DB name mapping
+        3. Return the package_id itself as last resort
+
+        :param package_id: The mod's package ID (case-insensitive)
+        :return: The mod's display name, or the package_id if not found
+        """
+        pid_lower = package_id.lower()
+        paths = self.packageid_to_paths.get(pid_lower, set())
+        for path in paths:
+            mod = self.mods_metadata.get(path)
+            if mod is not None and mod.name:
+                return mod.name
+        steam_name = self.steamdb_packageid_to_name.get(pid_lower)
+        if steam_name:
+            return steam_name
+        return package_id
+
     @staticmethod
     def _build_compiled_data(
         mods_metadata: Mapping[str, ListedMod],

@@ -230,6 +230,35 @@ def test_steamdb_packageid_to_name_invalidated_on_refresh(
     assert result1 is not result2
 
 
+def test_get_mod_name_from_package_id_found_in_metadata(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify name resolution from parsed mod metadata."""
+    metadata_controller_p.refresh_metadata()
+    name = metadata_controller_p.get_mod_name_from_package_id("steam.mod1")
+    assert name == "steam mod 1"
+
+
+def test_get_mod_name_from_package_id_not_found(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify fallback to package ID when mod is not found anywhere."""
+    metadata_controller_p.refresh_metadata()
+    name = metadata_controller_p.get_mod_name_from_package_id("nonexistent.mod.id")
+    assert name == "nonexistent.mod.id"
+
+
+def test_get_mod_name_from_package_id_case_insensitive(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify lookup is case-insensitive."""
+    metadata_controller_p.refresh_metadata()
+    name_lower = metadata_controller_p.get_mod_name_from_package_id("steam.mod1")
+    name_mixed = metadata_controller_p.get_mod_name_from_package_id("Steam.Mod1")
+    assert name_lower == name_mixed
+    assert name_lower == "steam mod 1"
+
+
 def test_user_rules_property(
     metadata_controller_p: MetadataController,
 ) -> None:
