@@ -193,6 +193,9 @@ class MetadataController(QObject):
             active_settings.external_use_this_instead_file_path
         )
 
+        self._packageid_to_paths_cache = None
+        self._steamdb_packageid_to_name_cache = None
+
     def get_metadata_with_path(
         self, path: str | Path
     ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
@@ -280,15 +283,17 @@ class MetadataController(QObject):
         """Build a mapping from package IDs to Steam names from the Steam DB (cached).
 
         Keys are actual packageIds (lowercased), NOT published file IDs.
+        Prefers steamName (Workshop display title) over name for better UX.
         """
         if self._steamdb_packageid_to_name_cache is None:
             if self.metadata_mediator.steam_db is None:
-                return {}
-            self._steamdb_packageid_to_name_cache = {
-                entry.packageId.lower(): entry.steamName or entry.name
-                for entry in self.metadata_mediator.steam_db.database.values()
-                if entry.packageId and (entry.steamName or entry.name)
-            }
+                self._steamdb_packageid_to_name_cache = {}
+            else:
+                self._steamdb_packageid_to_name_cache = {
+                    entry.packageId.lower(): entry.steamName or entry.name
+                    for entry in self.metadata_mediator.steam_db.database.values()
+                    if entry.packageId and (entry.steamName or entry.name)
+                }
         return self._steamdb_packageid_to_name_cache
 
     def get_missing_dependencies(

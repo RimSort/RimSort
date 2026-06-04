@@ -187,14 +187,13 @@ def test_steamdb_packageid_to_name_is_cached(
 def test_steamdb_packageid_to_name_empty_when_no_db(
     metadata_controller_p: MetadataController,
 ) -> None:
-    """Verify empty dict returned when steam DB is not loaded (not cached)."""
+    """Verify empty dict returned and cached when steam DB is not loaded."""
     metadata_controller_p.refresh_metadata()
     result1 = metadata_controller_p.steamdb_packageid_to_name
     result2 = metadata_controller_p.steamdb_packageid_to_name
     assert result1 == {}
     assert result2 == {}
-    # Not cached when DB is None — each call returns a fresh empty dict
-    assert result1 is not result2
+    assert result1 is result2
 
 
 def test_packageid_to_paths_is_cached(
@@ -285,7 +284,9 @@ def test_acf_data_populated_after_refresh(
     """Verify ACF data dicts are populated during refresh."""
     metadata_controller_p.refresh_metadata()
     assert isinstance(metadata_controller_p.steamcmd_acf_data, dict)
+    assert len(metadata_controller_p.steamcmd_acf_data) > 0
     assert isinstance(metadata_controller_p.workshop_acf_data, dict)
+    assert len(metadata_controller_p.workshop_acf_data) > 0
 
 
 def test_acf_data_empty_before_refresh(
