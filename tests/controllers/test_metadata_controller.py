@@ -259,6 +259,26 @@ def test_get_mod_name_from_package_id_case_insensitive(
     assert name_lower == "steam mod 1"
 
 
+def test_workshop_acf_path_property(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify workshop_acf_path is derived from workshop_mods_path."""
+    metadata_controller_p.refresh_metadata()
+    acf_path = metadata_controller_p.workshop_acf_path
+    assert acf_path is not None
+    assert acf_path.name == "appworkshop_294100.acf"
+
+
+def test_workshop_acf_path_when_no_workshop(
+    metadata_controller: MetadataController,
+) -> None:
+    """Verify workshop_acf_path returns None when workshop is not configured."""
+    metadata_controller.settings_controller.active_instance.workshop_folder = ""
+    metadata_controller.reset_paths()
+    acf_path = metadata_controller.workshop_acf_path
+    assert acf_path is None
+
+
 def test_user_rules_property(
     metadata_controller_p: MetadataController,
 ) -> None:

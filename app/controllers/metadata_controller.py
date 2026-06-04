@@ -98,11 +98,10 @@ class MetadataController(QObject):
                 ModType.STEAM_CMD,
             )
 
-            if self.metadata_mediator.workshop_mods_path is not None:
+            if self.workshop_acf_path is not None:
                 self.metadata_db_controller.update_from_acf(
                     session,
-                    self.metadata_mediator.workshop_mods_path.parent.parent
-                    / "appworkshop_294100.acf",
+                    self.workshop_acf_path,
                     ModType.STEAM_WORKSHOP,
                 )
 
@@ -332,6 +331,19 @@ class MetadataController(QObject):
             return None
         pid = str(mod.package_id)
         return use_this_instead.get(pid)
+
+    @property
+    def workshop_acf_path(self) -> Path | None:
+        """Path to Steam Workshop's appworkshop_294100.acf.
+
+        Derived from the workshop mods path: two directories up from
+        content/294100 to find workshop/appworkshop_294100.acf.
+        Returns None if workshop path is not configured.
+        """
+        workshop_path = self.metadata_mediator.workshop_mods_path
+        if workshop_path is None:
+            return None
+        return workshop_path.parent.parent / "appworkshop_294100.acf"
 
     def get_mod_name_from_package_id(self, package_id: str) -> str:
         """Get a mod's display name from its package ID.
