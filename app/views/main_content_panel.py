@@ -110,253 +110,195 @@ class MainContent(QObject):
         return cls._instance
 
     def __init__(self, settings_controller: SettingsController) -> None:
-        """
-        Initialize the main content panel.
-
-        :param settings_controller: the settings controller for the application
-        """
         if not hasattr(self, "initialized"):
-            super(MainContent, self).__init__()
+            super().__init__()
             logger.debug("Initializing MainContent")
-
             self.settings_controller = settings_controller
-            self.db_builder = DatabaseBuilder(self.settings_controller)
-
-            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
-            EventBus().do_check_for_application_update.connect(
-                self._do_check_for_update
-            )
-            EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
-            EventBus().do_import_mod_list_from_rentry.connect(
-                self._do_import_list_rentry
-            )
-            EventBus().do_import_mod_list_from_workshop_collection.connect(
-                self._do_import_list_workshop_collection
-            )
-            EventBus().do_import_mod_list_from_save_file.connect(
-                self._do_import_list_from_save_file
-            )
-            EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
-            EventBus().do_export_mod_list_to_clipboard.connect(
-                self._do_export_list_clipboard
-            )
-            EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_log.connect(self._upload_file)
-            EventBus().do_open_default_editor.connect(self._open_in_default_editor)
-            EventBus().do_download_all_mods_via_steamcmd.connect(
-                self.db_builder._on_do_download_all_mods_via_steamcmd
-            )
-            EventBus().do_download_all_mods_via_steam.connect(
-                self.db_builder._on_do_download_all_mods_via_steam
-            )
-            EventBus().do_compare_steam_workshop_databases.connect(
-                self.db_builder._do_generate_metadata_comparison_report
-            )
-            EventBus().do_merge_steam_workshop_databases.connect(
-                self.db_builder._do_merge_databases
-            )
-            EventBus().do_build_steam_workshop_database.connect(
-                self.db_builder._do_build_database_thread
-            )
-            EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
-            EventBus().do_export_acf.connect(self._do_export_steamcmd_acf_data)
-            EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
-            EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
-
-            EventBus().do_refresh_mods_lists.connect(self._do_refresh)
-            EventBus().do_clear_active_mods_list.connect(self._do_clear)
-            EventBus().do_restore_active_mods_list.connect(self._do_restore)
-            EventBus().do_sort_active_mods_list.connect(self._do_sort)
-            EventBus().do_save_active_mods_list.connect(self._do_save)
-            EventBus().do_run_game.connect(self._do_run_game)
-
-            # Shortcuts submenu Eventbus
-            EventBus().do_open_app_directory.connect(self._do_open_app_directory)
-            EventBus().do_open_settings_directory.connect(
-                self._do_open_settings_directory
-            )
-            EventBus().do_open_rimsort_logs_directory.connect(
-                self._do_open_rimsort_logs_directory
-            )
-            EventBus().do_open_rimworld_directory.connect(
-                self._do_open_rimworld_directory
-            )
-            EventBus().do_open_rimworld_config_directory.connect(
-                self._do_open_rimworld_config_directory
-            )
-            EventBus().do_open_rimworld_logs_directory.connect(
-                self._do_open_rimworld_logs_directory
-            )
-            EventBus().do_open_local_mods_directory.connect(
-                self._do_open_local_mods_directory
-            )
-            EventBus().do_open_steam_mods_directory.connect(
-                self._do_open_steam_mods_directory
-            )
-
-            EventBus().do_steamcmd_download.connect(
-                self._do_download_mods_with_steamcmd
-            )
-
-            EventBus().do_steamworks_api_call.connect(
-                self._do_steamworks_api_call_animated
-            )
-
-            # Edit Menu bar Eventbus
-            EventBus().do_rule_editor.connect(
-                lambda: self._do_open_rule_editor(
-                    compact=False, initial_mode="community_rules"
-                )
-            )
-            EventBus().do_ignore_json_editor.connect(self._do_open_ignore_json_editor)
-            EventBus().do_check_missing_mod_properties.connect(
-                self.__check_and_warn_missing_mod_properties
-            )
-
-            # Download Menu bar Eventbus
-            EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
-            EventBus().do_browse_workshop.connect(self._do_browse_workshop)
-            EventBus().do_check_for_workshop_updates.connect(
-                self._do_check_for_workshop_updates
-            )
-            EventBus().do_steam_verify_game_files.connect(
-                self.do_steam_verify_game_files
-            )
-
-            # Textures Menu bar Eventbus
-            EventBus().do_optimize_textures.connect(self._do_optimize_textures)
-            EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
-
-            # INITIALIZE WIDGETS
-            # Initialize Steam(CMD) integrations
-            self.steam_browser: SteamBrowser | None = None
-            self.steamcmd_runner: RunnerPanel | None = None
-            self.steamcmd_wrapper = SteamcmdInterface.instance()
-
-            # Initialize MetadataManager
-            self.metadata_manager = metadata.MetadataManager.instance()
-            self._import_export_service = ImportExportService(
-                self.metadata_manager, self.settings_controller
-            )
-
-            # BASE LAYOUT
-            self.main_layout = QHBoxLayout()
-            self.main_layout.setContentsMargins(
-                5, 5, 5, 5
-            )  # Space between widgets and Frame border
-            self.main_layout.setSpacing(5)  # Space between mod lists and action buttons
-
-            self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
-            self.main_splitter.setChildrenCollapsible(False)
-
-            # FRAME REQUIRED - to allow for styling
-            self.main_layout_frame = QFrame()
-            self.main_layout_frame.setObjectName("MainPanel")
-            self.main_layout_frame.setLayout(self.main_layout)
-
-            # INSTANTIATE WIDGETS
-            self.mod_info_panel = ModInfoPanel(
-                settings_controller=self.settings_controller,
-            )
-            self.mods_panel = ModsPanel(
-                settings_controller=self.settings_controller,
-            )
-
-            self.mod_info_container = QWidget()
-            self.mod_info_container.setLayout(self.mod_info_panel.panel)
-
-            self.mods_panel_container = QWidget()
-            self.mods_panel_container.setLayout(self.mods_panel.panel)
-
-            self.main_splitter.addWidget(self.mod_info_container)
-            self.main_splitter.addWidget(self.mods_panel_container)
-
-            self.main_splitter.setHandleWidth(1)
-
-            self.mod_info_container.setMinimumWidth(280)
-            # WIDGETS INTO BASE LAYOUT
-            self.main_layout.addWidget(self.main_splitter)
-
-            # SIGNALS AND SLOTS
-            self.metadata_manager.mod_created_signal.connect(
-                self.mods_panel.on_mod_created  # Connect MetadataManager to ModPanel for mod creation
-            )
-            self.metadata_manager.mod_deleted_signal.connect(
-                self.mods_panel.on_mod_deleted  # Connect MetadataManager to ModPanel for mod deletion
-            )
-            self.metadata_manager.mod_metadata_updated_signal.connect(
-                self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
-            )
-            self.mods_panel.active_mods_list.key_press_signal.connect(
-                self.__handle_active_mod_key_press
-            )
-            self.mods_panel.inactive_mods_list.key_press_signal.connect(
-                self.__handle_inactive_mod_key_press
-            )
-            self.mods_panel.active_mods_list.mod_info_signal.connect(
-                self.__mod_list_slot
-            )
-            self.mods_panel.inactive_mods_list.mod_info_signal.connect(
-                self.__mod_list_slot
-            )
-            self.mods_panel.active_mods_list.item_added_signal.connect(
-                self.mods_panel.inactive_mods_list.handle_other_list_row_added
-            )
-            self.mods_panel.inactive_mods_list.item_added_signal.connect(
-                self.mods_panel.active_mods_list.handle_other_list_row_added
-            )
-            self.mods_panel.active_mods_list.edit_rules_signal.connect(
-                self._do_open_rule_editor
-            )
-            self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
-                self._do_open_rule_editor
-            )
-            self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
-                self._do_blacklist_action_steamdb
-            )
-            self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
-                self._do_blacklist_action_steamdb
-            )
-            self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
-            self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
-
-            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
-
-            EventBus().do_threaded_loading_animation.connect(
-                self.do_threaded_loading_animation
-            )
-
-            EventBus().do_metadata_refresh_cache.connect(self.do_metadata_refresh_cache)
-
-            # Restore cache initially set to empty
-            self.active_mods_uuids_last_save: list[str] = []
-            self.active_mods_dividers_last_save: list[dict[str, Any]] = []
-            self.active_mods_uuids_restore_state: list[str] = []
-            self.inactive_mods_uuids_restore_state: list[str] = []
-
-            # Store duplicate_mods for global access
-            self.duplicate_mods: dict[str, Any] = {}
-
-            # Instantiate query runner
-            self.query_runner: RunnerPanel | None = None
-
-            # Steamworks bool - use this to check any Steamworks processes you try to initialize
-            self.steamworks_in_use = False
-
-            # Instantiate todds runner
-            self.todds_runner: RunnerPanel | None = None
-            self.todds_controller: (
-                ToddsController  # Set by MainWindow after construction
-            )
-
-            # Progress widget for extraction operations
-            self._extract_progress_widget: Optional[TaskProgressWindow] = None
-
-            # Track child windows for cleanup on main window close
-            self._child_windows: list[QWidget] = []
-
+            self._init_services()
+            self._init_widgets()
+            self._setup_layout()
+            self._connect_signals()
+            self._init_state()
             logger.info("Finished MainContent initialization")
             self.initialized = True
+
+    def _init_services(self) -> None:
+        self.db_builder = DatabaseBuilder(self.settings_controller)
+        self.steam_browser: SteamBrowser | None = None
+        self.steamcmd_runner: RunnerPanel | None = None
+        self.steamcmd_wrapper = SteamcmdInterface.instance()
+        self.metadata_manager = metadata.MetadataManager.instance()
+        self._import_export_service = ImportExportService(
+            self.metadata_manager, self.settings_controller
+        )
+        self.query_runner: RunnerPanel | None = None
+        self.steamworks_in_use = False
+        self.todds_runner: RunnerPanel | None = None
+        self.todds_controller: ToddsController
+
+    def _init_widgets(self) -> None:
+        self.mod_info_panel = ModInfoPanel(
+            settings_controller=self.settings_controller,
+        )
+        self.mods_panel = ModsPanel(
+            settings_controller=self.settings_controller,
+        )
+        self.mod_info_container = QWidget()
+        self.mod_info_container.setLayout(self.mod_info_panel.panel)
+        self.mods_panel_container = QWidget()
+        self.mods_panel_container.setLayout(self.mods_panel.panel)
+
+    def _setup_layout(self) -> None:
+        self.main_layout = QHBoxLayout()
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
+        self.main_layout.setSpacing(5)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setChildrenCollapsible(False)
+        self.main_layout_frame = QFrame()
+        self.main_layout_frame.setObjectName("MainPanel")
+        self.main_layout_frame.setLayout(self.main_layout)
+        self.main_splitter.addWidget(self.mod_info_container)
+        self.main_splitter.addWidget(self.mods_panel_container)
+        self.main_splitter.setHandleWidth(1)
+        self.mod_info_container.setMinimumWidth(280)
+        self.main_layout.addWidget(self.main_splitter)
+
+    def _connect_signals(self) -> None:
+        EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+        EventBus().do_check_for_application_update.connect(self._do_check_for_update)
+        EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+        EventBus().do_import_mod_list_from_rentry.connect(self._do_import_list_rentry)
+        EventBus().do_import_mod_list_from_workshop_collection.connect(
+            self._do_import_list_workshop_collection
+        )
+        EventBus().do_import_mod_list_from_save_file.connect(
+            self._do_import_list_from_save_file
+        )
+        EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
+        EventBus().do_export_mod_list_to_clipboard.connect(
+            self._do_export_list_clipboard
+        )
+        EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
+        EventBus().do_upload_log.connect(self._upload_file)
+        EventBus().do_open_default_editor.connect(self._open_in_default_editor)
+        EventBus().do_download_all_mods_via_steamcmd.connect(
+            self.db_builder._on_do_download_all_mods_via_steamcmd
+        )
+        EventBus().do_download_all_mods_via_steam.connect(
+            self.db_builder._on_do_download_all_mods_via_steam
+        )
+        EventBus().do_compare_steam_workshop_databases.connect(
+            self.db_builder._do_generate_metadata_comparison_report
+        )
+        EventBus().do_merge_steam_workshop_databases.connect(
+            self.db_builder._do_merge_databases
+        )
+        EventBus().do_build_steam_workshop_database.connect(
+            self.db_builder._do_build_database_thread
+        )
+        EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
+        EventBus().do_export_acf.connect(self._do_export_steamcmd_acf_data)
+        EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
+        EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
+
+        EventBus().do_refresh_mods_lists.connect(self._do_refresh)
+        EventBus().do_clear_active_mods_list.connect(self._do_clear)
+        EventBus().do_restore_active_mods_list.connect(self._do_restore)
+        EventBus().do_sort_active_mods_list.connect(self._do_sort)
+        EventBus().do_save_active_mods_list.connect(self._do_save)
+        EventBus().do_run_game.connect(self._do_run_game)
+
+        EventBus().do_open_app_directory.connect(self._do_open_app_directory)
+        EventBus().do_open_settings_directory.connect(self._do_open_settings_directory)
+        EventBus().do_open_rimsort_logs_directory.connect(
+            self._do_open_rimsort_logs_directory
+        )
+        EventBus().do_open_rimworld_directory.connect(self._do_open_rimworld_directory)
+        EventBus().do_open_rimworld_config_directory.connect(
+            self._do_open_rimworld_config_directory
+        )
+        EventBus().do_open_rimworld_logs_directory.connect(
+            self._do_open_rimworld_logs_directory
+        )
+        EventBus().do_open_local_mods_directory.connect(
+            self._do_open_local_mods_directory
+        )
+        EventBus().do_open_steam_mods_directory.connect(
+            self._do_open_steam_mods_directory
+        )
+
+        EventBus().do_steamcmd_download.connect(self._do_download_mods_with_steamcmd)
+
+        EventBus().do_steamworks_api_call.connect(self._do_steamworks_api_call_animated)
+
+        EventBus().do_rule_editor.connect(
+            lambda: self._do_open_rule_editor(
+                compact=False, initial_mode="community_rules"
+            )
+        )
+        EventBus().do_ignore_json_editor.connect(self._do_open_ignore_json_editor)
+        EventBus().do_check_missing_mod_properties.connect(
+            self.__check_and_warn_missing_mod_properties
+        )
+
+        EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
+        EventBus().do_browse_workshop.connect(self._do_browse_workshop)
+        EventBus().do_check_for_workshop_updates.connect(
+            self._do_check_for_workshop_updates
+        )
+        EventBus().do_steam_verify_game_files.connect(self.do_steam_verify_game_files)
+
+        EventBus().do_optimize_textures.connect(self._do_optimize_textures)
+        EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
+
+        self.metadata_manager.mod_created_signal.connect(self.mods_panel.on_mod_created)
+        self.metadata_manager.mod_deleted_signal.connect(self.mods_panel.on_mod_deleted)
+        self.metadata_manager.mod_metadata_updated_signal.connect(
+            self.mods_panel.on_mod_metadata_updated
+        )
+        self.mods_panel.active_mods_list.key_press_signal.connect(
+            self.__handle_active_mod_key_press
+        )
+        self.mods_panel.inactive_mods_list.key_press_signal.connect(
+            self.__handle_inactive_mod_key_press
+        )
+        self.mods_panel.active_mods_list.mod_info_signal.connect(self.__mod_list_slot)
+        self.mods_panel.inactive_mods_list.mod_info_signal.connect(self.__mod_list_slot)
+        self.mods_panel.active_mods_list.item_added_signal.connect(
+            self.mods_panel.inactive_mods_list.handle_other_list_row_added
+        )
+        self.mods_panel.inactive_mods_list.item_added_signal.connect(
+            self.mods_panel.active_mods_list.handle_other_list_row_added
+        )
+        self.mods_panel.active_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
+        self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
+        self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
+        self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+        EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+        EventBus().do_threaded_loading_animation.connect(
+            self.do_threaded_loading_animation
+        )
+        EventBus().do_metadata_refresh_cache.connect(self.do_metadata_refresh_cache)
+
+    def _init_state(self) -> None:
+        self.active_mods_uuids_last_save: list[str] = []
+        self.active_mods_dividers_last_save: list[dict[str, Any]] = []
+        self.active_mods_uuids_restore_state: list[str] = []
+        self.inactive_mods_uuids_restore_state: list[str] = []
+        self.duplicate_mods: dict[str, Any] = {}
+        self._extract_progress_widget: Optional[TaskProgressWindow] = None
+        self._child_windows: list[QWidget] = []
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
