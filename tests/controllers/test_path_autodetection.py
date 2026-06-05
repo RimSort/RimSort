@@ -208,3 +208,85 @@ class TestGetLinuxPaths:
             result = self._call(_make_controller())
 
         assert result[0] == debian_root / "steamapps" / "common" / "RimWorld"
+
+
+class TestGetDarwinPaths:
+    """Tests for SettingsController.__get_darwin_paths().
+
+    Note: macOS uses "Rimworld" (lowercase w) in hardcoded fallback paths,
+    while VDF parsing returns "RimWorld" (capital W). This is fine because
+    macOS has a case-insensitive filesystem by default. Tests assert the
+    exact casing each code path produces.
+    """
+
+    def _call(self, controller: SettingsController) -> tuple[Path, Path, Path]:
+        return controller._SettingsController__get_darwin_paths()  # type: ignore[attr-defined]
+
+    @staticmethod
+    def _make_darwin_steam_root(tmp_path: Path) -> Path:
+        """Create a minimal macOS Steam root directory tree."""
+        steam_root = tmp_path / "Library" / "Application Support" / "Steam"
+        steam_root.mkdir(parents=True)
+        (steam_root / "steamapps").mkdir()
+        return steam_root
+
+    def test_vdf_based_detection(self, tmp_path: Path) -> None:
+        steam_root = self._make_darwin_steam_root(tmp_path)
+        (steam_root / "steamapps" / "common" / "RimWorld" / "RimworldMac.app").mkdir(
+            parents=True
+        )
+        (steam_root / "steamapps" / "workshop" / "content" / "294100").mkdir(
+            parents=True
+        )
+        vdf_dir = steam_root / "config"
+        vdf_dir.mkdir(parents=True)
+        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{steam_root}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
+        (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        # VDF returns "RimWorld" (capital W)
+        assert (
+            result[0]
+            == steam_root / "steamapps" / "common" / "RimWorld" / "RimworldMac.app"
+        )
+
+    def test_fallback_when_no_vdf(self, tmp_path: Path) -> None:
+        steam_root = self._make_darwin_steam_root(tmp_path)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        # Fallback uses "Rimworld" (lowercase w) — matches existing behavior
+        expected_game = (
+            steam_root / "steamapps" / "common" / "Rimworld" / "RimworldMac.app"
+        )
+        assert result[0] == expected_game
+
+    def test_config_folder_unchanged(self, tmp_path: Path) -> None:
+        self._make_darwin_steam_root(tmp_path)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        expected_config = (
+            tmp_path / "Library" / "Application Support" / "Rimworld" / "Config"
+        )
+        assert result[1] == expected_config
+
+    def test_workshop_folder_derived_from_game(self, tmp_path: Path) -> None:
+        self._make_darwin_steam_root(tmp_path)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert str(result[2]).endswith("workshop/content/294100")
+
+    def test_no_steam_root_returns_hardcoded_paths(self, tmp_path: Path) -> None:
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert "RimworldMac.app" in str(result[0])
+        assert "Config" in str(result[1])
+        assert "294100" in str(result[2])

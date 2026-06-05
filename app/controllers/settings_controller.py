@@ -1964,20 +1964,66 @@ class SettingsController(QObject):
 
     def __get_darwin_paths(self) -> tuple[Path, Path, Path]:
         """
-        Get the default paths for macOS.
+        Get paths for macOS. Uses VDF parsing to locate RimWorld in non-default
+        Steam library folders, with hardcoded fallback.
 
-        Returns:
-            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        :return: (game_folder, config_folder, steam_mods_folder)
         """
         user_home = Path.home()
-        game_folder = Path(
-            f"/{user_home}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app"
-        )
-        config_folder = Path(
-            f"/{user_home}/Library/Application Support/Rimworld/Config"
-        )
-        steam_mods_folder = Path(
-            f"/{user_home}/Library/Application Support/Steam/steamapps/workshop/content/294100"
+        candidates = [
+            user_home / "Library" / "Application Support" / "Steam",
+        ]
+
+        steam_root = self._find_steam_root(candidates)
+
+        if steam_root:
+            game_folder_str = find_steam_rimworld(steam_root)
+            if game_folder_str:
+                game_folder = Path(game_folder_str) / "RimworldMac.app"
+                logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
+            else:
+                game_folder = (
+                    steam_root / "steamapps" / "common" / "Rimworld" / "RimworldMac.app"
+                )
+                logger.debug(
+                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                )
+
+            steam_mods_folder_str = get_path_up_to_string(
+                game_folder.parent, "common", exclude=True
+            )
+            if steam_mods_folder_str == "":
+                steam_mods_folder: Path = (
+                    steam_root / "steamapps" / "workshop" / "content" / "294100"
+                )
+            else:
+                steam_mods_folder = (
+                    Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
+                )
+        else:
+            game_folder = (
+                user_home
+                / "Library"
+                / "Application Support"
+                / "Steam"
+                / "steamapps"
+                / "common"
+                / "Rimworld"
+                / "RimworldMac.app"
+            )
+            steam_mods_folder = (
+                user_home
+                / "Library"
+                / "Application Support"
+                / "Steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+        config_folder = (
+            user_home / "Library" / "Application Support" / "Rimworld" / "Config"
         )
 
         return game_folder, config_folder, steam_mods_folder
