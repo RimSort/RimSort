@@ -66,8 +66,9 @@ jobs:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
           # TODO(debt): Fedora/RPM builds disabled — the container: key was never
-          # applied at the job level so these always ran on Ubuntu. Revisit once
-          # AppImage support lands (see PR for appimage-distribution branch).
+          # applied at the job level so these always ran on Ubuntu. AppImage
+          # support has landed; revisit whether dedicated Fedora builds are
+          # still needed or if the AppImage covers this use case.
           # - os: ubuntu-latest
           #   container: fedora:42
           #   platform: "Fedora-42"
