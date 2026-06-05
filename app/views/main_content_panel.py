@@ -39,6 +39,7 @@ from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
 from app.services.import_export_service import ImportExportService
+from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
 from app.utils.app_info import AppInfo
@@ -55,7 +56,6 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.ignore_manager import IgnoreManager
 from app.utils.metadata import SettingsController
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.steambrowser.browser import SteamBrowser
@@ -298,7 +298,7 @@ class MainContent(QObject):
         self.inactive_mods_uuids_restore_state: list[str] = []
         self.duplicate_mods: dict[str, Any] = {}
         self._extract_progress_widget: Optional[TaskProgressWindow] = None
-        self._child_windows: list[QWidget] = []
+        self.window_manager = WindowManager(self.metadata_manager)
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -314,26 +314,7 @@ class MainContent(QObject):
         Called when the main window is closing to ensure no orphan
         windows remain on screen.
         """
-        # Close instance-variable windows
-        for attr_name in (
-            "missing_mods_prompt",
-            "rule_editor",
-            "ignore_json_editor",
-            "steamcmd_runner",
-            "query_runner",
-            "todds_runner",
-            "use_this_instead_dialog",
-            "steam_browser",
-        ):
-            window = getattr(self, attr_name, None)
-            if window is not None:
-                window.close()
-
-        # Close tracked windows (created as local vars elsewhere)
-        for window in self._child_windows:
-            if window is not None:
-                window.close()
-        self._child_windows.clear()
+        self.window_manager.close_all()
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
@@ -571,7 +552,7 @@ class MainContent(QObject):
             duplicate_mods_panel = DuplicateModsPanel(
                 self.duplicate_mods, self.settings_controller
             )
-            self._child_windows.append(duplicate_mods_panel)
+            self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
         else:
@@ -595,6 +576,7 @@ class MainContent(QObject):
             )
             # Always open the MissingModsPrompt panel, allowing manual entry if Steam database is unavailable
             self.missing_mods_prompt = MissingModsPrompt(packageids=self.missing_mods)
+            self.window_manager.register_attr(self, "missing_mods_prompt")
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -602,41 +584,6 @@ class MainContent(QObject):
             self.missing_mods_prompt.show()
         else:
             logger.info("No missing mods found. Skipping...")
-
-    def _get_missing_packageid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a valid Package ID in their About.xml.
-
-        A missing or invalid Package ID can cause dependency resolution issues
-        and prevent proper mod identification. Mods are marked with a default
-        placeholder value when no valid Package ID is found.
-
-        :return: List of internal UUIDs for mods with missing Package ID.
-        """
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("packageid") == app_constants.DEFAULT_MISSING_PACKAGEID
-        ]
-
-    def _get_missing_publishfieldid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a Publish Field ID (Steam Workshop ID).
-
-        Workshop mods without a Publish Field ID cannot support automatic
-        redownloads or update checking. This check intentionally excludes
-        RimWorld core content and DLC since they are not published mods.
-
-        :return: List of internal UUIDs for mods with missing Publish Field ID.
-        """
-        ignored_mods = IgnoreManager.load_ignored_mods()
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("publishedfileid") is None
-            and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
-            and mod_metadata.get("packageid") not in ignored_mods
-        ]
 
     def __check_and_warn_missing_mod_properties(self) -> None:
         """
@@ -654,8 +601,10 @@ class MainContent(QObject):
         """
         try:
             # Identify mods with missing critical properties
-            missing_packageid_uuids = self._get_missing_packageid_uuids()
-            missing_publishfieldid_uuids = self._get_missing_publishfieldid_uuids()
+            missing_packageid_uuids = self.window_manager.get_missing_packageid_uuids()
+            missing_publishfieldid_uuids = (
+                self.window_manager.get_missing_publishfieldid_uuids()
+            )
 
             # If no mods have missing properties, log and return early
             if not missing_packageid_uuids and not missing_publishfieldid_uuids:
@@ -679,7 +628,7 @@ class MainContent(QObject):
                 missing_publishfieldid_mods=missing_publishfieldid_uuids,
                 settings_controller=self.settings_controller,
             )
-            self._child_windows.append(missing_mod_properties_panel)
+            self.window_manager.register(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
             missing_mod_properties_panel.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -989,7 +938,7 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
-                self._child_windows.append(dialog)
+                self.window_manager.register(dialog)
 
                 # Build a deps_summary from the missing deps for the dialog display
                 deps_summary: dict[str, dict[str, set[str]]] = {}
@@ -1760,6 +1709,7 @@ class MainContent(QObject):
 
         if not is_pre_launch:
             self.todds_runner = runner
+            self.window_manager.register_attr(self, "todds_runner")
 
         runner.show()
         return runner
@@ -1975,6 +1925,7 @@ class MainContent(QObject):
             self.metadata_manager,
             self.settings_controller,
         )
+        self.window_manager.register_attr(self, "steam_browser")
 
         # Automatically null the reference when browser is destroyed
         self.steam_browser.destroyed.connect(
@@ -2008,7 +1959,7 @@ class MainContent(QObject):
             )
             return
         workshop_mod_updater = WorkshopModUpdaterPanel()
-        self._child_windows.append(workshop_mod_updater)
+        self.window_manager.register(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
@@ -2068,6 +2019,7 @@ class MainContent(QObject):
         ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message("Setting up steamcmd...")
@@ -2136,6 +2088,7 @@ class MainContent(QObject):
                 steamcmd_download_tracking=publishedfileids,
                 steam_db=steam_db,
             )
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message(
@@ -2620,6 +2573,7 @@ class MainContent(QObject):
             edit_packageid=packageid,
             initial_mode=initial_mode,
         )
+        self.window_manager.register_attr(self, "rule_editor")
         self.rule_editor._populate_from_metadata()
         self.rule_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
@@ -2628,6 +2582,7 @@ class MainContent(QObject):
     def _do_open_ignore_json_editor(self) -> None:
         """Open the Ignore JSON Editor dialog."""
         self.ignore_json_editor = IgnoreJsonEditor()
+        self.window_manager.register_attr(self, "ignore_json_editor")
         self.ignore_json_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.ignore_json_editor.show()
 
@@ -3027,6 +2982,7 @@ class MainContent(QObject):
         self.use_this_instead_dialog = UseThisInsteadPanel(
             mod_metadata=self.metadata_manager.internal_local_metadata
         )
+        self.window_manager.register_attr(self, "use_this_instead_dialog")
         if not self.use_this_instead_dialog.show_if_has_alternatives():
             dialogue.show_information(
                 title=self.tr("Use This Instead"),
