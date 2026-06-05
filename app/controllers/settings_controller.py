@@ -83,6 +83,8 @@ class SettingsController(QObject):
 
         self._http_download_worker: HttpDownloadWorker | None = None
 
+        self._detected_steam_root: Path | None = None
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -2068,7 +2070,7 @@ class SettingsController(QObject):
         ]
 
         steam_root = self._find_steam_root(candidates)
-        self._detected_steam_root: Path | None = steam_root
+        self._detected_steam_root = steam_root
 
         if steam_root:
             game_folder_str = find_steam_rimworld(steam_root)
