@@ -31,6 +31,7 @@ from app.utils.constants import (
 from app.utils.external_metadata_loaders import (
     ExternalMetadataLoader,
 )
+from app.utils.files import subfolder_contains_candidate_path
 from app.utils.generic import directories, scanpath
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -1710,43 +1711,10 @@ class ModParser(QRunnable):
                             f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                         )
                     # If a mod contains C# assemblies, we want to tag the mod
-                    assemblies_path = str(directory_path / "Assemblies")
-                    # Check if the 'Assemblies' directory exists and is a directory
-                    if os.path.exists(assemblies_path) and os.path.isdir(
-                        assemblies_path
+                    if subfolder_contains_candidate_path(
+                        directory_path, "Assemblies", "*.dll"
                     ):
-                        try:
-                            # Check if there are any .dll files in the 'Assemblies' directory
-                            if any(
-                                filename.endswith((".dll", ".DLL"))
-                                for filename in os.listdir(assemblies_path)
-                            ):
-                                mod_metadata["csharp"] = (
-                                    True  # Tag the mod as containing C# code
-                                )
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to list directory {assemblies_path}: {e}"
-                            )
-                    else:
-                        # If no 'Assemblies' directory in the main folder, check in subfolders
-                        subfolder_paths = [
-                            str(directory_path / folder)
-                            for folder in os.listdir(mod_directory)
-                            if os.path.isdir(str(directory_path / folder))
-                        ]
-                        for subfolder_path in subfolder_paths:
-                            assemblies_path = str(Path(subfolder_path) / "Assemblies")
-                            # Check if the 'Assemblies' directory exists in the subfolder
-                            if os.path.exists(assemblies_path):
-                                # Check if there are any .dll files in this 'Assemblies' directory
-                                if any(
-                                    filename.endswith((".dll", ".DLL"))
-                                    for filename in os.listdir(assemblies_path)
-                                ):
-                                    mod_metadata["csharp"] = (
-                                        True  # Tag the mod as containing C# code
-                                    )
+                        mod_metadata["csharp"] = True
                     # data_source will be used with setIcon later
                     mod_metadata["data_source"] = data_source
                     mod_metadata["folder"] = directory_name
