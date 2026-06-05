@@ -1,6 +1,25 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from app.controllers.settings_controller import SettingsController
+
+
+def _setup_steam_root(tmp_path: Path, subdir: str) -> Path:
+    """Create a fake Steam root with steamapps dir at the given subdir under tmp_path."""
+    steam_root = tmp_path / subdir
+    steam_root.mkdir(parents=True)
+    (steam_root / "steamapps" / "common" / "RimWorld").mkdir(parents=True)
+    (steam_root / "steamapps" / "workshop" / "content" / "294100").mkdir(parents=True)
+    return steam_root
+
+
+def _make_controller() -> SettingsController:
+    """Create a SettingsController without __init__ (which requires Qt widgets).
+
+    Safe because the path detection methods only use Path.home(), static
+    methods, and module-level utility functions — no instance attributes.
+    """
+    return SettingsController.__new__(SettingsController)
 
 
 class TestFindSteamRoot:
@@ -57,3 +76,135 @@ class TestFindSteamRoot:
     def test_returns_none_for_empty_list(self) -> None:
         result = SettingsController._find_steam_root([])
         assert result is None
+
+
+class TestGetLinuxPaths:
+    """Tests for SettingsController.__get_linux_paths() via the name-mangled accessor."""
+
+    def _call(self, controller: SettingsController) -> tuple[Path, Path, Path]:
+        return controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+
+    def test_debian_installation_path(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, ".steam/debian-installation")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+        assert result[2] == steam_root / "steamapps" / "workshop" / "content" / "294100"
+
+    def test_native_steam_path(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, ".steam/steam")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+    def test_local_share_path(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, ".local/share/Steam")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+    def test_flatpak_path(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(
+            tmp_path,
+            ".var/app/com.valvesoftware.Steam/.local/share/Steam",
+        )
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+    def test_snap_path(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, "snap/steam/common/.local/share/Steam")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+    def test_vdf_finds_rimworld_in_secondary_library(self, tmp_path: Path) -> None:
+        steam_root = tmp_path / ".steam" / "steam"
+        steam_root.mkdir(parents=True)
+        (steam_root / "steamapps").mkdir()
+
+        secondary_lib = tmp_path / "games" / "SteamLibrary"
+        (secondary_lib / "steamapps" / "common" / "RimWorld").mkdir(parents=True)
+        (secondary_lib / "steamapps" / "workshop" / "content" / "294100").mkdir(
+            parents=True
+        )
+
+        vdf_dir = steam_root / "config"
+        vdf_dir.mkdir(parents=True)
+        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{steam_root}"\n        "apps"\n        {{\n        }}\n    }}\n    "1"\n    {{\n        "path"    "{secondary_lib}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
+        (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == secondary_lib / "steamapps" / "common" / "RimWorld"
+        assert (
+            result[2] == secondary_lib / "steamapps" / "workshop" / "content" / "294100"
+        )
+
+    def test_proton_config_takes_priority(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, ".steam/steam")
+        proton_config = (
+            steam_root
+            / "steamapps"
+            / "compatdata"
+            / "294100"
+            / "pfx"
+            / "drive_c"
+            / "users"
+            / "steamuser"
+            / "AppData"
+            / "LocalLow"
+            / "Ludeon Studios"
+            / "RimWorld by Ludeon Studios"
+            / "Config"
+        )
+        proton_config.mkdir(parents=True)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[1] == proton_config
+
+    def test_native_config_when_no_proton(self, tmp_path: Path) -> None:
+        _setup_steam_root(tmp_path, ".steam/steam")
+        native_config = (
+            tmp_path
+            / ".config"
+            / "unity3d"
+            / "Ludeon Studios"
+            / "RimWorld by Ludeon Studios"
+            / "Config"
+        )
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[1] == native_config
+
+    def test_no_steam_root_returns_fallback_paths(self, tmp_path: Path) -> None:
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert "steamapps" in str(result[0])
+        assert "Config" in str(result[1])
+        assert "294100" in str(result[2])
+
+    def test_priority_debian_over_native(self, tmp_path: Path) -> None:
+        debian_root = _setup_steam_root(tmp_path, ".steam/debian-installation")
+        _setup_steam_root(tmp_path, ".steam/steam")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call(_make_controller())
+
+        assert result[0] == debian_root / "steamapps" / "common" / "RimWorld"

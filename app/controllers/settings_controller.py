@@ -1913,7 +1913,7 @@ class SettingsController(QObject):
             os_paths = self.__get_darwin_paths()
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
-            os_paths = self.__get_debian_paths()
+            os_paths = self.__get_linux_paths()
             logger.info(f"Running on Linux with the following paths: {os_paths}")
         elif sys.platform == "win32":
             os_paths = self.__get_windows_paths()
@@ -1982,24 +1982,102 @@ class SettingsController(QObject):
 
         return game_folder, config_folder, steam_mods_folder
 
-    def __get_debian_paths(self) -> tuple[Path, Path, Path]:
+    def __get_linux_paths(self) -> tuple[Path, Path, Path]:
         """
-        Get the default paths for Debian-based Linux distributions.
+        Get paths for Linux by discovering the Steam root across distribution methods.
 
-        Returns:
-            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        Checks Debian, native, Flatpak, and Snap Steam installations in priority
+        order. Uses VDF parsing to locate RimWorld in non-default library folders.
+        Detects Proton prefix for config folder.
+
+        :return: (game_folder, config_folder, steam_mods_folder)
         """
         user_home = Path.home()
-        debian_path = user_home / ".steam/debian-installation"
-        if not debian_path.exists():
-            steam_path = user_home / ".steam/steam"
-            debian_path = steam_path / "steamapps/common/RimWorld"
-        game_folder = debian_path / "steamapps/common/RimWorld"
-        config_folder = (
+        candidates = [
+            user_home / ".steam" / "debian-installation",
+            user_home / ".steam" / "steam",
+            user_home / ".local" / "share" / "Steam",
             user_home
-            / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+            / ".var"
+            / "app"
+            / "com.valvesoftware.Steam"
+            / ".local"
+            / "share"
+            / "Steam",
+            user_home / "snap" / "steam" / "common" / ".local" / "share" / "Steam",
+        ]
+
+        steam_root = self._find_steam_root(candidates)
+        self._detected_steam_root: Path | None = steam_root
+
+        if steam_root:
+            game_folder_str = find_steam_rimworld(steam_root)
+            if game_folder_str:
+                game_folder = Path(game_folder_str)
+                logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
+            else:
+                game_folder = steam_root / "steamapps" / "common" / "RimWorld"
+                logger.debug(
+                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                )
+
+            steam_mods_folder_str = get_path_up_to_string(
+                game_folder, "common", exclude=True
+            )
+            if steam_mods_folder_str == "":
+                steam_mods_folder = (
+                    steam_root / "steamapps" / "workshop" / "content" / "294100"
+                )
+            else:
+                steam_mods_folder = (
+                    Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
+                )
+        else:
+            game_folder = (
+                user_home / ".steam" / "steam" / "steamapps" / "common" / "RimWorld"
+            )
+            steam_mods_folder = (
+                user_home
+                / ".steam"
+                / "steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+        # Config folder: check Proton prefix first, then native
+        native_config = (
+            user_home
+            / ".config"
+            / "unity3d"
+            / "Ludeon Studios"
+            / "RimWorld by Ludeon Studios"
+            / "Config"
         )
-        steam_mods_folder = debian_path / "steamapps/workshop/content/294100"
+        if steam_root:
+            proton_config = (
+                steam_root
+                / "steamapps"
+                / "compatdata"
+                / "294100"
+                / "pfx"
+                / "drive_c"
+                / "users"
+                / "steamuser"
+                / "AppData"
+                / "LocalLow"
+                / "Ludeon Studios"
+                / "RimWorld by Ludeon Studios"
+                / "Config"
+            )
+            if proton_config.exists():
+                logger.info(f"Proton prefix detected for config: {proton_config}")
+                config_folder = proton_config
+            else:
+                config_folder = native_config
+        else:
+            config_folder = native_config
 
         return game_folder, config_folder, steam_mods_folder
 
