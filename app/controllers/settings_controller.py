@@ -1915,6 +1915,20 @@ class SettingsController(QObject):
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
             os_paths = self.__get_linux_paths()
             logger.info(f"Running on Linux with the following paths: {os_paths}")
+            if (
+                self._detected_steam_root is not None
+                and "snap" in self._detected_steam_root.parts
+            ):
+                show_warning(
+                    title="Unsupported Steam installation",
+                    text="Snap-based Steam installation detected.",
+                    information=(
+                        "Steam installed via Snap is not officially supported and may cause issues. "
+                        "We recommend installing Steam via your distribution's native package manager "
+                        "or Flatpak instead.\n\n"
+                        "Autodetection will continue, but some paths may not work correctly."
+                    ),
+                )
         elif sys.platform == "win32":
             os_paths = self.__get_windows_paths()
             logger.info(f"Running on Windows with the following paths: {os_paths}")

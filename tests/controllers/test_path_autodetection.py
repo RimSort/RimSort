@@ -290,3 +290,35 @@ class TestGetDarwinPaths:
         assert "RimworldMac.app" in str(result[0])
         assert "Config" in str(result[1])
         assert "294100" in str(result[2])
+
+
+class TestSnapWarning:
+    """Tests for Snap detection via _detected_steam_root."""
+
+    def test_snap_steam_root_detected(self, tmp_path: Path) -> None:
+        _setup_steam_root(tmp_path, "snap/steam/common/.local/share/Steam")
+        controller = _make_controller()
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+
+        assert controller._detected_steam_root is not None
+        assert "snap" in controller._detected_steam_root.parts
+
+    def test_native_steam_root_not_flagged(self, tmp_path: Path) -> None:
+        _setup_steam_root(tmp_path, ".steam/steam")
+        controller = _make_controller()
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+
+        assert controller._detected_steam_root is not None
+        assert "snap" not in controller._detected_steam_root.parts
+
+    def test_no_steam_root_not_flagged(self, tmp_path: Path) -> None:
+        controller = _make_controller()
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+
+        assert controller._detected_steam_root is None
