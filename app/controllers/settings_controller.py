@@ -1874,6 +1874,32 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
         self.settings_dialog.local_mods_folder_location.setText("")
 
+    @staticmethod
+    def _find_steam_root(candidates: list[Path]) -> Path | None:
+        """
+        Find the Steam installation root from a prioritized list of candidate paths.
+
+        A candidate is valid if it exists as a directory and contains either
+        a ``steamapps/`` directory or ``config/libraryfolders.vdf``.
+
+        :param candidates: Ordered list of candidate Steam root paths
+        :return: First valid Steam root, or None if no candidate matches
+        """
+        for candidate in candidates:
+            if not candidate.is_dir():
+                logger.debug(f"Steam root candidate does not exist: {candidate}")
+                continue
+            has_steamapps = (candidate / "steamapps").is_dir()
+            has_vdf = (candidate / "config" / "libraryfolders.vdf").is_file()
+            if has_steamapps or has_vdf:
+                logger.info(f"Found Steam root: {candidate}")
+                return candidate
+            logger.debug(
+                f"Steam root candidate exists but has no steamapps/ or config/libraryfolders.vdf: {candidate}"
+            )
+        logger.warning("No valid Steam root found from any candidate path")
+        return None
+
     @Slot()
     def _on_locations_autodetect_button_clicked(self) -> None:
         """
