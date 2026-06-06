@@ -322,3 +322,50 @@ class TestSnapWarning:
             controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
 
         assert controller._detected_steam_root is None
+
+
+class TestVdfEdgeCases:
+    """Tests for VDF parsing edge cases in path autodetection."""
+
+    def _call_linux(self, controller: SettingsController) -> tuple[Path, Path, Path]:
+        return controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+
+    def test_malformed_vdf_falls_back_to_default(self, tmp_path: Path) -> None:
+        steam_root = tmp_path / ".steam" / "steam"
+        steam_root.mkdir(parents=True)
+        (steam_root / "steamapps").mkdir()
+        vdf_dir = steam_root / "config"
+        vdf_dir.mkdir()
+        (vdf_dir / "libraryfolders.vdf").write_text("this is not valid vdf {{{")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call_linux(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+        assert result[2] == steam_root / "steamapps" / "workshop" / "content" / "294100"
+
+    def test_vdf_without_rimworld_falls_back(self, tmp_path: Path) -> None:
+        steam_root = tmp_path / ".steam" / "steam"
+        steam_root.mkdir(parents=True)
+        (steam_root / "steamapps").mkdir()
+        vdf_dir = steam_root / "config"
+        vdf_dir.mkdir()
+        vdf_content = (
+            '"libraryfolders"\n'
+            "{\n"
+            '    "0"\n'
+            "    {\n"
+            f'        "path"    "{steam_root}"\n'
+            '        "apps"\n'
+            "        {\n"
+            '            "730"    "12345"\n'
+            "        }\n"
+            "    }\n"
+            "}\n"
+        )
+        (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = self._call_linux(_make_controller())
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
