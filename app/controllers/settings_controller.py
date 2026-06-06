@@ -1991,6 +1991,7 @@ class SettingsController(QObject):
         ]
 
         steam_root = self._find_steam_root(candidates)
+        self._detected_steam_root = steam_root
 
         if steam_root:
             game_folder_str = find_steam_rimworld(steam_root)
