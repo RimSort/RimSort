@@ -84,6 +84,7 @@ class MetadataController(QObject):
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
+        self.reset_paths()
         prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
         self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
         self._refresh_metadata_db()
