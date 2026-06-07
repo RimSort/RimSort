@@ -90,6 +90,9 @@ class MetadataManager(QObject):
             self.settings_controller = settings_controller
             self.steamcmd_wrapper = SteamcmdInterface.instance()
 
+            # Abort flag for cancelling long-running refresh operations (e.g. on app close)
+            self._abort_requested = False
+
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
 
@@ -143,6 +146,17 @@ class MetadataManager(QObject):
         elif args or kwargs:
             raise ValueError("MetadataManager instance has already been initialized.")
         return cls._instance
+
+    def request_abort(self) -> None:
+        """Request cancellation of any in-progress refresh_cache operation.
+
+        Sets the abort flag and clears queued (not yet started) runnables from the
+        thread pool. Already-running ModParser tasks will finish their current mod
+        but no new work will be queued.
+        """
+        logger.info("Abort requested for metadata refresh")
+        self._abort_requested = True
+        self.parser_threadpool.clear()
 
     def __read_game_version(self) -> None:
         """Read game version from Version.txt file.
@@ -430,11 +444,23 @@ class MetadataManager(QObject):
         # Process official RimWorld content (Base game + DLC)
         process_data_source_folder("expansion", game_folder, "Data")
 
+        if self._abort_requested:
+            self.parser_threadpool.clear()
+            return
+
         # Process locally installed mods (SteamCMD, manual installs)
         process_data_source_folder("local", settings_instance.local_folder)
 
+        if self._abort_requested:
+            self.parser_threadpool.clear()
+            return
+
         # Process Steam Workshop mods
         process_data_source_folder("workshop", settings_instance.workshop_folder)
+
+        if self._abort_requested:
+            self.parser_threadpool.clear()
+            return
 
         # ===== THREAD SYNCHRONIZATION =====
         # Wait for all queued metadata parsing tasks to complete before rebuilding mappers
@@ -1380,6 +1406,7 @@ class MetadataManager(QObject):
             is_initial (bool): If True, indicates initial load and skips purging orphaned metadata.
         """
         logger.warning("Refreshing metadata cache...")
+        self._abort_requested = False
 
         # If we are refreshing cache from user action, update user paths as well in case of change
         if not is_initial:
@@ -1389,6 +1416,9 @@ class MetadataManager(QObject):
 
         # Refresh ACF metadata from Steam sources for workshop mod details
         refresh_acf_metadata(self, steamclient=True, steamcmd=True)
+        if self._abort_requested:
+            logger.info("Metadata refresh aborted after ACF metadata")
+            return
         # Read game version first since external metadata loading (e.g., No Version Warning) depends on it
         self.__read_game_version()
         # Load external metadata sources in parallel (user rules, Steam DB, community rules, etc.)
@@ -1396,8 +1426,14 @@ class MetadataManager(QObject):
         # which depend on SteamDB for generating missing mod info are assigned proper data correctly.
         # This is necessary for compatibility with old mods, such as https://steamcommunity.com/sharedfiles/filedetails/?id=1147799676
         self.__refresh_external_metadata()
+        if self._abort_requested:
+            logger.info("Metadata refresh aborted after external metadata")
+            return
         # Scan and refresh internal mod metadata from file system (expansion, local, workshop)
         self.__refresh_internal_metadata(is_initial=is_initial)
+        if self._abort_requested:
+            logger.info("Metadata refresh aborted after internal metadata")
+            return
         # Compile metadata to calculate dependencies, incompatibilities, and load rules
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
 
