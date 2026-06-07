@@ -92,6 +92,10 @@ class MetadataController(QObject):
             cls._instance = cls(settings_controller, metadata_db_controller)
         return cls._instance
 
+    def _invalidate_caches(self) -> None:
+        self._packageid_to_paths_cache = None
+        self._steamdb_packageid_to_name_cache = None
+
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
@@ -122,9 +126,7 @@ class MetadataController(QObject):
         else:
             self.workshop_acf_data = {}
 
-        # Invalidate cached derived data (must be AFTER mediator refresh completes)
-        self._packageid_to_paths_cache = None
-        self._steamdb_packageid_to_name_cache = None
+        self._invalidate_caches()
 
     def _refresh_metadata_db(self) -> None:
         """Refresh the metadata database."""
@@ -198,8 +200,7 @@ class MetadataController(QObject):
             active_settings.external_use_this_instead_file_path
         )
 
-        self._packageid_to_paths_cache = None
-        self._steamdb_packageid_to_name_cache = None
+        self._invalidate_caches()
 
     def get_mod(self, path: str | Path) -> ListedMod | None:
         """Get mod metadata by path.
@@ -258,7 +259,7 @@ class MetadataController(QObject):
             self.metadata_mediator.mods_metadata.pop(str(p), None)
             self.mod_deleted_signal.emit(str(p))
 
-        self._packageid_to_paths_cache = None
+        self._invalidate_caches()
 
     def compile(
         self,
