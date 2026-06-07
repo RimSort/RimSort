@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import msgspec
-from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
@@ -22,7 +20,6 @@ from app.models.metadata.metadata_structure import (
 )
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
-from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 
 if TYPE_CHECKING:
@@ -271,7 +268,7 @@ class MetadataController(QObject):
         :param use_alternative_package_ids: Fall back to alternative package IDs for deps
         :return: Compiled dependency data
         """
-        return self._build_compiled_data(
+        return CompiledDependencyData.build(
             self.metadata_mediator.mods_metadata,
             use_moddependencies_as_loadTheseBefore,
             use_alternative_package_ids,
@@ -501,125 +498,6 @@ class MetadataController(QObject):
             return steam_name
         return package_id
 
-    @staticmethod
-    def _build_compiled_data(
-        mods_metadata: Mapping[str, ListedMod],
-        use_moddependencies_as_loadTheseBefore: bool = False,
-        use_alternative_package_ids: bool = False,
-    ) -> CompiledDependencyData:
-        """Build compiled dependency data from parsed mods.
-
-        When ``use_moddependencies_as_loadTheseBefore`` is True, declared
-        ``modDependencies`` are treated as implicit ``loadAfter`` edges.
-        Explicit load-order rules always take precedence: if an explicit
-        rule says A loads after B, an inferred rule saying B loads after A
-        is silently dropped to avoid creating a cycle.
-
-        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``.
-        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter.
-        :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
-        :return: A fully-populated ``CompiledDependencyData`` instance.
-        """
-        compiled = CompiledDependencyData()
-
-        compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()
-        compiled.tier_one_mods = KNOWN_TIER_ONE_MODS.copy()
-
-        # --- Step 1: Build packageid -> set[path] index and collect all known pids ---
-        packageid_to_paths: dict[str, set[str]] = {}
-        all_package_ids: set[str] = set()
-
-        for path_str, mod in mods_metadata.items():
-            if not isinstance(mod, AboutXmlMod):
-                continue
-            pid = str(mod.package_id)
-            all_package_ids.add(pid)
-            packageid_to_paths.setdefault(pid, set()).add(path_str)
-
-        # --- Step 2: Build explicit forward and reverse dependency graphs ---
-        for mod in mods_metadata.values():
-            if not isinstance(mod, AboutXmlMod):
-                continue
-
-            pid = str(mod.package_id)
-            rules = mod.overall_rules
-
-            # load_after: "I (pid) load after dep" -> pid depends on dep
-            for dep_ci in rules.load_after:
-                dep = str(dep_ci)
-                if dep not in all_package_ids:
-                    continue
-                compiled.deps_graph.setdefault(pid, set()).add(dep)
-                compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
-
-            # load_before: "I (pid) load before target" -> target depends on pid
-            for target_ci in rules.load_before:
-                target = str(target_ci)
-                if target not in all_package_ids:
-                    continue
-                compiled.deps_graph.setdefault(target, set()).add(pid)
-                compiled.rev_deps_graph.setdefault(pid, set()).add(target)
-
-            # --- Step 3: Record incompatibilities ---
-            for incompat_ci in rules.incompatible_with:
-                incompat = str(incompat_ci)
-                if incompat not in all_package_ids:
-                    continue
-                compiled.incompatibilities.setdefault(pid, set()).add(incompat)
-
-            # --- Step 4: Tier classification ---
-            if rules.load_first and pid not in compiled.tier_zero_mods:
-                compiled.tier_one_mods.add(pid)
-
-            if rules.load_last:
-                compiled.tier_three_mods.add(pid)
-
-        # --- Step 5: Inferred edges from dependencies (with conflict resolution) ---
-        # Matches old gen_tier_two_deps_graph: skip tier-one and tier-three mods
-        # (both as source and target). Tier-zero is NOT excluded — the old code
-        # allowed inferred edges involving Core/DLCs within tier-two processing.
-        if use_moddependencies_as_loadTheseBefore:
-            excluded_tiers = compiled.tier_one_mods | compiled.tier_three_mods
-            conflicts_ignored = 0
-            for mod in mods_metadata.values():
-                if not isinstance(mod, AboutXmlMod):
-                    continue
-                pid = str(mod.package_id)
-                if pid in excluded_tiers:
-                    continue
-                for dep_mod in mod.overall_rules.dependencies.values():
-                    dep = str(dep_mod.package_id)
-                    # Resolve: prefer primary, fall back to alternative if enabled
-                    if dep not in all_package_ids:
-                        if not use_alternative_package_ids:
-                            continue
-                        resolved = None
-                        for alt in dep_mod.alternative_package_ids:
-                            alt_str = str(alt)
-                            if alt_str in all_package_ids:
-                                resolved = alt_str
-                                break
-                        if resolved is None:
-                            continue
-                        dep = resolved
-                    if dep in excluded_tiers:
-                        continue
-                    # Conflict check: would adding pid -> dep contradict
-                    # an existing explicit edge dep -> pid?
-                    if pid in compiled.deps_graph.get(dep, set()):
-                        logger.warning(
-                            f"Ignoring inferred dependency {pid} -> {dep}: "
-                            f"conflicts with explicit rule {dep} -> {pid}"
-                        )
-                        conflicts_ignored += 1
-                        continue
-                    compiled.deps_graph.setdefault(pid, set()).add(dep)
-                    compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
-
-            if conflicts_ignored > 0:
-                logger.info(
-                    f"Resolved {conflicts_ignored} conflicts by prioritizing "
-                    f"explicit load order rules over inferred dependencies"
-                )
-
-        return compiled
+    # Keep as a thin backward-compat shim for test code that calls
+    # MetadataController._build_compiled_data() directly.
+    _build_compiled_data = staticmethod(CompiledDependencyData.build)
