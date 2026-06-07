@@ -102,21 +102,26 @@ class MetadataController(QObject):
         self.reset_paths()
         prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
         self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
-        self._refresh_metadata_db()
 
         with self.metadata_db_controller.Session() as session:
+            for path, mod_data in self.metadata_mediator.mods_metadata.items():
+                entry = self.metadata_db_controller.get_or_create(session, path)
+                entry.type = str(mod_data.mod_type)
+                entry.published_file_id = mod_data.published_file_id
+
             self.metadata_db_controller.update_from_acf(
                 session,
                 Path(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path),
                 ModType.STEAM_CMD,
             )
-
             if self.workshop_acf_path is not None:
                 self.metadata_db_controller.update_from_acf(
                     session,
                     self.workshop_acf_path,
                     ModType.STEAM_WORKSHOP,
                 )
+
+            session.commit()
 
         self.steamcmd_acf_data = load_acf_from_path(
             self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
@@ -127,17 +132,6 @@ class MetadataController(QObject):
             self.workshop_acf_data = {}
 
         self._invalidate_caches()
-
-    def _refresh_metadata_db(self) -> None:
-        """Refresh the metadata database."""
-        with self.metadata_db_controller.Session() as session:
-            for path, mod_data in self.metadata_mediator.mods_metadata.items():
-                entry = self.metadata_db_controller.get_or_create(session, path)
-
-                entry.type = str(mod_data.mod_type)
-                entry.published_file_id = mod_data.published_file_id
-
-            session.commit()
 
     @staticmethod
     def _resolve_db_path(
