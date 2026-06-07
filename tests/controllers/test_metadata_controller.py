@@ -321,7 +321,9 @@ def test_get_mod_returns_mod_for_known_path(
 ) -> None:
     """Verify get_mod returns ListedMod for a populated path."""
     metadata_controller_p.refresh_metadata()
-    mod = metadata_controller_p.get_mod("tests/data/mod_examples/Steam/steam_mod_1")
+    mod = metadata_controller_p.get_mod(
+        Path("tests/data/mod_examples/Steam/steam_mod_1")
+    )
     assert mod is not None
     assert mod.name == "steam mod 1"
 
@@ -352,7 +354,9 @@ def test_has_mod_true_for_known_path(
 ) -> None:
     """Verify has_mod returns True for a populated path."""
     metadata_controller_p.refresh_metadata()
-    assert metadata_controller_p.has_mod("tests/data/mod_examples/Steam/steam_mod_1")
+    assert metadata_controller_p.has_mod(
+        Path("tests/data/mod_examples/Steam/steam_mod_1")
+    )
 
 
 def test_has_mod_false_for_unknown_path(
@@ -381,9 +385,9 @@ def test_resolve_about_xml_to_mod_path_valid(
     """Verify resolve_about_xml_to_mod_path finds the mod from About.xml path."""
     metadata_controller_p.refresh_metadata()
     result = metadata_controller_p.resolve_about_xml_to_mod_path(
-        "tests/data/mod_examples/Steam/steam_mod_1/About/About.xml"
+        str(Path("tests/data/mod_examples/Steam/steam_mod_1/About/About.xml"))
     )
-    assert result == "tests/data/mod_examples/Steam/steam_mod_1"
+    assert result == str(Path("tests/data/mod_examples/Steam/steam_mod_1"))
 
 
 def test_resolve_about_xml_to_mod_path_unknown(
