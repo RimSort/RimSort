@@ -306,6 +306,143 @@ def test_user_rules_property(
     assert result is metadata_controller_p.metadata_mediator.user_rules
 
 
+# ---- Task 1: Path-based lookup helpers ----
+
+
+def test_get_mod_returns_mod_for_known_path(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify get_mod returns ListedMod for a populated path."""
+    metadata_controller_p.refresh_metadata()
+    mod = metadata_controller_p.get_mod("tests/data/mod_examples/Steam/steam_mod_1")
+    assert mod is not None
+    assert mod.name == "steam mod 1"
+
+
+def test_get_mod_returns_none_for_unknown_path(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify get_mod returns None for an unknown path."""
+    metadata_controller_p.refresh_metadata()
+    mod = metadata_controller_p.get_mod("tests/data/mod_examples/Steam/nonexistent_mod")
+    assert mod is None
+
+
+def test_get_mod_accepts_path_object(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify get_mod works with Path objects (converted to str internally)."""
+    metadata_controller_p.refresh_metadata()
+    mod = metadata_controller_p.get_mod(
+        Path("tests/data/mod_examples/Steam/steam_mod_1")
+    )
+    assert mod is not None
+    assert mod.name == "steam mod 1"
+
+
+def test_has_mod_true_for_known_path(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify has_mod returns True for a populated path."""
+    metadata_controller_p.refresh_metadata()
+    assert metadata_controller_p.has_mod("tests/data/mod_examples/Steam/steam_mod_1")
+
+
+def test_has_mod_false_for_unknown_path(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify has_mod returns False for an unknown path."""
+    metadata_controller_p.refresh_metadata()
+    assert not metadata_controller_p.has_mod(
+        "tests/data/mod_examples/Steam/nonexistent_mod"
+    )
+
+
+def test_has_mod_accepts_path_object(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify has_mod works with Path objects."""
+    metadata_controller_p.refresh_metadata()
+    assert metadata_controller_p.has_mod(
+        Path("tests/data/mod_examples/Steam/steam_mod_1")
+    )
+
+
+def test_resolve_about_xml_to_mod_path_valid(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify resolve_about_xml_to_mod_path finds the mod from About.xml path."""
+    metadata_controller_p.refresh_metadata()
+    result = metadata_controller_p.resolve_about_xml_to_mod_path(
+        "tests/data/mod_examples/Steam/steam_mod_1/About/About.xml"
+    )
+    assert result == "tests/data/mod_examples/Steam/steam_mod_1"
+
+
+def test_resolve_about_xml_to_mod_path_unknown(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify resolve_about_xml_to_mod_path returns None for unknown mods."""
+    metadata_controller_p.refresh_metadata()
+    result = metadata_controller_p.resolve_about_xml_to_mod_path(
+        "tests/data/mod_examples/Steam/nonexistent/About/About.xml"
+    )
+    assert result is None
+
+
+# ---- Task 2: DB path properties ----
+
+
+def test_steam_db_path_when_disabled(
+    metadata_controller: MetadataController,
+) -> None:
+    """Verify steam_db_path returns None when Steam DB is disabled."""
+    assert metadata_controller.steam_db_path is None
+
+
+def test_community_rules_path_when_disabled(
+    metadata_controller: MetadataController,
+) -> None:
+    """Verify community_rules_path returns None when community rules are disabled."""
+    assert metadata_controller.community_rules_path is None
+
+
+def test_steam_db_path_when_configured(
+    metadata_controller_with_steamdb: MetadataController,
+) -> None:
+    """Verify steam_db_path returns a Path when Steam DB is configured."""
+    metadata_controller_with_steamdb.reset_paths()
+    result = metadata_controller_with_steamdb.steam_db_path
+    assert result is not None
+    assert isinstance(result, Path)
+    assert result.name == "steamDB.json"
+
+
+def test_community_rules_path_when_configured(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify community_rules_path returns a Path when community rules are configured."""
+    metadata_controller_p.settings_controller.settings.external_community_rules_metadata_source = "Configured file path"
+    metadata_controller_p.settings_controller.settings.external_community_rules_file_path = "tests/data/dbs/communityRules.json"
+    metadata_controller_p.reset_paths()
+    result = metadata_controller_p.community_rules_path
+    assert result is not None
+    assert isinstance(result, Path)
+    assert result.name == "communityRules.json"
+
+
+# ---- Task 3: steamcmd_acf_path property ----
+
+
+def test_steamcmd_acf_path_property(
+    metadata_controller: MetadataController,
+) -> None:
+    """Verify steamcmd_acf_path delegates to steamcmd_wrapper."""
+    result = metadata_controller.steamcmd_acf_path
+    assert isinstance(result, str)
+    assert "appworkshop_294100.acf" in result
+
+
 def test_metadata_controller_delete_mod(
     metadata_controller_p: MetadataController,
 ) -> None:

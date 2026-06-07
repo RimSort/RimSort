@@ -197,6 +197,36 @@ class MetadataController(QObject):
         self._packageid_to_paths_cache = None
         self._steamdb_packageid_to_name_cache = None
 
+    def get_mod(self, path: str | Path) -> ListedMod | None:
+        """Get mod metadata by path.
+
+        :param path: Mod path (string or Path)
+        :return: The ListedMod at that path, or None
+        """
+        return self.metadata_mediator.mods_metadata.get(str(path))
+
+    def has_mod(self, path: str | Path) -> bool:
+        """Check if a mod exists at the given path.
+
+        :param path: Mod path (string or Path)
+        :return: True if a mod exists at the path
+        """
+        return str(path) in self.metadata_mediator.mods_metadata
+
+    def resolve_about_xml_to_mod_path(self, about_xml_path: str) -> str | None:
+        """Resolve an About.xml file path to its mod's path key.
+
+        About.xml lives at ``<mod_path>/About/About.xml``, so the mod path
+        is the grandparent directory. Returns None if no mod exists there.
+
+        :param about_xml_path: Path to an About.xml file
+        :return: The mod path key, or None
+        """
+        candidate = str(Path(about_xml_path).parent.parent)
+        if candidate in self.metadata_mediator.mods_metadata:
+            return candidate
+        return None
+
     def get_metadata_with_path(
         self, path: str | Path
     ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
@@ -364,6 +394,30 @@ class MetadataController(QObject):
         if workshop_path is None:
             return None
         return workshop_path.parent.parent / "appworkshop_294100.acf"
+
+    @property
+    def steam_db_path(self) -> Path | None:
+        """Path to the Steam database file on disk.
+
+        :return: The resolved path, or None if Steam DB is disabled
+        """
+        return self.metadata_mediator.steam_db_path
+
+    @property
+    def community_rules_path(self) -> Path | None:
+        """Path to the community rules database file on disk.
+
+        :return: The resolved path, or None if community rules are disabled
+        """
+        return self.metadata_mediator.community_rules_path
+
+    @property
+    def steamcmd_acf_path(self) -> str:
+        """Path to the SteamCMD appworkshop ACF file.
+
+        :return: The ACF file path as a string
+        """
+        return self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
 
     def get_mod_name_from_package_id(self, package_id: str) -> str:
         """Get a mod's display name from its package ID.
