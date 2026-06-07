@@ -304,6 +304,13 @@ if [ -d "$UPDATE_SOURCE_FOLDER/RimSort" ]; then
 	log_info "Adjusted update source to subdirectory: $UPDATE_SOURCE_FOLDER"
 fi
 
+# On macOS, adjust source if it contains a RimSort.app bundle so rsync copies the
+# bundle contents rather than nesting RimSort.app inside the target .app directory.
+if [ "$OS" = "Darwin" ] && [ -d "$UPDATE_SOURCE_FOLDER/RimSort.app" ]; then
+	UPDATE_SOURCE_FOLDER="$UPDATE_SOURCE_FOLDER/RimSort.app"
+	log_info "Adjusted update source to .app bundle: $UPDATE_SOURCE_FOLDER"
+fi
+
 # Verify checksum if available
 checksum_file="$UPDATE_SOURCE_FOLDER/checksum.sha256"
 if [ -f "$checksum_file" ]; then
