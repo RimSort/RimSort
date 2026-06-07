@@ -2142,8 +2142,6 @@ class MainContent(QObject):
             instruction[1] is a list containing [game_folder_path: str, args: list] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        # use prebuilt libs path
-        libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
@@ -2156,7 +2154,6 @@ class MainContent(QObject):
                     steamworks_api_process = SteamworksGameLaunch(
                         game_install_path=instruction[1][0],
                         run_args=instruction[1][1],
-                        _libs=libs_path,
                     )
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
@@ -2182,7 +2179,6 @@ class MainContent(QObject):
                     handler = SteamworksSubscriptionHandler(
                         action=instruction[0],
                         pfid_or_pfids=instruction[1],
-                        _libs=libs_path,
                     )
                     handler.start()
                     handler.join()

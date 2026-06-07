@@ -1,12 +1,6 @@
-import sys
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
-
-# Ensure steamworks can be imported even without the native binary
-if "steamworks" not in sys.modules:
-    sys.modules["steamworks"] = MagicMock()
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (

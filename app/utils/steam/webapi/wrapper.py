@@ -15,7 +15,6 @@ from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
 from app.utils import http
-from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
@@ -741,7 +740,6 @@ class DynamicQuery(QObject):
                 SteamworksAppDependenciesQuery(
                     pfid_or_pfids=[int(str_pfid) for str_pfid in chunk],
                     interval=1,
-                    _libs=str(AppInfo().libs_folder),
                 )
                 for chunk in list(
                     chunks(
