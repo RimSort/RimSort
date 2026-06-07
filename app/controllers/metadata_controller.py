@@ -504,5 +504,3 @@ class MetadataController(QObject):
         formatted = msgspec.json.format(encoded, indent=4)
         steam_db_path.write_bytes(formatted)
         return True
-
-    _build_compiled_data = staticmethod(CompiledDependencyData.build)

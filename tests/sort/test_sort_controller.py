@@ -496,7 +496,6 @@ class TestGenerateDependencyGraphsPartition:
 class TestSorterRegressions:
     def test_constants_not_mutated(self) -> None:
         """Regression test for #2041: KNOWN_TIER_ONE_MODS must not be mutated."""
-        from app.controllers.metadata_controller import MetadataController
         from app.utils.constants import KNOWN_TIER_ONE_MODS
 
         original = KNOWN_TIER_ONE_MODS.copy()
@@ -512,7 +511,7 @@ class TestSorterRegressions:
                 "/mods/b", name="Regular", package_id="author.regular"
             ),
         }
-        compiled = MetadataController._build_compiled_data(mods)
+        compiled = CompiledDependencyData.build(mods)
 
         assert KNOWN_TIER_ONE_MODS == original
         assert "author.framework" in compiled.tier_one_mods
