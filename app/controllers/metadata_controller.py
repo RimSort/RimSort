@@ -238,13 +238,13 @@ class MetadataController(QObject):
 
         return mod_data, entry
 
-    @Slot(str)
     def delete_mod(self, *path: Path) -> None:
-        """Delete a mod from the metadata, and aux metadata
-        Does not remove the mod from disk.
+        """Delete one or more mods from metadata and aux DB by path.
 
-        :param path:
-        :type Path: Path
+        Does not remove mod files from disk. Emits ``mod_deleted_signal``
+        for each removed path.
+
+        :param path: One or more mod paths to remove
         """
         with self.metadata_db_controller.Session() as session:
             self.metadata_db_controller.delete(session, *path)
