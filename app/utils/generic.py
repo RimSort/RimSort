@@ -457,10 +457,26 @@ def launch_process(
 
 def open_url_browser(url: str) -> None:
     """
-    Open a url in a user's default web browser
+    Open a url in a user's default web browser.
+
+    Uses platform-native commands on Linux and macOS to avoid issues with
+    ``webbrowser.open`` failing silently in bundled environments (e.g. Nuitka)
+    where ``LD_LIBRARY_PATH`` or other env vars interfere with spawned processes.
     """
     logger.info(f"USER ACTION: Opening url {url}")
-    webbrowser.open(url)
+    try:
+        if sys.platform == "linux":
+            subprocess.Popen(
+                ["xdg-open", url],
+                env=dict(os.environ, LD_LIBRARY_PATH=""),
+            )
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", url])
+        else:
+            webbrowser.open(url)
+    except Exception as e:
+        logger.error(f"Failed to open URL {url}: {e}")
+        webbrowser.open(url)
 
 
 def platform_specific_open(path: str | Path) -> None:

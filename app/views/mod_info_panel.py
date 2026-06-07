@@ -24,7 +24,12 @@ from app.sort.mod_sorting import uuid_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
-from app.utils.generic import format_file_size, platform_specific_open, scanpath
+from app.utils.generic import (
+    format_file_size,
+    open_url_browser,
+    platform_specific_open,
+    scanpath,
+)
 from app.utils.metadata import MetadataManager
 from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
@@ -75,13 +80,7 @@ class ClickablePathLabel(QLabel):
         if event.button() == Qt.MouseButton.LeftButton and self.path and self.clickable:
             # If path looks like a URL, open in browser
             if self.path.startswith("http://") or self.path.startswith("https://"):
-                import webbrowser
-
-                try:
-                    webbrowser.open(self.path)
-                    logger.info(f"Opening URL: {self.path}")
-                except Exception as e:
-                    logger.error(f"Failed to open URL {self.path}: {e}")
+                open_url_browser(self.path)
             else:
                 try:
                     path_obj = Path(self.path)
