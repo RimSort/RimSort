@@ -48,7 +48,7 @@ Features all the basic functionality you'd expect from a mod manager plus extras
 
 - Additional integration with internal and external tools
   - Git integration for Git mods and databases
-  - Integration with [SteamworksPy](https://github.com/philippj/SteamworksPy)
+  - Steamworks SDK integration via rimsort_steam
   - This is used to interact with Steam client, as well as provide Steam API game launch
 - Log sharing to [0x0.st](http://0x0.st/)
 - Mod list sharing with [Rentry.co](https://rentry.co/)
