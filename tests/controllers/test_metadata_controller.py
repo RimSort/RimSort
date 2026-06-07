@@ -1,7 +1,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 from unittest.mock import MagicMock, patch
 
 import msgspec
@@ -448,6 +448,21 @@ def test_steamcmd_acf_path_property(
     result = metadata_controller.steamcmd_acf_path
     assert isinstance(result, str)
     assert "appworkshop_294100.acf" in result
+
+
+def test_delete_mod_emits_signal(
+    metadata_controller_p: MetadataController,
+    qtbot: Any,
+) -> None:
+    """Verify delete_mod emits mod_deleted_signal for each deleted path."""
+    metadata_controller_p.refresh_metadata()
+
+    steam_mod_1_path = Path("tests/data/mod_examples/Steam/steam_mod_1")
+    emitted: list[str] = []
+    metadata_controller_p.mod_deleted_signal.connect(emitted.append)
+
+    metadata_controller_p.delete_mod(steam_mod_1_path)
+    assert emitted == [str(steam_mod_1_path)]
 
 
 def test_metadata_controller_delete_mod(

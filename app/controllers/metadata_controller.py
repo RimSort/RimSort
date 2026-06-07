@@ -256,6 +256,7 @@ class MetadataController(QObject):
 
         for p in path:
             self.metadata_mediator.mods_metadata.pop(str(p), None)
+            self.mod_deleted_signal.emit(str(p))
 
         self._packageid_to_paths_cache = None
 
