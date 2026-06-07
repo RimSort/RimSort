@@ -40,6 +40,8 @@ class MetadataController(QObject):
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
 
+    # ---- Lifecycle ----
+
     def __init__(
         self,
         settings_controller: SettingsController,
@@ -89,10 +91,6 @@ class MetadataController(QObject):
             cls._instance = cls(settings_controller, metadata_db_controller)
         return cls._instance
 
-    def _invalidate_caches(self) -> None:
-        self._packageid_to_paths_cache = None
-        self._steamdb_packageid_to_name_cache = None
-
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
@@ -130,32 +128,9 @@ class MetadataController(QObject):
 
         self._invalidate_caches()
 
-    @staticmethod
-    def _resolve_db_path(
-        source: str, file_path: str, repo_url: str, file_name: str
-    ) -> Path | None:
-        """Resolve the actual on-disk path for an external DB file.
-
-        Mirrors the path resolution logic from ExternalMetadataLoader._get_repo_path:
-        when the source is a URL or git repo, the download lands in
-        ``AppInfo().databases_folder / <repo-name> / <file_name>``, not
-        at the settings default.
-        """
-        if source == "Disabled":
-            return None
-        if source == "Configured file path":
-            return Path(file_path) if file_path else None
-        # "Configured URL" or "Configured git repository"
-        repo_name = Path(repo_url).name
-        return AppInfo().databases_folder / repo_name / file_name
-
     @Slot()
     def reset_paths(self) -> None:
-        """Reset the paths.
-        This is used when the paths are changed in the settings.
-
-        Does not refresh the metadata.
-        """
+        """Reset the paths from current settings. Does not refresh metadata."""
 
         def _get_path(path_str: str) -> Path | None:
             return Path(path_str) if path_str else None
@@ -192,6 +167,104 @@ class MetadataController(QObject):
         )
 
         self._invalidate_caches()
+
+    # ---- Data properties ----
+
+    @property
+    def mods_metadata(self) -> dict[str, ListedMod]:
+        """Get the current mods metadata dictionary."""
+        return self.metadata_mediator.mods_metadata
+
+    @property
+    def game_version(self) -> str:
+        """Get the current game version."""
+        return self.metadata_mediator.game_version
+
+    @property
+    def steam_db(self) -> SteamDbSchema | None:
+        """Get the loaded Steam database, if any."""
+        return self.metadata_mediator.steam_db
+
+    @property
+    def community_rules(self) -> ExternalRulesSchema | None:
+        """Get the loaded community rules, if any."""
+        return self.metadata_mediator.community_rules
+
+    @property
+    def user_rules(self) -> ExternalRulesSchema | None:
+        """Get the loaded user rules, if any."""
+        return self.metadata_mediator.user_rules
+
+    @property
+    def packageid_to_paths(self) -> dict[str, set[str]]:
+        """Build a mapping from package IDs to sets of mod paths (cached)."""
+        if self._packageid_to_paths_cache is None:
+            result: dict[str, set[str]] = {}
+            for path, mod in self.mods_metadata.items():
+                if isinstance(mod, AboutXmlMod):
+                    pid = str(mod.package_id)
+                    result.setdefault(pid, set()).add(path)
+            self._packageid_to_paths_cache = result
+        return self._packageid_to_paths_cache
+
+    @property
+    def steamdb_packageid_to_name(self) -> dict[str, str]:
+        """Build a mapping from package IDs to Steam names from the Steam DB (cached).
+
+        Keys are actual packageIds (lowercased), NOT published file IDs.
+        Prefers steamName (Workshop display title) over name for better UX.
+        """
+        if self._steamdb_packageid_to_name_cache is None:
+            if self.metadata_mediator.steam_db is None:
+                self._steamdb_packageid_to_name_cache = {}
+            else:
+                self._steamdb_packageid_to_name_cache = {
+                    entry.packageId.lower(): entry.steamName or entry.name
+                    for entry in self.metadata_mediator.steam_db.database.values()
+                    if entry.packageId and (entry.steamName or entry.name)
+                }
+        return self._steamdb_packageid_to_name_cache
+
+    # ---- Path accessors ----
+
+    @property
+    def workshop_acf_path(self) -> Path | None:
+        """Path to Steam Workshop's appworkshop_294100.acf.
+
+        Derived from the workshop mods path: two directories up from
+        content/294100 to find workshop/appworkshop_294100.acf.
+        Returns None if workshop path is not configured.
+        """
+        workshop_path = self.metadata_mediator.workshop_mods_path
+        if workshop_path is None:
+            return None
+        return workshop_path.parent.parent / "appworkshop_294100.acf"
+
+    @property
+    def steamcmd_acf_path(self) -> str:
+        """Path to the SteamCMD appworkshop ACF file.
+
+        :return: The ACF file path as a string
+        """
+        return self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+
+    @property
+    def steam_db_path(self) -> Path | None:
+        """Path to the Steam database file on disk.
+
+        :return: The resolved path, or None if Steam DB is disabled
+        """
+        return self.metadata_mediator.steam_db_path
+
+    @property
+    def community_rules_path(self) -> Path | None:
+        """Path to the community rules database file on disk.
+
+        :return: The resolved path, or None if community rules are disabled
+        """
+        return self.metadata_mediator.community_rules_path
+
+    # ---- Lookups ----
 
     def get_mod(self, path: str | Path) -> ListedMod | None:
         """Get mod metadata by path.
@@ -240,22 +313,29 @@ class MetadataController(QObject):
 
         return mod_data, entry
 
-    def delete_mod(self, *path: Path) -> None:
-        """Delete one or more mods from metadata and aux DB by path.
+    def get_mod_name_from_package_id(self, package_id: str) -> str:
+        """Get a mod's display name from its package ID.
 
-        Does not remove mod files from disk. Emits ``mod_deleted_signal``
-        for each removed path.
+        Resolution order:
+        1. Check parsed mods metadata (packageid_to_paths + mods_metadata)
+        2. Fall back to Steam DB name mapping
+        3. Return the package_id itself as last resort
 
-        :param path: One or more mod paths to remove
+        :param package_id: The mod's package ID (case-insensitive)
+        :return: The mod's display name, or the package_id if not found
         """
-        with self.metadata_db_controller.Session() as session:
-            self.metadata_db_controller.delete(session, *path)
+        pid_lower = package_id.lower()
+        paths = self.packageid_to_paths.get(pid_lower, set())
+        for path in paths:
+            mod = self.mods_metadata.get(path)
+            if mod is not None and mod.name:
+                return mod.name
+        steam_name = self.steamdb_packageid_to_name.get(pid_lower)
+        if steam_name:
+            return steam_name
+        return package_id
 
-        for p in path:
-            self.metadata_mediator.mods_metadata.pop(str(p), None)
-            self.mod_deleted_signal.emit(str(p))
-
-        self._invalidate_caches()
+    # ---- Queries ----
 
     def compile(
         self,
@@ -273,61 +353,6 @@ class MetadataController(QObject):
             use_moddependencies_as_loadTheseBefore,
             use_alternative_package_ids,
         )
-
-    @property
-    def mods_metadata(self) -> dict[str, ListedMod]:
-        """Get the current mods metadata dictionary."""
-        return self.metadata_mediator.mods_metadata
-
-    @property
-    def packageid_to_paths(self) -> dict[str, set[str]]:
-        """Build a mapping from package IDs to sets of mod paths (cached)."""
-        if self._packageid_to_paths_cache is None:
-            result: dict[str, set[str]] = {}
-            for path, mod in self.mods_metadata.items():
-                if isinstance(mod, AboutXmlMod):
-                    pid = str(mod.package_id)
-                    result.setdefault(pid, set()).add(path)
-            self._packageid_to_paths_cache = result
-        return self._packageid_to_paths_cache
-
-    @property
-    def game_version(self) -> str:
-        """Get the current game version."""
-        return self.metadata_mediator.game_version
-
-    @property
-    def steam_db(self) -> SteamDbSchema | None:
-        """Get the loaded Steam database, if any."""
-        return self.metadata_mediator.steam_db
-
-    @property
-    def community_rules(self) -> ExternalRulesSchema | None:
-        """Get the loaded community rules, if any."""
-        return self.metadata_mediator.community_rules
-
-    @property
-    def user_rules(self) -> ExternalRulesSchema | None:
-        """Get the loaded user rules, if any."""
-        return self.metadata_mediator.user_rules
-
-    @property
-    def steamdb_packageid_to_name(self) -> dict[str, str]:
-        """Build a mapping from package IDs to Steam names from the Steam DB (cached).
-
-        Keys are actual packageIds (lowercased), NOT published file IDs.
-        Prefers steamName (Workshop display title) over name for better UX.
-        """
-        if self._steamdb_packageid_to_name_cache is None:
-            if self.metadata_mediator.steam_db is None:
-                self._steamdb_packageid_to_name_cache = {}
-            else:
-                self._steamdb_packageid_to_name_cache = {
-                    entry.packageId.lower(): entry.steamName or entry.name
-                    for entry in self.metadata_mediator.steam_db.database.values()
-                    if entry.packageId and (entry.steamName or entry.name)
-                }
-        return self._steamdb_packageid_to_name_cache
 
     def get_missing_dependencies(
         self, active_mod_paths: set[str]
@@ -384,56 +409,24 @@ class MetadataController(QObject):
         pid = str(mod.package_id)
         return use_this_instead.get(pid)
 
-    @property
-    def workshop_acf_path(self) -> Path | None:
-        """Path to Steam Workshop's appworkshop_294100.acf.
+    # ---- Mutations ----
 
-        Derived from the workshop mods path: two directories up from
-        content/294100 to find workshop/appworkshop_294100.acf.
-        Returns None if workshop path is not configured.
+    def delete_mod(self, *path: Path) -> None:
+        """Delete one or more mods from metadata and aux DB by path.
+
+        Does not remove mod files from disk. Emits ``mod_deleted_signal``
+        for each removed path.
+
+        :param path: One or more mod paths to remove
         """
-        workshop_path = self.metadata_mediator.workshop_mods_path
-        if workshop_path is None:
-            return None
-        return workshop_path.parent.parent / "appworkshop_294100.acf"
+        with self.metadata_db_controller.Session() as session:
+            self.metadata_db_controller.delete(session, *path)
 
-    @property
-    def steam_db_path(self) -> Path | None:
-        """Path to the Steam database file on disk.
+        for p in path:
+            self.metadata_mediator.mods_metadata.pop(str(p), None)
+            self.mod_deleted_signal.emit(str(p))
 
-        :return: The resolved path, or None if Steam DB is disabled
-        """
-        return self.metadata_mediator.steam_db_path
-
-    @property
-    def community_rules_path(self) -> Path | None:
-        """Path to the community rules database file on disk.
-
-        :return: The resolved path, or None if community rules are disabled
-        """
-        return self.metadata_mediator.community_rules_path
-
-    def _persist_steam_db(self) -> bool:
-        """Persist the in-memory SteamDbSchema to disk.
-
-        Updates the version timestamp using the configured database_expiry
-        offset, then serializes the full schema with msgspec.
-
-        :return: True if written successfully, False if no DB or path
-        """
-        steam_db = self.metadata_mediator.steam_db
-        steam_db_path = self.metadata_mediator.steam_db_path
-        if steam_db is None or steam_db_path is None:
-            return False
-
-        steam_db.version = int(
-            time.time() + self.settings_controller.settings.database_expiry
-        )
-        encoded = msgspec.json.encode(steam_db)
-        # msgspec.json.encode produces compact JSON; format it for readability
-        formatted = msgspec.json.format(encoded, indent=4)
-        steam_db_path.write_bytes(formatted)
-        return True
+        self._invalidate_caches()
 
     def set_steam_db_blacklist(
         self,
@@ -455,7 +448,6 @@ class MetadataController(QObject):
         if steam_db is None or self.metadata_mediator.steam_db_path is None:
             return False
 
-        # Create entry if it doesn't exist
         if published_file_id not in steam_db.database:
             steam_db.database[published_file_id] = SteamDbEntry()
 
@@ -468,36 +460,49 @@ class MetadataController(QObject):
 
         return self._persist_steam_db()
 
-    @property
-    def steamcmd_acf_path(self) -> str:
-        """Path to the SteamCMD appworkshop ACF file.
+    # ---- Private helpers ----
 
-        :return: The ACF file path as a string
+    def _invalidate_caches(self) -> None:
+        self._packageid_to_paths_cache = None
+        self._steamdb_packageid_to_name_cache = None
+
+    @staticmethod
+    def _resolve_db_path(
+        source: str, file_path: str, repo_url: str, file_name: str
+    ) -> Path | None:
+        """Resolve the actual on-disk path for an external DB file.
+
+        Mirrors the path resolution logic from ExternalMetadataLoader._get_repo_path:
+        when the source is a URL or git repo, the download lands in
+        ``AppInfo().databases_folder / <repo-name> / <file_name>``, not
+        at the settings default.
         """
-        return self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        if source == "Disabled":
+            return None
+        if source == "Configured file path":
+            return Path(file_path) if file_path else None
+        repo_name = Path(repo_url).name
+        return AppInfo().databases_folder / repo_name / file_name
 
-    def get_mod_name_from_package_id(self, package_id: str) -> str:
-        """Get a mod's display name from its package ID.
+    def _persist_steam_db(self) -> bool:
+        """Persist the in-memory SteamDbSchema to disk.
 
-        Resolution order:
-        1. Check parsed mods metadata (packageid_to_paths + mods_metadata)
-        2. Fall back to Steam DB name mapping
-        3. Return the package_id itself as last resort
+        Updates the version timestamp using the configured database_expiry
+        offset, then serializes the full schema with msgspec.
 
-        :param package_id: The mod's package ID (case-insensitive)
-        :return: The mod's display name, or the package_id if not found
+        :return: True if written successfully, False if no DB or path
         """
-        pid_lower = package_id.lower()
-        paths = self.packageid_to_paths.get(pid_lower, set())
-        for path in paths:
-            mod = self.mods_metadata.get(path)
-            if mod is not None and mod.name:
-                return mod.name
-        steam_name = self.steamdb_packageid_to_name.get(pid_lower)
-        if steam_name:
-            return steam_name
-        return package_id
+        steam_db = self.metadata_mediator.steam_db
+        steam_db_path = self.metadata_mediator.steam_db_path
+        if steam_db is None or steam_db_path is None:
+            return False
 
-    # Keep as a thin backward-compat shim for test code that calls
-    # MetadataController._build_compiled_data() directly.
+        steam_db.version = int(
+            time.time() + self.settings_controller.settings.database_expiry
+        )
+        encoded = msgspec.json.encode(steam_db)
+        formatted = msgspec.json.format(encoded, indent=4)
+        steam_db_path.write_bytes(formatted)
+        return True
+
     _build_compiled_data = staticmethod(CompiledDependencyData.build)
