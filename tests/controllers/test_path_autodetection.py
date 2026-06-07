@@ -4,6 +4,11 @@ from unittest.mock import patch
 from app.controllers.settings_controller import SettingsController
 
 
+def _vdf_escape(path: Path) -> str:
+    """Escape backslashes for VDF format (matches real Steam VDF files on Windows)."""
+    return str(path).replace("\\", "\\\\")
+
+
 def _setup_steam_root(tmp_path: Path, subdir: str) -> Path:
     """Create a fake Steam root with steamapps dir at the given subdir under tmp_path."""
     steam_root = tmp_path / subdir
@@ -141,7 +146,7 @@ class TestGetLinuxPaths:
 
         vdf_dir = steam_root / "config"
         vdf_dir.mkdir(parents=True)
-        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{steam_root}"\n        "apps"\n        {{\n        }}\n    }}\n    "1"\n    {{\n        "path"    "{secondary_lib}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
+        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{_vdf_escape(steam_root)}"\n        "apps"\n        {{\n        }}\n    }}\n    "1"\n    {{\n        "path"    "{_vdf_escape(secondary_lib)}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
         (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -240,7 +245,7 @@ class TestGetDarwinPaths:
         )
         vdf_dir = steam_root / "config"
         vdf_dir.mkdir(parents=True)
-        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{steam_root}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
+        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{_vdf_escape(steam_root)}"\n        "apps"\n        {{\n            "294100"    "1234567890"\n        }}\n    }}\n}}\n'
         (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -281,7 +286,7 @@ class TestGetDarwinPaths:
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = self._call(_make_controller())
 
-        assert str(result[2]).endswith("workshop/content/294100")
+        assert result[2].parts[-3:] == ("workshop", "content", "294100")
 
     def test_no_steam_root_returns_hardcoded_paths(self, tmp_path: Path) -> None:
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -355,7 +360,7 @@ class TestVdfEdgeCases:
             "{\n"
             '    "0"\n'
             "    {\n"
-            f'        "path"    "{steam_root}"\n'
+            f'        "path"    "{_vdf_escape(steam_root)}"\n'
             '        "apps"\n'
             "        {\n"
             '            "730"    "12345"\n'
