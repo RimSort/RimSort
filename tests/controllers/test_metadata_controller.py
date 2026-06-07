@@ -1,13 +1,19 @@
+import json
+import shutil
 from pathlib import Path
 from typing import Generator
 from unittest.mock import MagicMock, patch
 
+import msgspec
 import pytest
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.models.metadata.metadata_structure import AboutXmlMod
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    SteamDbSchema,
+)
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -33,6 +39,7 @@ def mock_settings() -> Generator[MagicMock, None, None]:
         mock_settings.external_no_version_warning_file_path = ""
         mock_settings.external_use_this_instead_file_path = ""
         mock_settings.prefer_versioned_about_tags = True
+        mock_settings.database_expiry = 0
 
         yield mock_settings
 
@@ -487,3 +494,151 @@ def test_metadata_controller_delete_mod(
 
     assert mod_2 is None
     assert aux_metadata_2 is None
+
+
+# ---- Task 4: set_steam_db_blacklist mutation method ----
+
+
+def test_set_steam_db_blacklist_adds_entry(
+    metadata_controller_with_steamdb: MetadataController,
+    tmp_path: Path,
+) -> None:
+    """Verify blacklisting a known PFID updates both in-memory struct and disk."""
+    mc = metadata_controller_with_steamdb
+    mc.refresh_metadata()
+
+    # Redirect persistence to a temp file
+    src = Path("tests/data/dbs/steamDB.json")
+    dest = tmp_path / "steamDB.json"
+    shutil.copy(src, dest)
+    mc.metadata_mediator.steam_db_path = dest
+
+    known_pfid = "basic_mod1-multiversion-multiauthor-nodependencies"
+    result = mc.set_steam_db_blacklist(
+        known_pfid, blacklisted=True, comment="test reason"
+    )
+    assert result is True
+
+    # Verify in-memory
+    assert mc.steam_db is not None
+    entry = mc.steam_db.database[known_pfid]
+    assert entry.blacklist.value is True
+    assert entry.blacklist.comment == "test reason"
+
+    # Verify on disk
+    disk_data = msgspec.json.decode(dest.read_bytes(), type=SteamDbSchema)
+    disk_entry = disk_data.database[known_pfid]
+    assert disk_entry.blacklist.value is True
+    assert disk_entry.blacklist.comment == "test reason"
+
+
+def test_set_steam_db_blacklist_creates_entry_for_unknown_pfid(
+    metadata_controller_with_steamdb: MetadataController,
+    tmp_path: Path,
+) -> None:
+    """Verify blacklisting an unknown PFID creates a new entry."""
+    mc = metadata_controller_with_steamdb
+    mc.refresh_metadata()
+
+    dest = tmp_path / "steamDB.json"
+    shutil.copy(Path("tests/data/dbs/steamDB.json"), dest)
+    mc.metadata_mediator.steam_db_path = dest
+
+    new_pfid = "999999999"
+    assert mc.steam_db is not None
+    assert new_pfid not in mc.steam_db.database
+
+    result = mc.set_steam_db_blacklist(new_pfid, blacklisted=True, comment="spam mod")
+    assert result is True
+
+    # Verify entry was created in memory
+    assert new_pfid in mc.steam_db.database
+    entry = mc.steam_db.database[new_pfid]
+    assert entry.blacklist.value is True
+    assert entry.blacklist.comment == "spam mod"
+
+    # Verify entry exists on disk
+    disk_data = msgspec.json.decode(dest.read_bytes(), type=SteamDbSchema)
+    assert new_pfid in disk_data.database
+    assert disk_data.database[new_pfid].blacklist.value is True
+
+
+def test_set_steam_db_blacklist_clears_entry(
+    metadata_controller_with_steamdb: MetadataController,
+    tmp_path: Path,
+) -> None:
+    """Verify clearing blacklist resets it to defaults."""
+    mc = metadata_controller_with_steamdb
+    mc.refresh_metadata()
+
+    dest = tmp_path / "steamDB.json"
+    shutil.copy(Path("tests/data/dbs/steamDB.json"), dest)
+    mc.metadata_mediator.steam_db_path = dest
+
+    pfid = "basic_mod1-multiversion-multiauthor-nodependencies"
+
+    # First blacklist it
+    mc.set_steam_db_blacklist(pfid, blacklisted=True, comment="blocked")
+    assert mc.steam_db is not None
+    assert mc.steam_db.database[pfid].blacklist.value is True
+
+    # Then clear it
+    result = mc.set_steam_db_blacklist(pfid, blacklisted=False)
+    assert result is True
+
+    # Verify in-memory: defaults mean value=False, comment=""
+    entry = mc.steam_db.database[pfid]
+    assert entry.blacklist.value is False
+    assert entry.blacklist.comment == ""
+
+    # Verify on disk: blacklist should be omitted (omit_defaults=True)
+    disk_data = msgspec.json.decode(dest.read_bytes(), type=SteamDbSchema)
+    assert disk_data.database[pfid].blacklist.value is False
+
+
+def test_set_steam_db_blacklist_returns_false_when_no_db(
+    metadata_controller_p: MetadataController,
+) -> None:
+    """Verify returns False when no steam DB is loaded."""
+    mc = metadata_controller_p
+    # Steam DB is disabled in metadata_controller_p (source = "Disabled")
+    mc.refresh_metadata()
+    assert mc.steam_db is None
+
+    result = mc.set_steam_db_blacklist("12345", blacklisted=True, comment="test")
+    assert result is False
+
+
+def test_set_steam_db_blacklist_persists_to_disk(
+    metadata_controller_with_steamdb: MetadataController,
+    tmp_path: Path,
+) -> None:
+    """Verify the JSON file written to disk is valid and contains the update."""
+    mc = metadata_controller_with_steamdb
+    mc.refresh_metadata()
+
+    dest = tmp_path / "steamDB.json"
+    shutil.copy(Path("tests/data/dbs/steamDB.json"), dest)
+    mc.metadata_mediator.steam_db_path = dest
+
+    pfid = "basic_mod4-multiversion-singleauthor-nodependencies"
+    mc.set_steam_db_blacklist(pfid, blacklisted=True, comment="reason here")
+
+    # Verify disk file is valid JSON with expected structure
+    raw = json.loads(dest.read_text())
+    assert "version" in raw
+    assert "database" in raw
+    assert isinstance(raw["version"], int)
+    assert raw["version"] > 0
+
+    # Verify the specific entry
+    assert pfid in raw["database"]
+    assert raw["database"][pfid]["blacklist"]["value"] is True
+    assert raw["database"][pfid]["blacklist"]["comment"] == "reason here"
+
+    # Verify version was updated with expiry offset
+    # The version should be roughly time.time() + database_expiry
+    import time
+
+    expected_min = int(time.time()) - 10  # allow some slack
+    assert raw["version"] >= expected_min

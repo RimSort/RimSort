@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -16,6 +18,8 @@ from app.models.metadata.metadata_structure import (
     CompiledDependencyData,
     ListedMod,
     ModType,
+    SteamDbEntry,
+    SteamDbEntryBlacklist,
 )
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
@@ -410,6 +414,61 @@ class MetadataController(QObject):
         :return: The resolved path, or None if community rules are disabled
         """
         return self.metadata_mediator.community_rules_path
+
+    def _persist_steam_db(self) -> bool:
+        """Persist the in-memory SteamDbSchema to disk.
+
+        Updates the version timestamp using the configured database_expiry
+        offset, then serializes the full schema with msgspec.
+
+        :return: True if written successfully, False if no DB or path
+        """
+        steam_db = self.metadata_mediator.steam_db
+        steam_db_path = self.metadata_mediator.steam_db_path
+        if steam_db is None or steam_db_path is None:
+            return False
+
+        steam_db.version = int(
+            time.time() + self.settings_controller.settings.database_expiry
+        )
+        encoded = msgspec.json.encode(steam_db)
+        # msgspec.json.encode produces compact JSON; format it for readability
+        formatted = msgspec.json.format(encoded, indent=4)
+        steam_db_path.write_bytes(formatted)
+        return True
+
+    def set_steam_db_blacklist(
+        self,
+        published_file_id: str,
+        blacklisted: bool,
+        comment: str = "",
+    ) -> bool:
+        """Set or clear the blacklist status for a SteamDB entry.
+
+        Creates the entry if the published_file_id doesn't exist in the
+        database yet. Persists the updated database to disk.
+
+        :param published_file_id: The Steam Workshop published file ID
+        :param blacklisted: True to blacklist, False to clear
+        :param comment: Reason for blacklisting (ignored when clearing)
+        :return: True if the operation succeeded, False if no DB loaded
+        """
+        steam_db = self.metadata_mediator.steam_db
+        if steam_db is None or self.metadata_mediator.steam_db_path is None:
+            return False
+
+        # Create entry if it doesn't exist
+        if published_file_id not in steam_db.database:
+            steam_db.database[published_file_id] = SteamDbEntry()
+
+        entry = steam_db.database[published_file_id]
+
+        if blacklisted:
+            entry.blacklist = SteamDbEntryBlacklist(value=True, comment=comment)
+        else:
+            entry.blacklist = SteamDbEntryBlacklist()
+
+        return self._persist_steam_db()
 
     @property
     def steamcmd_acf_path(self) -> str:
