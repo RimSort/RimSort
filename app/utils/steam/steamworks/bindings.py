@@ -125,7 +125,7 @@ def _resolve_library_path() -> Path:
     checked_str = ", ".join(str(p) for p in paths_checked)
     raise OSError(
         f"Could not find {lib_name}. Checked: {checked_str}. "
-        f"See libs/rimsort_steam/README.md for build instructions."
+        f"See lib/rimsort_steam/README.md for build instructions."
     )
 
 

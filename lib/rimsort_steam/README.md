@@ -25,7 +25,7 @@ This replaces the previous SteamworksPy submodule with a focused, maintainable
 ### macOS / Linux
 
 ```bash
-cd libs/rimsort_steam
+cd lib/rimsort_steam
 export STEAMWORKS_SDK_PATH=/path/to/sdk
 make
 ```

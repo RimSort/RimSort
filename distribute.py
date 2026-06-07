@@ -85,7 +85,7 @@ def build_rimsort_steam() -> None:
         print("Pre-built binaries in libs/ will be used if available.")
         return
 
-    src_dir = os.path.join(_CWD, "libs", "rimsort_steam")
+    src_dir = os.path.join(_CWD, "lib", "rimsort_steam")
     if not os.path.exists(os.path.join(src_dir, "rimsort_steam.cpp")):
         print(f"rimsort_steam.cpp not found in {src_dir} -- skipping build")
         return

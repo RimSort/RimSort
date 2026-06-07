@@ -59,7 +59,7 @@ RimSort uses a submodule hosted in another repository that needs to be cloned.
 
 - [steamfiles](https://github.com/RimSort/steamfiles): used to parse Steam client acf/appinfo/manifest information
 
-RimSort also uses **rimsort_steam**, a custom C++ shim for the [Steamworks API](https://partner.steamgames.com/doc/api), located in `libs/rimsort_steam/`. Pre-built binaries are committed to `libs/` for all platforms, so most developers do not need to build it from source.
+RimSort also uses **rimsort_steam**, a custom C++ shim for the [Steamworks API](https://partner.steamgames.com/doc/api), located in `lib/rimsort_steam/`. Pre-built binaries are committed to `libs/` for all platforms, so most developers do not need to build it from source.
 
 To clone with submodules run:
 
@@ -139,7 +139,7 @@ To build from source:
 
 1. Download and extract the [Steamworks SDK](https://partner.steamgames.com/).
 2. Set the `STEAMWORKS_SDK_PATH` environment variable to the extracted SDK root.
-3. Run `make` inside `libs/rimsort_steam/`.
+3. Run `make` inside `lib/rimsort_steam/`.
 
 Platform requirements:
 
