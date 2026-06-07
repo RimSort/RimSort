@@ -7,7 +7,7 @@ if "%STEAMWORKS_SDK_PATH%"=="" (
     exit /b 1
 )
 
-set SDK_HEADERS=%STEAMWORKS_SDK_PATH%\public\steam
+set SDK_HEADERS=%STEAMWORKS_SDK_PATH%\public
 set SDK_REDIST=%STEAMWORKS_SDK_PATH%\redistributable_bin\win64
 
 call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"

@@ -1,6 +1,7 @@
 """Tests for ctypes struct definitions and library loading behavior."""
 
 import ctypes
+from unittest.mock import patch
 
 import pytest
 
@@ -51,10 +52,15 @@ class TestStructLayouts:
 
 
 class TestLibraryLoading:
-    def test_load_returns_none_when_library_missing(self) -> None:
+    @patch(
+        "app.utils.steam.steamworks.bindings._resolve_library_path",
+        side_effect=OSError("Could not find rimsort_steam"),
+    )
+    def test_load_returns_none_when_library_missing(self, _mock: object) -> None:
         result = _load_library()
         assert result is None
 
     def test_resolve_raises_oserror_when_library_missing(self) -> None:
-        with pytest.raises(OSError, match="Could not find"):
-            _resolve_library_path()
+        with patch("pathlib.Path.exists", return_value=False):
+            with pytest.raises(OSError, match="Could not find"):
+                _resolve_library_path()

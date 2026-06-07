@@ -2,7 +2,7 @@
 # Requires STEAMWORKS_SDK_PATH to be set to the extracted SDK root
 
 SDK_PATH ?= $(STEAMWORKS_SDK_PATH)
-HEADERS = $(SDK_PATH)/public/steam
+HEADERS = $(SDK_PATH)/public
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
