@@ -319,6 +319,9 @@ class MainWindow(QMainWindow):
         )
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
+        # If the window was closed during scanning, skip remaining initialization
+        if not self.isVisible():
+            return
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
