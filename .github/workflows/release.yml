@@ -117,8 +117,6 @@ jobs:
         id: artifacts
         run: |
           mv artifacts/Windows_x86_64_msi artifacts/msi
-          mv artifacts/Fedora-42_x86_64_rpm artifacts/rpm-f42 || true
-          mv artifacts/Fedora-43_x86_64_rpm artifacts/rpm-f43 || true
           mv artifacts/Ubuntu-22.04_x86_64_appimage artifacts/appimage-u2204 || true
           cd artifacts
           for artifact in ./*; do
@@ -127,16 +125,6 @@ jobs:
               cd "$artifact"
               name="RimSort-${{ needs.pre-build.outputs.version }}-Windows_x86_64.msi"
               mv ./*.msi "../$name"
-              cd ..
-            elif [[ "$file" == "rpm-f42" ]]; then
-              cd "$artifact"
-              name="RimSort-${{ needs.pre-build.outputs.version }}-Fedora-42_x86_64.rpm"
-              mv ./*.rpm "../$name"
-              cd ..
-            elif [[ "$file" == "rpm-f43" ]]; then
-              cd "$artifact"
-              name="RimSort-${{ needs.pre-build.outputs.version }}-Fedora-43_x86_64.rpm"
-              mv ./*.rpm "../$name"
               cd ..
             elif [[ "$file" == "appimage-u2204" ]]; then
               cd "$artifact"
@@ -175,7 +163,7 @@ jobs:
           wait
           echo "Cleaning up - Removing non-archive files"
           shopt -s extglob
-          rm -rf -- ./!(*.zip|*.tar.gz|*.msi|*.rpm|*.AppImage)
+          rm -rf -- ./!(*.zip|*.tar.gz|*.msi|*.AppImage)
         shell: bash
 
       - name: Create body
@@ -199,10 +187,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        uses: ncipollo/release-action@v1.21.0
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         id: release
         with:
-          artifacts: "artifacts/*.zip,artifacts/*.tar.gz,artifacts/*.msi,artifacts/*.rpm,artifacts/*.AppImage"
+          artifacts: "artifacts/*.zip,artifacts/*.tar.gz,artifacts/*.msi,artifacts/*.AppImage"
           tag: ${{ steps.tag.outputs.tag }}
           generateReleaseNotes: true
           prerelease: ${{ needs.pre-build.outputs.prerelease }}
