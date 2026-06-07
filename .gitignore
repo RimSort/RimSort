@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!lib/rimsort_steam/
 lib64/
 parts/
 sdist/

@@ -90,25 +90,31 @@ def build_rimsort_steam() -> None:
         print(f"rimsort_steam.cpp not found in {src_dir} -- skipping build")
         return
 
+    libs_dir = os.path.join(_CWD, "libs")
     print(f"Building rimsort_steam for {_SYSTEM}...")
     if _SYSTEM == "Windows":
         build_script = os.path.join(src_dir, "build_windows.bat")
         _execute(["cmd.exe", "/c", build_script], env=os.environ)
         output_name = "rimsort_steam.dll"
     else:
-        _execute(["make", "-C", src_dir, f"STEAMWORKS_SDK_PATH={sdk_path}"])
+        _execute(
+            [
+                "make",
+                "-C",
+                src_dir,
+                f"STEAMWORKS_SDK_PATH={sdk_path}",
+                f"OUTPUT_DIR={libs_dir}",
+            ]
+        )
         output_name = (
             "rimsort_steam.dylib" if _SYSTEM == "Darwin" else "rimsort_steam.so"
         )
 
-    # Copy built library to libs/
-    src = os.path.join(src_dir, output_name)
-    dest = os.path.join(_CWD, "libs", output_name)
-    if os.path.exists(src):
-        shutil.copyfile(src, dest)
-        print(f"Copied {output_name} to libs/")
+    output_path = os.path.join(libs_dir, output_name)
+    if os.path.exists(output_path):
+        print(f"Built {output_name} in libs/")
     else:
-        print(f"Warning: Expected output {src} not found after build")
+        print(f"Warning: Expected output {output_path} not found after build")
 
 
 def get_latest_todds_release() -> None:
