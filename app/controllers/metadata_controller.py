@@ -11,7 +11,6 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
-from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_mediator import MetadataMediator
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -27,6 +26,7 @@ from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 
 if TYPE_CHECKING:
+    from app.models.metadata.metadata_db import AuxMetadataEntry
     from app.models.metadata.metadata_structure import (
         ExternalRulesSchema,
         SteamDbSchema,
