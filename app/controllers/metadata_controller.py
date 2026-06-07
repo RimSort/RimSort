@@ -229,6 +229,11 @@ class MetadataController(QObject):
     def get_metadata_with_path(
         self, path: str | Path
     ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
+        """Get mod metadata and aux DB entry for a given path.
+
+        :param path: Mod path (string or Path)
+        :return: (ListedMod, AuxMetadataEntry) if found, (None, None) otherwise
+        """
         mod_data = self.metadata_mediator.mods_metadata.get(str(path), None)
         if mod_data is None:
             return None, None
