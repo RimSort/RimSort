@@ -41,7 +41,7 @@ endif
 
 # Cross-compile Windows DLL from Linux (requires mingw-w64)
 windows: rimsort_steam.cpp
-	$(MINGW_CXX) -std=c++11 -shared -D_WIN32 -I$(HEADERS) $< $(WIN_REDIST)/steam_api64.lib -o $(OUTPUT_DIR)/rimsort_steam.dll -static-libgcc -static-libstdc++
+	$(MINGW_CXX) -std=c++11 -shared -D_WIN32 -I$(HEADERS) $< $(WIN_REDIST)/steam_api64.lib -o $(OUTPUT_DIR)/rimsort_steam.dll -static-libgcc -static-libstdc++ -s
 
 clean:
 	rm -f $(OUTPUT_DIR)/rimsort_steam.dylib $(OUTPUT_DIR)/rimsort_steam.so $(OUTPUT_DIR)/rimsort_steam.dll
