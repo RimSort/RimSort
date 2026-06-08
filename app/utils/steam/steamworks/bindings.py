@@ -90,6 +90,11 @@ _LIB_NAMES = {
     "Linux": "rimsort_steam.so",
     "Windows": "rimsort_steam.dll",
 }
+_STEAM_RT_NAMES = {
+    "Darwin": "libsteam_api.dylib",
+    "Linux": "libsteam_api.so",
+    "Windows": "steam_api64.dll",
+}
 
 
 def _resolve_library_path() -> Path:
@@ -141,7 +146,23 @@ def _load_library() -> ctypes.CDLL | None:
         logger.warning(f"rimsort_steam native library not available: {e}")
         return None
 
-    lib = ctypes.CDLL(str(lib_path))
+    # Pre-load the Steam runtime library so the dynamic linker can resolve
+    # symbols when rimsort_steam is loaded (it links against steam_api).
+    steam_rt_name = _STEAM_RT_NAMES.get(_SYSTEM)
+    if steam_rt_name:
+        steam_rt_path = lib_path.parent / steam_rt_name
+        if steam_rt_path.exists():
+            try:
+                ctypes.CDLL(str(steam_rt_path))
+            except OSError as e:
+                logger.warning(f"Failed to pre-load Steam runtime {steam_rt_path}: {e}")
+                return None
+
+    try:
+        lib = ctypes.CDLL(str(lib_path))
+    except OSError as e:
+        logger.warning(f"Failed to load rimsort_steam from {lib_path}: {e}")
+        return None
 
     # Lifecycle
     lib.RS_SteamAPI_Init.restype = ctypes.c_int
