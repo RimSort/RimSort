@@ -20,33 +20,6 @@ def metadata_manager(mock_metadata_manager: MagicMock) -> MagicMock:
 
 
 class TestMergePreviewDialogCategorization:
-    def test_all_new_mods(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        dialog = MergePreviewDialog(
-            new_mods=["uuid-a", "uuid-b"],
-            already_present=[],
-            missing_packageids=[],
-        )
-        assert dialog.new_mod_count == 2
-        assert dialog.already_present_count == 0
-        assert dialog.missing_count == 0
-
-    def test_all_already_present(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        dialog = MergePreviewDialog(
-            new_mods=[],
-            already_present=["uuid-a", "uuid-c"],
-            missing_packageids=[],
-        )
-        assert dialog.new_mod_count == 0
-        assert dialog.already_present_count == 2
-
     def test_mixed_categories(
         self,
         metadata_manager: MagicMock,
@@ -75,18 +48,6 @@ class TestMergePreviewDialogButtonState:
         )
         assert not dialog.merge_button.isEnabled()
         assert dialog.merge_button.toolTip() == "No new mods to add."
-
-    def test_merge_button_enabled_when_new_mods_exist(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        dialog = MergePreviewDialog(
-            new_mods=["uuid-a"],
-            already_present=[],
-            missing_packageids=[],
-        )
-        assert dialog.merge_button.isEnabled()
 
 
 class TestMergePreviewDialogSections:

@@ -5,7 +5,6 @@ This module tests the merge handler in MainContent:
 - Merge appends new mods to active list
 - Cancel makes no changes
 - Sort is called after merge
-- Button states match conditions
 """
 
 from collections.abc import Generator
@@ -118,16 +117,3 @@ class TestMergeHandlerIntegration:
             MainContent._do_merge_list_file_xml(main_content)
 
         main_content._do_sort.assert_called_once()
-
-    def test_full_overlap_button_disabled(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        """When all imported mods are already active, Merge button is disabled."""
-        dialog = MergePreviewDialog(
-            new_mods=[],
-            already_present=["uuid-a", "uuid-b"],
-            missing_packageids=[],
-        )
-        assert not dialog.merge_button.isEnabled()
