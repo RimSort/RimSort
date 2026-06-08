@@ -112,22 +112,13 @@ class TestMergeHandlerIntegration:
 
         main_content._insert_data_into_lists.assert_not_called()
 
-    def test_merge_emits_sort_signal(
+    def test_merge_calls_sort(
         self,
         main_content: MagicMock,
         metadata_manager: MagicMock,
     ) -> None:
-        """After merge, do_sort_active_mods_list is emitted."""
-        from app.utils.event_bus import EventBus
+        """After merge, _do_sort is called directly."""
         from app.views.main_content_panel import MainContent
-
-        sort_emitted = False
-
-        def on_sort() -> None:
-            nonlocal sort_emitted
-            sort_emitted = True
-
-        EventBus().do_sort_active_mods_list.connect(on_sort)
 
         with (
             patch(
@@ -146,7 +137,7 @@ class TestMergeHandlerIntegration:
         ):
             MainContent._do_merge_list_file_xml(main_content)
 
-        assert sort_emitted
+        main_content._do_sort.assert_called_once()
 
     def test_full_overlap_button_disabled(
         self,

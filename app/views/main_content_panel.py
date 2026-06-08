@@ -1184,15 +1184,15 @@ class MainContent(QObject):
         )
         self._insert_data_into_lists(merged_active, updated_inactive)
 
+        # Sort before showing any prompts to avoid modal dialog interference
+        self._do_sort()
+
         # Show duplicate mods dialog if applicable
         self.__duplicate_mods_prompt()
 
         # Prompt to download missing mods if applicable
         self.missing_mods = missing_mods
         self.__missing_mods_prompt()
-
-        # Trigger topological sort (may show MissingDependenciesDialog)
-        EventBus().do_sort_active_mods_list.emit()
 
     def _do_export_list_file_xml(self) -> None:
         """

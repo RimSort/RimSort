@@ -90,33 +90,7 @@ class TestMergePreviewDialogButtonState:
 
 
 class TestMergePreviewDialogSections:
-    def test_new_section_expanded_by_default(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        dialog = MergePreviewDialog(
-            new_mods=["uuid-a"],
-            already_present=["uuid-b"],
-            missing_packageids=[],
-        )
-        # Use isHidden() because the dialog is never shown, so isVisible()
-        # always returns False for children of an unshown parent.
-        assert not dialog.new_section.list_widget.isHidden()
-
-    def test_already_present_section_collapsed_by_default(
-        self,
-        metadata_manager: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
-    ) -> None:
-        dialog = MergePreviewDialog(
-            new_mods=["uuid-a"],
-            already_present=["uuid-b"],
-            missing_packageids=[],
-        )
-        assert dialog.already_present_section.list_widget.isHidden()
-
-    def test_missing_section_expanded_when_non_empty(
+    def test_missing_section_visible_when_non_empty(
         self,
         metadata_manager: MagicMock,
         qapp: Union[QApplication, QCoreApplication],
@@ -126,7 +100,7 @@ class TestMergePreviewDialogSections:
             already_present=[],
             missing_packageids=["missing.mod"],
         )
-        assert not dialog.missing_section.list_widget.isHidden()
+        assert not dialog.missing_section.isHidden()
 
     def test_missing_section_hidden_when_empty(
         self,
@@ -139,3 +113,27 @@ class TestMergePreviewDialogSections:
             missing_packageids=[],
         )
         assert dialog.missing_section.isHidden()
+
+    def test_new_section_shows_mod_entries(
+        self,
+        metadata_manager: MagicMock,
+        qapp: Union[QApplication, QCoreApplication],
+    ) -> None:
+        dialog = MergePreviewDialog(
+            new_mods=["uuid-a", "uuid-b"],
+            already_present=[],
+            missing_packageids=[],
+        )
+        assert dialog.new_section.list_widget.count() == 2
+
+    def test_already_present_section_shows_mod_entries(
+        self,
+        metadata_manager: MagicMock,
+        qapp: Union[QApplication, QCoreApplication],
+    ) -> None:
+        dialog = MergePreviewDialog(
+            new_mods=[],
+            already_present=["uuid-a", "uuid-c"],
+            missing_packageids=[],
+        )
+        assert dialog.already_present_section.list_widget.count() == 2
