@@ -8,6 +8,7 @@ This module tests the merge handler in MainContent:
 - Button states match conditions
 """
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Union
 from unittest.mock import MagicMock, patch
@@ -36,7 +37,7 @@ def metadata_manager(mock_metadata_manager: MagicMock) -> MagicMock:
 def _patch_merge_handler(
     imported_active: list[str],
     dialog_result: QDialog.DialogCode = QDialog.DialogCode.Accepted,
-):
+) -> Generator[None]:
     """Patch the file dialog, mod list parser, and preview dialog for merge tests."""
     with (
         patch(
