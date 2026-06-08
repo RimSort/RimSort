@@ -80,6 +80,9 @@ def _get_dir_size(path: str) -> int:
     return total
 
 
+PRESERVE_UNIVERSAL = {"rimsort_steam.dylib", "libsteam_api.dylib"}
+
+
 def thin_fat_binaries(app_path: str, target_arch: str) -> int:
     """Thin universal Mach-O binaries in Contents/Resources/ to a single arch."""
     resources_dir = os.path.join(app_path, "Contents", "Resources")
@@ -99,6 +102,11 @@ def thin_fat_binaries(app_path: str, target_arch: str) -> int:
             ):
                 continue
             if not _is_fat_binary(filepath):
+                continue
+            if filename in PRESERVE_UNIVERSAL:
+                print(
+                    f"  Skipping {os.path.relpath(filepath, app_path)} (intentionally universal)"
+                )
                 continue
 
             original_size = os.path.getsize(filepath)
