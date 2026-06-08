@@ -4,10 +4,11 @@ Integration tests for the modlist merge flow.
 This module tests the merge handler in MainContent:
 - Merge appends new mods to active list
 - Cancel makes no changes
-- Merge emits sort signal
+- Sort is called after merge
 - Button states match conditions
 """
 
+from contextlib import contextmanager
 from typing import Union
 from unittest.mock import MagicMock, patch
 
@@ -29,6 +30,26 @@ def metadata_manager(mock_metadata_manager: MagicMock) -> MagicMock:
     }
     mock_metadata_manager.internal_local_metadata = mods
     return mock_metadata_manager
+
+
+@contextmanager
+def _patch_merge_handler(
+    imported_active: list[str],
+    dialog_result: QDialog.DialogCode = QDialog.DialogCode.Accepted,
+):
+    """Patch the file dialog, mod list parser, and preview dialog for merge tests."""
+    with (
+        patch(
+            "app.views.main_content_panel.dialogue.show_dialogue_file",
+            return_value="/fake/mods.xml",
+        ),
+        patch(
+            "app.views.main_content_panel.metadata.get_mods_from_list",
+            return_value=(imported_active, [], {}, []),
+        ),
+        patch.object(MergePreviewDialog, "exec", return_value=dialog_result),
+    ):
+        yield
 
 
 class TestMergeHandlerIntegration:
@@ -59,25 +80,8 @@ class TestMergeHandlerIntegration:
         """After merge, _insert_data_into_lists is called with the union."""
         from app.views.main_content_panel import MainContent
 
-        with (
-            patch(
-                "app.views.main_content_panel.dialogue.show_dialogue_file",
-                return_value="/fake/mods.xml",
-            ),
-            patch(
-                "app.views.main_content_panel.metadata.get_mods_from_list",
-                return_value=(
-                    ["uuid-b", "uuid-c", "uuid-d"],  # imported active
-                    [],  # imported inactive
-                    {},  # duplicates
-                    [],  # missing
-                ),
-            ),
-            patch.object(
-                MergePreviewDialog,
-                "exec",
-                return_value=QDialog.DialogCode.Accepted,
-            ),
+        with _patch_merge_handler(
+            imported_active=["uuid-b", "uuid-c", "uuid-d"],
         ):
             MainContent._do_merge_list_file_xml(main_content)
 
@@ -93,20 +97,9 @@ class TestMergeHandlerIntegration:
         """Cancelling the preview dialog leaves the active list unchanged."""
         from app.views.main_content_panel import MainContent
 
-        with (
-            patch(
-                "app.views.main_content_panel.dialogue.show_dialogue_file",
-                return_value="/fake/mods.xml",
-            ),
-            patch(
-                "app.views.main_content_panel.metadata.get_mods_from_list",
-                return_value=(["uuid-c"], [], {}, []),
-            ),
-            patch.object(
-                MergePreviewDialog,
-                "exec",
-                return_value=QDialog.DialogCode.Rejected,
-            ),
+        with _patch_merge_handler(
+            imported_active=["uuid-c"],
+            dialog_result=QDialog.DialogCode.Rejected,
         ):
             MainContent._do_merge_list_file_xml(main_content)
 
@@ -120,21 +113,7 @@ class TestMergeHandlerIntegration:
         """After merge, _do_sort is called directly."""
         from app.views.main_content_panel import MainContent
 
-        with (
-            patch(
-                "app.views.main_content_panel.dialogue.show_dialogue_file",
-                return_value="/fake/mods.xml",
-            ),
-            patch(
-                "app.views.main_content_panel.metadata.get_mods_from_list",
-                return_value=(["uuid-c"], [], {}, []),
-            ),
-            patch.object(
-                MergePreviewDialog,
-                "exec",
-                return_value=QDialog.DialogCode.Accepted,
-            ),
-        ):
+        with _patch_merge_handler(imported_active=["uuid-c"]):
             MainContent._do_merge_list_file_xml(main_content)
 
         main_content._do_sort.assert_called_once()
