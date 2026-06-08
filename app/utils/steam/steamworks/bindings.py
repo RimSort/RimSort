@@ -1,16 +1,17 @@
 """
 ctypes bindings for the rimsort_steam native library.
 
-Loads the compiled C++ shim and declares type-safe interfaces for all
-exported functions and callback structs. If the native library is not
-found, _lib is set to None and the wrapper layer handles graceful
-degradation.
+Declares type-safe interfaces for all exported functions and callback
+structs. The native library is loaded lazily via ``ensure_loaded()``
+rather than at import time, because loading ``libsteam_api.so`` can
+crash (SIGSEGV) on headless Linux systems without a running Steam client.
 
 The loaded library is exposed as module-level ``_lib`` for monkeypatching
 in tests.
 """
 
 import ctypes
+import os
 import platform
 import sys
 from pathlib import Path
@@ -97,6 +98,40 @@ _STEAM_RT_NAMES = {
 }
 
 
+def _probe_load_safe(path: str) -> bool:
+    """
+    Fork a child process to test whether a shared library can be loaded
+    without crashing. Returns True if safe, False if the child segfaults.
+
+    Only used on Linux where ctypes.CDLL can SIGSEGV loading the Steam
+    runtime (the signal kills the process and can't be caught by
+    try/except). On other platforms, returns True unconditionally.
+    """
+    if _SYSTEM != "Linux":
+        return True
+
+    pid = os.fork()
+    if pid == 0:
+        # Child: attempt the load, _exit immediately either way.
+        # _exit (not sys.exit) to avoid running atexit handlers.
+        try:
+            ctypes.CDLL(path)
+        except Exception:
+            os._exit(1)
+        os._exit(0)
+
+    # Parent: wait for child and inspect exit status
+    _, status = os.waitpid(pid, 0)
+    if os.WIFSIGNALED(status):
+        sig = os.WTERMSIG(status)
+        logger.warning(
+            f"Loading {path} crashed child process with signal {sig} — "
+            f"disabling native Steam integration"
+        )
+        return False
+    return os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0
+
+
 def _resolve_library_path() -> Path:
     """
     Resolve the path to the rimsort_steam native library.
@@ -152,12 +187,16 @@ def _load_library() -> ctypes.CDLL | None:
     if steam_rt_name:
         steam_rt_path = lib_path.parent / steam_rt_name
         if steam_rt_path.exists():
+            if not _probe_load_safe(str(steam_rt_path)):
+                return None
             try:
                 ctypes.CDLL(str(steam_rt_path))
             except OSError as e:
                 logger.warning(f"Failed to pre-load Steam runtime {steam_rt_path}: {e}")
                 return None
 
+    if not _probe_load_safe(str(lib_path)):
+        return None
     try:
         lib = ctypes.CDLL(str(lib_path))
     except OSError as e:
@@ -211,4 +250,31 @@ def _load_library() -> ctypes.CDLL | None:
     return lib
 
 
-_lib = _load_library()
+_lib: ctypes.CDLL | None = None
+_lib_loaded = False
+
+
+def ensure_loaded() -> None:
+    """
+    Load the native library on first call. Subsequent calls are no-ops.
+
+    Must be called before accessing ``_lib``. Separated from module import
+    to avoid loading ``libsteam_api`` at startup — that causes SIGSEGV on
+    headless Linux without Steam, and also makes Steam think RimWorld is
+    running whenever RimSort is open.
+    """
+    global _lib, _lib_loaded
+    if _lib_loaded:
+        return
+    _lib_loaded = True
+    _lib = _load_library()
+
+
+def unload() -> None:
+    """
+    Unload the native library reference so Steam no longer thinks the
+    game is running. Safe to call multiple times.
+    """
+    global _lib, _lib_loaded
+    _lib = None
+    _lib_loaded = False

@@ -62,6 +62,7 @@ class SteamworksInterface:
         self.get_app_deps_query_result: dict[int, Any] = {}
         self._tracker = CallbackTracker(expected=callbacks_total if callbacks else 0)
 
+        bindings.ensure_loaded()
         if bindings._lib is None:
             logger.warning("rimsort_steam native library not available")
             self.steam_not_running = True
@@ -116,6 +117,7 @@ class SteamworksInterface:
             self._callback_thread.join(timeout=5)
         if bindings._lib is not None and not self.steam_not_running:
             bindings._lib.RS_SteamAPI_Shutdown()
+        bindings.unload()
 
     def cb_app_dependencies_result(self, *args: Any, **kwargs: Any) -> None:
         self._tracker.record()
