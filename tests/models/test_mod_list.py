@@ -15,6 +15,19 @@ from app.models.metadata.metadata_structure import (
 from app.models.mod_list import ModEntry, ModList, ModListDiff, create_mod_entry
 
 
+def _config(
+    version: str,
+    active: list[str],
+    expansions: list[str] | None = None,
+) -> ModsConfig:
+    """Build a ModsConfig with plain strings (wraps to CaseInsensitiveStr for pyright)."""
+    return ModsConfig(
+        version=version,
+        activeMods=[CaseInsensitiveStr(s) for s in active],
+        knownExpansions=[CaseInsensitiveStr(s) for s in (expansions or [])],
+    )
+
+
 class TestModEntry:
     def test_frozen(self) -> None:
         entry = ModEntry(
@@ -461,7 +474,7 @@ class TestFromModsConfig:
                 "/local/mod_b": ("author.modb", ModType.LOCAL),
             }
         )
-        config = ModsConfig("1.5", ["author.moda", "author.modb"], [])
+        config = _config("1.5", ["author.moda", "author.modb"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert mod_list.paths() == ["/local/mod_a", "/local/mod_b"]
         assert missing == []
@@ -472,7 +485,7 @@ class TestFromModsConfig:
                 "/local/mod_a": ("author.moda", ModType.LOCAL),
             }
         )
-        config = ModsConfig("1.5", ["author.moda", "ghost.mod"], [])
+        config = _config("1.5", ["author.moda", "ghost.mod"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert mod_list.paths() == ["/local/mod_a"]
         assert "ghost.mod" in missing
@@ -484,7 +497,7 @@ class TestFromModsConfig:
                 "/workshop/mymod": ("author.mod", ModType.STEAM_WORKSHOP),
             }
         )
-        config = ModsConfig("1.5", ["author.mod_steam"], [])
+        config = _config("1.5", ["author.mod_steam"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert len(mod_list) == 1
         assert mod_list[0].path == "/workshop/mymod"
@@ -497,7 +510,7 @@ class TestFromModsConfig:
                 "/workshop/rimworld": ("ludeon.rimworld", ModType.STEAM_WORKSHOP),
             }
         )
-        config = ModsConfig("1.5", ["ludeon.rimworld"], [])
+        config = _config("1.5", ["ludeon.rimworld"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/game/Data/Core"
 
@@ -508,7 +521,7 @@ class TestFromModsConfig:
                 "/workshop/mymod": ("author.mod", ModType.STEAM_WORKSHOP),
             }
         )
-        config = ModsConfig("1.5", ["author.mod"], [])
+        config = _config("1.5", ["author.mod"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/local/mymod"
 
@@ -520,7 +533,7 @@ class TestFromModsConfig:
                 "/c": ("mod.c", ModType.LOCAL),
             }
         )
-        config = ModsConfig("1.5", ["mod.c", "mod.a", "mod.b"], [])
+        config = _config("1.5", ["mod.c", "mod.a", "mod.b"])
         mod_list, _ = ModList.from_mods_config(config, mc)
         assert mod_list.package_ids() == [
             CaseInsensitiveStr("mod.c"),
@@ -535,11 +548,7 @@ class TestFromModsConfig:
                 "/b": ("mod.b", ModType.STEAM_WORKSHOP),
             }
         )
-        original_config = ModsConfig(
-            "1.5",
-            ["mod.a", "mod.b"],
-            [CaseInsensitiveStr("ludeon.rimworld")],
-        )
+        original_config = _config("1.5", ["mod.a", "mod.b"], ["ludeon.rimworld"])
         mod_list, _ = ModList.from_mods_config(original_config, mc)
         roundtripped = mod_list.to_mods_config(
             "1.5", [CaseInsensitiveStr("ludeon.rimworld")]
@@ -549,14 +558,14 @@ class TestFromModsConfig:
 
     def test_empty_config(self) -> None:
         mc = _make_mock_metadata_controller({})
-        config = ModsConfig("1.5", [], [])
+        config = _config("1.5", [])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert len(mod_list) == 0
         assert missing == []
 
     def test_all_missing(self) -> None:
         mc = _make_mock_metadata_controller({})
-        config = ModsConfig("1.5", ["gone.a", "gone.b"], [])
+        config = _config("1.5", ["gone.a", "gone.b"])
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert len(mod_list) == 0
         assert set(missing) == {"gone.a", "gone.b"}
