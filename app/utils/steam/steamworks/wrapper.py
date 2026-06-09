@@ -8,7 +8,7 @@ Provides Python wrappers for Steamworks API interactions including:
 - Callback-based async event handling
 
 Key features:
-- Proper sequencing for resubscribe operations (unsub → wait → sub → download)
+- Proper sequencing for resubscribe operations (unsub -> wait -> sub -> download)
 - Sequential processing for subscribe/unsubscribe operations
 - Thread-safe callback handling with timeout management
 - Comprehensive logging for debugging and monitoring
@@ -20,31 +20,20 @@ Usage:
 
 Reference:
     https://partner.steamgames.com/doc/api/ISteamUGC
-    https://github.com/philippj/SteamworksPy
-    https://philippj.github.io/SteamworksPy
-    https://github.com/philippj/SteamworksPy/issues/62
-    https://github.com/philippj/SteamworksPy/issues/75
-    https://github.com/philippj/SteamworksPy/pull/76
 """
 
 import sys
 from multiprocessing import Process
-from os import getcwd
 from pathlib import Path
 from threading import Thread
-from time import sleep, time
+from time import sleep
 from typing import Any, Callable, Union
 
 from loguru import logger
 
-# If we're running from a Python interpreter, Ensure SteamworksPy module is in Python path, sys.path ($PYTHONPATH)
-# Ensure that this is available by running via: git submodule update --init --recursive
-# You can automatically ensure this is done by utilizing distribute.py
-if "__compiled__" not in globals():
-    sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
-
 from app.utils.generic import launch_game_process
-from steamworks import STEAMWORKS  # type: ignore
+from app.utils.steam.steamworks import bindings
+from app.utils.steam.steamworks.callback_tracker import CallbackTracker
 
 # Timing constants for subscription operations
 RESUBSCRIBE_UNSUBSCRIBE_WAIT = 4  # Seconds to wait for Steam to uninstall files
@@ -59,151 +48,87 @@ class SteamworksInterface:
     """
     Low-level Steamworks API interface wrapper.
 
-    Manages Steamworks SDK initialization, callback threading, and lifecycle.
-    Provides callback-based async event handling for Steam operations.
-
-    Attributes:
-        callbacks (bool): Whether to enable callback-based event handling
-        callbacks_count (int): Number of callbacks received so far
-        callbacks_total (int | None): Total callbacks expected (for multi-operation batches)
-        multiple_queries (bool): Whether multiple async operations are in flight
-        end_callbacks (bool): Signal to end the callback thread
-        steam_not_running (bool): Whether Steam was unavailable during init
-        steamworks: STEAMWORKS SDK instance
-        steamworks_thread (Thread): Background thread running callback loop
-        get_app_deps_query_result (dict): Cached AppDependencies query results
-
-    Reference:
-    https://partner.steamgames.com/doc/api/ISteamUGC
-    https://github.com/philippj/SteamworksPy
-    https://philippj.github.io/SteamworksPy
-    https://github.com/philippj/SteamworksPy/issues/62
-    https://github.com/philippj/SteamworksPy/issues/75
-    https://github.com/philippj/SteamworksPy/pull/76
+    Manages SDK initialization, callback threading, and lifecycle.
     """
 
     def __init__(
         self,
         callbacks: bool,
         callbacks_total: int | None = None,
-        _libs: str | None = None,
     ) -> None:
-        """
-        Initialize Steamworks API interface.
-
-        Args:
-            callbacks: Enable callback-based async event handling
-            callbacks_total: Expected number of callbacks (for multi-op batches)
-            _libs: Optional path to prebuilt Steamworks libraries
-        """
         logger.info("SteamworksInterface initializing...")
-        self.callbacks = callbacks
-        self.callbacks_count = 0
-        self.callbacks_total = callbacks_total
-        if self.callbacks:
-            logger.debug("Callbacks enabled!")
-            self.end_callbacks = False  # Signal used to end the _callbacks Thread
-            if (
-                self.callbacks_total
-            ):  # Pass this if you want to do multiple actions with 1 initialization
-                logger.debug(f"Callbacks total : {self.callbacks_total}")
-                self.multiple_queries = True
-            else:
-                self.multiple_queries = False
-        # Used for GetAppDependencies data
+        self.steam_not_running = False
+        self._shutdown_done = False
         self.get_app_deps_query_result: dict[int, Any] = {}
-        self.steam_not_running = False  # Skip action if True. Log occurrences.
-        self.steamworks = STEAMWORKS(_libs=_libs)
-        try:
-            self.steamworks.initialize()  # Init the Steamworks API
-        except Exception as e:
-            logger.warning(
-                f"Unable to initialize Steamworks API due to exception: {e.__class__.__name__}"
-            )
-            logger.warning(
-                "If you are a Steam user, please check that Steam running and that you are logged in..."
-            )
+        self._tracker = CallbackTracker(expected=callbacks_total if callbacks else 0)
+
+        bindings.ensure_loaded()
+        if bindings._lib is None:
+            logger.warning("rimsort_steam native library not available")
             self.steam_not_running = True
-        if not self.steam_not_running:  # Skip if True
-            if self.callbacks:
-                # Start the thread
-                logger.debug("Starting thread")
-                self.steamworks_thread = self._daemon()
-                self.steamworks_thread.start()
+            return
 
-    def _callbacks(self) -> None:
-        """
-        Background thread target for processing Steamworks callbacks.
+        init_result = bindings._lib.RS_SteamAPI_Init()
+        if init_result != 0:
+            error_messages = {
+                1: "Steamworks API initialization failed",
+                2: "Steam client not found -- is Steam installed?",
+                3: "No Steam connection -- is Steam running and are you logged in?",
+            }
+            msg = error_messages.get(init_result, f"Unknown init error: {init_result}")
+            logger.warning(f"Unable to initialize Steamworks API: {msg}")
+            self.steam_not_running = True
+            return
 
-        Runs in a daemon thread, calling steamworks.run_callbacks() repeatedly
-        until self.end_callbacks is set. Callbacks fire asynchronously and
-        invoke handlers registered via SetItemSubscribedCallback, etc.
-        """
-        logger.debug("Starting _callbacks")
-        # Wait for Steamworks to be fully loaded
-        while not self.steamworks.loaded():
-            logger.warning("Waiting for Steamworks...")
-        else:
-            logger.info("Steamworks loaded!")
+        if callbacks:
+            logger.debug("Starting callback thread")
+            self._callback_thread = self._daemon()
+            self._callback_thread.start()
 
-        # Main callback loop - process events every 100ms until signaled to stop
-        while not self.end_callbacks:
-            self.steamworks.run_callbacks()
+    def _run_callbacks_loop(self) -> None:
+        logger.debug("Callback loop started")
+        while not self._tracker.is_done:
+            if bindings._lib is not None:
+                bindings._lib.RS_SteamAPI_RunCallbacks()
             sleep(0.1)
-        else:
-            logger.info(
-                f"{self.callbacks_count} callback(s) received. Ending thread..."
-            )
-
-    # TODO: Rework this for proper static type checking
-    def _cb_app_dependencies_result_callback(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Executes upon Steamworks API callback response
-        """
-        # Add to callbacks count
-        self.callbacks_count = self.callbacks_count + 1
-        # Debug prints
-        logger.debug(f"GetAppDependencies query callback: {args}, {kwargs}")
-        logger.debug(f"result : {args[0].result}")
-        pfid = args[0].publishedFileId
-        logger.debug(f"publishedFileId : {pfid}")
-        app_dependencies_list = args[0].get_app_dependencies_list()
-        logger.debug(f"app_dependencies_list : {app_dependencies_list}")
-        # Collect data for our query if dependencies were returned
-        if len(app_dependencies_list) > 0:
-            self.get_app_deps_query_result[pfid] = app_dependencies_list
-        # Check for multiple actions
-        if self.multiple_queries and self.callbacks_count == self.callbacks_total:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
-        elif not self.multiple_queries:
-            # Set flag so that _callbacks cease
-            self.end_callbacks = True
+        logger.info(f"{self._tracker.count} callback(s) received. Ending thread...")
 
     def _daemon(self) -> Thread:
-        """
-        Returns a Thread pointing to our _callbacks daemon
-        """
-        return Thread(target=self._callbacks, daemon=True)
+        return Thread(target=self._run_callbacks_loop, daemon=True)
 
-    def _wait_for_callbacks(self, timeout: int) -> None:
-        """
-        Waits for the Steamworks API callbacks to complete within a specified time interval.
-
-        Args:
-            timeout (int): Maximum time to wait in seconds.
-
-        Returns:
-            None
-        """
-        start_time = time()
+    def wait_for_callbacks(self, timeout: int) -> bool:
+        """Wait for all expected callbacks. Returns True if completed, False on timeout."""
         logger.debug(f"Waiting {timeout} seconds for Steamworks API callbacks...")
-        while self.steamworks_thread.is_alive():
-            elapsed_time = time() - start_time
-            if elapsed_time >= timeout:
-                self.end_callbacks = True
-                break
-            sleep(1)
+        completed = self._tracker.wait(timeout=float(timeout))
+        if not completed:
+            logger.warning(
+                f"Timed out after {timeout}s ({self._tracker.count} callbacks received)"
+            )
+            self._tracker.cancel()
+        return completed
+
+    def shutdown(self) -> None:
+        """Shut down the Steamworks API and stop callback thread."""
+        if self._shutdown_done:
+            return
+        self._shutdown_done = True
+        if hasattr(self, "_callback_thread") and self._callback_thread.is_alive():
+            self._tracker.cancel()
+            self._callback_thread.join(timeout=5)
+        if bindings._lib is not None and not self.steam_not_running:
+            bindings._lib.RS_SteamAPI_Shutdown()
+        bindings.unload()
+
+    def cb_app_dependencies_result(self, *args: Any, **kwargs: Any) -> None:
+        self._tracker.record()
+        logger.debug(f"GetAppDependencies callback: {args}, {kwargs}")
+        logger.debug(f"result: {args[0].result}")
+        pfid = args[0].published_file_id
+        logger.debug(f"published_file_id: {pfid}")
+        app_dependencies_list = args[0].get_app_dependencies_list()
+        logger.debug(f"app_dependencies_list: {app_dependencies_list}")
+        if len(app_dependencies_list) > 0:
+            self.get_app_deps_query_result[pfid] = app_dependencies_list
 
 
 class SteamworksAppDependenciesQuery:
@@ -211,15 +136,14 @@ class SteamworksAppDependenciesQuery:
         self,
         pfid_or_pfids: Union[int, list[int]],
         interval: int = 1,
-        _libs: str | None = None,
     ) -> None:
-        self._libs = _libs
         self.interval = interval
         self.pfid_or_pfids = pfid_or_pfids
 
     def run(self) -> None | dict[int, Any]:
         """
-        Query PublishedFileIDs for AppID dependency data
+        Query PublishedFileIDs for AppID dependency data.
+
         :param pfid_or_pfids: is an int that corresponds with a subscribed Steam mod's PublishedFileId
                             OR is a list of int that corresponds with multiple Steam mod PublishedFileIds
         :param interval: time in seconds to sleep between multiple subsequent API calls
@@ -227,73 +151,65 @@ class SteamworksAppDependenciesQuery:
         logger.info(
             f"Creating SteamworksInterface and passing PublishedFileID(s) {self.pfid_or_pfids}"
         )
-        # If the chunk passed is a single int, convert it into a list in an effort to simplify procedure
+        # If the chunk passed is a single int, convert it into a list
         if isinstance(self.pfid_or_pfids, int):
             self.pfid_or_pfids = [self.pfid_or_pfids]
         # Create our Steamworks interface and initialize Steamworks API
-        steamworks_interface = SteamworksInterface(
-            callbacks=True, callbacks_total=len(self.pfid_or_pfids), _libs=self._libs
+        interface = SteamworksInterface(
+            callbacks=True, callbacks_total=len(self.pfid_or_pfids)
         )
-        if not steamworks_interface.steam_not_running:  # Skip if True
-            while not steamworks_interface.steamworks.loaded():  # Ensure that Steamworks API is initialized before attempting any instruction
-                break
-            else:
-                for pfid in self.pfid_or_pfids:
-                    logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
-                    steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
-                        steamworks_interface._cb_app_dependencies_result_callback
-                    )
-                    steamworks_interface.steamworks.Workshop.GetAppDependencies(pfid)
-                    # Sleep for the interval if we have more than one pfid to action on
-                    if len(self.pfid_or_pfids) > 1:
-                        sleep(self.interval)
-                # Patience, but don't wait forever
-                steamworks_interface._wait_for_callbacks(timeout=60)
-                # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
-                logger.info("Thread completed. Unloading Steamworks...")
-                steamworks_interface.steamworks_thread.join()
-                # Grab the data and return it
-                logger.warning(
-                    f"Returning {len(steamworks_interface.get_app_deps_query_result.keys())} results..."
+        if not interface.steam_not_running:
+            # Register callback and issue queries
+            if bindings._lib is not None:
+                bindings._lib.RS_Workshop_SetGetAppDependenciesResultCallback(
+                    bindings.AppDepsCallback(interface.cb_app_dependencies_result)
                 )
-                return steamworks_interface.get_app_deps_query_result
+            for pfid in self.pfid_or_pfids:
+                logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
+                if bindings._lib is not None:
+                    bindings._lib.RS_Workshop_GetAppDependencies(pfid)
+                # Sleep for the interval if we have more than one pfid to action on
+                if len(self.pfid_or_pfids) > 1:
+                    sleep(self.interval)
+            # Patience, but don't wait forever
+            interface.wait_for_callbacks(timeout=60)
+            # Grab the data and return it
+            logger.warning(
+                f"Returning {len(interface.get_app_deps_query_result.keys())} results..."
+            )
+            result = interface.get_app_deps_query_result
+            interface.shutdown()
+            return result
         else:
-            steamworks_interface.steamworks.unload()
+            interface.shutdown()
 
         return None
 
 
 class SteamworksGameLaunch(Process):
-    def __init__(
-        self, game_install_path: str, run_args: str = "", _libs: str | None = None
-    ) -> None:
+    def __init__(self, game_install_path: str, run_args: str = "") -> None:
         Process.__init__(self)
-        self._libs = _libs
         self.game_install_path = game_install_path
         self.run_args = run_args
 
     def run(self) -> None:
         """
-        Handle SW game launch; instructions received from connected signals
+        Handle SW game launch; instructions received from connected signals.
 
         :param game_install_path: is a string path to the game folder
         :param run_args: is a string representing the args to pass to the generated executable path
         """
         logger.info("Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
-        steamworks_interface = SteamworksInterface(callbacks=False, _libs=self._libs)
+        steamworks_interface = SteamworksInterface(callbacks=False)
 
         # Launch the game
         launch_game_process(
-            game_install_path=Path(self.game_install_path), run_args=self.run_args
+            game_install_path=Path(self.game_install_path),
+            run_args=self.run_args,
         )
-        # If we had an API initialization, try to unload it
-        if (
-            not steamworks_interface.steam_not_running
-            and steamworks_interface.steamworks
-        ):
-            # Unload Steamworks API
-            steamworks_interface.steamworks.unload()
+        # If we had an API initialization, try to shut it down
+        steamworks_interface.shutdown()
 
 
 class SteamworksSubscriptionHandler(Process):
@@ -306,11 +222,11 @@ class SteamworksSubscriptionHandler(Process):
     - "resubscribe": Unsub then resub with proper delays (forces Steam to re-download)
 
     Resubscribe timing is critical for fixing GitHub issue #1460 (missing mods):
-    1. UnsubscribeItem() → Steam marks as unsubscribed
-    2. Wait 4 seconds → Steam uninstalls mod files
-    3. SubscribeItem() → Steam marks as subscribed
-    4. Wait 2 seconds → Steam registers subscription
-    5. DownloadItem(high_priority=True) → Forces Steam to queue re-download
+    1. UnsubscribeItem() -> Steam marks as unsubscribed
+    2. Wait 4 seconds -> Steam uninstalls mod files
+    3. SubscribeItem() -> Steam marks as subscribed
+    4. Wait 2 seconds -> Steam registers subscription
+    5. DownloadItem(high_priority=True) -> Forces Steam to queue re-download
 
     Without proper spacing, Steam can queue operations in wrong order,
     resulting in mods being subscribed but not downloaded.
@@ -321,7 +237,6 @@ class SteamworksSubscriptionHandler(Process):
         action (str): Operation to perform
         pfid_or_pfids (list[int]): Published file IDs (Steam Workshop mod IDs)
         interval (float): Delay in seconds between processing multiple mods
-        _libs (str | None): Optional path to prebuilt Steamworks libraries
     """
 
     def __init__(
@@ -329,19 +244,15 @@ class SteamworksSubscriptionHandler(Process):
         action: str,
         pfid_or_pfids: Union[int, list[int]],
         interval: float = SUBSCRIBE_UNSUBSCRIBE_INTERVAL,
-        _libs: str | None = None,
     ):
         """
         Initialize subscription handler.
 
-        Args:
-            action: Operation type ("subscribe", "unsubscribe", or "resubscribe")
-            pfid_or_pfids: Single mod ID or list of mod IDs to process
-            interval: Seconds to wait between operations (only used for subscribe/unsubscribe)
-            _libs: Optional custom path to Steamworks libraries
+        :param action: Operation type ("subscribe", "unsubscribe", or "resubscribe")
+        :param pfid_or_pfids: Single mod ID or list of mod IDs to process
+        :param interval: Seconds to wait between operations (only used for subscribe/unsubscribe)
         """
         Process.__init__(self)
-        self._libs = _libs
         self.action = action
         # Normalize to list for consistent handling
         self.pfid_or_pfids = (
@@ -366,7 +277,7 @@ class SteamworksSubscriptionHandler(Process):
         - subscribe/unsubscribe: 30 seconds
         """
         logger.warning(
-            f"=== SteamworksSubscriptionHandler START: action={self.action}, mods={len(self.pfid_or_pfids)} ==="
+            f"SteamworksSubscriptionHandler START: action={self.action}, mods={len(self.pfid_or_pfids)}"
         )
 
         # Calculate expected callbacks - used to know when all operations complete
@@ -381,19 +292,13 @@ class SteamworksSubscriptionHandler(Process):
         logger.warning(f"Expected {callbacks_total} callback(s)")
 
         steamworks_interface = SteamworksInterface(
-            callbacks=True, callbacks_total=callbacks_total, _libs=self._libs
+            callbacks=True, callbacks_total=callbacks_total
         )
 
         if steamworks_interface.steam_not_running:
             logger.error("Steam is not running. Aborting subscription handler.")
-            steamworks_interface.steamworks.unload()
+            steamworks_interface.shutdown()
             return
-
-        # Wait for Steamworks to be ready
-        logger.warning("Waiting for Steamworks to load...")
-        while not steamworks_interface.steamworks.loaded():
-            sleep(0.1)
-        logger.warning("Steamworks loaded and ready")
 
         try:
             if self.action == "resubscribe":
@@ -412,26 +317,22 @@ class SteamworksSubscriptionHandler(Process):
             logger.warning(
                 f"Waiting up to {timeout}s for callbacks to complete (expecting {callbacks_total})..."
             )
-            steamworks_interface._wait_for_callbacks(timeout=timeout)
+            steamworks_interface.wait_for_callbacks(timeout=timeout)
             logger.warning(
-                f"✓ All callbacks completed! ({steamworks_interface.callbacks_count}/{callbacks_total})"
+                f"All callbacks completed ({steamworks_interface._tracker.count}/{callbacks_total})"
             )
 
         except Exception as e:
             logger.error(
-                f"✗ Error during subscription action {self.action}: {e}", exc_info=True
+                f"Error during subscription action {self.action}: {e}",
+                exc_info=True,
             )
         finally:
             # Cleanup
             logger.warning(
-                "=== SteamworksSubscriptionHandler END: Unloading Steamworks ==="
+                "SteamworksSubscriptionHandler END: Shutting down Steamworks"
             )
-            if (
-                hasattr(steamworks_interface, "steamworks_thread")
-                and steamworks_interface.steamworks_thread.is_alive()
-            ):
-                steamworks_interface.steamworks_thread.join(timeout=5)
-            steamworks_interface.steamworks.unload()
+            steamworks_interface.shutdown()
 
     def _handle_resubscribe(self, steamworks_interface: SteamworksInterface) -> None:
         """
@@ -453,25 +354,38 @@ class SteamworksSubscriptionHandler(Process):
         Without proper staging, Steam may queue subscribe before unsubscribe
         completes, resulting in mods subscribed but not downloaded.
         """
-        logger.warning(
-            f">>> RESUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)"
-        )
+        logger.warning(f"RESUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)")
+
+        if bindings._lib is None:
+            logger.error("Cannot resubscribe: native library not available")
+            return
 
         # Register callbacks for all unsub/resub operations
         # These fire asynchronously as Steam processes each operation
-        steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
-            self._create_unsub_callback(steamworks_interface)
+        unsub_cb = self._create_callback(
+            "Unsubscribe", tracker=steamworks_interface._tracker
         )
-        steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
-            self._create_resub_callback(steamworks_interface)
+        sub_cb = self._create_callback(
+            "Subscribe", tracker=steamworks_interface._tracker
         )
-        logger.warning("Callbacks registered for unsub and resub")
+        dl_cb = self._create_callback("Download", tracker=None)
+
+        bindings._lib.RS_Workshop_SetItemUnsubscribedCallback(
+            bindings.SubscriptionCallback(unsub_cb)
+        )
+        bindings._lib.RS_Workshop_SetItemSubscribedCallback(
+            bindings.SubscriptionCallback(sub_cb)
+        )
+        bindings._lib.RS_Workshop_SetDownloadItemResultCallback(
+            bindings.DownloadItemResultCallback(dl_cb)
+        )
+        logger.warning("Callbacks registered for unsub, resub, and download")
 
         # STAGE 1: Unsubscribe ALL mods
-        logger.warning(f">>> STAGE 1: Unsubscribing {len(self.pfid_or_pfids)} mod(s)")
+        logger.warning(f"STAGE 1: Unsubscribing {len(self.pfid_or_pfids)} mod(s)")
         for idx, pfid in enumerate(self.pfid_or_pfids, 1):
             logger.warning(f"  [{idx}] Unsubscribing: {pfid}")
-            steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+            bindings._lib.RS_Workshop_UnsubscribeItem(pfid)
             # Small gap between API calls to space them out
             if len(self.pfid_or_pfids) > 1 and idx < len(self.pfid_or_pfids):
                 sleep(API_CALL_GAP)
@@ -483,10 +397,10 @@ class SteamworksSubscriptionHandler(Process):
         sleep(RESUBSCRIBE_UNSUBSCRIBE_WAIT)
 
         # STAGE 3: Subscribe ALL mods
-        logger.warning(f">>> STAGE 2: Subscribing {len(self.pfid_or_pfids)} mod(s)")
+        logger.warning(f"STAGE 2: Subscribing {len(self.pfid_or_pfids)} mod(s)")
         for idx, pfid in enumerate(self.pfid_or_pfids, 1):
             logger.warning(f"  [{idx}] Subscribing: {pfid}")
-            steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
+            bindings._lib.RS_Workshop_SubscribeItem(pfid)
             # Small gap between API calls to space them out
             if len(self.pfid_or_pfids) > 1 and idx < len(self.pfid_or_pfids):
                 sleep(API_CALL_GAP)
@@ -499,177 +413,85 @@ class SteamworksSubscriptionHandler(Process):
 
         # STAGE 5: Force download ALL mods with high priority
         logger.warning(
-            f">>> STAGE 3: Initiating downloads for {len(self.pfid_or_pfids)} mod(s)"
+            f"STAGE 3: Initiating downloads for {len(self.pfid_or_pfids)} mod(s)"
         )
         for idx, pfid in enumerate(self.pfid_or_pfids, 1):
             try:
                 logger.warning(f"  [{idx}] Download: {pfid}")
-                # Call DownloadItem to force Steam to queue the mod for download
-                # high_priority=True makes Steam skip other queued downloads
-                # Note: callback may not fire, but the download is still queued
-                if hasattr(steamworks_interface.steamworks.Workshop, "DownloadItem"):
-                    steamworks_interface.steamworks.Workshop.DownloadItem(
-                        pfid,
-                        high_priority=True,
-                        callback=self._create_download_callback(steamworks_interface),
-                        override_callback=True,
-                    )
-                else:
-                    logger.warning(
-                        "DownloadItem skipped: not supported by SteamworksPy library."
-                    )
+                bindings._lib.RS_Workshop_DownloadItem(pfid, True)
             except Exception as e:
                 logger.error(f"Failed to trigger download for {pfid}: {e}")
 
-        logger.warning(">>> All mods queued. Waiting for callbacks...")
+        logger.warning("All mods queued. Waiting for callbacks...")
 
     def _handle_subscribe(self, steamworks_interface: SteamworksInterface) -> None:
-        """
-        Subscribe to mods
-        """
-        logger.warning(f">>> SUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)")
+        """Subscribe to mods."""
+        logger.warning(f"SUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)")
 
-        steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
-            self._create_resub_callback(steamworks_interface)
+        if bindings._lib is None:
+            logger.error("Cannot subscribe: native library not available")
+            return
+
+        sub_cb = self._create_callback(
+            "Subscribe", tracker=steamworks_interface._tracker
+        )
+        bindings._lib.RS_Workshop_SetItemSubscribedCallback(
+            bindings.SubscriptionCallback(sub_cb)
         )
         logger.warning("Callback registered for subscribe")
 
         for idx, pfid in enumerate(self.pfid_or_pfids, 1):
             logger.warning(
-                f">>> Subscribing to mod {idx}/{len(self.pfid_or_pfids)}: {pfid}"
+                f"Subscribing to mod {idx}/{len(self.pfid_or_pfids)}: {pfid}"
             )
-            steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
+            bindings._lib.RS_Workshop_SubscribeItem(pfid)
 
             if len(self.pfid_or_pfids) > 1 and idx < len(self.pfid_or_pfids):
                 logger.warning(f"Waiting {self.interval}s before next mod...")
                 sleep(self.interval)
 
-        logger.warning(">>> All mods queued. Waiting for callbacks...")
+        logger.warning("All mods queued. Waiting for callbacks...")
 
     def _handle_unsubscribe(self, steamworks_interface: SteamworksInterface) -> None:
-        """
-        Unsubscribe from mods
-        """
-        logger.warning(
-            f">>> UNSUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)"
-        )
+        """Unsubscribe from mods."""
+        logger.warning(f"UNSUBSCRIBE: Starting for {len(self.pfid_or_pfids)} mod(s)")
 
-        steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
-            self._create_unsub_callback(steamworks_interface)
+        if bindings._lib is None:
+            logger.error("Cannot unsubscribe: native library not available")
+            return
+
+        unsub_cb = self._create_callback(
+            "Unsubscribe", tracker=steamworks_interface._tracker
+        )
+        bindings._lib.RS_Workshop_SetItemUnsubscribedCallback(
+            bindings.SubscriptionCallback(unsub_cb)
         )
         logger.warning("Callback registered for unsubscribe")
 
         for idx, pfid in enumerate(self.pfid_or_pfids, 1):
             logger.warning(
-                f">>> Unsubscribing from mod {idx}/{len(self.pfid_or_pfids)}: {pfid}"
+                f"Unsubscribing from mod {idx}/{len(self.pfid_or_pfids)}: {pfid}"
             )
-            steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+            bindings._lib.RS_Workshop_UnsubscribeItem(pfid)
 
             if len(self.pfid_or_pfids) > 1 and idx < len(self.pfid_or_pfids):
                 logger.warning(f"Waiting {self.interval}s before next mod...")
                 sleep(self.interval)
 
-        logger.warning(">>> All mods queued. Waiting for callbacks...")
+        logger.warning("All mods queued. Waiting for callbacks...")
 
-    def _create_unsub_callback(
-        self, steamworks_interface: SteamworksInterface
-    ) -> Callable[[Any, Any], None]:
-        """
-        Create unsubscribe callback handler.
-
-        Returns a callable that increments callback count and signals
-        completion when all expected callbacks have fired.
-        """
-
-        def callback(*args: Any, **kwargs: Any) -> None:
-            steamworks_interface.callbacks_count += 1
-            result = args[0].result
-            pfid = args[0].publishedFileId
-
-            if result == 1:
-                logger.warning(f"✓ Unsubscribe succeeded for {pfid}")
+    @staticmethod
+    def _create_callback(
+        label: str, tracker: CallbackTracker | None = None
+    ) -> Callable[[Any], None]:
+        def callback(result: Any) -> None:
+            pfid = result.published_file_id
+            if result.result == 1:
+                logger.warning(f"{label} succeeded for {pfid}")
             else:
-                logger.error(f"✗ Unsubscribe failed for {pfid}: result={result}")
-
-            # Check if all expected callbacks have completed
-            if (
-                steamworks_interface.multiple_queries
-                and steamworks_interface.callbacks_total is not None
-                and steamworks_interface.callbacks_count
-                >= steamworks_interface.callbacks_total
-            ):
-                steamworks_interface.end_callbacks = True
-            elif not steamworks_interface.multiple_queries:
-                steamworks_interface.end_callbacks = True
-
-        return callback
-
-    def _create_resub_callback(
-        self, steamworks_interface: SteamworksInterface
-    ) -> Callable[[Any, Any], None]:
-        """
-        Create subscribe callback handler.
-
-        Returns a callable that increments callback count and signals
-        completion when all expected callbacks have fired.
-        """
-
-        def callback(*args: Any, **kwargs: Any) -> None:
-            steamworks_interface.callbacks_count += 1
-            result = args[0].result
-            pfid = args[0].publishedFileId
-
-            if result == 1:
-                logger.warning(f"✓ Subscribe succeeded for {pfid}")
-            else:
-                logger.error(f"✗ Subscribe failed for {pfid}: result={result}")
-
-            # Check if all expected callbacks have completed
-            if (
-                steamworks_interface.multiple_queries
-                and steamworks_interface.callbacks_total is not None
-                and steamworks_interface.callbacks_count
-                >= steamworks_interface.callbacks_total
-            ):
-                steamworks_interface.end_callbacks = True
-            elif not steamworks_interface.multiple_queries:
-                steamworks_interface.end_callbacks = True
-
-        return callback
-
-    def _create_download_callback(
-        self, steamworks_interface: SteamworksInterface
-    ) -> Callable[[Any, Any], None]:
-        """
-        Create download callback handler.
-
-        Returns a callable that increments callback count and signals
-        completion when all expected callbacks have fired.
-
-        Note: DownloadItem callbacks are unreliable and may not fire,
-        so this is primarily used for logging purposes.
-        """
-
-        def callback(*args: Any, **kwargs: Any) -> None:
-            steamworks_interface.callbacks_count += 1
-            result = args[0].result
-            pfid = args[0].publishedFileId
-
-            if result == 1:
-                logger.warning(f"✓ Download succeeded for {pfid}")
-            else:
-                logger.error(f"✗ Download failed for {pfid}: result={result}")
-
-            # Check if all expected callbacks have completed
-            if (
-                steamworks_interface.multiple_queries
-                and steamworks_interface.callbacks_total is not None
-                and steamworks_interface.callbacks_count
-                >= steamworks_interface.callbacks_total
-            ):
-                steamworks_interface.end_callbacks = True
-            elif not steamworks_interface.multiple_queries:
-                steamworks_interface.end_callbacks = True
+                logger.error(f"{label} failed for {pfid}: result={result.result}")
+            if tracker is not None:
+                tracker.record()
 
         return callback
 

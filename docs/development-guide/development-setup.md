@@ -55,12 +55,11 @@ Python linters (ruff, mypy) are installed automatically by `uv sync` — no manu
 
 ### Cloning the repository
 
-RimSort uses submodules that are hosted in other repositories that need to be cloned.
+RimSort uses a submodule hosted in another repository that needs to be cloned.
 
 - [steamfiles](https://github.com/RimSort/steamfiles): used to parse Steam client acf/appinfo/manifest information
-- [SteamworksPy](https://github.com/philippj/SteamworksPy): used for interactions with the local Steam client
-  - SteamworksPy is a python module built to interface directly with the [Steamworks API](https://partner.steamgames.com/doc/api)
-  - This allows certain interactions with the local Steam client to be initiated through the Steamworks API via Python (such as subscribing/unsubscribing to/from Steam mods via RimSort)
+
+RimSort also uses **rimsort_steam**, a custom C++ shim for the [Steamworks API](https://partner.steamgames.com/doc/api), located in `lib/rimsort_steam/`. Pre-built binaries are committed to `libs/` for all platforms, so most developers do not need to build it from source.
 
 To clone with submodules run:
 
@@ -68,7 +67,7 @@ To clone with submodules run:
 git clone --recurse-submodules -j8 https://github.com/RimSort/RimSort
 ```
 
-Should you need to update these submodules, or you forgot to clone with `--recurse-submodules`, run:
+Should you need to update the steamfiles submodule, or you forgot to clone with `--recurse-submodules`, run:
 
 ```shell
 git submodule update --init --recursive
@@ -112,7 +111,7 @@ Ensure that build requirements are installed by running `uv sync --group build`.
 
 ### Setting up additional dependencies
 
- RimSort uses Python, and depends on several Python modules. You can install/view most of the above dependencies via `pyproject.tom`. These would have been set up in the prior environment setup step. However, the **SteamworksPy** dependency is a special case that has requires special handling.
+ RimSort uses Python, and depends on several Python modules. You can install/view most of the above dependencies via `pyproject.toml`. These would have been set up in the prior environment setup step.
 
 See their respective sections for information on how to set them up. Alternatively, use `distribute.py` to do so automatically. By default, the script will build RimSort, but it can be configured to enable or disable various steps including building. See `uv run python distribute.py --help` for more info.
 
@@ -128,35 +127,27 @@ See their respective sections for information on how to set them up. Alternative
   - Replace `/path/to/` with the actual path where the file/folder is, example:
     - `xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app`
 
-### Using SteamworksPy binaries
+### Using rimsort_steam binaries
 
-For RimSort to actually USE the SteamworksPy module, you need the compiled library for your platform, as well as the binaries from the steamworks SDK in the RimSort project root - in conjunction the python module included at: `SteamworksPy/steamworks`.
+RimSort uses **rimsort_steam**, a lightweight C++ shim that wraps the [Steamworks API](https://partner.steamgames.com/doc/api). Pre-built binaries and Steam SDK redistributables are committed to `libs/` for all platforms. Most developers do not need to do anything beyond cloning the repository.
 
-  - Repo maintainers will provide pre-built binaries for the `SteamworksPy` library, as well as the redistributables from the steamworks-sdk in-repo as well as in each platform's respective release.
-  - On Linux, you will want to copy `SteamworksPy_*.so` (where \* is your CPU) to `SteamworksPy.so`
-  - On macOS, you will want to copy `SteamworksPy_*.dylib` (where \* is your CPU) to `SteamworksPy.dylib`
+### Building rimsort_steam from source
 
-### Building SteamworksPy from source
+This is an _**OPTIONAL**_ step. You do not _**NEED**_ to do this -- pre-built binaries are already committed to `libs/` for all platforms. Only rebuild if you are modifying the native shim or updating the Steamworks SDK.
 
-{: .note}
-> At the time of writing, the SteamworksPy module can only be built using Python 11, differing from RimSort itself. You may need to use a different Python environment from the one you use to handle RimSort.
+To build from source:
 
-- You can set up this module using the following commands:
+1. Download and extract the [Steamworks SDK](https://partner.steamgames.com/).
+2. Set the `STEAMWORKS_SDK_PATH` environment variable to the extracted SDK root.
+3. Run `make` inside `lib/rimsort_steam/`.
 
-  - `cd SteamworksPy`
-  - `pip install -r requirements.txt`
+Platform requirements:
 
-This is an _**OPTIONAL**_ step. You do not _**NEED**_ to do this - there are already pre-built binaries available for usage in-repo as well as in each platform's respective release. Please do not attempt to commit/PR an update for these binaries without maintainer consent - these will not be approved otherwise.
+- On Linux, you need `g++`. It works out of the box on Ubuntu.
+- On macOS, you need Xcode command line tools (`xcode-select --install`).
+- On Windows, use the provided `build_windows.bat` (requires MSVC / Visual Studio Build Tools).
 
-Reference: [SteamworksPy](https://philippj.github.io/SteamworksPy/)
-
-- On Linux, you need `g++`. It worked right out of the box for me on Ubuntu.
-- On macOS, you need Xcode command line tools. Then, you can compile directly with the script (without a full Xcode install):
-- On Windows, you need to get Visual Studio & Build Tools for Visual Studio:
-  - [MSVC](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
-    - When you run the downloaded executable, it updates and runs the Visual Studio Installer. To install only the tools you need for C++ development, select the "Desktop development with C++" workload. Alternatively, just install VS Community 2022 with the standard load set.
-
-Execute: `python -c "from distribute import build_steamworkspy; build_steamworkspy()"`
+Please do not attempt to commit/PR an update for these binaries without maintainer consent -- such requests will not be approved otherwise.
 
 ### Texture optimization (todds)
 
@@ -170,21 +161,7 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 
 ### Packaging RimSort
 
-After following all the prior steps, from the RimSort project root directory, first add the `SteamworksPy` submodule to the Python path:
-
-On Linux/macOS:
-
-```shell
-PYTHONPATH=./submodules/SteamworksPy
-```
-
-On Windows (Powershell):
-
-```powershell
-$env:PYTHONPATH = ".\submodules\SteamworksPy"
-```
-
-Then build with nuitka:
+After following all the prior steps, from the RimSort project root directory, build with nuitka:
 
 ```shell
 uv run nuitka app/__main__.py

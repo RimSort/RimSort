@@ -1,11 +1,7 @@
-"""Integration tests: compile() → Sorter → sorted paths pipeline."""
+"""Integration tests: compile() -> Sorter -> sorted paths pipeline."""
 
-import sys
 from collections.abc import Mapping
-from unittest.mock import MagicMock, patch
-
-if "steamworks" not in sys.modules:
-    sys.modules["steamworks"] = MagicMock()
+from unittest.mock import patch
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.sort_controller import Sorter

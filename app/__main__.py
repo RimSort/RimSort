@@ -7,7 +7,6 @@
 # nuitka-project: --noinclude-default-mode=error
 # nuitka-project: --nofollow-import-to=numpy
 # nuitka-project: --noinclude-data-files=*qtwebengine_devtools_resources.pak
-# nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
 # nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico

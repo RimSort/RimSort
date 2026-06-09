@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import sys
 import uuid as uuid_module
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Union
 from unittest.mock import MagicMock
 
@@ -16,12 +14,6 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from app.controllers.settings_controller import SettingsController
 from app.models.instance import Instance
 from app.models.settings import Settings
-
-# Ensure the steamworks module is mockable for the MainWindow import chain.
-# This must run at import time, before any test imports MainWindow.
-if "steamworks" not in sys.modules:
-    sys.modules["steamworks"] = ModuleType("steamworks")
-    sys.modules["steamworks"].STEAMWORKS = MagicMock()  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
     from app.views.main_window import MainWindow

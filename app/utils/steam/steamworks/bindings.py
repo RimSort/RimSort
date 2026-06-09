@@ -1,0 +1,280 @@
+"""
+ctypes bindings for the rimsort_steam native library.
+
+Declares type-safe interfaces for all exported functions and callback
+structs. The native library is loaded lazily via ``ensure_loaded()``
+rather than at import time, because loading ``libsteam_api.so`` can
+crash (SIGSEGV) on headless Linux systems without a running Steam client.
+
+The loaded library is exposed as module-level ``_lib`` for monkeypatching
+in tests.
+"""
+
+import ctypes
+import os
+import platform
+import sys
+from pathlib import Path
+
+from loguru import logger
+
+# --------------------------------------------------------------------------- #
+# Struct definitions -- field order MUST match the C++ shim / SDK layout       #
+# --------------------------------------------------------------------------- #
+
+
+class SubscriptionResult(ctypes.Structure):
+    """Result struct for subscribe/unsubscribe callbacks."""
+
+    _fields_ = [
+        ("result", ctypes.c_int32),
+        ("published_file_id", ctypes.c_uint64),
+    ]
+
+
+class GetAppDependenciesResult(ctypes.Structure):
+    """Result struct for GetAppDependencies callback."""
+
+    _fields_ = [
+        ("result", ctypes.c_int32),
+        ("published_file_id", ctypes.c_uint64),
+        ("array_app_dependencies", ctypes.POINTER(ctypes.c_uint32)),
+        ("array_num_app_dependencies", ctypes.c_uint32),
+        ("total_num_app_dependencies", ctypes.c_uint32),
+    ]
+
+    def get_app_dependencies_list(self) -> list[int]:
+        """Extract the dependency array as a Python list."""
+        return [
+            self.array_app_dependencies[i]
+            for i in range(self.array_num_app_dependencies)
+        ]
+
+
+class DownloadItemResult(ctypes.Structure):
+    """Result struct for DownloadItem callback."""
+
+    _fields_ = [
+        ("app_id", ctypes.c_uint32),
+        ("published_file_id", ctypes.c_uint64),
+        ("result", ctypes.c_int32),
+    ]
+
+
+class ItemInstalledResult(ctypes.Structure):
+    """Result struct for ItemInstalled callback."""
+
+    _fields_ = [
+        ("app_id", ctypes.c_uint32),
+        ("published_file_id", ctypes.c_uint64),
+        ("legacy_content", ctypes.c_uint64),
+        ("manifest_id", ctypes.c_uint64),
+    ]
+
+
+# --------------------------------------------------------------------------- #
+# Callback function pointer types                                              #
+# --------------------------------------------------------------------------- #
+
+SubscriptionCallback = ctypes.CFUNCTYPE(None, SubscriptionResult)
+AppDepsCallback = ctypes.CFUNCTYPE(None, GetAppDependenciesResult)
+DownloadItemResultCallback = ctypes.CFUNCTYPE(None, DownloadItemResult)
+ItemInstalledCallback = ctypes.CFUNCTYPE(None, ItemInstalledResult)
+
+# --------------------------------------------------------------------------- #
+# Library loading                                                              #
+# --------------------------------------------------------------------------- #
+
+_SYSTEM = platform.system()
+_LIB_NAMES = {
+    "Darwin": "rimsort_steam.dylib",
+    "Linux": "rimsort_steam.so",
+    "Windows": "rimsort_steam.dll",
+}
+_STEAM_RT_NAMES = {
+    "Darwin": "libsteam_api.dylib",
+    "Linux": "libsteam_api.so",
+    "Windows": "steam_api64.dll",
+}
+
+
+def _probe_load_safe(path: str) -> bool:
+    """
+    Fork a child process to test whether a shared library can be loaded
+    without crashing. Returns True if safe, False if the child segfaults.
+
+    Only used on Linux where ctypes.CDLL can SIGSEGV loading the Steam
+    runtime (the signal kills the process and can't be caught by
+    try/except). On other platforms, returns True unconditionally.
+    """
+    if _SYSTEM != "Linux":
+        return True
+
+    pid = os.fork()
+    if pid == 0:
+        # Child: attempt the load, _exit immediately either way.
+        # _exit (not sys.exit) to avoid running atexit handlers.
+        try:
+            ctypes.CDLL(path)
+        except Exception:
+            os._exit(1)
+        os._exit(0)
+
+    # Parent: wait for child and inspect exit status
+    _, status = os.waitpid(pid, 0)
+    if os.WIFSIGNALED(status):
+        sig = os.WTERMSIG(status)
+        logger.warning(
+            f"Loading {path} crashed child process with signal {sig} — "
+            f"disabling native Steam integration"
+        )
+        return False
+    return os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0
+
+
+def _resolve_library_path() -> Path:
+    """
+    Resolve the path to the rimsort_steam native library.
+
+    :return: Path to the native library file
+    :raises OSError: If the library cannot be found or the platform is unsupported
+    """
+    lib_name = _LIB_NAMES.get(_SYSTEM)
+    if lib_name is None:
+        raise OSError(f"Unsupported platform: {_SYSTEM}")
+
+    paths_checked: list[Path] = []
+
+    # Nuitka compiled build -- library is adjacent to the executable
+    if "__compiled__" in globals():
+        exe_dir = Path(sys.argv[0]).resolve().parent
+        candidate = exe_dir / lib_name
+        paths_checked.append(candidate)
+        if candidate.exists():
+            return candidate
+
+    # Running from source -- look in libs/
+    source_root = (
+        Path(__file__).resolve().parents[4]
+    )  # app/utils/steam/steamworks -> root
+    candidate = source_root / "libs" / lib_name
+    paths_checked.append(candidate)
+    if candidate.exists():
+        return candidate
+
+    checked_str = ", ".join(str(p) for p in paths_checked)
+    raise OSError(
+        f"Could not find {lib_name}. Checked: {checked_str}. "
+        f"See lib/rimsort_steam/README.md for build instructions."
+    )
+
+
+def _load_library() -> ctypes.CDLL | None:
+    """
+    Load the native library and declare all function signatures.
+
+    :return: Loaded CDLL instance, or None if the library is not found (non-fatal)
+    """
+    try:
+        lib_path = _resolve_library_path()
+    except OSError as e:
+        logger.warning(f"rimsort_steam native library not available: {e}")
+        return None
+
+    # Pre-load the Steam runtime library so the dynamic linker can resolve
+    # symbols when rimsort_steam is loaded (it links against steam_api).
+    steam_rt_name = _STEAM_RT_NAMES.get(_SYSTEM)
+    if steam_rt_name:
+        steam_rt_path = lib_path.parent / steam_rt_name
+        if steam_rt_path.exists():
+            if not _probe_load_safe(str(steam_rt_path)):
+                return None
+            try:
+                ctypes.CDLL(str(steam_rt_path))
+            except OSError as e:
+                logger.warning(f"Failed to pre-load Steam runtime {steam_rt_path}: {e}")
+                return None
+
+    if not _probe_load_safe(str(lib_path)):
+        return None
+    try:
+        lib = ctypes.CDLL(str(lib_path))
+    except OSError as e:
+        logger.warning(f"Failed to load rimsort_steam from {lib_path}: {e}")
+        return None
+
+    # Lifecycle
+    lib.RS_SteamAPI_Init.restype = ctypes.c_int
+    lib.RS_SteamAPI_Init.argtypes = []
+
+    lib.RS_SteamAPI_Shutdown.restype = None
+    lib.RS_SteamAPI_Shutdown.argtypes = []
+
+    lib.RS_SteamAPI_RunCallbacks.restype = None
+    lib.RS_SteamAPI_RunCallbacks.argtypes = []
+
+    lib.RS_SteamAPI_IsInitialized.restype = ctypes.c_bool
+    lib.RS_SteamAPI_IsInitialized.argtypes = []
+
+    # Workshop
+    lib.RS_Workshop_SubscribeItem.restype = None
+    lib.RS_Workshop_SubscribeItem.argtypes = [ctypes.c_uint64]
+
+    lib.RS_Workshop_UnsubscribeItem.restype = None
+    lib.RS_Workshop_UnsubscribeItem.argtypes = [ctypes.c_uint64]
+
+    lib.RS_Workshop_GetAppDependencies.restype = None
+    lib.RS_Workshop_GetAppDependencies.argtypes = [ctypes.c_uint64]
+
+    lib.RS_Workshop_DownloadItem.restype = ctypes.c_bool
+    lib.RS_Workshop_DownloadItem.argtypes = [ctypes.c_uint64, ctypes.c_bool]
+
+    # Callback registration
+    lib.RS_Workshop_SetItemSubscribedCallback.restype = None
+    lib.RS_Workshop_SetItemSubscribedCallback.argtypes = [SubscriptionCallback]
+
+    lib.RS_Workshop_SetItemUnsubscribedCallback.restype = None
+    lib.RS_Workshop_SetItemUnsubscribedCallback.argtypes = [SubscriptionCallback]
+
+    lib.RS_Workshop_SetGetAppDependenciesResultCallback.restype = None
+    lib.RS_Workshop_SetGetAppDependenciesResultCallback.argtypes = [AppDepsCallback]
+
+    lib.RS_Workshop_SetDownloadItemResultCallback.restype = None
+    lib.RS_Workshop_SetDownloadItemResultCallback.argtypes = [
+        DownloadItemResultCallback
+    ]
+
+    lib.RS_Workshop_SetItemInstalledCallback.restype = None
+    lib.RS_Workshop_SetItemInstalledCallback.argtypes = [ItemInstalledCallback]
+
+    return lib
+
+
+_lib: ctypes.CDLL | None = None
+_lib_loaded = False
+
+
+def ensure_loaded() -> None:
+    """
+    Load the native library on first call. Subsequent calls are no-ops.
+
+    Must be called before accessing ``_lib``. Separated from module import
+    to avoid loading ``libsteam_api`` at startup — that causes SIGSEGV on
+    headless Linux without Steam, and also makes Steam think RimWorld is
+    running whenever RimSort is open.
+    """
+    global _lib, _lib_loaded
+    if _lib_loaded:
+        return
+    _lib_loaded = True
+    _lib = _load_library()
+
+
+def unload() -> None:
+    """
+    Unload the native library reference so Steam no longer thinks the
+    game is running. Safe to call multiple times.
+    """
+    global _lib, _lib_loaded
+    _lib = None
+    _lib_loaded = False

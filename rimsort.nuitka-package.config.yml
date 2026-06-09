@@ -25,6 +25,7 @@
         prefixes:
           - "steam*"
           - "Steam*"
+          - "rimsort_steam*"
         suffixes:
           - "dll"
       dest_path: "."
@@ -34,6 +35,7 @@
         prefixes:
           - "libsteam*"
           - "Steam*"
+          - "rimsort_steam*"
         suffixes:
           - "so"
       dest_path: "."
@@ -41,19 +43,11 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "*arm"
+          - "rimsort_steam*"
         suffixes:
           - "dylib"
       dest_path: "."
-      when: "macos and arch_arm64"
-    - from_filenames:
-        relative_path: "../libs"
-        prefixes:
-          - "*i386"
-        suffixes:
-          - "dylib"
-      dest_path: "."
-      when: "macos and arch_amd64"
+      when: "macos"
     - from_filenames:
         relative_path: "../libs"
         prefixes:

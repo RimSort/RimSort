@@ -115,6 +115,19 @@ jobs:
         run: |
           brew install coreutils
 
+      - name: List bundled native libraries
+        if: ${{ matrix.platform == 'Ubuntu-22.04' || matrix.platform == 'Ubuntu-24.04' }}
+        run: |
+          exe_dir=$(dirname "${{ steps.find.outputs.FOUND }}")
+          echo "=== Native libraries in build ==="
+          find "$exe_dir" -name '*.so' -o -name '*.so.*' | sort
+          echo "=== libsteam_api.so deps ==="
+          ldd "$exe_dir/libsteam_api.so" 2>&1 || echo "(not found)"
+          echo "=== rimsort_steam.so deps ==="
+          ldd "$exe_dir/rimsort_steam.so" 2>&1 || echo "(not found)"
+        shell: bash
+        continue-on-error: true
+
       - name: Run executable. Attempt to run the executable, waits 15 seconds, then kills it.
         run: |
           if [[ ${{ matrix.platform }} == "Ubuntu-22.04" || ${{ matrix.platform }} == "Ubuntu-24.04" ]]; then

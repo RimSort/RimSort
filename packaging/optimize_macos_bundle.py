@@ -80,6 +80,9 @@ def _get_dir_size(path: str) -> int:
     return total
 
 
+PRESERVE_UNIVERSAL = {"rimsort_steam.dylib", "libsteam_api.dylib"}
+
+
 def thin_fat_binaries(app_path: str, target_arch: str) -> int:
     """Thin universal Mach-O binaries in Contents/Resources/ to a single arch."""
     resources_dir = os.path.join(app_path, "Contents", "Resources")
@@ -99,6 +102,11 @@ def thin_fat_binaries(app_path: str, target_arch: str) -> int:
             ):
                 continue
             if not _is_fat_binary(filepath):
+                continue
+            if filename in PRESERVE_UNIVERSAL:
+                print(
+                    f"  Skipping {os.path.relpath(filepath, app_path)} (intentionally universal)"
+                )
                 continue
 
             original_size = os.path.getsize(filepath)
@@ -219,36 +227,21 @@ def remove_locale_sources(app_path: str) -> int:
     return total_saved
 
 
-def fixup_steamworkspy(app_path: str) -> None:
-    """Ensure generic-named SteamworksPy.dylib exists in the bundle.
-
-    Nuitka bundles the arch-suffixed variant (e.g. SteamworksPy_arm.dylib) but
-    the runtime expects ``SteamworksPy.dylib``.  Copy the suffixed file to the
-    generic name if it is missing.
-    """
+def fixup_rimsort_steam(app_path: str) -> None:
+    """Verify rimsort_steam.dylib exists in the bundle."""
     macos_dir = os.path.join(app_path, "Contents", "MacOS")
-    generic = os.path.join(macos_dir, "SteamworksPy.dylib")
-    if os.path.exists(generic):
-        print("  SteamworksPy.dylib already exists")
-        return
-
-    candidates = [
-        os.path.join(macos_dir, f)
-        for f in os.listdir(macos_dir)
-        if f.startswith("SteamworksPy_") and f.endswith(".dylib")
-    ]
-    if candidates:
-        shutil.copyfile(candidates[0], generic)
-        print(f"  Created SteamworksPy.dylib from {os.path.basename(candidates[0])}")
+    lib_path = os.path.join(macos_dir, "rimsort_steam.dylib")
+    if os.path.exists(lib_path):
+        print("  rimsort_steam.dylib found in bundle")
     else:
-        print("  WARNING: No SteamworksPy dylib found in bundle")
+        print("  WARNING: rimsort_steam.dylib not found in bundle")
 
 
 def optimize_bundle(app_path: str, target_arch: str) -> None:
     total_saved = 0
 
-    print("\n[1/4] Fixing up SteamworksPy...")
-    fixup_steamworkspy(app_path)
+    print("\n[1/4] Verifying rimsort_steam...")
+    fixup_rimsort_steam(app_path)
 
     print("\n[2/4] Thinning fat binaries...")
     total_saved += thin_fat_binaries(app_path, target_arch)
