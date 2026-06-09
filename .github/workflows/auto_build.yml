@@ -114,11 +114,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   attested-build:
-    needs: [detect-changes, pre-build, edge-rate-check]
+    needs: [detect-changes, pre-build]
     if: >-
       needs.detect-changes.outputs.app_changed == 'true'
       && github.event_name != 'pull_request'
-      && (github.event_name != 'push' || needs.edge-rate-check.outputs.should_release == 'true')
     permissions:
       id-token: write
       contents: read
