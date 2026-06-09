@@ -129,6 +129,9 @@ class MenuBarController(QObject):
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
         )
+        self.menu_bar.github_mods_action.triggered.connect(
+            lambda: EventBus().do_open_github_mods_panel.emit()
+        )
         self.menu_bar.add_zip_mod_action.triggered.connect(
             EventBus().do_add_zip_mod.emit
         )

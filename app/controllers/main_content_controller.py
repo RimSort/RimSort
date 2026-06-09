@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import datetime
 import json
 import time
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import TYPE_CHECKING, List, Optional, cast
 
 from github import Github, Repository
 from loguru import logger
@@ -31,6 +33,18 @@ from app.utils.git_worker import (
     GitStageCommitWorker,
     PushConfig,
 )
+from app.utils.github.provider import (
+    GitHubProvider,
+    GitHubRateLimitError,
+    ReleaseAsset,
+    ReleaseInfo,
+    parse_github_url,
+)
+from app.utils.github.worker import (
+    GitHubInstallWorker,
+    GitHubUpdateCheckWorker,
+    GitHubVersionSwitchWorker,
+)
 from app.utils.http_downloader import (
     DatabaseDownloadTask,
     DownloadResult,
@@ -42,6 +56,12 @@ from app.views.dialogue import (
     show_dialogue_conditional,
 )
 from app.views.main_content_panel import MainContent
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from app.utils.github.updater import UpdateAvailable
+    from app.windows.github_mods_panel import GitHubModsPanel
 
 
 class MainContentController(QObject):
@@ -57,6 +77,10 @@ class MainContentController(QObject):
         self._git_push_worker: Optional[GitPushWorker] = None
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
         self._http_download_worker: Optional[HttpDownloadWorker] = None
+        self._github_install_worker: Optional[GitHubInstallWorker] = None
+        self._github_version_switch_worker: Optional[GitHubVersionSwitchWorker] = None
+        self._github_update_check_worker: Optional[GitHubUpdateCheckWorker] = None
+        self._github_mods_panel: Optional[GitHubModsPanel] = None
 
         # Thread pool for concurrent tasks
         self.thread_pool = QThreadPool.globalInstance()
@@ -108,10 +132,183 @@ class MainContentController(QObject):
         }
 
         self._connect_signals()
+        self._start_github_update_check()
+
+    def _start_github_update_check(self) -> None:
+        """Run a background GitHub update check if enabled in settings."""
+        from app.utils.github.worker import GitHubUpdateCheckWorker
+
+        settings = self.settings_controller.settings
+        if not settings.github_update_check_enabled:
+            return
+
+        try:
+            from app.controllers.metadata_db_controller import AuxMetadataController
+            from app.models.metadata.metadata_db import Base
+            from app.utils.github.models import GitHubModEntry
+
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            Base.metadata.create_all(aux_controller.engine)
+
+            with aux_controller.Session() as session:
+                count = session.query(GitHubModEntry).count()
+            if count == 0:
+                return
+        except Exception:
+            return
+
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
+
+        self._github_update_check_worker = GitHubUpdateCheckWorker(
+            provider=provider,
+            instance_session_factory=aux_controller.Session,
+            check_interval_hours=settings.github_update_check_interval_hours,
+        )
+        self._github_update_check_worker.finished.connect(
+            self._on_github_update_check_finished
+        )
+        self._github_update_check_worker.error.connect(
+            lambda msg: logger.warning(f"GitHub update check failed: {msg}")
+        )
+        self._github_update_check_worker.start()
+        logger.info(f"Started background GitHub update check for {count} mod(s)")
+
+    def _on_github_update_check_finished(self, updates: list[UpdateAvailable]) -> None:
+        """Handle results from background GitHub update check."""
+        if not updates:
+            logger.info("All GitHub mods are up to date")
+            return
+
+        auto = [u for u in updates if u.auto_update]
+        manual = [u for u in updates if not u.auto_update]
+
+        if manual:
+            names = ", ".join(u.owner_repo for u in manual[:5])
+            suffix = f" and {len(manual) - 5} more" if len(manual) > 5 else ""
+            logger.info(f"GitHub updates available (manual): {names}{suffix}")
+            InformationBox(
+                title=self.tr("GitHub Mod Updates Available"),
+                text=self.tr("{count} GitHub mod(s) have updates available.").format(
+                    count=len(manual)
+                ),
+                information=self.tr(
+                    "Use Download → GitHub Mods to view and install updates."
+                ),
+            ).exec()
+
+        if auto:
+            logger.info(
+                f"Auto-updating {len(auto)} GitHub mod(s): "
+                + ", ".join(u.owner_repo for u in auto)
+            )
+            self._github_auto_update_queue = list(auto)
+            self._github_auto_update_results: list[tuple[str, bool]] = []
+            self._process_next_auto_update()
+        elif not manual:
+            logger.info("All GitHub mods are up to date")
+
+    def _process_next_auto_update(self) -> None:
+        """Process the next mod in the auto-update queue."""
+        if not self._github_auto_update_queue:
+            self._on_auto_updates_complete()
+            return
+
+        update = self._github_auto_update_queue.pop(0)
+        release = update.latest_release
+        if release is None:
+            self._github_auto_update_results.append((update.owner_repo, False))
+            self._process_next_auto_update()
+            return
+
+        target_asset = None
+        custom_zips = release.get_custom_zip_assets()
+        if len(custom_zips) >= 1:
+            target_asset = custom_zips[0]
+
+        repo_url = f"https://github.com/{update.owner_repo}.git"
+        worker = GitHubVersionSwitchWorker(
+            mod_path=update.mod_path,
+            owner_repo=update.owner_repo,
+            repo_url=repo_url,
+            target_release=release if target_asset else None,
+            target_asset=target_asset,
+        )
+        owner_repo = update.owner_repo
+        worker.finished.connect(
+            lambda ok, ver, path: self._on_auto_update_one_finished(
+                ok, ver, path, owner_repo
+            )
+        )
+        self._github_version_switch_worker = worker
+        worker.start()
+
+    def _on_auto_update_one_finished(
+        self, success: bool, new_version: str, mod_path: str, owner_repo: str
+    ) -> None:
+        """Handle completion of a single auto-update, then process the next."""
+        self._github_auto_update_results.append((owner_repo, success))
+
+        if success:
+            from app.controllers.metadata_db_controller import AuxMetadataController
+            from app.utils.github.models import GitHubModEntry
+
+            settings = self.settings_controller.settings
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            version = "HEAD" if new_version.startswith("HEAD") else new_version
+            with aux_controller.Session() as session:
+                entry = (
+                    session.query(GitHubModEntry)
+                    .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                    .first()
+                )
+                if entry is not None:
+                    entry.installed_version = version
+                    session.commit()
+            logger.info(f"Auto-updated {owner_repo} to {version}")
+        else:
+            logger.warning(f"Auto-update failed for {owner_repo}: {new_version}")
+
+        self._process_next_auto_update()
+
+    def _on_auto_updates_complete(self) -> None:
+        """Show results after all auto-updates finish and offer to refresh."""
+        results = self._github_auto_update_results
+        succeeded = [r for r, ok in results if ok]
+        failed = [r for r, ok in results if not ok]
+
+        summary_parts = []
+        if succeeded:
+            summary_parts.append(
+                self.tr("Updated: {mods}").format(mods=", ".join(succeeded))
+            )
+        if failed:
+            summary_parts.append(
+                self.tr("Failed: {mods}").format(mods=", ".join(failed))
+            )
+
+        refresh_now = show_dialogue_conditional(
+            title=self.tr("GitHub Auto-Update Complete"),
+            text=self.tr(
+                "{count} mod(s) were auto-updated.\n\n{summary}\n\n"
+                "The updated versions won't appear until you refresh. "
+                "Refresh now?"
+            ).format(count=len(succeeded), summary="\n".join(summary_parts)),
+        )
+        if refresh_now:
+            EventBus().do_refresh_mods_lists.emit()
 
     def _connect_signals(self) -> None:
         # Bind install mod signal
         EventBus().do_add_git_mod.connect(self._do_git_install_mod)
+        EventBus().do_open_github_mods_panel.connect(self._on_open_github_mods_panel)
 
         # Bind update check signals
         update_targets = [
@@ -147,6 +344,38 @@ class MainContentController(QObject):
         EventBus().do_upload_community_rules_db_to_github.connect(
             self._on_do_upload_community_db_to_github
         )
+        EventBus().github_version_switch_requested.connect(
+            self._on_github_version_switch
+        )
+
+    def _get_github_cache_session(self) -> Session:
+        """Create a session for the global GitHub release cache DB."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        from app.utils.github.models import CacheBase
+
+        cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
+        engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
+        CacheBase.metadata.create_all(engine)
+        return sessionmaker(bind=engine)()
+
+    def _on_open_github_mods_panel(self) -> None:
+        """Open the GitHub Mods panel, reusing the existing window if open."""
+        from app.windows.github_mods_panel import GitHubModsPanel
+
+        if self._github_mods_panel is not None and self._github_mods_panel.isVisible():
+            self._github_mods_panel.raise_()
+            self._github_mods_panel.activateWindow()
+            return
+
+        if self._github_mods_panel is not None:
+            self._github_mods_panel.close()
+            self._github_mods_panel.deleteLater()
+
+        self._github_mods_panel = GitHubModsPanel()
+        self.view.window_manager.register(self._github_mods_panel)
+        self._github_mods_panel.show()
 
     @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
@@ -221,13 +450,38 @@ class MainContentController(QObject):
         else:
             logger.debug("User declined batch update.")
 
+    def _filter_non_github_repos(self, repos_paths: List[Path]) -> List[Path]:
+        """Filter out paths tracked as GitHub mods in the current instance."""
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        try:
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                settings.aux_db_path
+            )
+            with aux_controller.Session() as session:
+                github_paths = {
+                    entry.mod_path for entry in session.query(GitHubModEntry).all()
+                }
+        except Exception as e:
+            logger.debug(f"Could not check GitHub mods table: {e}")
+            return list(repos_paths)
+
+        return [p for p in repos_paths if str(p) not in github_paths]
+
     def _on_update_repos(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories."""
+        filtered_paths = self._filter_non_github_repos(repos_paths)
+        if not filtered_paths:
+            logger.debug("All repos are GitHub mods, skipping batch update.")
+            return
         logger.debug(
-            f"Scheduling concurrent update for {len(repos_paths)} repositories."
+            f"Scheduling concurrent update for {len(filtered_paths)} repositories "
+            f"({len(repos_paths) - len(filtered_paths)} GitHub mods excluded)."
         )
         config = GitOperationConfig(notify_errors=True)
-        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker = GitBatchUpdateWorker(filtered_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results)
         self.thread_pool.start(worker)
 
@@ -551,11 +805,14 @@ class MainContentController(QObject):
 
     def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories silently."""
+        filtered_paths = self._filter_non_github_repos(repos_paths)
+        if not filtered_paths:
+            return
         logger.debug(
-            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
+            f"Scheduling silent concurrent update for {len(filtered_paths)} repositories."
         )
         config = GitOperationConfig(notify_errors=False)
-        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker = GitBatchUpdateWorker(filtered_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results_silent)
         self.thread_pool.start(worker)
 
@@ -751,23 +1008,364 @@ class MainContentController(QObject):
 
     @Slot()
     def _do_git_install_mod(self) -> None:
-        """Prompt user for repo URL and trigger clone."""
+        """Prompt user for repo URL and trigger clone or GitHub install."""
         args, ok = QInputDialog().getText(
             self.view.mods_panel,
             self.tr("Enter git repo"),
             self.tr("Enter a git repository url (http/https) to clone to local mods:"),
         )
-        if ok and args:
-            self._do_git_clone(
-                base_path=str(
-                    self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].local_folder
-                ),
-                repo_url=args,
+        if not ok or not args:
+            logger.debug("Cancelled git install mod.")
+            return
+
+        base_path = str(
+            self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].local_folder
+        )
+
+        parsed = parse_github_url(args)
+        if parsed is not None:
+            owner, repo = parsed
+            self._do_github_install_flow(f"{owner}/{repo}", args, base_path)
+        else:
+            self._do_git_clone(base_path=base_path, repo_url=args)
+
+    def _do_github_install_flow(
+        self, owner_repo: str, repo_url: str, base_path: str
+    ) -> None:
+        """Handle GitHub URL: query releases, offer choice dialog, install."""
+        if not check_internet_connection():
+            return
+
+        settings = self.settings_controller.settings
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
+
+        try:
+            releases = provider.get_releases(owner_repo, force_refresh=True)
+        except GitHubRateLimitError as e:
+            InformationBox(
+                title=self.tr("GitHub Rate Limit"),
+                text=str(e),
+            ).exec()
+            releases = []
+        except Exception as e:
+            logger.error(f"Failed to query GitHub releases: {e}")
+            releases = []
+
+        if releases:
+            dialog_text = self.tr(
+                "This repository is hosted on GitHub. You can install it as a "
+                "GitHub Mod to track releases and manage versions, or clone it "
+                "directly as a standard git mod."
             )
         else:
-            logger.debug("Cancelled git install mod.")
+            dialog_text = self.tr(
+                "No releases found for this repository. You can install it as a "
+                "GitHub Mod tracking the latest commit (you'll be notified if "
+                "releases are published in the future), or clone it directly "
+                "as a standard git mod."
+            )
+
+        choice = BinaryChoiceDialog(
+            title=self.tr("GitHub Repository Detected"),
+            text=dialog_text,
+            information=self.tr("Repository: {owner_repo}").format(
+                owner_repo=owner_repo
+            ),
+            positive_text=self.tr("Install as GitHub Mod"),
+            negative_text=self.tr("Clone as Git Mod"),
+        )
+
+        if not choice.exec_is_positive():
+            self._do_git_clone(base_path=base_path, repo_url=repo_url)
+            return
+
+        version_labels: list[str] = []
+        releases_by_label: dict[str, ReleaseInfo | None] = {}
+
+        for r in releases:
+            label = f"{r.tag} (pre-release)" if r.prerelease else r.tag
+            version_labels.append(label)
+            releases_by_label[label] = r
+
+        version_labels.append("HEAD (latest commit)")
+        releases_by_label["HEAD (latest commit)"] = None
+
+        stable = [r for r in releases if not r.prerelease]
+        if stable:
+            default_label = stable[0].tag
+        elif releases:
+            default_label = version_labels[0]
+        else:
+            default_label = "HEAD (latest commit)"
+
+        chosen_label, ok = QInputDialog().getItem(
+            self.view.mods_panel,
+            self.tr("Select Version"),
+            self.tr("Choose a version to install:"),
+            version_labels,
+            version_labels.index(default_label),
+            False,
+        )
+        if not ok:
+            return
+
+        target_release = releases_by_label.get(chosen_label)
+        target_asset: ReleaseAsset | None = None
+
+        if target_release is not None:
+            custom_zips = target_release.get_custom_zip_assets()
+            if len(custom_zips) == 1:
+                target_asset = custom_zips[0]
+            elif len(custom_zips) > 1:
+                asset_names = [a.name for a in custom_zips]
+                chosen_asset, ok = QInputDialog().getItem(
+                    self.view.mods_panel,
+                    self.tr("Select Asset"),
+                    self.tr("Multiple release assets found. Choose one:"),
+                    asset_names,
+                    0,
+                    False,
+                )
+                if not ok:
+                    return
+                target_asset = custom_zips[asset_names.index(chosen_asset)]
+            else:
+                answer = show_dialogue_conditional(
+                    title=self.tr("No Release ZIP Found"),
+                    text=self.tr(
+                        "Release {tag} has no ZIP assets. "
+                        "Install from HEAD (latest commit) instead?"
+                    ).format(tag=target_release.tag),
+                    information=self.tr(
+                        "The release only contains source archives, which may "
+                        "not work as a RimWorld mod."
+                    ),
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
+                target_release = None
+
+        repo_name = owner_repo.split("/")[1]
+        target_dir = str(Path(base_path) / repo_name)
+
+        if Path(target_dir).exists():
+            answer = show_dialogue_conditional(
+                title=self.tr("Existing mod found"),
+                text=self.tr(
+                    "A mod folder already exists at this location: {path}"
+                ).format(path=target_dir),
+                information=self.tr("Replace it with the GitHub mod?"),
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+            import shutil
+
+            shutil.rmtree(target_dir, ignore_errors=True)
+
+        self._github_install_worker = GitHubInstallWorker(
+            owner_repo=owner_repo,
+            release=target_release,
+            asset=target_asset,
+            repo_url=repo_url,
+            target_dir=target_dir,
+        )
+        self._github_install_worker.finished.connect(
+            lambda ok, msg, path: self._on_github_install_finished(
+                ok, msg, path, owner_repo, target_release, target_asset
+            )
+        )
+        self._github_install_worker.start()
+
+    def _on_github_install_finished(
+        self,
+        success: bool,
+        message: str,
+        mod_path: str,
+        owner_repo: str,
+        release: ReleaseInfo | None,
+        asset: ReleaseAsset | None,
+    ) -> None:
+        """Handle completed GitHub mod install -- record metadata and refresh."""
+        if not success:
+            InformationBox(
+                title=self.tr("GitHub Install Failed"),
+                text=self.tr("Failed to install GitHub mod: {error}").format(
+                    error=message
+                ),
+            ).exec()
+            return
+
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.models.metadata.metadata_db import Base
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+
+        # Ensure the github_mods table exists (GitHubModEntry shares
+        # the same Base as AuxMetadataEntry, but the controller may
+        # have been created before this model was imported).
+        Base.metadata.create_all(aux_controller.engine)
+
+        with aux_controller.Session() as session:
+            AuxMetadataController.get_or_create(session, mod_path)
+            session.commit()
+
+            version = "HEAD" if release is None else release.tag
+            asset_name = asset.name if asset else None
+
+            existing = (
+                session.query(GitHubModEntry)
+                .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                .first()
+            )
+            if existing is not None:
+                existing.installed_version = version
+                existing.installed_asset_name = asset_name
+            else:
+                entry = GitHubModEntry(
+                    owner_repo=owner_repo,
+                    mod_path=mod_path,
+                    installed_version=version,
+                    installed_asset_name=asset_name,
+                )
+                session.add(entry)
+            session.commit()
+
+        InformationBox(
+            title=self.tr("GitHub Mod Installed"),
+            text=self.tr("Successfully installed {owner_repo} ({version})").format(
+                owner_repo=owner_repo, version=version
+            ),
+        ).exec()
+
+        EventBus().do_refresh_mods_lists.emit()
+
+    @Slot(str, str)
+    def _on_github_version_switch(self, mod_path: str, selected_tag: str) -> None:
+        """Handle version switch request from the mod info panel combo box."""
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.models.metadata.metadata_db import Base
+        from app.utils.github.models import GitHubModEntry
+        from app.utils.github.worker import GitHubVersionSwitchWorker
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+        Base.metadata.create_all(aux_controller.engine)
+
+        with aux_controller.Session() as session:
+            entry = session.query(GitHubModEntry).filter_by(mod_path=mod_path).first()
+            if entry is None:
+                logger.warning(f"No GitHub mod entry for {mod_path}")
+                return
+            owner_repo = entry.owner_repo
+
+        cache_session = self._get_github_cache_session()
+        provider = GitHubProvider(
+            github_token=settings.github_token or None,
+            cache_session=cache_session,
+        )
+        releases = provider.get_releases(owner_repo)
+
+        target_release = None
+        target_asset = None
+
+        if selected_tag != "HEAD (latest commit)":
+            target_release = next((r for r in releases if r.tag == selected_tag), None)
+            if target_release is not None:
+                custom_zips = target_release.get_custom_zip_assets()
+                if len(custom_zips) == 1:
+                    target_asset = custom_zips[0]
+                elif len(custom_zips) > 1:
+                    asset_names = [a.name for a in custom_zips]
+                    chosen_asset, ok = QInputDialog().getItem(
+                        self.view.mods_panel,
+                        self.tr("Select Asset"),
+                        self.tr("Multiple release assets found. Choose one:"),
+                        asset_names,
+                        0,
+                        False,
+                    )
+                    if not ok:
+                        return
+                    target_asset = custom_zips[asset_names.index(chosen_asset)]
+                else:
+                    answer = show_dialogue_conditional(
+                        title=self.tr("No Release ZIP Found"),
+                        text=self.tr(
+                            "Release {tag} has no ZIP assets. Switch to HEAD instead?"
+                        ).format(tag=selected_tag),
+                    )
+                    if answer != QMessageBox.StandardButton.Yes:
+                        return
+                    target_release = None
+
+        repo_url = f"https://github.com/{owner_repo}.git"
+
+        self._github_version_switch_worker = GitHubVersionSwitchWorker(
+            mod_path=mod_path,
+            owner_repo=owner_repo,
+            repo_url=repo_url,
+            target_release=target_release,
+            target_asset=target_asset,
+        )
+        self._github_version_switch_worker.finished.connect(
+            lambda ok, ver, path: self._on_github_version_switch_finished(
+                ok, ver, path, owner_repo
+            )
+        )
+        self._github_version_switch_worker.start()
+
+    def _on_github_version_switch_finished(
+        self, success: bool, new_version: str, mod_path: str, owner_repo: str
+    ) -> None:
+        """Handle completed version switch."""
+        if not success:
+            InformationBox(
+                title=self.tr("Version Switch Failed"),
+                text=self.tr("Failed to switch version: {error}").format(
+                    error=new_version
+                ),
+            ).exec()
+            return
+
+        from app.controllers.metadata_db_controller import AuxMetadataController
+        from app.utils.github.models import GitHubModEntry
+
+        settings = self.settings_controller.settings
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings.aux_db_path
+        )
+
+        version = "HEAD" if new_version.startswith("HEAD") else new_version
+        with aux_controller.Session() as session:
+            entry = (
+                session.query(GitHubModEntry)
+                .filter_by(owner_repo=owner_repo, mod_path=mod_path)
+                .first()
+            )
+            if entry is not None:
+                entry.installed_version = version
+                session.commit()
+
+        InformationBox(
+            title=self.tr("Version Switched"),
+            text=self.tr("Switched {owner_repo} to {version}").format(
+                owner_repo=owner_repo, version=version
+            ),
+        ).exec()
+
+        EventBus().do_refresh_mods_lists.emit()
 
     @Slot(str, str)
     def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:

@@ -8,6 +8,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -248,6 +249,27 @@ class ModInfoPanel:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_steam_url_value.setWordWrap(True)
+        # GitHub source and version
+        self.mod_info_github_source_label = QLabel(self.tr("GitHub:"))
+        self.mod_info_github_source_label.setObjectName("summaryLabel")
+        self.mod_info_github_source_value = QLabel()
+        self.mod_info_github_source_value.setObjectName("summaryValue")
+        self.mod_info_github_source_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_github_source_value.setWordWrap(True)
+
+        self.mod_info_github_version_label = QLabel(self.tr("Version:"))
+        self.mod_info_github_version_label.setObjectName("summaryLabel")
+        self.mod_info_github_version_combo = QComboBox()
+        self.mod_info_github_version_combo.setObjectName("githubVersionCombo")
+        self.mod_info_github_version_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
+
+        self.mod_info_github_update_label = QLabel()
+        self.mod_info_github_update_label.setObjectName("githubUpdateBadge")
+        self.mod_info_github_update_label.hide()
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
         self.mod_info_last_touched_value = QLabel()
@@ -354,6 +376,23 @@ class ModInfoPanel:
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_label, 20)
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_steam_url_layout)
+        self.mod_info_github_source_row = QHBoxLayout()
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_layout.addLayout(self.mod_info_github_source_row)
+        self.mod_info_github_version_row = QHBoxLayout()
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_combo, NAME_VALUE_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(self.mod_info_github_update_label)
+        self.mod_info_layout.addLayout(self.mod_info_github_version_row)
         self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
@@ -404,7 +443,164 @@ class ModInfoPanel:
         ):
             widget.hide()
 
+        self.hide_github_info()
+
+        from app.utils.event_bus import EventBus
+
+        EventBus().do_refresh_mods_lists.connect(self._refresh_github_info)
+
         logger.debug("Finished ModInfo initialization")
+
+    def show_github_info(
+        self,
+        owner_repo: str,
+        installed_version: str,
+        available_versions: list[str],
+        update_available: bool,
+        mod_path: str = "",
+    ) -> None:
+        """Show GitHub source info for a GitHub-tracked mod."""
+        self._github_owner_repo = owner_repo
+        self._github_installed_version = installed_version
+        self._github_mod_path = mod_path
+
+        self.mod_info_github_source_value.setText(owner_repo)
+
+        try:
+            self.mod_info_github_version_combo.activated.disconnect()
+        except RuntimeError:
+            pass  # No prior connection exists; safe to ignore
+
+        self.mod_info_github_version_combo.clear()
+        self.mod_info_github_version_combo.addItems(available_versions)
+        idx = self.mod_info_github_version_combo.findText(installed_version)
+        if idx >= 0:
+            self.mod_info_github_version_combo.setCurrentIndex(idx)
+
+        self.mod_info_github_version_combo.activated.connect(
+            self._on_github_version_selected
+        )
+
+        if update_available:
+            self.mod_info_github_update_label.setText(self.tr("(Update available)"))
+            self.mod_info_github_update_label.show()
+        else:
+            self.mod_info_github_update_label.hide()
+
+        self._set_github_row_visible(True)
+
+    def _on_github_version_selected(self, index: int) -> None:
+        """Handle user selecting a different version in the combo box."""
+        from app.utils.event_bus import EventBus
+
+        selected = self.mod_info_github_version_combo.itemText(index)
+        if selected == self._github_installed_version:
+            return
+
+        EventBus().github_version_switch_requested.emit(self._github_mod_path, selected)
+
+    def hide_github_info(self) -> None:
+        """Hide GitHub info row for non-GitHub mods."""
+        self._set_github_row_visible(False)
+
+    def _set_github_row_visible(self, visible: bool) -> None:
+        self.mod_info_github_source_label.setVisible(visible)
+        self.mod_info_github_source_value.setVisible(visible)
+        self.mod_info_github_version_label.setVisible(visible)
+        self.mod_info_github_version_combo.setVisible(visible)
+        self.mod_info_github_update_label.setVisible(visible)
+
+    def _refresh_github_info(self) -> None:
+        """Re-check GitHub info for the currently displayed mod after a version switch."""
+        try:
+            mod_path = getattr(self, "_github_mod_path", None)
+            if mod_path:
+                self._update_github_info(mod_path)
+        except Exception:
+            logger.debug("Could not refresh GitHub info for current mod")
+
+    def _update_github_info(self, mod_path: str | None) -> None:
+        """Check if mod is GitHub-tracked and show/hide info accordingly."""
+        if not mod_path:
+            self.hide_github_info()
+            return
+
+        try:
+            from app.models.metadata.metadata_db import Base
+            from app.utils.github.models import GitHubModEntry
+
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                self.settings_controller.settings.aux_db_path
+            )
+            Base.metadata.create_all(aux_controller.engine)
+
+            with aux_controller.Session() as session:
+                entry = (
+                    session.query(GitHubModEntry).filter_by(mod_path=mod_path).first()
+                )
+                if entry is None:
+                    self.hide_github_info()
+                    return
+
+                owner_repo = entry.owner_repo
+                installed_version = entry.installed_version
+
+            versions = [installed_version]
+            update_available = False
+
+            try:
+                from sqlalchemy import create_engine
+                from sqlalchemy.orm import sessionmaker as sa_sessionmaker
+
+                from app.utils.github.models import CacheBase, GitHubReleaseCache
+                from app.utils.github.provider import (
+                    GitHubProvider,
+                    _releases_from_json,
+                )
+
+                cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
+                cache_engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
+                CacheBase.metadata.create_all(cache_engine)
+                cache_session = sa_sessionmaker(bind=cache_engine)()
+                try:
+                    cached = (
+                        cache_session.query(GitHubReleaseCache)
+                        .filter_by(owner_repo=owner_repo)
+                        .first()
+                    )
+                    if cached is not None:
+                        releases = _releases_from_json(cached.releases_json)
+                        if releases:
+                            versions = [r.tag for r in releases]
+                            versions.append("HEAD (latest commit)")
+                            latest = GitHubProvider.get_latest_stable_release(releases)
+                            if latest and installed_version != "HEAD":
+                                installed_rel = next(
+                                    (r for r in releases if r.tag == installed_version),
+                                    None,
+                                )
+                                if (
+                                    installed_rel
+                                    and latest.published_at > installed_rel.published_at
+                                ):
+                                    update_available = True
+                            elif latest and installed_version == "HEAD":
+                                update_available = True
+                finally:
+                    cache_session.close()
+            except Exception:
+                logger.debug("Could not load cached releases for {}", owner_repo)
+
+            self.show_github_info(
+                owner_repo=owner_repo,
+                installed_version=installed_version,
+                available_versions=versions,
+                update_available=update_available,
+                mod_path=mod_path,
+            )
+        except Exception:
+            logger.debug("Could not check GitHub mod status for {}", mod_path)
+            self.hide_github_info()
 
     def update_user_mod_notes(self) -> None:
         if self.current_mod_item is None:
@@ -816,6 +1012,9 @@ class ModInfoPanel:
 
         # Set path
         self.mod_info_path_value.setPath(mod_metadata.get("path"))
+
+        # Show or hide GitHub info based on whether this mod is tracked
+        self._update_github_info(mod_metadata.get("path"))
 
         # Set description
         self._set_description(mod_metadata, render_unity_rt)
