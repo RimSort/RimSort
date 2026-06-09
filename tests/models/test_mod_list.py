@@ -1,7 +1,7 @@
 """Tests for app.models.mod_list — ModEntry, create_mod_entry, ModListDiff, ModList."""
 
 from app.models.metadata.metadata_structure import CaseInsensitiveStr, ModType
-from app.models.mod_list import ModEntry, ModListDiff, create_mod_entry
+from app.models.mod_list import ModEntry, ModList, ModListDiff, create_mod_entry
 
 
 class TestModEntry:
@@ -85,6 +85,13 @@ class TestCreateModEntry:
         assert entry.package_id == CaseInsensitiveStr("some.mod")
 
 
+def _entry(path: str, pid: str = "", config_id: str = "") -> ModEntry:
+    """Helper to build ModEntry with sensible defaults."""
+    pid = pid or path.split("/")[-1]
+    config_id = config_id or pid
+    return ModEntry(path=path, package_id=CaseInsensitiveStr(pid), config_id=config_id)
+
+
 class TestModListDiff:
     def test_empty_diff(self) -> None:
         diff = ModListDiff(added=[], removed=[], reordered=False)
@@ -99,3 +106,74 @@ class TestModListDiff:
         assert diff.added == [a]
         assert diff.removed == [b]
         assert diff.reordered is True
+
+
+class TestModListConstruction:
+    def test_empty(self) -> None:
+        ml = ModList()
+        assert len(ml) == 0
+        assert list(ml) == []
+
+    def test_from_entries(self) -> None:
+        entries = [_entry("/a"), _entry("/b"), _entry("/c")]
+        ml = ModList(entries)
+        assert len(ml) == 3
+        assert ml[0] == entries[0]
+        assert ml[1] == entries[1]
+        assert ml[2] == entries[2]
+
+    def test_contains(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b")])
+        assert "/a" in ml
+        assert "/c" not in ml
+
+    def test_index_of_found(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        assert ml.index_of("/b") == 1
+
+    def test_index_of_missing(self) -> None:
+        ml = ModList([_entry("/a")])
+        assert ml.index_of("/z") is None
+
+    def test_getitem_out_of_bounds(self) -> None:
+        ml = ModList([_entry("/a")])
+        try:
+            ml[5]
+            assert False, "Should have raised IndexError"
+        except IndexError:
+            pass
+
+    def test_paths(self) -> None:
+        ml = ModList([_entry("/a", "pkg.a"), _entry("/b", "pkg.b")])
+        assert ml.paths() == ["/a", "/b"]
+
+    def test_package_ids(self) -> None:
+        ml = ModList([_entry("/a", "pkg.a"), _entry("/b", "pkg.b")])
+        pids = ml.package_ids()
+        assert pids == [CaseInsensitiveStr("pkg.a"), CaseInsensitiveStr("pkg.b")]
+
+    def test_entries_for_package_id(self) -> None:
+        e1 = _entry("/local/mymod", "author.mod")
+        e2 = _entry("/workshop/mymod", "author.mod")
+        ml = ModList([e1, e2])
+        found = ml.entries_for_package_id(CaseInsensitiveStr("author.mod"))
+        assert found == [e1, e2]
+
+    def test_entries_for_package_id_missing(self) -> None:
+        ml = ModList([_entry("/a", "pkg.a")])
+        assert ml.entries_for_package_id(CaseInsensitiveStr("pkg.z")) == []
+
+    def test_find_duplicate_package_ids(self) -> None:
+        e1 = _entry("/local/mod", "dup.mod")
+        e2 = _entry("/workshop/mod", "dup.mod")
+        e3 = _entry("/other", "unique.mod")
+        ml = ModList([e1, e2, e3])
+        dupes = ml.find_duplicate_package_ids()
+        assert CaseInsensitiveStr("dup.mod") in dupes
+        assert set(dupes[CaseInsensitiveStr("dup.mod")]) == {"/local/mod", "/workshop/mod"}
+        assert CaseInsensitiveStr("unique.mod") not in dupes
+
+    def test_iter(self) -> None:
+        entries = [_entry("/a"), _entry("/b")]
+        ml = ModList(entries)
+        assert list(ml) == entries
