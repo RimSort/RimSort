@@ -47,24 +47,28 @@ jobs:
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
+
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
+
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: "RimSort"
+
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
+
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
