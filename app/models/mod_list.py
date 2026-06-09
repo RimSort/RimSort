@@ -126,3 +126,76 @@ class ModList:
             for pid, indices in self._pid_index.items()
             if len(indices) > 1
         }
+
+    def insert(self, index: int, entry: ModEntry) -> None:
+        """Insert an entry at the given index.
+
+        :raises ValueError: If the path already exists in the list.
+        :raises IndexError: If index is out of range.
+        """
+        if entry.path in self._path_index:
+            raise ValueError(f"Path already exists: {entry.path}")
+        if index < 0 or index > len(self._entries):
+            raise IndexError(f"Index {index} out of range for list of length {len(self._entries)}")
+        self._entries.insert(index, entry)
+        self._rebuild_indices()
+
+    def remove_by_path(self, path: str) -> ModEntry:
+        """Remove and return the entry with the given path.
+
+        :raises KeyError: If the path is not in the list.
+        """
+        idx = self._path_index.get(path)
+        if idx is None:
+            raise KeyError(f"Path not found: {path}")
+        entry = self._entries.pop(idx)
+        self._rebuild_indices()
+        return entry
+
+    def reorder(self, path: str, new_index: int) -> None:
+        """Move an existing entry to a new position.
+
+        :raises KeyError: If the path is not in the list.
+        :raises IndexError: If new_index is out of range.
+        """
+        old_index = self._path_index.get(path)
+        if old_index is None:
+            raise KeyError(f"Path not found: {path}")
+        if new_index < 0 or new_index >= len(self._entries):
+            raise IndexError(
+                f"Index {new_index} out of range for list of length {len(self._entries)}"
+            )
+        entry = self._entries.pop(old_index)
+        self._entries.insert(new_index, entry)
+        self._rebuild_indices()
+
+    def move_batch(self, paths: list[str], target_index: int) -> None:
+        """Move multiple entries to a target position, preserving their relative order.
+
+        Entries are ordered by their current position (not the order in `paths`),
+        removed, then reinserted at `target_index` (clamped to list bounds).
+        """
+        current_positions = []
+        for p in paths:
+            idx = self._path_index.get(p)
+            if idx is not None:
+                current_positions.append((idx, self._entries[idx]))
+        current_positions.sort(key=lambda x: x[0])
+        moved_entries = [entry for _, entry in current_positions]
+        for entry in moved_entries:
+            self._entries.remove(entry)
+        insert_at = min(target_index, len(self._entries))
+        for i, entry in enumerate(moved_entries):
+            self._entries.insert(insert_at + i, entry)
+        self._rebuild_indices()
+
+    def replace_order(self, entries: list[ModEntry]) -> None:
+        """Replace all entries with a new ordered list. Full index rebuild."""
+        self._entries = list(entries)
+        self._rebuild_indices()
+
+    def clear(self) -> None:
+        """Remove all entries and clear indices."""
+        self._entries.clear()
+        self._path_index.clear()
+        self._pid_index.clear()

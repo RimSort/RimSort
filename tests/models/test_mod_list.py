@@ -1,5 +1,7 @@
 """Tests for app.models.mod_list — ModEntry, create_mod_entry, ModListDiff, ModList."""
 
+import pytest
+
 from app.models.metadata.metadata_structure import CaseInsensitiveStr, ModType
 from app.models.mod_list import ModEntry, ModList, ModListDiff, create_mod_entry
 
@@ -177,3 +179,136 @@ class TestModListConstruction:
         entries = [_entry("/a"), _entry("/b")]
         ml = ModList(entries)
         assert list(ml) == entries
+
+
+class TestModListMutations:
+    def test_insert(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/c")])
+        ml.insert(1, _entry("/b"))
+        assert ml.paths() == ["/a", "/b", "/c"]
+        assert ml.index_of("/b") == 1
+
+    def test_insert_at_start(self) -> None:
+        ml = ModList([_entry("/b")])
+        ml.insert(0, _entry("/a"))
+        assert ml.paths() == ["/a", "/b"]
+
+    def test_insert_at_end(self) -> None:
+        ml = ModList([_entry("/a")])
+        ml.insert(1, _entry("/b"))
+        assert ml.paths() == ["/a", "/b"]
+
+    def test_insert_duplicate_path_raises(self) -> None:
+        ml = ModList([_entry("/a")])
+        with pytest.raises(ValueError):
+            ml.insert(0, _entry("/a"))
+
+    def test_remove_by_path(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        removed = ml.remove_by_path("/b")
+        assert removed.path == "/b"
+        assert ml.paths() == ["/a", "/c"]
+        assert ml.index_of("/c") == 1
+        assert "/b" not in ml
+
+    def test_remove_missing_raises(self) -> None:
+        ml = ModList([_entry("/a")])
+        with pytest.raises(KeyError):
+            ml.remove_by_path("/z")
+
+    def test_reorder_forward(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        ml.reorder("/a", 2)
+        assert ml.paths() == ["/b", "/c", "/a"]
+
+    def test_reorder_backward(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        ml.reorder("/c", 0)
+        assert ml.paths() == ["/c", "/a", "/b"]
+
+    def test_reorder_missing_raises(self) -> None:
+        ml = ModList([_entry("/a")])
+        with pytest.raises(KeyError):
+            ml.reorder("/z", 0)
+
+    def test_reorder_out_of_bounds_raises(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b")])
+        with pytest.raises(IndexError):
+            ml.reorder("/a", 5)
+
+    def test_move_batch(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c"), _entry("/d")])
+        ml.move_batch(["/a", "/c"], 3)
+        assert ml.paths() == ["/b", "/d", "/a", "/c"]
+
+    def test_move_batch_to_start(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        ml.move_batch(["/b", "/c"], 0)
+        assert ml.paths() == ["/b", "/c", "/a"]
+
+    def test_move_batch_preserves_relative_order(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c"), _entry("/d")])
+        ml.move_batch(["/c", "/a"], 1)
+        assert ml.paths() == ["/b", "/a", "/c", "/d"]
+
+    def test_replace_order(self) -> None:
+        entries = [_entry("/a"), _entry("/b"), _entry("/c")]
+        ml = ModList(entries)
+        ml.replace_order([entries[2], entries[0], entries[1]])
+        assert ml.paths() == ["/c", "/a", "/b"]
+
+    def test_clear(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b")])
+        ml.clear()
+        assert len(ml) == 0
+        assert ml.paths() == []
+        assert "/a" not in ml
+
+
+class TestModListIndexConsistency:
+    """Verify indices stay correct after every mutation type."""
+
+    def _check_indices(self, ml: ModList) -> None:
+        """Assert _path_index and _pid_index are consistent with _entries."""
+        for i, entry in enumerate(ml._entries):
+            assert ml._path_index[entry.path] == i, (
+                f"_path_index[{entry.path}] = {ml._path_index[entry.path]}, expected {i}"
+            )
+            assert i in ml._pid_index[entry.package_id], (
+                f"{i} not in _pid_index[{entry.package_id}]"
+            )
+        assert len(ml._path_index) == len(ml._entries)
+        total_pid_refs = sum(len(v) for v in ml._pid_index.values())
+        assert total_pid_refs == len(ml._entries)
+
+    def test_after_insert(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/c")])
+        ml.insert(1, _entry("/b"))
+        self._check_indices(ml)
+
+    def test_after_remove(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        ml.remove_by_path("/b")
+        self._check_indices(ml)
+
+    def test_after_reorder(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c")])
+        ml.reorder("/a", 2)
+        self._check_indices(ml)
+
+    def test_after_move_batch(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b"), _entry("/c"), _entry("/d")])
+        ml.move_batch(["/a", "/c"], 3)
+        self._check_indices(ml)
+
+    def test_after_replace_order(self) -> None:
+        entries = [_entry("/a"), _entry("/b"), _entry("/c")]
+        ml = ModList(entries)
+        ml.replace_order([entries[2], entries[0], entries[1]])
+        self._check_indices(ml)
+
+    def test_after_clear_and_reuse(self) -> None:
+        ml = ModList([_entry("/a"), _entry("/b")])
+        ml.clear()
+        ml.insert(0, _entry("/x"))
+        self._check_indices(ml)
