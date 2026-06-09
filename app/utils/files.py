@@ -46,9 +46,9 @@ def subfolder_contains_candidate_path(
         candidate_path = subfolder_path / candidate_directory
         if candidate_path.exists() and candidate_path.is_dir():
             if case_sensitive:
-                return any(candidate_path.glob(glob_pattern))
+                return any(candidate_path.rglob(glob_pattern))
             else:
-                for file_path in candidate_path.glob(glob_pattern):
+                for file_path in candidate_path.rglob(glob_pattern):
                     if fnmatch.fnmatch(file_path.name.lower(), glob_pattern.lower()):
                         return True
         return False

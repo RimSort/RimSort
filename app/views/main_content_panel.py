@@ -299,6 +299,7 @@ class MainContent(QObject):
         self.duplicate_mods: dict[str, Any] = {}
         self._extract_progress_widget: Optional[TaskProgressWindow] = None
         self.window_manager = WindowManager(self.metadata_manager)
+        self._active_loading_loop: QEventLoop | None = None
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -307,6 +308,15 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    def abort_loading(self) -> None:
+        """Abort any in-progress loading animation by quitting its nested event loop.
+
+        Called from MainWindow.closeEvent to unblock the startup scanning so
+        the process can exit cleanly.
+        """
+        if self._active_loading_loop is not None:
+            self._active_loading_loop.quit()
 
     def close_child_windows(self) -> None:
         """Close all tracked child windows.
@@ -752,7 +762,13 @@ class MainContent(QObject):
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
         loop = QEventLoop()
         loading_animation.finished.connect(loop.quit)
+        # Store ref so closeEvent can break out of this loop
+        self._active_loading_loop = loop
         loop.exec_()
+        self._active_loading_loop = None
+        # If the loop was quit externally (e.g. window close), skip UI cleanup
+        if not loading_animation.animation_finished:
+            return None
         data = loading_animation.data
         # Remove text label if it was passed
         if text and loading_animation_text_label is not None:
@@ -796,7 +812,7 @@ class MainContent(QObject):
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
-            self.do_threaded_loading_animation(
+            result = self.do_threaded_loading_animation(
                 gif_path=str(
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
@@ -805,6 +821,10 @@ class MainContent(QObject):
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
+
+            # If loading was aborted (e.g. window closed during scan), skip remaining work
+            if result is None and self.metadata_manager._abort_requested:
+                return
 
             # Refresh MetadataController alongside MetadataManager
             MetadataController.instance().refresh_metadata()
