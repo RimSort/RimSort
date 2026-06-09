@@ -81,11 +81,44 @@ jobs:
       type: ${{ github.event_name == 'push' && 'Edge' || 'Auto-Build' }}
       format_only: ${{ github.event_name != 'push' }}
 
+  edge-rate-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - name: Check Edge release cooldown
+        id: check
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          last=$(gh release view Edge --repo "$GITHUB_REPOSITORY" --json createdAt -q .createdAt 2>/dev/null || echo "")
+          if [[ -n "$last" ]]; then
+            last_epoch=$(date -d "$last" +%s)
+            now_epoch=$(date +%s)
+            age_hours=$(( (now_epoch - last_epoch) / 3600 ))
+            echo "Last Edge release was ${age_hours}h ago"
+            if (( age_hours < 6 )); then
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::Skipping Edge build — last release was ${age_hours}h ago (minimum 6h cooldown)"
+              exit 0
+            fi
+          else
+            echo "No previous Edge release found"
+          fi
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   attested-build:
-    needs: [detect-changes, pre-build]
+    needs: [detect-changes, pre-build, edge-rate-check]
     if: >-
       needs.detect-changes.outputs.app_changed == 'true'
       && github.event_name != 'pull_request'
+      && (github.event_name != 'push' || needs.edge-rate-check.outputs.should_release == 'true')
     permissions:
       id-token: write
       contents: read
@@ -112,9 +145,10 @@ jobs:
       attest: false
 
   edge-release:
-    needs: [attested-build, pre-build, pre-pyright, pre-test]
+    needs: [attested-build, pre-build, pre-pyright, pre-test, edge-rate-check]
     if: >-
       github.event_name == 'push'
+      && needs.edge-rate-check.outputs.should_release == 'true'
       && needs.attested-build.result == 'success'
       && needs.pre-pyright.result == 'success'
       && needs.pre-test.result == 'success'
@@ -207,6 +241,7 @@ jobs:
       - pre-pyright
       - pre-test
       - pre-build
+      - edge-rate-check
       - attested-build
       - non-attested-build
       - edge-release
@@ -221,6 +256,7 @@ jobs:
             "${{ needs.pre-pyright.result }}"
             "${{ needs.pre-test.result }}"
             "${{ needs.pre-build.result }}"
+            "${{ needs.edge-rate-check.result }}"
             "${{ needs.attested-build.result }}"
             "${{ needs.non-attested-build.result }}"
             "${{ needs.edge-release.result }}"
