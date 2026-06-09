@@ -415,3 +415,127 @@ class TestFromSortedPaths:
         source = ModList([_entry("/a")])
         result = ModList.from_sorted_paths([], source)
         assert len(result) == 0
+
+
+from unittest.mock import MagicMock, PropertyMock
+
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod
+
+
+def _make_mock_metadata_controller(
+    mods: dict[str, tuple[str, ModType]],
+) -> MagicMock:
+    """Build a mock MetadataController with mods_metadata and packageid_to_paths.
+
+    :param mods: dict of path -> (packageId, ModType)
+    """
+    mc = MagicMock()
+
+    mods_metadata: dict[str, ListedMod] = {}
+    pid_to_paths: dict[str, set[str]] = {}
+
+    for path, (pid, mod_type) in mods.items():
+        mod = MagicMock(spec=AboutXmlMod)
+        mod.package_id = CaseInsensitiveStr(pid)
+        mod.mod_type = mod_type
+        mods_metadata[path] = mod
+        pid_to_paths.setdefault(pid.lower(), set()).add(path)
+
+    mc.mods_metadata = mods_metadata
+    type(mc).packageid_to_paths = PropertyMock(return_value=pid_to_paths)
+    return mc
+
+
+class TestFromModsConfig:
+    def test_basic_resolution(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/local/mod_a": ("author.moda", ModType.LOCAL),
+            "/local/mod_b": ("author.modb", ModType.LOCAL),
+        })
+        config = ModsConfig("1.5", ["author.moda", "author.modb"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert mod_list.paths() == ["/local/mod_a", "/local/mod_b"]
+        assert missing == []
+
+    def test_missing_mod(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/local/mod_a": ("author.moda", ModType.LOCAL),
+        })
+        config = ModsConfig("1.5", ["author.moda", "ghost.mod"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert mod_list.paths() == ["/local/mod_a"]
+        assert "ghost.mod" in missing
+
+    def test_steam_suffix_prefers_workshop(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/local/mymod": ("author.mod", ModType.LOCAL),
+            "/workshop/mymod": ("author.mod", ModType.STEAM_WORKSHOP),
+        })
+        config = ModsConfig("1.5", ["author.mod_steam"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert len(mod_list) == 1
+        assert mod_list[0].path == "/workshop/mymod"
+        assert mod_list[0].config_id == "author.mod_steam"
+
+    def test_no_suffix_prefers_expansion(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/game/Data/Core": ("ludeon.rimworld", ModType.LUDEON),
+            "/workshop/rimworld": ("ludeon.rimworld", ModType.STEAM_WORKSHOP),
+        })
+        config = ModsConfig("1.5", ["ludeon.rimworld"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert mod_list[0].path == "/game/Data/Core"
+
+    def test_no_suffix_fallback_to_local(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/local/mymod": ("author.mod", ModType.LOCAL),
+            "/workshop/mymod": ("author.mod", ModType.STEAM_WORKSHOP),
+        })
+        config = ModsConfig("1.5", ["author.mod"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert mod_list[0].path == "/local/mymod"
+
+    def test_preserves_order(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/a": ("mod.a", ModType.LOCAL),
+            "/b": ("mod.b", ModType.LOCAL),
+            "/c": ("mod.c", ModType.LOCAL),
+        })
+        config = ModsConfig("1.5", ["mod.c", "mod.a", "mod.b"], [])
+        mod_list, _ = ModList.from_mods_config(config, mc)
+        assert mod_list.package_ids() == [
+            CaseInsensitiveStr("mod.c"),
+            CaseInsensitiveStr("mod.a"),
+            CaseInsensitiveStr("mod.b"),
+        ]
+
+    def test_round_trip(self) -> None:
+        mc = _make_mock_metadata_controller({
+            "/a": ("mod.a", ModType.LOCAL),
+            "/b": ("mod.b", ModType.STEAM_WORKSHOP),
+        })
+        original_config = ModsConfig(
+            "1.5",
+            ["mod.a", "mod.b"],
+            [CaseInsensitiveStr("ludeon.rimworld")],
+        )
+        mod_list, _ = ModList.from_mods_config(original_config, mc)
+        roundtripped = mod_list.to_mods_config(
+            "1.5", [CaseInsensitiveStr("ludeon.rimworld")]
+        )
+        assert roundtripped.activeMods == original_config.activeMods
+        assert roundtripped.knownExpansions == original_config.knownExpansions
+
+    def test_empty_config(self) -> None:
+        mc = _make_mock_metadata_controller({})
+        config = ModsConfig("1.5", [], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert len(mod_list) == 0
+        assert missing == []
+
+    def test_all_missing(self) -> None:
+        mc = _make_mock_metadata_controller({})
+        config = ModsConfig("1.5", ["gone.a", "gone.b"], [])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert len(mod_list) == 0
+        assert set(missing) == {"gone.a", "gone.b"}

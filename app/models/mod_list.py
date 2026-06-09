@@ -9,14 +9,30 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from loguru import logger
+from natsort import natsorted
 
 from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
     CaseInsensitiveStr,
     ModsConfig,
     ModType,
 )
+
+if TYPE_CHECKING:
+    from app.controllers.metadata_controller import MetadataController
+
+
+_STEAM_SUFFIX = "_steam"
+
+_SOURCE_PRIORITY_STEAM: list[ModType] = [ModType.STEAM_WORKSHOP, ModType.LOCAL]
+_SOURCE_PRIORITY_DEFAULT: list[ModType] = [
+    ModType.LUDEON,
+    ModType.LOCAL,
+    ModType.STEAM_WORKSHOP,
+]
 
 
 @dataclass(frozen=True)
@@ -257,3 +273,80 @@ class ModList:
             else:
                 logger.warning(f"from_sorted_paths: path not in source, skipping: {path}")
         return cls(entries)
+
+    @classmethod
+    def from_mods_config(
+        cls,
+        config: ModsConfig,
+        metadata_controller: MetadataController,
+    ) -> tuple[ModList, list[str]]:
+        """Resolve a ModsConfig into a ModList by mapping packageIds to paths.
+
+        Handles _steam suffix detection and source-priority resolution for
+        duplicate mods. Unresolved packageIds are returned in the missing list.
+
+        :param config: The ModsConfig loaded from XML.
+        :param metadata_controller: Provides mods_metadata and packageid_to_paths.
+        :return: (resolved ModList, list of missing packageId strings)
+        """
+        entries: list[ModEntry] = []
+        missing: list[str] = []
+        seen_paths: set[str] = set()
+        pid_to_paths = metadata_controller.packageid_to_paths
+
+        for config_id_ci in config.activeMods:
+            config_id_str = str(config_id_ci)
+            is_steam = config_id_str.endswith(_STEAM_SUFFIX)
+            raw_pid = config_id_str[: -len(_STEAM_SUFFIX)] if is_steam else config_id_str
+
+            candidate_paths = pid_to_paths.get(raw_pid, set())
+            if not candidate_paths:
+                missing.append(raw_pid)
+                continue
+
+            sources = _SOURCE_PRIORITY_STEAM if is_steam else _SOURCE_PRIORITY_DEFAULT
+            resolved_path = cls._resolve_path(
+                candidate_paths,
+                sources,
+                metadata_controller,
+                seen_paths,
+            )
+
+            if resolved_path is None:
+                missing.append(raw_pid)
+                continue
+
+            seen_paths.add(resolved_path)
+            mod = metadata_controller.mods_metadata[resolved_path]
+            has_duplicate = len(candidate_paths) > 1
+            entry = create_mod_entry(
+                path=resolved_path,
+                package_id=CaseInsensitiveStr(raw_pid),
+                mod_type=mod.mod_type,
+                has_duplicate=has_duplicate,
+            )
+            entries.append(entry)
+
+        return cls(entries), missing
+
+    @staticmethod
+    def _resolve_path(
+        candidate_paths: set[str],
+        source_priority: list[ModType],
+        metadata_controller: MetadataController,
+        seen_paths: set[str],
+    ) -> str | None:
+        """Pick the best path from candidates using source priority and natsort tiebreaking."""
+        for source_type in source_priority:
+            source_paths = [
+                p
+                for p in candidate_paths
+                if p not in seen_paths
+                and metadata_controller.mods_metadata[p].mod_type == source_type
+            ]
+            if source_paths:
+                return natsorted(source_paths)[0]
+        remaining = [p for p in candidate_paths if p not in seen_paths]
+        if remaining:
+            return natsorted(remaining)[0]
+        return None
