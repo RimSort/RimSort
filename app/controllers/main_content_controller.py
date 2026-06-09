@@ -374,7 +374,7 @@ class MainContentController(QObject):
             self._github_mods_panel.deleteLater()
 
         self._github_mods_panel = GitHubModsPanel()
-        self.view._child_windows.append(self._github_mods_panel)
+        self.view.window_manager.register(self._github_mods_panel)
         self._github_mods_panel.show()
 
     @Slot(list)
