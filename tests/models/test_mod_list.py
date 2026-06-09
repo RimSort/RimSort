@@ -10,6 +10,7 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     ModsConfig,
     ModType,
+    ScenarioMod,
 )
 from app.models.mod_list import ModEntry, ModList, ModListDiff, create_mod_entry
 
@@ -596,6 +597,28 @@ class TestFromRemaining:
         active = ModList([_entry("/a", "mod.a")])
         remaining = ModList.from_remaining({"/a"}, active, mc)
         assert len(remaining) == 0
+
+    def test_non_about_xml_mod_gets_synthetic_pid(self) -> None:
+        """ScenarioMod and invalid ListedMod entries get __path: prefixed package_id."""
+        mc = MagicMock()
+        scenario = MagicMock(spec=ScenarioMod)
+        scenario.mod_type = ModType.LOCAL
+        invalid = MagicMock(spec=ListedMod)
+        invalid.mod_type = ModType.UNKNOWN
+        mc.mods_metadata = {
+            "/scenarios/my_scenario": scenario,
+            "/invalid/leftover": invalid,
+        }
+        active = ModList()
+        remaining = ModList.from_remaining(
+            {"/scenarios/my_scenario", "/invalid/leftover"}, active, mc
+        )
+        assert len(remaining) == 2
+        for entry in remaining:
+            assert entry.package_id.startswith("__path:")
+            assert entry.path in str(entry.package_id)
+        dupes = remaining.find_duplicate_package_ids()
+        assert len(dupes) == 0
 
     def test_empty_all(self) -> None:
         mc = _make_mock_metadata_controller({})

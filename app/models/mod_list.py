@@ -26,11 +26,19 @@ if TYPE_CHECKING:
 
 
 _STEAM_SUFFIX = "_steam"
+_SYNTHETIC_PID_PREFIX = "__path:"
 
-_SOURCE_PRIORITY_STEAM: list[ModType] = [ModType.STEAM_WORKSHOP, ModType.LOCAL]
+_SOURCE_PRIORITY_STEAM: list[ModType] = [
+    ModType.STEAM_WORKSHOP,
+    ModType.LOCAL,
+    ModType.STEAM_CMD,
+    ModType.GIT,
+]
 _SOURCE_PRIORITY_DEFAULT: list[ModType] = [
     ModType.LUDEON,
     ModType.LOCAL,
+    ModType.STEAM_CMD,
+    ModType.GIT,
     ModType.STEAM_WORKSHOP,
 ]
 
@@ -102,10 +110,15 @@ class ModList:
         self._rebuild_indices()
 
     def _rebuild_indices(self) -> None:
-        """Full index rebuild from _entries. O(n)."""
+        """Full index rebuild from _entries. O(n).
+
+        :raises ValueError: If duplicate paths are found in _entries.
+        """
         self._path_index = {}
         self._pid_index = {}
         for i, entry in enumerate(self._entries):
+            if entry.path in self._path_index:
+                raise ValueError(f"Duplicate path in entries: {entry.path}")
             self._path_index[entry.path] = i
             self._pid_index.setdefault(entry.package_id, []).append(i)
 
@@ -196,6 +209,7 @@ class ModList:
         Entries are ordered by their current position (not the order in `paths`),
         removed, then reinserted at `target_index` (clamped to list bounds).
         """
+        paths = list(dict.fromkeys(paths))
         current_positions = []
         for p in paths:
             idx = self._path_index.get(p)
@@ -205,7 +219,7 @@ class ModList:
         moved_entries = [entry for _, entry in current_positions]
         for entry in moved_entries:
             self._entries.remove(entry)
-        insert_at = min(target_index, len(self._entries))
+        insert_at = max(0, min(target_index, len(self._entries)))
         for i, entry in enumerate(moved_entries):
             self._entries.insert(insert_at + i, entry)
         self._rebuild_indices()
@@ -226,8 +240,16 @@ class ModList:
         self_paths = set(self._path_index.keys())
         other_paths = set(other._path_index.keys())
 
-        added = [other[other._path_index[p]] for p in other_paths - self_paths]
-        removed = [self[self._path_index[p]] for p in self_paths - other_paths]
+        added_paths = other_paths - self_paths
+        added = sorted(
+            [other[other._path_index[p]] for p in added_paths],
+            key=lambda e: other._path_index[e.path],
+        )
+        removed_paths = self_paths - other_paths
+        removed = sorted(
+            [self[self._path_index[p]] for p in removed_paths],
+            key=lambda e: self._path_index[e.path],
+        )
 
         common = self_paths & other_paths
         reordered = False
@@ -388,10 +410,8 @@ class ModList:
             if not isinstance(mod, AboutXmlMod):
                 entry = create_mod_entry(
                     path=path,
-                    package_id=CaseInsensitiveStr(""),
-                    mod_type=mod.mod_type
-                    if hasattr(mod, "mod_type")
-                    else ModType.UNKNOWN,
+                    package_id=CaseInsensitiveStr(f"{_SYNTHETIC_PID_PREFIX}{path}"),
+                    mod_type=mod.mod_type,
                     has_duplicate=False,
                 )
             else:
