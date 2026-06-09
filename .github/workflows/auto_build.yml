@@ -80,7 +80,7 @@ jobs:
     with:
       type: ${{ github.event_name == 'push' && 'Edge' || 'Auto-Build' }}
       format_only: ${{ github.event_name != 'push' }}
-
+      
   edge-rate-check:
     runs-on: ubuntu-latest
     permissions:

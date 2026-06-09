@@ -45,6 +45,7 @@ from app.utils.constants import (
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
+from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.acf_log_reader import AcfLogReader
@@ -287,6 +288,13 @@ class MainWindow(QMainWindow):
 
         :param event: The close event to handle.
         """
+        # Abort any in-progress metadata scanning so background threads stop
+        MetadataManager.instance().request_abort()
+
+        # Break out of the nested QEventLoop in do_threaded_loading_animation
+        # so the startup sequence can unwind and the process can exit
+        self.main_content_panel.abort_loading()
+
         # Stop filesystem watchdog if running
         self.shutdown_watchdog()
 
@@ -311,6 +319,9 @@ class MainWindow(QMainWindow):
         )
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
+        # If the window was closed during scanning, skip remaining initialization
+        if not self.isVisible():
+            return
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix

@@ -18,6 +18,7 @@ body:
         - Compiled (Darwin ARM64)
         - Compiled (Ubuntu 22.04)
         - Compiled (Ubuntu 24.04)
+        - AppImage (x86-64)
         - Self-Compiled
         - Python Interpreter
     validations:

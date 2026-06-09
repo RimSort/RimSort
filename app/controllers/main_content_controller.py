@@ -405,8 +405,15 @@ class MainContentController(QObject):
         # Check internet connection before attempting task
         if not check_internet_connection():
             return
-        repo_folder = git_utils.git_get_repo_name(repo_url)
-        full_repo_path = Path(base_path) / repo_folder
+
+        parsed = git_utils.parse_git_url(repo_url)
+        if parsed is None:
+            logger.error(f"Invalid git URL: {repo_url}")
+            return
+
+        clone_url = parsed.clone_url
+        checkout_branch = parsed.branch
+        full_repo_path = Path(base_path) / parsed.repo_name
 
         # Always ask user before starting clone
         binary_diag = BinaryChoiceDialog(
@@ -437,13 +444,23 @@ class MainContentController(QObject):
                 button_text_override=[self.tr("Clone new"), self.tr("Update existing")],
             )
             if answer == self.tr("Clone new"):
-                self._start_git_clone_worker(repo_url, str(full_repo_path), force=True)
+                self._start_git_clone_worker(
+                    clone_url,
+                    str(full_repo_path),
+                    force=True,
+                    checkout_branch=checkout_branch,
+                )
             elif answer == self.tr("Update existing"):
                 self._on_update_repos([full_repo_path])
             else:
                 logger.debug("User cancelled clone operation.")
         else:
-            self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
+            self._start_git_clone_worker(
+                clone_url,
+                str(full_repo_path),
+                force=False,
+                checkout_branch=checkout_branch,
+            )
 
     def _update_databases_on_startup_if_enabled_silent(self) -> None:
         """
@@ -512,17 +529,25 @@ class MainContentController(QObject):
     def _do_auto_database_update(self, base_path: str, repo_url: str) -> None:
         """Handle automatic database update: silently update existing or clone new."""
         logger.info(f"Starting automatic database update: {repo_url}")
-        repo_folder = git_utils.git_get_repo_name(repo_url)
-        full_repo_path = Path(base_path) / repo_folder
+
+        parsed = git_utils.parse_git_url(repo_url)
+        if parsed is None:
+            logger.error(f"Invalid git URL for database update: {repo_url}")
+            return
+
+        full_repo_path = Path(base_path) / parsed.repo_name
 
         if full_repo_path.exists():
-            # For existing repositories, update them silently (default behavior)
             logger.info(f"Updating existing database repository: {full_repo_path}")
             self._on_update_repos_silent([full_repo_path])
         else:
-            # For new repositories, clone them silently
             logger.info(f"Cloning new database repository to: {full_repo_path}")
-            self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
+            self._start_git_clone_worker(
+                parsed.clone_url,
+                str(full_repo_path),
+                force=False,
+                checkout_branch=parsed.branch,
+            )
 
     def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent batch pull for multiple repositories silently."""
@@ -655,7 +680,11 @@ class MainContentController(QObject):
         self._cleanup_http_download_worker()
 
     def _start_git_clone_worker(
-        self, repo_url: str, base_path: str, force: bool
+        self,
+        repo_url: str,
+        base_path: str,
+        force: bool,
+        checkout_branch: Optional[str] = None,
     ) -> None:
         """Initialize and start GitCloneWorker."""
         if self._git_clone_worker is not None:
@@ -673,6 +702,7 @@ class MainContentController(QObject):
         self._git_clone_worker = GitCloneWorker(
             repo_url=repo_url,
             repo_path=base_path,
+            checkout_branch=checkout_branch,
             force=force,
             config=config,
         )
