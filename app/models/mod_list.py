@@ -199,3 +199,20 @@ class ModList:
         self._entries.clear()
         self._path_index.clear()
         self._pid_index.clear()
+
+    def diff(self, other: ModList) -> ModListDiff:
+        """Compare this list against another, returning added/removed/reordered."""
+        self_paths = set(self._path_index.keys())
+        other_paths = set(other._path_index.keys())
+
+        added = [other[other._path_index[p]] for p in other_paths - self_paths]
+        removed = [self[self._path_index[p]] for p in self_paths - other_paths]
+
+        common = self_paths & other_paths
+        reordered = False
+        if not added and not removed and common:
+            self_order = [e.path for e in self._entries if e.path in common]
+            other_order = [e.path for e in other._entries if e.path in common]
+            reordered = self_order != other_order
+
+        return ModListDiff(added=added, removed=removed, reordered=reordered)

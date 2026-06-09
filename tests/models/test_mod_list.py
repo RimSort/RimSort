@@ -312,3 +312,55 @@ class TestModListIndexConsistency:
         ml.clear()
         ml.insert(0, _entry("/x"))
         self._check_indices(ml)
+
+
+class TestModListDiffMethod:
+    def test_identical_lists(self) -> None:
+        entries = [_entry("/a"), _entry("/b")]
+        a = ModList(entries)
+        b = ModList(entries)
+        d = a.diff(b)
+        assert d.added == []
+        assert d.removed == []
+        assert d.reordered is False
+
+    def test_added(self) -> None:
+        a = ModList([_entry("/a")])
+        new_entry = _entry("/b")
+        b = ModList([_entry("/a"), new_entry])
+        d = a.diff(b)
+        assert d.added == [new_entry]
+        assert d.removed == []
+
+    def test_removed(self) -> None:
+        removed_entry = _entry("/b")
+        a = ModList([_entry("/a"), removed_entry])
+        b = ModList([_entry("/a")])
+        d = a.diff(b)
+        assert d.added == []
+        assert d.removed == [removed_entry]
+
+    def test_reordered(self) -> None:
+        e1, e2 = _entry("/a"), _entry("/b")
+        a = ModList([e1, e2])
+        b = ModList([e2, e1])
+        d = a.diff(b)
+        assert d.added == []
+        assert d.removed == []
+        assert d.reordered is True
+
+    def test_both_empty(self) -> None:
+        d = ModList().diff(ModList())
+        assert d.added == []
+        assert d.removed == []
+        assert d.reordered is False
+
+    def test_added_and_removed(self) -> None:
+        ea = _entry("/a")
+        eb = _entry("/b")
+        a = ModList([ea])
+        b = ModList([eb])
+        d = a.diff(b)
+        assert d.added == [eb]
+        assert d.removed == [ea]
+        assert d.reordered is False
