@@ -144,6 +144,12 @@ class AppController(QObject):
         """Runs the main application loop after initializing the main window."""
         self.main_window.show()
         self.main_window.initialize_content(is_initial=True)
+        # If the window was closed during initialization (e.g. user closed during
+        # mod scanning), skip the main event loop — Qt resets the quit flag in exec()
+        # so a prior quit() from quitOnLastWindowClosed would have no effect and the
+        # event loop would block forever with no visible windows.
+        if not self.main_window.isVisible():
+            return 0
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:
