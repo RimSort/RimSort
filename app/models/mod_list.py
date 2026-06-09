@@ -155,7 +155,9 @@ class ModList:
         if entry.path in self._path_index:
             raise ValueError(f"Path already exists: {entry.path}")
         if index < 0 or index > len(self._entries):
-            raise IndexError(f"Index {index} out of range for list of length {len(self._entries)}")
+            raise IndexError(
+                f"Index {index} out of range for list of length {len(self._entries)}"
+            )
         self._entries.insert(index, entry)
         self._rebuild_indices()
 
@@ -271,7 +273,9 @@ class ModList:
             if idx is not None:
                 entries.append(source[idx])
             else:
-                logger.warning(f"from_sorted_paths: path not in source, skipping: {path}")
+                logger.warning(
+                    f"from_sorted_paths: path not in source, skipping: {path}"
+                )
         return cls(entries)
 
     @classmethod
@@ -297,7 +301,9 @@ class ModList:
         for config_id_ci in config.activeMods:
             config_id_str = str(config_id_ci)
             is_steam = config_id_str.endswith(_STEAM_SUFFIX)
-            raw_pid = config_id_str[: -len(_STEAM_SUFFIX)] if is_steam else config_id_str
+            raw_pid = (
+                config_id_str[: -len(_STEAM_SUFFIX)] if is_steam else config_id_str
+            )
 
             candidate_paths = pid_to_paths.get(raw_pid, set())
             if not candidate_paths:
@@ -350,3 +356,50 @@ class ModList:
         if remaining:
             return natsorted(remaining)[0]
         return None
+
+    @classmethod
+    def from_remaining(
+        cls,
+        all_mod_paths: set[str],
+        active: ModList,
+        metadata_controller: MetadataController,
+    ) -> ModList:
+        """Build the inactive mod list from all known paths minus active paths.
+
+        Entries use config_id = str(package_id) (no _steam suffix) since
+        inactive mods don't serialize to ModsConfig.xml.
+
+        :param all_mod_paths: Set of all known mod paths.
+        :param active: The active ModList to subtract.
+        :param metadata_controller: For looking up packageId and ModType per path.
+        :return: A ModList of inactive mods.
+        """
+        active_paths = set(active.paths())
+        inactive_paths = all_mod_paths - active_paths
+
+        entries: list[ModEntry] = []
+        for path in sorted(inactive_paths):
+            mod = metadata_controller.mods_metadata.get(path)
+            if mod is None:
+                logger.warning(
+                    f"from_remaining: path not in metadata, skipping: {path}"
+                )
+                continue
+            if not isinstance(mod, AboutXmlMod):
+                entry = create_mod_entry(
+                    path=path,
+                    package_id=CaseInsensitiveStr(""),
+                    mod_type=mod.mod_type
+                    if hasattr(mod, "mod_type")
+                    else ModType.UNKNOWN,
+                    has_duplicate=False,
+                )
+            else:
+                entry = create_mod_entry(
+                    path=path,
+                    package_id=mod.package_id,
+                    mod_type=mod.mod_type,
+                    has_duplicate=False,
+                )
+            entries.append(entry)
+        return cls(entries)
