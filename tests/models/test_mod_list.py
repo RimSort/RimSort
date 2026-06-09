@@ -1,7 +1,7 @@
 """Tests for app.models.mod_list — ModEntry, create_mod_entry, ModListDiff, ModList."""
 
 from app.models.metadata.metadata_structure import CaseInsensitiveStr, ModType
-from app.models.mod_list import ModEntry, create_mod_entry
+from app.models.mod_list import ModEntry, ModListDiff, create_mod_entry
 
 
 class TestModEntry:
@@ -83,3 +83,19 @@ class TestCreateModEntry:
         )
         assert entry.path == "/some/path"
         assert entry.package_id == CaseInsensitiveStr("some.mod")
+
+
+class TestModListDiff:
+    def test_empty_diff(self) -> None:
+        diff = ModListDiff(added=[], removed=[], reordered=False)
+        assert len(diff.added) == 0
+        assert len(diff.removed) == 0
+        assert diff.reordered is False
+
+    def test_diff_fields(self) -> None:
+        a = ModEntry("/a", CaseInsensitiveStr("a"), "a")
+        b = ModEntry("/b", CaseInsensitiveStr("b"), "b")
+        diff = ModListDiff(added=[a], removed=[b], reordered=True)
+        assert diff.added == [a]
+        assert diff.removed == [b]
+        assert diff.reordered is True

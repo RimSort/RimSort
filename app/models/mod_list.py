@@ -33,6 +33,20 @@ class ModEntry:
     config_id: str
 
 
+@dataclass
+class ModListDiff:
+    """Result of comparing two ModLists.
+
+    :param added: Entries in the other list but not this one.
+    :param removed: Entries in this list but not the other.
+    :param reordered: True if both lists have the same entries but in different order.
+    """
+
+    added: list[ModEntry]
+    removed: list[ModEntry]
+    reordered: bool
+
+
 def create_mod_entry(
     path: str,
     package_id: CaseInsensitiveStr,
