@@ -364,3 +364,54 @@ class TestModListDiffMethod:
         assert d.added == [eb]
         assert d.removed == [ea]
         assert d.reordered is False
+
+
+from app.models.metadata.metadata_structure import ModsConfig
+
+
+class TestToModsConfig:
+    def test_basic(self) -> None:
+        entries = [
+            _entry("/a", "pkg.a"),
+            _entry("/b", "pkg.b"),
+        ]
+        ml = ModList(entries)
+        config = ml.to_mods_config("1.5", [CaseInsensitiveStr("ludeon.rimworld")])
+        assert config.version == "1.5"
+        assert config.activeMods == [CaseInsensitiveStr("pkg.a"), CaseInsensitiveStr("pkg.b")]
+        assert config.knownExpansions == [CaseInsensitiveStr("ludeon.rimworld")]
+
+    def test_uses_config_id(self) -> None:
+        entry = ModEntry("/w/mod", CaseInsensitiveStr("author.mod"), "author.mod_steam")
+        ml = ModList([entry])
+        config = ml.to_mods_config("1.5", [])
+        assert config.activeMods == [CaseInsensitiveStr("author.mod_steam")]
+
+    def test_empty(self) -> None:
+        ml = ModList()
+        config = ml.to_mods_config("1.5", [])
+        assert config.activeMods == []
+
+
+class TestFromSortedPaths:
+    def test_reorders_from_source(self) -> None:
+        e1 = _entry("/a", "pkg.a")
+        e2 = _entry("/b", "pkg.b")
+        e3 = _entry("/c", "pkg.c")
+        source = ModList([e1, e2, e3])
+        result = ModList.from_sorted_paths(["/c", "/a", "/b"], source)
+        assert result.paths() == ["/c", "/a", "/b"]
+        assert result[0] is e3
+        assert result[1] is e1
+        assert result[2] is e2
+
+    def test_missing_path_skipped(self) -> None:
+        e1 = _entry("/a", "pkg.a")
+        source = ModList([e1])
+        result = ModList.from_sorted_paths(["/a", "/missing"], source)
+        assert result.paths() == ["/a"]
+
+    def test_empty_sort(self) -> None:
+        source = ModList([_entry("/a")])
+        result = ModList.from_sorted_paths([], source)
+        assert len(result) == 0

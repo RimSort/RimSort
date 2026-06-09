@@ -10,8 +10,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
+from loguru import logger
+
 from app.models.metadata.metadata_structure import (
     CaseInsensitiveStr,
+    ModsConfig,
     ModType,
 )
 
@@ -216,3 +219,41 @@ class ModList:
             reordered = self_order != other_order
 
         return ModListDiff(added=added, removed=removed, reordered=reordered)
+
+    def to_mods_config(
+        self,
+        version: str,
+        expansions: list[CaseInsensitiveStr],
+    ) -> ModsConfig:
+        """Serialize to RimWorld's ModsConfig format.
+
+        :param version: Game version string.
+        :param expansions: Known expansion package IDs.
+        :return: A ModsConfig ready for XML serialization.
+        """
+        active_mods = [CaseInsensitiveStr(e.config_id) for e in self._entries]
+        return ModsConfig(
+            version=version,
+            activeMods=active_mods,
+            knownExpansions=expansions,
+        )
+
+    @classmethod
+    def from_sorted_paths(cls, sorted_paths: list[str], source: ModList) -> ModList:
+        """Create a new ModList by reordering entries from source.
+
+        Copies existing ModEntry objects (preserving config_id). Paths not
+        found in source are logged and skipped.
+
+        :param sorted_paths: Desired order of paths.
+        :param source: ModList to pull entries from.
+        :return: A new ModList in the sorted order.
+        """
+        entries: list[ModEntry] = []
+        for path in sorted_paths:
+            idx = source.index_of(path)
+            if idx is not None:
+                entries.append(source[idx])
+            else:
+                logger.warning(f"from_sorted_paths: path not in source, skipping: {path}")
+        return cls(entries)
