@@ -699,12 +699,20 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
 
     if os.path.exists(steam_folder / primary_library):
         logger.debug(f"Attempting to get RimWorld path from {primary_library}")
-        with open(steam_folder / primary_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / primary_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {primary_library}", exc_info=True)
+            return rimworld_path
     elif os.path.exists(steam_folder / backup_library):
         logger.debug(f"Attempting to get RimWorld path from {backup_library}")
-        with open(steam_folder / backup_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / backup_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {backup_library}", exc_info=True)
+            return rimworld_path
     else:
         logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
         return rimworld_path

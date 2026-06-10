@@ -83,6 +83,8 @@ class SettingsController(QObject):
 
         self._http_download_worker: HttpDownloadWorker | None = None
 
+        self._detected_steam_root: Path | None = None
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -1874,6 +1876,32 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
         self.settings_dialog.local_mods_folder_location.setText("")
 
+    @staticmethod
+    def _find_steam_root(candidates: list[Path]) -> Path | None:
+        """
+        Find the Steam installation root from a prioritized list of candidate paths.
+
+        A candidate is valid if it exists as a directory and contains either
+        a ``steamapps/`` directory or ``config/libraryfolders.vdf``.
+
+        :param candidates: Ordered list of candidate Steam root paths
+        :return: First valid Steam root, or None if no candidate matches
+        """
+        for candidate in candidates:
+            if not candidate.is_dir():
+                logger.debug(f"Steam root candidate does not exist: {candidate}")
+                continue
+            has_steamapps = (candidate / "steamapps").is_dir()
+            has_vdf = (candidate / "config" / "libraryfolders.vdf").is_file()
+            if has_steamapps or has_vdf:
+                logger.info(f"Found Steam root: {candidate}")
+                return candidate
+            logger.debug(
+                f"Steam root candidate exists but has no steamapps/ or config/libraryfolders.vdf: {candidate}"
+            )
+        logger.warning("No valid Steam root found from any candidate path")
+        return None
+
     @Slot()
     def _on_locations_autodetect_button_clicked(self) -> None:
         """
@@ -1887,8 +1915,22 @@ class SettingsController(QObject):
             os_paths = self.__get_darwin_paths()
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
-            os_paths = self.__get_debian_paths()
+            os_paths = self.__get_linux_paths()
             logger.info(f"Running on Linux with the following paths: {os_paths}")
+            if (
+                self._detected_steam_root is not None
+                and "snap" in self._detected_steam_root.parts
+            ):
+                show_warning(
+                    title="Unsupported Steam installation",
+                    text="Snap-based Steam installation detected.",
+                    information=(
+                        "Steam installed via Snap is not officially supported and may cause issues. "
+                        "We recommend installing Steam via your distribution's native package manager "
+                        "or Flatpak instead.\n\n"
+                        "Autodetection will continue, but some paths may not work correctly."
+                    ),
+                )
         elif sys.platform == "win32":
             os_paths = self.__get_windows_paths()
             logger.info(f"Running on Windows with the following paths: {os_paths}")
@@ -1938,42 +1980,167 @@ class SettingsController(QObject):
 
     def __get_darwin_paths(self) -> tuple[Path, Path, Path]:
         """
-        Get the default paths for macOS.
+        Get paths for macOS. Uses VDF parsing to locate RimWorld in non-default
+        Steam library folders, with hardcoded fallback.
 
-        Returns:
-            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        :return: (game_folder, config_folder, steam_mods_folder)
         """
         user_home = Path.home()
-        game_folder = Path(
-            f"/{user_home}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app"
-        )
-        config_folder = Path(
-            f"/{user_home}/Library/Application Support/Rimworld/Config"
-        )
-        steam_mods_folder = Path(
-            f"/{user_home}/Library/Application Support/Steam/steamapps/workshop/content/294100"
+        candidates = [
+            user_home / "Library" / "Application Support" / "Steam",
+        ]
+
+        steam_root = self._find_steam_root(candidates)
+        self._detected_steam_root = steam_root
+
+        if steam_root:
+            game_folder_str = find_steam_rimworld(steam_root)
+            if game_folder_str:
+                game_folder = Path(game_folder_str) / "RimworldMac.app"
+                logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
+            else:
+                game_folder = (
+                    steam_root / "steamapps" / "common" / "Rimworld" / "RimworldMac.app"
+                )
+                logger.debug(
+                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                )
+
+            steam_mods_folder_str = get_path_up_to_string(
+                game_folder.parent, "common", exclude=True
+            )
+            if steam_mods_folder_str == "":
+                steam_mods_folder: Path = (
+                    steam_root / "steamapps" / "workshop" / "content" / "294100"
+                )
+            else:
+                steam_mods_folder = (
+                    Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
+                )
+        else:
+            game_folder = (
+                user_home
+                / "Library"
+                / "Application Support"
+                / "Steam"
+                / "steamapps"
+                / "common"
+                / "Rimworld"
+                / "RimworldMac.app"
+            )
+            steam_mods_folder = (
+                user_home
+                / "Library"
+                / "Application Support"
+                / "Steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+        config_folder = (
+            user_home / "Library" / "Application Support" / "Rimworld" / "Config"
         )
 
         return game_folder, config_folder, steam_mods_folder
 
-    def __get_debian_paths(self) -> tuple[Path, Path, Path]:
+    def __get_linux_paths(self) -> tuple[Path, Path, Path]:
         """
-        Get the default paths for Debian-based Linux distributions.
+        Get paths for Linux by discovering the Steam root across distribution methods.
 
-        Returns:
-            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        Checks Debian, native, Flatpak, and Snap Steam installations in priority
+        order. Uses VDF parsing to locate RimWorld in non-default library folders.
+        Detects Proton prefix for config folder.
+
+        :return: (game_folder, config_folder, steam_mods_folder)
         """
         user_home = Path.home()
-        debian_path = user_home / ".steam/debian-installation"
-        if not debian_path.exists():
-            steam_path = user_home / ".steam/steam"
-            debian_path = steam_path / "steamapps/common/RimWorld"
-        game_folder = debian_path / "steamapps/common/RimWorld"
-        config_folder = (
+        candidates = [
+            user_home / ".steam" / "debian-installation",
+            user_home / ".steam" / "steam",
+            user_home / ".local" / "share" / "Steam",
             user_home
-            / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+            / ".var"
+            / "app"
+            / "com.valvesoftware.Steam"
+            / ".local"
+            / "share"
+            / "Steam",
+            user_home / "snap" / "steam" / "common" / ".local" / "share" / "Steam",
+        ]
+
+        steam_root = self._find_steam_root(candidates)
+        self._detected_steam_root = steam_root
+
+        if steam_root:
+            game_folder_str = find_steam_rimworld(steam_root)
+            if game_folder_str:
+                game_folder = Path(game_folder_str)
+                logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
+            else:
+                game_folder = steam_root / "steamapps" / "common" / "RimWorld"
+                logger.debug(
+                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                )
+
+            steam_mods_folder_str = get_path_up_to_string(
+                game_folder, "common", exclude=True
+            )
+            if steam_mods_folder_str == "":
+                steam_mods_folder = (
+                    steam_root / "steamapps" / "workshop" / "content" / "294100"
+                )
+            else:
+                steam_mods_folder = (
+                    Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
+                )
+        else:
+            game_folder = (
+                user_home / ".steam" / "steam" / "steamapps" / "common" / "RimWorld"
+            )
+            steam_mods_folder = (
+                user_home
+                / ".steam"
+                / "steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+        # Config folder: check Proton prefix first, then native
+        native_config = (
+            user_home
+            / ".config"
+            / "unity3d"
+            / "Ludeon Studios"
+            / "RimWorld by Ludeon Studios"
+            / "Config"
         )
-        steam_mods_folder = debian_path / "steamapps/workshop/content/294100"
+        if steam_root:
+            proton_config = (
+                steam_root
+                / "steamapps"
+                / "compatdata"
+                / "294100"
+                / "pfx"
+                / "drive_c"
+                / "users"
+                / "steamuser"
+                / "AppData"
+                / "LocalLow"
+                / "Ludeon Studios"
+                / "RimWorld by Ludeon Studios"
+                / "Config"
+            )
+            if proton_config.exists():
+                logger.info(f"Proton prefix detected for config: {proton_config}")
+                config_folder = proton_config
+            else:
+                config_folder = native_config
+        else:
+            config_folder = native_config
 
         return game_folder, config_folder, steam_mods_folder
 
