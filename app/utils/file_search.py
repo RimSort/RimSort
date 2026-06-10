@@ -86,8 +86,21 @@ class FileSearch:
         preview = options.get("preview", False)
         return_dict = options.get("return_dict", False)
 
+        exclude_options = options.get("exclude_options", {})
+        excluded_dirs: set[str] = set()
+        if exclude_options.get("skip_translations"):
+            excluded_dirs.add("Languages")
+        if exclude_options.get("skip_git"):
+            excluded_dirs.add(".git")
+        if exclude_options.get("skip_source"):
+            excluded_dirs.add("Source")
+        if exclude_options.get("skip_textures"):
+            excluded_dirs.add("Textures")
+
         for root_path in root_paths:
-            for dirpath, _, filenames in os.walk(root_path):
+            for dirpath, dirnames, filenames in os.walk(root_path):
+                if excluded_dirs:
+                    dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
                 if self.stop_requested:
                     logger.info("Search stopped by user.")
                     return
