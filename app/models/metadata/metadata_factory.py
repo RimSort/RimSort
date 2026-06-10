@@ -795,13 +795,19 @@ def read_rules_db(
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from rules DB")
-            rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
-            rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
-            logger.info(f"Loaded {len(rule_data.rules)} additional rules")
-            return rule_data
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from rules DB")
+                rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
+                rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
+                logger.info(f"Loaded {len(rule_data.rules)} additional rules")
+                return rule_data
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"Rules DB at {path} could not be decoded: {e}. Try re-downloading the database."
+            )
+            return None
     else:  # Assume db_data_missing
         logger.warning("Rules DB not found at specified path.")
         return None
@@ -842,15 +848,21 @@ def read_steam_db(path: Path) -> SteamDbSchema | None:
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from SteamDB")
-            steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
-            steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
-            logger.info(
-                f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from SteamDB")
+                steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
+                steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
+                logger.info(
+                    f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+                )
+                return steam_db
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"SteamDB at {path} could not be decoded: {e}. Try re-downloading the database."
             )
-            return steam_db
+            return None
     else:  # Assume db_data_missing
         logger.warning("SteamDB not found at specified path.")
         return None
