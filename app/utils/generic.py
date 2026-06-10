@@ -819,3 +819,43 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         return f"{abs_time} | {rel_time}", timestamp
     except (ValueError, TypeError, OSError):
         return "Invalid timestamp", None
+
+
+def show_no_steam_warning() -> None:
+    """
+    Show warning that Steam is not detected.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Steam Not Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "RimSort could not detect Steam client or it may be unresponsive. "
+            "Please make sure Steam is installed and running. "
+            "If you are a Steam user, please check that Steam is running and that you are logged in. "
+            "Try restarting Steam.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues",
+        ),
+    )
+
+
+def show_snap_steam_warning() -> None:
+    """
+    Show snap steam warning in a thread-safe manner.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Snap Steam Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "For full Steam support, please install native Steam "
+            "from the official repository.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "Snap Steam is sandboxed and incompatible with Steamworks API",
+        ),
+    )

@@ -58,6 +58,7 @@ from app.utils.generic import (
 )
 from app.utils.metadata import SettingsController
 from app.utils.rentry.wrapper import RentryImport
+from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
@@ -2098,6 +2099,9 @@ class MainContent(QObject):
         # use prebuilt libs path
         libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
+            if not check_steam_available(_libs=libs_path):
+                logger.error("Steam is not available, skipping Steamworks API call")
+                return
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)

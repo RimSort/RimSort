@@ -43,8 +43,9 @@ from loguru import logger
 if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
-from app.utils.generic import launch_game_process
 from steamworks import STEAMWORKS  # type: ignore
+
+from app.utils.generic import launch_game_process
 
 # Timing constants for subscription operations
 RESUBSCRIBE_STAGE_WAIT = 1  # Seconds to wait between resubscribe stages (unsub/sub)
