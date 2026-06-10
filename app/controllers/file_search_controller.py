@@ -517,28 +517,6 @@ class SearchWorker(QThread):
             scope == "inactive mods" and not is_active
         )
 
-    def _should_exclude(self, file_path: str) -> bool:
-        """Check if a file or directory should be excluded based on exclude_options."""
-        exclude_options = self.options.get("exclude_options", {})
-
-        # Skip translations
-        if exclude_options.get("skip_translations") and "Languages" in file_path:
-            return True
-
-        # Skip .git folders
-        if exclude_options.get("skip_git") and ".git" in file_path:
-            return True
-
-        # Skip Source folders
-        if exclude_options.get("skip_source") and "Source" in file_path:
-            return True
-
-        # Skip Textures folders
-        if exclude_options.get("skip_textures") and "Textures" in file_path:
-            return True
-
-        return False
-
     def run(self) -> None:
         try:
             logger.info(f"Starting search with text: {self.pattern}")
