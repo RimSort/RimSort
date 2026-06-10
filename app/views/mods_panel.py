@@ -3161,13 +3161,26 @@ class ModListWidget(QListWidget):
 
     def _check_incompatibilities(
         self, mod_data: ModMetadata, package_ids_set: set[str]
-    ) -> set[str]:
-        """Check for conflicting incompatibilities."""
-        return {
+    ) -> tuple[set[str], set[str]]:
+        """Check for conflicting incompatibilities.
+
+        :return: (declared, reverse_only) — declared are incompatibilities this
+            mod declared itself; reverse_only are ones only declared by the
+            other mod.
+        """
+        all_incomp = {
             incomp
             for incomp in mod_data.get("incompatibilities", [])
             if incomp in package_ids_set
         }
+        own_declared = {
+            incomp
+            for incomp in mod_data.get("declared_incompatibilities", [])
+            if incomp in package_ids_set
+        }
+        declared = all_incomp & own_declared
+        reverse_only = all_incomp - own_declared
+        return declared, reverse_only
 
     def _check_load_order_violations(
         self,
@@ -3227,6 +3240,9 @@ class ModListWidget(QListWidget):
                 if self.list_type == "Active"
                 else None,
                 "conflicting_incompatibilities": (
+                    set() if self.list_type == "Active" else None
+                ),
+                "reverse_incompatibilities": (
                     set() if self.list_type == "Active" else None
                 ),
                 "load_before_violations": set() if self.list_type == "Active" else None,
@@ -3316,9 +3332,10 @@ class ModListWidget(QListWidget):
                     mod_errors["missing_dependencies"],
                     mod_errors["alternative_dependencies"],
                 ) = self._check_missing_dependencies(mod_data, package_ids_set)
-                mod_errors["conflicting_incompatibilities"] = (
-                    self._check_incompatibilities(mod_data, package_ids_set)
-                )
+                (
+                    mod_errors["conflicting_incompatibilities"],
+                    mod_errors["reverse_incompatibilities"],
+                ) = self._check_incompatibilities(mod_data, package_ids_set)
                 (
                     mod_errors["load_before_violations"],
                     mod_errors["load_after_violations"],
@@ -3331,6 +3348,10 @@ class ModListWidget(QListWidget):
             tooltip_sections = [
                 ("missing_dependencies", self.tr("\nMissing Dependencies:")),
                 ("conflicting_incompatibilities", self.tr("\nIncompatibilities:")),
+                (
+                    "reverse_incompatibilities",
+                    self.tr("\nIncompatible (per other mod's rules):"),
+                ),
             ]
             if self.metadata_manager.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
                 tooltip_sections.insert(
@@ -3400,6 +3421,7 @@ class ModListWidget(QListWidget):
                     for key in [
                         "missing_dependencies",
                         "conflicting_incompatibilities",
+                        "reverse_incompatibilities",
                     ]
                 ]
             ):
