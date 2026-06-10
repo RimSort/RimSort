@@ -5206,6 +5206,37 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>蒸気が検出されない</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Steam 統合は利用できません</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>rimSort が Steam クライアントを検出できなかったか、応答しなくなっている可能性があります。 Steam がインストールされ、実行されていることを確認してください。 Steam ユーザーの場合は、Steam が実行中であり、ログインしていることを確認してください。Steam を再起動してみてください。</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>Steam をインストールして実行した後でも問題が解決しない場合は、この問題を https://github.com/RimSort/RimSort/issues に報告してください。</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>スナップスチームを検出しました</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>Steam を完全にサポートするには、公式リポジトリからネイティブ Steam をインストールしてください。</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam はサンドボックス化されており、Steamworks API と互換性がありません</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>

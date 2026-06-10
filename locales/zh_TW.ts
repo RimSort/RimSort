@@ -5210,6 +5210,37 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>未檢測到蒸汽</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Steam 整合不可用</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>RimSort 無法偵測到 Steam 用戶端，或者可能沒有回應。請確保 Steam 已安裝並正在運作。如果您是 Steam 用戶，請檢查 Steam 是否正在運行並且您是否已登入。嘗試重新啟動 Steam。</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>如果在安裝並執行 Steam 後您仍然遇到問題，請將此問題回報給 https://github.com/RimSort/RimSort/issues</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>偵測到突然蒸汽</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>要獲得完整的 Steam 支持，請從官方存儲庫安裝本機 Steam。</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam 是沙盒的，與 Steamworks API 不相容</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>
