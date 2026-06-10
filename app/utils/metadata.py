@@ -740,6 +740,7 @@ class MetadataManager(QObject):
                         self.internal_local_metadata[uuid],
                         matched_versioned_incompat,
                         self.internal_local_metadata,
+                        self.packageid_to_uuids,
                     )
                 else:
                     logger.debug(
@@ -754,6 +755,7 @@ class MetadataManager(QObject):
                         self.internal_local_metadata[uuid],
                         base_incompat,
                         self.internal_local_metadata,
+                        self.packageid_to_uuids,
                     )
                 # prefer_versioned is disabled: ignore versioned incompat entries
             # Current mod should be loaded AFTER these mods. These mods can be thought
@@ -1087,6 +1089,7 @@ class MetadataManager(QObject):
                                     self.internal_local_metadata[uuid],
                                     incompatibilities,
                                     self.internal_local_metadata,
+                                    self.packageid_to_uuids,
                                 )
                     load_this_top = self.external_community_rules[package_id].get(
                         "loadTop"
@@ -1179,6 +1182,7 @@ class MetadataManager(QObject):
                                     self.internal_local_metadata[uuid],
                                     incompatibilities,
                                     self.internal_local_metadata,
+                                    self.packageid_to_uuids,
                                 )
                     load_this_top = self.external_user_rules[package_id].get("loadTop")
                     if load_this_top:
@@ -2149,42 +2153,64 @@ def add_incompatibility_to_mod(
     mod_data: dict[str, Any],
     dependency_or_dependency_ids: Any,
     all_mods: dict[str, Any],
+    packageid_to_uuids: dict[str, Any],
 ) -> None:
     """
-    Incompatibility data is collected only if that incompatibility is in `all_mods`.
+    Incompatibility data is collected only if that incompatibility is in ``all_mods``.
     There's no need to surface incompatibilities if they aren't even downloaded.
+
+    Adds bidirectional incompatibilities: if mod A is incompatible with mod B,
+    mod B is also marked as incompatible with mod A. Tracks which mod declared
+    the incompatibility in ``declared_incompatibilities``.
     """
     logger.debug(
-        f"Adding incompatibilities for packages [{dependency_or_dependency_ids}] to mod data: {mod_data} (and reverse direction too)"
+        f"Adding incompatibilities for packages [{dependency_or_dependency_ids}] "
+        f"to mod data: {mod_data}"
     )
-    if mod_data:
-        # Create a new key with empty set as value by default
-        mod_data.setdefault("incompatibilities", set())
+    if not mod_data:
+        return
 
-        all_package_ids = set(all_mods[uuid]["packageid"] for uuid in all_mods)
+    mod_data.setdefault("incompatibilities", set())
+    mod_data.setdefault("declared_incompatibilities", set())
 
-        # If the value is a single string...
-        if isinstance(dependency_or_dependency_ids, str):
-            dependency_id = dependency_or_dependency_ids.lower()
-            if dependency_id in all_package_ids:
-                mod_data["incompatibilities"].add(dependency_id)
+    all_package_ids = set(all_mods[uuid]["packageid"] for uuid in all_mods)
+    declaring_package_id = mod_data.get("packageid", "")
 
-        # If the value is a LIST of strings
-        elif isinstance(dependency_or_dependency_ids, list):
-            if isinstance(dependency_or_dependency_ids[0], str):
-                for dependency in dependency_or_dependency_ids:
-                    if dependency:  # Sometimes, this can be None or an empty string if XML syntax error/extra elements
-                        dependency_id = dependency.lower()
-                        if dependency_id in all_package_ids:
-                            mod_data["incompatibilities"].add(dependency_id)
-            else:
-                logger.error(
-                    f"List of incompatibilities does not contain strings: [{dependency_or_dependency_ids}]"
-                )
-        else:
+    # Normalize to list
+    if isinstance(dependency_or_dependency_ids, str):
+        ids_to_process = [dependency_or_dependency_ids]
+    elif isinstance(dependency_or_dependency_ids, list):
+        if dependency_or_dependency_ids and not isinstance(
+            dependency_or_dependency_ids[0], str
+        ):
             logger.error(
-                f"Incompatibilities is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
+                f"List of incompatibilities does not contain strings: "
+                f"[{dependency_or_dependency_ids}]"
             )
+            return
+        ids_to_process = [d for d in dependency_or_dependency_ids if d]
+    else:
+        logger.error(
+            f"Incompatibilities is not a single string or a list of strings: "
+            f"[{dependency_or_dependency_ids}]"
+        )
+        return
+
+    for dep_id_raw in ids_to_process:
+        dependency_id = dep_id_raw.lower()
+        if dependency_id not in all_package_ids:
+            continue
+
+        # Forward: declaring mod -> target
+        mod_data["incompatibilities"].add(dependency_id)
+        mod_data["declared_incompatibilities"].add(dependency_id)
+
+        # Reverse: target -> declaring mod
+        if declaring_package_id:
+            for target_uuid in packageid_to_uuids.get(dependency_id, []):
+                target_data = all_mods[target_uuid]
+                target_data.setdefault("incompatibilities", set())
+                target_data["incompatibilities"].add(declaring_package_id)
 
 
 def add_load_rule_to_mod(
