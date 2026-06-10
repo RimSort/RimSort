@@ -47,6 +47,23 @@ class TestSubfolderContainsCandidatePath:
             subfolder_contains_candidate_path(tmp_path, "Assemblies", "*.dll") is True
         )
 
+    def test_finds_dll_nested_inside_assemblies(self, tmp_path: Path) -> None:
+        candidate = tmp_path / "Assemblies" / "net472"
+        candidate.mkdir(parents=True)
+        (candidate / "mod.dll").write_text("dll")
+        assert (
+            subfolder_contains_candidate_path(tmp_path, "Assemblies", "*.dll") is True
+        )
+
+    def test_empty_root_assemblies_finds_dll_in_subfolder(self, tmp_path: Path) -> None:
+        (tmp_path / "Assemblies").mkdir()
+        sub = tmp_path / "1.5" / "Assemblies"
+        sub.mkdir(parents=True)
+        (sub / "mod.dll").write_text("dll")
+        assert (
+            subfolder_contains_candidate_path(tmp_path, "Assemblies", "*.dll") is True
+        )
+
 
 class TestCleanupOldBackups:
     def _create_backups(self, backup_dir: Path, count: int) -> list[Path]:

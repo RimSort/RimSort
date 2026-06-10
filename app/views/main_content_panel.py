@@ -39,6 +39,7 @@ from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
 from app.services.import_export_service import ImportExportService
+from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
 from app.utils.app_info import AppInfo
@@ -55,9 +56,9 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.ignore_manager import IgnoreManager
-from app.utils.metadata import SettingsController
+from app.utils.metadata import SettingsController, WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport
+from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
@@ -298,7 +299,8 @@ class MainContent(QObject):
         self.inactive_mods_uuids_restore_state: list[str] = []
         self.duplicate_mods: dict[str, Any] = {}
         self._extract_progress_widget: Optional[TaskProgressWindow] = None
-        self._child_windows: list[QWidget] = []
+        self.window_manager = WindowManager(self.metadata_manager)
+        self._active_loading_loop: QEventLoop | None = None
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -308,32 +310,22 @@ class MainContent(QObject):
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
 
+    def abort_loading(self) -> None:
+        """Abort any in-progress loading animation by quitting its nested event loop.
+
+        Called from MainWindow.closeEvent to unblock the startup scanning so
+        the process can exit cleanly.
+        """
+        if self._active_loading_loop is not None:
+            self._active_loading_loop.quit()
+
     def close_child_windows(self) -> None:
         """Close all tracked child windows.
 
         Called when the main window is closing to ensure no orphan
         windows remain on screen.
         """
-        # Close instance-variable windows
-        for attr_name in (
-            "missing_mods_prompt",
-            "rule_editor",
-            "ignore_json_editor",
-            "steamcmd_runner",
-            "query_runner",
-            "todds_runner",
-            "use_this_instead_dialog",
-            "steam_browser",
-        ):
-            window = getattr(self, attr_name, None)
-            if window is not None:
-                window.close()
-
-        # Close tracked windows (created as local vars elsewhere)
-        for window in self._child_windows:
-            if window is not None:
-                window.close()
-        self._child_windows.clear()
+        self.window_manager.close_all()
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
@@ -571,7 +563,7 @@ class MainContent(QObject):
             duplicate_mods_panel = DuplicateModsPanel(
                 self.duplicate_mods, self.settings_controller
             )
-            self._child_windows.append(duplicate_mods_panel)
+            self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
         else:
@@ -595,6 +587,7 @@ class MainContent(QObject):
             )
             # Always open the MissingModsPrompt panel, allowing manual entry if Steam database is unavailable
             self.missing_mods_prompt = MissingModsPrompt(packageids=self.missing_mods)
+            self.window_manager.register_attr(self, "missing_mods_prompt")
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -602,41 +595,6 @@ class MainContent(QObject):
             self.missing_mods_prompt.show()
         else:
             logger.info("No missing mods found. Skipping...")
-
-    def _get_missing_packageid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a valid Package ID in their About.xml.
-
-        A missing or invalid Package ID can cause dependency resolution issues
-        and prevent proper mod identification. Mods are marked with a default
-        placeholder value when no valid Package ID is found.
-
-        :return: List of internal UUIDs for mods with missing Package ID.
-        """
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("packageid") == app_constants.DEFAULT_MISSING_PACKAGEID
-        ]
-
-    def _get_missing_publishfieldid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a Publish Field ID (Steam Workshop ID).
-
-        Workshop mods without a Publish Field ID cannot support automatic
-        redownloads or update checking. This check intentionally excludes
-        RimWorld core content and DLC since they are not published mods.
-
-        :return: List of internal UUIDs for mods with missing Publish Field ID.
-        """
-        ignored_mods = IgnoreManager.load_ignored_mods()
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("publishedfileid") is None
-            and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
-            and mod_metadata.get("packageid") not in ignored_mods
-        ]
 
     def __check_and_warn_missing_mod_properties(self) -> None:
         """
@@ -654,8 +612,10 @@ class MainContent(QObject):
         """
         try:
             # Identify mods with missing critical properties
-            missing_packageid_uuids = self._get_missing_packageid_uuids()
-            missing_publishfieldid_uuids = self._get_missing_publishfieldid_uuids()
+            missing_packageid_uuids = self.window_manager.get_missing_packageid_uuids()
+            missing_publishfieldid_uuids = (
+                self.window_manager.get_missing_publishfieldid_uuids()
+            )
 
             # If no mods have missing properties, log and return early
             if not missing_packageid_uuids and not missing_publishfieldid_uuids:
@@ -679,7 +639,7 @@ class MainContent(QObject):
                 missing_publishfieldid_mods=missing_publishfieldid_uuids,
                 settings_controller=self.settings_controller,
             )
-            self._child_windows.append(missing_mod_properties_panel)
+            self.window_manager.register(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
             missing_mod_properties_panel.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -803,7 +763,13 @@ class MainContent(QObject):
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
         loop = QEventLoop()
         loading_animation.finished.connect(loop.quit)
+        # Store ref so closeEvent can break out of this loop
+        self._active_loading_loop = loop
         loop.exec_()
+        self._active_loading_loop = None
+        # If the loop was quit externally (e.g. window close), skip UI cleanup
+        if not loading_animation.animation_finished:
+            return None
         data = loading_animation.data
         # Remove text label if it was passed
         if text and loading_animation_text_label is not None:
@@ -829,25 +795,12 @@ class MainContent(QObject):
             # Reset the data source filters to default and clear searches
             # Avoid recalculating warnings/errors when clearing search
             # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Active",
-            )
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Inactive",
-            )
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
-            self.do_threaded_loading_animation(
+            result = self.do_threaded_loading_animation(
                 gif_path=str(
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
@@ -856,6 +809,10 @@ class MainContent(QObject):
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
+
+            # If loading was aborted (e.g. window closed during scan), skip remaining work
+            if result is None and self.metadata_manager._abort_requested:
+                return
 
             # Refresh MetadataController alongside MetadataManager
             MetadataController.instance().refresh_metadata()
@@ -900,14 +857,8 @@ class MainContent(QObject):
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
         # Metadata to insert
         active_mods_uuids: list[str] = []
         inactive_mods_uuids: list[str] = []
@@ -965,16 +916,8 @@ class MainContent(QObject):
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.debug("Starting sorting mods")
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_active_mods_search_data_source_filter()
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_inactive_mods_search_data_source_filter()
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Get active mods (exclude dividers)
         active_mods = {
@@ -989,7 +932,7 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
-                self._child_windows.append(dialog)
+                self.window_manager.register(dialog)
 
                 # Build a deps_summary from the missing deps for the dialog display
                 deps_summary: dict[str, dict[str, set[str]]] = {}
@@ -1128,16 +1071,8 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Active")
-            self.mods_panel.signal_clear_search(list_type="Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Inactive")
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_uuids,
@@ -1207,16 +1142,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         if rentry_import.publishedfileids:
             # Get set of publishedfileids already present locally
@@ -1358,16 +1285,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Log the attempt to import mods list from Workshop collection
         logger.info(
@@ -1417,6 +1336,7 @@ class MainContent(QObject):
         Export the current list of active mods to the clipboard in a
         readable format. The current list does not need to have been saved.
         """
+
         data = self._import_export_service.collect_active_mods(
             self.mods_panel.active_mods_list.uuids, self.duplicate_mods
         )
@@ -1519,16 +1439,8 @@ class MainContent(QObject):
             return
 
         # Clear searches and data source filters just like XML import
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         logger.info(f"Trying to import mods list from save file: {file_path}")
         (
@@ -1720,16 +1632,8 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state
             and self.inactive_mods_uuids_restore_state
         ):
-            self.mods_panel.signal_clear_search("Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_active_mods_search_data_source_filter()
-            self.mods_panel.signal_clear_search("Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_inactive_mods_search_data_source_filter()
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
@@ -1760,6 +1664,7 @@ class MainContent(QObject):
 
         if not is_pre_launch:
             self.todds_runner = runner
+            self.window_manager.register_attr(self, "todds_runner")
 
         runner.show()
         return runner
@@ -1975,6 +1880,7 @@ class MainContent(QObject):
             self.metadata_manager,
             self.settings_controller,
         )
+        self.window_manager.register_attr(self, "steam_browser")
 
         # Automatically null the reference when browser is destroyed
         self.steam_browser.destroyed.connect(
@@ -1983,11 +1889,9 @@ class MainContent(QObject):
         self.steam_browser.show()
 
     def _do_check_for_workshop_updates(self) -> None:
-        # Check internet connection before attempting task
         if not check_internet_connection():
             return
-        # Query Workshop for update data
-        updates_checked = self.do_threaded_loading_animation(
+        result: WorkshopUpdateResult = self.do_threaded_loading_animation(
             gif_path=str(
                 AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
@@ -1997,18 +1901,36 @@ class MainContent(QObject):
             ),
             text=self.tr("Checking Steam Workshop mods for updates..."),
         )
-        # If we failed to check for updates, skip the comparison(s) & UI prompt
-        if updates_checked == "failed":
+
+        if result.status == "no_workshop_mods":
+            self.status_signal.emit(self.tr("No Workshop mods to check for updates"))
+            return
+
+        if result.status == "failed":
             dialogue.show_warning(
                 title=self.tr("Unable to check for updates"),
                 text=self.tr(
-                    "RimSort was unable to query Steam WebAPI for update information!\n"
+                    "RimSort was unable to check your Workshop mods for updates."
                 ),
-                information=self.tr("Are you connected to the Internet?"),
+                details="\n".join(result.errors) if result.errors else None,
             )
             return
+
+        if result.status == "partial":
+            dialogue.show_warning(
+                title=self.tr("Update check partially completed"),
+                text=self.tr(
+                    "{failed} out of {total} Workshop mods could not be checked for updates."
+                ).format(
+                    failed=len(result.failed_pfids),
+                    total=result.mods_checked,
+                ),
+                details="\n".join(result.errors) if result.errors else None,
+            )
+
+        # For both "success" and "partial", show the updater panel
         workshop_mod_updater = WorkshopModUpdaterPanel()
-        self._child_windows.append(workshop_mod_updater)
+        self.window_manager.register(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
@@ -2068,6 +1990,7 @@ class MainContent(QObject):
         ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message("Setting up steamcmd...")
@@ -2136,6 +2059,7 @@ class MainContent(QObject):
                 steamcmd_download_tracking=publishedfileids,
                 steam_db=steam_db,
             )
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message(
@@ -2192,6 +2116,9 @@ class MainContent(QObject):
         # use prebuilt libs path
         libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
+            if not check_steam_available(_libs=libs_path):
+                logger.error("Steam is not available, skipping Steamworks API call")
+                return
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -2620,6 +2547,7 @@ class MainContent(QObject):
             edit_packageid=packageid,
             initial_mode=initial_mode,
         )
+        self.window_manager.register_attr(self, "rule_editor")
         self.rule_editor._populate_from_metadata()
         self.rule_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
@@ -2628,6 +2556,7 @@ class MainContent(QObject):
     def _do_open_ignore_json_editor(self) -> None:
         """Open the Ignore JSON Editor dialog."""
         self.ignore_json_editor = IgnoreJsonEditor()
+        self.window_manager.register_attr(self, "ignore_json_editor")
         self.ignore_json_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.ignore_json_editor.show()
 
@@ -3027,6 +2956,7 @@ class MainContent(QObject):
         self.use_this_instead_dialog = UseThisInsteadPanel(
             mod_metadata=self.metadata_manager.internal_local_metadata
         )
+        self.window_manager.register_attr(self, "use_this_instead_dialog")
         if not self.use_this_instead_dialog.show_if_has_alternatives():
             dialogue.show_information(
                 title=self.tr("Use This Instead"),

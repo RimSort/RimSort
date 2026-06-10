@@ -410,13 +410,13 @@ class SteamBrowser(QWidget):
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
-                collection_mods_webapi_response = (
+                collection_mods_webapi_response, _, _ = (
                     ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids)
                 )
             else:
                 return collection_mods_pfid_to_title
 
-            if collection_mods_webapi_response is None:
+            if not collection_mods_webapi_response:
                 return collection_mods_pfid_to_title
 
             for metadata in collection_mods_webapi_response:

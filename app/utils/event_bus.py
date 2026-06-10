@@ -51,6 +51,8 @@ class EventBus(QObject):
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
+    do_open_github_mods_panel = Signal()
+    github_version_switch_requested = Signal(str, str)  # mod_path, target_tag
     do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
     do_check_for_workshop_updates = Signal()

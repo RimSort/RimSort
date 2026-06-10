@@ -637,7 +637,7 @@ class RunnerPanel(QWidget):
         # For mods not found in local DB, try Steam API
         if failed_mods_no_names:
             try:
-                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(
+                mod_details_lookup, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(
                     failed_mods_no_names
                 )
                 if mod_details_lookup:

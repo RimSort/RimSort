@@ -75,16 +75,6 @@ RIMWORLD_DLC_METADATA = {
     },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
-SEARCH_DATA_SOURCE_FILTER_INDEXES = [
-    "all",
-    "expansion",
-    "local",
-    "git_repo",
-    "steamcmd",
-    "workshop",
-    "csharp",
-    "xml",
-]
 KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher", "jikulopo.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},

@@ -489,6 +489,8 @@ def create_base_rules(
 
     for dependency in mod_dependencies:
         if isinstance(dependency, dict):
+            if not dependency or dependency.get("@isNull") == "True":
+                continue
             deps: dict[str, Any] = {}
             for key, value in dependency.items():
                 if isinstance(value, str):
@@ -512,6 +514,10 @@ def create_base_rules(
                     # Store as a normalized list for create_mod_dependency
                     if alt_list:
                         deps["alternativePackageIds"] = alt_list
+                elif isinstance(value, dict) and (
+                    not value or value.get("@isNull") == "True"
+                ):
+                    continue
                 else:
                     logger.warning(
                         f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
@@ -525,7 +531,7 @@ def create_base_rules(
                 )
             else:
                 rules.dependencies[dep.package_id] = dep
-        else:
+        elif dependency:
             logger.warning(
                 f"Skipping invalid dependency: {dependency}. This mod may be invalid."
             )

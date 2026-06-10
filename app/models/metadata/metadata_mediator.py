@@ -178,30 +178,18 @@ class MetadataMediator:
         self._load_use_this_instead()
 
         # Get all folders in the workshop and local mods paths
-        mod_paths = list()
-        if self.workshop_mods_path is not None:
-            if not self.workshop_mods_path.exists():
-                logger.warning(
-                    f"Workshop mods path does not exist: {self.workshop_mods_path}"
-                )
-            else:
-                mod_paths += list(self.workshop_mods_path.iterdir())
-
-        if self.local_mods_path is not None:
-            if not self.local_mods_path.exists():
-                logger.warning(
-                    f"Local mods path does not exist: {self.local_mods_path}"
-                )
-            else:
-                mod_paths += list(self.local_mods_path.iterdir())
-
-        if self.game_modules_path is not None:
-            if not self.game_modules_path.exists():
-                logger.warning(
-                    f"Game modules path does not exist: {self.game_modules_path}"
-                )
-            else:
-                mod_paths += list(self.game_modules_path.iterdir())
+        mod_paths: list[Path] = []
+        for search_path in (
+            self.workshop_mods_path,
+            self.local_mods_path,
+            self.game_modules_path,
+        ):
+            if search_path is None:
+                continue
+            if not search_path.exists():
+                logger.warning(f"Mod search path does not exist: {search_path}")
+                continue
+            mod_paths.extend(p for p in search_path.iterdir() if p.is_dir())
 
         # Create equal sized batches of mod_paths for threadpool processing
         threads = QThread.idealThreadCount()
@@ -348,7 +336,7 @@ class MetadataMediator:
                     )
 
                     if not valid:
-                        logger.warning(f"Mod at path {self.mod_path} is not valid")
+                        logger.warning(f"Mod at path {path} is not valid")
 
                     if isinstance(mod, AboutXmlMod):
                         if (
@@ -369,7 +357,7 @@ class MetadataMediator:
 
                     results[mod.uuid] = mod
                 except Exception as e:
-                    logger.error(f"Error parsing mod at path: {self.mod_path}")
+                    logger.error(f"Error parsing mod at path: {path}")
                     logger.error(e)
 
             self.mutex.lock()
