@@ -501,6 +501,7 @@ class CompiledDependencyData:
     tier_one_mods: set[str] = field(default_factory=set)
     tier_three_mods: set[str] = field(default_factory=set)
     incompatibilities: dict[str, set[str]] = field(default_factory=dict)
+    declared_incompatibilities: dict[str, set[str]] = field(default_factory=dict)
 
     @classmethod
     def build(
@@ -562,6 +563,8 @@ class CompiledDependencyData:
                 if incompat not in all_package_ids:
                     continue
                 compiled.incompatibilities.setdefault(pid, set()).add(incompat)
+                compiled.incompatibilities.setdefault(incompat, set()).add(pid)
+                compiled.declared_incompatibilities.setdefault(pid, set()).add(incompat)
 
             if rules.load_first and pid not in compiled.tier_zero_mods:
                 compiled.tier_one_mods.add(pid)

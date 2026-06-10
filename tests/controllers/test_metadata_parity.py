@@ -143,3 +143,31 @@ def test_game_version_is_parsed(parity_mediator: MetadataMediator) -> None:
     assert "1.5" in parity_mediator.game_version, (
         f"Expected version to contain '1.5', got: {parity_mediator.game_version}"
     )
+
+
+def test_compile_incompatibilities_are_bidirectional(
+    parity_mods: dict[str, ListedMod],
+) -> None:
+    """Every incompatibility edge has a reverse edge."""
+    compiled = CompiledDependencyData.build(parity_mods)
+
+    for pkg_id, incompatibles in compiled.incompatibilities.items():
+        for incompat in incompatibles:
+            assert pkg_id in compiled.incompatibilities.get(incompat, set()), (
+                f"incompatibilities has {pkg_id} -> {incompat}, "
+                f"but missing reverse {incompat} -> {pkg_id}"
+            )
+
+
+def test_compile_declared_is_subset_of_incompatibilities(
+    parity_mods: dict[str, ListedMod],
+) -> None:
+    """declared_incompatibilities is always a subset of incompatibilities."""
+    compiled = CompiledDependencyData.build(parity_mods)
+
+    for pkg_id, declared in compiled.declared_incompatibilities.items():
+        full = compiled.incompatibilities.get(pkg_id, set())
+        assert declared <= full, (
+            f"declared_incompatibilities[{pkg_id}] has entries not in "
+            f"incompatibilities: {declared - full}"
+        )
