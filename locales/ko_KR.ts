@@ -5206,6 +5206,37 @@ New symlink:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>증기가 감지되지 않음</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Steam 통합을 사용할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>RimSort가 Steam 클라이언트를 감지할 수 없거나 응답하지 않을 수 있습니다. Steam이 설치되어 실행 중인지 확인하세요. Steam 사용자라면 Steam이 실행 중인지, 로그인되어 있는지 확인하세요. Steam을 다시 시작해 보세요.</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>Steam을 설치하고 실행한 후에도 여전히 문제가 발생하는 경우 이 문제를 https://github.com/RimSort/RimSort/issues에 보고해 주세요.</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>순간 증기 감지됨</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>전체 Steam 지원을 받으려면 공식 저장소에서 기본 Steam을 설치하세요.</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam은 샌드박스 처리되어 Steamworks API와 호환되지 않습니다.</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>

@@ -5189,6 +5189,37 @@ Neuer Symlink:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>Steam nicht erkannt</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Steam-Integration nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>RimSort konnte den Steam-Client nicht erkennen oder reagiert möglicherweise nicht. Bitte stellen Sie sicher, dass Steam installiert ist und ausgeführt wird. Wenn Sie Steam-Benutzer sind, überprüfen Sie bitte, ob Steam ausgeführt wird und Sie angemeldet sind. Versuchen Sie, Steam neu zu starten.</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>Wenn Sie auch nach der Installation und Ausführung von Steam weiterhin Probleme haben, melden Sie dieses Problem bitte an https://github.com/RimSort/RimSort/issues</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>Snap Steam erkannt</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>Für vollständige Steam-Unterstützung installieren Sie bitte natives Steam aus dem offiziellen Repository.</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam ist eine Sandbox und ist nicht mit der Steamworks-API kompatibel</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>

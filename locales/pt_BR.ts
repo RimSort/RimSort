@@ -5212,6 +5212,37 @@ Novo link simbólico:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>Vapor não detectado</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Integração Steam indisponível</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>RimSort não conseguiu detectar o cliente Steam ou pode não responder. Certifique-se de que o Steam esteja instalado e funcionando. Se você é um usuário do Steam, verifique se o Steam está em execução e se você está conectado. Tente reiniciar o Steam.</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>Se você ainda estiver enfrentando problemas mesmo depois que o Steam estiver instalado e em execução, relate o problema para https://github.com/RimSort/RimSort/issues</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>Snap Steam detectado</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>Para suporte completo ao Steam, instale o Steam nativo do repositório oficial.</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam está em sandbox e é incompatível com a API Steamworks</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>

@@ -5182,6 +5182,37 @@ Nuevo enlace simbólico:
     </message>
 </context>
 <context>
+    <name>SteamworksInterface</name>
+    <message>
+        <source>Steam Not Detected</source>
+        <translation>Vapor no detectado</translation>
+    </message>
+    <message>
+        <source>Steam Integration Unavailable</source>
+        <translation>Integración de Steam no disponible</translation>
+    </message>
+    <message>
+        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <translation>RimSort no pudo detectar el cliente Steam o puede que no responda. Asegúrese de que Steam esté instalado y ejecutándose. Si es usuario de Steam, verifique que Steam se esté ejecutando y que haya iniciado sesión. Intente reiniciar Steam.</translation>
+    </message>
+    <message>
+        <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
+        <translation>Si aún tiene problemas incluso después de instalar y ejecutar Steam, informe este problema a https://github.com/RimSort/RimSort/issues</translation>
+    </message>
+    <message>
+        <source>Snap Steam Detected</source>
+        <translation>Vapor rápido detectado</translation>
+    </message>
+    <message>
+        <source>For full Steam support, please install native Steam from the official repository.</source>
+        <translation>Para obtener soporte completo de Steam, instale Steam nativo desde el repositorio oficial.</translation>
+    </message>
+    <message>
+        <source>Snap Steam is sandboxed and incompatible with Steamworks API</source>
+        <translation>Snap Steam está aislado y es incompatible con la API de Steamworks</translation>
+    </message>
+</context>
+<context>
     <name>TagEditDialog</name>
     <message>
         <source>Select existing tags and/or enter new tags separated by commas:</source>
