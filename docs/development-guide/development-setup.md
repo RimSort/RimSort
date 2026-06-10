@@ -170,7 +170,13 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 
 ### Dev mode data isolation
 
-When you run RimSort from source, it automatically enters **dev mode**. In dev mode, all user data (settings, logs, databases, mod lists, themes, backups) is stored in a `dev/` subdirectory of the repository root instead of your platform's standard application data directory. This prevents development runs from corrupting your production RimSort configuration.
+RimSort supports a **dev mode** that redirects all user data (settings, logs, databases, mod lists, themes, backups) to a `dev/` subdirectory of the repository root instead of your platform's standard application data directory. This prevents development runs from corrupting your production RimSort configuration.
+
+To activate dev mode, pass the `--dev` flag:
+
+```shell
+uv run python -m app --dev
+```
 
 **What changes in dev mode:**
 
@@ -184,17 +190,17 @@ When you run RimSort from source, it automatically enters **dev mode**. In dev m
 
 | Variable | Values | Effect |
 | :--- | :--- | :--- |
-| `RIMSORT_DEV` | `1`, `true` | Force dev mode on (even from a compiled build) |
-| `RIMSORT_DEV` | `0`, `false` | Force dev mode off (use production paths from source) |
+| `RIMSORT_DEV` | `1`, `true` | Force dev mode on (equivalent to `--dev`) |
+| `RIMSORT_DEV` | `0`, `false` | Force dev mode off (overrides `--dev`) |
 | `RIMSORT_DEV_DIR` | absolute path | Override the dev data root (only when dev mode is active) |
 
-To run from source with production paths (e.g., to test against your real config):
+To use a custom dev data directory:
 
 ```shell
-RIMSORT_DEV=0 uv run python -m app
+uv run python -m app --dev RIMSORT_DEV_DIR=/tmp/rimsort-test
 ```
 
-To use a custom dev data directory:
+Or via env vars only:
 
 ```shell
 RIMSORT_DEV=1 RIMSORT_DEV_DIR=/tmp/rimsort-test uv run python -m app

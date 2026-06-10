@@ -42,16 +42,14 @@ def _suppress_mock_app_info(
 
 
 class TestIsDevMode:
-    """Test is_dev_mode property with env var and __compiled__ combinations."""
+    """Test is_dev_mode property with env var and --dev flag."""
 
     @pytest.mark.usefixtures("_suppress_mock_app_info")
-    def test_dev_mode_true_when_not_compiled(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_dev_mode_off_by_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("RIMSORT_DEV", raising=False)
         monkeypatch.delenv("RIMSORT_DEV_DIR", raising=False)
         info = AppInfo()
-        assert info.is_dev_mode is True
+        assert info.is_dev_mode is False
 
     @pytest.mark.usefixtures("_suppress_mock_app_info")
     def test_env_var_forces_dev_mode_off(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -89,7 +87,7 @@ class TestDevModePathRedirection:
     def test_dev_mode_redirects_storage_to_dev_data(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("RIMSORT_DEV", raising=False)
+        monkeypatch.setenv("RIMSORT_DEV", "1")
         monkeypatch.delenv("RIMSORT_DEV_DIR", raising=False)
         info = AppInfo()
         assert info.is_dev_mode is True
@@ -100,7 +98,7 @@ class TestDevModePathRedirection:
     def test_dev_mode_redirects_logs_to_dev_logs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("RIMSORT_DEV", raising=False)
+        monkeypatch.setenv("RIMSORT_DEV", "1")
         monkeypatch.delenv("RIMSORT_DEV_DIR", raising=False)
         info = AppInfo()
         expected = info.application_folder / "dev" / "logs"
@@ -110,7 +108,7 @@ class TestDevModePathRedirection:
     def test_production_mode_uses_platformdirs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("RIMSORT_DEV", "0")
+        monkeypatch.delenv("RIMSORT_DEV", raising=False)
         monkeypatch.delenv("RIMSORT_DEV_DIR", raising=False)
         info = AppInfo()
         assert "dev" not in info.app_storage_folder.parts[-2:]
@@ -119,7 +117,7 @@ class TestDevModePathRedirection:
     def test_derived_paths_follow_storage_redirect(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("RIMSORT_DEV", raising=False)
+        monkeypatch.setenv("RIMSORT_DEV", "1")
         monkeypatch.delenv("RIMSORT_DEV_DIR", raising=False)
         info = AppInfo()
         assert info.databases_folder == info.app_storage_folder / "dbs"

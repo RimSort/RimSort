@@ -96,6 +96,10 @@ def handle_exception(
 sys.excepthook = handle_exception
 
 
+# Process --dev flag if present (before any other initialization)
+if "--dev" in sys.argv:
+    os.environ["RIMSORT_DEV"] = "1"
+
 # Process --disable-updater flag if present (before any other initialization)
 if "--disable-updater" in sys.argv:
     os.environ["RIMSORT_DISABLE_UPDATER"] = "1"

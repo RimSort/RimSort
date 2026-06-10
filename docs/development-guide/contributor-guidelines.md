@@ -39,7 +39,7 @@ Please follow the following guidelines when contributing to RimSort.
 
 6. In 99% of situations, you should not submit pull requests that are only dependency bumps. Basic dependency bumps are handled automatically using dependabot.
 
-7. When running RimSort from source, dev mode is active by default. Your development data is stored in the `dev/` subdirectory of the repo — your production RimSort configuration is never touched. See [Development Setup](development-setup.md#dev-mode-data-isolation) for details and env var overrides.
+7. RimSort supports a `--dev` flag that redirects all data to the `dev/` subdirectory of the repo, keeping your production configuration untouched. See [Development Setup](development-setup.md#dev-mode-data-isolation) for details.
 
 ## Versioning and Releases
 

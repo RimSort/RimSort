@@ -37,12 +37,12 @@ class AppInfo:
     def _resolve_dev_mode() -> bool:
         """Determine whether the application is running in development mode.
 
-        Resolution order:
+        Dev mode is only active when explicitly requested via the ``--dev``
+        CLI flag (which sets ``RIMSORT_DEV=1``) or the ``RIMSORT_DEV`` env
+        var directly.
 
-        1. ``RIMSORT_DEV`` env var (highest priority):
-           ``"1"`` / ``"true"`` -> True;  ``"0"`` / ``"false"`` -> False.
-        2. Fallback: ``"__compiled__" not in globals()`` — running from
-           source means dev mode.
+        ``RIMSORT_DEV`` values: ``"1"`` / ``"true"`` -> True;
+        ``"0"`` / ``"false"`` -> False.  Default (unset): False.
         """
         env = os.environ.get("RIMSORT_DEV", "").lower()
         if env in ("1", "true"):
@@ -51,9 +51,9 @@ class AppInfo:
             return False
         if env:
             logger.warning(
-                f"Unrecognized RIMSORT_DEV value '{env}' — expected 1/true/0/false, falling back to auto-detect"
+                f"Unrecognized RIMSORT_DEV value '{env}' — expected 1/true/0/false"
             )
-        return "__compiled__" not in globals()
+        return False
 
     def __init__(self) -> None:
         """
