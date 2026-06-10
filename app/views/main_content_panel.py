@@ -60,7 +60,6 @@ from app.utils.ignore_manager import IgnoreManager
 from app.utils.metadata import MetadataManager, SettingsController, WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
-from app.utils.metadata import SettingsController
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
