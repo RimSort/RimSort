@@ -48,7 +48,6 @@ class SortingTabController(BaseTabController):
         self.dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
-        self.dialog.mod_type_filter_checkbox.setChecked(self.settings.mod_type_filter)
         self.dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering
         )
@@ -81,7 +80,6 @@ class SortingTabController(BaseTabController):
         self.settings.duplicate_mods_warning = (
             self.dialog.show_duplicate_mods_warning_checkbox.isChecked()
         )
-        self.settings.mod_type_filter = self.dialog.mod_type_filter_checkbox.isChecked()
         self.settings.hide_invalid_mods_when_filtering = (
             self.dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
         )
