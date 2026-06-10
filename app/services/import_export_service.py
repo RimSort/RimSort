@@ -104,8 +104,8 @@ class ImportExportService:
         if not pfids:
             return pfid_to_preview_url
 
-        webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-        if webapi_response is not None:
+        webapi_response, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+        if webapi_response:
             for metadata_entry in webapi_response:
                 pfid = metadata_entry["publishedfileid"]
                 if metadata_entry["result"] != 1:

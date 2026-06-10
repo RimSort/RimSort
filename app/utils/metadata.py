@@ -3,9 +3,10 @@ import os
 import shutil
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from pathlib import Path
 from re import match
-from typing import Any, Iterable, Union
+from typing import Any, Iterable, Literal, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -2811,15 +2812,33 @@ def import_steamcmd_acf_data(
     dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)
 
 
-def query_workshop_update_data(mods: dict[str, Any]) -> str | None:
+@dataclass
+class WorkshopUpdateResult:
+    """Result of a workshop mod update check.
+
+    :param status: Outcome — success, no_workshop_mods, partial, or failed
+    :param mods_checked: Number of workshop mod pfids we attempted to query
+    :param mods_updated: Number of mods that received update metadata
+    :param failed_pfids: PublishedFileIds that could not be queried
+    :param errors: Human-readable error descriptions for each failure
     """
-    Query Steam WebAPI for update data, for any workshop mods that have a 'publishedfileid'
-    attribute contained in their mod_data, and from there, populate mod_json_data with it.
 
-    Append mod update data found for Steam Workshop mods to internal metadata
+    status: Literal["success", "no_workshop_mods", "partial", "failed"]
+    mods_checked: int
+    mods_updated: int
+    failed_pfids: list[str]
+    errors: list[str]
 
-    :param mods: A dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
-    which contains possible Steam mods to lookup metadata for
+
+def query_workshop_update_data(mods: dict[str, Any]) -> WorkshopUpdateResult:
+    """
+    Query Steam WebAPI for update data for workshop/steamcmd mods.
+
+    Populates mods dict entries with ``external_time_created`` and
+    ``external_time_updated`` fields from the Steam API response.
+
+    :param mods: Dict of mod metadata keyed by UUID
+    :return: WorkshopUpdateResult describing what happened
     """
     logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
 
@@ -2830,24 +2849,55 @@ def query_workshop_update_data(mods: dict[str, Any]) -> str | None:
         and metadata.get("publishedfileid")
     }
 
-    workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(
-        list(workshop_mods_pfid_to_uuid.keys())
-    )
-    if workshop_mods_query_updates and len(workshop_mods_query_updates) > 0:
-        for workshop_mod_metadata in workshop_mods_query_updates:
-            uuid = workshop_mods_pfid_to_uuid[workshop_mod_metadata["publishedfileid"]]
-            if workshop_mod_metadata.get("time_created"):
-                mods[uuid]["external_time_created"] = workshop_mod_metadata[
-                    "time_created"
-                ]
-            if workshop_mod_metadata.get("time_updated"):
-                mods[uuid]["external_time_updated"] = workshop_mod_metadata[
-                    "time_updated"
-                ]
-    else:
-        return "failed"
+    if not workshop_mods_pfid_to_uuid:
+        logger.info("No Workshop/SteamCMD mods found — skipping update check")
+        return WorkshopUpdateResult(
+            status="no_workshop_mods",
+            mods_checked=0,
+            mods_updated=0,
+            failed_pfids=[],
+            errors=[],
+        )
 
-    return None
+    pfid_list = list(workshop_mods_pfid_to_uuid.keys())
+    mods_checked = len(pfid_list)
+
+    metadata_list, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        pfid_list
+    )
+
+    mods_updated = 0
+    for workshop_mod_metadata in metadata_list:
+        pfid = workshop_mod_metadata.get("publishedfileid")
+        if pfid is None or pfid not in workshop_mods_pfid_to_uuid:
+            continue
+        uuid = workshop_mods_pfid_to_uuid[pfid]
+        if workshop_mod_metadata.get("time_created"):
+            mods[uuid]["external_time_created"] = workshop_mod_metadata["time_created"]
+        if workshop_mod_metadata.get("time_updated"):
+            mods[uuid]["external_time_updated"] = workshop_mod_metadata["time_updated"]
+        mods_updated += 1
+
+    status: Literal["success", "no_workshop_mods", "partial", "failed"]
+    if failed_pfids and mods_updated > 0:
+        status = "partial"
+    elif failed_pfids:
+        status = "failed"
+    else:
+        status = "success"
+
+    logger.info(
+        f"Workshop update check complete: {mods_updated}/{mods_checked} mods updated"
+        + (f", {len(failed_pfids)} failed" if failed_pfids else "")
+    )
+
+    return WorkshopUpdateResult(
+        status=status,
+        mods_checked=mods_checked,
+        mods_updated=mods_updated,
+        failed_pfids=failed_pfids,
+        errors=errors,
+    )
 
 
 def recursively_update_dict(

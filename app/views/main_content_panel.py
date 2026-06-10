@@ -56,7 +56,7 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.metadata import SettingsController
+from app.utils.metadata import SettingsController, WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
@@ -1336,6 +1336,7 @@ class MainContent(QObject):
         Export the current list of active mods to the clipboard in a
         readable format. The current list does not need to have been saved.
         """
+
         data = self._import_export_service.collect_active_mods(
             self.mods_panel.active_mods_list.uuids, self.duplicate_mods
         )
@@ -1888,11 +1889,9 @@ class MainContent(QObject):
         self.steam_browser.show()
 
     def _do_check_for_workshop_updates(self) -> None:
-        # Check internet connection before attempting task
         if not check_internet_connection():
             return
-        # Query Workshop for update data
-        updates_checked = self.do_threaded_loading_animation(
+        result: WorkshopUpdateResult = self.do_threaded_loading_animation(
             gif_path=str(
                 AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
@@ -1902,16 +1901,34 @@ class MainContent(QObject):
             ),
             text=self.tr("Checking Steam Workshop mods for updates..."),
         )
-        # If we failed to check for updates, skip the comparison(s) & UI prompt
-        if updates_checked == "failed":
+
+        if result.status == "no_workshop_mods":
+            self.status_signal.emit(self.tr("No Workshop mods to check for updates"))
+            return
+
+        if result.status == "failed":
             dialogue.show_warning(
                 title=self.tr("Unable to check for updates"),
                 text=self.tr(
-                    "RimSort was unable to query Steam WebAPI for update information!\n"
+                    "RimSort was unable to check your Workshop mods for updates."
                 ),
-                information=self.tr("Are you connected to the Internet?"),
+                details="\n".join(result.errors) if result.errors else None,
             )
             return
+
+        if result.status == "partial":
+            dialogue.show_warning(
+                title=self.tr("Update check partially completed"),
+                text=self.tr(
+                    "{failed} out of {total} Workshop mods could not be checked for updates."
+                ).format(
+                    failed=len(result.failed_pfids),
+                    total=result.mods_checked,
+                ),
+                details="\n".join(result.errors) if result.errors else None,
+            )
+
+        # For both "success" and "partial", show the updater panel
         workshop_mod_updater = WorkshopModUpdaterPanel()
         self.window_manager.register(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
