@@ -58,7 +58,6 @@ from app.utils.generic import (
 )
 from app.utils.metadata import SettingsController, WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport
-from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface

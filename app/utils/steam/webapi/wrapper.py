@@ -835,7 +835,20 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                     errors.append(f"{last_error_desc} for {chunk_size} mods")
                     break
 
-                json_response = request.json()
+                try:
+                    json_response = request.json()
+                except requests.exceptions.JSONDecodeError as e:
+                    last_error_desc = (
+                        f"Invalid JSON response (HTTP {request.status_code})"
+                    )
+                    logger.error(
+                        f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
+                        f"{last_error_desc}: {e}"
+                    )
+                    failed_pfids.extend(chunk)
+                    errors.append(f"{last_error_desc} for {chunk_size} mods")
+                    break
+
                 if json_response.get("response", {}).get("resultcount", 0) > 0:
                     for mod_metadata in json_response["response"][
                         "publishedfiledetails"
@@ -875,16 +888,6 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                         f"{last_error_desc} for {chunk_size} mods "
                         f"after {_MAX_CHUNK_ATTEMPTS} attempts"
                     )
-
-            except requests.exceptions.JSONDecodeError as e:
-                last_error_desc = f"Invalid JSON response (HTTP {request.status_code})"
-                logger.error(
-                    f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
-                    f"{last_error_desc}: {e}"
-                )
-                failed_pfids.extend(chunk)
-                errors.append(f"{last_error_desc} for {chunk_size} mods")
-                break
 
     succeeded = total - len(failed_pfids)
     if total > 0:
