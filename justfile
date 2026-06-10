@@ -37,13 +37,59 @@ test-coverage: dev-setup
 # Code Quality
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Check code for linting issues (ruff check)
-ruff:
-    uv run ruff check {{ruff_config}} .
+# Container image for super-linter (matches CI version)
+superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
 
-# Check code for formatting issues (ruff format)
-ruff-format:
-    uv run ruff format {{ruff_config}} . --check
+# Run super-linter locally via container (ruff, ruff-format, jscpd, bash,
+# json, yaml, checkov, gitleaks). Mypy/Pyright run natively because they
+# need the local venv to resolve imports.
+[unix]
+super-lint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Detect container runtime
+    if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+        RUNTIME=docker
+    elif command -v podman &>/dev/null && podman info &>/dev/null 2>&1; then
+        RUNTIME=podman
+    else
+        echo "Error: docker or podman required but neither is running" >&2
+        exit 1
+    fi
+    PLATFORM_FLAG=""
+    if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
+        PLATFORM_FLAG="--platform linux/amd64"
+    fi
+    # Mount the git common dir for worktree support
+    GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
+    $RUNTIME run --rm $PLATFORM_FLAG \
+        -e RUN_LOCAL=true \
+        -e DEFAULT_BRANCH=main \
+        -e LOG_LEVEL=NOTICE \
+        -e LINTER_RULES_PATH=. \
+        -e VALIDATE_PYTHON_RUFF=true \
+        -e VALIDATE_PYTHON_RUFF_FORMAT=true \
+        -e VALIDATE_BASH=true \
+        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_JSON=true \
+        -e VALIDATE_YAML=true \
+        -e VALIDATE_CHECKOV=true \
+        -e VALIDATE_GITLEAKS=true \
+        -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
+        -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
+        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/" \
+        -e IGNORE_GITIGNORED_FILES=true \
+        -v "$(pwd)":/tmp/lint \
+        -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
+        {{superlinter_image}}
+
+# Run static type checking (mypy)
+typecheck:
+    uv run mypy --config-file pyproject.toml .
+
+# Run Pyright type checker on app and tests
+pyright:
+    uv run python -m pyright -p pyproject.toml .
 
 # Check and automatically fix linting issues (ruff check --fix)
 ruff-fix:
@@ -53,38 +99,16 @@ ruff-fix:
 ruff-format-fix:
     uv run ruff format {{ruff_config}} .
 
-# Check Markdown documentation for linting issues (markdownlint-cli2)
-markdownlint:
-    npx markdownlint-cli2@latest
-
 # Fix Markdown documentation issues (markdownlint-cli2 --fix)
 markdownlint-fix:
     npx markdownlint-cli2@latest --fix
-
-# Run static type checking (mypy)
-typecheck:
-    uv run mypy --config-file pyproject.toml .
-
-# Run Pyright type checker on app and tests
-pyright:
-    uv run pyright -p pyproject.toml .
-
-# Detect copy-paste code duplication (jscpd) — exits with error if any
-# clones are found (--threshold 0 means zero tolerance for duplicates).
-# Matches the CI's jscpd check configuration.
-jscpd:
-    npx jscpd@latest app/ tests/ --threshold 0
-
-# Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
-shfmt:
-    fd -e sh --exclude .venv --exclude submodules -x shfmt -d {}
 
 # Automatically fix shell script formatting issues (shfmt)
 shfmt-fix:
     fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
-# Run all code quality checks: ruff + ruff-format + typecheck + pyright + jscpd + shfmt + markdown lint
-check: ruff ruff-format typecheck pyright jscpd shfmt markdownlint
+# Run all code quality checks: super-linter + typecheck + pyright
+check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
