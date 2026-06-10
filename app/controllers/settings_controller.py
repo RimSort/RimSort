@@ -926,10 +926,6 @@ class SettingsController(QObject):
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
-        # Mod type filter checkbox
-        self.settings_dialog.mod_type_filter_checkbox.setChecked(
-            self.settings.mod_type_filter
-        )
         # Hide invalid mod filtering checkbox
         self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering
@@ -1310,10 +1306,6 @@ class SettingsController(QObject):
         # Duplicate mod notification checkbox
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
-        )
-        # Mod type filter checkbox
-        self.settings.mod_type_filter = (
-            self.settings_dialog.mod_type_filter_checkbox.isChecked()
         )
         # Hide invalid mod filtering checkbox
         self.settings.hide_invalid_mods_when_filtering = (

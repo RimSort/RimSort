@@ -892,15 +892,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.show_duplicate_mods_warning_checkbox
         )
 
-        # Mod type filter checkbox
-        self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
-        self.mod_type_filter_checkbox.setToolTip(
-            self.tr(
-                "Add icons and filtering options for easy mods identification and grouping"
-            )
-        )
-        modlist_option_group_box_layout.addWidget(self.mod_type_filter_checkbox)
-
         # Hide invalid mod filtering checkbox
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
             self.tr("Hide invalid mods when filtering")

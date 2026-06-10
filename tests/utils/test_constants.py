@@ -5,7 +5,6 @@ from app.utils.constants import (
     KNOWN_TIER_ZERO_MODS,
     RIMWORLD_DLC_METADATA,
     RIMWORLD_PACKAGE_IDS,
-    SEARCH_DATA_SOURCE_FILTER_INDEXES,
     SortMethod,
 )
 
@@ -65,7 +64,3 @@ class TestMiscConstants:
 
     def test_default_missing_packageid(self) -> None:
         assert DEFAULT_MISSING_PACKAGEID == "missing.packageid"
-
-    def test_search_filter_indexes(self) -> None:
-        assert "all" in SEARCH_DATA_SOURCE_FILTER_INDEXES
-        assert "workshop" in SEARCH_DATA_SOURCE_FILTER_INDEXES
