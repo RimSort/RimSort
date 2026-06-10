@@ -9,11 +9,12 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
 from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
+from app.controllers.settings_tabs import SortingTabController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.acf_utils import validate_acf_file_exists
 from app.utils.app_info import AppInfo
-from app.utils.constants import DEFAULT_INSTANCE_NAME, SortMethod
+from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     extract_git_dir_name,
@@ -86,6 +87,9 @@ class SettingsController(QObject):
         self._detected_steam_root: Path | None = None
 
         # Initialize the settings dialog from the settings model
+
+        self._sorting_tab = SortingTabController(self.settings, self.settings_dialog)
+        self._sorting_tab.connect_signals()
 
         self._update_view_from_model()
 
@@ -895,49 +899,7 @@ class SettingsController(QObject):
         )
 
         # Sorting tab
-        if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
-            self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
-        elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
-            self.settings_dialog.sorting_topological_radio.setChecked(True)
-        # Use dependencies for sorting checkbox
-        if self.settings.use_moddependencies_as_loadTheseBefore:
-            (
-                self.settings_dialog.use_moddependencies_as_loadTheseBefore.setChecked(
-                    True
-                )
-            )
-        # Use alternativePackageIds as satisfying dependencies
-        if self.settings.use_alternative_package_ids_as_satisfying_dependencies:
-            self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.setChecked(
-                True
-            )
-        # Set dependencies checkbox
-        self.settings_dialog.check_deps_checkbox.setChecked(
-            self.settings.check_dependencies_on_sort
-        )
-        # Prefer versioned About.xml tags over base tags
-        if self.settings.prefer_versioned_about_tags:
-            self.settings_dialog.prefer_versioned_about_tags_checkbox.setChecked(True)
-        # Download missing mods checkbox
-        self.settings_dialog.download_missing_mods_checkbox.setChecked(
-            self.settings.try_download_missing_mods
-        )
-        # Duplicate mod notification checkbox
-        self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
-            self.settings.duplicate_mods_warning
-        )
-        # Hide invalid mod filtering checkbox
-        self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
-            self.settings.hide_invalid_mods_when_filtering
-        )
-        # Inactive mods sorting options checkbox
-        self.settings_dialog.inactive_mods_sorting_checkbox.setChecked(
-            self.settings.inactive_mods_sorting
-        )
-        # Save inactive mods sort state
-        self.settings_dialog.save_inactive_mods_sort_state_checkbox.setChecked(
-            self.settings.save_inactive_mods_sort_state
-        )
+        self._sorting_tab.update_view_from_model()
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -1280,45 +1242,7 @@ class SettingsController(QObject):
             self.settings.aux_db_time_limit = -1
 
         # Sorting tab
-        if self.settings_dialog.sorting_alphabetical_radio.isChecked():
-            self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
-        elif self.settings_dialog.sorting_topological_radio.isChecked():
-            self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
-
-        # Use moddependencies as loadTheseBefore
-        self.settings.use_moddependencies_as_loadTheseBefore = (
-            self.settings_dialog.use_moddependencies_as_loadTheseBefore.isChecked()
-        )
-        # Use alternativePackageIds as satisfying dependencies
-        self.settings.use_alternative_package_ids_as_satisfying_dependencies = self.settings_dialog.use_alternative_package_ids_as_satisfying_dependencies_checkbox.isChecked()
-        # Set dependencies checkbox
-        self.settings.check_dependencies_on_sort = (
-            self.settings_dialog.check_deps_checkbox.isChecked()
-        )
-        # Prefer versioned About.xml tags over base tags
-        self.settings.prefer_versioned_about_tags = (
-            self.settings_dialog.prefer_versioned_about_tags_checkbox.isChecked()
-        )
-        # Download missing mods checkbox
-        self.settings.try_download_missing_mods = (
-            self.settings_dialog.download_missing_mods_checkbox.isChecked()
-        )
-        # Duplicate mod notification checkbox
-        self.settings.duplicate_mods_warning = (
-            self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
-        )
-        # Hide invalid mod filtering checkbox
-        self.settings.hide_invalid_mods_when_filtering = (
-            self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
-        )
-        # Inactive mods sorting options checkbox
-        self.settings.inactive_mods_sorting = (
-            self.settings_dialog.inactive_mods_sorting_checkbox.isChecked()
-        )
-        # Save inactive mods sort state
-        self.settings.save_inactive_mods_sort_state = (
-            self.settings_dialog.save_inactive_mods_sort_state_checkbox.isChecked()
-        )
+        self._sorting_tab.update_model_from_view()
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():
