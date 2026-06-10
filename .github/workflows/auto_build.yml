@@ -1,5 +1,5 @@
 # Auto build on push to main and PR.
-# Not recommended to release these builds due to versioning.
+# Pushes to main also create an Edge release on GitHub.
 
 name: Auto Build
 on:
@@ -18,6 +18,58 @@ on:
 permissions: {}
 
 jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app_changed: ${{ steps.check.outputs.app_changed }}
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Check for app-relevant changes
+        id: check
+        env:
+          GH_EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          MG_BASE: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$GH_EVENT" == "pull_request" ]]; then
+            CHANGED=$(git diff --name-only "$PR_BASE"..."$PR_HEAD")
+          elif [[ "$GH_EVENT" == "merge_group" ]]; then
+            CHANGED=$(git diff --name-only "$MG_BASE"..."$MG_HEAD")
+          else
+            CHANGED=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_SHA")
+          fi
+
+          APP_CHANGED=$(echo "$CHANGED" \
+            | grep -v -E '^docs/' \
+            | grep -v -E '\.md$' \
+            | grep -v -E '^\.github/ISSUE_TEMPLATE/' \
+            | grep -v -E '^\.github/(release|labeler)\.yml$' \
+            | grep -v -E '^LICENSE' \
+            || true)
+
+          if [[ -n "$APP_CHANGED" ]]; then
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+            echo "App-relevant files changed:"
+            echo "$APP_CHANGED"
+          else
+            echo "app_changed=false" >> "$GITHUB_OUTPUT"
+            echo "Only documentation files changed — builds will be skipped"
+          fi
+
+  pre-pyright:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/pyright.yml
+
   pre-test:
     permissions:
       contents: read
@@ -26,11 +78,14 @@ jobs:
   pre-build:
     uses: ./.github/workflows/get_version_info.yml
     with:
-      format_only: true
+      type: ${{ github.event_name == 'push' && 'Edge' || 'Auto-Build' }}
+      format_only: ${{ github.event_name != 'push' }}
 
   attested-build:
-    needs: pre-build
-    if: github.event_name != 'pull_request'
+    needs: [detect-changes, pre-build]
+    if: >-
+      needs.detect-changes.outputs.app_changed == 'true'
+      && github.event_name != 'pull_request'
     permissions:
       id-token: write
       contents: read
@@ -42,8 +97,10 @@ jobs:
       attest: true
 
   non-attested-build:
-    needs: pre-build
-    if: github.event_name == 'pull_request'
+    needs: [detect-changes, pre-build]
+    if: >-
+      needs.detect-changes.outputs.app_changed == 'true'
+      && github.event_name == 'pull_request'
     permissions:
       id-token: write
       contents: read
@@ -54,15 +111,124 @@ jobs:
       version_format: ${{ needs.pre-build.outputs.version_format }}
       attest: false
 
+  edge-release:
+    needs: [attested-build, pre-build, pre-pyright, pre-test]
+    if: >-
+      github.event_name == 'push'
+      && needs.attested-build.result == 'success'
+      && needs.pre-pyright.result == 'success'
+      && needs.pre-test.result == 'success'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8.0.1
+        with:
+          path: artifacts
+
+      - name: Package artifacts
+        run: |
+          mv artifacts/Windows_x86_64_msi artifacts/msi
+          mv artifacts/Ubuntu-22.04_x86_64_appimage artifacts/appimage-u2204 || true
+          cd artifacts
+          for artifact in ./*; do
+            file=${artifact##*/}
+            if [[ "$file" == "msi" ]]; then
+              cd "$artifact"
+              name="RimSort-$VERSION-Windows_x86_64.msi"
+              mv ./*.msi "../$name"
+              cd ..
+            elif [[ "$file" == "appimage-u2204" ]]; then
+              cd "$artifact"
+              name="RimSort-$VERSION-x86_64.AppImage"
+              mv ./*.AppImage "../$name"
+              cd ..
+            else
+              base=${file%%.tar}
+              cd "$artifact"
+              if [[ $base == *"Windows"* ]]; then
+                rootname=RimSort
+                name="RimSort-$VERSION-$base.zip"
+                tar -xf "${file}.tar"
+                zip -rmqq "../$name" "$rootname" &
+              else
+                name="RimSort-$VERSION-$base.tar.gz"
+                gzip -c "${file}.tar" > "../$name" &
+              fi
+              cd ..
+            fi
+          done
+          wait
+          shopt -s extglob
+          rm -rf -- ./!(*.zip|*.tar.gz|*.msi|*.AppImage)
+        shell: bash
+        env:
+          VERSION: ${{ needs.pre-build.outputs.version }}
+
+      - name: Delete Previous Edge Release
+        run: |
+          gh release delete Edge -y --cleanup-tag || echo "No previous Edge release found"
+          git tag -d Edge || echo "Edge tag doesn't exist locally"
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Edge Release
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        with:
+          artifacts: "artifacts/*.zip,artifacts/*.tar.gz,artifacts/*.msi,artifacts/*.AppImage"
+          tag: Edge
+          name: "Edge Build (Unstable)"
+          generateReleaseNotes: true
+          prerelease: true
+          draft: false
+          body: |
+            > **⚠️ This is an unstable edge build from the latest main branch. It may contain bugs and breaking changes. Use [stable releases](https://github.com/${{ github.repository }}/releases/latest) for production.**
+
+            Edge release ${{ needs.pre-build.outputs.version }}.
+            The latest commit is ${{ needs.pre-build.outputs.current_commit }}.
+
+            Refer to the [action run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) that created this release.
+          allowUpdates: true
+          removeArtifacts: true
+          commit: ${{ needs.pre-build.outputs.current_commit }}
+
   status-check:
     name: Status Check
     runs-on: ubuntu-latest
     needs:
+      - detect-changes
+      - pre-pyright
       - pre-test
       - pre-build
       - attested-build
       - non-attested-build
+      - edge-release
     if: always()
     steps:
-      - name: Set status check
-        run: echo "All required jobs have completed."
+      - name: Verify all required jobs succeeded
+        run: |
+          if [[ "${{ needs.detect-changes.outputs.app_changed }}" != "true" ]]; then
+            echo "No app-relevant changes detected — builds were skipped."
+          fi
+          results=(
+            "${{ needs.pre-pyright.result }}"
+            "${{ needs.pre-test.result }}"
+            "${{ needs.pre-build.result }}"
+            "${{ needs.attested-build.result }}"
+            "${{ needs.non-attested-build.result }}"
+            "${{ needs.edge-release.result }}"
+          )
+          for r in "${results[@]}"; do
+            if [[ "$r" == "failure" || "$r" == "cancelled" ]]; then
+              echo "::error::A required job finished with result: $r"
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded or were skipped."

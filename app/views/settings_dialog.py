@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QSizePolicy,
     QSpinBox,
     QTabWidget,
@@ -73,7 +74,6 @@ class SettingsDialog(QDialog):
         self._do_locations_tab()
         self._do_game_launch_tab()
         self._do_databases_tab()
-        self._do_cross_version_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
@@ -386,22 +386,21 @@ class SettingsDialog(QDialog):
         tab_layout.addStretch()
 
     def _do_databases_tab(self) -> None:
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.tab_widget.addTab(scroll_area, self.tr("Databases"))
+
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Databases"))
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
+        scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
 
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
-
-    def _do_cross_version_databases_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Additional Databases"))
-
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
-
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
 
@@ -775,11 +774,23 @@ This basically preserves your mod coloring, user notes etc. for this many second
         sorting_label.setFont(GUIInfo().emphasis_font)
         sort_group_box_layout.addWidget(sorting_label)
 
-        self.sorting_alphabetical_radio = QRadioButton(self.tr("Alphabetically"))
-        sort_group_box_layout.addWidget(self.sorting_alphabetical_radio)
-
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
+
+        alphabetical_layout = QHBoxLayout()
+        self.sorting_alphabetical_radio = QRadioButton(self.tr("Alphabetically"))
+        self.sorting_alphabetical_radio.setToolTip(
+            self.tr(
+                "Alphabetical sorting may produce incorrect results with complex mod lists. "
+                "Topological sorting is recommended."
+            )
+        )
+        alphabetical_layout.addWidget(self.sorting_alphabetical_radio)
+        alphabetical_warning = QLabel(self.tr("(Deprecated — use Topological instead)"))
+        alphabetical_warning.setStyleSheet("color: #e8a838; font-style: italic;")
+        alphabetical_layout.addWidget(alphabetical_warning)
+        alphabetical_layout.addStretch()
+        sort_group_box_layout.addLayout(alphabetical_layout)
 
         # Dependencies group
         deps_group_box = QGroupBox()
@@ -881,15 +892,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.show_duplicate_mods_warning_checkbox
         )
 
-        # Mod type filter checkbox
-        self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
-        self.mod_type_filter_checkbox.setToolTip(
-            self.tr(
-                "Add icons and filtering options for easy mods identification and grouping"
-            )
-        )
-        modlist_option_group_box_layout.addWidget(self.mod_type_filter_checkbox)
-
         # Hide invalid mod filtering checkbox
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
             self.tr("Hide invalid mods when filtering")
@@ -915,17 +917,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
         inactive_mods_sorting_group_box_layout.addWidget(inactive_mods_sorting_label)
 
         # Inactive mods sorting options checkbox
-        self.enable_inactive_mods_sorting_checkbox = QCheckBox(
+        self.inactive_mods_sorting_checkbox = QCheckBox(
             self.tr("Enable inactive mods sorting")
         )
-        self.enable_inactive_mods_sorting_checkbox.setToolTip(
+        self.inactive_mods_sorting_checkbox.setToolTip(
             self.tr(
                 "Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods \n"
                 "Disabling this can improve performance by avoiding heavy calculations."
             )
         )
         inactive_mods_sorting_group_box_layout.addWidget(
-            self.enable_inactive_mods_sorting_checkbox
+            self.inactive_mods_sorting_checkbox
         )
 
         self.save_inactive_mods_sort_state_checkbox = QCheckBox(

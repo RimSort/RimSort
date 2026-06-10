@@ -1,52 +1,14 @@
 # tests/views/test_main_content_run.py
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Generator, List, Tuple
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-import app.utils.metadata as metadata
-import app.utils.steam.steamcmd.wrapper as steamcmd_wrapper
 import app.views.dialogue as dialogue
 from app.views.main_content_panel import MainContent
-
-
-# Dummy settings and controller to initialize MainContent
-class DummySettings:
-    def __init__(self) -> None:
-        self.current_instance = "inst1"
-        # Mod list options
-        self.try_download_missing_mods = True
-        self.duplicate_mods_warning = True
-        self.mod_type_filter = True
-        self.hide_invalid_mods_when_filtering = False
-        self.backup_saves_on_launch = False
-        self.auto_run_todds_before_launch = False
-        # Inactive mods sort settings
-        self.inactive_mods_sorting = True
-        self.save_inactive_mods_sort_state = False
-        self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
-        self.inactive_mods_sort_descending = True
-        self.active_mods_data_source_filter_index = 0
-        self.inactive_mods_data_source_filter_index = 0
-        self.active_mods_dividers: list[dict[str, object]] = []
-        # Instance data with dummy game_folder, config_folder and run_args
-        self.instances = {
-            "inst1": SimpleNamespace(
-                game_folder="/fake/path",
-                config_folder="/fake/config",
-                run_args=["--test"],
-                steam_client_integration=False,
-                launch_via_steam_protocol=False,
-            )
-        }
-
-
-class DummySettingsController:
-    def __init__(self) -> None:
-        self.settings = DummySettings()
 
 
 @pytest.fixture(autouse=True)
@@ -58,14 +20,14 @@ def patch_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
 
 
 @pytest.fixture(autouse=True)
-def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, List[str]]]:
+def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, str]]:
     # Fake launch_game_process in main_content_panel to capture calls
     from app.views import main_content_panel
 
-    calls: List[Tuple[Path, List[str]]] = []
+    calls: List[Tuple[Path, str]] = []
 
-    def fake_launch_game_process(game_install_path: str, args: List[str]) -> None:
-        calls.append((Path(game_install_path), args))
+    def fake_launch_game_process(game_install_path: str, run_args: str = "") -> None:
+        calls.append((Path(game_install_path), run_args))
 
     monkeypatch.setattr(
         main_content_panel, "launch_game_process", fake_launch_game_process
@@ -75,39 +37,22 @@ def patch_launch(monkeypatch: pytest.MonkeyPatch) -> List[Tuple[Path, List[str]]
     return calls
 
 
-@pytest.fixture(autouse=True)
-def patch_steamcmd(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Prevent SteamcmdInterface __init__ requiring args
-    monkeypatch.setattr(
-        steamcmd_wrapper.SteamcmdInterface,
-        "instance",
-        classmethod(
-            lambda cls: SimpleNamespace(setup=True, steamcmd_appworkshop_acf_path="")
-        ),
-    )
-
-
-@pytest.fixture(autouse=True)
-def patch_metadata_manager(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Patch MetadataManager to avoid initialization issues."""
-    # Create a mock MetadataManager instance
-    mock_metadata_manager = Mock()
-
-    # Patch the MetadataManager.instance method
-    monkeypatch.setattr(
-        metadata.MetadataManager,
-        "instance",
-        classmethod(lambda cls: mock_metadata_manager),
-    )
-
-
 @pytest.fixture
 def main_content(
-    monkeypatch: pytest.MonkeyPatch, qapp: QApplication
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: QApplication,
+    mock_settings_controller: MagicMock,
+    mock_metadata_manager: MagicMock,
+    mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:
-    # Initialize MainContent with dummy settings
-    sc = DummySettingsController()
-    mc = MainContent(sc)  # type: ignore[arg-type]
+    # Ensure active_mods_dividers is set on the settings object
+    QObject.__setattr__(mock_settings_controller.settings, "active_mods_dividers", [])
+    # Set game_folder and run_args on the instance to match test expectations
+    instance = mock_settings_controller.settings.instances["Default"]
+    instance.game_folder = "/fake/path"
+    instance.run_args = "--test"
+    # Initialize MainContent with the shared mock settings controller
+    mc = MainContent(mock_settings_controller)
     # Patch _do_save to capture calls
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
@@ -115,6 +60,7 @@ def main_content(
     monkeypatch.setattr(
         mc, "check_if_essential_paths_are_set", lambda prompt=True: True
     )
+    mc.todds_controller = MagicMock()
 
     yield mc, save_calls
 
@@ -140,17 +86,17 @@ def unsaved_main_content(
     "dialogue_return, expected_save_calls, expected_launch",
     [
         (QMessageBox.StandardButton.Cancel, [], []),
-        ("Run Anyway", [], [(Path("/fake/path"), ["--test"])]),
-        ("Save and Run", [True], [(Path("/fake/path"), ["--test"])]),
+        ("Run Anyway", [], [(Path("/fake/path"), "--test")]),
+        ("Save and Run", [True], [(Path("/fake/path"), "--test")]),
     ],
 )
 def test_run_game_with_unsaved_changes(
     patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
+    patch_launch: List[Tuple[Path, str]],
     unsaved_main_content: Tuple[MainContent, List[bool]],
     dialogue_return: QMessageBox.StandardButton | str,
     expected_save_calls: List[bool],
-    expected_launch: List[Tuple[Path, List[str]]],
+    expected_launch: List[Tuple[Path, str]],
 ) -> None:
     mc, save_calls = unsaved_main_content
     patch_dialogue.return_value = (
@@ -165,7 +111,7 @@ def test_run_game_with_unsaved_changes(
 
 def test_run_without_unsaved(
     patch_dialogue: Mock,
-    patch_launch: List[Tuple[Path, List[str]]],
+    patch_launch: List[Tuple[Path, str]],
     main_content: Tuple[MainContent, List[bool]],
 ) -> None:
     mc, save_calls = main_content
@@ -176,4 +122,4 @@ def test_run_without_unsaved(
     # Dialogue not shown
     assert patch_dialogue.return_value is None
     assert save_calls == []
-    assert patch_launch == [(Path("/fake/path"), ["--test"])]
+    assert patch_launch == [(Path("/fake/path"), "--test")]

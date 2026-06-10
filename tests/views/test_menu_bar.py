@@ -3,24 +3,11 @@ from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, QObject
 from PySide6.QtWidgets import QApplication, QMenuBar
 
 from app.controllers.menu_bar_controller import MenuBarController
-from app.controllers.settings_controller import SettingsController
 from app.views.menu_bar import MenuBar
-
-
-@pytest.fixture
-def mock_settings_controller() -> MagicMock:
-    """Mock SettingsController."""
-    controller = MagicMock(spec=SettingsController)
-    controller.settings = MagicMock()
-    controller.settings.check_for_update_startup = False
-    controller.settings.text_editor_location = None
-    controller.settings.instances = {"Default": MagicMock()}
-    controller.settings.current_instance = "Default"
-    return controller
 
 
 @pytest.fixture
@@ -29,6 +16,9 @@ def menu_bar_instance(
     qapp: Union[QApplication, QCoreApplication],
 ) -> MenuBar:
     """Create a MenuBar instance for testing."""
+    QObject.__setattr__(
+        mock_settings_controller.settings, "check_for_update_startup", False
+    )
     qt_menu_bar = QMenuBar()
     menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
     return menu_bar

@@ -70,7 +70,7 @@ class TestGameFilesRecovery:
 
         (game_dir / "test.txt").write_text("test")
 
-        with patch("app.utils.generic.platform_specific_open"):
+        with patch("app.controllers.troubleshooting_controller.platform_specific_open"):
             controller._delete_game_files()
             assert test_mod.exists()
             assert not (game_dir / "test.txt").exists()
@@ -90,7 +90,7 @@ class TestSteamModsRecovery:
         test_mod.mkdir()
         (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
 
-        with patch("app.utils.generic.platform_specific_open"):
+        with patch("app.controllers.troubleshooting_controller.platform_specific_open"):
             controller._delete_steam_mods()
             assert not test_mod.exists()
 
@@ -209,7 +209,7 @@ class TestUIInteractions:
         controller.dialog.integrity_delete_game_configs.setChecked(False)
 
         with (
-            patch("app.utils.generic.platform_specific_open"),
+            patch("app.controllers.troubleshooting_controller.platform_specific_open"),
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
@@ -486,7 +486,7 @@ class TestEdgeCases:
             rmtree(path)
 
         with (
-            patch("app.utils.generic.platform_specific_open"),
+            patch("app.controllers.troubleshooting_controller.platform_specific_open"),
             patch("pathlib.Path.exists", return_value=False),
             patch("pathlib.Path.iterdir", return_value=[]),
         ):

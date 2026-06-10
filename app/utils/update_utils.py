@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import platform
 import re
@@ -418,8 +420,8 @@ class UpdateManager(QObject):
         "Darwin": {
             "patterns": ["Darwin", "macOS", "Mac"],
             "arch_patterns": {
-                "64bit": ["x86_64", "intel"],
-                "ARM64": ["arm64", "apple"],
+                "arm64": ["arm64", "arm", "apple"],
+                "x86_64": ["x86_64", "i386", "intel"],
             },
         },
         "Linux": {
@@ -472,7 +474,12 @@ class UpdateManager(QObject):
         self._elevation_needed: Optional[bool] = None  # Cache elevation check result
         # Cache platform info to avoid repeated calls
         self._system = platform.system()
-        self._arch = platform.architecture()[0]
+        # On macOS, platform.architecture()[0] returns "64bit" for both Intel and
+        # ARM, so use platform.machine() which returns "arm64" or "x86_64".
+        if self._system == "Darwin":
+            self._arch = platform.machine()
+        else:
+            self._arch = platform.architecture()[0]
         # Cache platform patterns for performance
         self._cached_patterns = (
             self._platform_patterns[self._system]
@@ -816,7 +823,7 @@ class UpdateManager(QObject):
                 release_data.get("assets", []), needs_elevation
             )
             if not download_info:
-                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.processor()}"
+                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.machine()}"
                 dialogue.show_warning(
                     title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
                     text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(

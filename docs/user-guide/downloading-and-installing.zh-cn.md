@@ -100,6 +100,6 @@ Linux
 
 <img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
 
-[所有发布]: https://github.com/oceancabbage/RimSort/releases
-[稳定版]: https://github.com/oceancabbage/RimSort/releases/latest
+[所有发布]: https://github.com/RimSort/RimSort/releases
+[稳定版]: https://github.com/RimSort/RimSort/releases/latest
 [前瞻版]: https://github.com/RimSort/RimSort/releases/tag/Edge

@@ -8,9 +8,7 @@ import traceback
 import webbrowser
 from functools import partial
 from pathlib import Path
-from tempfile import gettempdir
 from typing import Any, Callable, Literal, Optional, cast, overload
-from urllib.parse import urlparse
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -35,13 +33,18 @@ from PySide6.QtWidgets import (
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.sort_controller import Sorter
+from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
+from app.services.import_export_service import ImportExportService
+from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.db_builder import DatabaseBuilder
 from app.utils.event_bus import EventBus
 from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
@@ -57,20 +60,17 @@ from app.utils.ignore_manager import IgnoreManager
 from app.utils.metadata import MetadataManager, SettingsController, WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
+from app.utils.metadata import SettingsController
+from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from app.utils.steam.webapi.wrapper import (
-    CollectionImport,
-    ISteamRemoteStorage_GetPublishedFileDetails,
-)
+from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.system_info import SystemInfo
-from app.utils.todds.wrapper import ToddsInterface
 from app.utils.update_utils import UpdateManager
-from app.utils.xml import json_to_xml_write
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
@@ -114,243 +114,196 @@ class MainContent(QObject):
         return cls._instance
 
     def __init__(self, settings_controller: SettingsController) -> None:
-        """
-        Initialize the main content panel.
-
-        :param settings_controller: the settings controller for the application
-        """
         if not hasattr(self, "initialized"):
-            super(MainContent, self).__init__()
+            super().__init__()
             logger.debug("Initializing MainContent")
-
             self.settings_controller = settings_controller
-
-            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
-            EventBus().do_check_for_application_update.connect(
-                self._do_check_for_update
-            )
-            EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
-            EventBus().do_import_mod_list_from_rentry.connect(
-                self._do_import_list_rentry
-            )
-            EventBus().do_import_mod_list_from_workshop_collection.connect(
-                self._do_import_list_workshop_collection
-            )
-            EventBus().do_import_mod_list_from_save_file.connect(
-                self._do_import_list_from_save_file
-            )
-            EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
-            EventBus().do_export_mod_list_to_clipboard.connect(
-                self._do_export_list_clipboard
-            )
-            EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_log.connect(self._upload_file)
-            EventBus().do_open_default_editor.connect(self._open_in_default_editor)
-            EventBus().do_download_all_mods_via_steamcmd.connect(
-                self._on_do_download_all_mods_via_steamcmd
-            )
-            EventBus().do_download_all_mods_via_steam.connect(
-                self._on_do_download_all_mods_via_steam
-            )
-            EventBus().do_compare_steam_workshop_databases.connect(
-                self._do_generate_metadata_comparison_report
-            )
-            EventBus().do_merge_steam_workshop_databases.connect(
-                self._do_merge_databases
-            )
-            EventBus().do_build_steam_workshop_database.connect(
-                self._on_do_build_steam_workshop_database
-            )
-            EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
-            EventBus().do_export_acf.connect(self._do_export_steamcmd_acf_data)
-            EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
-            EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
-
-            EventBus().do_refresh_mods_lists.connect(self._do_refresh)
-            EventBus().do_clear_active_mods_list.connect(self._do_clear)
-            EventBus().do_restore_active_mods_list.connect(self._do_restore)
-            EventBus().do_sort_active_mods_list.connect(self._do_sort)
-            EventBus().do_save_active_mods_list.connect(self._do_save)
-            EventBus().do_run_game.connect(self._do_run_game)
-
-            # Shortcuts submenu Eventbus
-            EventBus().do_open_app_directory.connect(self._do_open_app_directory)
-            EventBus().do_open_settings_directory.connect(
-                self._do_open_settings_directory
-            )
-            EventBus().do_open_rimsort_logs_directory.connect(
-                self._do_open_rimsort_logs_directory
-            )
-            EventBus().do_open_rimworld_directory.connect(
-                self._do_open_rimworld_directory
-            )
-            EventBus().do_open_rimworld_config_directory.connect(
-                self._do_open_rimworld_config_directory
-            )
-            EventBus().do_open_rimworld_logs_directory.connect(
-                self._do_open_rimworld_logs_directory
-            )
-            EventBus().do_open_local_mods_directory.connect(
-                self._do_open_local_mods_directory
-            )
-            EventBus().do_open_steam_mods_directory.connect(
-                self._do_open_steam_mods_directory
-            )
-
-            EventBus().do_steamcmd_download.connect(
-                self._do_download_mods_with_steamcmd
-            )
-
-            EventBus().do_steamworks_api_call.connect(
-                self._do_steamworks_api_call_animated
-            )
-
-            # Edit Menu bar Eventbus
-            EventBus().do_rule_editor.connect(
-                lambda: self._do_open_rule_editor(
-                    compact=False, initial_mode="community_rules"
-                )
-            )
-            EventBus().do_ignore_json_editor.connect(self._do_open_ignore_json_editor)
-            EventBus().do_check_missing_mod_properties.connect(
-                self.__check_and_warn_missing_mod_properties
-            )
-
-            # Download Menu bar Eventbus
-            EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
-            EventBus().do_browse_workshop.connect(self._do_browse_workshop)
-            EventBus().do_check_for_workshop_updates.connect(
-                self._do_check_for_workshop_updates
-            )
-            EventBus().do_steam_verify_game_files.connect(
-                self.do_steam_verify_game_files
-            )
-
-            # Textures Menu bar Eventbus
-            EventBus().do_optimize_textures.connect(self._do_optimize_textures)
-            EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
-
-            # INITIALIZE WIDGETS
-            # Initialize Steam(CMD) integrations
-            self.steam_browser: SteamBrowser | None = None
-            self.steamcmd_runner: RunnerPanel | None = None
-            self.steamcmd_wrapper = SteamcmdInterface.instance()
-
-            # Initialize MetadataManager
-            self.metadata_manager = metadata.MetadataManager.instance()
-
-            # BASE LAYOUT
-            self.main_layout = QHBoxLayout()
-            self.main_layout.setContentsMargins(
-                5, 5, 5, 5
-            )  # Space between widgets and Frame border
-            self.main_layout.setSpacing(5)  # Space between mod lists and action buttons
-
-            self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
-            self.main_splitter.setChildrenCollapsible(False)
-
-            # FRAME REQUIRED - to allow for styling
-            self.main_layout_frame = QFrame()
-            self.main_layout_frame.setObjectName("MainPanel")
-            self.main_layout_frame.setLayout(self.main_layout)
-
-            # INSTANTIATE WIDGETS
-            self.mod_info_panel = ModInfoPanel(
-                settings_controller=self.settings_controller,
-            )
-            self.mods_panel = ModsPanel(
-                settings_controller=self.settings_controller,
-            )
-
-            self.mod_info_container = QWidget()
-            self.mod_info_container.setLayout(self.mod_info_panel.panel)
-
-            self.mods_panel_container = QWidget()
-            self.mods_panel_container.setLayout(self.mods_panel.panel)
-
-            self.main_splitter.addWidget(self.mod_info_container)
-            self.main_splitter.addWidget(self.mods_panel_container)
-
-            self.main_splitter.setHandleWidth(1)
-
-            self.mod_info_container.setMinimumWidth(280)
-            # WIDGETS INTO BASE LAYOUT
-            self.main_layout.addWidget(self.main_splitter)
-
-            # SIGNALS AND SLOTS
-            self.metadata_manager.mod_created_signal.connect(
-                self.mods_panel.on_mod_created  # Connect MetadataManager to ModPanel for mod creation
-            )
-            self.metadata_manager.mod_deleted_signal.connect(
-                self.mods_panel.on_mod_deleted  # Connect MetadataManager to ModPanel for mod deletion
-            )
-            self.metadata_manager.mod_metadata_updated_signal.connect(
-                self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
-            )
-            self.mods_panel.active_mods_list.key_press_signal.connect(
-                self.__handle_active_mod_key_press
-            )
-            self.mods_panel.inactive_mods_list.key_press_signal.connect(
-                self.__handle_inactive_mod_key_press
-            )
-            self.mods_panel.active_mods_list.mod_info_signal.connect(
-                self.__mod_list_slot
-            )
-            self.mods_panel.inactive_mods_list.mod_info_signal.connect(
-                self.__mod_list_slot
-            )
-            self.mods_panel.active_mods_list.item_added_signal.connect(
-                self.mods_panel.inactive_mods_list.handle_other_list_row_added
-            )
-            self.mods_panel.inactive_mods_list.item_added_signal.connect(
-                self.mods_panel.active_mods_list.handle_other_list_row_added
-            )
-            self.mods_panel.active_mods_list.edit_rules_signal.connect(
-                self._do_open_rule_editor
-            )
-            self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
-                self._do_open_rule_editor
-            )
-            self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
-                self._do_blacklist_action_steamdb
-            )
-            self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
-                self._do_blacklist_action_steamdb
-            )
-            self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
-            self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
-
-            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
-
-            EventBus().do_threaded_loading_animation.connect(
-                self.do_threaded_loading_animation
-            )
-
-            EventBus().do_metadata_refresh_cache.connect(self.do_metadata_refresh_cache)
-
-            # Restore cache initially set to empty
-            self.active_mods_uuids_last_save: list[str] = []
-            self.active_mods_dividers_last_save: list[dict[str, Any]] = []
-            self.active_mods_uuids_restore_state: list[str] = []
-            self.inactive_mods_uuids_restore_state: list[str] = []
-
-            # Store duplicate_mods for global access
-            self.duplicate_mods: dict[str, Any] = {}
-
-            # Instantiate query runner
-            self.query_runner: RunnerPanel | None = None
-
-            # Steamworks bool - use this to check any Steamworks processes you try to initialize
-            self.steamworks_in_use = False
-
-            # Instantiate todds runner
-            self.todds_runner: RunnerPanel | None = None
-
-            # Progress widget for extraction operations
-            self._extract_progress_widget: Optional[TaskProgressWindow] = None
-
+            self._init_services()
+            self._init_widgets()
+            self._setup_layout()
+            self._connect_signals()
+            self._init_state()
             logger.info("Finished MainContent initialization")
             self.initialized = True
+
+    def _init_services(self) -> None:
+        self.db_builder = DatabaseBuilder(self.settings_controller)
+        self.steam_browser: SteamBrowser | None = None
+        self.steamcmd_runner: RunnerPanel | None = None
+        self.steamcmd_wrapper = SteamcmdInterface.instance()
+        self.metadata_manager = metadata.MetadataManager.instance()
+        self._import_export_service = ImportExportService(
+            self.metadata_manager, self.settings_controller
+        )
+        self.query_runner: RunnerPanel | None = None
+        self.steamworks_in_use = False
+        self.todds_runner: RunnerPanel | None = None
+        self.todds_controller: ToddsController
+
+    def _init_widgets(self) -> None:
+        self.mod_info_panel = ModInfoPanel(
+            settings_controller=self.settings_controller,
+        )
+        self.mods_panel = ModsPanel(
+            settings_controller=self.settings_controller,
+        )
+        self.mod_info_container = QWidget()
+        self.mod_info_container.setLayout(self.mod_info_panel.panel)
+        self.mods_panel_container = QWidget()
+        self.mods_panel_container.setLayout(self.mods_panel.panel)
+
+    def _setup_layout(self) -> None:
+        self.main_layout = QHBoxLayout()
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
+        self.main_layout.setSpacing(5)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setChildrenCollapsible(False)
+        self.main_layout_frame = QFrame()
+        self.main_layout_frame.setObjectName("MainPanel")
+        self.main_layout_frame.setLayout(self.main_layout)
+        self.main_splitter.addWidget(self.mod_info_container)
+        self.main_splitter.addWidget(self.mods_panel_container)
+        self.main_splitter.setHandleWidth(1)
+        self.mod_info_container.setMinimumWidth(280)
+        self.main_layout.addWidget(self.main_splitter)
+
+    def _connect_signals(self) -> None:
+        EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+        EventBus().do_check_for_application_update.connect(self._do_check_for_update)
+        EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+        EventBus().do_import_mod_list_from_rentry.connect(self._do_import_list_rentry)
+        EventBus().do_import_mod_list_from_workshop_collection.connect(
+            self._do_import_list_workshop_collection
+        )
+        EventBus().do_import_mod_list_from_save_file.connect(
+            self._do_import_list_from_save_file
+        )
+        EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
+        EventBus().do_export_mod_list_to_clipboard.connect(
+            self._do_export_list_clipboard
+        )
+        EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
+        EventBus().do_upload_log.connect(self._upload_file)
+        EventBus().do_open_default_editor.connect(self._open_in_default_editor)
+        EventBus().do_download_all_mods_via_steamcmd.connect(
+            self.db_builder._on_do_download_all_mods_via_steamcmd
+        )
+        EventBus().do_download_all_mods_via_steam.connect(
+            self.db_builder._on_do_download_all_mods_via_steam
+        )
+        EventBus().do_compare_steam_workshop_databases.connect(
+            self.db_builder._do_generate_metadata_comparison_report
+        )
+        EventBus().do_merge_steam_workshop_databases.connect(
+            self.db_builder._do_merge_databases
+        )
+        EventBus().do_build_steam_workshop_database.connect(
+            self.db_builder._do_build_database_thread
+        )
+        EventBus().do_import_acf.connect(self._do_import_steamcmd_acf_data)
+        EventBus().do_export_acf.connect(self._do_export_steamcmd_acf_data)
+        EventBus().do_delete_acf.connect(self._do_reset_steamcmd_acf_data)
+        EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
+
+        EventBus().do_refresh_mods_lists.connect(self._do_refresh)
+        EventBus().do_clear_active_mods_list.connect(self._do_clear)
+        EventBus().do_restore_active_mods_list.connect(self._do_restore)
+        EventBus().do_sort_active_mods_list.connect(self._do_sort)
+        EventBus().do_save_active_mods_list.connect(self._do_save)
+        EventBus().do_run_game.connect(self._do_run_game)
+
+        EventBus().do_open_app_directory.connect(self._do_open_app_directory)
+        EventBus().do_open_settings_directory.connect(self._do_open_settings_directory)
+        EventBus().do_open_rimsort_logs_directory.connect(
+            self._do_open_rimsort_logs_directory
+        )
+        EventBus().do_open_rimworld_directory.connect(self._do_open_rimworld_directory)
+        EventBus().do_open_rimworld_config_directory.connect(
+            self._do_open_rimworld_config_directory
+        )
+        EventBus().do_open_rimworld_logs_directory.connect(
+            self._do_open_rimworld_logs_directory
+        )
+        EventBus().do_open_local_mods_directory.connect(
+            self._do_open_local_mods_directory
+        )
+        EventBus().do_open_steam_mods_directory.connect(
+            self._do_open_steam_mods_directory
+        )
+
+        EventBus().do_steamcmd_download.connect(self._do_download_mods_with_steamcmd)
+
+        EventBus().do_steamworks_api_call.connect(self._do_steamworks_api_call_animated)
+
+        EventBus().do_rule_editor.connect(
+            lambda: self._do_open_rule_editor(
+                compact=False, initial_mode="community_rules"
+            )
+        )
+        EventBus().do_ignore_json_editor.connect(self._do_open_ignore_json_editor)
+        EventBus().do_check_missing_mod_properties.connect(
+            self.__check_and_warn_missing_mod_properties
+        )
+
+        EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
+        EventBus().do_browse_workshop.connect(self._do_browse_workshop)
+        EventBus().do_check_for_workshop_updates.connect(
+            self._do_check_for_workshop_updates
+        )
+        EventBus().do_steam_verify_game_files.connect(self.do_steam_verify_game_files)
+
+        EventBus().do_optimize_textures.connect(self._do_optimize_textures)
+        EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
+
+        self.metadata_manager.mod_created_signal.connect(self.mods_panel.on_mod_created)
+        self.metadata_manager.mod_deleted_signal.connect(self.mods_panel.on_mod_deleted)
+        self.metadata_manager.mod_metadata_updated_signal.connect(
+            self.mods_panel.on_mod_metadata_updated
+        )
+        self.mods_panel.active_mods_list.key_press_signal.connect(
+            self.__handle_active_mod_key_press
+        )
+        self.mods_panel.inactive_mods_list.key_press_signal.connect(
+            self.__handle_inactive_mod_key_press
+        )
+        self.mods_panel.active_mods_list.mod_info_signal.connect(self.__mod_list_slot)
+        self.mods_panel.inactive_mods_list.mod_info_signal.connect(self.__mod_list_slot)
+        self.mods_panel.active_mods_list.item_added_signal.connect(
+            self.mods_panel.inactive_mods_list.handle_other_list_row_added
+        )
+        self.mods_panel.inactive_mods_list.item_added_signal.connect(
+            self.mods_panel.active_mods_list.handle_other_list_row_added
+        )
+        self.mods_panel.active_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
+        self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
+        self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
+        self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+        EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+        EventBus().do_threaded_loading_animation.connect(
+            self.do_threaded_loading_animation
+        )
+        EventBus().do_metadata_refresh_cache.connect(self.do_metadata_refresh_cache)
+
+    def _init_state(self) -> None:
+        self.active_mods_uuids_last_save: list[str] = []
+        self.active_mods_dividers_last_save: list[dict[str, Any]] = []
+        self.active_mods_uuids_restore_state: list[str] = []
+        self.inactive_mods_uuids_restore_state: list[str] = []
+        self.duplicate_mods: dict[str, Any] = {}
+        self._extract_progress_widget: Optional[TaskProgressWindow] = None
+        self.window_manager = WindowManager(self.metadata_manager)
+        self._active_loading_loop: QEventLoop | None = None
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -360,9 +313,27 @@ class MainContent(QObject):
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
 
+    def abort_loading(self) -> None:
+        """Abort any in-progress loading animation by quitting its nested event loop.
+
+        Called from MainWindow.closeEvent to unblock the startup scanning so
+        the process can exit cleanly.
+        """
+        if self._active_loading_loop is not None:
+            self._active_loading_loop.quit()
+
+    def close_child_windows(self) -> None:
+        """Close all tracked child windows.
+
+        Called when the main window is closing to ensure no orphan
+        windows remain on screen.
+        """
+        self.window_manager.close_all()
+
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
         self.metadata_manager.refresh_cache()
+        MetadataController.instance().refresh_metadata()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
@@ -595,6 +566,7 @@ class MainContent(QObject):
             duplicate_mods_panel = DuplicateModsPanel(
                 self.duplicate_mods, self.settings_controller
             )
+            self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
         else:
@@ -618,6 +590,7 @@ class MainContent(QObject):
             )
             # Always open the MissingModsPrompt panel, allowing manual entry if Steam database is unavailable
             self.missing_mods_prompt = MissingModsPrompt(packageids=self.missing_mods)
+            self.window_manager.register_attr(self, "missing_mods_prompt")
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -625,41 +598,6 @@ class MainContent(QObject):
             self.missing_mods_prompt.show()
         else:
             logger.info("No missing mods found. Skipping...")
-
-    def _get_missing_packageid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a valid Package ID in their About.xml.
-
-        A missing or invalid Package ID can cause dependency resolution issues
-        and prevent proper mod identification. Mods are marked with a default
-        placeholder value when no valid Package ID is found.
-
-        :return: List of internal UUIDs for mods with missing Package ID.
-        """
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("packageid") == app_constants.DEFAULT_MISSING_PACKAGEID
-        ]
-
-    def _get_missing_publishfieldid_uuids(self) -> list[str]:
-        """
-        Identify mods lacking a Publish Field ID (Steam Workshop ID).
-
-        Workshop mods without a Publish Field ID cannot support automatic
-        redownloads or update checking. This check intentionally excludes
-        RimWorld core content and DLC since they are not published mods.
-
-        :return: List of internal UUIDs for mods with missing Publish Field ID.
-        """
-        ignored_mods = IgnoreManager.load_ignored_mods()
-        return [
-            uuid
-            for uuid, mod_metadata in self.metadata_manager.internal_local_metadata.items()
-            if mod_metadata.get("publishedfileid") is None
-            and mod_metadata.get("packageid") not in app_constants.RIMWORLD_PACKAGE_IDS
-            and mod_metadata.get("packageid") not in ignored_mods
-        ]
 
     def __check_and_warn_missing_mod_properties(self) -> None:
         """
@@ -677,8 +615,10 @@ class MainContent(QObject):
         """
         try:
             # Identify mods with missing critical properties
-            missing_packageid_uuids = self._get_missing_packageid_uuids()
-            missing_publishfieldid_uuids = self._get_missing_publishfieldid_uuids()
+            missing_packageid_uuids = self.window_manager.get_missing_packageid_uuids()
+            missing_publishfieldid_uuids = (
+                self.window_manager.get_missing_publishfieldid_uuids()
+            )
 
             # If no mods have missing properties, log and return early
             if not missing_packageid_uuids and not missing_publishfieldid_uuids:
@@ -702,6 +642,7 @@ class MainContent(QObject):
                 missing_publishfieldid_mods=missing_publishfieldid_uuids,
                 settings_controller=self.settings_controller,
             )
+            self.window_manager.register(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
             missing_mod_properties_panel.setWindowModality(
                 Qt.WindowModality.ApplicationModal
@@ -825,7 +766,13 @@ class MainContent(QObject):
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
         loop = QEventLoop()
         loading_animation.finished.connect(loop.quit)
+        # Store ref so closeEvent can break out of this loop
+        self._active_loading_loop = loop
         loop.exec_()
+        self._active_loading_loop = None
+        # If the loop was quit externally (e.g. window close), skip UI cleanup
+        if not loading_animation.animation_finished:
+            return None
         data = loading_animation.data
         # Remove text label if it was passed
         if text and loading_animation_text_label is not None:
@@ -851,25 +798,12 @@ class MainContent(QObject):
             # Reset the data source filters to default and clear searches
             # Avoid recalculating warnings/errors when clearing search
             # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Active",
-            )
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(
-                list_type="Inactive",
-            )
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
-            self.do_threaded_loading_animation(
+            result = self.do_threaded_loading_animation(
                 gif_path=str(
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
@@ -878,6 +812,13 @@ class MainContent(QObject):
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
+
+            # If loading was aborted (e.g. window closed during scan), skip remaining work
+            if result is None and self.metadata_manager._abort_requested:
+                return
+
+            # Refresh MetadataController alongside MetadataManager
+            MetadataController.instance().refresh_metadata()
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
@@ -919,14 +860,8 @@ class MainContent(QObject):
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
         # Metadata to insert
         active_mods_uuids: list[str] = []
         inactive_mods_uuids: list[str] = []
@@ -984,16 +919,8 @@ class MainContent(QObject):
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.debug("Starting sorting mods")
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_active_mods_search_data_source_filter()
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.on_inactive_mods_search_data_source_filter()
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Get active mods (exclude dividers)
         active_mods = {
@@ -1008,7 +935,18 @@ class MainContent(QObject):
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog()
-                selected_deps = dialog.show_dialog(missing_deps)
+                self.window_manager.register(dialog)
+
+                # Build a deps_summary from the missing deps for the dialog display
+                deps_summary: dict[str, dict[str, set[str]]] = {}
+                for mod_id, deps in missing_deps.items():
+                    deps_summary[mod_id] = {
+                        "satisfied": set(),
+                        "local": set(),
+                        "download": deps,
+                    }
+
+                selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
                 if selected_deps:
                     # Add selected mods to active mods
@@ -1023,21 +961,37 @@ class MainContent(QObject):
                                     active_mods.add(uuid)
                                 break
 
-        # Get package IDs for active mods
-        active_package_ids = set()
-        for uuid in active_mods:
-            active_package_ids.add(
-                self.metadata_manager.internal_local_metadata[uuid]["packageid"]
+        # Compile dependency data from MetadataController
+        metadata_controller = MetadataController.instance()
+        try:
+            compiled_data = metadata_controller.compile(
+                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                use_alternative_package_ids=self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies,
             )
+        except ValueError:
+            dialogue.show_warning(
+                title=self.tr("Metadata not loaded"),
+                text=self.tr(
+                    "Mod metadata has not finished loading. Please wait and try again."
+                ),
+            )
+            return
+
+        # Bridge: translate old UUIDs to paths for the new sort system
+        active_mod_paths: set[str] = set()
+        for uuid in active_mods:
+            mod_data = self.metadata_manager.internal_local_metadata.get(uuid)
+            if mod_data and mod_data.get("path"):
+                active_mod_paths.add(mod_data["path"])
 
         # Get the current order of active mods list and create a copy for comparison
         current_order = active_mods
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
-                active_package_ids=active_package_ids,
-                active_uuids=active_mods,
-                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
+                compiled_data=compiled_data,
+                mods_metadata=metadata_controller.mods_metadata,
+                active_mod_paths=active_mod_paths,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
@@ -1055,7 +1009,15 @@ class MainContent(QObject):
             logger.error(f"Sort failed. Sorting algorithm not implemented: {e}")
             return
 
-        success, new_order = sorter.sort()
+        success, new_order_paths = sorter.sort()
+
+        # Bridge: translate paths back to UUIDs for the list widget
+        path_to_uuid: dict[str, str] = {}
+        for uuid, mod_data in self.metadata_manager.internal_local_metadata.items():
+            p = mod_data.get("path")
+            if p:
+                path_to_uuid[p] = uuid
+        new_order = [path_to_uuid[p] for p in new_order_paths if p in path_to_uuid]
 
         # Log the sort result and the order
         logger.debug(
@@ -1112,16 +1074,8 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Active")
-            self.mods_panel.signal_clear_search(list_type="Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_search_source_filter(list_type="Inactive")
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_uuids,
@@ -1154,44 +1108,11 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            logger.info("Exporting current active mods to ModsConfig.xml format")
-            active_mods = []
-            for uuid in self.mods_panel.active_mods_list.uuids:
-                if is_divider_uuid(uuid):
-                    continue
-                package_id = self.metadata_manager.internal_local_metadata[uuid][
-                    "packageid"
-                ]
-                if package_id in active_mods:  # This should NOT be happening
-                    logger.critical(
-                        f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
-                    )
-                    continue
-                else:  # Otherwise, proceed with adding the mod package_id
-                    if (
-                        package_id in self.duplicate_mods.keys()
-                    ):  # Check if mod has duplicates
-                        if (
-                            self.metadata_manager.internal_local_metadata[uuid][
-                                "data_source"
-                            ]
-                            == "workshop"
-                        ):
-                            active_mods.append(package_id + "_steam")
-                            continue  # Append `_steam` suffix if Steam mod, continue to next mod
-                    active_mods.append(package_id)
-            logger.info(f"Collected {len(active_mods)} active mods for export")
-            mods_config_data = generate_rimworld_mods_list(
-                self.metadata_manager.game_version, active_mods
+            data = self._import_export_service.collect_active_mods(
+                self.mods_panel.active_mods_list.uuids, self.duplicate_mods
             )
             try:
-                logger.info(
-                    f"Saving generated ModsConfig.xml style list to selected path: {file_path}"
-                )
-                if not file_path.endswith(".xml"):
-                    json_to_xml_write(mods_config_data, file_path + ".xml")
-                else:
-                    json_to_xml_write(mods_config_data, file_path)
+                self._import_export_service.export_to_xml(data.active_mods, file_path)
             except Exception:
                 dialogue.show_fatal_error(
                     title=self.tr("Failed to export to file"),
@@ -1224,16 +1145,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         if rentry_import.publishedfileids:
             # Get set of publishedfileids already present locally
@@ -1375,16 +1288,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         # Log the attempt to import mods list from Workshop collection
         logger.info(
@@ -1415,227 +1320,46 @@ class MainContent(QObject):
         readable format. The current list does not need to have been saved.
         """
         logger.info("Generating report to export mod list to clipboard")
-        # Build our lists
-        active_mods = []
-        active_mods_packageid_to_uuid = {}
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = self.metadata_manager.internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    "Tried to export more than 1 identical package ids to the same mod list. "
-                    + f"Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                active_mods.append(package_id)
-                active_mods_packageid_to_uuid[package_id] = uuid
-        logger.info(f"Collected {len(active_mods)} active mods for export")
-        # Build our report
-        active_mods_clipboard_report = (
-            f"Created with RimSort {AppInfo().app_version}"
-            + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
-            + f"\nTotal # of mods: {len(active_mods)}\n"
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
         )
-        for package_id in active_mods:
-            uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
-                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
-            else:
-                name = "No name specified"
-            if self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-            elif self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
-                url = self.metadata_manager.internal_local_metadata[uuid]["steam_url"]
-            else:
-                url = "No url specified"
-            active_mods_clipboard_report = (
-                active_mods_clipboard_report
-                + f"\n{name} "
-                + f"[{package_id}]"
-                + f"[{url}]"
-            )
-        # Copy report to clipboard
+        report = self._import_export_service.build_clipboard_report(
+            data.active_mods, data.packageid_to_uuid
+        )
         dialogue.show_information(
             title=self.tr("Export active mod list"),
             text=self.tr("Copied active mod list report to clipboard..."),
             information=self.tr('Click "Show Details" to see the full report!'),
-            details=f"{active_mods_clipboard_report}",
+            details=report,
         )
-        copy_to_clipboard_safely(active_mods_clipboard_report)
-
-    def _build_rentry_report(
-        self,
-        mods: list[str],
-        active_mods_packageid_to_uuid: dict[str, str],
-        active_steam_mods_packageid_to_pfid: dict[str, str],
-        active_steam_mods_pfid_to_preview_url: dict[str, str],
-        truncated: bool = False,
-    ) -> str:
-        truncated_note = " (truncated)" if truncated else ""
-        active_mods_rentry_report = (
-            "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {AppInfo().app_version}"
-            + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
-            + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
-            + f"\n\n\n\n!!! note Mod list length: `{len(mods)}`{truncated_note}\n"
-        )
-        # Add a line for each mod
-        for package_id in mods:
-            count = mods.index(package_id) + 1
-            uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
-                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
-            else:
-                name = "No name specified"
-            if (
-                self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
-                or self.metadata_manager.internal_local_metadata[uuid]["data_source"]
-                == "workshop"
-            ) and active_steam_mods_packageid_to_pfid.get(package_id):
-                pfid = active_steam_mods_packageid_to_pfid[package_id]
-                if active_steam_mods_pfid_to_preview_url.get(pfid):
-                    preview_url = (
-                        active_steam_mods_pfid_to_preview_url[pfid]
-                        + "?imw=100&imh=100&impolicy=Letterbox"
-                    )
-                else:
-                    preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
-                if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                else:
-                    url = None
-                if url is None:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageid: {package_id}"
-                        )
-                else:
-                    if package_id in active_steam_mods_packageid_to_pfid.keys():
-                        active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
-                        )
-            else:
-                if self.metadata_manager.internal_local_metadata[uuid].get("url"):
-                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
-                elif self.metadata_manager.internal_local_metadata[uuid].get(
-                    "steam_url"
-                ):
-                    url = self.metadata_manager.internal_local_metadata[uuid][
-                        "steam_url"
-                    ]
-                else:
-                    url = None
-                if url is None:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} {name} "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-                else:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-        return active_mods_rentry_report
+        copy_to_clipboard_safely(report)
 
     def _do_upload_list_rentry(self) -> None:
         """
         Export the current list of active mods to the clipboard in a
         readable format. The current list does not need to have been saved.
         """
-        # Define our lists
-        active_mods = []
-        active_mods_packageid_to_uuid = {}
-        active_steam_mods_packageid_to_pfid = {}
-        active_steam_mods_pfid_to_preview_url = {}
-        pfids = []
-        # Build our lists
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = MetadataManager.instance().internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    "Tried to export more than 1 identical package ids to the same mod list. "
-                    + f"Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                active_mods.append(package_id)
-                active_mods_packageid_to_uuid[package_id] = uuid
-                if (
-                    self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
-                    or self.metadata_manager.internal_local_metadata[uuid][
-                        "data_source"
-                    ]
-                    == "workshop"
-                ) and self.metadata_manager.internal_local_metadata[uuid].get(
-                    "publishedfileid"
-                ):
-                    publishedfileid = self.metadata_manager.internal_local_metadata[
-                        uuid
-                    ]["publishedfileid"]
-                    active_steam_mods_packageid_to_pfid[package_id] = publishedfileid
-                    pfids.append(publishedfileid)
-        logger.info(f"Collected {len(active_mods)} active mods for export")
-        if len(pfids) > 0:  # No empty queries...
-            # Compile list of Steam Workshop publishing preview images that correspond
-            # to a Steam mod in the active mod list
-            webapi_response, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            if webapi_response:
-                for metadata in webapi_response:
-                    pfid = metadata["publishedfileid"]
-                    if metadata["result"] != 1:
-                        logger.warning("Rentry.co export: Unable to get data for mod!")
-                        logger.warning(
-                            f"Invalid result returned from WebAPI for mod {pfid}"
-                        )
-                    else:
-                        # Retrieve the preview image URL from the response
-                        active_steam_mods_pfid_to_preview_url[pfid] = metadata[
-                            "preview_url"
-                        ]
-        # Build our report using the helper method
-        active_mods_rentry_report = self._build_rentry_report(
-            active_mods,
-            active_mods_packageid_to_uuid,
-            active_steam_mods_packageid_to_pfid,
-            active_steam_mods_pfid_to_preview_url,
+
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+        )
+        data.pfid_to_preview_url = self._import_export_service.fetch_steam_preview_urls(
+            data.pfids
+        )
+        report = self._import_export_service.build_rentry_report(
+            data.active_mods,
+            data.packageid_to_uuid,
+            data.steam_packageid_to_pfid,
+            data.pfid_to_preview_url,
         )
         # Check report length and offer truncation if necessary
-        if len(active_mods_rentry_report) > 200000:
-            # Calculate the maximum number of mods that can fit within 200,000 characters
-            max_mods = 0
-            for i in range(1, len(active_mods) + 1):
-                test_mods = active_mods[:i]
-                test_report = self._build_rentry_report(
-                    test_mods,
-                    active_mods_packageid_to_uuid,
-                    active_steam_mods_packageid_to_pfid,
-                    active_steam_mods_pfid_to_preview_url,
-                    truncated=True,
-                )
-                if len(test_report) > 200000:
-                    max_mods = i - 1
-                    break
-                max_mods = i
+        if len(report) > 200000:
+            max_mods = self._import_export_service.calculate_rentry_max_mods(
+                data.active_mods,
+                data.packageid_to_uuid,
+                data.steam_packageid_to_pfid,
+                data.pfid_to_preview_url,
+            )
             if max_mods == 0:
                 dialogue.show_warning(
                     title=self.tr("Report too long"),
@@ -1660,35 +1384,28 @@ class MainContent(QObject):
             if answer == self.tr("Truncate to the first {max_mods} mods").format(
                 max_mods=max_mods
             ):
-                # Rebuild report with the maximum number of mods that fit
-                truncated_mods = active_mods[:max_mods]
-                active_mods_rentry_report = self._build_rentry_report(
+                truncated_mods = data.active_mods[:max_mods]
+                report = self._import_export_service.build_rentry_report(
                     truncated_mods,
-                    active_mods_packageid_to_uuid,
-                    active_steam_mods_packageid_to_pfid,
-                    active_steam_mods_pfid_to_preview_url,
+                    data.packageid_to_uuid,
+                    data.steam_packageid_to_pfid,
+                    data.pfid_to_preview_url,
                     truncated=True,
                 )
             else:
                 logger.info("USER ACTION: cancelled truncation, passing")
                 return
         # Upload the report to Rentry.co
-        rentry_uploader = RentryUpload(active_mods_rentry_report)
-        successful = rentry_uploader.upload_success
-        host = (
-            urlparse(rentry_uploader.url).hostname
-            if successful and (rentry_uploader.url is not None)
-            else None
-        )
-        if rentry_uploader.url and host and host.endswith("rentry.co"):
-            copy_to_clipboard_safely(rentry_uploader.url)
+        success, url = self._import_export_service.upload_rentry_report(report)
+        if success and url:
+            copy_to_clipboard_safely(url)
             dialogue.show_information(
                 title=self.tr("Uploaded active mod list"),
                 text=self.tr(
-                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}"
-                ).format(rentry_uploader=rentry_uploader),
+                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{url}"
+                ).format(url=url),
                 information=self.tr('Click "Show Details" to see the full report!'),
-                details=f"{active_mods_rentry_report}",
+                details=report,
             )
         else:
             dialogue.show_warning(
@@ -1725,16 +1442,8 @@ class MainContent(QObject):
             return
 
         # Clear searches and data source filters just like XML import
-        self.mods_panel.signal_clear_search(list_type="Active")
-        self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Active")
-        self.mods_panel.signal_clear_search(list_type="Inactive")
-        self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.data_source_filter_icons
-        )
-        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
 
         logger.info(f"Trying to import mods list from save file: {file_path}")
         (
@@ -1891,56 +1600,23 @@ class MainContent(QObject):
             self.mods_panel.active_mods_list.get_dividers_data()
         )
         self.settings_controller.settings.save()
-        active_mods = []
-        for uuid in self.mods_panel.active_mods_list.uuids:
-            if is_divider_uuid(uuid):
-                continue
-            package_id = self.metadata_manager.internal_local_metadata[uuid][
-                "packageid"
-            ]
-            if package_id in active_mods:  # This should NOT be happening
-                logger.critical(
-                    f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
-                )
-                continue
-            else:  # Otherwise, proceed with adding the mod package_id
-                if (
-                    package_id in self.duplicate_mods.keys()
-                ):  # Check if mod has duplicates
-                    if (
-                        self.metadata_manager.internal_local_metadata[uuid][
-                            "data_source"
-                        ]
-                        == "workshop"
-                    ):
-                        active_mods.append(package_id + "_steam")
-                        continue  # Append `_steam` suffix if Steam mod, continue to next mod
-                active_mods.append(package_id)
+
+        data = self._import_export_service.collect_active_mods(
+            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+        )
         active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
-            mod_list=active_mods
+            mod_list=data.active_mods
         )
         self.active_mods_uuids_last_save = active_mods_uuids
-        logger.info(f"Collected {len(active_mods)} active mods for saving")
+        logger.info(f"Collected {len(data.active_mods)} active mods for saving")
 
-        mods_config_data = generate_rimworld_mods_list(
-            self.metadata_manager.game_version, active_mods
-        )
-        mods_config_path = str(
-            Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
-            )
-            / "ModsConfig.xml"
-        )
         try:
-            json_to_xml_write(mods_config_data, mods_config_path)
+            self._import_export_service.save_to_mods_config(data.active_mods)
         except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
                 title=self.tr("Could not save active mods"),
                 text=self.tr("Failed to save active mods to file:"),
-                information=f"{mods_config_path}",
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
@@ -1959,16 +1635,8 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state
             and self.inactive_mods_uuids_restore_state
         ):
-            self.mods_panel.signal_clear_search("Active")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_active_mods_search_data_source_filter()
-            self.mods_panel.signal_clear_search("Inactive")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.on_inactive_mods_search_data_source_filter()
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
@@ -1987,101 +1655,7 @@ class MainContent(QObject):
             )
 
     # TODDS ACTIONS
-    def _do_generate_todds_txt(self) -> tuple[str, int]:
-        """
-        Generate the todds.txt path-list file that todds uses as input.
-
-        Only paths that actually exist on disk are written to the file so that
-        todds never receives a path it cannot iterate (which would cause a
-        ``filesystem::recursive_directory_iterator`` crash).  If no valid
-        paths are found a warning dialog is shown to the user.
-
-        Returns:
-            tuple[str, int]: Absolute path to the generated todds.txt file,
-                and the number of valid paths written.  Callers should abort
-                when the count is zero.
-        """
-        logger.info("Generating todds.txt...")
-        # Create or overwrite todds.txt in temp directory
-        todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
-        if os.path.exists(todds_txt_path):
-            os.remove(todds_txt_path)
-
-        paths_written = 0
-
-        if not self.settings_controller.settings.todds_active_mods_target:
-            local_mods_target = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].local_folder
-            if local_mods_target and local_mods_target != "":
-                abs_local = os.path.abspath(local_mods_target)
-                if os.path.isdir(abs_local):
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(abs_local + "\n")
-                    paths_written += 1
-                else:
-                    logger.warning(
-                        f"Local mods folder does not exist, skipping for todds: {abs_local}"
-                    )
-
-            workshop_mods_target = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].workshop_folder
-            if workshop_mods_target and workshop_mods_target != "":
-                abs_workshop = os.path.abspath(workshop_mods_target)
-                if os.path.isdir(abs_workshop):
-                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(abs_workshop + "\n")
-                    paths_written += 1
-                else:
-                    logger.warning(
-                        f"Workshop mods folder does not exist, skipping for todds: {abs_workshop}"
-                    )
-        else:
-            with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                for uuid in self.mods_panel.active_mods_list.uuids:
-                    if is_divider_uuid(uuid):
-                        continue
-                    mod_path = os.path.abspath(
-                        self.metadata_manager.internal_local_metadata[uuid]["path"]
-                    )
-                    if os.path.isdir(mod_path):
-                        todds_txt_file.write(mod_path + "\n")
-                        paths_written += 1
-                    else:
-                        logger.warning(
-                            f"Mod path does not exist, skipping for todds: {mod_path}"
-                        )
-
-        if paths_written == 0:
-            logger.error("No valid mod paths found for todds texture optimization.")
-            dialogue.show_warning(
-                title=self.tr("No valid paths for todds"),
-                text=self.tr("todds could not find any valid mod folders to process."),
-                information=self.tr(
-                    "None of the configured mod folder paths exist on disk. "
-                    "Please verify your Local Mods and Workshop folders are correctly "
-                    "set in Settings, then try again."
-                ),
-            )
-
-        logger.info(
-            f"Generated todds.txt at: {todds_txt_path} ({paths_written} path(s) written)"
-        )
-        return todds_txt_path, paths_written
-
     def _create_todds_runner(self, is_pre_launch: bool) -> RunnerPanel:
-        """
-        Create and configure the todds runner UI panel.
-
-        Args:
-            is_pre_launch: If True, panel auto-closes on completion and shows "(pre-launch)"
-                          suffix. If False, panel shows completion dialog and is stored
-                          as self.todds_runner for manual access.
-
-        Returns:
-            RunnerPanel: Configured and visible runner panel for todds output display.
-        """
         runner = RunnerPanel(
             todds_dry_run_support=self.settings_controller.settings.todds_dry_run,
             auto_close_on_complete=is_pre_launch,
@@ -2092,124 +1666,91 @@ class MainContent(QObject):
         runner.setWindowTitle(f"{base_title}{suffix}")
 
         if not is_pre_launch:
-            self.todds_runner = runner  # Store for manual runs
+            self.todds_runner = runner
+            self.window_manager.register_attr(self, "todds_runner")
 
         runner.show()
         return runner
 
-    def _wait_for_todds_completion(self, runner: RunnerPanel) -> tuple[bool, int]:
-        """
-        Block execution until todds process completes and return exit status.
-
-        Creates an event loop that waits for the todds process to finish, then logs
-        the result and returns the status. This is used for synchronous operations
-        like pre-launch optimization where we need to wait before starting the game.
-
-        Args:
-            runner: RunnerPanel instance with an active todds process.
-
-        Returns:
-            tuple[bool, int]: (success, exit_code) where success is True if exit_code == 0.
-        """
-        loop = QEventLoop()
-        runner.process.finished.connect(loop.quit)
-        loop.exec_()
-
-        exit_code = runner.process.exitCode()
-        success = exit_code == 0
-
-        if success:
-            logger.info("todds process completed successfully")
-        else:
-            logger.warning(f"todds process failed with exit code: {exit_code}")
-
-        return success, exit_code
-
-    @overload  # Blocking call: returns (success, exit_code)
+    @overload
     def _do_optimize_textures(
         self, block_until_complete: Literal[True]
     ) -> tuple[bool, int]: ...
 
-    @overload  # Async call (default): returns None immediately
+    @overload
     def _do_optimize_textures(self) -> None: ...
 
     def _do_optimize_textures(
         self, block_until_complete: bool = False
     ) -> tuple[bool, int] | None:
-        """
-        Run todds texture optimization with optional blocking.
-
-        Generates a todds configuration file, executes the optimization process
-        in the UI, and optionally blocks until completion. Useful for automatic
-        texture optimization before game launch or manual optimization runs.
-
-        Args:
-            block_until_complete: If True, blocks execution until todds finishes
-                                 and returns (success, exit_code). If False (default),
-                                 launches asynchronously and returns None immediately.
-
-        Returns:
-            tuple[bool, int] | None: (success, exit_code) when blocking=True,
-                                    None when blocking=False (async execution).
-        """
         logger.info("Optimizing textures with todds...")
+        todds_runner = self._create_todds_runner(block_until_complete)
+        active_uuids = list(self.mods_panel.active_mods_list.uuids)
 
-        # Initialize todds interface with current user settings
-        todds_interface = ToddsInterface(
-            preset=self.settings_controller.settings.todds_preset,
-            dry_run=self.settings_controller.settings.todds_dry_run,
-            overwrite=self.settings_controller.settings.todds_overwrite,
+        started = self.todds_controller.optimize_textures(
+            runner=todds_runner,
+            active_mod_uuids=active_uuids,
         )
 
-        # Create and display runner UI (auto-closes if pre-launch, shows dialog if manual)
-        todds_runner = self._create_todds_runner(block_until_complete)
-        todds_txt_path, paths_written = self._do_generate_todds_txt()
-
-        # Bail out early if no valid paths — warning already shown by generator
-        if paths_written == 0:
+        if not started:
             todds_runner.close()
+            self._show_todds_no_paths_warning()
             return (False, -1) if block_until_complete else None
 
-        # Execute the todds command
-        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+        if block_until_complete:
+            loop = QEventLoop()
+            todds_runner.process.finished.connect(loop.quit)
+            loop.exec_()
+            exit_code = todds_runner.process.exitCode()
+            success = exit_code == 0
+            if success:
+                logger.info("todds process completed successfully")
+            else:
+                logger.warning(f"todds process failed with exit code: {exit_code}")
+            return success, exit_code
 
-        # Block and return status if needed, otherwise return immediately
-        return (
-            self._wait_for_todds_completion(todds_runner)
-            if block_until_complete
-            else None
-        )
+        return None
 
     def _do_delete_dds_textures(self) -> None:
-        """
-        Delete all .dds texture files using todds clean preset.
-
-        Generates a todds configuration file for the active mods and executes
-        the clean operation to remove compiled .dds textures. This is useful
-        when texture optimization is no longer needed or you want to reset
-        to original texture sources.
-
-        The operation runs asynchronously in a UI panel showing progress.
-        """
-        logger.info("Deleting .dds textures with todds...")
-
-        # Create todds interface with clean preset (removes .dds files)
-        todds_interface = ToddsInterface(
-            preset="clean",
-            dry_run=self.settings_controller.settings.todds_dry_run,
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Confirm texture deletion"),
+            text=self.tr(
+                "This will delete all optimized .dds textures from your active mods"
+            ),
+            information=self.tr(
+                "Are you sure you want to delete all .dds textures? "
+                "You can re-optimize them later if needed."
+            ),
+            button_text_override=[
+                self.tr("Delete textures"),
+            ],
         )
-
-        # Create and display runner UI (shows completion dialog after finishing)
-        todds_runner = self._create_todds_runner(is_pre_launch=False)
-        todds_txt_path, paths_written = self._do_generate_todds_txt()
-
-        # Bail out early if no valid paths — warning already shown by generator
-        if paths_written == 0:
-            todds_runner.close()
+        if self.tr("Delete textures") not in str(answer):
             return
 
-        # Execute the todds command
-        todds_interface.execute_todds_cmd(todds_txt_path, todds_runner)
+        logger.info("Deleting .dds textures with todds...")
+        todds_runner = self._create_todds_runner(is_pre_launch=False)
+        active_uuids = list(self.mods_panel.active_mods_list.uuids)
+
+        started = self.todds_controller.delete_dds_textures(
+            runner=todds_runner,
+            active_mod_uuids=active_uuids,
+        )
+
+        if not started:
+            todds_runner.close()
+            self._show_todds_no_paths_warning()
+
+    def _show_todds_no_paths_warning(self) -> None:
+        dialogue.show_warning(
+            title=self.tr("No valid paths for todds"),
+            text=self.tr("todds could not find any valid mod folders to process."),
+            information=self.tr(
+                "None of the configured mod folder paths exist on disk. "
+                "Please verify your Local Mods and Workshop folders are correctly "
+                "set in Settings, then try again."
+            ),
+        )
 
     # STEAM{CMD, WORKS} ACTIONS
     def _do_import_steamcmd_acf_data(self) -> None:
@@ -2342,6 +1883,7 @@ class MainContent(QObject):
             self.metadata_manager,
             self.settings_controller,
         )
+        self.window_manager.register_attr(self, "steam_browser")
 
         # Automatically null the reference when browser is destroyed
         self.steam_browser.destroyed.connect(
@@ -2391,6 +1933,7 @@ class MainContent(QObject):
 
         # For both "success" and "partial", show the updater panel
         workshop_mod_updater = WorkshopModUpdaterPanel()
+        self.window_manager.register(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
@@ -2450,6 +1993,7 @@ class MainContent(QObject):
         ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message("Setting up steamcmd...")
@@ -2518,6 +2062,7 @@ class MainContent(QObject):
                 steamcmd_download_tracking=publishedfileids,
                 steam_db=steam_db,
             )
+            self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
             self.steamcmd_runner.show()
             self.steamcmd_runner.message(
@@ -2574,6 +2119,9 @@ class MainContent(QObject):
         # use prebuilt libs path
         libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
+            if not check_steam_available(_libs=libs_path):
+                logger.error("Steam is not available, skipping Steamworks API call")
+                return
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -2584,7 +2132,7 @@ class MainContent(QObject):
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
                         game_install_path=instruction[1][0],
-                        args=instruction[1][1],
+                        run_args=instruction[1][1],
                         _libs=libs_path,
                     )
                     # Start the Steamworks API Process
@@ -3002,6 +2550,7 @@ class MainContent(QObject):
             edit_packageid=packageid,
             initial_mode=initial_mode,
         )
+        self.window_manager.register_attr(self, "rule_editor")
         self.rule_editor._populate_from_metadata()
         self.rule_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
@@ -3010,6 +2559,7 @@ class MainContent(QObject):
     def _do_open_ignore_json_editor(self) -> None:
         """Open the Ignore JSON Editor dialog."""
         self.ignore_json_editor = IgnoreJsonEditor()
+        self.window_manager.register_attr(self, "ignore_json_editor")
         self.ignore_json_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.ignore_json_editor.show()
 
@@ -3081,65 +2631,6 @@ class MainContent(QObject):
             self.settings_controller.settings.external_community_rules_repo = args
             self.settings_controller.settings.save()
 
-    def _do_build_database_thread(self) -> None:
-        # Prompt user file dialog to choose/create new DB
-        logger.info("Opening file dialog to specify output file")
-        output_path = dialogue.show_dialogue_file(
-            mode="save",
-            caption="Designate output path",
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        # Check file path and launch DB Builder with user configured mode
-        if output_path:  # If output path was returned
-            logger.info(f"Selected path: {output_path}")
-            if not output_path.endswith(".json"):
-                output_path += ".json"  # Handle file extension if needed
-            # RimWorld Workshop contains 30,000+ PublishedFileIDs (mods) as of 2023!
-            # "No": Produce accurate, complete DB by QueryFiles via WebAPI
-            # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
-            # Does not use metadata from locally available mods. This means no packageids!
-            if self.settings_controller.settings.db_builder_include == "no_local":
-                self.db_builder = metadata.SteamDatabaseBuilder(
-                    apikey=self.settings_controller.settings.steam_apikey,
-                    appid=294100,
-                    database_expiry=self.settings_controller.settings.database_expiry,
-                    mode=self.settings_controller.settings.db_builder_include,
-                    output_database_path=output_path,
-                    get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
-                    update=self.settings_controller.settings.build_steam_database_update_toggle,
-                )
-            # "Yes": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
-            # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
-            # Produces DB which contains metadata from locally available mods. Includes packageids!
-            elif self.settings_controller.settings.db_builder_include == "all_mods":
-                self.db_builder = metadata.SteamDatabaseBuilder(
-                    apikey=self.settings_controller.settings.steam_apikey,
-                    appid=294100,
-                    database_expiry=self.settings_controller.settings.database_expiry,
-                    mode=self.settings_controller.settings.db_builder_include,
-                    output_database_path=output_path,
-                    get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
-                    mods=self.metadata_manager.internal_local_metadata,
-                    update=self.settings_controller.settings.build_steam_database_update_toggle,
-                )
-            # Create query runner
-            self.query_runner = RunnerPanel()
-            self.query_runner.closing_signal.connect(self.db_builder.terminate)
-            self.query_runner.setWindowTitle(
-                f"RimSort - DB Builder ({self.settings_controller.settings.db_builder_include})"
-            )
-            self.query_runner.progress_bar.show()
-            self.query_runner.show()
-            # Connect message signal
-            self.db_builder.db_builder_message_output_signal.connect(
-                self.query_runner.message
-            )
-            # Start DB builder
-            self.db_builder.start()
-        else:
-            logger.debug("USER ACTION: cancelled selection...")
-
     def _do_blacklist_action_steamdb(self, instruction: list[Any]) -> None:
         if (
             self.metadata_manager.external_steam_metadata_path
@@ -3191,92 +2682,6 @@ class MainContent(QObject):
             # Do a full refresh of metadata and UI
             self._do_refresh()
 
-    def _do_download_entire_workshop(self, action: str) -> None:
-        # DB Builder is used to run DQ and grab entirety of
-        # any available Steam Workshop PublishedFileIDs
-        self.db_builder = metadata.SteamDatabaseBuilder(
-            apikey=self.settings_controller.settings.steam_apikey,
-            appid=294100,
-            database_expiry=self.settings_controller.settings.database_expiry,
-            mode="pfids_by_appid",
-        )
-        # Create query runner
-        self.query_runner = RunnerPanel()
-        self.query_runner.closing_signal.connect(self.db_builder.terminate)
-        self.query_runner.setWindowTitle("RimSort - DB Builder PublishedFileIDs query")
-        self.query_runner.progress_bar.show()
-        self.query_runner.show()
-        # Connect message signal
-        self.db_builder.db_builder_message_output_signal.connect(
-            self.query_runner.message
-        )
-        # Start DB builder
-        self.db_builder.start()
-        loop = QEventLoop()
-        self.db_builder.finished.connect(loop.quit)
-        loop.exec_()
-        if len(self.db_builder.publishedfileids) == 0:
-            dialogue.show_warning(
-                title=self.tr("No PublishedFileIDs"),
-                text=self.tr("DB Builder query did not return any PublishedFileIDs!"),
-                information=self.tr(
-                    "This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
-                    + "PublishedFileIDs are needed to retrieve mods from Steam!"
-                ),
-            )
-        else:
-            self.query_runner.close()
-            self.query_runner = None
-            if "steamcmd" in action:
-                # Filter out existing SteamCMD mods
-                mod_pfid = None
-                for (
-                    metadata_values
-                ) in self.metadata_manager.internal_local_metadata.values():
-                    if metadata_values.get("steamcmd"):
-                        mod_pfid = metadata_values.get("publishedfileid")
-                    if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
-                        logger.debug(
-                            f"Skipping download of existing SteamCMD mod: {mod_pfid}"
-                        )
-                        self.db_builder.publishedfileids.remove(mod_pfid)
-                self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
-            elif "steamworks" in action:
-                answer = dialogue.show_dialogue_conditional(
-                    title=self.tr("Are you sure?"),
-                    text=self.tr("Here be dragons."),
-                    information=self.tr(
-                        "WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
-                        + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
-                        + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
-                        + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
-                        + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort."
-                    ),
-                )
-                if answer == QMessageBox.StandardButton.Yes:
-                    for (
-                        metadata_values
-                    ) in self.metadata_manager.internal_local_metadata.values():
-                        mod_pfid = metadata_values.get("publishedfileid")
-                        if (
-                            metadata_values["data_source"] == "workshop"
-                            and mod_pfid
-                            and mod_pfid in self.db_builder.publishedfileids
-                        ):
-                            logger.warning(
-                                f"Skipping download of existing Steam mod: {mod_pfid}"
-                            )
-                            self.db_builder.publishedfileids.remove(mod_pfid)
-                    self._do_steamworks_api_call_animated(
-                        [
-                            "subscribe",
-                            [
-                                str(int(str_pfid))
-                                for str_pfid in self.db_builder.publishedfileids
-                            ],
-                        ]
-                    )
-
     def _do_edit_steam_webapi_key(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit their Steam API-key
@@ -3292,212 +2697,6 @@ class MainContent(QObject):
         if ok:
             self.settings_controller.settings.steam_apikey = args
             self.settings_controller.settings.save()
-
-    def _do_generate_metadata_comparison_report(self) -> None:
-        """
-        Open a user-selected JSON file. Calculate and display discrepancies
-        found between database and this file.
-        """
-        # TODO: Refactor this...
-        discrepancies: list[str] = []
-        database_a_deps: dict[str, Any] = {}
-        database_b_deps: dict[str, Any] = {}
-        # Notify user
-        dialogue.show_information(
-            title=self.tr("Steam DB Builder"),
-            text=self.tr(
-                "This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B."
-            ),
-            information=self.tr(
-                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
-                + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
-                + "\n\t1) Select input A"
-                + "\n\t2) Select input B",
-            ),
-        )
-        # Input A
-        logger.info("Opening file dialog to specify input file A")
-        input_path_a = dialogue.show_dialogue_file(
-            mode="open",
-            caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {input_path_a}")
-        if input_path_a and os.path.exists(input_path_a):
-            with open(input_path_a, encoding="utf-8") as f:
-                json_string = f.read()
-                logger.debug("Reading info...")
-                db_input_a = json.loads(json_string)
-                logger.debug("Retrieved database A...")
-        else:
-            logger.warning("Steam DB Builder: User cancelled selection...")
-            return
-        # Input B
-        logger.info("Opening file dialog to specify input file B")
-        input_path_b = dialogue.show_dialogue_file(
-            mode="open",
-            caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {input_path_b}")
-        if input_path_b and os.path.exists(input_path_b):
-            with open(input_path_b, encoding="utf-8") as f:
-                json_string = f.read()
-                logger.debug("Reading info...")
-                db_input_b = json.loads(json_string)
-                logger.debug("Retrieved database B...")
-        else:
-            logger.debug("Steam DB Builder: User cancelled selection...")
-            return
-        for k, v in db_input_a["database"].items():
-            # print(k, v['dependencies'])
-            database_b_deps[k] = set()
-            if v.get("dependencies"):
-                for dep_key in v["dependencies"]:
-                    database_b_deps[k].add(dep_key)
-        for k, v in db_input_b["database"].items():
-            # print(k, v['dependencies'])
-            if k in database_b_deps:
-                database_a_deps[k] = set()
-                if v.get("dependencies"):
-                    for dep_key in v["dependencies"]:
-                        database_a_deps[k].add(dep_key)
-        no_deps_str = "*no explicit dependencies listed*"
-        database_a_total_deps = len(database_a_deps)
-        database_b_total_deps = len(database_b_deps)
-        report = (
-            "\nSteam DB comparison report:\n"
-            + "\nTotal # of deps from database A:\n"
-            + f"{database_a_total_deps}"
-            + "\nTotal # of deps from database B:\n"
-            + f"{database_b_total_deps}"
-            + f"\nTotal # of discrepancies:\n{len(discrepancies)}"
-        )
-        comparison_skipped = []
-        for k, v in database_b_deps.items():
-            if db_input_a["database"][k].get("unpublished"):
-                comparison_skipped.append(k)
-                # logger.debug(f"Skipping comparison for unpublished mod: {k}")
-            else:
-                # If the deps are different...
-                if v != database_a_deps.get(k):
-                    pp = database_a_deps.get(k)
-                    if pp:
-                        # Normalize here (get rid of core/dlc deps)
-                        if v != pp:
-                            discrepancies.append(k)
-                            pp_total = len(pp)
-                            v_total = len(v)
-                            if v == set():
-                                v = no_deps_str
-                            if pp == set():
-                                pp = no_deps_str
-                            mod_name = db_input_b["database"][k]["name"]
-                            report += f"\n\nDISCREPANCY FOUND for {k}:"
-                            report += f"\nhttps://steamcommunity.com/sharedfiles/filedetails/?id={k}"
-                            report += f"\nMod name: {mod_name}"
-                            report += (
-                                f"\n\nDatabase A:\n{v_total} dependencies found:\n{v}"
-                            )
-                            report += (
-                                f"\n\nDatabase B:\n{pp_total} dependencies found:\n{pp}"
-                            )
-        logger.debug(
-            f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
-        )
-        dialogue.show_information(
-            title=self.tr("Steam DB Builder"),
-            text=self.tr("Steam DB comparison report: {len} found").format(
-                len=len(discrepancies)
-            ),
-            information=self.tr("Click 'Show Details' to see the full report!"),
-            details=report,
-        )
-
-    def _do_merge_databases(self) -> None:
-        # Notify user
-        dialogue.show_information(
-            title=self.tr("Steam DB Builder"),
-            text=self.tr(
-                "This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions."
-            ),
-            information=self.tr(
-                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-                + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-                + "- The following exceptions will be made:\n"
-                + "\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
-                + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-                + "\n\t1) Select input A (db to-be-updated)"
-                + "\n\t2) Select input B (update source)"
-                + "\n\t3) Select output C (resultant db)"
-            ).format(
-                DB_BUILDER_RECURSE_EXCEPTIONS=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS
-            ),
-        )
-        # Input A
-        logger.info("Opening file dialog to specify input file A")
-        input_path_a = dialogue.show_dialogue_file(
-            mode="open",
-            caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {input_path_a}")
-        if input_path_a and os.path.exists(input_path_a):
-            with open(input_path_a, encoding="utf-8") as f:
-                json_string = f.read()
-                logger.debug("Reading info...")
-                db_input_a = json.loads(json_string)
-                logger.debug("Retrieved database A...")
-        else:
-            logger.warning("Steam DB Builder: User cancelled selection...")
-            return
-        # Input B
-        logger.info("Opening file dialog to specify input file B")
-        input_path_b = dialogue.show_dialogue_file(
-            mode="open",
-            caption='Input "update source" database, input B',
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {input_path_b}")
-        if input_path_b and os.path.exists(input_path_b):
-            with open(input_path_b, encoding="utf-8") as f:
-                json_string = f.read()
-                logger.debug("Reading info...")
-                db_input_b = json.loads(json_string)
-                logger.debug("Retrieved database B...")
-        else:
-            logger.debug("Steam DB Builder: User cancelled selection...")
-            return
-        # Output C
-        db_output_c = db_input_a.copy()
-        metadata.recursively_update_dict(
-            db_output_c,
-            db_input_b,
-            prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,
-            recurse_exceptions=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS,
-        )
-        logger.info("Updated DB A with DB B!")
-        logger.debug(db_output_c)
-        logger.info("Opening file dialog to specify output file")
-        output_path = dialogue.show_dialogue_file(
-            mode="save",
-            caption="Designate output path for resultant database:",
-            _dir=str(AppInfo().app_storage_folder),
-            _filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {output_path}")
-        if output_path:
-            if not output_path.endswith(".json"):
-                output_path += ".json"  # Handle file extension if needed
-            with open(output_path, "w", encoding="utf-8") as output:
-                json.dump(db_output_c, output, indent=4)
-        else:
-            logger.warning("Steam DB Builder: User cancelled selection...")
-            return
 
     def _do_update_rules_database(self, instruction: list[Any]) -> None:
         rules_source = instruction[0]
@@ -3609,18 +2808,6 @@ class MainContent(QObject):
         )
 
     @Slot()
-    def _on_do_download_all_mods_via_steamcmd(self) -> None:
-        self._do_download_entire_workshop("download_entire_workshop_steamcmd")
-
-    @Slot()
-    def _on_do_download_all_mods_via_steam(self) -> None:
-        self._do_download_entire_workshop("download_entire_workshop_steamworks")
-
-    @Slot()
-    def _on_do_build_steam_workshop_database(self) -> None:
-        self._do_build_database_thread()
-
-    @Slot()
     def _do_run_game(self) -> None:
         """
         Prepare and launch the RimWorld game process.
@@ -3692,12 +2879,9 @@ class MainContent(QObject):
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance].game_folder
         )
-        # Run args is inconsistent and is sometimes a string and sometimes a list
-        run_args: list[str] | str = self.settings_controller.settings.instances[
+        run_args = self.settings_controller.settings.instances[
             current_instance
         ].run_args
-
-        run_args = [run_args] if isinstance(run_args, str) else run_args
 
         # Retrieve Steam-related settings for this instance
         steam_client_integration = self.settings_controller.settings.instances[
@@ -3753,7 +2937,7 @@ class MainContent(QObject):
             # Launch game executable directly
             # This method ignores Steam overlay but respects custom run arguments
             logger.info("Launching game process without Steamworks API...")
-            launch_game_process(game_install_path=game_install_path, args=run_args)
+            launch_game_process(game_install_path=game_install_path, run_args=run_args)
 
     @Slot()
     def _use_this_instead_clicked(self) -> None:
@@ -3775,6 +2959,7 @@ class MainContent(QObject):
         self.use_this_instead_dialog = UseThisInsteadPanel(
             mod_metadata=self.metadata_manager.internal_local_metadata
         )
+        self.window_manager.register_attr(self, "use_this_instead_dialog")
         if not self.use_this_instead_dialog.show_if_has_alternatives():
             dialogue.show_information(
                 title=self.tr("Use This Instead"),

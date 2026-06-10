@@ -1,8 +1,8 @@
 # ─── Shell Configuration ─────────────────────────────────────────────────
-# Use PowerShell 7 (pwsh) as the default shell — it's cross-platform
-# (available on Windows, Linux, and macOS). If pwsh is not installed on
-# your system, change to: set shell := ["sh", "-c"]
-set shell := ["pwsh", "-NoProfile", "-Command"]
+# Unix: just's default (sh -c). Windows: powershell.exe (ships with all
+# modern Windows). Multi-line recipes use [unix]/[windows] guards with
+# shebang overrides where needed.
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 # ─── Global Variables ────────────────────────────────────────────────────
 # Shared flag values to keep recipes DRY and consistent.
@@ -65,6 +65,10 @@ markdownlint-fix:
 typecheck:
     uv run mypy --config-file pyproject.toml .
 
+# Run Pyright type checker on app and tests
+pyright:
+    uv run pyright -p pyproject.toml .
+
 # Detect copy-paste code duplication (jscpd) — exits with error if any
 # clones are found (--threshold 0 means zero tolerance for duplicates).
 # Matches the CI's jscpd check configuration.
@@ -73,14 +77,14 @@ jscpd:
 
 # Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
 shfmt:
-    shfmt -d .
+    fd -e sh --exclude .venv --exclude submodules -x shfmt -d {}
 
 # Automatically fix shell script formatting issues (shfmt)
 shfmt-fix:
-    shfmt -w .
+    fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
-# Run all code quality checks: ruff + ruff-format + typecheck + jscpd + shfmt + markdown lint
-check: ruff ruff-format typecheck jscpd shfmt markdownlint
+# Run all code quality checks: ruff + ruff-format + typecheck + pyright + jscpd + shfmt + markdown lint
+check: ruff ruff-format typecheck pyright jscpd shfmt markdownlint
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
@@ -100,6 +104,7 @@ ci: check test-coverage
 dev-setup: submodules-init
     uv venv --allow-existing
     uv sync --locked --dev --group build
+    just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
 
 # Update all dependencies to their latest compatible versions
 update:
@@ -126,12 +131,12 @@ clean:
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Build RimSort executable (inits submodules and runs all checks first)
-build *ARGS='': submodules-init check
+build *ARGS='': submodules-init check i18n-compile
     uv run python distribute.py {{ARGS}}
 
 # Build RimSort executable with a specific version string, e.g. "1.2.3.4"
 # (inits submodules and runs all checks first)
-build-version VERSION: submodules-init check
+build-version VERSION: submodules-init check i18n-compile
     uv run python distribute.py --product-version="{{VERSION}}"
 
 # Create source tarball including submodules for RPM building
@@ -207,8 +212,45 @@ build-appimage VERSION='1.0.0':
     bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Internationalization
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Compile translation .ts files into .qm binary files (required for app to load translations)
+[unix]
+i18n-compile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    rm -f locales/*.qm
+    for ts_file in locales/*.ts; do
+        qm_file="${ts_file%.ts}.qm"
+        uv run pyside6-lrelease "$ts_file" -qm "$qm_file"
+    done
+
+[windows]
+i18n-compile:
+    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm; Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
+
+# Extract translatable strings from source code into .ts files (for translators)
+[unix]
+i18n-update:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    uv run pyside6-lupdate app/ -ts locales/*.ts
+
+[windows]
+i18n-update:
+    uv run pyside6-lupdate app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Utilities
 # ═══════════════════════════════════════════════════════════════════════════
+
+# Install shared git hooks (pre-commit quality gate)
+install-hooks:
+    git config core.hooksPath .githooks
+    @echo "Git hooks installed — commits will run 'just check' automatically."
 
 # Initialize and update git submodules (required after the first clone)
 submodules-init:

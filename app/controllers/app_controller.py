@@ -42,6 +42,8 @@ class AppController(QObject):
         self.do_dds_cleanup()
         # Initialize the metadata manager
         self.initialize_metadata_manager()
+        # Initialize the new MetadataController (runs alongside MetadataManager)
+        self.initialize_metadata_controller()
         # Initialize the main window controller
         self.initialize_main_window()
 
@@ -120,6 +122,19 @@ class AppController(QObject):
             settings_controller=self.settings_controller
         )
 
+    def initialize_metadata_controller(self) -> None:
+        """Initializes the new MetadataController alongside MetadataManager."""
+        from app.controllers.metadata_controller import MetadataController
+        from app.controllers.metadata_db_controller import AuxMetadataController
+
+        aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
+            self.settings_controller.settings.aux_db_path
+        )
+        self.metadata_controller = MetadataController.instance(
+            settings_controller=self.settings_controller,
+            metadata_db_controller=aux_db_controller,
+        )
+
     def initialize_main_window(self) -> None:
         """Initializes the main window and its controller."""
         self.main_window = MainWindow(settings_controller=self.settings_controller)
@@ -129,6 +144,12 @@ class AppController(QObject):
         """Runs the main application loop after initializing the main window."""
         self.main_window.show()
         self.main_window.initialize_content(is_initial=True)
+        # If the window was closed during initialization (e.g. user closed during
+        # mod scanning), skip the main event loop — Qt resets the quit flag in exec()
+        # so a prior quit() from quitOnLastWindowClosed would have no effect and the
+        # event loop would block forever with no visible windows.
+        if not self.main_window.isVisible():
+            return 0
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:

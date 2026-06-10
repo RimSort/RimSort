@@ -4,30 +4,10 @@ from typing import Any, Dict, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, QObject
 from PySide6.QtWidgets import QApplication
 
-from app.controllers.settings_controller import SettingsController
-from app.utils.metadata import MetadataManager
 from app.views.deletion_menu import DeletionResult, ModDeletionMenu
-
-
-@pytest.fixture
-def mock_settings_controller() -> MagicMock:
-    """Mock SettingsController."""
-    controller = MagicMock(spec=SettingsController)
-    controller.settings = MagicMock()
-    controller.settings.aux_db_time_limit = 1  # Enable DB operations
-    controller.settings.current_instance_path = "/fake/path"
-    return controller
-
-
-@pytest.fixture
-def mock_metadata_manager() -> MagicMock:
-    """Mock MetadataManager."""
-    manager = MagicMock(spec=MetadataManager)
-    manager.instance.return_value = manager
-    return manager
 
 
 @pytest.fixture
@@ -49,16 +29,14 @@ def deletion_menu(
     qapp: Union[QApplication, QCoreApplication],
 ) -> ModDeletionMenu:
     """Create a ModDeletionMenu instance for testing."""
-    with patch(
-        "app.views.deletion_menu.MetadataManager.instance",
-        return_value=mock_metadata_manager,
-    ):
-        menu = ModDeletionMenu(
-            settings_controller=mock_settings_controller,
-            get_selected_mod_metadata=lambda: [],
-            menu_title="Test Menu",
-        )
-        return menu
+    # The shared fixture defaults aux_db_time_limit to -1; override to enable DB ops.
+    QObject.__setattr__(mock_settings_controller.settings, "aux_db_time_limit", 1)
+    menu = ModDeletionMenu(
+        settings_controller=mock_settings_controller,
+        get_selected_mod_metadata=lambda: [],
+        menu_title="Test Menu",
+    )
+    return menu
 
 
 class TestDeletionResult:

@@ -32,6 +32,8 @@ class AuxMetadataEntry(Base):
     published_file_id: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
+    external_time_created: Mapped[int] = mapped_column(Integer, default=-1)
+    external_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 
     user_notes: Mapped[str] = mapped_column(String, default="")
     color_hex: Mapped[str] = mapped_column(

@@ -133,7 +133,7 @@ class InstanceController(QObject):
         config_folder: str = "",
         local_folder: str = "",
         workshop_folder: str = "",
-        run_args: list[str] | None = None,
+        run_args: str = "",
         steamcmd_install_path: str = "",
         steam_client_integration: bool = False,
         instance_folder_override: str = "",
@@ -146,15 +146,13 @@ class InstanceController(QObject):
         :param config_folder: Path to config folder
         :param local_folder: Path to local mods folder
         :param workshop_folder: Path to workshop folder
-        :param run_args: Run arguments list
+        :param run_args: Run arguments string
         :param steamcmd_install_path: Path to SteamCMD installation
         :param steam_client_integration: Enable Steam client integration
         :param instance_folder_override: Custom folder path for instance (overrides default)
         :return: Created Instance
         :rtype: Instance
         """
-        if run_args is None:
-            run_args = []
         return Instance(
             name=instance_name,
             game_folder=game_folder,

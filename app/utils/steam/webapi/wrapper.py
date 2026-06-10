@@ -309,6 +309,76 @@ class DynamicQuery(QObject):
         else:
             self.dq_messaging_signal.emit(msg)
 
+    def _process_mod_details(
+        self,
+        all_details: list[dict[str, Any]],
+        json_to_update: dict[str, Any],
+    ) -> list[str]:
+        """
+        Process raw publishedfiledetails into the database.
+
+        Populates steamName, url, tags, and dependency entries for each mod.
+        Returns a list of missing children pfids (dependencies not yet in the DB).
+
+        :param all_details: flat list of publishedfiledetails dicts from the API
+        :param json_to_update: database dict to update in-place
+        :return: list of missing children PublishedFileIds
+        """
+        missing_children: list[str] = []
+        result = json_to_update
+        for metadata in all_details:
+            publishedfileid = metadata["publishedfileid"]
+            if metadata["result"] != 1:
+                if not result["database"].get(publishedfileid):
+                    result["database"][publishedfileid] = {}
+                logger.debug(
+                    f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
+                )
+                result["database"][publishedfileid]["unpublished"] = True
+                continue
+            else:
+                if not result["database"].get(publishedfileid):
+                    result["database"][publishedfileid] = {}
+                result["database"][publishedfileid]["steamName"] = metadata["title"]
+                result["database"][publishedfileid]["url"] = (
+                    f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                )
+                if metadata.get("tags"):
+                    result["database"][publishedfileid]["tags"] = metadata["tags"]
+                result["database"][publishedfileid]["dependencies"] = {}
+                if metadata.get("children"):
+                    for children in metadata["children"]:
+                        child_pfid = children["publishedfileid"]
+                        if result["database"].get(child_pfid):
+                            if not result["database"][child_pfid].get("unpublished"):
+                                if result["database"][child_pfid].get("name"):
+                                    child_name = result["database"][child_pfid]["name"]
+                                elif result["database"][child_pfid].get("steamName"):
+                                    child_name = result["database"][child_pfid][
+                                        "steamName"
+                                    ]
+                                else:
+                                    child_name = "UNKNOWN"
+                                child_url = result["database"][child_pfid]["url"]
+                                result["database"][publishedfileid]["dependencies"][
+                                    child_pfid
+                                ] = [
+                                    child_name,
+                                    child_url,
+                                ]
+                        else:
+                            if child_pfid not in missing_children:
+                                logger.debug(
+                                    f"Could not find pfid {child_pfid} in database. Adding child to missing_children"
+                                )
+                                missing_children.append(child_pfid)
+        for missing_child in missing_children[:]:
+            if result["database"].get(missing_child) and result["database"][
+                missing_child
+            ].get("unpublished"):
+                missing_children.remove(missing_child)
+        return missing_children
+
     def __initialize_webapi(self) -> None:
         if self.api:
             # Make a request to GetServerInfo to check if the API is active
@@ -347,6 +417,13 @@ class DynamicQuery(QObject):
         Builds a database using a chunked WebAPI query of all available
         PublishedFileIds supplied.
 
+        Uses a cache-and-replay approach to avoid redundant API calls:
+
+        1. Fetch + process all mods, caching the raw API responses
+        2. Fetch + process any missing dependency children
+        3. Re-process the cached round 1 responses locally (no API calls)
+           so dependency entries that couldn't resolve in round 1 now resolve
+
         :param database: a database to update using IPublishedFileService_GetDetails queries
         :param publishedfileids: a list of PublishedFileIDs to query
         """
@@ -356,62 +433,51 @@ class DynamicQuery(QObject):
         query = database
         query["version"] = self.expiry
         query["database"] = database["database"]
-        querying = True
-        while querying:  # Begin initial query
-            result = self.IPublishedFileService_GetDetails(query, publishedfileids)
 
+        # Round 1: fetch + process all mods, cache the raw responses
+        result = self.IPublishedFileService_GetDetails(query, publishedfileids)
+        if result is None:
+            logger.warning(
+                "Dynamic Query failed to initialize WebAPI query! "
+                "Critical failure. Aborting steam_db creation."
+            )
+            return
+
+        query, missing_children, cached_details = result
+
+        # Round 2: fetch + process only the missing children
+        if missing_children:
+            self._emit_message(
+                f"\nRetrieving dependency information for {len(missing_children)} missing children"
+            )
+            result = self.IPublishedFileService_GetDetails(query, missing_children)
             if result is None:
                 logger.warning(
-                    f"Dynamic Query failed to initialize WebAPI query! Critical failure. Aborting steam_db creation. query: {query} publishedfileids: {publishedfileids}"
+                    "Dynamic Query failed during missing children query! "
+                    "Proceeding with partial data."
                 )
-                return
+            else:
+                query, _, round2_details = result
+                cached_details = cached_details + round2_details
 
-            # Returns WHAT we can get remotely, FROM what we have locally
-            query, missing_children = result
+            # Re-process all cached responses locally (no API calls).
+            # Now that all mods are in the DB, dependency entries that
+            # were unresolvable due to processing order will resolve correctly.
+            self._emit_message(
+                "\nRe-processing cached mod details to resolve remaining dependencies"
+            )
+            self._process_mod_details(cached_details, query)
 
-            if (
-                missing_children and len(missing_children) > 0
-            ):  # If we have missing data for any dependency...
-                # Uncomment to see the contents of missing_children
-                # logger.debug(missing_children)
-                self._emit_message(
-                    f"\nRetrieving dependency information for {len(missing_children)} missing children"
-                )
-                # Extend publishedfileids with the missing_children PublishedFileIds for final query
-                publishedfileids.extend(missing_children)
-                # Launch a separate query from the initial, to recursively append
-                # any of the missing_children's metadata to the query["database"].
-                #
-                # This will ensure that we get ALL dependency data that is possible,
-                # even if we do not have the dependenc{y, ies}. It's not perfect,
-                # because it will always cause one additional full query to ensure that
-                # the query["database"] is complete with missing_children metadata.
-                #
-                # It is the only way to paint the full picture without already
-                # possessing the mod's metadata for the initial query.
-                result = self.IPublishedFileService_GetDetails(query, missing_children)
-
-                if result is None:
-                    logger.warning(
-                        f"Dynamic Query failed to initialize WebAPI query! Critical failure. Aborting steam_db creation. Query: {query} Missing Children: {missing_children}"
-                    )
-                    return
-
-                query, missing_children = result
-                self._emit_message(
-                    "\nLaunching addiitonal full query to complete dependency information for the missing children"
-                )
-            else:  # Stop querying once we have 0 missing_children
-                missing_children = []
-                querying = False
+        all_publishedfileids = publishedfileids + [
+            c for c in missing_children if c not in publishedfileids
+        ]
 
         if self.get_appid_deps:
             self._emit_message(
                 "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)"
             )
-            # ISteamUGC/GetAppDependencies
             self.ISteamUGC_GetAppDependencies(
-                publishedfileids=publishedfileids, query=query
+                publishedfileids=all_publishedfileids, query=query
             )
         else:
             self._emit_message(
@@ -445,21 +511,19 @@ class DynamicQuery(QObject):
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: dict[Any, Any], publishedfileids: list[str]
-    ) -> tuple[dict[Any, Any], list[str]] | None:
+    ) -> tuple[dict[Any, Any], list[str], list[dict[str, Any]]] | None:
         """
-
-        Given a list of PublishedFileIds, return a dict of json data queried
-        from Steam WebAPI, containing data to be parsed during db update.
+        Given a list of PublishedFileIds, fetch mod metadata from Steam WebAPI
+        in chunks, process it into the database, and return the raw responses
+        for potential re-processing.
 
         https://steamapi.xpaw.me/#IPublishedFileService/GetDetails
-        https://steamwebapi.azurewebsites.net (Ctrl + F search: "IPublishedFileService/GetDetails")
 
-        :param json_to_update: a Dict of json data, containing a query to update in
-        RimPy db_data["database"] format, or the skeleton of one from local_metadata
-        :param publishedfileids: a list of PublishedFileIds to query Steam Workshop mod metadata for
-        :return: Tuple containing the updated json data from PublishedFileIds query, as well as
-        a list of any missing children's PublishedFileIds to consider for additional queries
-            OR None, None -  which indicates a critical failure in an ongoing Dynamic Query
+        :param json_to_update: database dict to update in-place
+        :param publishedfileids: list of PublishedFileIds to query
+        :return: Tuple of (updated_db, missing_children, raw_details) where
+            raw_details can be passed to _process_mod_details for re-processing.
+            Returns None on critical failure.
         """
         items_processed = 0
         total = len(publishedfileids)
@@ -467,14 +531,11 @@ class DynamicQuery(QObject):
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
         )
         self._emit_message(f"IPublishedFileService/GetDetails chunk [0/{total}]")
-        if not self.api:  # If we don't have API initialized
-            return None  # Exit query
-        missing_children = []
-        result = json_to_update
-        # Uncomment to see the all pfids to be queried
-        # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
+        if not self.api:
+            return None
+        all_details: list[dict[str, Any]] = []
         for chunk in chunks(
-            _list=publishedfileids, limit=213
+            _list=publishedfileids, limit=200
         ):  # Chunk limit appears to be 213 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
             items_processed += chunk_total
@@ -499,110 +560,13 @@ class DynamicQuery(QObject):
                     includereactions=False,
                     admin_query=False,
                 )
-                for metadata in response["response"]["publishedfiledetails"]:
-                    publishedfileid = metadata[
-                        "publishedfileid"
-                    ]  # Set the PublishedFileId to that of the metadata we are parsing
-
-                    # Uncomment this to view the metadata being parsed in real time
-                    # logger.debug(f"{publishedfileid}: {metadata}")
-                    # If the mod is no longer published
-                    if metadata["result"] != 1:
-                        if not result[
-                            "database"
-                        ].get(
-                            publishedfileid
-                        ):  # If we don't already have a ["database"] entry for this pfid
-                            result["database"][publishedfileid] = {}
-                        logger.debug(
-                            f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
-                        )
-                        result["database"][publishedfileid]["unpublished"] = True
-                        # If mod is unpublished, it has no metadata.
-                        continue  # We are done with this publishedfileid
-                    else:
-                        # This case is mostly intended for any missing_children passed back thru
-                        # If this is part of an AppIDQuery, then it is useful for population of
-                        # child_name and/or child_url below as part of the dependency data being collected
-                        if not result[
-                            "database"
-                        ].get(
-                            publishedfileid
-                        ):  # If we don't already have a ["database"] entry for this pfid
-                            result["database"][
-                                publishedfileid
-                            ] = {}  # Add in skeleton data
-                        # We populate the data
-                        result["database"][publishedfileid]["steamName"] = metadata[
-                            "title"
-                        ]
-                        result["database"][publishedfileid]["url"] = (
-                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                        )
-                        # Save tags information
-                        if metadata.get("tags"):
-                            result["database"][publishedfileid]["tags"] = metadata[
-                                "tags"
-                            ]
-                        # Track time publishing created
-                        # result["database"][publishedfileid][
-                        #     "external_time_created"
-                        # ] = metadata["time_created"]
-                        # # Track time publishing last updated
-                        # result["database"][publishedfileid][
-                        #     "external_time_updated"
-                        # ] = metadata["time_updated"]
-                        result["database"][publishedfileid]["dependencies"] = {}
-                        # If the publishing has listed mod dependencies
-                        if metadata.get("children"):
-                            for children in metadata[
-                                "children"
-                            ]:  # Check if children present in database
-                                child_pfid = children["publishedfileid"]
-                                if result["database"].get(
-                                    child_pfid
-                                ):  # If we have data for this child already cached
-                                    if not result["database"][child_pfid].get(
-                                        "unpublished"
-                                    ):  # ... and the mod is published, populate it
-                                        if result["database"][child_pfid].get(
-                                            "name"
-                                        ):  # Use local name over Steam name if possible
-                                            child_name = result["database"][child_pfid][
-                                                "name"
-                                            ]
-                                        elif result["database"][child_pfid].get(
-                                            "steamName"
-                                        ):
-                                            child_name = result["database"][child_pfid][
-                                                "steamName"
-                                            ]
-                                        else:  # This is a stub value used in-memory only (hopefully)
-                                            # and is intended for AppIdQuery first pass
-                                            child_name = "UNKNOWN"
-                                        child_url = result["database"][child_pfid][
-                                            "url"
-                                        ]
-                                        result["database"][publishedfileid][
-                                            "dependencies"
-                                        ][child_pfid] = [
-                                            child_name,
-                                            child_url,
-                                        ]
-                                else:  # Child was not found in database, track it's pfid for later
-                                    if child_pfid not in missing_children:
-                                        logger.debug(
-                                            f"Could not find pfid {child_pfid} in database. Adding child to missing_children"
-                                        )
-                                        missing_children.append(child_pfid)
+                all_details.extend(response["response"]["publishedfiledetails"])
             except Exception as e:
                 stacktrace = traceback.format_exc()
                 if (
                     e.__class__.__name__ == "HTTPError"
                     or e.__class__.__name__ == "SSLError"
                 ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
-                    # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
-                    # try to remove the Steam API key from the stacktrace
                     pattern = "&key="
                     stacktrace = stacktrace[
                         : len(stacktrace)
@@ -614,14 +578,8 @@ class DynamicQuery(QObject):
             self._emit_message(
                 f"IPublishedFileService/GetDetails chunk [{items_processed}/{total}]"
             )
-        for missing_child in missing_children:
-            if result["database"].get(missing_child) and result["database"][
-                missing_child
-            ].get(
-                "unpublished"
-            ):  # If there is somehow an unpublished mod in missing_children, remove it
-                missing_children.remove(missing_child)
-        return result, missing_children
+        missing_children = self._process_mod_details(all_details, json_to_update)
+        return json_to_update, missing_children, all_details
 
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """

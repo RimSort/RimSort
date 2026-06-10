@@ -209,6 +209,10 @@ class Settings(QObject):
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # GitHub Mod Updates
+        self.github_update_check_enabled: bool = True
+        self.github_update_check_interval_hours: int = 24
+
         # Auxiliary Metadata DB
         self.enable_aux_db_behavior_editing: bool = False
 
@@ -290,7 +294,9 @@ class Settings(QObject):
                             local_folder=data.get("local_folder", ""),
                             workshop_folder=data.get("workshop_folder", ""),
                             config_folder=data.get("config_folder", ""),
-                            run_args=data.get("run_args", []),
+                            run_args=self._migrate_run_args_value(
+                                data.get("run_args", "")
+                            ),
                             steamcmd_install_path=steamcmd_prefix_default_instance_path,
                             steam_client_integration=False,
                         )
@@ -500,6 +506,34 @@ class Settings(QObject):
             logger.error(f"Failed to recover settings from backup: {e}")
             return False
 
+    @staticmethod
+    def _migrate_run_args_value(value: object) -> str:
+        """Migrate legacy run_args formats to a single string.
+
+        Handles all historical formats:
+        - [] -> ""
+        - ["-logfile", "/path", "-flag"] -> "-logfile /path -flag"
+        - ["-logfile,/path,-flag"] -> "-logfile /path -flag"
+        - ["-logfile /path -flag"] -> "-logfile /path -flag"
+        - "already a string" -> "already a string"
+
+        :param value: The raw run_args value from settings JSON
+        :return: Normalized run_args string
+        """
+        if isinstance(value, str):
+            return value
+        if not isinstance(value, list):
+            return ""
+        if not value:
+            return ""
+        if len(value) == 1:
+            arg = value[0]
+            if "," in arg:
+                parts = [p.strip() for p in arg.split(",") if p.strip()]
+                return " ".join(parts)
+            return arg
+        return " ".join(value)
+
     def _from_dict(self, data: Dict[str, Any]) -> None:
         special_attributes = ["instances"]
 
@@ -517,6 +551,10 @@ class Settings(QObject):
                 if isinstance(instance_data, Instance):
                     instances[instance_name] = instance_data
                 elif isinstance(instance_data, dict):
+                    if "run_args" in instance_data:
+                        instance_data["run_args"] = self._migrate_run_args_value(
+                            instance_data["run_args"]
+                        )
                     instances[instance_name] = msgspec.convert(instance_data, Instance)
                 else:
                     logger.warning(

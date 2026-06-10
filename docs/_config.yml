@@ -9,6 +9,12 @@ exclude_from_localization: ["javascript", "images", "css", "public", "sitemap"]
 parallel_localization: true
 url: https://rimsort.github.io
 
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - rentry_preview.png
+  - rentry_steam_icon.png
+
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: false
 

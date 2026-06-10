@@ -281,7 +281,7 @@ def get_executable_path(game_install_path: Path) -> str | None:
         return None
 
 
-def launch_game_process(game_install_path: Path, args: list[str]) -> None:
+def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
@@ -291,8 +291,8 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     The game will be launched with the game install path being the working directory.
 
     :param game_install_path: is a path to the game folder
-    :param args: is a list containing a single launch command string with Steam-style
-                 %command% syntax (e.g., ["PROTON_LOG=1 gamemoderun %command% -logfile /tmp/log"])
+    :param run_args: a launch command string with optional Steam-style
+                     %command% syntax (e.g., "PROTON_LOG=1 gamemoderun %command% -logfile /tmp/log")
     """
     if not game_install_path:
         logger.error("The path to the game folder is empty")
@@ -327,12 +327,10 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         )
         return
 
-    # Parse the launch command if args is non-empty
-    if args and len(args) > 0:
-        # Treat first element as full command string with %command% syntax
-        command_string = args[0]
-        logger.info(f"Parsing launch command: {command_string}")
-        parsed = parse_launch_command(command_string)
+    # Parse the launch command if run_args is non-empty
+    if run_args:
+        logger.info(f"Parsing launch command: {run_args}")
+        parsed = parse_launch_command(run_args)
         env_vars = parsed.env_vars
         wrapper_commands = parsed.wrapper_commands
         game_args = parsed.game_args
@@ -701,12 +699,20 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
 
     if os.path.exists(steam_folder / primary_library):
         logger.debug(f"Attempting to get RimWorld path from {primary_library}")
-        with open(steam_folder / primary_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / primary_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {primary_library}", exc_info=True)
+            return rimworld_path
     elif os.path.exists(steam_folder / backup_library):
         logger.debug(f"Attempting to get RimWorld path from {backup_library}")
-        with open(steam_folder / backup_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / backup_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {backup_library}", exc_info=True)
+            return rimworld_path
     else:
         logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
         return rimworld_path
@@ -813,3 +819,43 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         return f"{abs_time} | {rel_time}", timestamp
     except (ValueError, TypeError, OSError):
         return "Invalid timestamp", None
+
+
+def show_no_steam_warning() -> None:
+    """
+    Show warning that Steam is not detected.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Steam Not Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "RimSort could not detect Steam client or it may be unresponsive. "
+            "Please make sure Steam is installed and running. "
+            "If you are a Steam user, please check that Steam is running and that you are logged in. "
+            "Try restarting Steam.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues",
+        ),
+    )
+
+
+def show_snap_steam_warning() -> None:
+    """
+    Show snap steam warning in a thread-safe manner.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Snap Steam Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "For full Steam support, please install native Steam "
+            "from the official repository.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "Snap Steam is sandboxed and incompatible with Steamworks API",
+        ),
+    )

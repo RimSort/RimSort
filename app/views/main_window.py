@@ -7,7 +7,7 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -31,6 +31,7 @@ from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.todds_controller import ToddsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils import globals
 from app.utils.acf_utils import refresh_acf_metadata
@@ -44,6 +45,7 @@ from app.utils.constants import (
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
+from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.acf_log_reader import AcfLogReader
@@ -111,6 +113,7 @@ class MainWindow(QMainWindow):
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
         )
+        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         self.bottom_panel = Status()
 
         # Create and add the Main Content panel tab
@@ -235,6 +238,12 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
         )
 
+        self.todds_controller = ToddsController(
+            settings_controller=self.settings_controller,
+            metadata_manager=self.main_content_panel.metadata_manager,
+        )
+        self.main_content_panel.todds_controller = self.todds_controller
+
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
         EventBus().do_backup_existing_instance.connect(self.__backup_existing_instance)
@@ -274,6 +283,26 @@ class MainWindow(QMainWindow):
         for widget in q_app.allWidgets():
             widget.setEnabled(enable)
 
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Clean up child windows and resources before closing.
+
+        :param event: The close event to handle.
+        """
+        # Abort any in-progress metadata scanning so background threads stop
+        MetadataManager.instance().request_abort()
+
+        # Break out of the nested QEventLoop in do_threaded_loading_animation
+        # so the startup sequence can unwind and the process can exit
+        self.main_content_panel.abort_loading()
+
+        # Stop filesystem watchdog if running
+        self.shutdown_watchdog()
+
+        # Close all child windows
+        self.main_content_panel.close_child_windows()
+
+        event.accept()
+
     def showEvent(self, event: QShowEvent) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
@@ -290,6 +319,9 @@ class MainWindow(QMainWindow):
         )
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
+        # If the window was closed during scanning, skip remaining initialization
+        if not self.isVisible():
+            return
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
@@ -759,7 +791,7 @@ class MainWindow(QMainWindow):
                 + f"\nWorkshop mods folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
                 + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
                 + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n"
-                + f"\nRun arguments:\n{'[' + ' '.join(existing_instance_run_args) + ']' if existing_instance_run_args else '<None>'}\n",
+                + f"\nRun arguments:\n{existing_instance_run_args if existing_instance_run_args else '<None>'}\n",
             )
             if answer.exec_is_positive():
                 # Clone the RimWorld game_folder to the new instance
@@ -923,7 +955,7 @@ class MainWindow(QMainWindow):
                         "local_folder": target_local_folder,
                         "workshop_folder": target_workshop_folder,
                         "config_folder": target_config_folder,
-                        "run_args": existing_instance_run_args or [],
+                        "run_args": existing_instance_run_args,
                         "steamcmd_install_path": str(
                             AppInfo().app_storage_folder
                             / INSTANCE_FOLDER_NAME
@@ -979,17 +1011,21 @@ class MainWindow(QMainWindow):
             )
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
+            # Fall back to current instance's folders if missing or empty (e.g., Create Instance)
+            current_inst = self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ]
+            if not instance_data.get("game_folder"):
+                instance_data["game_folder"] = current_inst.game_folder
+            if not instance_data.get("config_folder"):
+                instance_data["config_folder"] = current_inst.config_folder
             # Get run args from instance data, autogenerate additional config items if desired
-            run_args = []
-            generated_instance_run_args = []
+            run_args = ""
             if instance_data.get("game_folder") and instance_data.get("config_folder"):
-                # Generate preview of run args
-                preview_generated_run_args = [
-                    "-logfile",
-                    str(instance_path / "RimWorld.log"),
-                    f"-savedatafolder={str(instance_path / 'InstanceData')}",
-                ]
-                preview_text = " ".join(preview_generated_run_args)
+                # Generate preview of run args as a single string
+                log_path = str(instance_path / "RimWorld.log")
+                savedata_path = str(instance_path / "InstanceData")
+                preview_text = f"-logfile {log_path} -savedatafolder={savedata_path}"
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(
                     title=self.tr("Create new instance [{instance_name}]"),
@@ -1002,10 +1038,16 @@ class MainWindow(QMainWindow):
                     ).format(preview=preview_text),
                 )
                 if answer == QMessageBox.StandardButton.Yes:
-                    # Use the preview generated run args
-                    generated_instance_run_args = preview_generated_run_args
-                run_args.extend(generated_instance_run_args)
-                run_args.extend(instance_data.get("run_args", []))
+                    run_args = preview_text
+                    # Align config_folder with -savedatafolder so _do_save()
+                    # writes ModsConfig.xml where the game will read it
+                    config_path = instance_path / "InstanceData" / "Config"
+                    config_path.mkdir(parents=True, exist_ok=True)
+                    instance_data["config_folder"] = str(config_path)
+                # Append any existing run_args from cloned instance
+                existing_args = instance_data.get("run_args", "")
+                if existing_args:
+                    run_args = f"{run_args} {existing_args}".strip()
             # Add new instance to Settings
             self.settings_controller.create_instance(
                 instance_name=instance_name,
@@ -1095,7 +1137,7 @@ class MainWindow(QMainWindow):
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""
-        self.stop_watchdog_if_running()
+        self.shutdown_watchdog()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
         instance_path = str(InstanceController.get_instance_folder_path(instance))
@@ -1119,30 +1161,9 @@ class MainWindow(QMainWindow):
 
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
-        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        # Instantiate event handler
-        # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
-        current_instance = self.settings_controller.settings.current_instance
         self.watchdog_event_handler = WatchdogHandler(
             settings_controller=self.settings_controller,
-            targets=[
-                str(
-                    Path(
-                        self.settings_controller.settings.instances[
-                            current_instance
-                        ].game_folder
-                    )
-                    / "Data"
-                ),
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].local_folder,
-                self.settings_controller.settings.instances[
-                    current_instance
-                ].workshop_folder,
-            ],
         )
-        # Connect watchdog to MetadataManager for ACF changes
         self.watchdog_event_handler.acf_changed.connect(
             partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
         )
@@ -1155,47 +1176,9 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler.mod_updated.connect(
             self.main_content_panel.metadata_manager.process_update
         )
-        # Connect main content signal so it can stop watchdog
-        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
-        # Start watchdog
-        try:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None:
-                self.watchdog_event_handler.watchdog_acf_observer.start()
-            else:
-                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
-            if self.watchdog_event_handler.watchdog_mods_observer is not None:
-                self.watchdog_event_handler.watchdog_mods_observer.start()
-            else:
-                logger.warning("Watchdog Mods Observer is None. Unable to start.")
-        except Exception as e:
-            logger.warning(
-                f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
-            )
-
-    def stop_watchdog_if_running(self) -> None:
-        # STOP WATCHDOG IF IT IS ALREADY RUNNING
-        if self.watchdog_event_handler is not None:
-            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
-                self.watchdog_event_handler.watchdog_mods_observer is not None
-            ):
-                self.shutdown_watchdog()
+        self.watchdog_event_handler.start()
 
     def shutdown_watchdog(self) -> None:
-        if (
-            self.watchdog_event_handler is not None
-            and self.watchdog_event_handler.watchdog_acf_observer is not None
-            and self.watchdog_event_handler.watchdog_mods_observer is not None
-        ):
-            # Handle Steam .acf Observer shutdown
-            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
-                self.watchdog_event_handler.watchdog_acf_observer.stop()
-                self.watchdog_event_handler.watchdog_acf_observer.join()
-                self.watchdog_event_handler.watchdog_acf_observer = None
-            # Handle Mod Directory Observer shutdown
-            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
-                self.watchdog_event_handler.watchdog_mods_observer.stop()
-                self.watchdog_event_handler.watchdog_mods_observer.join()
-                self.watchdog_event_handler.watchdog_mods_observer = None
-                for timer in self.watchdog_event_handler.cooldown_timers.values():
-                    timer.cancel()
+        if self.watchdog_event_handler is not None:
+            self.watchdog_event_handler.stop()
             self.watchdog_event_handler = None
