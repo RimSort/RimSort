@@ -13,6 +13,7 @@ from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.steam_status_handler import SteamStatusHandler
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
 
@@ -36,6 +37,8 @@ class AppController(QObject):
         self.initialize_theme_controller()
         # Set the theme of the application.
         self.set_theme()
+        # Initialize the Steam status handler
+        self.initialize_steam_status_handler()
         # Initialize the Steamcmd interface
         self.initialize_steamcmd_interface()
         # Perform cleanup of orphaned DDS files if the setting is enabled
@@ -100,6 +103,10 @@ class AppController(QObject):
             QCoreApplication.installTranslator(qt_translator)
         else:
             print(f"Qt translation file {qt_file_path} not found.")
+
+    def initialize_steam_status_handler(self) -> None:
+        """Initializes the SteamStatusHandler for Steam detection and auto-launch."""
+        self.steam_status_handler = SteamStatusHandler(settings=self.settings)
 
     def initialize_steamcmd_interface(self) -> None:
         """Initializes the SteamcmdInterface."""

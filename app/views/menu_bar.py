@@ -75,6 +75,8 @@ class MenuBar(QObject):
         self.github_action: QAction
         self.show_translation_status_action: QAction
         self.auto_add_translations_action: QAction
+        self.check_steam_connection_action: QAction
+        self.launch_steam_action: QAction
         self.check_for_updates_action: QAction | None = None
         self.check_for_updates_on_startup_action: QAction | None = None
 
@@ -387,6 +389,10 @@ class MenuBar(QObject):
         self.wiki_action = self._add_action(help_menu, self.tr("RimSort Wiki…"))
         self.github_action = self._add_action(help_menu, self.tr("RimSort GitHub…"))
         help_menu.addSeparator()
+        self.check_steam_connection_action = self._add_action(
+            help_menu, self.tr("Check Steam Connection")
+        )
+        self.launch_steam_action = self._add_action(help_menu, self.tr("Launch Steam"))
         return help_menu
 
     def _create_menu_bar(self) -> None:

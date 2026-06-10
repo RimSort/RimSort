@@ -182,6 +182,12 @@ class MenuBarController(QObject):
         self.menu_bar.github_action.triggered.connect(
             self._on_menu_bar_github_triggered
         )
+        self.menu_bar.check_steam_connection_action.triggered.connect(
+            EventBus().do_check_steam_connection.emit
+        )
+        self.menu_bar.launch_steam_action.triggered.connect(
+            EventBus().do_launch_steam.emit
+        )
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)

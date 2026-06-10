@@ -133,6 +133,9 @@ class Settings(QObject):
         self.build_steam_database_update_toggle: bool = False
         self.steam_apikey: str = ""
 
+        # Steam
+        self.auto_launch_steam: bool = False
+
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
         self.steamcmd_delete_before_update: bool = False
