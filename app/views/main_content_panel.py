@@ -56,9 +56,8 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.ignore_manager import IgnoreManager
-from app.utils.metadata import MetadataManager, SettingsController, WorkshopUpdateResult
-from app.utils.rentry.wrapper import RentryImport, RentryUpload
+from app.utils.metadata import SettingsController, WorkshopUpdateResult
+from app.utils.rentry.wrapper import RentryImport
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
