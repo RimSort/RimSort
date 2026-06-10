@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import functools
 import os
-from collections.abc import MutableSet
+from collections.abc import Mapping, MutableSet
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -8,6 +10,7 @@ from typing import AbstractSet, Any, Iterable, Iterator
 from uuid import uuid4
 
 import msgspec
+from loguru import logger
 
 from app.utils.files import subfolder_contains_candidate_path
 
@@ -490,7 +493,7 @@ class AboutXmlMod(ListedMod, PackageIdMod):
 
 @dataclass
 class CompiledDependencyData:
-    """Standalone compiled dependency data built by MetadataController."""
+    """Standalone compiled dependency data."""
 
     deps_graph: dict[str, set[str]] = field(default_factory=dict)
     rev_deps_graph: dict[str, set[str]] = field(default_factory=dict)
@@ -498,6 +501,116 @@ class CompiledDependencyData:
     tier_one_mods: set[str] = field(default_factory=set)
     tier_three_mods: set[str] = field(default_factory=set)
     incompatibilities: dict[str, set[str]] = field(default_factory=dict)
+
+    @classmethod
+    def build(
+        cls,
+        mods_metadata: Mapping[str, ListedMod],
+        use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
+    ) -> CompiledDependencyData:
+        """Build compiled dependency data from parsed mods.
+
+        When ``use_moddependencies_as_loadTheseBefore`` is True, declared
+        ``modDependencies`` are treated as implicit ``loadAfter`` edges.
+        Explicit load-order rules always take precedence: if an explicit
+        rule says A loads after B, an inferred rule saying B loads after A
+        is silently dropped to avoid creating a cycle.
+
+        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``.
+        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter.
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
+        :return: A fully-populated ``CompiledDependencyData`` instance.
+        """
+        from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
+
+        compiled = cls()
+
+        compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()
+        compiled.tier_one_mods = KNOWN_TIER_ONE_MODS.copy()
+
+        all_package_ids: set[str] = set()
+
+        for mod in mods_metadata.values():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+            all_package_ids.add(str(mod.package_id))
+
+        for mod in mods_metadata.values():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+
+            pid = str(mod.package_id)
+            rules = mod.overall_rules
+
+            for dep_ci in rules.load_after:
+                dep = str(dep_ci)
+                if dep not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(pid, set()).add(dep)
+                compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            for target_ci in rules.load_before:
+                target = str(target_ci)
+                if target not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(target, set()).add(pid)
+                compiled.rev_deps_graph.setdefault(pid, set()).add(target)
+
+            for incompat_ci in rules.incompatible_with:
+                incompat = str(incompat_ci)
+                if incompat not in all_package_ids:
+                    continue
+                compiled.incompatibilities.setdefault(pid, set()).add(incompat)
+
+            if rules.load_first and pid not in compiled.tier_zero_mods:
+                compiled.tier_one_mods.add(pid)
+
+            if rules.load_last:
+                compiled.tier_three_mods.add(pid)
+
+        if use_moddependencies_as_loadTheseBefore:
+            excluded_tiers = compiled.tier_one_mods | compiled.tier_three_mods
+            conflicts_ignored = 0
+            for mod in mods_metadata.values():
+                if not isinstance(mod, AboutXmlMod):
+                    continue
+                pid = str(mod.package_id)
+                if pid in excluded_tiers:
+                    continue
+                for dep_mod in mod.overall_rules.dependencies.values():
+                    dep = str(dep_mod.package_id)
+                    if dep not in all_package_ids:
+                        if not use_alternative_package_ids:
+                            continue
+                        resolved = None
+                        for alt in dep_mod.alternative_package_ids:
+                            alt_str = str(alt)
+                            if alt_str in all_package_ids:
+                                resolved = alt_str
+                                break
+                        if resolved is None:
+                            continue
+                        dep = resolved
+                    if dep in excluded_tiers:
+                        continue
+                    if pid in compiled.deps_graph.get(dep, set()):
+                        logger.warning(
+                            f"Ignoring inferred dependency {pid} -> {dep}: "
+                            f"conflicts with explicit rule {dep} -> {pid}"
+                        )
+                        conflicts_ignored += 1
+                        continue
+                    compiled.deps_graph.setdefault(pid, set()).add(dep)
+                    compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            if conflicts_ignored > 0:
+                logger.info(
+                    f"Resolved {conflicts_ignored} conflicts by prioritizing "
+                    f"explicit load order rules over inferred dependencies"
+                )
+
+        return compiled
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):

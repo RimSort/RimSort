@@ -7,11 +7,11 @@ from unittest.mock import MagicMock, patch
 if "steamworks" not in sys.modules:
     sys.modules["steamworks"] = MagicMock()
 
-from app.controllers.metadata_controller import MetadataController
 from app.controllers.sort_controller import Sorter
 from app.models.metadata.metadata_structure import (
     CaseInsensitiveSet,
     CaseInsensitiveStr,
+    CompiledDependencyData,
     DependencyMod,
     ListedMod,
     Rules,
@@ -29,7 +29,7 @@ def _pipeline(
     """Full pipeline helper: compile → Sorter → sort."""
     if active_paths is None:
         active_paths = set(mods.keys())
-    compiled = MetadataController._build_compiled_data(
+    compiled = CompiledDependencyData.build(
         mods, use_moddependencies_as_loadTheseBefore
     )
     sorter = Sorter(sort_method, compiled, mods, active_paths)
@@ -320,7 +320,7 @@ class TestRealisticScale:
     def test_200_mods_with_tiers(self) -> None:
         """200 mods across all four tiers sort in tier order."""
         mods, active = self._generate_mod_set(200)
-        compiled = MetadataController._build_compiled_data(mods)
+        compiled = CompiledDependencyData.build(mods)
         compiled.tier_zero_mods = {f"mod.{i:04d}" for i in range(5)}
         compiled.tier_one_mods = {f"mod.{i:04d}" for i in range(5, 15)}
         compiled.tier_three_mods = {f"mod.{i:04d}" for i in range(195, 200)}

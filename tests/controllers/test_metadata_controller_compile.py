@@ -8,7 +8,6 @@ import pytest
 if "steamworks" not in sys.modules:
     sys.modules["steamworks"] = MagicMock()
 
-from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     BaseRules,
@@ -45,8 +44,8 @@ def _make_mod(
 
 
 def _compile(mods: dict[str, ListedMod], **kwargs: bool) -> CompiledDependencyData:
-    """Shorthand for MetadataController._build_compiled_data."""
-    return MetadataController._build_compiled_data(mods, **kwargs)
+    """Shorthand for CompiledDependencyData.build."""
+    return CompiledDependencyData.build(mods, **kwargs)
 
 
 @pytest.fixture
