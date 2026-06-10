@@ -720,6 +720,17 @@ def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
     return rules
 
 
+def _find_about_xml(mod_path: Path) -> Path | None:
+    """Case-insensitive lookup for About/About.xml inside a mod directory."""
+    for entry in mod_path.iterdir():
+        if entry.name.lower() == "about" and entry.is_dir():
+            for child in entry.iterdir():
+                if child.name.lower() == "about.xml" and child.is_file():
+                    return child
+            break
+    return None
+
+
 def create_listed_mod_from_path(
     path: Path,
     target_version: str,
@@ -743,9 +754,9 @@ def create_listed_mod_from_path(
 
     # Check if path is a directory
     if path.is_dir():
-        # Check if About.xml exists
-        about_xml_path = path / Path("About/About.xml")
-        if about_xml_path.exists():
+        # Case-insensitive lookup for About/About.xml (Linux is case-sensitive)
+        about_xml_path = _find_about_xml(path)
+        if about_xml_path is not None:
             success, about_mod = _create_about_mod_from_xml(
                 path, about_xml_path, target_version, prefer_versioned
             )
