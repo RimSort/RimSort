@@ -24,31 +24,29 @@ def settings_controller(tmp_path: Path) -> MagicMock:
 
 
 @pytest.fixture
-def metadata_manager() -> MagicMock:
+def metadata_controller() -> MagicMock:
     return MagicMock()
 
 
 @pytest.fixture
 def active_mods_setup(
-    settings_controller: MagicMock, metadata_manager: MagicMock, tmp_path: Path
+    settings_controller: MagicMock, metadata_controller: MagicMock, tmp_path: Path
 ) -> tuple[MagicMock, MagicMock]:
     """Setup for active mods mode tests."""
     settings_controller.settings.todds_active_mods_target = True
 
     mod_dir = tmp_path / "mods" / "MyMod"
     mod_dir.mkdir(parents=True)
-    metadata_manager.internal_local_metadata = {
-        "uuid-1": {"path": str(mod_dir)},
-    }
+    settings_controller._test_mod_dir = str(mod_dir)
 
-    return settings_controller, metadata_manager
+    return settings_controller, metadata_controller
 
 
 class TestGenerateToddsTxt:
     def test_all_mods_mode_writes_existing_dirs(
         self,
         settings_controller: MagicMock,
-        metadata_manager: MagicMock,
+        metadata_controller: MagicMock,
         tmp_path: Path,
     ) -> None:
         """When todds_active_mods_target is False, writes local and workshop folders."""
@@ -57,7 +55,7 @@ class TestGenerateToddsTxt:
 
         tc = ToddsController(
             settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
+            metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt()
 
@@ -70,13 +68,13 @@ class TestGenerateToddsTxt:
     def test_all_mods_mode_skips_missing_dirs(
         self,
         settings_controller: MagicMock,
-        metadata_manager: MagicMock,
+        metadata_controller: MagicMock,
         tmp_path: Path,
     ) -> None:
         """When directories don't exist, they are skipped."""
         tc = ToddsController(
             settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
+            metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt()
         assert count == 0
@@ -85,40 +83,45 @@ class TestGenerateToddsTxt:
         self, active_mods_setup: tuple[MagicMock, MagicMock]
     ) -> None:
         """When todds_active_mods_target is True, writes individual mod paths."""
-        settings_controller, metadata_manager = active_mods_setup
+        settings_controller, metadata_controller = active_mods_setup
 
         tc = ToddsController(
             settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
+            metadata_controller=metadata_controller,
         )
-        path, count = tc.generate_todds_txt(active_mod_uuids=["uuid-1"])
+        path, count = tc.generate_todds_txt(
+            active_mod_paths=[settings_controller._test_mod_dir]
+        )
         assert count == 1
 
     def test_active_mods_mode_skips_divider_uuids(
         self, active_mods_setup: tuple[MagicMock, MagicMock]
     ) -> None:
         """Divider UUIDs (starting with __divider__) are skipped."""
-        settings_controller, metadata_manager = active_mods_setup
+        settings_controller, metadata_controller = active_mods_setup
 
         tc = ToddsController(
             settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
+            metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt(
-            active_mod_uuids=["__divider__test123", "uuid-1"]
+            active_mod_paths=[
+                "__divider__test123",
+                settings_controller._test_mod_dir,
+            ]
         )
         assert count == 1
 
 
 class TestActiveModUuidsGuard:
     def test_generate_todds_txt_returns_zero_when_uuids_missing(
-        self, settings_controller: MagicMock, metadata_manager: MagicMock
+        self, settings_controller: MagicMock, metadata_controller: MagicMock
     ) -> None:
-        """When todds_active_mods_target is True but active_mod_uuids is None, returns 0."""
+        """When todds_active_mods_target is True but active_mod_paths is None, returns 0."""
         settings_controller.settings.todds_active_mods_target = True
         tc = ToddsController(
             settings_controller=settings_controller,
-            metadata_manager=metadata_manager,
+            metadata_controller=metadata_controller,
         )
-        _, count = tc.generate_todds_txt(active_mod_uuids=None)
+        _, count = tc.generate_todds_txt(active_mod_paths=None)
         assert count == 0

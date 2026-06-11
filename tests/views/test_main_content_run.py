@@ -43,6 +43,7 @@ def main_content(
     qapp: QApplication,
     mock_settings_controller: MagicMock,
     mock_metadata_manager: MagicMock,
+    mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:
     # Ensure active_mods_dividers is set on the settings object
@@ -77,8 +78,8 @@ def unsaved_main_content(
 ) -> Tuple[MainContent, List[bool]]:
     mc, save_calls = main_content
     # Set unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
-    mc.active_mods_uuids_last_save = ["a"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
+    mc.active_mods_paths_last_save = ["a"]
     return mc, save_calls
 
 

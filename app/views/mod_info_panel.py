@@ -18,15 +18,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
-from app.sort.mod_sorting import uuid_to_folder_size
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ScenarioMod
+from app.sort.mod_sorting import path_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.generic import format_file_size, platform_specific_open, scanpath
-from app.utils.metadata import MetadataManager
 from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
 
@@ -111,8 +112,8 @@ class ModInfoPanel:
         """
         logger.debug("Initializing ModInfo")
 
-        # Cache MetadataManager instance
-        self.metadata_manager = MetadataManager.instance()
+        # Cache MetadataController instance
+        self.metadata_controller = MetadataController.instance()
         self.settings_controller = settings_controller
 
         # Used to keep track of which mod items notes we are viewing/editing
@@ -609,15 +610,18 @@ class ModInfoPanel:
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
         # Update Aux DB
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
         uuid = mod_data["uuid"]
         if not uuid:
             logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
             return
+        # In MetadataController, uuid IS the path
+        mod = self.metadata_controller.get_mod(uuid)
+        if mod is None:
+            logger.error(f"Mod not found for uuid {uuid} when saving user notes.")
+            return
+        mod_path = str(mod.mod_path) if mod.mod_path else uuid
+        aux_metadata_controller = self.metadata_controller.metadata_db_controller
         with aux_metadata_controller.Session() as aux_metadata_session:
-            mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
             aux_metadata_controller.update(
                 aux_metadata_session,
                 mod_path,
@@ -708,7 +712,7 @@ class ModInfoPanel:
         """Set folder size information using optimized calculation."""
         try:
             if self.settings_controller.settings.inactive_mods_sorting:
-                size_bytes = uuid_to_folder_size(uuid)
+                size_bytes = path_to_folder_size(uuid)
                 self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
             else:
                 self.mod_info_folder_size_value.setText("Not available")
@@ -880,7 +884,7 @@ class ModInfoPanel:
         elif "descriptionsbyversion" in mod_metadata and isinstance(
             mod_metadata["descriptionsbyversion"], dict
         ):
-            major, minor = self.metadata_manager.game_version.split(".")[
+            major, minor = self.metadata_controller.game_version.split(".")[
                 :2
             ]  # Split the version and take the first two parts
             version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
@@ -978,15 +982,21 @@ class ModInfoPanel:
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """
-        This slot receives a the complete mod data json for
-        the mod that was just clicked on. It will set the relevant
-        information on the info panel.
+        This slot receives the UUID (path) of the mod that was just clicked on.
+        It will set the relevant information on the info panel.
 
-        :param uuid: UUID of the mod to display
+        :param uuid: UUID (path) of the mod to display
+        :param render_unity_rt: Whether to render Unity rich text in descriptions
         """
-        mod_metadata = self.metadata_manager.internal_local_metadata.get(uuid, {})
-        is_invalid = mod_metadata and mod_metadata.get("invalid")
-        is_scenario = mod_metadata and mod_metadata.get("scenario")
+        mod = self.metadata_controller.get_mod(uuid)
+        if mod is None:
+            return
+
+        is_invalid = not isinstance(mod, AboutXmlMod)
+        is_scenario = isinstance(mod, ScenarioMod)
+
+        # Build a compatibility dict for helpers that still expect dict format
+        mod_metadata = self._build_mod_metadata_dict(uuid, mod)
 
         # Create ModInfo object - it handles all edge cases and formatting
         mod_info = ModInfo.from_metadata(uuid, mod_metadata)
@@ -1011,10 +1021,11 @@ class ModInfoPanel:
             self._set_invalid_info_fields()
 
         # Set path
-        self.mod_info_path_value.setPath(mod_metadata.get("path"))
+        mod_path = str(mod.mod_path) if mod.mod_path else None
+        self.mod_info_path_value.setPath(mod_path)
 
         # Show or hide GitHub info based on whether this mod is tracked
-        self._update_github_info(mod_metadata.get("path"))
+        self._update_github_info(mod_path)
 
         # Set description
         self._set_description(mod_metadata, render_unity_rt)
@@ -1023,3 +1034,54 @@ class ModInfoPanel:
         self._load_preview_image(mod_metadata, is_scenario)
 
         logger.debug("Finished displaying mod info")
+
+    def _build_mod_metadata_dict(self, uuid: str, mod: ListedMod) -> dict[str, Any]:
+        """Build a backward-compatible metadata dict from a ListedMod.
+
+        This bridges the gap between the typed ListedMod API and helpers
+        that still expect dict-based metadata. Intended to be removed once
+        all helpers are fully migrated.
+        """
+        mod_path = str(mod.mod_path) if mod.mod_path else ""
+        metadata: dict[str, Any] = {
+            "uuid": uuid,
+            "name": mod.name,
+            "path": mod_path,
+            "description": mod.description,
+            "supportedversions": mod.supported_versions,
+            "publishedfileid": mod.published_file_id,
+            "internal_time_touched": mod.internal_time_touched,
+        }
+        if isinstance(mod, AboutXmlMod):
+            metadata["packageid"] = str(mod.package_id)
+            metadata["authors"] = mod.authors
+            metadata["modversion"] = mod.mod_version
+            metadata["url"] = mod.url
+        if isinstance(mod, ScenarioMod):
+            metadata["scenario"] = True
+            metadata["summary"] = mod.summary
+        if not isinstance(mod, AboutXmlMod):
+            metadata["invalid"] = True
+
+        # Derive steam_url from published_file_id
+        pfid = mod.published_file_id
+        if pfid:
+            metadata["pfid"] = pfid
+            metadata["steam_url"] = (
+                f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+            )
+
+        # Get external timestamps from aux DB
+        _, aux_entry = self.metadata_controller.get_metadata_with_path(uuid)
+        if aux_entry is not None:
+            metadata["external_time_created"] = getattr(
+                aux_entry, "external_time_created", None
+            )
+            metadata["external_time_updated"] = getattr(
+                aux_entry, "external_time_updated", None
+            )
+            metadata["internal_time_updated"] = getattr(
+                aux_entry, "internal_time_updated", None
+            )
+
+        return metadata

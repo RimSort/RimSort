@@ -2,11 +2,15 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    CaseInsensitiveStr,
+    ListedMod,
+)
 from app.sort.mod_sorting import (
     DEFAULT_REVERSE_FLAGS,
     ModsPanelSortKey,
@@ -14,17 +18,44 @@ from app.sort.mod_sorting import (
     get_cached_metadata_for_batch,
     get_dir_size,
     get_mod_metadata,
-    sort_uuids,
-    uuid_no_key,
-    uuid_to_author,
-    uuid_to_filesystem_modified_time,
-    uuid_to_folder_size,
-    uuid_to_mod_color,
-    uuid_to_mod_name,
-    uuid_to_mod_tags,
-    uuid_to_packageid,
-    uuid_to_version,
+    path_no_key,
+    path_to_author,
+    path_to_filesystem_modified_time,
+    path_to_folder_size,
+    path_to_mod_color,
+    path_to_mod_name,
+    path_to_mod_tags,
+    path_to_packageid,
+    path_to_version,
+    sort_paths,
 )
+
+
+def _make_listed(name: str = "Unknown Mod", path: str | None = None) -> ListedMod:
+    """Helper to build a ListedMod, optionally with a mod_path."""
+    mod = ListedMod(name=name)
+    if path is not None:
+        object.__setattr__(mod, "_mod_path", Path(path))
+    return mod
+
+
+def _make_about(
+    name: str = "Unknown Mod",
+    package_id: str = "unknown.mod",
+    path: str | None = None,
+    authors: list[str] | None = None,
+    mod_version: str = "",
+) -> AboutXmlMod:
+    """Helper to build an AboutXmlMod, optionally with a mod_path."""
+    mod = AboutXmlMod(
+        name=name,
+        package_id=CaseInsensitiveStr(package_id),
+        authors=authors if authors is not None else [],
+        mod_version=mod_version,
+    )
+    if path is not None:
+        object.__setattr__(mod, "_mod_path", Path(path))
+    return mod
 
 
 @pytest.fixture(autouse=True)
@@ -37,281 +68,268 @@ def _clear_folder_size_cache() -> Generator[None, None, None]:
 
 
 # ---------------------------------------------------------------------------
-# uuid_no_key — identity function
+# path_no_key — identity function
 # ---------------------------------------------------------------------------
 
 
-class TestUuidNoKey:
-    def test_returns_uuid_unchanged(self) -> None:
-        assert uuid_no_key("some-uuid-123") == "some-uuid-123"
+class TestPathNoKey:
+    def test_returns_path_unchanged(self) -> None:
+        assert path_no_key("some-path-123") == "some-path-123"
 
     def test_empty_string(self) -> None:
-        assert uuid_no_key("") == ""
+        assert path_no_key("") == ""
 
 
 # ---------------------------------------------------------------------------
-# uuid_to_mod_name
+# path_to_mod_name
 # ---------------------------------------------------------------------------
 
 
-class TestUuidToModName:
+class TestPathToModName:
     def test_cached_metadata_with_name(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": "MyMod"}}
-        assert uuid_to_mod_name("uuid1", cached) == "mymod"
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="MyMod")}
+        assert path_to_mod_name("uuid1", cached) == "mymod"
 
-    def test_cached_metadata_missing_uuid(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_mod_name("missing", cached) == "name error in mod about.xml"
+    def test_cached_metadata_missing_path(self) -> None:
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_mod_name("missing", cached) == "name error in mod about.xml"
 
-    def test_cached_metadata_name_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": None}}
-        assert uuid_to_mod_name("uuid1", cached) == "name error in mod about.xml"
-
-    def test_cached_metadata_name_is_non_string(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": 42}}
-        assert uuid_to_mod_name("uuid1", cached) == "name error in mod about.xml"
+    def test_cached_metadata_is_none(self) -> None:
+        cached: dict[str, ListedMod | None] = {"uuid1": None}
+        assert path_to_mod_name("uuid1", cached) == "name error in mod about.xml"
 
     def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"name": "TestMod"},
+        metadata_manager_mock.mods_metadata = {
+            "uuid1": _make_listed(name="TestMod"),
         }
-        assert uuid_to_mod_name("uuid1") == "testmod"
+        assert path_to_mod_name("uuid1") == "testmod"
 
     def test_name_preserves_lowercase(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": "ALLCAPS"}}
-        assert uuid_to_mod_name("uuid1", cached) == "allcaps"
-
-    def test_metadata_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": None}
-        assert uuid_to_mod_name("uuid1", cached) == "name error in mod about.xml"
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="ALLCAPS")}
+        assert path_to_mod_name("uuid1", cached) == "allcaps"
 
 
 # ---------------------------------------------------------------------------
-# uuid_to_packageid
+# path_to_packageid
 # ---------------------------------------------------------------------------
 
 
-class TestUuidToPackageid:
+class TestPathToPackageid:
     def test_cached_with_packageid(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"packageid": "author.ModName"}}
-        assert uuid_to_packageid("uuid1", cached) == "author.modname"
-
-    def test_cached_missing_uuid(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_packageid("missing", cached) == ""
-
-    def test_packageid_is_non_string(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"packageid": 123}}
-        assert uuid_to_packageid("uuid1", cached) == ""
-
-    def test_packageid_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"packageid": None}}
-        assert uuid_to_packageid("uuid1", cached) == ""
-
-    def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"packageid": "Author.Mod"},
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", package_id="author.ModName"),
         }
-        assert uuid_to_packageid("uuid1") == "author.mod"
+        assert path_to_packageid("uuid1", cached) == "author.modname"
 
+    def test_cached_missing_path(self) -> None:
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_packageid("missing", cached) == ""
 
-# ---------------------------------------------------------------------------
-# uuid_to_version
-# ---------------------------------------------------------------------------
-
-
-class TestUuidToVersion:
-    def test_cached_with_version(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"modversion": "1.2.3"}}
-        assert uuid_to_version("uuid1", cached) == "1.2.3"
-
-    def test_cached_missing_uuid(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_version("missing", cached) == ""
-
-    def test_version_is_non_string(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"modversion": 100}}
-        assert uuid_to_version("uuid1", cached) == ""
-
-    def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"modversion": "2.0.0-BETA"},
-        }
-        assert uuid_to_version("uuid1") == "2.0.0-beta"
-
-
-# ---------------------------------------------------------------------------
-# uuid_to_mod_color
-# ---------------------------------------------------------------------------
-
-
-class TestUuidToModColor:
-    def test_cached_with_color_hex(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"color_hex": "#FF00AA"}}
-        assert uuid_to_mod_color("uuid1", cached) == "#ff00aa"
-
-    def test_cached_missing_uuid(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_mod_color("missing", cached) == ""
-
-    def test_color_hex_is_non_string(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"color_hex": 0xFF00AA}}
-        assert uuid_to_mod_color("uuid1", cached) == ""
-
-    def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"color_hex": "#AABBCC"},
-        }
-        assert uuid_to_mod_color("uuid1") == "#aabbcc"
-
-
-# ---------------------------------------------------------------------------
-# uuid_to_author — complex multi-format extractor
-# ---------------------------------------------------------------------------
-
-
-class TestUuidToAuthor:
-    def test_dict_li_list(self) -> None:
-        """{'li': ['Author1', 'Author2']} → first author lowercased."""
-        cached: dict[str, Any] = {"uuid1": {"authors": {"li": ["Author1", "Author2"]}}}
-        assert uuid_to_author("uuid1", cached) == "author1"
-
-    def test_dict_li_string(self) -> None:
-        """{'li': 'SingleAuthor'} → lowercased."""
-        cached: dict[str, Any] = {"uuid1": {"authors": {"li": "SingleAuthor"}}}
-        assert uuid_to_author("uuid1", cached) == "singleauthor"
-
-    def test_list_format(self) -> None:
-        """['Author1', 'Author2'] → first author lowercased."""
-        cached: dict[str, Any] = {"uuid1": {"authors": ["Author1", "Author2"]}}
-        assert uuid_to_author("uuid1", cached) == "author1"
-
-    def test_string_format(self) -> None:
-        """'JustAString' → lowercased."""
-        cached: dict[str, Any] = {"uuid1": {"authors": "JustAString"}}
-        assert uuid_to_author("uuid1", cached) == "justastring"
-
-    def test_none_authors(self) -> None:
-        """None → empty string."""
-        cached: dict[str, Any] = {"uuid1": {"authors": None}}
-        assert uuid_to_author("uuid1", cached) == ""
-
-    def test_missing_authors_key(self) -> None:
-        """No 'authors' key at all → empty string."""
-        cached: dict[str, Any] = {"uuid1": {"name": "SomeMod"}}
-        assert uuid_to_author("uuid1", cached) == ""
-
-    def test_empty_list(self) -> None:
-        """[] → empty string."""
-        cached: dict[str, Any] = {"uuid1": {"authors": []}}
-        assert uuid_to_author("uuid1", cached) == ""
-
-    def test_empty_dict(self) -> None:
-        """{} → empty string (no 'li' key)."""
-        cached: dict[str, Any] = {"uuid1": {"authors": {}}}
-        assert uuid_to_author("uuid1", cached) == ""
-
-    def test_dict_li_empty_list(self) -> None:
-        """{'li': []} → empty string."""
-        cached: dict[str, Any] = {"uuid1": {"authors": {"li": []}}}
-        assert uuid_to_author("uuid1", cached) == ""
-
-    def test_missing_uuid(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_author("missing", cached) == ""
+    def test_listed_mod_has_no_packageid(self) -> None:
+        """A ListedMod (not AboutXmlMod) has no package_id, returns empty."""
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="Mod")}
+        assert path_to_packageid("uuid1", cached) == ""
 
     def test_metadata_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": None}
-        assert uuid_to_author("uuid1", cached) == ""
+        cached: dict[str, ListedMod | None] = {"uuid1": None}
+        assert path_to_packageid("uuid1", cached) == ""
 
     def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"authors": "UncachedAuthor"},
+        metadata_manager_mock.mods_metadata = {
+            "uuid1": _make_about(name="Mod", package_id="Author.Mod"),
         }
-        assert uuid_to_author("uuid1") == "uncachedauthor"
+        assert path_to_packageid("uuid1") == "author.mod"
 
 
 # ---------------------------------------------------------------------------
-# uuid_to_filesystem_modified_time
+# path_to_version
 # ---------------------------------------------------------------------------
 
 
-class TestUuidToFilesystemModifiedTime:
+class TestPathToVersion:
+    def test_cached_with_version(self) -> None:
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", mod_version="1.2.3"),
+        }
+        assert path_to_version("uuid1", cached) == "1.2.3"
+
+    def test_cached_missing_path(self) -> None:
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_version("missing", cached) == ""
+
+    def test_listed_mod_has_no_version(self) -> None:
+        """A ListedMod (not AboutXmlMod) has no mod_version, returns empty."""
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="Mod")}
+        assert path_to_version("uuid1", cached) == ""
+
+    def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
+        metadata_manager_mock.mods_metadata = {
+            "uuid1": _make_about(name="Mod", mod_version="2.0.0-BETA"),
+        }
+        assert path_to_version("uuid1") == "2.0.0-beta"
+
+
+# ---------------------------------------------------------------------------
+# path_to_mod_color — now takes path_to_color: dict[str, str]
+# ---------------------------------------------------------------------------
+
+
+class TestPathToModColor:
+    def test_with_color_hex(self) -> None:
+        path_to_color: dict[str, str] = {"uuid1": "#FF00AA"}
+        assert path_to_mod_color("uuid1", path_to_color) == "#ff00aa"
+
+    def test_missing_path(self) -> None:
+        path_to_color: dict[str, str] = {}
+        assert path_to_mod_color("missing", path_to_color) == ""
+
+    def test_no_color_map(self) -> None:
+        assert path_to_mod_color("uuid1") == ""
+
+    def test_none_color_map(self) -> None:
+        assert path_to_mod_color("uuid1", None) == ""
+
+
+# ---------------------------------------------------------------------------
+# path_to_author — complex multi-format extractor
+# ---------------------------------------------------------------------------
+
+
+class TestPathToAuthor:
+    def test_list_format(self) -> None:
+        """['Author1', 'Author2'] -> first author lowercased."""
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", authors=["Author1", "Author2"]),
+        }
+        assert path_to_author("uuid1", cached) == "author1"
+
+    def test_single_author(self) -> None:
+        """['JustAString'] -> lowercased."""
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", authors=["JustAString"]),
+        }
+        assert path_to_author("uuid1", cached) == "justastring"
+
+    def test_empty_authors(self) -> None:
+        """Empty authors list -> empty string."""
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", authors=[]),
+        }
+        assert path_to_author("uuid1", cached) == ""
+
+    def test_listed_mod_has_no_authors(self) -> None:
+        """A ListedMod (not AboutXmlMod) has no authors, returns empty."""
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="SomeMod")}
+        assert path_to_author("uuid1", cached) == ""
+
+    def test_missing_path(self) -> None:
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_author("missing", cached) == ""
+
+    def test_metadata_is_none(self) -> None:
+        cached: dict[str, ListedMod | None] = {"uuid1": None}
+        assert path_to_author("uuid1", cached) == ""
+
+    def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
+        metadata_manager_mock.mods_metadata = {
+            "uuid1": _make_about(name="Mod", authors=["UncachedAuthor"]),
+        }
+        assert path_to_author("uuid1") == "uncachedauthor"
+
+
+# ---------------------------------------------------------------------------
+# path_to_filesystem_modified_time
+# ---------------------------------------------------------------------------
+
+
+class TestPathToFilesystemModifiedTime:
     def test_path_exists(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/mymod", "name": "MyMod"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="MyMod", path="/mods/mymod"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.exists", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=1700000000.5),
         ):
-            result = uuid_to_filesystem_modified_time("uuid1", cached)
+            result = path_to_filesystem_modified_time("uuid1", cached)
         assert result == 1700000000
 
     def test_path_does_not_exist(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/gone", "name": "Gone"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="Gone", path="/mods/gone"),
+        }
         with patch("app.sort.mod_sorting.os.path.exists", return_value=False):
-            result = uuid_to_filesystem_modified_time("uuid1", cached)
+            result = path_to_filesystem_modified_time("uuid1", cached)
         assert result == 0
 
     def test_no_metadata(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_filesystem_modified_time("missing", cached) == 0
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_filesystem_modified_time("missing", cached) == 0
 
     def test_path_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": None}}
-        assert uuid_to_filesystem_modified_time("uuid1", cached) == 0
+        """ListedMod with no mod_path set -> 0."""
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="NoPather")}
+        assert path_to_filesystem_modified_time("uuid1", cached) == 0
 
     def test_uncached_path(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"path": "/mods/test", "name": "Test"},
+        metadata_manager_mock.mods_metadata = {
+            "uuid1": _make_listed(name="Test", path="/mods/test"),
         }
         with (
             patch("app.sort.mod_sorting.os.path.exists", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=1600000000.0),
         ):
-            result = uuid_to_filesystem_modified_time("uuid1")
+            result = path_to_filesystem_modified_time("uuid1")
         assert result == 1600000000
 
 
 # ---------------------------------------------------------------------------
-# uuid_to_folder_size
+# path_to_folder_size
 # ---------------------------------------------------------------------------
 
 
-class TestUuidToFolderSize:
+class TestPathToFolderSize:
     def test_directory_exists(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/mymod"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="MyMod", path="/mods/mymod"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=12345.0),
             patch("app.sort.mod_sorting.get_dir_size", return_value=4096),
         ):
-            result = uuid_to_folder_size("uuid1", cached)
+            result = path_to_folder_size("uuid1", cached)
         assert result == 4096
 
     def test_path_not_a_directory(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/file.txt"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="File", path="/mods/file.txt"),
+        }
         with patch("app.sort.mod_sorting.os.path.isdir", return_value=False):
-            result = uuid_to_folder_size("uuid1", cached)
+            result = path_to_folder_size("uuid1", cached)
         assert result == 0
 
     def test_no_metadata(self) -> None:
-        cached: dict[str, Any] = {}
-        assert uuid_to_folder_size("missing", cached) == 0
+        cached: dict[str, ListedMod | None] = {}
+        assert path_to_folder_size("missing", cached) == 0
 
     def test_path_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": None}}
-        assert uuid_to_folder_size("uuid1", cached) == 0
+        """ListedMod with no mod_path set -> 0."""
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="NoPather")}
+        assert path_to_folder_size("uuid1", cached) == 0
 
     def test_cache_hit_same_mtime(self) -> None:
         """Second call with same mtime returns cached value without calling get_dir_size."""
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/mymod"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="MyMod", path="/mods/mymod"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=12345.0),
             patch("app.sort.mod_sorting.get_dir_size", return_value=8192) as mock_size,
         ):
-            first = uuid_to_folder_size("uuid1", cached)
-            second = uuid_to_folder_size("uuid1", cached)
+            first = path_to_folder_size("uuid1", cached)
+            second = path_to_folder_size("uuid1", cached)
 
         assert first == 8192
         assert second == 8192
@@ -325,7 +343,9 @@ class TestUuidToFolderSize:
         # Pre-populate cache with old mtime
         _FOLDER_SIZE_CACHE["/mods/mymod"] = (10000, 1024)
 
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/mymod"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="MyMod", path="/mods/mymod"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch(
@@ -333,26 +353,28 @@ class TestUuidToFolderSize:
             ),  # different mtime
             patch("app.sort.mod_sorting.get_dir_size", return_value=2048) as mock_size,
         ):
-            result = uuid_to_folder_size("uuid1", cached)
+            result = path_to_folder_size("uuid1", cached)
 
         assert result == 2048
         mock_size.assert_called_once_with("/mods/mymod")
 
     def test_oserror_on_getmtime(self) -> None:
         """OSError during getmtime returns 0."""
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/mymod"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="MyMod", path="/mods/mymod"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch(
                 "app.sort.mod_sorting.os.path.getmtime", side_effect=OSError("denied")
             ),
         ):
-            result = uuid_to_folder_size("uuid1", cached)
+            result = path_to_folder_size("uuid1", cached)
         assert result == 0
 
     def test_metadata_is_none(self) -> None:
-        cached: dict[str, Any] = {"uuid1": None}
-        assert uuid_to_folder_size("uuid1", cached) == 0
+        cached: dict[str, ListedMod | None] = {"uuid1": None}
+        assert path_to_folder_size("uuid1", cached) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -400,13 +422,13 @@ class TestGetDirSize:
 
 
 # ---------------------------------------------------------------------------
-# uuid_to_mod_tags
+# path_to_mod_tags
 # ---------------------------------------------------------------------------
 
 
-class TestUuidToModTags:
+class TestPathToModTags:
     def test_no_settings_controller(self) -> None:
-        assert uuid_to_mod_tags("uuid1", settings_controller=None) == ""
+        assert path_to_mod_tags("uuid1", settings_controller=None) == ""
 
     def test_normal_tags(self) -> None:
         mock_sc = MagicMock()
@@ -414,13 +436,13 @@ class TestUuidToModTags:
             "app.sort.mod_sorting.auxdb_get_mod_tags",
             return_value=["Zebra", "Alpha", "Beta"],
         ):
-            result = uuid_to_mod_tags("uuid1", settings_controller=mock_sc)
+            result = path_to_mod_tags("uuid1", settings_controller=mock_sc)
         assert result == "alpha, beta, zebra"
 
     def test_empty_tags(self) -> None:
         mock_sc = MagicMock()
         with patch("app.sort.mod_sorting.auxdb_get_mod_tags", return_value=[]):
-            result = uuid_to_mod_tags("uuid1", settings_controller=mock_sc)
+            result = path_to_mod_tags("uuid1", settings_controller=mock_sc)
         assert result == ""
 
     def test_exception_returns_empty(self) -> None:
@@ -429,13 +451,13 @@ class TestUuidToModTags:
             "app.sort.mod_sorting.auxdb_get_mod_tags",
             side_effect=RuntimeError("db error"),
         ):
-            result = uuid_to_mod_tags("uuid1", settings_controller=mock_sc)
+            result = path_to_mod_tags("uuid1", settings_controller=mock_sc)
         assert result == ""
 
     def test_single_tag(self) -> None:
         mock_sc = MagicMock()
         with patch("app.sort.mod_sorting.auxdb_get_mod_tags", return_value=["OnlyTag"]):
-            result = uuid_to_mod_tags("uuid1", settings_controller=mock_sc)
+            result = path_to_mod_tags("uuid1", settings_controller=mock_sc)
         assert result == "onlytag"
 
 
@@ -445,15 +467,14 @@ class TestUuidToModTags:
 
 
 class TestGetModMetadata:
-    def test_uuid_exists(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"name": "TestMod"},
-        }
+    def test_path_exists(self, metadata_manager_mock: MagicMock) -> None:
+        mod = _make_listed(name="TestMod")
+        metadata_manager_mock.mods_metadata = {"uuid1": mod}
         result = get_mod_metadata("uuid1")
-        assert result == {"name": "TestMod"}
+        assert result is mod
 
-    def test_uuid_missing(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {}
+    def test_path_missing(self, metadata_manager_mock: MagicMock) -> None:
+        metadata_manager_mock.mods_metadata = {}
         result = get_mod_metadata("nonexistent")
         assert result is None
 
@@ -465,24 +486,22 @@ class TestGetModMetadata:
 
 class TestGetCachedMetadataForBatch:
     def test_basic_batch_fetch(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"name": "Mod1"},
-            "uuid2": {"name": "Mod2"},
-        }
+        mod1 = _make_listed(name="Mod1")
+        mod2 = _make_listed(name="Mod2")
+        metadata_manager_mock.mods_metadata = {"uuid1": mod1, "uuid2": mod2}
         result = get_cached_metadata_for_batch(["uuid1", "uuid2"])
-        assert result["uuid1"] == {"name": "Mod1"}
-        assert result["uuid2"] == {"name": "Mod2"}
+        assert result["uuid1"] is mod1
+        assert result["uuid2"] is mod2
 
-    def test_missing_uuids_map_to_none(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {
-            "uuid1": {"name": "Mod1"},
-        }
+    def test_missing_paths_map_to_none(self, metadata_manager_mock: MagicMock) -> None:
+        mod1 = _make_listed(name="Mod1")
+        metadata_manager_mock.mods_metadata = {"uuid1": mod1}
         result = get_cached_metadata_for_batch(["uuid1", "uuid_missing"])
-        assert result["uuid1"] == {"name": "Mod1"}
+        assert result["uuid1"] is mod1
         assert result["uuid_missing"] is None
 
-    def test_empty_uuids(self, metadata_manager_mock: MagicMock) -> None:
-        metadata_manager_mock.internal_local_metadata = {}
+    def test_empty_paths(self, metadata_manager_mock: MagicMock) -> None:
+        metadata_manager_mock.mods_metadata = {}
         result = get_cached_metadata_for_batch([])
         assert result == {}
 
@@ -494,9 +513,9 @@ class TestGetCachedMetadataForBatch:
 
 class TestBuildSortKeyMap:
     def test_modname_key(self) -> None:
-        cached: dict[str, Any] = {
-            "uuid1": {"name": "Bravo"},
-            "uuid2": {"name": "Alpha"},
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="Bravo"),
+            "uuid2": _make_listed(name="Alpha"),
         }
         result = _build_sort_key_map(
             ["uuid1", "uuid2"], ModsPanelSortKey.MODNAME, cached
@@ -504,33 +523,44 @@ class TestBuildSortKeyMap:
         assert result["uuid1"] == "bravo"
         assert result["uuid2"] == "alpha"
 
-    def test_nokey_returns_uuid(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": "Irrelevant"}}
+    def test_nokey_returns_path(self) -> None:
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="Irrelevant")}
         result = _build_sort_key_map(["uuid1"], ModsPanelSortKey.NOKEY, cached)
         assert result["uuid1"] == "uuid1"
 
     def test_packageid_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"packageid": "Author.Pkg"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", package_id="Author.Pkg"),
+        }
         result = _build_sort_key_map(["uuid1"], ModsPanelSortKey.PACKAGEID, cached)
         assert result["uuid1"] == "author.pkg"
 
     def test_version_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"modversion": "1.0.0"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", mod_version="1.0.0"),
+        }
         result = _build_sort_key_map(["uuid1"], ModsPanelSortKey.VERSION, cached)
         assert result["uuid1"] == "1.0.0"
 
     def test_author_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"authors": "SomeAuthor"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_about(name="Mod", authors=["SomeAuthor"]),
+        }
         result = _build_sort_key_map(["uuid1"], ModsPanelSortKey.AUTHOR, cached)
         assert result["uuid1"] == "someauthor"
 
     def test_mod_color_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"color_hex": "#ABC123"}}
-        result = _build_sort_key_map(["uuid1"], ModsPanelSortKey.MOD_COLOR, cached)
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="Mod")}
+        path_to_color: dict[str, str] = {"uuid1": "#ABC123"}
+        result = _build_sort_key_map(
+            ["uuid1"], ModsPanelSortKey.MOD_COLOR, cached, path_to_color=path_to_color
+        )
         assert result["uuid1"] == "#abc123"
 
     def test_filesystem_modified_time_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/m", "name": "M"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="M", path="/mods/m"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.exists", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=1700000000.0),
@@ -541,7 +571,9 @@ class TestBuildSortKeyMap:
         assert result["uuid1"] == 1700000000
 
     def test_folder_size_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"path": "/mods/m"}}
+        cached: dict[str, ListedMod | None] = {
+            "uuid1": _make_listed(name="M", path="/mods/m"),
+        }
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=100.0),
@@ -553,7 +585,7 @@ class TestBuildSortKeyMap:
         assert result["uuid1"] == 999
 
     def test_mod_tags_key(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": "M"}}
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="M")}
         mock_sc = MagicMock()
         with patch(
             "app.sort.mod_sorting.auxdb_get_mod_tags",
@@ -569,21 +601,21 @@ class TestBuildSortKeyMap:
 
 
 # ---------------------------------------------------------------------------
-# sort_uuids — orchestration
+# sort_paths — orchestration
 # ---------------------------------------------------------------------------
 
 
-class TestSortUuids:
-    _three_mod_cached: dict[str, Any] = {
-        "uuid_z": {"name": "Zebra"},
-        "uuid_a": {"name": "Alpha"},
-        "uuid_m": {"name": "Middle"},
+class TestSortPaths:
+    _three_mod_cached: dict[str, ListedMod | None] = {
+        "uuid_z": _make_listed(name="Zebra"),
+        "uuid_a": _make_listed(name="Alpha"),
+        "uuid_m": _make_listed(name="Middle"),
     }
-    _three_mod_uuids = ["uuid_z", "uuid_a", "uuid_m"]
+    _three_mod_paths = ["uuid_z", "uuid_a", "uuid_m"]
 
     def test_sort_by_modname_ascending(self) -> None:
-        result = sort_uuids(
-            self._three_mod_uuids,
+        result = sort_paths(
+            self._three_mod_paths,
             ModsPanelSortKey.MODNAME,
             descending=False,
             cached_metadata=self._three_mod_cached,
@@ -591,8 +623,8 @@ class TestSortUuids:
         assert result == ["uuid_a", "uuid_m", "uuid_z"]
 
     def test_sort_by_modname_descending(self) -> None:
-        result = sort_uuids(
-            self._three_mod_uuids,
+        result = sort_paths(
+            self._three_mod_paths,
             ModsPanelSortKey.MODNAME,
             descending=True,
             cached_metadata=self._three_mod_cached,
@@ -601,11 +633,11 @@ class TestSortUuids:
 
     def test_descending_none_uses_default_flags(self) -> None:
         """When descending=None, uses DEFAULT_REVERSE_FLAGS (all False = ascending)."""
-        cached: dict[str, Any] = {
-            "uuid_b": {"name": "Bravo"},
-            "uuid_a": {"name": "Alpha"},
+        cached: dict[str, ListedMod | None] = {
+            "uuid_b": _make_listed(name="Bravo"),
+            "uuid_a": _make_listed(name="Alpha"),
         }
-        result = sort_uuids(
+        result = sort_paths(
             ["uuid_b", "uuid_a"],
             ModsPanelSortKey.MODNAME,
             descending=None,
@@ -615,13 +647,13 @@ class TestSortUuids:
         assert result == ["uuid_a", "uuid_b"]
 
     def test_sort_preserves_original_list(self) -> None:
-        """sort_uuids returns a new list; original is not mutated."""
-        cached: dict[str, Any] = {
-            "uuid_b": {"name": "Bravo"},
-            "uuid_a": {"name": "Alpha"},
+        """sort_paths returns a new list; original is not mutated."""
+        cached: dict[str, ListedMod | None] = {
+            "uuid_b": _make_listed(name="Bravo"),
+            "uuid_a": _make_listed(name="Alpha"),
         }
         original = ["uuid_b", "uuid_a"]
-        result = sort_uuids(
+        result = sort_paths(
             original,
             ModsPanelSortKey.MODNAME,
             cached_metadata=cached,
@@ -630,7 +662,7 @@ class TestSortUuids:
         assert original == ["uuid_b", "uuid_a"]
 
     def test_sort_empty_list(self) -> None:
-        result = sort_uuids(
+        result = sort_paths(
             [],
             ModsPanelSortKey.MODNAME,
             cached_metadata={},
@@ -638,8 +670,8 @@ class TestSortUuids:
         assert result == []
 
     def test_sort_single_item(self) -> None:
-        cached: dict[str, Any] = {"uuid1": {"name": "Only"}}
-        result = sort_uuids(
+        cached: dict[str, ListedMod | None] = {"uuid1": _make_listed(name="Only")}
+        result = sort_paths(
             ["uuid1"],
             ModsPanelSortKey.MODNAME,
             cached_metadata=cached,
@@ -647,13 +679,13 @@ class TestSortUuids:
         assert result == ["uuid1"]
 
     def test_sort_by_nokey_preserves_relative_order(self) -> None:
-        """NOKEY sorts by UUID string value (lexicographic)."""
-        cached: dict[str, Any] = {
-            "uuid_c": {"name": "C"},
-            "uuid_a": {"name": "A"},
-            "uuid_b": {"name": "B"},
+        """NOKEY sorts by path string value (lexicographic)."""
+        cached: dict[str, ListedMod | None] = {
+            "uuid_c": _make_listed(name="C"),
+            "uuid_a": _make_listed(name="A"),
+            "uuid_b": _make_listed(name="B"),
         }
-        result = sort_uuids(
+        result = sort_paths(
             ["uuid_c", "uuid_a", "uuid_b"],
             ModsPanelSortKey.NOKEY,
             cached_metadata=cached,

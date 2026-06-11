@@ -7,7 +7,7 @@ from loguru import logger
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QCheckBox
 
-from app.utils.metadata import MetadataManager
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.mod_info import ModInfo
 from app.views import dialogue
 from app.windows.base_mods_panel import (
@@ -309,44 +309,51 @@ class UseThisInsteadPanel(BaseModsPanel):
 
     def _check_replacement_exists_locally(self, pfid: str) -> tuple[bool, str | None]:
         """
-        Check if replacement mod exists locally and get its UUID.
+        Check if replacement mod exists locally and get its path key.
 
         Args:
             pfid: Published file ID.
 
         Returns:
-            Tuple of (exists_locally, uuid).
+            Tuple of (exists_locally, path_key).
         """
-        exists_locally = any(
-            mod.get("publishedfileid") == pfid
-            for mod in self.metadata_manager.internal_local_metadata.values()
-        )
-        uuid = None
-        if exists_locally:
-            for (
-                mod_uuid,
-                mod_metadata,
-            ) in self.metadata_manager.internal_local_metadata.items():
-                if mod_metadata.get("publishedfileid") == pfid:
-                    uuid = mod_uuid
-                    break
-        return exists_locally, uuid
+        for path, mod in self.metadata_controller.mods_metadata.items():
+            if mod.published_file_id == pfid:
+                return True, path
+        return False, None
 
     def _get_local_metadata_for_replacement(
-        self, uuid: str | None
+        self, path: str | None
     ) -> dict[str, Any] | None:
         """
-        Retrieve local metadata for a replacement mod if it exists.
+        Retrieve local metadata for a replacement mod as a compat dict, if it exists.
 
         Args:
-            uuid: UUID of the replacement mod.
+            path: Path key of the replacement mod.
 
         Returns:
-            Local metadata dictionary or None if not found.
+            Local metadata as a compat dictionary or None if not found.
         """
-        if uuid and uuid in self.metadata_manager.internal_local_metadata:
-            return self.metadata_manager.internal_local_metadata[uuid]
-        return None
+        if not path:
+            return None
+        mod = self.metadata_controller.get_mod(path)
+        if mod is None:
+            return None
+        # Build a compat dict for downstream merge
+        compat: dict[str, Any] = {
+            "path": str(mod.mod_path) if mod.mod_path else "",
+            "internal_time_touched": mod.internal_time_touched,
+            "source": str(mod.mod_type.value) if mod.mod_type else "",
+        }
+        if isinstance(mod, AboutXmlMod):
+            compat["supportedversions"] = sorted(mod.supported_versions)
+        else:
+            compat["supportedversions"] = None
+        # Get external_time_updated from aux DB
+        _, aux_entry = self.metadata_controller.get_metadata_with_path(path)
+        if aux_entry is not None:
+            compat["external_time_updated"] = aux_entry.external_time_updated
+        return compat
 
     def _merge_local_and_external_metadata(
         self, external_metadata: dict[str, Any], local_metadata: dict[str, Any] | None
@@ -476,10 +483,9 @@ class UseThisInsteadPanel(BaseModsPanel):
             Dictionary of mods with their alternatives.
         """
         try:
-            metadata_manager = MetadataManager.instance()
             alternatives: dict[str, Any] = {}
             for mod in self.mod_metadata:
-                alt = metadata_manager.has_alternative_mod(mod)
+                alt = self.metadata_controller.has_alternative_mod(mod)
                 if alt is not None:
                     alternatives[mod] = alt
             return alternatives
@@ -568,11 +574,11 @@ class UseThisInsteadPanel(BaseModsPanel):
             else:
                 metadata = mod_item.metadata
 
-            # Retrieve UUID for the mod from the directory mapper
+            # Path IS the key in the new metadata system
             path = metadata.get("path")
             uuid = (
-                self.metadata_manager.mod_metadata_dir_mapper.get(path)
-                if isinstance(path, str)
+                path
+                if isinstance(path, str) and self.metadata_controller.has_mod(path)
                 else None
             )
 
@@ -600,31 +606,18 @@ class UseThisInsteadPanel(BaseModsPanel):
         Returns:
             tuple:
                 - exists_locally (bool): True if exists locally.
-                - uuid (str | None): UUID if exists locally.
-                - local_metadata (dict | None): Local metadata dict or None.
+                - path (str | None): Path key if exists locally.
+                - local_metadata (dict | None): Compat metadata dict or None.
         """
-        exists_locally = False
-        uuid = None
-        local_metadata = None
         try:
-            exists_locally = any(
-                mod.get("publishedfileid") == pfid
-                for mod in self.metadata_manager.internal_local_metadata.values()
-            )
-            if exists_locally:
-                for (
-                    mod_uuid,
-                    mod_metadata,
-                ) in self.metadata_manager.internal_local_metadata.items():
-                    if mod_metadata.get("publishedfileid") == pfid:
-                        uuid = mod_uuid
-                        local_metadata = mod_metadata
-                        break
+            exists_locally, path = self._check_replacement_exists_locally(pfid)
+            local_metadata = self._get_local_metadata_for_replacement(path)
+            return exists_locally, path, local_metadata
         except Exception as e:
             logger.error(
                 f"Error checking local replacement metadata for pfid {pfid}: {e}"
             )
-        return exists_locally, uuid, local_metadata
+        return False, None, None
 
     def _create_replacement_mod_info(self, mod_replacement: Any) -> "ModInfo":
         """

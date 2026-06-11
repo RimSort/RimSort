@@ -5,12 +5,14 @@ from loguru import logger
 from PySide6.QtCore import QObject, Qt, Slot
 from sqlalchemy import delete, update
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.event_bus import EventBus
 from app.views.dialogue import BinaryChoiceDialog
-from app.views.mods_panel import ModListWidget, ModsPanel
+from app.views.mods_panel import ModsPanel
 
 
 class ModsPanelController(QObject):
@@ -108,6 +110,7 @@ class ModsPanelController(QObject):
         )
         if not binary_diag.exec_is_positive():
             return
+        metadata_controller = MetadataController.instance()
         # Do visible mods first to resize the visible widgets
         loaded_active_mods = (
             self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
@@ -115,9 +118,10 @@ class ModsPanelController(QObject):
         loaded_inactive_mods = self.mods_panel.inactive_mods_list.get_all_loaded_and_toggled_mod_list_items()
         mods_done = set()
         for loaded_mod in loaded_active_mods + loaded_inactive_mods:
-            package_id = loaded_mod.metadata_manager.internal_local_metadata.get(
-                loaded_mod.uuid, {}
-            ).get("packageid")
+            mod = metadata_controller.get_mod(loaded_mod.uuid)
+            package_id = (
+                str(mod.package_id) if mod and isinstance(mod, AboutXmlMod) else None
+            )
             loaded_mod.toggle_warning_signal.emit(package_id, loaded_mod.uuid)
             mods_done.add(loaded_mod.uuid)
 
@@ -134,12 +138,9 @@ class ModsPanelController(QObject):
             if mod_data["warning_toggled"]:
                 mod_data["warning_toggled"] = False
                 mod.setData(Qt.ItemDataRole.UserRole, mod_data)
-                widget = mod.listWidget()
-                # Widget should always be of type ModListWidget
-                if isinstance(widget, ModListWidget):
-                    package_id = widget.metadata_manager.internal_local_metadata[
-                        mod_data["uuid"]
-                    ]["packageid"]
+                mod_obj = metadata_controller.get_mod(uuid)
+                if mod_obj is not None and isinstance(mod_obj, AboutXmlMod):
+                    package_id = str(mod_obj.package_id)
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
                     aux_metadata_controller = (
@@ -152,10 +153,8 @@ class ModsPanelController(QObject):
                             "Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset."
                         )
                         return
+                    mod_path = str(mod_obj.mod_path) if mod_obj.mod_path else uuid
                     with aux_metadata_controller.Session() as aux_metadata_session:
-                        mod_path = widget.metadata_manager.internal_local_metadata[
-                            uuid
-                        ]["path"]
                         aux_metadata_controller.update(
                             aux_metadata_session,
                             mod_path,

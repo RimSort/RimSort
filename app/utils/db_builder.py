@@ -10,6 +10,8 @@ from PySide6.QtWidgets import QMessageBox
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.windows.runner_panel import RunnerPanel
@@ -49,7 +51,7 @@ class DatabaseBuilder(QObject):
             logger.info("Initializing DatabaseBuilder")
 
             self.settings_controller = settings_controller
-            self.metadata_manager = metadata.MetadataManager.instance()
+            self.metadata_controller = MetadataController.instance()
             self.query_runner: RunnerPanel | None = None
 
             logger.info("Finished DatabaseBuilder initialization")
@@ -129,7 +131,7 @@ class DatabaseBuilder(QObject):
         }
 
         if mode == self.MODE_ALL_MODS:
-            base_kwargs["mods"] = self.metadata_manager.internal_local_metadata
+            base_kwargs["mods"] = self.metadata_controller.mods_metadata
 
         return metadata.SteamDatabaseBuilder(**base_kwargs)
 
@@ -182,18 +184,15 @@ class DatabaseBuilder(QObject):
         """
         existing_ids: set[str] = set()
 
-        for mod_metadata in self.metadata_manager.internal_local_metadata.values():
-            mod_pfid = mod_metadata.get("publishedfileid")
+        for mod in self.metadata_controller.mods_metadata.values():
+            mod_pfid = mod.published_file_id
             if not mod_pfid:
                 continue
 
-            if check_mode == "steamcmd" and mod_metadata.get("steamcmd"):
+            if check_mode == "steamcmd" and mod.mod_type == ModType.STEAM_CMD:
                 logger.debug(f"Skipping download of existing SteamCMD mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
-            elif (
-                check_mode == "steamworks"
-                and mod_metadata.get("data_source") == "workshop"
-            ):
+            elif check_mode == "steamworks" and mod.mod_type == ModType.STEAM_WORKSHOP:
                 logger.warning(f"Skipping download of existing Steam mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
 

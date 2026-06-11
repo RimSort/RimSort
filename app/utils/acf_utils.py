@@ -11,7 +11,7 @@ gracefully and provides logging for debugging and monitoring.
 
 Key functions:
 - load_acf_from_path: Safely load and parse ACF files
-- refresh_acf_metadata: Load ACF data into MetadataManager
+- refresh_acf_metadata: Load ACF data into MetadataController
 - load_and_merge_acf_data: Merge ACF data from multiple sources
 - steamcmd_purge_mods: Remove mods from SteamCMD ACF metadata
 - validate_acf_file_exists: Validate that appworkshop_294100.acf exists
@@ -26,7 +26,10 @@ from loguru import logger
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 
 if TYPE_CHECKING:
-    from app.utils.metadata import MetadataManager
+    from app.controllers.metadata_controller import MetadataController
+    from app.utils.metadata import (
+        MetadataManager,  # noqa: F401 — used in string annotations
+    )
 
 
 def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
@@ -68,48 +71,50 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
 
 
 def refresh_acf_metadata(
-    metadata_manager: "MetadataManager", steamclient: bool = True, steamcmd: bool = True
+    metadata_controller: "MetadataController | MetadataManager",
+    steamclient: bool = True,
+    steamcmd: bool = True,
 ) -> None:
     """
     Load and cache ACF metadata from Steam and SteamCMD sources.
 
     Parses appworkshop_294100.acf files from both Steam client and SteamCMD
-    installations, storing the results in MetadataManager for later use.
+    installations, storing the results for later use.
     Each source is loaded independently; errors in one do not affect the other.
-    This function is typically called during application startup or when
-    refreshing metadata cache.
 
-    Args:
-        metadata_manager: The MetadataManager instance to update with ACF data.
-                         Must have workshop_acf_path and steamcmd_wrapper configured.
-        steamclient: If True, load Steam client ACF data. Defaults to True.
-        steamcmd: If True, load SteamCMD ACF data. Defaults to True.
+    Accepts either MetadataController (new) or MetadataManager (legacy).
 
-    Note:
-        - Steam client ACF data is stored in metadata_manager.workshop_acf_data
-        - SteamCMD ACF data is stored in metadata_manager.steamcmd_acf_data
-        - Failed loads are logged but don't raise exceptions
+    :param metadata_controller: The MetadataController or MetadataManager instance.
+    :param steamclient: If True, load Steam client ACF data. Defaults to True.
+    :param steamcmd: If True, load SteamCMD ACF data. Defaults to True.
     """
     # Load Steam client appworkshop_294100.acf if enabled
     if steamclient:
-        workshop_data = load_acf_from_path(metadata_manager.workshop_acf_path)
-        if workshop_data:
-            metadata_manager.workshop_acf_data = workshop_data
-            logger.info(
-                f"Successfully parsed Steam client appworkshop.acf metadata from: {metadata_manager.workshop_acf_path}"
-            )
+        workshop_acf_path = metadata_controller.workshop_acf_path
+        if workshop_acf_path is not None:
+            workshop_data = load_acf_from_path(workshop_acf_path)
+            if workshop_data:
+                metadata_controller.workshop_acf_data = workshop_data
+                logger.info(
+                    f"Successfully parsed Steam client appworkshop.acf metadata from: {workshop_acf_path}"
+                )
+            else:
+                logger.warning("Failed to load Steam client ACF data")
         else:
-            logger.warning("Failed to load Steam client ACF data")
+            logger.warning(
+                "Workshop ACF path not configured, skipping Steam client ACF"
+            )
 
     # Load SteamCMD appworkshop_294100.acf if enabled
     if steamcmd:
-        steamcmd_data = load_acf_from_path(
-            metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        steamcmd_acf_path_val = (
+            metadata_controller.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
+        steamcmd_data = load_acf_from_path(steamcmd_acf_path_val)
         if steamcmd_data:
-            metadata_manager.steamcmd_acf_data = steamcmd_data
+            metadata_controller.steamcmd_acf_data = steamcmd_data
             logger.info(
-                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {steamcmd_acf_path_val}"
             )
         else:
             logger.warning("Failed to load SteamCMD ACF data")
@@ -247,43 +252,29 @@ def _merge_workshop_items_from_sources(
 
 
 def get_acf_workshop_items(
-    metadata_manager: "MetadataManager",
+    metadata_controller: "MetadataController | MetadataManager",
 ) -> tuple[list[tuple[str, str, int | None]], dict[str, Any], dict[str, Any]]:
     """
     Merge and deduplicate workshop items from both SteamCMD and Steam sources.
 
-    Uses cached ACF data from MetadataManager to combine workshop item entries
-    from both ACF sources. Prioritizes SteamCMD items over Steam items when
-    duplicates are found (same PFID). This function is used by the ACF log reader
-    to display workshop items from both installations.
+    Uses cached ACF data to combine workshop item entries from both ACF sources.
+    Prioritizes SteamCMD items over Steam items when duplicates are found.
 
-    Args:
-        metadata_manager: The MetadataManager instance containing cached ACF data.
-                         Must have steamcmd_acf_data and workshop_acf_data populated
-                         (typically via refresh_acf_metadata).
+    Accepts either MetadataController (new) or MetadataManager (legacy).
 
-    Returns:
-        Tuple of (entries, steamcmd_acf_data, workshop_acf_data) where:
-        - entries: List of (pfid, source, timeupdated) tuples with deduplication
-          applied. Source is "SteamCMD" or "Steam", timeupdated is parsed int or None.
-        - steamcmd_acf_data: Raw SteamCMD ACF data dict (may be None)
-        - workshop_acf_data: Raw Steam Workshop ACF data dict (may be None)
-
-    Note:
-        - Returns empty lists/dicts if no ACF data is cached
-        - SteamCMD items take precedence over Steam items for same PFID
-        - Invalid timeupdated values are logged but included with None timestamp
+    :param metadata_controller: Instance containing cached ACF data.
+    :return: Tuple of (entries, steamcmd_acf_data, workshop_acf_data)
     """
     # Extract workshop items from cached SteamCMD ACF data
     steamcmd_items = (
-        get_workshop_items_from_acf(metadata_manager.steamcmd_acf_data)
-        if metadata_manager.steamcmd_acf_data
+        get_workshop_items_from_acf(metadata_controller.steamcmd_acf_data)
+        if metadata_controller.steamcmd_acf_data
         else {}
     )
     # Extract workshop items from cached Steam ACF data
     workshop_items = (
-        get_workshop_items_from_acf(metadata_manager.workshop_acf_data)
-        if metadata_manager.workshop_acf_data
+        get_workshop_items_from_acf(metadata_controller.workshop_acf_data)
+        if metadata_controller.workshop_acf_data
         else {}
     )
 
@@ -294,8 +285,8 @@ def get_acf_workshop_items(
 
     return (
         entries,
-        metadata_manager.steamcmd_acf_data,
-        metadata_manager.workshop_acf_data,
+        metadata_controller.steamcmd_acf_data,
+        metadata_controller.workshop_acf_data,
     )
 
 
@@ -376,7 +367,7 @@ def _extract_manifest_ids_and_remove_pfid(
 
 
 def steamcmd_purge_mods(
-    metadata_manager: "MetadataManager",
+    metadata_controller: "MetadataController | MetadataManager",
     publishedfileids: set[str],
     auto_clear_enabled: bool = True,
 ) -> None:
@@ -384,33 +375,13 @@ def steamcmd_purge_mods(
     Remove mods from SteamCMD installation and clean up associated files.
 
     Deletes specified workshop items from the SteamCMD appworkshop_294100.acf file
-    and removes associated manifest files from the depotcache directory. Handles
-    both WorkshopItemsInstalled and WorkshopItemDetails sections to ensure
-    complete removal.
+    and removes associated manifest files from the depotcache directory.
 
-    This function is called when mods are deleted from the mod list to keep the
-    SteamCMD installation synchronized. It's designed to be robust and continue
-    operation even if some files are missing or operations fail.
+    Accepts either MetadataController (new) or MetadataManager (legacy).
 
-    Args:
-        metadata_manager: The MetadataManager instance with SteamCMD paths
-                         configured. Must have steamcmd_wrapper with valid paths.
-        publishedfileids: Set of published file IDs (PFIDs) as strings to remove
-                         from SteamCMD. These correspond to workshop item IDs.
-        auto_clear_enabled: Whether to perform the purge operation. If False,
-                           returns early without making any changes. Defaults to True.
-
-    Note:
-        The operation is tolerant of missing files and parsing errors:
-        - If auto_clear_enabled is False, returns early without error
-        - If ACF file is missing, returns early without error
-        - If parsing fails, returns early without error
-        - Individual manifest file deletions are logged but don't halt the operation
-        - No exceptions are raised; all errors are logged instead
-
-    Example:
-        >>> steamcmd_purge_mods(metadata_manager, {"123456789", "987654321"})
-        # Removes the specified mods from SteamCMD ACF and deletes manifest files
+    :param metadata_controller: Instance with SteamCMD paths configured.
+    :param publishedfileids: Set of published file IDs (PFIDs) as strings to remove.
+    :param auto_clear_enabled: Whether to perform the purge operation. Defaults to True.
     """
     # Return early if auto-clear is not enabled
     if not auto_clear_enabled:
@@ -418,7 +389,7 @@ def steamcmd_purge_mods(
         return
 
     # Load SteamCMD workshop ACF metadata file
-    acf_path = metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+    acf_path = metadata_controller.steamcmd_wrapper.steamcmd_appworkshop_acf_path
     acf_metadata = load_acf_from_path(acf_path)
     if not acf_metadata:
         logger.warning(
@@ -427,7 +398,7 @@ def steamcmd_purge_mods(
         return
 
     # Get depotcache directory path for manifest file cleanup
-    depotcache_path = metadata_manager.steamcmd_wrapper.steamcmd_depotcache_path
+    depotcache_path = metadata_controller.steamcmd_wrapper.steamcmd_depotcache_path
 
     # Extract workshop sections from ACF metadata
     workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(

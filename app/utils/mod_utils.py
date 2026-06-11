@@ -4,23 +4,21 @@ from typing import Any
 
 from loguru import logger
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod
 
 
 def get_mod_path_from_pfid(pfid: str) -> str | None:
     """
     Get the mod path from a published file ID.
 
-    Args:
-        pfid: Published file ID.
-
-    Returns:
-        Mod path if found, None otherwise.
+    :param pfid: Published file ID.
+    :return: Mod path if found, None otherwise.
     """
-    metadata_manager = MetadataManager.instance()
-    for metadata in metadata_manager.internal_local_metadata.values():
-        if metadata.get("publishedfileid") == pfid:
-            return metadata.get("path")
+    metadata_controller = MetadataController.instance()
+    for path, mod in metadata_controller.mods_metadata.items():
+        if mod.published_file_id == pfid:
+            return path
     return None
 
 
@@ -28,11 +26,8 @@ def get_mod_name_from_pfid(pfid: str | int | None) -> str:
     """
     Get a mod's name from its PublishedFileID.
 
-    Args:
-        pfid: The PublishedFileID to lookup (str, int or None)
-
-    Returns:
-        str: The mod name or "Unknown Mod" if not found
+    :param pfid: The PublishedFileID to lookup (str, int or None)
+    :return: The mod name or "Unknown Mod" if not found
     """
     if not pfid:
         return "Unknown Mod"
@@ -41,44 +36,38 @@ def get_mod_name_from_pfid(pfid: str | int | None) -> str:
     if not pfid_str.isdigit():
         return f"Invalid ID: {pfid_str}"
 
-    metadata_manager = MetadataManager.instance()
+    metadata_controller = MetadataController.instance()
 
-    # First check internal local metadata
-    for metadata in metadata_manager.internal_local_metadata.values():
-        if metadata.get("publishedfileid") == pfid_str:
-            name = metadata.get("name") or metadata.get("steamName")
-            return name if name else f"Invalid ID: {pfid_str}"
+    # First check parsed mods metadata
+    for mod in metadata_controller.mods_metadata.values():
+        if mod.published_file_id == pfid_str:
+            return mod.name if mod.name else f"Invalid ID: {pfid_str}"
 
-    # Then check external steam metadata if available
-    if hasattr(metadata_manager, "external_steam_metadata"):
-        steam_metadata = getattr(metadata_manager, "external_steam_metadata", {})
-        if isinstance(steam_metadata, dict) and pfid_str in steam_metadata:
-            metadata = steam_metadata[pfid_str]
-            if isinstance(metadata, dict):
-                name = metadata.get("title") or metadata.get("name")
-                return name if name else f"Invalid ID: {pfid_str}"
+    # Then check SteamDB if available
+    steam_db = metadata_controller.steam_db
+    if steam_db is not None and pfid_str in steam_db.database:
+        entry = steam_db.database[pfid_str]
+        name = entry.steamName or entry.name
+        return name if name else f"Invalid ID: {pfid_str}"
 
     return f"Invalid ID: {pfid_str}"
 
 
-def get_mod_paths_from_uuids(uuids: list[str]) -> list[str]:
+def get_mod_paths(paths: list[str]) -> list[str]:
     """
-    Get mod paths from a list of UUIDs.
+    Filter a list of mod paths to only include valid, existing directories.
 
-    Args:
-        uuids: List of mod UUID strings.
-
-    Returns:
-        List of mod folder paths corresponding to the UUIDs.
+    :param paths: List of mod path strings.
+    :return: List of mod folder paths that exist on disk.
     """
-    metadata_manager = MetadataManager.instance()
+    metadata_controller = MetadataController.instance()
     mod_paths = []
 
-    for uuid in uuids:
-        if uuid in metadata_manager.internal_local_metadata:
-            mod_path = metadata_manager.internal_local_metadata[uuid]["path"]
-            if mod_path and os.path.isdir(mod_path):
-                mod_paths.append(mod_path)
+    for path in paths:
+        if path in metadata_controller.mods_metadata:
+            mod = metadata_controller.mods_metadata[path]
+            if mod.mod_path and os.path.isdir(str(mod.mod_path)):
+                mod_paths.append(str(mod.mod_path))
 
     return mod_paths
 
@@ -99,7 +88,7 @@ def _format_timestamp(ts: int) -> str:
 
 
 def filter_eligible_mods_for_update(
-    internal_local_metadata: dict[str, dict[str, Any]],
+    mods_metadata: dict[str, ListedMod],
 ) -> list[dict[str, Any]]:
     """
     Filter mods that are eligible for update.
@@ -108,14 +97,11 @@ def filter_eligible_mods_for_update(
     has a valid internal timestamp, has a valid external timestamp, and the
     external timestamp is strictly newer than the internal one.
 
-    The internal timestamp is resolved with a fallback chain:
-    ``internal_time_touched`` is preferred; if absent or zero,
-    ``internal_time_updated`` is used instead.
-
-    :param internal_local_metadata: Dictionary of internal local metadata
-        keyed by UUID.
+    :param mods_metadata: Dictionary of mods metadata keyed by path.
     :return: List of metadata dictionaries for mods eligible for update.
     """
+    from app.models.metadata.metadata_structure import ModType
+
     eligible: list[dict[str, Any]] = []
 
     skipped_not_workshop = 0
@@ -124,15 +110,15 @@ def filter_eligible_mods_for_update(
     skipped_up_to_date = 0
     total = 0
 
-    for uuid, metadata in internal_local_metadata.items():
+    metadata_controller = MetadataController.instance()
+
+    for path, mod in mods_metadata.items():
         total += 1
-        mod_name = metadata.get("name", uuid)
-        pfid = metadata.get("publishedfileid", "N/A")
+        mod_name = mod.name
+        pfid = mod.published_file_id or "N/A"
 
         # Must be a workshop/steamcmd mod
-        is_workshop = (
-            metadata.get("steamcmd") or metadata.get("data_source") == "workshop"
-        )
+        is_workshop = mod.mod_type in (ModType.STEAM_WORKSHOP, ModType.STEAM_CMD)
         if not is_workshop:
             skipped_not_workshop += 1
             logger.debug(
@@ -146,15 +132,17 @@ def filter_eligible_mods_for_update(
         internal_time: int | None = None
         timestamp_source: str = "none"
 
-        raw_touched = metadata.get("internal_time_touched")
-        raw_updated = metadata.get("internal_time_updated")
-
-        if raw_touched and int(raw_touched) > 0:
-            internal_time = int(raw_touched)
+        raw_touched = mod.internal_time_touched
+        if raw_touched > 0:
+            internal_time = raw_touched
             timestamp_source = "internal_time_touched"
-        elif raw_updated and int(raw_updated) > 0:
-            internal_time = int(raw_updated)
-            timestamp_source = "internal_time_updated (fallback)"
+
+        # Fallback to ACF timestamps from aux DB
+        if internal_time is None:
+            _, aux_entry = metadata_controller.get_metadata_with_path(path)
+            if aux_entry is not None and aux_entry.acf_time_updated > 0:
+                internal_time = aux_entry.acf_time_updated
+                timestamp_source = "acf_time_updated (fallback)"
 
         if internal_time is None:
             skipped_no_internal_time += 1
@@ -165,9 +153,14 @@ def filter_eligible_mods_for_update(
             )
             continue
 
-        # External timestamp
-        raw_external = metadata.get("external_time_updated")
-        if not raw_external or int(raw_external) <= 0:
+        # External timestamp from aux DB
+        _, aux_entry = metadata_controller.get_metadata_with_path(path)
+        external_time = (
+            aux_entry.external_time_updated
+            if aux_entry is not None and aux_entry.external_time_updated > 0
+            else 0
+        )
+        if external_time <= 0:
             skipped_no_external_time += 1
             logger.debug(
                 "[mod_update] SKIP (no external time) mod={mod_name!r} pfid={pfid}",
@@ -175,13 +168,28 @@ def filter_eligible_mods_for_update(
                 pfid=pfid,
             )
             continue
-        external_time = int(raw_external)
 
         delta = external_time - internal_time
         delta_days = delta / 86400
 
         if external_time > internal_time:
-            eligible.append(metadata)
+            # Build a compat dict for ModInfo.from_metadata consumption
+            compat_metadata: dict[str, Any] = {
+                "name": mod.name,
+                "publishedfileid": mod.published_file_id or "",
+                "path": str(mod.mod_path) if mod.mod_path else "",
+                "data_source": (
+                    "workshop" if mod.mod_type == ModType.STEAM_WORKSHOP else "steamcmd"
+                ),
+                "steamcmd": mod.mod_type == ModType.STEAM_CMD,
+                "internal_time_touched": mod.internal_time_touched,
+                "external_time_updated": external_time,
+            }
+            if isinstance(mod, AboutXmlMod):
+                compat_metadata["packageid"] = str(mod.package_id)
+                compat_metadata["authors"] = mod.authors
+                compat_metadata["supportedversions"] = sorted(mod.supported_versions)
+            eligible.append(compat_metadata)
             logger.debug(
                 "[mod_update] ELIGIBLE mod={mod_name!r} pfid={pfid} "
                 "internal={internal_fmt} external={external_fmt} "

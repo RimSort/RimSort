@@ -153,6 +153,39 @@ def mock_metadata_manager(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 
 
 @pytest.fixture
+def mock_metadata_controller(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Patch MetadataController.instance() to return a lightweight mock."""
+    from app.controllers.metadata_controller import MetadataController
+
+    controller = MagicMock(spec=MetadataController)
+    controller.mods_metadata = {}
+    controller.game_version = "1.5"
+    controller.steam_db = None
+    controller.community_rules = None
+    controller.user_rules = None
+    controller.packageid_to_paths = {}
+    controller.workshop_acf_data = {}
+    controller.steamcmd_acf_data = {}
+    controller.workshop_acf_path = None
+    controller.steamcmd_acf_path = ""
+    controller.is_abort_requested = False
+
+    # Mock the metadata_db_controller
+    mock_aux = MagicMock()
+    mock_session = MagicMock()
+    mock_aux.Session.return_value.__enter__ = MagicMock(return_value=mock_session)
+    mock_aux.Session.return_value.__exit__ = MagicMock(return_value=False)
+    controller.metadata_db_controller = mock_aux
+
+    monkeypatch.setattr(
+        MetadataController,
+        "instance",
+        classmethod(lambda cls, **kw: controller),
+    )
+    return controller
+
+
+@pytest.fixture
 def mock_steamcmd_interface(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Patch SteamcmdInterface.instance() to return a lightweight mock."""
     from app.utils.steam.steamcmd.wrapper import SteamcmdInterface

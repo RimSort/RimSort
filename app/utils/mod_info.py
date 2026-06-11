@@ -3,6 +3,7 @@ from typing import Any
 
 from loguru import logger
 
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
 from app.utils.generic import format_time_display
 
 # Module-level constants for better access
@@ -107,6 +108,66 @@ class ModInfo:
                 f"Error creating ModInfo from metadata for UUID {uuid}: {e}. Metadata keys: {metadata_keys}"
             )
             raise ValueError(f"Failed to create ModInfo from metadata: {e}") from e
+
+    @classmethod
+    def from_listed_mod(
+        cls,
+        mod: ListedMod,
+        *,
+        type: str = "",
+        installed_status: str = "",
+    ) -> "ModInfo":
+        """Create ModInfo from a typed ListedMod object.
+
+        :param mod: The ListedMod (or AboutXmlMod) to convert
+        :param type: Override type label (e.g. "Original", "Replacement")
+        :param installed_status: Override installed status label
+        :return: A populated ModInfo instance
+        """
+        name = mod.name or UNKNOWN
+        packageid = str(mod.package_id) if isinstance(mod, AboutXmlMod) else ""
+        published_file_id = mod.published_file_id or ""
+        supported_versions = cls._parse_supported_versions_static(
+            sorted(mod.supported_versions) if mod.supported_versions else None
+        )
+
+        # Map ModType to source string
+        source_map = {
+            ModType.LUDEON: "expansion",
+            ModType.LOCAL: LOCAL,
+            ModType.STEAM_WORKSHOP: STEAM,
+            ModType.STEAM_CMD: STEAM_CMD,
+            ModType.GIT: "git",
+        }
+        source = source_map.get(mod.mod_type, UNKNOWN)
+
+        # Authors
+        if isinstance(mod, AboutXmlMod) and mod.authors:
+            authors = ", ".join(str(a) for a in mod.authors)
+        else:
+            authors = UNKNOWN
+
+        path = str(mod.mod_path) if mod.mod_path else ""
+        downloaded_time_raw: float | None = (
+            float(mod.internal_time_touched) if mod.internal_time_touched >= 0 else None
+        )
+        workshop_url = cls._generate_workshop_url(published_file_id)
+
+        return cls(
+            uuid=None,
+            name=name,
+            authors=authors,
+            packageid=packageid,
+            published_file_id=published_file_id,
+            supported_versions=supported_versions,
+            source=source,
+            path=path,
+            downloaded_time_raw=downloaded_time_raw,
+            updated_time_raw=None,
+            workshop_url=workshop_url,
+            type=type,
+            installed_status=installed_status,
+        )
 
     @staticmethod
     def _parse_name(metadata: dict[str, Any]) -> str:

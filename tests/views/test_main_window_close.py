@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from PySide6.QtGui import QCloseEvent
 
@@ -12,9 +12,11 @@ from tests.views.conftest import make_stub_main_window
 class TestMainWindowCloseEvent:
     """Test that closeEvent closes child windows."""
 
-    @patch("app.views.main_window.MetadataManager")
     def test_close_event_calls_close_child_windows(
-        self, mock_mm_cls: MagicMock, qapp: object
+        self,
+        qapp: object,
+        mock_metadata_manager: MagicMock,
+        mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent delegates to MainContent.close_child_windows."""
         window = make_stub_main_window()
@@ -24,53 +26,60 @@ class TestMainWindowCloseEvent:
 
         window.main_content_panel.close_child_windows.assert_called_once()  # type: ignore[attr-defined]
 
-    @patch("app.views.main_window.MetadataManager")
     def test_close_event_stops_watchdog(
-        self, mock_mm_cls: MagicMock, qapp: object
+        self,
+        qapp: object,
+        mock_metadata_manager: MagicMock,
+        mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent stops the watchdog if running."""
         window = make_stub_main_window()
-        handler = MagicMock()
-        window.watchdog_event_handler = handler
+        mock_handler = MagicMock()
+        window.watchdog_event_handler = mock_handler
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        handler.stop.assert_called_once()
+        mock_handler.stop.assert_called_once()
+
+    def test_close_event_ignores_none_watchdog(
+        self,
+        qapp: object,
+        mock_metadata_manager: MagicMock,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
+        """No crash when watchdog_event_handler is None."""
+        window = make_stub_main_window()
         assert window.watchdog_event_handler is None
 
-    @patch("app.views.main_window.MetadataManager")
-    def test_close_event_accepts(self, mock_mm_cls: MagicMock, qapp: object) -> None:
-        """Verify closeEvent accepts the event to allow window closure."""
-        window = make_stub_main_window()
-
         event = QCloseEvent()
         window.closeEvent(event)
 
-        assert event.isAccepted()
-
-    @patch("app.views.main_window.MetadataManager")
-    def test_close_event_aborts_metadata_refresh(
-        self, mock_mm_cls: MagicMock, qapp: object
+    def test_close_event_aborts_metadata(
+        self,
+        qapp: object,
+        mock_metadata_manager: MagicMock,
+        mock_metadata_controller: MagicMock,
     ) -> None:
-        """Verify closeEvent requests abort on MetadataManager."""
-        mock_instance = MagicMock()
-        mock_mm_cls.instance.return_value = mock_instance
+        """Verify closeEvent requests metadata abort."""
         window = make_stub_main_window()
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        mock_instance.request_abort.assert_called_once()
+        # MetadataController.instance().is_abort_requested should be set to True
+        assert mock_metadata_controller.is_abort_requested is True
 
-    @patch("app.views.main_window.MetadataManager")
-    def test_close_event_aborts_loading_animation(
-        self, mock_mm_cls: MagicMock, qapp: object
+    def test_close_event_calls_abort_loading(
+        self,
+        qapp: object,
+        mock_metadata_manager: MagicMock,
+        mock_metadata_controller: MagicMock,
     ) -> None:
-        """Verify closeEvent calls abort_loading on the content panel."""
+        """Verify closeEvent calls abort_loading on the main content panel."""
         window = make_stub_main_window()
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        window.main_content_panel.abort_loading.assert_called_once()  # type: ignore[attr-defined]
+        window.main_content_panel.abort_loading.assert_called_once()

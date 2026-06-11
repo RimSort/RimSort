@@ -128,9 +128,9 @@ class MainContent(QObject):
         self.steam_browser: SteamBrowser | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
-        self.metadata_manager = metadata.MetadataManager.instance()
+        self.metadata_controller = MetadataController.instance()
         self._import_export_service = ImportExportService(
-            self.metadata_manager, self.settings_controller
+            self.metadata_controller, self.settings_controller
         )
         self.query_runner: RunnerPanel | None = None
         self.steamworks_in_use = False
@@ -252,9 +252,13 @@ class MainContent(QObject):
         EventBus().do_optimize_textures.connect(self._do_optimize_textures)
         EventBus().do_delete_dds_textures.connect(self._do_delete_dds_textures)
 
-        self.metadata_manager.mod_created_signal.connect(self.mods_panel.on_mod_created)
-        self.metadata_manager.mod_deleted_signal.connect(self.mods_panel.on_mod_deleted)
-        self.metadata_manager.mod_metadata_updated_signal.connect(
+        self.metadata_controller.mod_created_signal.connect(
+            self.mods_panel.on_mod_created
+        )
+        self.metadata_controller.mod_deleted_signal.connect(
+            self.mods_panel.on_mod_deleted
+        )
+        self.metadata_controller.mod_metadata_updated_signal.connect(
             self.mods_panel.on_mod_metadata_updated
         )
         self.mods_panel.active_mods_list.key_press_signal.connect(
@@ -299,7 +303,7 @@ class MainContent(QObject):
         self.inactive_mods_uuids_restore_state: list[str] = []
         self.duplicate_mods: dict[str, Any] = {}
         self._extract_progress_widget: Optional[TaskProgressWindow] = None
-        self.window_manager = WindowManager(self.metadata_manager)
+        self.window_manager = WindowManager(self.metadata_controller)
         self._active_loading_loop: QEventLoop | None = None
 
     @classmethod
@@ -329,8 +333,8 @@ class MainContent(QObject):
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
-        self.metadata_manager.refresh_cache()
-        MetadataController.instance().refresh_metadata()
+        metadata.MetadataManager.instance().refresh_cache()
+        self.metadata_controller.refresh_metadata()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
@@ -435,7 +439,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     data = item.data(Qt.ItemDataRole.UserRole)
                     uuid = data["uuid"]
-                    aml.uuids.remove(uuid)
+                    aml.paths.remove(uuid)
                     aml.takeItem(aml.row(item))
                 if aml.count():
                     if aml.count() == first_selected:
@@ -489,7 +493,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     data = item.data(Qt.ItemDataRole.UserRole)
                     uuid = data["uuid"]
-                    iml.uuids.remove(uuid)
+                    iml.paths.remove(uuid)
                     iml.takeItem(iml.row(item))
                 if iml.count():
                     if iml.count() == first_selected:
@@ -814,17 +818,18 @@ class MainContent(QObject):
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
                 target=partial(
-                    self.metadata_manager.refresh_cache, is_initial=is_initial
+                    metadata.MetadataManager.instance().refresh_cache,
+                    is_initial=is_initial,
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
 
             # If loading was aborted (e.g. window closed during scan), skip remaining work
-            if result is None and self.metadata_manager._abort_requested:
+            if result is None and metadata.MetadataManager.instance()._abort_requested:
                 return
 
-            # Refresh MetadataController alongside MetadataManager
-            MetadataController.instance().refresh_metadata()
+            # Refresh MetadataController
+            self.metadata_controller.refresh_metadata()
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
@@ -890,7 +895,7 @@ class MainContent(QObject):
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
             mod_data["packageid"]
-            for mod_data in self.metadata_manager.internal_local_metadata.values()
+            for mod_data in self.metadata_controller.mods_metadata.values()
         )
         # Iterate over the package IDs we want to keep active
         for package_id in package_ids_to_keep_active:
@@ -898,14 +903,14 @@ class MainContent(QObject):
                 # Append the UUIDs to active_mods_uuids if the package ID exists in mod_data
                 active_mods_uuids.extend(
                     uuid
-                    for uuid, mod_data in self.metadata_manager.internal_local_metadata.items()
+                    for uuid, mod_data in self.metadata_controller.mods_metadata.items()
                     if mod_data["data_source"] == "expansion"
                     and mod_data["packageid"] == package_id
                 )
         # Append the remaining UUIDs to inactive_mods_uuids
         inactive_mods_uuids.extend(
             uuid
-            for uuid in self.metadata_manager.internal_local_metadata.keys()
+            for uuid in self.metadata_controller.mods_metadata.keys()
             if uuid not in active_mods_uuids
         )
         # Clear dividers on list clear
@@ -931,15 +936,17 @@ class MainContent(QObject):
 
         # Get active mods (exclude dividers)
         active_mods = {
-            u for u in self.mods_panel.active_mods_list.uuids if not is_divider_uuid(u)
+            u for u in self.mods_panel.active_mods_list.paths if not is_divider_uuid(u)
         }
 
         # Compile metadata for active mods so newly-added ones have dependency info
-        self.metadata_manager.compile_metadata(uuids=list(active_mods))
+        self.metadata_controller.compile(uuids=list(active_mods))
 
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
-            missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
+            missing_deps = self.metadata_controller.get_missing_dependencies(
+                active_mods
+            )
             if missing_deps:
                 dialog = MissingDependenciesDialog()
                 self.window_manager.register(dialog)
@@ -962,16 +969,15 @@ class MainContent(QObject):
                         for (
                             uuid,
                             mod_data,
-                        ) in self.metadata_manager.internal_local_metadata.items():
+                        ) in self.metadata_controller.mods_metadata.items():
                             if mod_data.get("packageid") == mod_id:
                                 if uuid not in active_mods:
                                     active_mods.add(uuid)
                                 break
 
         # Compile dependency data from MetadataController
-        metadata_controller = MetadataController.instance()
         try:
-            compiled_data = metadata_controller.compile(
+            compiled_data = self.metadata_controller.compile(
                 use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
                 use_alternative_package_ids=self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies,
             )
@@ -987,7 +993,7 @@ class MainContent(QObject):
         # Bridge: translate old UUIDs to paths for the new sort system
         active_mod_paths: set[str] = set()
         for uuid in active_mods:
-            mod_data = self.metadata_manager.internal_local_metadata.get(uuid)
+            mod_data = self.metadata_controller.mods_metadata.get(uuid)
             if mod_data and mod_data.get("path"):
                 active_mod_paths.add(mod_data["path"])
 
@@ -997,7 +1003,7 @@ class MainContent(QObject):
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
                 compiled_data=compiled_data,
-                mods_metadata=metadata_controller.mods_metadata,
+                mods_metadata=self.metadata_controller.mods_metadata,
                 active_mod_paths=active_mod_paths,
             )
         except NotImplementedError as e:
@@ -1021,7 +1027,7 @@ class MainContent(QObject):
 
         # Bridge: translate paths back to UUIDs for the list widget
         path_to_uuid: dict[str, str] = {}
-        for uuid, mod_data in self.metadata_manager.internal_local_metadata.items():
+        for uuid, mod_data in self.metadata_controller.mods_metadata.items():
             p = mod_data.get("path")
             if p:
                 path_to_uuid[p] = uuid
@@ -1052,7 +1058,7 @@ class MainContent(QObject):
                 new_order,
                 [
                     uuid
-                    for uuid in self.metadata_manager.internal_local_metadata
+                    for uuid in self.metadata_controller.mods_metadata
                     if uuid not in set(new_order)
                 ],
             )
@@ -1117,7 +1123,7 @@ class MainContent(QObject):
         logger.info(f"Selected path: {file_path}")
         if file_path:
             data = self._import_export_service.collect_active_mods(
-                self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+                self.mods_panel.active_mods_list.paths, self.duplicate_mods
             )
             try:
                 self._import_export_service.export_to_xml(data.active_mods, file_path)
@@ -1160,7 +1166,7 @@ class MainContent(QObject):
             # Get set of publishedfileids already present locally
             existing_publishedfileids = {
                 mod_data.get("publishedfileid")
-                for mod_data in self.metadata_manager.internal_local_metadata.values()
+                for mod_data in self.metadata_controller.mods_metadata.values()
                 if mod_data.get("publishedfileid") is not None
             }
             # Filter out publishedfileids that already exist locally
@@ -1290,7 +1296,9 @@ class MainContent(QObject):
             return
         # Create an instance of collection_import
         # This also triggers the import dialogue and gets result
-        collection_import = CollectionImport(metadata_manager=self.metadata_manager)
+        collection_import = CollectionImport(
+            metadata_controller=self.metadata_controller
+        )
         # Exit if user cancels or no package IDs
         if not collection_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1329,7 +1337,7 @@ class MainContent(QObject):
         """
         logger.info("Generating report to export mod list to clipboard")
         data = self._import_export_service.collect_active_mods(
-            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+            self.mods_panel.active_mods_list.paths, self.duplicate_mods
         )
         report = self._import_export_service.build_clipboard_report(
             data.active_mods, data.packageid_to_uuid
@@ -1349,7 +1357,7 @@ class MainContent(QObject):
         """
 
         data = self._import_export_service.collect_active_mods(
-            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+            self.mods_panel.active_mods_list.paths, self.duplicate_mods
         )
         data.pfid_to_preview_url = self._import_export_service.fetch_steam_preview_urls(
             data.pfids
@@ -1610,7 +1618,7 @@ class MainContent(QObject):
         self.settings_controller.settings.save()
 
         data = self._import_export_service.collect_active_mods(
-            self.mods_panel.active_mods_list.uuids, self.duplicate_mods
+            self.mods_panel.active_mods_list.paths, self.duplicate_mods
         )
         active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
             mod_list=data.active_mods
@@ -1693,7 +1701,7 @@ class MainContent(QObject):
     ) -> tuple[bool, int] | None:
         logger.info("Optimizing textures with todds...")
         todds_runner = self._create_todds_runner(block_until_complete)
-        active_uuids = list(self.mods_panel.active_mods_list.uuids)
+        active_uuids = list(self.mods_panel.active_mods_list.paths)
 
         started = self.todds_controller.optimize_textures(
             runner=todds_runner,
@@ -1738,7 +1746,7 @@ class MainContent(QObject):
 
         logger.info("Deleting .dds textures with todds...")
         todds_runner = self._create_todds_runner(is_pre_launch=False)
-        active_uuids = list(self.mods_panel.active_mods_list.uuids)
+        active_uuids = list(self.mods_panel.active_mods_list.paths)
 
         started = self.todds_controller.delete_dds_textures(
             runner=todds_runner,
@@ -1888,7 +1896,7 @@ class MainContent(QObject):
 
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/",
-            self.metadata_manager,
+            self.metadata_controller,
             self.settings_controller,
         )
         self.window_manager.register_attr(self, "steam_browser")
@@ -1908,7 +1916,7 @@ class MainContent(QObject):
             ),
             target=partial(
                 metadata.query_workshop_update_data,
-                mods=self.metadata_manager.internal_local_metadata,
+                mods=self.metadata_controller.mods_metadata,
             ),
             text=self.tr("Checking Steam Workshop mods for updates..."),
         )
@@ -2027,10 +2035,12 @@ class MainContent(QObject):
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
         # Check for blacklisted mods
-        if self.metadata_manager.external_steam_metadata is not None:
+        steam_db_schema = self.metadata_controller.steam_db
+        steam_db = steam_db_schema.database if steam_db_schema else {}
+        if steam_db:
             publishedfileids = metadata.check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
-                steamdb=self.metadata_manager.external_steam_metadata,
+                steamdb=steam_db,
             )
         # No empty publishedfileids
         if len(publishedfileids) == 0:
@@ -2062,9 +2072,6 @@ class MainContent(QObject):
         ):
             if self.steam_browser:
                 self.steam_browser.close()
-            steam_db = self.metadata_manager.external_steam_metadata
-            if steam_db is None:
-                steam_db = {}
 
             self.steamcmd_runner = RunnerPanel(
                 steamcmd_download_tracking=publishedfileids,
@@ -2190,9 +2197,8 @@ class MainContent(QObject):
     ) -> None:
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
-        steamdb = self.metadata_manager.external_steam_metadata
-        if steamdb is None:
-            steamdb = {}
+        steam_db_schema = self.metadata_controller.steam_db
+        steamdb = steam_db_schema.database if steam_db_schema else {}
         # Check for blacklisted mods for subscription actions
         if instruction[0] == "subscribe":
             assert isinstance(publishedfileids, list)
@@ -2640,55 +2646,24 @@ class MainContent(QObject):
             self.settings_controller.settings.save()
 
     def _do_blacklist_action_steamdb(self, instruction: list[Any]) -> None:
-        if (
-            self.metadata_manager.external_steam_metadata_path
-            and self.metadata_manager.external_steam_metadata
-            and len(self.metadata_manager.external_steam_metadata.keys()) > 0
-        ):
-            logger.info(f"Updating SteamDB blacklist status for item: {instruction}")
-            # Retrieve instruction passed from signal
-            publishedfileid = instruction[0]
-            blacklist = instruction[1]
-            if blacklist:  # Only deal with comment if we are adding a mod to blacklist
-                comment = instruction[2]
-            else:
-                comment = None
-            # Check if our DB has an entry for the mod we are editing
-            if not self.metadata_manager.external_steam_metadata.get(publishedfileid):
-                self.metadata_manager.external_steam_metadata.setdefault(
-                    publishedfileid, {}
-                )
-            # Edit our metadata
-            if blacklist and comment:
-                self.metadata_manager.external_steam_metadata[publishedfileid][
-                    "blacklist"
-                ] = {
-                    "value": blacklist,
-                    "comment": comment,
-                }
-            else:
-                self.metadata_manager.external_steam_metadata[publishedfileid].pop(
-                    "blacklist", None
-                )
-            logger.debug("Updating previous database with new metadata...\n")
-            with open(
-                self.metadata_manager.external_steam_metadata_path,
-                "w",
-                encoding="utf-8",
-            ) as output:
-                json.dump(
-                    {
-                        "version": int(
-                            time.time()
-                            + self.settings_controller.settings.database_expiry
-                        ),
-                        "database": self.metadata_manager.external_steam_metadata,
-                    },
-                    output,
-                    indent=4,
-                )
+        logger.info(f"Updating SteamDB blacklist status for item: {instruction}")
+        # Retrieve instruction passed from signal
+        publishedfileid = instruction[0]
+        blacklist = instruction[1]
+        comment = instruction[2] if blacklist else ""
+        # Delegate to MetadataController
+        success = self.metadata_controller.set_steam_db_blacklist(
+            published_file_id=publishedfileid,
+            blacklisted=blacklist,
+            comment=comment or "",
+        )
+        if success:
             # Do a full refresh of metadata and UI
             self._do_refresh()
+        else:
+            logger.warning(
+                "Could not update SteamDB blacklist: no Steam database loaded"
+            )
 
     def _do_edit_steam_webapi_key(self) -> None:
         """
@@ -2710,11 +2685,9 @@ class MainContent(QObject):
         rules_source = instruction[0]
         rules_data = instruction[1]
         # Get path based on rules source
-        if (
-            rules_source == "Community Rules"
-            and self.metadata_manager.external_community_rules_path
-        ):
-            path = self.metadata_manager.external_community_rules_path
+        cr_path = self.metadata_controller.community_rules_path
+        if rules_source == "Community Rules" and cr_path:
+            path = str(cr_path)
         elif rules_source == "User Rules" and str(
             AppInfo().databases_folder / "userRules.json"
         ):
@@ -2843,7 +2816,7 @@ class MainContent(QObject):
 
         # Check for unsaved mod list changes and prompt user
         current_mod_uuids = [
-            u for u in self.mods_panel.active_mods_list.uuids if not is_divider_uuid(u)
+            u for u in self.mods_panel.active_mods_list.paths if not is_divider_uuid(u)
         ]
         if current_mod_uuids != self.active_mods_uuids_last_save:
             answer = dialogue.show_dialogue_conditional(
@@ -2965,7 +2938,7 @@ class MainContent(QObject):
             return
 
         self.use_this_instead_dialog = UseThisInsteadPanel(
-            mod_metadata=self.metadata_manager.internal_local_metadata
+            mod_metadata=self.metadata_controller.mods_metadata
         )
         self.window_manager.register_attr(self, "use_this_instead_dialog")
         if not self.use_this_instead_dialog.show_if_has_alternatives():

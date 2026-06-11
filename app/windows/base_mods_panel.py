@@ -26,10 +26,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_controller import MetadataController
 from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
-from app.utils.metadata import MetadataManager
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import get_mod_path_from_pfid
 from app.views.deletion_menu import ModDeletionMenu
@@ -129,7 +129,7 @@ class BaseModsPanel(QWidget):
     """
 
     # Type hints for instance variables
-    metadata_manager: MetadataManager
+    metadata_controller: MetadataController
     settings_controller: Any
     editor_model: QStandardItemModel
     editor_table_view: QTableView
@@ -149,9 +149,9 @@ class BaseModsPanel(QWidget):
     COL_WORKSHOP_PAGE = "Workshop Page"
 
     def _setup_metadata(self) -> None:
-        """Set up metadata manager and settings controller."""
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = self.metadata_manager.settings_controller
+        """Set up metadata controller and settings controller."""
+        self.metadata_controller = MetadataController.instance()
+        self.settings_controller = self.metadata_controller.settings_controller
 
     def _get_steam_client_integration_enabled(self) -> bool:
         """
@@ -1038,18 +1038,40 @@ class BaseModsPanel(QWidget):
         """
         Get metadata for selected mods in the table.
 
+        Returns a list of compat dicts with keys expected by ModDeletionMenu:
+        path, name, publishedfileid, data_source, packageid, steamcmd, uuid.
+
         Returns:
-            List of ModMetadata objects for selected mods
+            List of ModMetadata compat dicts for selected mods
         """
-        selected_mods = []
+        from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+
+        selected_mods: list[dict[str, Any]] = []
         try:
             for row in range(self.editor_model.rowCount()):
                 if self._row_is_checked(row):
-                    uuid = self._get_uuid_from_row(row)
-                    if uuid and uuid in self.metadata_manager.internal_local_metadata:
-                        selected_mods.append(
-                            self.metadata_manager.internal_local_metadata[uuid]
-                        )
+                    path = self._get_uuid_from_row(row)
+                    if path:
+                        mod = self.metadata_controller.get_mod(path)
+                        if mod is not None:
+                            compat: dict[str, Any] = {
+                                "path": str(mod.mod_path) if mod.mod_path else "",
+                                "uuid": path,
+                                "name": mod.name or "",
+                                "publishedfileid": mod.published_file_id or "",
+                                "steamcmd": mod.mod_type == ModType.STEAM_CMD,
+                            }
+                            if mod.mod_type == ModType.LUDEON:
+                                compat["data_source"] = "expansion"
+                            elif mod.mod_type == ModType.STEAM_WORKSHOP:
+                                compat["data_source"] = "workshop"
+                            elif mod.mod_type == ModType.LOCAL:
+                                compat["data_source"] = "local"
+                            else:
+                                compat["data_source"] = str(mod.mod_type.value)
+                            if isinstance(mod, AboutXmlMod):
+                                compat["packageid"] = str(mod.package_id)
+                            selected_mods.append(compat)
         except Exception as e:
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
@@ -1061,9 +1083,9 @@ class BaseModsPanel(QWidget):
 
         This refreshes the metadata cache and repopulates the table with the updated mod data.
         """
-        logger.warning("Refreshing metadata cache and repopulating table")
-        # Refresh the metadata cache to reflect deletion changes
-        self.metadata_manager.refresh_cache(is_initial=False)
+        logger.warning("Refreshing metadata and repopulating table")
+        # Refresh the metadata to reflect deletion changes
+        self.metadata_controller.refresh_metadata()
         # Repopulate the table with updated data
         self._populate_from_metadata()
 
@@ -1213,15 +1235,20 @@ class BaseModsPanel(QWidget):
 
     def _extract_uuid_from_path(self, path: str) -> str | None:
         """
-        Extract UUID from mod path using metadata manager.
+        Extract path key from mod path.
+
+        In the new metadata system, the path IS the key, so this is an identity
+        lookup that verifies the path exists in metadata.
 
         Args:
             path: Mod path
 
         Returns:
-            UUID if found, None otherwise
+            The path if found in metadata, None otherwise
         """
-        return self.metadata_manager.mod_metadata_dir_mapper.get(path)
+        if self.metadata_controller.has_mod(path):
+            return path
+        return None
 
     def _reconfigure_table_sorting(self, sorting_enabled: bool) -> None:
         """
