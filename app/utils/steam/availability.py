@@ -5,7 +5,7 @@ import sys
 from collections.abc import MutableMapping
 from pathlib import Path
 from time import sleep
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication, QThread, Signal
@@ -36,12 +36,12 @@ _STEAM_LAUNCH_BEHAVIOR_ALWAYS = "always"
 _STEAM_LAUNCH_BEHAVIOR_NEVER = "never"
 
 
-def _find_steam_executable() -> Optional[Path]:
+def _find_steam_executable() -> Path | None:
     """
     Find the Steam executable path based on the current platform.
 
     Returns:
-        Optional[Path]: Path to Steam executable, or None if not found
+        Path | None: Path to Steam executable, or None if not found
     """
     if sys.platform == "win32":
         from app.utils.win_find_steam import find_steam_folder
@@ -282,124 +282,6 @@ def run_steam_launch_with_progress(libs: str) -> bool:
     worker.wait()
 
     return result[0]
-
-
-def _launch_steam(_libs: str) -> bool:
-    """
-    Launch Steam if it's not running and wait for it to start.
-
-    .. deprecated::
-        Will be removed in Task 7. Superseded by SteamLaunchWorker.
-
-    Args:
-        _libs: Path to the Steamworks library directory
-
-    Returns:
-        bool: True if Steam was launched successfully, False otherwise
-    """
-    # jscpd:ignore-start
-    try:
-        steam_exe = _find_steam_executable()
-        if steam_exe is None:
-            if not sys.platform.startswith("linux"):
-                logger.warning("Steam executable not found")
-                return False
-
-            # For Linux, try to launch steam in a terminal emulator
-            logger.info("Launching Steam via 'steam' command in a terminal...")
-            env = os.environ.copy()
-            env["LD_LIBRARY_PATH"] = _libs + os.pathsep + env.get("LD_LIBRARY_PATH", "")
-
-            _setup_snap_steam_env(env)
-
-            terminal_candidates = [
-                "gnome-terminal",
-                "konsole",
-                "xfce4-terminal",
-                "mate-terminal",
-                "xterm",
-                "x-terminal-emulator",
-            ]
-            terminal = next((t for t in terminal_candidates if shutil.which(t)), None)
-
-            try:
-                if terminal:
-                    logger.debug(f"Using terminal emulator: {terminal}")
-                    if terminal == "gnome-terminal":
-                        subprocess.Popen([terminal, "--", "steam"], env=env)
-                    else:
-                        subprocess.Popen([terminal, "-e", "steam"], env=env)
-                else:
-                    logger.warning(
-                        "No terminal emulator found, falling back to direct launch"
-                    )
-                    subprocess.Popen(["steam"], env=env)
-            except FileNotFoundError:
-                logger.warning("Steam executable or terminal emulator not found")
-                return False
-        else:
-            if not steam_exe.exists():
-                logger.warning("Steam executable not found")
-                return False
-            logger.info("Launching Steam...")
-            env = os.environ.copy()
-            if sys.platform.startswith("linux"):
-                _setup_snap_steam_env(env)
-            subprocess.Popen([str(steam_exe)], env=env)
-        # Give Steam some initial time to start up before checking
-        sleep(SLEEP_TIME)
-
-        # First check if Steam processes are running after initial launch
-        if is_steam_running():
-            logger.info("Steam processes detected after launch")
-            # Give Steam a bit more time to fully initialize
-            sleep(SLEEP_TIME)
-            return True
-
-        # Wait for Steam to start checks every SLEEP_TIME (15 seconds), MAX_ATTEMPTS (10 attempts).
-        for attempt in range(MAX_ATTEMPTS):
-            sleep(SLEEP_TIME)
-            # Check both process detection and API initialization
-            if is_steam_running():
-                logger.info("Steam processes detected during API wait")
-                # Give Steam a bit more time to fully initialize
-                sleep(SLEEP_TIME)
-                return True
-            try:
-                # Try to create a temporary Steamworks instance to test if Steam is ready
-                from steamworks import STEAMWORKS  # type: ignore
-
-                test_steamworks = STEAMWORKS()
-                test_steamworks.initialize()
-                test_steamworks.unload()
-                logger.info("Steam launched and API initialized successfully")
-                # Give Steam a bit more time to fully initialize
-                sleep(SLEEP_TIME)
-                return True
-            except Exception as e:
-                error_msg = f"{e.__class__.__name__}: {e}"
-                logger.debug(
-                    f"Steam API not ready yet (attempt {attempt + 1}/{MAX_ATTEMPTS}): {error_msg}"
-                )
-                # Log more details on the last attempt
-                if attempt == MAX_ATTEMPTS - 1:
-                    total_time = SLEEP_TIME + (MAX_ATTEMPTS * SLEEP_TIME)
-                    logger.warning(
-                        f"Steamworks initialization failed after {total_time} seconds: {error_msg}"
-                    )
-                    if "snap" in str(Path.home()):
-                        logger.warning(
-                            "Snap Steam detected - ensure you have a native Steam installation for Steamworks support"
-                        )
-                continue
-
-        logger.warning("Steam failed to start within timeout")
-        return False
-
-    except Exception as e:
-        logger.warning(f"Error launching Steam: {e}")
-        return False
-    # jscpd:ignore-end
 
 
 def _show_steam_launch_prompt() -> str:
