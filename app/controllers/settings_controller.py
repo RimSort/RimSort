@@ -200,8 +200,10 @@ class SettingsController(QObject):
             self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
                 self._on_toggle_show_save_comparison_indicators
             )
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            logger.warning(
+                "show_save_comparison_indicators_checkbox not available for signal wiring"
+            )
 
         # Advanced tab
         self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
@@ -438,8 +440,10 @@ class SettingsController(QObject):
             self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
                 self.settings.show_save_comparison_indicators
             )
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            logger.warning(
+                "show_save_comparison_indicators_checkbox not available for view update"
+            )
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
