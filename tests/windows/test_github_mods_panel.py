@@ -171,3 +171,176 @@ class TestOnUninstallDelete:
         panel = _make_panel()
         panel._get_selected_mod_data = MagicMock(return_value=[])
         panel._on_uninstall_delete()
+
+
+class TestOnUninstallConvertToGit:
+    # jscpd:ignore-start
+    @patch("app.windows.github_mods_panel.EventBus")
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    @patch("app.windows.github_mods_panel.AuxMetadataController")
+    def test_head_tracked_mod_just_deletes_db_entry(
+        self,
+        mock_aux_ctrl: MagicMock,
+        mock_msgbox: MagicMock,
+        mock_event_bus: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.Yes
+
+        mock_session = MagicMock()
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__enter__ = MagicMock(
+            return_value=mock_session
+        )
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__exit__ = MagicMock(
+            return_value=False
+        )
+
+        mock_entry = MagicMock()
+        mock_entry.installed_asset_name = None  # HEAD-tracked
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_entry
+        )
+
+        panel._on_uninstall_convert_to_git()
+
+        mock_session.delete.assert_called_with(mock_entry)
+        mock_session.commit.assert_called()
+        mock_event_bus.return_value.do_refresh_mods_lists.emit.assert_called_once()
+
+    @patch("app.windows.github_mods_panel.EventBus")
+    @patch("app.windows.github_mods_panel.GitHubInstaller")
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    @patch("app.windows.github_mods_panel.AuxMetadataController")
+    def test_release_based_mod_clones_head_then_deletes_entry(
+        self,
+        mock_aux_ctrl: MagicMock,
+        mock_msgbox: MagicMock,
+        mock_installer: MagicMock,
+        mock_event_bus: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.Yes
+
+        mock_session = MagicMock()
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__enter__ = MagicMock(
+            return_value=mock_session
+        )
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__exit__ = MagicMock(
+            return_value=False
+        )
+
+        mock_entry = MagicMock()
+        mock_entry.installed_asset_name = "release.zip"  # Release-based
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_entry
+        )
+
+        backup_path = Path("/mods/alpha.rimsort_backup")
+        mock_installer.backup_mod.return_value = backup_path
+        mock_installer.install_head.return_value = (True, "abc1234")
+
+        panel._on_uninstall_convert_to_git()
+
+        mock_installer.backup_mod.assert_called_once_with(Path("/mods/alpha"))
+        mock_installer.install_head.assert_called_once_with(
+            "https://github.com/owner/alpha.git", "/mods/alpha"
+        )
+        mock_installer.delete_backup.assert_called_once_with(backup_path)
+        mock_session.delete.assert_called_with(mock_entry)
+        mock_session.commit.assert_called()
+
+    @patch("app.windows.github_mods_panel.EventBus")
+    @patch("app.windows.github_mods_panel.GitHubInstaller")
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    @patch("app.windows.github_mods_panel.AuxMetadataController")
+    def test_release_based_mod_restores_backup_on_clone_failure(
+        self,
+        mock_aux_ctrl: MagicMock,
+        mock_msgbox: MagicMock,
+        mock_installer: MagicMock,
+        mock_event_bus: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.Yes
+
+        mock_session = MagicMock()
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__enter__ = MagicMock(
+            return_value=mock_session
+        )
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__exit__ = MagicMock(
+            return_value=False
+        )
+
+        mock_entry = MagicMock()
+        mock_entry.installed_asset_name = "release.zip"
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_entry
+        )
+
+        backup_path = Path("/mods/alpha.rimsort_backup")
+        mock_installer.backup_mod.return_value = backup_path
+        mock_installer.install_head.return_value = (False, None)  # Clone failed
+
+        panel._on_uninstall_convert_to_git()
+
+        mock_installer.restore_backup.assert_called_once_with(
+            backup_path, Path("/mods/alpha")
+        )
+        mock_session.delete.assert_not_called()
+
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    def test_does_nothing_when_cancelled(
+        self,
+        mock_msgbox: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.No
+
+        panel._on_uninstall_convert_to_git()
+
+    # jscpd:ignore-end
+
+    def test_does_nothing_when_no_selection(self, qapp: QApplication) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(return_value=[])
+        panel._on_uninstall_convert_to_git()
