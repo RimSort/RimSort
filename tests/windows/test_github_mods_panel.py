@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QCheckBox
 
+from app.utils.metadata import MetadataManager
 from app.windows.github_mods_panel import _COL_NAME, _COL_REPO, GitHubModsPanel
 
 
@@ -344,3 +345,31 @@ class TestOnUninstallConvertToGit:
         panel = _make_panel()
         panel._get_selected_mod_data = MagicMock(return_value=[])
         panel._on_uninstall_convert_to_git()
+
+
+class TestUninstallButton:
+    @patch("app.windows.github_mods_panel.GitHubModsPanel._populate_from_mods")
+    @patch("app.windows.github_mods_panel.EventBus")
+    @patch.object(MetadataManager, "instance")
+    def test_uninstall_button_exists_in_layout(
+        self,
+        mock_mm_instance: MagicMock,
+        mock_event_bus: MagicMock,
+        mock_populate: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        mock_mm = MagicMock()
+        mock_mm.settings_controller.settings.aux_db_path = "/tmp/test.db"
+        mock_mm_instance.return_value = mock_mm
+        mock_event_bus.return_value.do_refresh_mods_lists = MagicMock()
+
+        panel = GitHubModsPanel()
+        layout = panel.layouts.editor_main_actions_layout
+
+        button_texts: list[str] = []
+        for i in range(layout.count()):
+            widget = layout.itemAt(i).widget()
+            if widget is not None:
+                button_texts.append(widget.text())
+
+        assert "Uninstall" in button_texts
