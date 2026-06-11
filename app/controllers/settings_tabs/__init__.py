@@ -11,12 +11,13 @@ from app.controllers.settings_tabs.databases_tab_controller import (
 from app.controllers.settings_tabs.game_launch_tab_controller import (
     GameLaunchTabController,
 )
+from app.controllers.settings_tabs.internal_tools_tab_controller import (
+    InternalToolsTabController,
+)
 from app.controllers.settings_tabs.locations_tab_controller import (
     LocationsTabController,
 )
 from app.controllers.settings_tabs.sorting_tab_controller import SortingTabController
-from app.controllers.settings_tabs.steamcmd_tab_controller import SteamcmdTabController
-from app.controllers.settings_tabs.todds_tab_controller import ToddsTabController
 
 __all__ = [
     "AdvancedTabController",
@@ -24,8 +25,7 @@ __all__ = [
     "BaseTabController",
     "DatabasesTabController",
     "GameLaunchTabController",
+    "InternalToolsTabController",
     "LocationsTabController",
     "SortingTabController",
-    "SteamcmdTabController",
-    "ToddsTabController",
 ]

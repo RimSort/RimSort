@@ -10,12 +10,12 @@ from app.views.dialogue import show_dialogue_file
 from app.views.settings_dialog import SettingsDialog
 
 
-class SteamcmdTabController(BaseTabController):
-    """Controller for the SteamCMD settings tab.
+class InternalToolsTabController(BaseTabController):
+    """Controller for the Internal Tools settings tab.
 
-    Manages: validate downloads toggle, auto-clear depot cache toggle,
-    delete-before-update toggle, install location path with file chooser,
-    and 4 action buttons (clear cache, import ACF, delete ACF, install).
+    Manages: SteamCMD settings (validate, auto-clear, delete-before-update,
+    install location, action buttons) and todds texture optimization settings
+    (quality preset, target scope, dry-run, overwrite, orphaned DDS, auto-run).
     """
 
     def __init__(
@@ -30,6 +30,7 @@ class SteamcmdTabController(BaseTabController):
         self._on_path_selected = on_path_selected
 
     def connect_signals(self) -> None:
+        # SteamCMD signals
         self.dialog.steamcmd_install_location_choose_button.clicked.connect(
             self._on_install_location_choose
         )
@@ -41,6 +42,7 @@ class SteamcmdTabController(BaseTabController):
         self.dialog.steamcmd_install_button.clicked.connect(self._on_install)
 
     def update_view_from_model(self) -> None:
+        # --- SteamCMD ---
         instance = self.settings.instances[self.settings.current_instance]
 
         self.dialog.steamcmd_validate_downloads_checkbox.setChecked(
@@ -56,7 +58,34 @@ class SteamcmdTabController(BaseTabController):
             str(instance.steamcmd_install_path)
         )
 
+        # --- todds ---
+        if self.settings.todds_preset == "optimized":
+            self.dialog.todds_preset_optimized_radio.setChecked(True)
+            self.dialog.todds_custom_command_lineedit.setEnabled(False)
+        elif self.settings.todds_preset == "custom":
+            self.dialog.todds_preset_custom_radio.setChecked(True)
+            self.dialog.todds_custom_command_lineedit.setEnabled(True)
+        else:
+            self.dialog.todds_preset_optimized_radio.setChecked(True)
+            self.dialog.todds_custom_command_lineedit.setEnabled(False)
+        if self.settings.todds_active_mods_target:
+            self.dialog.todds_active_mods_only_radio.setChecked(True)
+        else:
+            self.dialog.todds_all_mods_radio.setChecked(True)
+        self.dialog.todds_dry_run_checkbox.setChecked(self.settings.todds_dry_run)
+        self.dialog.todds_overwrite_checkbox.setChecked(self.settings.todds_overwrite)
+        self.dialog.todds_custom_command_lineedit.setText(
+            self.settings.todds_custom_command
+        )
+        self.dialog.auto_delete_orphaned_dds_checkbox.setChecked(
+            self.settings.auto_delete_orphaned_dds
+        )
+        self.dialog.auto_run_todds_before_launch_checkbox.setChecked(
+            self.settings.auto_run_todds_before_launch
+        )
+
     def update_model_from_view(self) -> None:
+        # --- SteamCMD ---
         instance = self.settings.instances[self.settings.current_instance]
 
         self.settings.steamcmd_validate_downloads = (
@@ -69,6 +98,29 @@ class SteamcmdTabController(BaseTabController):
             self.dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         instance.steamcmd_install_path = self.dialog.steamcmd_install_location.text()
+
+        # --- todds ---
+        if self.dialog.todds_preset_custom_radio.isChecked():
+            self.settings.todds_preset = "custom"
+            self.settings.todds_custom_command = (
+                self.dialog.todds_custom_command_lineedit.text()
+            )
+        else:
+            self.settings.todds_preset = "optimized"
+        if self.dialog.todds_active_mods_only_radio.isChecked():
+            self.settings.todds_active_mods_target = True
+        elif self.dialog.todds_all_mods_radio.isChecked():
+            self.settings.todds_active_mods_target = False
+        self.settings.todds_dry_run = self.dialog.todds_dry_run_checkbox.isChecked()
+        self.settings.todds_overwrite = self.dialog.todds_overwrite_checkbox.isChecked()
+        self.settings.auto_delete_orphaned_dds = (
+            self.dialog.auto_delete_orphaned_dds_checkbox.isChecked()
+        )
+        self.settings.auto_run_todds_before_launch = (
+            self.dialog.auto_run_todds_before_launch_checkbox.isChecked()
+        )
+
+    # --- SteamCMD handlers ---
 
     @Slot()
     def _on_install_location_choose(self) -> None:
