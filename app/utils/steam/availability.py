@@ -8,6 +8,8 @@ from time import sleep
 from typing import Optional
 
 from loguru import logger
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 
 from app.utils.generic import show_no_steam_warning, show_snap_steam_warning
 
@@ -111,6 +113,168 @@ def _setup_snap_steam_env(env: MutableMapping[str, str]) -> None:
         logger.debug("Configuring environment for snap Steam...")
         env["STEAM_COMPAT_TOOL_PATHS"] = str(SNAP_STEAM_PATH)
         env["STEAMRUNTIME_PATH"] = str(SNAP_STEAM_PATH / "ubuntu12_32")
+
+
+class SteamLaunchWorker(QThread):
+    """Background worker that launches Steam and waits for it to be ready."""
+
+    launch_finished = Signal(bool)
+    progress = Signal(str)
+
+    def __init__(self, libs: str) -> None:
+        super().__init__()
+        self._libs = libs
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        self._cancelled = True
+
+    def run(self) -> None:
+        try:
+            steam_exe = _find_steam_executable()
+            if steam_exe is None and not sys.platform.startswith("linux"):
+                logger.warning("Steam executable not found")
+                self.progress.emit("Steam executable not found")
+                self.launch_finished.emit(False)
+                return
+
+            self.progress.emit("Launching Steam...")
+            if not self._start_steam_process(steam_exe):
+                self.launch_finished.emit(False)
+                return
+
+            sleep(SLEEP_TIME)
+            if self._cancelled:
+                self.launch_finished.emit(False)
+                return
+
+            if is_steam_running():
+                self.progress.emit(
+                    "Steam processes detected, waiting for initialization..."
+                )
+                sleep(SLEEP_TIME)
+                self.launch_finished.emit(True)
+                return
+
+            for attempt in range(MAX_ATTEMPTS):
+                if self._cancelled:
+                    self.launch_finished.emit(False)
+                    return
+                self.progress.emit(
+                    f"Waiting for Steam to start ({attempt + 1}/{MAX_ATTEMPTS})..."
+                )
+                sleep(SLEEP_TIME)
+                if is_steam_running():
+                    self.progress.emit("Steam detected, finalizing...")
+                    sleep(SLEEP_TIME)
+                    self.launch_finished.emit(True)
+                    return
+
+            self.progress.emit("Steam failed to start within timeout")
+            logger.warning("Steam failed to start within timeout")
+            self.launch_finished.emit(False)
+
+        except Exception as e:
+            logger.warning(f"Error launching Steam: {e}")
+            self.progress.emit(f"Error: {e}")
+            self.launch_finished.emit(False)
+
+    def _start_steam_process(self, steam_exe: Path | None) -> bool:
+        try:
+            env = os.environ.copy()
+            if sys.platform.startswith("linux"):
+                env["LD_LIBRARY_PATH"] = (
+                    self._libs + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+                )
+                _setup_snap_steam_env(env)
+
+            if steam_exe is None:
+                return self._launch_linux_steam(env)
+            if not steam_exe.exists():
+                logger.warning("Steam executable not found")
+                self.progress.emit("Steam executable not found")
+                return False
+            if sys.platform.startswith("linux"):
+                _setup_snap_steam_env(env)
+            subprocess.Popen([str(steam_exe)], env=env)
+            return True
+        except FileNotFoundError:
+            logger.warning("Steam executable not found")
+            self.progress.emit("Steam executable not found")
+            return False
+
+    def _launch_linux_steam(self, env: dict[str, str]) -> bool:
+        terminal_candidates = [
+            "gnome-terminal",
+            "konsole",
+            "xfce4-terminal",
+            "mate-terminal",
+            "xterm",
+            "x-terminal-emulator",
+        ]
+        terminal = next((t for t in terminal_candidates if shutil.which(t)), None)
+        try:
+            if terminal:
+                logger.debug(f"Using terminal emulator: {terminal}")
+                if terminal == "gnome-terminal":
+                    subprocess.Popen([terminal, "--", "steam"], env=env)
+                else:
+                    subprocess.Popen([terminal, "-e", "steam"], env=env)
+            else:
+                logger.warning(
+                    "No terminal emulator found, falling back to direct launch"
+                )
+                subprocess.Popen(["steam"], env=env)
+            return True
+        except FileNotFoundError:
+            logger.warning("Steam executable or terminal emulator not found")
+            self.progress.emit("Steam executable not found")
+            return False
+
+
+def run_steam_launch_with_progress(libs: str) -> bool:
+    """
+    Launch Steam on a background thread and show a modal progress dialog.
+
+    :param libs: Path to the Steamworks library directory
+    :return: True if Steam launched successfully
+    """
+    worker = SteamLaunchWorker(libs)
+    result = [False]
+
+    dialog = QDialog()
+    dialog.setWindowTitle("Launching Steam")
+    dialog.setModal(True)
+    dialog.setMinimumWidth(350)
+
+    layout = QVBoxLayout(dialog)
+    status_label = QLabel("Starting Steam...")
+    layout.addWidget(status_label)
+
+    cancel_button = QPushButton("Cancel")
+    layout.addWidget(cancel_button)
+
+    def on_progress(message: str) -> None:
+        status_label.setText(message)
+
+    def on_finished(success: bool) -> None:
+        result[0] = success
+        dialog.accept()
+
+    def on_cancel() -> None:
+        worker.cancel()
+        status_label.setText("Cancelling...")
+        cancel_button.setEnabled(False)
+
+    worker.progress.connect(on_progress)
+    worker.launch_finished.connect(on_finished)
+    cancel_button.clicked.connect(on_cancel)
+
+    worker.start()
+    dialog.exec()
+    worker.wait()
+
+    return result[0]
 
 
 def _launch_steam(_libs: str) -> bool:
