@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from PySide6.QtCore import Qt
@@ -94,3 +95,79 @@ class TestGetSelectedModData:
 
         result = panel._get_selected_mod_data()
         assert result == []
+
+
+class TestOnUninstallDelete:
+    # jscpd:ignore-start
+    @patch("app.windows.github_mods_panel.EventBus")
+    @patch("app.windows.github_mods_panel.shutil.rmtree")
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    @patch("app.windows.github_mods_panel.AuxMetadataController")
+    def test_deletes_files_and_db_entries_on_confirm(
+        self,
+        mock_aux_ctrl: MagicMock,
+        mock_msgbox: MagicMock,
+        mock_rmtree: MagicMock,
+        mock_event_bus: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.Yes
+
+        mock_session = MagicMock()
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__enter__ = MagicMock(
+            return_value=mock_session
+        )
+        mock_aux_ctrl.get_or_create_cached_instance.return_value.Session.return_value.__exit__ = MagicMock(
+            return_value=False
+        )
+
+        mock_entry = MagicMock()
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_entry
+        )
+
+        panel._on_uninstall_delete()
+
+        mock_rmtree.assert_called_once_with(Path("/mods/alpha"))
+        mock_session.delete.assert_called_once_with(mock_entry)
+        mock_session.flush.assert_called_once()
+        mock_aux_ctrl.delete.assert_called_once_with(mock_session, Path("/mods/alpha"))
+        mock_event_bus.return_value.do_refresh_mods_lists.emit.assert_called_once()
+
+    @patch("app.windows.github_mods_panel.QMessageBox")
+    def test_does_nothing_when_cancelled(
+        self,
+        mock_msgbox: MagicMock,
+        qapp: QApplication,
+    ) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(
+            return_value=[
+                {
+                    "mod_path": "/mods/alpha",
+                    "owner_repo": "owner/alpha",
+                    "display_name": "Mod Alpha",
+                },
+            ]
+        )
+        mock_msgbox.question.return_value = mock_msgbox.StandardButton.No
+
+        panel._on_uninstall_delete()
+
+    # jscpd:ignore-end
+
+    def test_does_nothing_when_no_selection(self, qapp: QApplication) -> None:
+        panel = _make_panel()
+        panel._get_selected_mod_data = MagicMock(return_value=[])
+        panel._on_uninstall_delete()

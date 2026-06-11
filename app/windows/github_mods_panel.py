@@ -1,18 +1,25 @@
 from __future__ import annotations
 
+import shutil
 from functools import partial
+from pathlib import Path
 from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QCloseEvent, QColor, QStandardItem
-from PySide6.QtWidgets import QCheckBox
+from PySide6.QtWidgets import QCheckBox, QMessageBox
 
+from app.controllers.metadata_db_controller import AuxMetadataController
+from app.models.metadata.metadata_db import Base
 from app.utils.event_bus import EventBus
+from app.utils.github.installer import GitHubInstaller  # noqa: F401
+from app.utils.github.models import GitHubModEntry
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
+    MenuItem,  # noqa: F401
 )
 
 # Column indices (after the checkbox column 0 added by BaseModsPanel)
@@ -229,6 +236,75 @@ class GitHubModsPanel(BaseModsPanel):
                 }
             )
         return result
+
+    def _on_uninstall_delete(self) -> None:
+        """Delete selected mods completely: files, GitHubModEntry, and AuxMetadataEntry."""
+        selected = self._get_selected_mod_data()
+        if not selected:
+            return
+
+        mod_list = "\n".join(
+            f"  - {m['display_name']} ({m['owner_repo']})" for m in selected
+        )
+        answer = QMessageBox.question(
+            self,
+            self.tr("Delete mods"),
+            self.tr(
+                "Delete the following mods completely? This cannot be undone.\n\n{mod_list}"
+            ).format(mod_list=mod_list),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            self.settings_controller.settings.aux_db_path
+        )
+        Base.metadata.create_all(aux_controller.engine)
+
+        deleted = 0
+        fs_errors: list[str] = []
+
+        with aux_controller.Session() as session:
+            for mod in selected:
+                mod_path = mod["mod_path"]
+                fs_ok = True
+                try:
+                    shutil.rmtree(Path(mod_path))
+                except FileNotFoundError:
+                    logger.debug(f"Mod directory already missing: {mod_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete {mod_path}: {e}")
+                    fs_errors.append(mod["display_name"])
+                    fs_ok = False
+
+                try:
+                    entry = (
+                        session.query(GitHubModEntry)
+                        .filter_by(mod_path=mod_path)
+                        .first()
+                    )
+                    if entry is not None:
+                        session.delete(entry)
+                        session.flush()
+
+                    AuxMetadataController.delete(session, Path(mod_path))
+                    if fs_ok:
+                        deleted += 1
+                except Exception:
+                    logger.opt(exception=True).warning(
+                        f"Failed to clean up DB for {mod_path}"
+                    )
+
+        EventBus().do_refresh_mods_lists.emit()
+
+        msg = self.tr("Deleted {n} mod(s).").format(n=deleted)
+        if fs_errors:
+            msg += " " + self.tr("File deletion failed for: {names}").format(
+                names=", ".join(fs_errors)
+            )
+        self.ui_elements.details_label.setText(msg)
 
     def _on_check_updates(self) -> None:
         """Trigger update check for all GitHub mods, then refresh the table."""
