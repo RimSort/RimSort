@@ -819,6 +819,7 @@ class MainContent(QObject):
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
+            self.mods_panel.refresh_all_tag_filter_selectors()
 
             # check if we have duplicate mods, prompt user
             self.__duplicate_mods_prompt()
