@@ -109,15 +109,12 @@ class LocationsTabController(BaseTabController):
             group.connect_signals(self.dialog)
 
         # Instance folder location
-        try:
-            self.dialog.instance_folder_location_choose_button.clicked.connect(
-                self._on_instance_folder_choose_callback
-            )
-            self.dialog.instance_folder_location_clear_button.clicked.connect(
-                self._on_instance_folder_clear_callback
-            )
-        except AttributeError:
-            pass
+        self.dialog.instance_folder_location_choose_button.clicked.connect(
+            self._on_instance_folder_choose_callback
+        )
+        self.dialog.instance_folder_location_clear_button.clicked.connect(
+            self._on_instance_folder_clear_callback
+        )
 
         # Clear and autodetect buttons
         self.dialog.locations_clear_button.clicked.connect(
