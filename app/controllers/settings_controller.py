@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
+    AdvancedTabController,
     BaseTabController,
     DatabasesTabController,
     GameLaunchTabController,
@@ -88,8 +89,6 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
-        self.change_mod_coloring_mode = False
-
         self._http_download_worker: HttpDownloadWorker | None = None
 
         self._detected_steam_root: Path | None = None
@@ -131,6 +130,9 @@ class SettingsController(QObject):
 
         self._todds_tab = ToddsTabController(self.settings, self.settings_dialog)
         self._tab_controllers.append(self._todds_tab)
+
+        self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
+        self._tab_controllers.append(self._advanced_tab)
 
         for tc in self._tab_controllers:
             tc.connect_signals()
@@ -194,27 +196,6 @@ class SettingsController(QObject):
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
         )
-
-        # Advanced: wiring for save-comparison indicator toggle
-        try:
-            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
-                self._on_toggle_show_save_comparison_indicators
-            )
-        except (AttributeError, TypeError):
-            logger.warning(
-                "show_save_comparison_indicators_checkbox not available for signal wiring"
-            )
-
-        # Advanced tab
-        self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
-            self._on_use_background_coloring_checkbox_changed
-        )
-
-        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
-            self._on_include_mod_notes_in_mod_name_filter_changed
-        )
-
-        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
 
         # Connect signals from dialogs
         EventBus().reset_settings_file.connect(self._do_reset_settings_file)
@@ -296,12 +277,6 @@ class SettingsController(QObject):
         if tab_name:
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
-
-    @Slot(bool)
-    def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:
-        # Update model immediately for live UI response
-        self.settings.show_save_comparison_indicators = checked
-        self.settings.save()
 
     def create_instance(
         self,
@@ -435,54 +410,8 @@ class SettingsController(QObject):
             self.settings_dialog, self.settings
         )
 
-        # Advanced tab values
-        try:
-            self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
-                self.settings.show_save_comparison_indicators
-            )
-        except (AttributeError, TypeError):
-            logger.warning(
-                "show_save_comparison_indicators_checkbox not available for view update"
-            )
-
         # Advanced tab
-        self.settings_dialog.debug_logging_checkbox.setChecked(
-            self.settings.debug_logging_enabled
-        )
-        self.settings_dialog.watchdog_checkbox.setChecked(self.settings.watchdog_toggle)
-        self.settings_dialog.backup_saves_on_launch_checkbox.setChecked(
-            self.settings.backup_saves_on_launch
-        )
-        self.settings_dialog.auto_backup_retention_count_spinbox.setValue(
-            self.settings.auto_backup_retention_count
-        )
-        self.settings_dialog.auto_backup_compression_count_spinbox.setValue(
-            self.settings.auto_backup_compression_count
-        )
-        self.settings_dialog.color_background_instead_of_text_checkbox.setChecked(
-            self.settings.color_background_instead_of_text_toggle
-        )
-        # Clear button behavior
-        self.settings_dialog.clear_moves_dlc_checkbox.setChecked(
-            self.settings.clear_moves_dlc
-        )
-        self.settings_dialog.show_mod_updates_checkbox.setChecked(
-            self.settings.steam_mods_update_check
-        )
-        self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
-            self.settings.render_unity_rich_text
-        )
-        self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
-            self.settings.update_databases_on_startup
-        )
-        self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.setChecked(
-            self.settings.include_mod_notes_in_mod_name_filter
-        )
-
-        self.settings_dialog.enable_backup_before_update_checkbox.setChecked(
-            self.settings.enable_backup_before_update
-        )
-        self.settings_dialog.max_backups_spinbox.setValue(self.settings.max_backups)
+        self._advanced_tab.update_view_from_model()
         self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
             self.settings.enable_aux_db_behavior_editing
         )
@@ -575,43 +504,7 @@ class SettingsController(QObject):
         self.settings.language = self.settings_dialog.language_combobox.currentData()
 
         # Advanced tab
-        self.settings.debug_logging_enabled = (
-            self.settings_dialog.debug_logging_checkbox.isChecked()
-        )
-        self.settings.watchdog_toggle = (
-            self.settings_dialog.watchdog_checkbox.isChecked()
-        )
-        self.settings.backup_saves_on_launch = (
-            self.settings_dialog.backup_saves_on_launch_checkbox.isChecked()
-        )
-        self.settings.auto_backup_retention_count = (
-            self.settings_dialog.auto_backup_retention_count_spinbox.value()
-        )
-        self.settings.auto_backup_compression_count = (
-            self.settings_dialog.auto_backup_compression_count_spinbox.value()
-        )
-        self.settings.color_background_instead_of_text_toggle = (
-            self.settings_dialog.color_background_instead_of_text_checkbox.isChecked()
-        )
-        # Clear button behavior
-        self.settings.clear_moves_dlc = (
-            self.settings_dialog.clear_moves_dlc_checkbox.isChecked()
-        )
-        self.settings.steam_mods_update_check = (
-            self.settings_dialog.show_mod_updates_checkbox.isChecked()
-        )
-        self.settings.render_unity_rich_text = (
-            self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
-        )
-        self.settings.update_databases_on_startup = (
-            self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
-        )
-        self.settings.include_mod_notes_in_mod_name_filter = self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
-
-        self.settings.enable_backup_before_update = (
-            self.settings_dialog.enable_backup_before_update_checkbox.isChecked()
-        )
-        self.settings.max_backups = self.settings_dialog.max_backups_spinbox.value()
+        self._advanced_tab.update_model_from_view()
         self.settings.enable_aux_db_behavior_editing = (
             self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
         )
@@ -1442,21 +1335,3 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
-
-    @Slot()
-    def _on_use_background_coloring_checkbox_changed(self) -> None:
-        self.change_mod_coloring_mode = not self.change_mod_coloring_mode
-
-    @Slot()
-    def _on_include_mod_notes_in_mod_name_filter_changed(self) -> None:
-        self.settings.include_mod_notes_in_mod_name_filter = self.settings_dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
-
-    @Slot()
-    def _handle_mod_coloring_mode_changed(self) -> None:
-        """
-        If user changes coloring from text to background or vice versa,
-        update all mod items to use that coloring mode.
-        """
-        if self.change_mod_coloring_mode:
-            self.change_mod_coloring_mode = False
-            EventBus().do_change_mod_coloring_mode.emit()
