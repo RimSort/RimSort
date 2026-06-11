@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QLayout,
     QLayoutItem,
     QRadioButton,
+    QScrollArea,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -157,6 +158,32 @@ class FlowLayout(QLayout):
         :return: Required height
         """
         return self._do_layout(QRect(0, 0, width, 0))
+
+
+class FlowLayoutContainer(QWidget):
+    """Widget wrapper that keeps a FlowLayout height in sync with its width."""
+
+    def __init__(
+        self, layout: FlowLayout, parent: QWidget | None = None
+    ) -> None:
+        super().__init__(parent)
+        self.setLayout(layout)
+
+    def resizeEvent(self, event) -> None:  # type: ignore[override]
+        super().resizeEvent(event)
+        self._sync_height()
+
+    def showEvent(self, event) -> None:  # type: ignore[override]
+        super().showEvent(event)
+        self._sync_height()
+
+    def _sync_height(self) -> None:
+        layout = self.layout()
+        if not isinstance(layout, FlowLayout):
+            return
+        width = max(1, self.contentsRect().width())
+        layout.invalidate()
+        self.setMinimumHeight(layout.heightForWidth(width))
 
 
 class TagChip(QFrame):
@@ -371,6 +398,19 @@ class FilterPanel(QFrame):
         # Flow layout for tag chips
         self._tags_flow = FlowLayout()
         self._tags_flow.setSpacing(4)
+        self._tags_container = FlowLayoutContainer(self._tags_flow)
+
+        self._tags_scroll = QScrollArea()
+        self._tags_scroll.setWidgetResizable(True)
+        self._tags_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._tags_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self._tags_scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        self._tags_scroll.setWidget(self._tags_container)
+        self._tags_scroll.setMaximumHeight(200)
 
         # "No tags" chip is always present
         self._no_tags_chip = TagChip("No tags", is_no_tags=True)
@@ -378,7 +418,7 @@ class FilterPanel(QFrame):
         self._tag_chips["__no_tags__"] = self._no_tags_chip
         self._tags_flow.addWidget(self._no_tags_chip)
 
-        main_layout.addLayout(self._tags_flow)
+        main_layout.addWidget(self._tags_scroll)
 
         # --- Separator ---
         sep2 = QFrame()
@@ -405,6 +445,13 @@ class FilterPanel(QFrame):
 
         :param tags: List of tag names to display
         """
+        selected_tags = {
+            key
+            for key, chip in self._tag_chips.items()
+            if key != "__no_tags__" and chip.active
+        }
+        include_no_tags = self._no_tags_chip.active
+
         # Remove existing user tag chips (not the no_tags chip)
         keys_to_remove = [k for k in self._tag_chips if k != "__no_tags__"]
         for key in keys_to_remove:
@@ -419,11 +466,14 @@ class FilterPanel(QFrame):
         for tag in tags:
             chip = TagChip(tag)
             chip.toggled.connect(self._on_filter_changed)
+            chip.set_active(tag in selected_tags)
             self._tag_chips[tag] = chip
             self._tags_flow.addWidget(chip)
 
         # Re-add no_tags chip at end
         self._tags_flow.addWidget(self._no_tags_chip)
+        self._no_tags_chip.set_active(include_no_tags)
+        self._tags_container._sync_height()
 
     @property
     def filter_state(self) -> FilterState:
