@@ -79,8 +79,7 @@ class SettingsDialog(QDialog):
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_external_tools_tab()
-        self._do_themes_tab()
-        self._do_launch_state_tab()
+        self._do_appearance_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -1306,14 +1305,20 @@ This basically preserves your mod coloring, user notes etc. for this many second
         checked = self.launch_via_steam_protocol_checkbox.isChecked()
         self.run_args_group.setEnabled(not checked)
 
-    def _do_themes_tab(self) -> None:
+    def _do_appearance_tab(self) -> None:
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.tab_widget.addTab(scroll_area, self.tr("Appearance"))
+
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Theme"))
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
+        scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # Theme settings group
+        # === Theme settings group ===
         theme_group_label = QLabel(self.tr("Theme Settings"))
         theme_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(theme_group_label)
@@ -1351,7 +1356,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.theme_location_open_button.setText(self.tr("Open Theme Location"))
         theme_layout.addWidget(self.theme_location_open_button)
 
-        # Font settings group
+        # === Font settings group ===
         font_group_label = QLabel(self.tr("Font Settings"))
         font_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(font_group_label)
@@ -1398,14 +1403,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
         font_layout.addLayout(reset_button_layout)
         reset_button.clicked.connect(self.reset_font_settings)
 
-        if self.enable_themes_checkbox.isChecked():
-            self.enable_themes_checkbox.stateChanged.connect(
-                self.connect_populate_themes_combobox
-            )
-        else:
-            self.themes_combobox.clear()
+        self.enable_themes_checkbox.stateChanged.connect(
+            self.connect_populate_themes_combobox
+        )
 
-        # Language configuration group
+        # === Language setting group ===
         language_group_label = QLabel(self.tr("Language Setting"))
         language_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(language_group_label)
@@ -1430,14 +1432,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.connect_populate_languages_combobox()
 
-    def _do_launch_state_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Launch State"))
-
-        tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        # Windows launch state group
+        # === Launch state group ===
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -1480,7 +1475,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        # Add QLabel as title for Main Window Launch State
         main_window_title_label = QLabel(self.tr("Main Window Launch State"))
         main_window_title_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(main_window_title_label)
@@ -1503,7 +1497,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        # Add QLabel as title for Browser Window Launch State
         browser_window_title_label = QLabel(self.tr("Browser Window Launch State"))
         browser_window_title_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(browser_window_title_label)
@@ -1526,7 +1519,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.settings_custom_width_spinbox.setSuffix(" px")
         self.settings_custom_width_spinbox.setFixedWidth(100)
         custom_width_label = QLabel(self.tr("Custom Width:"))
-        custom_width_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        custom_width_label.setFont(GUIInfo().emphasis_font)
         settings_window_layout.addWidget(custom_width_label)
         settings_window_layout.addWidget(self.settings_custom_width_spinbox)
 
@@ -1538,11 +1531,13 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.settings_custom_height_spinbox.setSuffix(" px")
         self.settings_custom_height_spinbox.setFixedWidth(100)
         custom_height_label = QLabel(self.tr("Custom Height:"))
-        custom_height_label.setFont(GUIInfo().emphasis_font)  # Set font for label
+        custom_height_label.setFont(GUIInfo().emphasis_font)
         settings_window_layout.addWidget(custom_height_label)
         settings_window_layout.addWidget(self.settings_custom_height_spinbox)
 
         group_layout.addWidget(settings_window_group)
+
+        tab_layout.addStretch()
 
     def disable_main_custom_size_spinboxes(self) -> None:
         """Disable main window custom size spinboxes when 'Maximized' or 'Normal' radio buttons are checked"""
