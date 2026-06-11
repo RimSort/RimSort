@@ -249,16 +249,18 @@ def run_steam_launch_with_progress(libs: str) -> bool:
     worker = SteamLaunchWorker(libs)
     result = [False]
 
+    _tr = QCoreApplication.translate
+
     dialog = QDialog()
-    dialog.setWindowTitle("Launching Steam")
+    dialog.setWindowTitle(_tr("SteamAvailability", "Launching Steam"))
     dialog.setModal(True)
     dialog.setMinimumWidth(350)
 
     layout = QVBoxLayout(dialog)
-    status_label = QLabel("Starting Steam...")
+    status_label = QLabel(_tr("SteamAvailability", "Starting Steam..."))
     layout.addWidget(status_label)
 
-    cancel_button = QPushButton("Cancel")
+    cancel_button = QPushButton(_tr("SteamAvailability", "Cancel"))
     layout.addWidget(cancel_button)
 
     def on_progress(message: str) -> None:
@@ -276,6 +278,7 @@ def run_steam_launch_with_progress(libs: str) -> bool:
     worker.progress.connect(on_progress)
     worker.launch_finished.connect(on_finished)
     cancel_button.clicked.connect(on_cancel)
+    dialog.rejected.connect(on_cancel)
 
     worker.start()
     dialog.exec()
@@ -284,12 +287,32 @@ def run_steam_launch_with_progress(libs: str) -> bool:
     return result[0]
 
 
+_BUTTON_YES = "Yes"
+_BUTTON_YES_ALWAYS = "Yes, always"
+_BUTTON_NO = "No"
+_BUTTON_NO_NEVER = "No, never ask"
+
+_BUTTON_LABELS = [_BUTTON_YES, _BUTTON_YES_ALWAYS, _BUTTON_NO, _BUTTON_NO_NEVER]
+
+_BUTTON_TO_CHOICE = {
+    _BUTTON_YES: "yes",
+    _BUTTON_YES_ALWAYS: "yes_always",
+    _BUTTON_NO: "no",
+    _BUTTON_NO_NEVER: "no_never",
+}
+
+
 def _show_steam_launch_prompt() -> str:
     """
     Show a dialog asking the user what to do when Steam isn't running.
-    Returns one of: "yes", "yes_always", "no", "no_never".
+    Returns one of: "yes", "yes_always", "no", "no_never", "cancel".
     """
     import app.views.dialogue as dialogue
+
+    translated_to_key = {
+        QCoreApplication.translate("show_dialogue_conditional", label): label
+        for label in _BUTTON_LABELS
+    }
 
     response = dialogue.show_dialogue_conditional(
         title=QCoreApplication.translate("SteamAvailability", "Steam Not Running"),
@@ -301,17 +324,13 @@ def _show_steam_launch_prompt() -> str:
             "SteamAvailability",
             "Would you like to launch Steam?\n\n(You can also change this in Settings)",
         ),
-        button_text_override=["Yes", "Yes, always", "No", "No, never ask"],
+        button_text_override=_BUTTON_LABELS,
     )
     if isinstance(response, str):
-        response_lower = response.lower().strip()
-        if response_lower.startswith("yes, always"):
-            return "yes_always"
-        elif response_lower.startswith("yes"):
-            return "yes"
-        elif response_lower.startswith("no, never"):
-            return "no_never"
-    return "no"
+        original_label = translated_to_key.get(response)
+        if original_label is not None:
+            return _BUTTON_TO_CHOICE[original_label]
+    return "cancel"
 
 
 def check_steam_available(_libs: str, settings: "Settings") -> bool:
@@ -359,6 +378,8 @@ def check_steam_available(_libs: str, settings: "Settings") -> bool:
         settings.save()
         show_no_steam_warning()
         return False
-    else:
+    elif choice == "no":
         show_no_steam_warning()
+        return False
+    else:
         return False
