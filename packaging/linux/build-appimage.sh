@@ -28,9 +28,9 @@ APPDIR="${BUILD_DIR}/RimSort-${APPIMAGE_ARCH}.AppDir"
 APPIMAGETOOL="${BUILD_DIR}/appimagetool-${APPIMAGE_ARCH}.AppImage"
 OUTPUT="${BUILD_DIR}/RimSort-${VERSION}-${APPIMAGE_ARCH}.AppImage"
 
-DESKTOP_FILE="${REPO_ROOT}/data/io.github.rimsort.RimSort.desktop"
+DESKTOP_FILE="${REPO_ROOT}/packaging/linux/io.github.rimsort.RimSort.desktop"
 ICON_FILE="${REPO_ROOT}/themes/default-icons/RimSort_Icon_64x64.svg"
-METAINFO_FILE="${REPO_ROOT}/data/io.github.rimsort.RimSort.metainfo.xml"
+METAINFO_FILE="${REPO_ROOT}/packaging/linux/io.github.rimsort.RimSort.metainfo.xml"
 
 echo "=== Building AppImage for RimSort ${VERSION} (${APPIMAGE_ARCH}) ==="
 echo "  app.dist: ${APP_DIST}"
