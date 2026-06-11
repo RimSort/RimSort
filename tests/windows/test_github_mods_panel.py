@@ -1,9 +1,10 @@
 from pathlib import Path
+from typing import cast
 from unittest.mock import MagicMock, patch
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QApplication, QCheckBox
+from PySide6.QtWidgets import QAbstractButton, QApplication, QCheckBox
 
 from app.utils.metadata import MetadataManager
 from app.windows.github_mods_panel import _COL_NAME, _COL_REPO, GitHubModsPanel
@@ -20,7 +21,7 @@ def _make_panel(**overrides: object) -> GitHubModsPanel:
     panel.editor_model = MagicMock()
     panel.editor_table_view = MagicMock()
     panel.ui_elements = MagicMock()
-    panel._populate_from_mods = MagicMock()
+    panel._populate_from_mods = MagicMock()  # type: ignore[method-assign]
     for key, value in overrides.items():
         setattr(panel, key, value)
     return panel
@@ -62,12 +63,12 @@ class TestGetSelectedModData:
         cb_unchecked = QCheckBox()
         cb_unchecked.setChecked(False)
 
-        def indexWidget_side_effect(idx: object) -> QCheckBox:
-            if hasattr(idx, "row") and idx.row() == 0:
+        def indexWidget_side_effect(idx: QModelIndex) -> QCheckBox:
+            if idx.row() == 0:
                 return cb_checked
             return cb_unchecked
 
-        panel.editor_table_view.indexWidget.side_effect = indexWidget_side_effect
+        panel.editor_table_view.indexWidget.side_effect = indexWidget_side_effect  # type: ignore[attr-defined]
 
         result = panel._get_selected_mod_data()
 
@@ -92,7 +93,7 @@ class TestGetSelectedModData:
 
         cb = QCheckBox()
         cb.setChecked(False)
-        panel.editor_table_view.indexWidget.return_value = cb
+        panel.editor_table_view.indexWidget.return_value = cb  # type: ignore[attr-defined]
 
         result = panel._get_selected_mod_data()
         assert result == []
@@ -113,7 +114,7 @@ class TestOnUninstallDelete:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -153,7 +154,7 @@ class TestOnUninstallDelete:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -170,7 +171,7 @@ class TestOnUninstallDelete:
 
     def test_does_nothing_when_no_selection(self, qapp: QApplication) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(return_value=[])
+        panel._get_selected_mod_data = MagicMock(return_value=[])  # type: ignore[method-assign]
         panel._on_uninstall_delete()
 
 
@@ -187,7 +188,7 @@ class TestOnUninstallConvertToGit:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -231,7 +232,7 @@ class TestOnUninstallConvertToGit:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -283,7 +284,7 @@ class TestOnUninstallConvertToGit:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -326,7 +327,7 @@ class TestOnUninstallConvertToGit:
         qapp: QApplication,
     ) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(
+        panel._get_selected_mod_data = MagicMock(  # type: ignore[method-assign]
             return_value=[
                 {
                     "mod_path": "/mods/alpha",
@@ -343,7 +344,7 @@ class TestOnUninstallConvertToGit:
 
     def test_does_nothing_when_no_selection(self, qapp: QApplication) -> None:
         panel = _make_panel()
-        panel._get_selected_mod_data = MagicMock(return_value=[])
+        panel._get_selected_mod_data = MagicMock(return_value=[])  # type: ignore[method-assign]
         panel._on_uninstall_convert_to_git()
 
 
@@ -368,8 +369,11 @@ class TestUninstallButton:
 
         button_texts: list[str] = []
         for i in range(layout.count()):
-            widget = layout.itemAt(i).widget()
-            if widget is not None:
-                button_texts.append(widget.text())
+            item = layout.itemAt(i)
+            if item is None:
+                continue
+            widget = item.widget()
+            if widget is not None and hasattr(widget, "text"):
+                button_texts.append(cast(QAbstractButton, widget).text())
 
         assert "Uninstall" in button_texts
