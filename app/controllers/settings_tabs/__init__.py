@@ -8,6 +8,9 @@ from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.controllers.settings_tabs.databases_tab_controller import (
     DatabasesTabController,
 )
+from app.controllers.settings_tabs.external_tools_tab_controller import (
+    ExternalToolsTabController,
+)
 from app.controllers.settings_tabs.game_launch_tab_controller import (
     GameLaunchTabController,
 )
@@ -24,6 +27,7 @@ __all__ = [
     "AppearanceTabController",
     "BaseTabController",
     "DatabasesTabController",
+    "ExternalToolsTabController",
     "GameLaunchTabController",
     "InternalToolsTabController",
     "LocationsTabController",
