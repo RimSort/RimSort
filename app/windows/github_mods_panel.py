@@ -296,6 +296,7 @@ class GitHubModsPanel(BaseModsPanel):
                     if fs_ok:
                         deleted += 1
                 except Exception:
+                    session.rollback()
                     logger.opt(exception=True).warning(
                         f"Failed to clean up DB for {mod_path}"
                     )
@@ -395,6 +396,7 @@ class GitHubModsPanel(BaseModsPanel):
                     session.commit()
                     converted += 1
                 except Exception:
+                    session.rollback()
                     logger.opt(exception=True).warning(
                         f"Failed to convert {mod_path} to git tracking"
                     )
