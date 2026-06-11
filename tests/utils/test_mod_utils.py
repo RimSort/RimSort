@@ -65,11 +65,13 @@ def _make_about_xml_mod(
 def metadata_controller_mock() -> Generator[MagicMock, None, None]:
     with patch("app.utils.mod_utils.MetadataController.instance") as mock_instance:
         mock = MagicMock()
-        mod1 = _make_listed_mod(name="Mod One", mod_path="/path/to/mod1", pfid="123")
-        mod2 = _make_listed_mod(name="Mod Two", mod_path="/path/to/mod2", pfid="456")
+        p1 = str(Path("/path/to/mod1"))
+        p2 = str(Path("/path/to/mod2"))
+        mod1 = _make_listed_mod(name="Mod One", mod_path=p1, pfid="123")
+        mod2 = _make_listed_mod(name="Mod Two", mod_path=p2, pfid="456")
         mock.mods_metadata = {
-            "/path/to/mod1": mod1,
-            "/path/to/mod2": mod2,
+            p1: mod1,
+            p2: mod2,
         }
         # Set up steam_db mock
         steam_db = MagicMock(spec=SteamDbSchema)
@@ -102,11 +104,13 @@ def test_get_mod_name_from_pfid_invalid(
 
 
 def test_get_mod_paths(metadata_controller_mock: MagicMock) -> None:
+    p1 = str(Path("/path/to/mod1"))
+    p2 = str(Path("/path/to/mod2"))
     with patch("os.path.isdir") as isdir_mock:
-        isdir_mock.side_effect = lambda path: path in ["/path/to/mod1", "/path/to/mod2"]
-        paths = get_mod_paths(["/path/to/mod1", "/path/to/mod2", "/nonexistent"])
-        assert "/path/to/mod1" in paths
-        assert "/path/to/mod2" in paths
+        isdir_mock.side_effect = lambda path: path in [p1, p2]
+        paths = get_mod_paths([p1, p2, str(Path("/nonexistent"))])
+        assert p1 in paths
+        assert p2 in paths
         assert len(paths) == 2
 
 
@@ -115,7 +119,7 @@ def test_get_mod_paths_with_nonexistent_path(
 ) -> None:
     with patch("os.path.isdir") as isdir_mock:
         isdir_mock.return_value = False
-        paths = get_mod_paths(["/path/to/mod1"])
+        paths = get_mod_paths([str(Path("/path/to/mod1"))])
         assert paths == []
 
 
