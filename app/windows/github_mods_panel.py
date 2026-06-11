@@ -26,6 +26,7 @@ from app.windows.base_mods_panel import (
 
 # Column indices (after the checkbox column 0 added by BaseModsPanel)
 _COL_NAME = 1
+_COL_REPO = 2
 _COL_INSTALLED = 3
 _COL_LATEST = 4
 _COL_AUTO_UPDATE = 5
@@ -199,6 +200,27 @@ class GitHubModsPanel(BaseModsPanel):
             logger.opt(exception=True).warning(
                 f"Failed to update auto_update for {mod_path}"
             )
+
+    def _get_selected_mod_data(self) -> list[dict[str, str]]:
+        """Collect mod_path, owner_repo, and display_name from checked rows."""
+        selected = self._get_selected_row_indices()
+        result: list[dict[str, str]] = []
+        for row in selected:
+            name_item = self.editor_model.item(row, _COL_NAME)
+            repo_item = self.editor_model.item(row, _COL_REPO)
+            if not name_item or not repo_item:
+                continue
+            mod_path = name_item.data(Qt.ItemDataRole.UserRole)
+            if not mod_path:
+                continue
+            result.append(
+                {
+                    "mod_path": mod_path,
+                    "owner_repo": repo_item.text(),
+                    "display_name": name_item.text(),
+                }
+            )
+        return result
 
     def _on_check_updates(self) -> None:
         """Trigger update check for all GitHub mods, then refresh the table."""
