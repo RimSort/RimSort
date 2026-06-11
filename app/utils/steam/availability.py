@@ -52,9 +52,10 @@ def _find_steam_executable() -> Optional[Path]:
         return None
 
 
-def _is_steam_running() -> bool:
+def is_steam_running() -> bool:
     """
     Check if Steam is currently running by looking for Steam processes.
+    Single-pass check with no retries — suitable for synchronous UI calls.
 
     Returns:
         bool: True if Steam is running, False otherwise
@@ -65,7 +66,6 @@ def _is_steam_running() -> bool:
         logger.warning("psutil not available, cannot check if Steam is running")
         return False
     try:
-        # Define platform-specific Steam process indicators once
         if sys.platform == "win32":
             steam_indicators = {
                 "steam.exe",
@@ -85,19 +85,14 @@ def _is_steam_running() -> bool:
                 "steamwebhelper",
             }
 
-        # Retry up to 5 times with 2 second delay to account for process startup time
-        for attempt in range(5):
-            for process in psutil.process_iter(attrs=["name"]):
-                try:
-                    name = process.info["name"]
-                    if name and name.lower() in steam_indicators:
-                        logger.debug(f"Found Steam process: {name}")
-                        return True
-                except (psutil.AccessDenied, psutil.NoSuchProcess):
-                    continue
-
-            if attempt < 4:
-                sleep(2)
+        for process in psutil.process_iter(attrs=["name"]):
+            try:
+                name = process.info["name"]
+                if name and name.lower() in steam_indicators:
+                    logger.debug(f"Found Steam process: {name}")
+                    return True
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
 
         return False
     except Exception as e:
@@ -180,7 +175,7 @@ def _launch_steam(_libs: str) -> bool:
         sleep(SLEEP_TIME)
 
         # First check if Steam processes are running after initial launch
-        if _is_steam_running():
+        if is_steam_running():
             logger.info("Steam processes detected after launch")
             # Give Steam a bit more time to fully initialize
             sleep(SLEEP_TIME)
@@ -190,7 +185,7 @@ def _launch_steam(_libs: str) -> bool:
         for attempt in range(MAX_ATTEMPTS):
             sleep(SLEEP_TIME)
             # Check both process detection and API initialization
-            if _is_steam_running():
+            if is_steam_running():
                 logger.info("Steam processes detected during API wait")
                 # Give Steam a bit more time to fully initialize
                 sleep(SLEEP_TIME)
@@ -257,7 +252,7 @@ def check_steam_available(_libs: str) -> bool:
         return False
 
     # Check if Steam is running
-    if not _is_steam_running():
+    if not is_steam_running():
         logger.info("Steam is not running, attempting to launch...")
         if not _launch_steam(_libs):
             logger.error("Failed to launch Steam")
