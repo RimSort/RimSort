@@ -2,14 +2,16 @@ from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_tabs.base_tab_controller import (
     BaseTabController,
     SharedFileDialogState,
 )
 from app.models.settings import Settings
+from app.utils.acf_utils import validate_acf_file_exists
 from app.utils.constants import DEFAULT_INSTANCE_NAME
-from app.utils.generic import platform_specific_open
+from app.utils.generic import platform_specific_open, validate_game_executable
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import BinaryChoiceDialog, show_dialogue_file
 from app.views.settings_dialog import SettingsDialog
@@ -73,15 +75,11 @@ class LocationsTabController(BaseTabController):
         settings: Settings,
         dialog: SettingsDialog,
         file_dialog_state: SharedFileDialogState,
-        validate_game_location: Callable[[str], bool],
-        validate_config_folder_location: Callable[[str], bool],
         on_autodetect: Callable[[], None],
         on_instance_folder_choose: Callable[[], None],
         on_instance_folder_clear: Callable[[], None],
     ) -> None:
         super().__init__(settings, dialog, file_dialog_state=file_dialog_state)
-        self._validate_game_location = validate_game_location
-        self._validate_config_folder_location = validate_config_folder_location
         self._on_autodetect_callback = on_autodetect
         self._on_instance_folder_choose_callback = on_instance_folder_choose
         self._on_instance_folder_clear_callback = on_instance_folder_clear
@@ -159,6 +157,23 @@ class LocationsTabController(BaseTabController):
         instance.steam_client_integration = (
             self.dialog.steam_client_integration_checkbox.isChecked()
         )
+
+    def validate_before_save(self) -> bool:
+        game_folder_text = self.dialog.game_location.text().strip()
+        if game_folder_text and not self._validate_game_location(game_folder_text):
+            return False
+
+        config_folder_text = self.dialog.config_folder_location.text().strip()
+        if config_folder_text and not self._validate_config_folder_location(
+            config_folder_text
+        ):
+            return False
+
+        if self.dialog.steam_client_integration_checkbox.isChecked():
+            if not self._validate_steam_integration():
+                return False
+
+        return True
 
     # --- Folder path group callbacks ---
 
@@ -245,3 +260,99 @@ class LocationsTabController(BaseTabController):
         self.dialog.config_folder_location.setText("")
         self.dialog.steam_mods_folder_location.setText("")
         self.dialog.local_mods_folder_location.setText("")
+
+    # --- Validation ---
+
+    def _validate_game_location(self, game_location: str) -> bool:
+        """Validate the game location and show a warning if invalid."""
+        if not validate_game_executable(game_location):
+            QMessageBox.information(
+                self.dialog,
+                self.dialog.tr("Invalid Game Location"),
+                self.dialog.tr(
+                    "The selected game folder does not contain a valid RimWorld executable. Please select a valid game location."
+                ),
+            )
+            return False
+        return True
+
+    def _validate_config_folder_location(self, config_folder: str) -> bool:
+        """Validate the config folder location and show a warning if invalid."""
+        if not (Path(config_folder) / "ModsConfig.xml").exists():
+            QMessageBox.warning(
+                self.dialog,
+                self.dialog.tr("Invalid Config Folder"),
+                self.dialog.tr(
+                    "The selected config folder does not contain ModsConfig.xml. Please select a valid config folder."
+                ),
+            )
+            return False
+        return True
+
+    @staticmethod
+    def _check_steam_integration_validity(
+        steam_client_integration: bool, steam_mods_location: str
+    ) -> bool:
+        """Check if Steam client integration and Steam mods location are valid."""
+        if not steam_client_integration and not steam_mods_location:
+            return True
+        if steam_client_integration and not steam_mods_location:
+            return False
+        if steam_mods_location:
+            return validate_acf_file_exists(steam_mods_location)
+        return True
+
+    def _disable_steam_integration_ui(self) -> None:
+        """Clear all Steam integration dependent UI settings."""
+        self.dialog.steam_client_integration_checkbox.setChecked(False)
+        self.dialog.steam_mods_folder_location.setText("")
+        self.dialog.launch_via_steam_protocol_checkbox.setChecked(False)
+
+    def _validate_steam_integration(self) -> bool:
+        """Validate Steam client integration and Steam mods location configuration."""
+        steam_client_integration = (
+            self.dialog.steam_client_integration_checkbox.isChecked()
+        )
+        steam_mods_location = self.dialog.steam_mods_folder_location.text().strip()
+
+        if not steam_client_integration:
+            QMessageBox.warning(
+                self.dialog,
+                self.dialog.tr("Steam Client Integration Disabled"),
+                self.dialog.tr(
+                    "Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared."
+                ),
+            )
+            self.dialog.steam_mods_folder_location.setText("")
+            self.dialog.launch_via_steam_protocol_checkbox.setChecked(False)
+
+        is_valid = self._check_steam_integration_validity(
+            steam_client_integration, steam_mods_location
+        )
+
+        if not is_valid:
+            self._disable_steam_integration_ui()
+
+            if steam_client_integration and not steam_mods_location:
+                QMessageBox.warning(
+                    self.dialog,
+                    self.dialog.tr("Steam Mods Location Required"),
+                    self.dialog.tr(
+                        "Steam client integration requires a Steam mods location to be configured. "
+                        "Steam client integration, Steam mods location, and Steam protocol launch have been disabled."
+                    ),
+                )
+            elif steam_mods_location and not validate_acf_file_exists(
+                steam_mods_location
+            ):
+                QMessageBox.warning(
+                    self.dialog,
+                    self.dialog.tr("Steam Workshop File Not Found"),
+                    self.dialog.tr(
+                        "The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. "
+                        "Steam client integration, Steam mods location, and Steam protocol launch have been disabled. "
+                        "Please ensure Steam is properly installed and has downloaded RimWorld Workshop data."
+                    ),
+                )
+
+        return is_valid
