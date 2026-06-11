@@ -28,10 +28,8 @@
 
 import os
 import platform
-import signal
 import sys
 import traceback
-import types
 from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
@@ -262,12 +260,6 @@ if __name__ == "__main__":
             exc_info=True,
         )
         lock = None
-
-    # SIGTERM handler: raise SystemExit so the finally block runs release()
-    def _sigterm_handler(signum: int, frame: types.FrameType | None) -> None:
-        raise SystemExit(signum)
-
-    signal.signal(signal.SIGTERM, _sigterm_handler)
 
     try:
         main_thread()
