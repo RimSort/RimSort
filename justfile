@@ -108,7 +108,13 @@ shfmt-fix:
     fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
 # Run all code quality checks: super-linter + typecheck + pyright
+[unix]
 check: super-lint typecheck pyright
+    @echo "Use 'just fix' to automatically fix linting and formatting issues!"
+
+# Run all code quality checks available on Windows: typecheck + pyright
+[windows]
+check: typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
