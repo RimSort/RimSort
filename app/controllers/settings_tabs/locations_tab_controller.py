@@ -1,8 +1,10 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from loguru import logger
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QLineEdit, QMessageBox
 
 from app.controllers.settings_tabs.base_tab_controller import (
     BaseTabController,
@@ -12,8 +14,9 @@ from app.models.settings import Settings
 from app.utils.acf_utils import validate_acf_file_exists
 from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.generic import platform_specific_open, validate_game_executable
+from app.utils.steam_path_detection import detect_platform_paths
 from app.utils.system_info import SystemInfo
-from app.views.dialogue import BinaryChoiceDialog, show_dialogue_file
+from app.views.dialogue import BinaryChoiceDialog, show_dialogue_file, show_warning
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -75,12 +78,10 @@ class LocationsTabController(BaseTabController):
         settings: Settings,
         dialog: SettingsDialog,
         file_dialog_state: SharedFileDialogState,
-        on_autodetect: Callable[[], None],
         on_instance_folder_choose: Callable[[], None],
         on_instance_folder_clear: Callable[[], None],
     ) -> None:
         super().__init__(settings, dialog, file_dialog_state=file_dialog_state)
-        self._on_autodetect_callback = on_autodetect
         self._on_instance_folder_choose_callback = on_instance_folder_choose
         self._on_instance_folder_clear_callback = on_instance_folder_clear
 
@@ -121,7 +122,7 @@ class LocationsTabController(BaseTabController):
             self._on_clear_all_button_clicked
         )
         self.dialog.locations_autodetect_button.clicked.connect(
-            self._on_autodetect_callback
+            self._on_autodetect_button_clicked
         )
 
     def update_view_from_model(self) -> None:
@@ -260,6 +261,71 @@ class LocationsTabController(BaseTabController):
         self.dialog.config_folder_location.setText("")
         self.dialog.steam_mods_folder_location.setText("")
         self.dialog.local_mods_folder_location.setText("")
+
+    # --- Autodetect ---
+
+    @Slot()
+    def _on_autodetect_button_clicked(self) -> None:
+        """Autodetect RimWorld paths based on platform defaults."""
+        logger.info("USER ACTION: starting autodetect paths")
+
+        try:
+            paths = detect_platform_paths()
+        except RuntimeError:
+            logger.error("Attempting to autodetect paths on an unknown system")
+            return
+
+        if paths.steam_root is not None and "snap" in paths.steam_root.parts:
+            show_warning(
+                title="Unsupported Steam installation",
+                text="Snap-based Steam installation detected.",
+                information=(
+                    "Steam installed via Snap is not officially supported and may cause issues. "
+                    "We recommend installing Steam via your distribution's native package manager "
+                    "or Flatpak instead.\n\n"
+                    "Autodetection will continue, but some paths may not work correctly."
+                ),
+            )
+
+        @dataclass
+        class _PathGroup:
+            folder: Path
+            settings_line: QLineEdit
+            name: str
+
+        path_groups = [
+            _PathGroup(paths.game_folder, self.dialog.game_location, "game"),
+            _PathGroup(
+                paths.config_folder, self.dialog.config_folder_location, "config"
+            ),
+            _PathGroup(
+                paths.steam_mods_folder,
+                self.dialog.steam_mods_folder_location,
+                "workshop mods",
+            ),
+            _PathGroup(
+                paths.game_folder / "Mods",
+                self.dialog.local_mods_folder_location,
+                "local mods",
+            ),
+        ]
+
+        for group in path_groups:
+            if group.folder.exists():
+                logger.info(
+                    f"Auto-detected {group.name} folder path exists: {group.folder}"
+                )
+                if not group.settings_line.text():
+                    logger.info(
+                        f"No value set currently for {group.name} folder. Overwriting with auto-detected path"
+                    )
+                    group.settings_line.setText(str(group.folder))
+                else:
+                    logger.info(f"Value already set for {group.name} folder. Passing")
+            else:
+                logger.warning(
+                    f"Auto-detected {group.name} folder path does not exist: {group.folder}"
+                )
 
     # --- Validation ---
 
