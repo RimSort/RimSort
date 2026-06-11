@@ -79,7 +79,7 @@ class LocationsTabController(BaseTabController):
         super().__init__(settings, dialog)
         self._validate_game_location = validate_game_location
         self._validate_config_folder_location = validate_config_folder_location
-        self._on_path_selected = on_path_selected
+        self._path_selected_callback = on_path_selected
         self._on_autodetect_callback = on_autodetect
         self._on_instance_folder_choose_callback = on_instance_folder_choose
         self._on_instance_folder_clear_callback = on_instance_folder_clear
@@ -182,7 +182,7 @@ class LocationsTabController(BaseTabController):
             return None
 
         dialog.local_mods_folder_location.setText(str(result / "Mods"))
-        self._on_path_selected(str(result))
+        self._path_selected_callback(str(result))
         return str(result)
 
     @staticmethod
@@ -200,7 +200,7 @@ class LocationsTabController(BaseTabController):
         if not self._validate_config_folder_location(config_folder):
             return None
 
-        self._on_path_selected(str(Path(config_folder).parent))
+        self._path_selected_callback(str(Path(config_folder).parent))
         return config_folder
 
     def _on_steam_mods_choose(self, dialog: SettingsDialog) -> str | None:
@@ -210,7 +210,7 @@ class LocationsTabController(BaseTabController):
         )
         if not steam_mods_folder:
             return None
-        self._on_path_selected(str(Path(steam_mods_folder).parent))
+        self._path_selected_callback(str(Path(steam_mods_folder).parent))
         return steam_mods_folder
 
     def _on_local_mods_choose(self, dialog: SettingsDialog) -> str | None:
@@ -220,7 +220,7 @@ class LocationsTabController(BaseTabController):
         )
         if not local_mods_folder:
             return None
-        self._on_path_selected(str(Path(local_mods_folder).parent))
+        self._path_selected_callback(str(Path(local_mods_folder).parent))
         return local_mods_folder
 
     # --- Clear all button ---
