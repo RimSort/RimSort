@@ -306,6 +306,104 @@ class GitHubModsPanel(BaseModsPanel):
             )
         self.ui_elements.details_label.setText(msg)
 
+    def _on_uninstall_convert_to_git(self) -> None:
+        """Convert selected mods from GitHub release tracking to plain git tracking."""
+        selected = self._get_selected_mod_data()
+        if not selected:
+            return
+
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            self.settings_controller.settings.aux_db_path
+        )
+        Base.metadata.create_all(aux_controller.engine)
+
+        entries: list[tuple[dict[str, str], GitHubModEntry]] = []
+        has_release_based = False
+        with aux_controller.Session() as session:
+            for mod in selected:
+                entry = (
+                    session.query(GitHubModEntry)
+                    .filter_by(mod_path=mod["mod_path"])
+                    .first()
+                )
+                if entry is not None:
+                    entries.append((mod, entry))
+                    if entry.installed_asset_name:
+                        has_release_based = True
+
+        if not entries:
+            return
+
+        mod_list = "\n".join(
+            f"  - {m['display_name']} ({m['owner_repo']})" for m, _ in entries
+        )
+        message = self.tr(
+            "Convert the following mods to git tracking? "
+            "They will be updated via the Git Mod Updater instead of GitHub releases."
+            "\n\n{mod_list}"
+        ).format(mod_list=mod_list)
+        if has_release_based:
+            message += "\n\n" + self.tr(
+                "Release-based mods will be re-cloned from HEAD, replacing current files."
+            )
+
+        answer = QMessageBox.question(
+            self,
+            self.tr("Convert to git tracking"),
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        converted = 0
+        errors: list[str] = []
+
+        with aux_controller.Session() as session:
+            for mod, _cached_entry in entries:
+                mod_path = mod["mod_path"]
+                try:
+                    entry = (
+                        session.query(GitHubModEntry)
+                        .filter_by(mod_path=mod_path)
+                        .first()
+                    )
+                    if entry is None:
+                        continue
+
+                    if entry.installed_asset_name:
+                        clone_url = f"https://github.com/{mod['owner_repo']}.git"
+                        backup_path = GitHubInstaller.backup_mod(Path(mod_path))
+                        success, _sha = GitHubInstaller.install_head(
+                            clone_url, mod_path
+                        )
+                        if not success:
+                            GitHubInstaller.restore_backup(backup_path, Path(mod_path))
+                            errors.append(mod["display_name"])
+                            logger.warning(
+                                f"Failed to clone HEAD for {mod['owner_repo']}, "
+                                f"restored backup"
+                            )
+                            continue
+                        GitHubInstaller.delete_backup(backup_path)
+
+                    session.delete(entry)
+                    session.commit()
+                    converted += 1
+                except Exception:
+                    logger.opt(exception=True).warning(
+                        f"Failed to convert {mod_path} to git tracking"
+                    )
+                    errors.append(mod["display_name"])
+
+        EventBus().do_refresh_mods_lists.emit()
+
+        msg = self.tr("Converted {n} mod(s) to git tracking.").format(n=converted)
+        if errors:
+            msg += " " + self.tr("Failed: {names}").format(names=", ".join(errors))
+        self.ui_elements.details_label.setText(msg)
+
     def _on_check_updates(self) -> None:
         """Trigger update check for all GitHub mods, then refresh the table."""
         if self._update_worker is not None and self._update_worker.isRunning():
