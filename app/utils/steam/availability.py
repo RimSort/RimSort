@@ -5,13 +5,16 @@ import sys
 from collections.abc import MutableMapping
 from pathlib import Path
 from time import sleep
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QCoreApplication, QThread, Signal
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 
 from app.utils.generic import show_no_steam_warning, show_snap_steam_warning
+
+if TYPE_CHECKING:
+    from app.models.settings import Settings
 
 # If we're running from a Python interpreter, Ensure SteamworksPy module is in Python path, sys.path ($PYTHONPATH)
 # Ensure that this is available by running via: git submodule update --init --recursive
@@ -27,6 +30,10 @@ MAX_ATTEMPTS = 10
 SNAP_STEAM_PATH = (
     Path.home() / "snap" / "steam" / "common" / ".local" / "share" / "Steam"
 )
+
+_STEAM_LAUNCH_BEHAVIOR_PROMPT = "prompt"
+_STEAM_LAUNCH_BEHAVIOR_ALWAYS = "always"
+_STEAM_LAUNCH_BEHAVIOR_NEVER = "never"
 
 
 def _find_steam_executable() -> Optional[Path]:
@@ -281,12 +288,16 @@ def _launch_steam(_libs: str) -> bool:
     """
     Launch Steam if it's not running and wait for it to start.
 
+    .. deprecated::
+        Will be removed in Task 7. Superseded by SteamLaunchWorker.
+
     Args:
         _libs: Path to the Steamworks library directory
 
     Returns:
         bool: True if Steam was launched successfully, False otherwise
     """
+    # jscpd:ignore-start
     try:
         steam_exe = _find_steam_executable()
         if steam_exe is None:
@@ -388,40 +399,84 @@ def _launch_steam(_libs: str) -> bool:
     except Exception as e:
         logger.warning(f"Error launching Steam: {e}")
         return False
+    # jscpd:ignore-end
 
 
-def check_steam_available(_libs: str) -> bool:
+def _show_steam_launch_prompt() -> str:
     """
-    Check if Steam is available and running.
-
-    Checks if Steam is running, and if not, attempts to launch it.
-    Also checks for snap Steam incompatibility.
-
-    Args:
-        _libs: Path to the Steamworks library directory
-
-    Returns:
-        bool: True if Steam is available, False otherwise
+    Show a dialog asking the user what to do when Steam isn't running.
+    Returns one of: "yes", "yes_always", "no", "no_never".
     """
-    # Check for snap Steam (incompatible with Steamworks)
-    is_snap_steam = SNAP_STEAM_PATH.exists()
+    import app.views.dialogue as dialogue
 
-    if is_snap_steam and sys.platform.startswith("linux"):
+    response = dialogue.show_dialogue_conditional(
+        title=QCoreApplication.translate("SteamAvailability", "Steam Not Running"),
+        text=QCoreApplication.translate(
+            "SteamAvailability",
+            "Steam is required for this operation but is not running.",
+        ),
+        information=QCoreApplication.translate(
+            "SteamAvailability",
+            "Would you like to launch Steam?\n\n(You can also change this in Settings)",
+        ),
+        button_text_override=["Yes", "Yes, always", "No", "No, never ask"],
+    )
+    if isinstance(response, str):
+        response_lower = response.lower().strip()
+        if response_lower.startswith("yes, always"):
+            return "yes_always"
+        elif response_lower.startswith("yes"):
+            return "yes"
+        elif response_lower.startswith("no, never"):
+            return "no_never"
+    return "no"
+
+
+def check_steam_available(_libs: str, settings: "Settings") -> bool:
+    """
+    Check if Steam is available and running. Respects user's launch behavior preference.
+
+    :param _libs: Path to the Steamworks library directory
+    :param settings: Application settings (for steam_launch_behavior and instance config)
+    :return: True if Steam is available, False otherwise
+    """
+    current = settings.instances.get(settings.current_instance)
+    if current is None or not current.steam_client_integration:
+        return True
+
+    if SNAP_STEAM_PATH.exists() and sys.platform.startswith("linux"):
         logger.warning(
-            "Snap Steam detected. Snap Steam is incompatible with Steamworks due to sandboxing. "
-            "Steam integration is unavailable."
+            "Snap Steam detected. Snap Steam is incompatible with Steamworks due to sandboxing."
         )
-        # Show snap steam warning
         show_snap_steam_warning()
         return False
 
-    # Check if Steam is running
-    if not is_steam_running():
-        logger.info("Steam is not running, attempting to launch...")
-        if not _launch_steam(_libs):
-            logger.error("Failed to launch Steam")
-            # Show no steam warning
-            show_no_steam_warning()
-            return False
+    if is_steam_running():
+        return True
 
-    return True
+    logger.info("Steam is not running")
+    behavior = settings.steam_launch_behavior
+
+    if behavior == _STEAM_LAUNCH_BEHAVIOR_NEVER:
+        show_no_steam_warning()
+        return False
+
+    if behavior == _STEAM_LAUNCH_BEHAVIOR_ALWAYS:
+        return run_steam_launch_with_progress(_libs)
+
+    choice = _show_steam_launch_prompt()
+
+    if choice == "yes_always":
+        settings.steam_launch_behavior = _STEAM_LAUNCH_BEHAVIOR_ALWAYS
+        settings.save()
+        return run_steam_launch_with_progress(_libs)
+    elif choice == "yes":
+        return run_steam_launch_with_progress(_libs)
+    elif choice == "no_never":
+        settings.steam_launch_behavior = _STEAM_LAUNCH_BEHAVIOR_NEVER
+        settings.save()
+        show_no_steam_warning()
+        return False
+    else:
+        show_no_steam_warning()
+        return False

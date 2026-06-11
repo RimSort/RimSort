@@ -1,7 +1,12 @@
 import sys
 from unittest.mock import MagicMock, patch
 
-from app.utils.steam.availability import is_steam_running
+from app.utils.steam.availability import (
+    _STEAM_LAUNCH_BEHAVIOR_ALWAYS,  # noqa: F401
+    _STEAM_LAUNCH_BEHAVIOR_NEVER,  # noqa: F401
+    _STEAM_LAUNCH_BEHAVIOR_PROMPT,  # noqa: F401
+    is_steam_running,
+)
 
 
 @patch("psutil.process_iter")
@@ -42,8 +47,53 @@ def test_is_steam_running_handles_access_denied(
     import psutil
 
     mock_process = MagicMock()
-    mock_process.info.__getitem__ = MagicMock(
-        side_effect=psutil.AccessDenied(pid=1)
-    )
+    mock_process.info.__getitem__ = MagicMock(side_effect=psutil.AccessDenied(pid=1))
     mock_process_iter.return_value = [mock_process]
     assert is_steam_running() is False
+
+
+def _make_settings(
+    behavior: str = "prompt", steam_client_integration: bool = True
+) -> MagicMock:
+    """Create a mock Settings object with the given steam launch behavior."""
+    settings = MagicMock()
+    settings.steam_launch_behavior = behavior
+    settings.current_instance = "default"
+    instance = MagicMock()
+    instance.steam_client_integration = steam_client_integration
+    settings.instances = {"default": instance}
+    return settings
+
+
+@patch("app.utils.steam.availability.is_steam_running", return_value=True)
+def test_check_steam_available_returns_true_when_steam_running(
+    mock_running: MagicMock,
+) -> None:
+    from app.utils.steam.availability import check_steam_available
+
+    settings = _make_settings()
+    assert check_steam_available(_libs="/fake", settings=settings) is True
+
+
+@patch("app.utils.steam.availability.is_steam_running", return_value=True)
+def test_check_steam_available_skips_check_when_integration_disabled(
+    mock_running: MagicMock,
+) -> None:
+    from app.utils.steam.availability import check_steam_available
+
+    settings = _make_settings(steam_client_integration=False)
+    assert check_steam_available(_libs="/fake", settings=settings) is True
+    mock_running.assert_not_called()
+
+
+@patch("app.utils.steam.availability.is_steam_running", return_value=False)
+@patch("app.utils.steam.availability.show_no_steam_warning")
+def test_check_steam_available_never_shows_warning(
+    mock_warning: MagicMock,
+    mock_running: MagicMock,
+) -> None:
+    from app.utils.steam.availability import check_steam_available
+
+    settings = _make_settings(behavior="never")
+    assert check_steam_available(_libs="/fake", settings=settings) is False
+    mock_warning.assert_called_once()
