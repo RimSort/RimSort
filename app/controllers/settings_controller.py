@@ -12,6 +12,7 @@ from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
     BaseTabController,
     DatabasesTabController,
+    LocationsTabController,
     SortingTabController,
 )
 from app.controllers.theme_controller import ThemeController
@@ -103,6 +104,18 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._databases_tab)
 
+        self._locations_tab = LocationsTabController(
+            self.settings,
+            self.settings_dialog,
+            validate_game_location=self._validate_game_location,
+            validate_config_folder_location=self._validate_config_folder_location,
+            on_path_selected=self._on_locations_path_selected,
+            on_autodetect=self._on_locations_autodetect_button_clicked,
+            on_instance_folder_choose=self._on_instance_folder_location_choose_button_clicked,
+            on_instance_folder_clear=self._on_instance_folder_location_clear_button_clicked,
+        )
+        self._tab_controllers.append(self._locations_tab)
+
         for tc in self._tab_controllers:
             tc.connect_signals()
 
@@ -155,79 +168,6 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
-
-        # Locations tab
-        self.settings_dialog.game_location.textChanged.connect(
-            self._on_game_location_text_changed
-        )
-        self.settings_dialog.game_location_open_button.clicked.connect(
-            self._on_game_location_open_button_clicked
-        )
-        self.settings_dialog.game_location_choose_button.clicked.connect(
-            self._on_game_location_choose_button_clicked
-        )
-        self.settings_dialog.game_location_clear_button.clicked.connect(
-            self._on_game_location_clear_button_clicked
-        )
-
-        self.settings_dialog.config_folder_location.textChanged.connect(
-            self._on_config_folder_location_text_changed
-        )
-        self.settings_dialog.config_folder_location_open_button.clicked.connect(
-            self._on_config_folder_location_open_button_clicked
-        )
-        self.settings_dialog.config_folder_location_choose_button.clicked.connect(
-            self._on_config_folder_location_choose_button_clicked
-        )
-        self.settings_dialog.config_folder_location_clear_button.clicked.connect(
-            self._on_config_folder_location_clear_button_clicked
-        )
-
-        self.settings_dialog.steam_mods_folder_location.textChanged.connect(
-            self._on_steam_mods_folder_location_text_changed
-        )
-        self.settings_dialog.steam_mods_folder_location_open_button.clicked.connect(
-            self._on_steam_mods_folder_location_open_button_clicked
-        )
-        self.settings_dialog.steam_mods_folder_location_choose_button.clicked.connect(
-            self._on_steam_mods_folder_location_choose_button_clicked
-        )
-        self.settings_dialog.steam_mods_folder_location_clear_button.clicked.connect(
-            self._on_steam_mods_folder_location_clear_button_clicked
-        )
-
-        self.settings_dialog.local_mods_folder_location.textChanged.connect(
-            self._on_local_mods_folder_location_text_changed
-        )
-        self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
-            self._on_local_mods_folder_location_open_button_clicked
-        )
-        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
-            self._on_local_mods_folder_location_choose_button_clicked
-        )
-        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
-            self._on_local_mods_folder_location_clear_button_clicked
-        )
-
-        # Instance folder location (custom override)
-        try:
-            self.settings_dialog.instance_folder_location_choose_button.clicked.connect(
-                self._on_instance_folder_location_choose_button_clicked
-            )
-            self.settings_dialog.instance_folder_location_clear_button.clicked.connect(
-                self._on_instance_folder_location_clear_button_clicked
-            )
-        except AttributeError:
-            # Buttons may not exist if UI hasn't been updated yet
-            pass
-
-        self.settings_dialog.locations_clear_button.clicked.connect(
-            self._on_locations_clear_button_clicked
-        )
-
-        self.settings_dialog.locations_autodetect_button.clicked.connect(
-            self._on_locations_autodetect_button_clicked
-        )
 
         # Game Launch tab
         self.settings_dialog.run_args.textChanged.connect(
@@ -424,47 +364,7 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings_dialog.game_location.setText(
-            str(self.settings.instances[self.settings.current_instance].game_folder)
-        )
-        self.settings_dialog.game_location.setCursorPosition(0)
-        self.settings_dialog.game_location_open_button.setEnabled(
-            self.settings_dialog.game_location.text() != ""
-        )
-        self.settings_dialog.config_folder_location.setText(
-            str(self.settings.instances[self.settings.current_instance].config_folder)
-        )
-        self.settings_dialog.config_folder_location.setCursorPosition(0)
-        self.settings_dialog.config_folder_location_open_button.setEnabled(
-            self.settings_dialog.config_folder_location.text() != ""
-        )
-        self.settings_dialog.steam_mods_folder_location.setText(
-            str(self.settings.instances[self.settings.current_instance].workshop_folder)
-        )
-        self.settings_dialog.steam_mods_folder_location.setCursorPosition(0)
-        self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.steam_mods_folder_location.text() != ""
-        )
-        self.settings_dialog.local_mods_folder_location.setText(
-            str(self.settings.instances[self.settings.current_instance].local_folder)
-        )
-        self.settings_dialog.local_mods_folder_location.setCursorPosition(0)
-        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.local_mods_folder_location.text() != ""
-        )
-        self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            self.settings.instances[
-                self.settings.current_instance
-            ].steam_client_integration
-        )
-        # Enable/disable Steam mods location fields based on checkbox state
-        checked = self.settings_dialog.steam_client_integration_checkbox.isChecked()
-        self.settings_dialog.steam_mods_folder_location.setEnabled(checked)
-        self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(checked)
-        self.settings_dialog.steam_mods_folder_location_choose_button.setEnabled(
-            checked
-        )
-        self.settings_dialog.steam_mods_folder_location_clear_button.setEnabled(checked)
+        self._locations_tab.update_view_from_model()
 
         # Load Steam protocol launch option
         self.settings_dialog.launch_via_steam_protocol_checkbox.setChecked(
@@ -477,23 +377,6 @@ class SettingsController(QObject):
             self.settings.current_instance
         ].launch_via_steam_protocol
         self.settings_dialog.run_args_group.setEnabled(not launch_via_steam_protocol)
-
-        # Instance folder location (custom override)
-        # Only enable for Default instance
-        is_default_instance = self.settings.current_instance == DEFAULT_INSTANCE_NAME
-        self.settings_dialog.instance_folder_location.setText(
-            self.settings.instances[
-                self.settings.current_instance
-            ].instance_folder_override
-        )
-        self.settings_dialog.instance_folder_location.setCursorPosition(0)
-        self.settings_dialog.instance_folder_location.setEnabled(is_default_instance)
-        self.settings_dialog.instance_folder_location_choose_button.setEnabled(
-            is_default_instance
-        )
-        self.settings_dialog.instance_folder_location_clear_button.setEnabled(
-            is_default_instance
-        )
 
         # Databases tab
         self._databases_tab.update_view_from_model()
@@ -731,23 +614,7 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings.instances[
-            self.settings.current_instance
-        ].game_folder = self.settings_dialog.game_location.text()
-        self.settings.instances[
-            self.settings.current_instance
-        ].config_folder = self.settings_dialog.config_folder_location.text()
-        self.settings.instances[
-            self.settings.current_instance
-        ].workshop_folder = self.settings_dialog.steam_mods_folder_location.text()
-        self.settings.instances[
-            self.settings.current_instance
-        ].local_folder = self.settings_dialog.local_mods_folder_location.text()
-        self.settings.instances[
-            self.settings.current_instance
-        ].steam_client_integration = (
-            self.settings_dialog.steam_client_integration_checkbox.isChecked()
-        )
+        self._locations_tab.update_model_from_view()
 
         # Save Steam protocol launch option
         self.settings.instances[
@@ -965,6 +832,10 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_view_from_model()
 
+    def _on_locations_path_selected(self, path: str) -> None:
+        """Update the last selected path for file dialog default directories."""
+        self._last_file_dialog_path = path
+
     def _validate_game_location(self, game_location: str) -> bool:
         """
         Validate the game location and show a warning if invalid.
@@ -1138,186 +1009,6 @@ class SettingsController(QObject):
         )
         # Do a full refresh after updating the settings
         EventBus().do_refresh_mods_lists.emit()
-
-    @Slot()
-    def _on_game_location_text_changed(self) -> None:
-        self.settings_dialog.game_location_open_button.setEnabled(
-            self.settings_dialog.game_location.text() != ""
-        )
-
-    @Slot()
-    def _on_game_location_open_button_clicked(self) -> None:
-        platform_specific_open(self.settings_dialog.game_location.text())
-
-    @Slot()
-    def _on_game_location_choose_button_clicked(self) -> None:
-        """
-        Open a file dialog to select the game location and handle the result.
-        """
-        if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
-            game_location = self._on_game_location_choose_button_clicked_macos()
-        else:
-            game_location = self._on_game_location_choose_button_clicked_non_macos()
-        if game_location is None:
-            return
-        # Validate the selected game location immediately
-        if not self._validate_game_location(str(game_location)):
-            return
-        self.settings_dialog.game_location.setText(str(game_location))
-        self.settings_dialog.local_mods_folder_location.setText(
-            str(game_location / "Mods")
-        )
-        self._last_file_dialog_path = str(game_location)
-
-    def _on_game_location_choose_button_clicked_macos(self) -> Path | None:
-        """
-        Open a directory dialog to select the game location for macOS and handle the result.
-        """
-        game_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Game Location",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not game_location:
-            return None
-
-        return Path(game_location)
-
-    def _on_game_location_choose_button_clicked_non_macos(self) -> Path | None:
-        """
-        Open a directory dialog to select the game location and handle the result.
-        """
-        game_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Game Location",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not game_location:
-            return None
-
-        return Path(game_location).resolve()
-
-    @Slot()
-    def _on_game_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.game_location.setText("")
-        self.settings_dialog.local_mods_folder_location.setText("")
-
-    @Slot()
-    def _on_config_folder_location_text_changed(self) -> None:
-        self.settings_dialog.config_folder_location_open_button.setEnabled(
-            self.settings_dialog.config_folder_location.text() != ""
-        )
-
-    @Slot()
-    def _on_config_folder_location_open_button_clicked(self) -> None:
-        platform_specific_open(self.settings_dialog.config_folder_location.text())
-
-    @Slot()
-    def _on_config_folder_location_choose_button_clicked(self) -> None:
-        """
-        Open a directory dialog to select the config folder and handle the result.
-        """
-        config_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Config Folder",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not config_folder_location:
-            return
-
-        if not self._validate_config_folder_location(config_folder_location):
-            return
-
-        self.settings_dialog.config_folder_location.setText(config_folder_location)
-        self._last_file_dialog_path = str(Path(config_folder_location).parent)
-
-    @Slot()
-    def _on_config_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.config_folder_location.setText("")
-
-    @Slot()
-    def _on_steam_mods_folder_location_text_changed(self) -> None:
-        self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.steam_mods_folder_location.text() != ""
-        )
-
-    @Slot()
-    def _on_steam_mods_folder_location_open_button_clicked(self) -> None:
-        platform_specific_open(self.settings_dialog.steam_mods_folder_location.text())
-
-    @Slot()
-    def _on_steam_mods_folder_location_choose_button_clicked(self) -> None:
-        """
-        Open a directory dialog to select the Steam mods folder and handle the result.
-        """
-        steam_mods_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Steam Mods Folder",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not steam_mods_folder_location:
-            return
-
-        self.settings_dialog.steam_mods_folder_location.setText(
-            steam_mods_folder_location
-        )
-        self._last_file_dialog_path = str(Path(steam_mods_folder_location).parent)
-
-    @Slot()
-    def _on_steam_mods_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.steam_mods_folder_location.setText("")
-
-    @Slot()
-    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
-        """
-        Open a directory dialog to select the local mods folder and handle the result.
-        """
-        local_mods_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Local Mods Folder",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not local_mods_folder_location:
-            return
-
-        self.settings_dialog.local_mods_folder_location.setText(
-            local_mods_folder_location
-        )
-        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
-
-    @Slot()
-    def _on_local_mods_folder_location_text_changed(self) -> None:
-        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.local_mods_folder_location.text() != ""
-        )
-
-    @Slot()
-    def _on_local_mods_folder_location_open_button_clicked(self) -> None:
-        platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
-
-    @Slot()
-    def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.local_mods_folder_location.setText("")
-
-    @Slot()
-    def _on_locations_clear_button_clicked(
-        self, skip_confirmation: bool = False
-    ) -> None:
-        """
-        Clear the settings dialog's location fields.
-        """
-        if not skip_confirmation:
-            answer = BinaryChoiceDialog(
-                title=self.tr("Clear all locations"),
-                text=self.tr("Are you sure you want to clear all locations?"),
-            )
-            if not answer.exec_is_positive():
-                return
-
-        self.settings_dialog.game_location.setText("")
-        self.settings_dialog.config_folder_location.setText("")
-        self.settings_dialog.steam_mods_folder_location.setText("")
-        self.settings_dialog.local_mods_folder_location.setText("")
 
     @staticmethod
     def _find_steam_root(candidates: list[Path]) -> Path | None:
