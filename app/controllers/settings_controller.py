@@ -11,6 +11,7 @@ from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
     AdvancedTabController,
+    AppearanceTabController,
     BaseTabController,
     DatabasesTabController,
     GameLaunchTabController,
@@ -18,7 +19,6 @@ from app.controllers.settings_tabs import (
     SortingTabController,
     SteamcmdTabController,
     ToddsTabController,
-    WindowLayoutTabController,
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
@@ -30,7 +30,6 @@ from app.utils.generic import (
     extract_git_dir_name,
     find_steam_rimworld,
     get_path_up_to_string,
-    platform_specific_open,
     validate_game_executable,
 )
 from app.utils.http_downloader import (
@@ -119,10 +118,10 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._locations_tab)
 
-        self._window_layout_tab = WindowLayoutTabController(
+        self._appearance_tab = AppearanceTabController(
             self.settings, self.settings_dialog
         )
-        self._tab_controllers.append(self._window_layout_tab)
+        self._tab_controllers.append(self._appearance_tab)
 
         self._game_launch_tab = GameLaunchTabController(
             self.settings, self.settings_dialog
@@ -182,11 +181,6 @@ class SettingsController(QObject):
         # Other External Tools Tab
         self.settings_dialog.text_editor_location_choose_button.clicked.connect(
             self._on_text_editor_location_choose_button_clicked
-        )
-
-        # Theme tab
-        self.settings_dialog.theme_location_open_button.clicked.connect(
-            self._on_theme_location_open_button_clicked
         )
 
         # Connect signals from dialogs
@@ -361,21 +355,8 @@ class SettingsController(QObject):
             self.settings.text_editor_file_arg
         )
 
-        # Themes tab
-        self.settings_dialog.enable_themes_checkbox.setChecked(
-            self.settings.enable_themes
-        )
-        self.theme_controller.populate_themes_combobox(
-            self.settings_dialog.themes_combobox
-        )
-        self.theme_controller.setup_theme_dialog(self.settings_dialog, self.settings)
-
-        self.language_controller.populate_languages_combobox(
-            self.settings_dialog.language_combobox
-        )
-        self.language_controller.setup_language_dialog(
-            self.settings_dialog, self.settings
-        )
+        # Appearance tab
+        self._appearance_tab.update_view_from_model()
 
         # Advanced tab
         self._advanced_tab.update_view_from_model()
@@ -427,17 +408,8 @@ class SettingsController(QObject):
             self.settings_dialog.text_editor_file_arg.text()
         )
 
-        # Themes tab
-        self.settings.enable_themes = (
-            self.settings_dialog.enable_themes_checkbox.isChecked()
-        )
-        self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
-
-        self.settings.font_family = (
-            self.settings_dialog.font_family_combobox.currentText()
-        )
-        self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
-        self.settings.language = self.settings_dialog.language_combobox.currentData()
+        # Appearance tab
+        self._appearance_tab.update_model_from_view()
 
         # Advanced tab
         self._advanced_tab.update_model_from_view()
@@ -1200,21 +1172,3 @@ class SettingsController(QObject):
         logger.info("Resetting settings file and retrying load")
         self.settings.save()
         self._load_settings()
-
-    @Slot()
-    def _on_theme_location_open_button_clicked(self) -> None:
-        """
-        Open the location of the selected theme.
-        """
-        selected_theme_name = self.settings_dialog.themes_combobox.currentText()
-        logger.info(f"Opening theme location: {selected_theme_name}")
-        stylesheet_path = self.theme_controller.get_theme_stylesheet_path(
-            selected_theme_name
-        )
-
-        if stylesheet_path and stylesheet_path.exists():
-            platform_specific_open(stylesheet_path.parent)
-        else:
-            logger.warning(
-                f"Failed to open theme location: {stylesheet_path} not found or does not exist"
-            )

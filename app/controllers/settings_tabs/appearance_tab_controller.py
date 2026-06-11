@@ -1,13 +1,19 @@
+from loguru import logger
+from PySide6.QtCore import Slot
+
+from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
+from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
+from app.utils.generic import platform_specific_open
 from app.views.settings_dialog import SettingsDialog
 
 
-class WindowLayoutTabController(BaseTabController):
-    """Controller for the Window Launch State settings tab.
+class AppearanceTabController(BaseTabController):
+    """Controller for the Appearance settings tab.
 
-    Manages: main window launch state, browser window launch state,
-    settings window custom size, and dialogue positioning constraint.
+    Manages: theme settings, font settings, language selection,
+    main/browser/settings window launch states, and dialogue positioning.
     """
 
     def __init__(
@@ -16,6 +22,8 @@ class WindowLayoutTabController(BaseTabController):
         dialog: SettingsDialog,
     ) -> None:
         super().__init__(settings, dialog)
+        self._theme_controller = ThemeController()
+        self._language_controller = LanguageController()
 
     def connect_signals(self) -> None:
         # Main window radio buttons toggle custom size spinboxes
@@ -43,7 +51,23 @@ class WindowLayoutTabController(BaseTabController):
         self.dialog.settings_custom_width_spinbox.setEnabled(True)
         self.dialog.settings_custom_height_spinbox.setEnabled(True)
 
+        # Theme location open button
+        self.dialog.theme_location_open_button.clicked.connect(
+            self._on_theme_location_open_button_clicked
+        )
+
     def update_view_from_model(self) -> None:
+        # Theme
+        self.dialog.enable_themes_checkbox.setChecked(self.settings.enable_themes)
+        self._theme_controller.populate_themes_combobox(self.dialog.themes_combobox)
+        self._theme_controller.setup_theme_dialog(self.dialog, self.settings)
+
+        # Language
+        self._language_controller.populate_languages_combobox(
+            self.dialog.language_combobox
+        )
+        self._language_controller.setup_language_dialog(self.dialog, self.settings)
+
         # Dialogue positioning
         self.dialog.constrain_dialogues_to_main_window_monitor_checkbox.setChecked(
             self.settings.constrain_dialogues_to_main_window_monitor
@@ -104,6 +128,17 @@ class WindowLayoutTabController(BaseTabController):
         )
 
     def update_model_from_view(self) -> None:
+        # Theme
+        self.settings.enable_themes = self.dialog.enable_themes_checkbox.isChecked()
+        self.settings.theme_name = self.dialog.themes_combobox.currentText()
+
+        # Font
+        self.settings.font_family = self.dialog.font_family_combobox.currentText()
+        self.settings.font_size = self.dialog.font_size_spinbox.value()
+
+        # Language
+        self.settings.language = self.dialog.language_combobox.currentData()
+
         # Dialogue positioning
         self.settings.constrain_dialogues_to_main_window_monitor = (
             self.dialog.constrain_dialogues_to_main_window_monitor_checkbox.isChecked()
@@ -148,3 +183,18 @@ class WindowLayoutTabController(BaseTabController):
         self.settings.settings_window_custom_height = (
             self.dialog.settings_custom_height_spinbox.value()
         )
+
+    @Slot()
+    def _on_theme_location_open_button_clicked(self) -> None:
+        selected_theme_name = self.dialog.themes_combobox.currentText()
+        logger.info(f"Opening theme location: {selected_theme_name}")
+        stylesheet_path = self._theme_controller.get_theme_stylesheet_path(
+            selected_theme_name
+        )
+
+        if stylesheet_path and stylesheet_path.exists():
+            platform_specific_open(stylesheet_path.parent)
+        else:
+            logger.warning(
+                f"Failed to open theme location: {stylesheet_path} not found or does not exist"
+            )
