@@ -1376,7 +1376,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(browser_window_title_label)
         group_layout.addWidget(self.browser_window_group)
 
-        # Settings Window (only custom option)
+        # Settings Window (modal dialog — only custom sizing)
         settings_window_title_label = self._make_section_label(
             "Settings Window Launch State"
         )

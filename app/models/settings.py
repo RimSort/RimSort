@@ -177,7 +177,6 @@ class Settings(QObject):
         self.browser_window_custom_height: int = 600
 
         # Settings Window
-        self.settings_window_launch_state: str = "custom"
         self.settings_window_custom_width: int = 900
         self.settings_window_custom_height: int = 600
 

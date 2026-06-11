@@ -47,7 +47,7 @@ class AppearanceTabController(BaseTabController):
             self.dialog.enable_browser_custom_size_spinboxes
         )
 
-        # Settings Window (only custom option, spinboxes always enabled)
+        # Settings Window (modal dialog — spinboxes always enabled)
         self.dialog.settings_custom_width_spinbox.setEnabled(True)
         self.dialog.settings_custom_height_spinbox.setEnabled(True)
 
@@ -119,7 +119,7 @@ class AppearanceTabController(BaseTabController):
         else:
             self.dialog.browser_launch_maximized_radio.setChecked(True)
 
-        # Settings Window (only custom option)
+        # Settings Window (only custom option — modal dialog)
         self.dialog.settings_custom_width_spinbox.setValue(
             self.settings.settings_window_custom_width
         )
@@ -176,7 +176,7 @@ class AppearanceTabController(BaseTabController):
         else:
             self.settings.browser_window_launch_state = "maximized"
 
-        # Settings Window (only custom option)
+        # Settings Window (only custom option — modal dialog)
         self.settings.settings_window_custom_width = (
             self.dialog.settings_custom_width_spinbox.value()
         )
