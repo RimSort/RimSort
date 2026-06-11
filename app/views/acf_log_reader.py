@@ -328,11 +328,11 @@ class AcfLogReader(BaseModsPanel):
         if not self.active_mods_list:
             return
 
-        if not hasattr(self.active_mods_list, "uuids"):
+        if not hasattr(self.active_mods_list, "paths"):
             return
 
-        uuids = getattr(self.active_mods_list, "uuids", [])
-        for mod_uuid in uuids:
+        paths = getattr(self.active_mods_list, "paths", [])
+        for mod_uuid in paths:
             mod = self.metadata_controller.get_mod(mod_uuid)
             if mod is not None:
                 pfid = mod.published_file_id

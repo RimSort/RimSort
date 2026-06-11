@@ -233,6 +233,10 @@ class MetadataController(QObject):
     @is_abort_requested.setter
     def is_abort_requested(self, value: bool) -> None:
         self._abort_requested = value
+        if value:
+            from app.utils.metadata import MetadataManager
+
+            MetadataManager.instance().request_abort()
 
     def update_workshop_timestamps(
         self,

@@ -421,7 +421,7 @@ class MainContent(QObject):
                 return
             item = selected_items[0]
             data = item.data(Qt.ItemDataRole.UserRole)
-            uuid = data["uuid"]
+            uuid = data["path"]
             self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
@@ -439,7 +439,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     data = item.data(Qt.ItemDataRole.UserRole)
-                    uuid = data["uuid"]
+                    uuid = data["path"]
                     aml.paths.remove(uuid)
                     aml.takeItem(aml.row(item))
                 if aml.count():
@@ -479,7 +479,7 @@ class MainContent(QObject):
                 aml.setCurrentRow(self.___get_relative_middle(aml))
             item = aml.selectedItems()[0]
             data = item.data(Qt.ItemDataRole.UserRole)
-            uuid = data["uuid"]
+            uuid = data["path"]
             self.__mod_list_slot(uuid, cast(CustomListWidgetItem, item))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
@@ -493,7 +493,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     data = item.data(Qt.ItemDataRole.UserRole)
-                    uuid = data["uuid"]
+                    uuid = data["path"]
                     iml.paths.remove(uuid)
                     iml.takeItem(iml.row(item))
                 if iml.count():
@@ -826,7 +826,7 @@ class MainContent(QObject):
             )
 
             # If loading was aborted (e.g. window closed during scan), skip remaining work
-            if result is None and metadata.MetadataManager.instance()._abort_requested:
+            if result is None and self.metadata_controller.is_abort_requested:
                 return
 
             # Refresh MetadataController
