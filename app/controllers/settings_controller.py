@@ -16,6 +16,7 @@ from app.controllers.settings_tabs import (
     GameLaunchTabController,
     LocationsTabController,
     SortingTabController,
+    SteamcmdTabController,
     ToddsTabController,
     WindowLayoutTabController,
 )
@@ -134,6 +135,14 @@ class SettingsController(QObject):
         self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
         self._tab_controllers.append(self._advanced_tab)
 
+        self._steamcmd_tab = SteamcmdTabController(
+            self.settings,
+            self.settings_dialog,
+            last_file_dialog_path=str(self._last_file_dialog_path),
+            on_path_selected=self._on_locations_path_selected,
+        )
+        self._tab_controllers.append(self._steamcmd_tab)
+
         for tc in self._tab_controllers:
             tc.connect_signals()
 
@@ -168,23 +177,6 @@ class SettingsController(QObject):
         )
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
             self._on_db_builder_build_database_button_clicked
-        )
-
-        # SteamCMD tab
-        self.settings_dialog.steamcmd_install_location_choose_button.clicked.connect(
-            self._on_steamcmd_install_location_choose_button_clicked
-        )
-        self.settings_dialog.steamcmd_clear_depot_cache_button.clicked.connect(
-            self._on_steamcmd_clear_depot_cache_button_clicked
-        )
-        self.settings_dialog.steamcmd_import_acf_button.clicked.connect(
-            self._on_steamcmd_import_acf_button_clicked
-        )
-        self.settings_dialog.steamcmd_delete_acf_button.clicked.connect(
-            self._on_steamcmd_delete_acf_button_clicked
-        )
-        self.settings_dialog.steamcmd_install_button.clicked.connect(
-            self._on_steamcmd_install_button_clicked
         )
 
         # Other External Tools Tab
@@ -361,24 +353,7 @@ class SettingsController(QObject):
         )
 
         # SteamCMD tab
-        self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
-            self.settings.steamcmd_validate_downloads
-        )
-        self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
-            self.settings.instances[
-                self.settings.current_instance
-            ].steamcmd_auto_clear_depot_cache
-        )
-        self.settings_dialog.steamcmd_delete_before_update_checkbox.setChecked(
-            self.settings.steamcmd_delete_before_update
-        )
-        self.settings_dialog.steamcmd_install_location.setText(
-            str(
-                self.settings.instances[
-                    self.settings.current_instance
-                ].steamcmd_install_path
-            )
-        )
+        self._steamcmd_tab.update_view_from_model()
 
         # todds tab
         self._todds_tab.update_view_from_model()
@@ -462,20 +437,7 @@ class SettingsController(QObject):
         )
 
         # SteamCMD tab
-        self.settings.steamcmd_validate_downloads = (
-            self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
-        )
-        self.settings.steamcmd_delete_before_update = (
-            self.settings_dialog.steamcmd_delete_before_update_checkbox.isChecked()
-        )
-        self.settings.instances[
-            self.settings.current_instance
-        ].steamcmd_auto_clear_depot_cache = (
-            self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
-        )
-        self.settings.instances[
-            self.settings.current_instance
-        ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
+        self._steamcmd_tab.update_model_from_view()
 
         # todds tab
         self._todds_tab.update_model_from_view()
@@ -1101,53 +1063,6 @@ class SettingsController(QObject):
             except Exception as e:
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
-
-    @Slot()
-    @Slot()
-    def _on_steamcmd_install_location_choose_button_clicked(self) -> None:
-        """
-        Open a file dialog to select the Steamcmd install location and handle the result.
-        """
-        steamcmd_install_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Steamcmd Install Location",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not steamcmd_install_location:
-            return
-
-        self.settings_dialog.steamcmd_install_location.setText(
-            steamcmd_install_location
-        )
-        self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
-
-    @Slot()
-    def _on_steamcmd_clear_depot_cache_button_clicked(self) -> None:
-        EventBus().do_clear_steamcmd_depot_cache.emit()
-
-    @Slot()
-    def _on_steamcmd_import_acf_button_clicked(self) -> None:
-        """
-        Handle the Steamcmd import ACF button click.
-        """
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_import_acf.emit()
-
-    @Slot()
-    def _on_steamcmd_delete_acf_button_clicked(self) -> None:
-        """
-        Handle the Steamcmd delete ACF button click.
-        """
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_delete_acf.emit()
-
-    @Slot()
-    def _on_steamcmd_install_button_clicked(self) -> None:
-        """
-        Handle the Steamcmd install button click.
-        """
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_install_steamcmd.emit()
 
     @Slot()
     def _on_text_editor_location_choose_button_clicked(self) -> None:
