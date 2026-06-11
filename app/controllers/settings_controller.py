@@ -326,14 +326,6 @@ class SettingsController(QObject):
         # Databases tab
         self._databases_tab.update_view_from_model()
 
-        # Auxiliary DB tab (kept inline — not extracted yet)
-        self.settings_dialog.aux_db_time_limit.setText(
-            str(self.settings.aux_db_time_limit)
-        )
-        self.settings_dialog.aux_db_time_limit.setEnabled(
-            self.settings.enable_aux_db_behavior_editing
-        )
-
         # Sorting tab
         self._sorting_tab.update_view_from_model()
 
@@ -387,15 +379,6 @@ class SettingsController(QObject):
 
         # Advanced tab
         self._advanced_tab.update_view_from_model()
-        self.settings_dialog.enable_aux_db_behavior_editing.setChecked(
-            self.settings.enable_aux_db_behavior_editing
-        )
-        self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
-        self.settings_dialog.rentry_auth_code.setCursorPosition(0)
-        self.settings_dialog.github_username.setText(self.settings.github_username)
-        self.settings_dialog.github_username.setCursorPosition(0)
-        self.settings_dialog.github_token.setText(self.settings.github_token)
-        self.settings_dialog.github_token.setCursorPosition(0)
 
     def _update_model_from_view(self) -> None:
         """
@@ -410,15 +393,6 @@ class SettingsController(QObject):
 
         # Databases tab
         self._databases_tab.update_model_from_view()
-
-        # Auxiliary DB tab (kept inline — not extracted yet)
-        try:
-            self.settings.aux_db_time_limit = int(
-                self.settings_dialog.aux_db_time_limit.text()
-            )
-        except Exception:
-            logger.warning("Failed setting Aux DB time limit, falling back to -1")
-            self.settings.aux_db_time_limit = -1
 
         # Sorting tab
         self._sorting_tab.update_model_from_view()
@@ -467,12 +441,6 @@ class SettingsController(QObject):
 
         # Advanced tab
         self._advanced_tab.update_model_from_view()
-        self.settings.enable_aux_db_behavior_editing = (
-            self.settings_dialog.enable_aux_db_behavior_editing.isChecked()
-        )
-        self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
-        self.settings.github_username = self.settings_dialog.github_username.text()
-        self.settings.github_token = self.settings_dialog.github_token.text()
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
