@@ -19,6 +19,7 @@ from app.controllers.settings_tabs import (
     GameLaunchTabController,
     InternalToolsTabController,
     LocationsTabController,
+    SharedFileDialogState,
     SortingTabController,
 )
 from app.controllers.theme_controller import ThemeController
@@ -82,7 +83,7 @@ class SettingsController(QObject):
         self.settings = model
         self.settings_dialog = view
 
-        self._last_file_dialog_path = str(Path.home())
+        self._file_dialog_state = SharedFileDialogState(str(Path.home()))
 
         self.theme_controller = ThemeController()
 
@@ -110,9 +111,9 @@ class SettingsController(QObject):
         self._locations_tab = LocationsTabController(
             self.settings,
             self.settings_dialog,
+            file_dialog_state=self._file_dialog_state,
             validate_game_location=self._validate_game_location,
             validate_config_folder_location=self._validate_config_folder_location,
-            on_path_selected=self._on_locations_path_selected,
             on_autodetect=self._on_locations_autodetect_button_clicked,
             on_instance_folder_choose=self._on_instance_folder_location_choose_button_clicked,
             on_instance_folder_clear=self._on_instance_folder_location_clear_button_clicked,
@@ -132,16 +133,14 @@ class SettingsController(QObject):
         self._internal_tools_tab = InternalToolsTabController(
             self.settings,
             self.settings_dialog,
-            last_file_dialog_path=str(self._last_file_dialog_path),
-            on_path_selected=self._on_locations_path_selected,
+            file_dialog_state=self._file_dialog_state,
         )
         self._tab_controllers.append(self._internal_tools_tab)
 
         self._external_tools_tab = ExternalToolsTabController(
             self.settings,
             self.settings_dialog,
-            last_file_dialog_path=str(self._last_file_dialog_path),
-            on_path_selected=self._on_locations_path_selected,
+            file_dialog_state=self._file_dialog_state,
         )
         self._tab_controllers.append(self._external_tools_tab)
 
@@ -384,10 +383,6 @@ class SettingsController(QObject):
         """
         self.settings_dialog.close()
         self._update_view_from_model()
-
-    def _on_locations_path_selected(self, path: str) -> None:
-        """Update the last selected path for file dialog default directories."""
-        self._last_file_dialog_path = path
 
     def _validate_game_location(self, game_location: str) -> bool:
         """
@@ -965,7 +960,7 @@ class SettingsController(QObject):
         instance_folder_location = show_dialogue_file(
             mode="open_dir",
             caption="Select Instance Folder Location",
-            _dir=str(self._last_file_dialog_path),
+            _dir=self._file_dialog_state.last_path,
         )
         if not instance_folder_location:
             return
@@ -991,7 +986,7 @@ class SettingsController(QObject):
             self.settings.current_instance
         ].instance_folder_override = instance_folder_location
         self.settings_dialog.instance_folder_location.setText(instance_folder_location)
-        self._last_file_dialog_path = str(Path(instance_folder_location).parent)
+        self._file_dialog_state.last_path = str(Path(instance_folder_location).parent)
         self.settings.save()
 
     @Slot()

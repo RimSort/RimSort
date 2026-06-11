@@ -32,11 +32,11 @@ class ExternalToolsTabController(BaseTabController):
         text_editor_location = show_dialogue_file(
             mode="open",
             caption="Select Text Editor Command",
-            _dir=str(self._last_file_dialog_path),
+            _dir=self._file_dialog_state.last_path if self._file_dialog_state else "",
         )
         if not text_editor_location:
             return
 
         self.dialog.text_editor_location.setText(text_editor_location)
-        if self._on_path_selected:
-            self._on_path_selected(str(Path(text_editor_location).parent))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(Path(text_editor_location).parent)

@@ -3,7 +3,10 @@ from typing import Callable
 
 from PySide6.QtCore import Slot
 
-from app.controllers.settings_tabs.base_tab_controller import BaseTabController
+from app.controllers.settings_tabs.base_tab_controller import (
+    BaseTabController,
+    SharedFileDialogState,
+)
 from app.models.settings import Settings
 from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.generic import platform_specific_open
@@ -69,17 +72,16 @@ class LocationsTabController(BaseTabController):
         self,
         settings: Settings,
         dialog: SettingsDialog,
+        file_dialog_state: SharedFileDialogState,
         validate_game_location: Callable[[str], bool],
         validate_config_folder_location: Callable[[str], bool],
-        on_path_selected: Callable[[str], None],
         on_autodetect: Callable[[], None],
         on_instance_folder_choose: Callable[[], None],
         on_instance_folder_clear: Callable[[], None],
     ) -> None:
-        super().__init__(settings, dialog)
+        super().__init__(settings, dialog, file_dialog_state=file_dialog_state)
         self._validate_game_location = validate_game_location
         self._validate_config_folder_location = validate_config_folder_location
-        self._path_selected_callback = on_path_selected
         self._on_autodetect_callback = on_autodetect
         self._on_instance_folder_choose_callback = on_instance_folder_choose
         self._on_instance_folder_clear_callback = on_instance_folder_clear
@@ -182,7 +184,8 @@ class LocationsTabController(BaseTabController):
             return None
 
         dialog.local_mods_folder_location.setText(str(result / "Mods"))
-        self._path_selected_callback(str(result))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(result)
         return str(result)
 
     @staticmethod
@@ -200,7 +203,8 @@ class LocationsTabController(BaseTabController):
         if not self._validate_config_folder_location(config_folder):
             return None
 
-        self._path_selected_callback(str(Path(config_folder).parent))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(Path(config_folder).parent)
         return config_folder
 
     def _on_steam_mods_choose(self, dialog: SettingsDialog) -> str | None:
@@ -210,7 +214,8 @@ class LocationsTabController(BaseTabController):
         )
         if not steam_mods_folder:
             return None
-        self._path_selected_callback(str(Path(steam_mods_folder).parent))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(Path(steam_mods_folder).parent)
         return steam_mods_folder
 
     def _on_local_mods_choose(self, dialog: SettingsDialog) -> str | None:
@@ -220,7 +225,8 @@ class LocationsTabController(BaseTabController):
         )
         if not local_mods_folder:
             return None
-        self._path_selected_callback(str(Path(local_mods_folder).parent))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(Path(local_mods_folder).parent)
         return local_mods_folder
 
     # --- Clear all button ---
