@@ -21,15 +21,8 @@ from app.controllers.settings_tabs import (
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
-from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
-from app.utils.generic import extract_git_dir_name
-from app.utils.http_downloader import (
-    DatabaseDownloadTask,
-    DownloadResult,
-    HttpDownloadWorker,
-)
-from app.views.dialogue import BinaryChoiceDialog, show_settings_error, show_warning
+from app.views.dialogue import BinaryChoiceDialog, show_settings_error
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -75,8 +68,6 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
-        self._http_download_worker: HttpDownloadWorker | None = None
-
         # Initialize per-tab controllers (registry pattern)
         self._tab_controllers: list[BaseTabController] = []
 
@@ -86,7 +77,6 @@ class SettingsController(QObject):
         self._databases_tab = DatabasesTabController(
             self.settings,
             self.settings_dialog,
-            self._do_http_download_from_dialog,
         )
         self._tab_controllers.append(self._databases_tab)
 
@@ -380,80 +370,6 @@ class SettingsController(QObject):
         )
         # Do a full refresh after updating the settings
         EventBus().do_refresh_mods_lists.emit()
-
-    @Slot(bool)
-    def _do_http_download_from_dialog(
-        self, url: str, repo_url: str, display_name: str
-    ) -> None:
-        """Download a database via HTTP using the URL currently in the settings dialog."""
-        if not url:
-            show_warning(
-                title="No URL configured",
-                text=f"No URL is configured for {display_name}.",
-                information="Please enter a URL in the text field.",
-            )
-            return
-
-        repo_name = (
-            extract_git_dir_name(repo_url)
-            if repo_url
-            else display_name.replace(" ", "-")
-        )
-        task = DatabaseDownloadTask(
-            url=url,
-            target_dir=AppInfo().databases_folder,
-            repo_name=repo_name,
-            display_name=display_name,
-        )
-
-        if self._http_download_worker is not None:
-            try:
-                self._http_download_worker.download_finished.disconnect()
-                self._http_download_worker.quit()
-                self._http_download_worker.wait()
-            except Exception as e:
-                logger.debug(f"Error during HTTP worker cleanup: {e}")
-            self._http_download_worker = None
-
-        self._http_download_worker = HttpDownloadWorker([task])
-        self._http_download_worker.download_finished.connect(
-            self._on_http_download_from_dialog_finished
-        )
-        self._http_download_worker.start()
-
-    @Slot(dict)
-    def _on_http_download_from_dialog_finished(
-        self, results: dict[str, DownloadResult]
-    ) -> None:
-        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
-        up_to_date = [
-            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
-        ]
-        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
-
-        if failed:
-            show_warning(
-                title="Download failed",
-                text=f"Failed to download: {', '.join(failed)}",
-                information="Please check your internet connection and the configured URL.",
-            )
-        elif updated:
-            show_warning(
-                title="Download complete",
-                text=f"Downloaded successfully: {', '.join(updated)}",
-            )
-        elif up_to_date:
-            show_warning(
-                title="Already up to date",
-                text=f"Already up to date: {', '.join(up_to_date)}",
-            )
-
-        if self._http_download_worker:
-            try:
-                self._http_download_worker.download_finished.disconnect()
-            except Exception as e:
-                logger.debug(f"Error during HTTP worker cleanup: {e}")
-            self._http_download_worker = None
 
     @Slot()
     def _do_reset_settings_file(self) -> None:

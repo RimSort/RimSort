@@ -1,12 +1,20 @@
 from typing import Callable
 
 from loguru import logger
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.models.settings import Settings
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
-from app.views.dialogue import show_dialogue_file
+from app.utils.generic import extract_git_dir_name
+from app.utils.http_downloader import (
+    DatabaseDownloadTask,
+    DownloadResult,
+    HttpDownloadWorker,
+)
+from app.views.dialogue import show_dialogue_file, show_warning
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -191,10 +199,9 @@ class DatabasesTabController(BaseTabController):
         self,
         settings: Settings,
         dialog: SettingsDialog,
-        http_download_callback: Callable[[str, str, str], None],
     ) -> None:
         super().__init__(settings, dialog)
-        self._http_download_callback = http_download_callback
+        self._http_download_worker: HttpDownloadWorker | None = None
         self._groups = [
             DatabaseSourceGroup(
                 prefix="community_rules_db",
@@ -241,7 +248,7 @@ class DatabasesTabController(BaseTabController):
 
     def connect_signals(self) -> None:
         for group in self._groups:
-            group.connect_signals(self.dialog, self._http_download_callback)
+            group.connect_signals(self.dialog, self._do_http_download)
 
     def update_view_from_model(self) -> None:
         for group in self._groups:
@@ -256,3 +263,73 @@ class DatabasesTabController(BaseTabController):
         except Exception:
             logger.warning("Failed setting database_expiry, falling back to 0")
             self.settings.database_expiry = 0
+
+    @Slot()
+    def _do_http_download(self, url: str, repo_url: str, display_name: str) -> None:
+        """Download a database via HTTP using the URL currently in the settings dialog."""
+        if not url:
+            show_warning(
+                title="No URL configured",
+                text=f"No URL is configured for {display_name}.",
+                information="Please enter a URL in the text field.",
+            )
+            return
+
+        repo_name = (
+            extract_git_dir_name(repo_url)
+            if repo_url
+            else display_name.replace(" ", "-")
+        )
+        task = DatabaseDownloadTask(
+            url=url,
+            target_dir=AppInfo().databases_folder,
+            repo_name=repo_name,
+            display_name=display_name,
+        )
+
+        if self._http_download_worker is not None:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+                self._http_download_worker.quit()
+                self._http_download_worker.wait()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
+
+        self._http_download_worker = HttpDownloadWorker([task])
+        self._http_download_worker.download_finished.connect(
+            self._on_http_download_finished
+        )
+        self._http_download_worker.start()
+
+    @Slot(dict)
+    def _on_http_download_finished(self, results: dict[str, DownloadResult]) -> None:
+        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
+        up_to_date = [
+            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
+        ]
+        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
+
+        if failed:
+            show_warning(
+                title="Download failed",
+                text=f"Failed to download: {', '.join(failed)}",
+                information="Please check your internet connection and the configured URL.",
+            )
+        elif updated:
+            show_warning(
+                title="Download complete",
+                text=f"Downloaded successfully: {', '.join(updated)}",
+            )
+        elif up_to_date:
+            show_warning(
+                title="Already up to date",
+                text=f"Already up to date: {', '.join(up_to_date)}",
+            )
+
+        if self._http_download_worker:
+            try:
+                self._http_download_worker.download_finished.disconnect()
+            except Exception as e:
+                logger.debug(f"Error during HTTP worker cleanup: {e}")
+            self._http_download_worker = None
