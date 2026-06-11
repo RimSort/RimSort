@@ -12,6 +12,7 @@ from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
     BaseTabController,
     DatabasesTabController,
+    GameLaunchTabController,
     LocationsTabController,
     SortingTabController,
     WindowLayoutTabController,
@@ -122,6 +123,11 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._window_layout_tab)
 
+        self._game_launch_tab = GameLaunchTabController(
+            self.settings, self.settings_dialog
+        )
+        self._tab_controllers.append(self._game_launch_tab)
+
         for tc in self._tab_controllers:
             tc.connect_signals()
 
@@ -148,11 +154,6 @@ class SettingsController(QObject):
             )
         except Exception:
             pass
-
-        # Game Launch tab
-        self.settings_dialog.run_args.textChanged.connect(
-            self._on_run_args_text_changed
-        )
 
         # Build DB tab
         self.settings_dialog.db_builder_download_all_mods_via_steamcmd_button.clicked.connect(
@@ -346,17 +347,8 @@ class SettingsController(QObject):
         # Locations tab
         self._locations_tab.update_view_from_model()
 
-        # Load Steam protocol launch option
-        self.settings_dialog.launch_via_steam_protocol_checkbox.setChecked(
-            self.settings.instances[
-                self.settings.current_instance
-            ].launch_via_steam_protocol
-        )
-        # Update run_args group enabled state based on Steam protocol setting
-        launch_via_steam_protocol = self.settings.instances[
-            self.settings.current_instance
-        ].launch_via_steam_protocol
-        self.settings_dialog.run_args_group.setEnabled(not launch_via_steam_protocol)
+        # Game Launch tab
+        self._game_launch_tab.update_view_from_model()
 
         # Databases tab
         self._databases_tab.update_view_from_model()
@@ -520,12 +512,6 @@ class SettingsController(QObject):
         self.settings_dialog.github_token.setText(self.settings.github_token)
         self.settings_dialog.github_token.setCursorPosition(0)
 
-        # run_args is a plain string — no migration needed at display time
-        self.settings_dialog.run_args.setText(
-            self.settings.instances[self.settings.current_instance].run_args
-        )
-        self.settings_dialog.run_args.setCursorPosition(0)
-
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -534,12 +520,8 @@ class SettingsController(QObject):
         # Locations tab
         self._locations_tab.update_model_from_view()
 
-        # Save Steam protocol launch option
-        self.settings.instances[
-            self.settings.current_instance
-        ].launch_via_steam_protocol = (
-            self.settings_dialog.launch_via_steam_protocol_checkbox.isChecked()
-        )
+        # Game Launch tab
+        self._game_launch_tab.update_model_from_view()
 
         # Databases tab
         self._databases_tab.update_model_from_view()
@@ -677,9 +659,6 @@ class SettingsController(QObject):
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
-        self.settings_dialog.run_args.setText(
-            self.settings.instances[self.settings.current_instance].run_args
-        )
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
@@ -1418,11 +1397,6 @@ class SettingsController(QObject):
 
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
-
-    @Slot(str)
-    def _on_run_args_text_changed(self, text: str = "") -> None:
-        self.settings.instances[self.settings.current_instance].run_args = text
-        self.settings.save()
 
     @Slot()
     def _on_instance_folder_location_choose_button_clicked(self) -> None:
