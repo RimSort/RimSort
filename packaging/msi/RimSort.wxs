@@ -33,7 +33,7 @@
         <!-- Icons -->
         <!-- ===================================================== -->
 
-        <Icon Id="AppIcon.ico" SourceFile="themes\default-icons\AppIcon.ico" />
+        <Icon Id="AppIcon.ico" SourceFile="..\..\themes\default-icons\AppIcon.ico" />
 
         <!-- ===================================================== -->
         <!-- UI Configuration -->
