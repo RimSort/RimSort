@@ -81,8 +81,6 @@ class SettingsDialog(QDialog):
         self._do_external_tools_tab()
         self._do_themes_tab()
         self._do_launch_state_tab()
-        self._do_authentication_tab()
-        self._do_aux_db_settings_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -403,19 +401,6 @@ class SettingsDialog(QDialog):
         self._do_steam_workshop_db_group(tab_layout)
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
-
-    def _do_aux_db_settings_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Auxiliary DB"))
-
-        tab_layout = QVBoxLayout()
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        tab.setLayout(tab_layout)
-
-        self._do_aux_db_time_limit_group(tab_layout)
-        # New section for save-comparison feature
-        self._do_recent_save_integration_group(tab_layout)
-        self._do_backup_settings_group(tab_layout)
 
     def _do_backup_settings_group(self, tab_layout: QBoxLayout) -> None:
         backup_group_label = QLabel(self.tr("Backup Settings"))
@@ -1605,74 +1590,20 @@ This basically preserves your mod coloring, user notes etc. for this many second
         language_controller = LanguageController()
         language_controller.populate_languages_combobox
 
-    def _do_authentication_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Authentication"))
-
-        tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        auth_group = QGroupBox()
-        tab_layout.addWidget(auth_group)
-
-        auth_group_layout = QGridLayout()
-        auth_group.setLayout(auth_group_layout)
-
-        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
-        auth_group_layout.addWidget(
-            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.rentry_auth_code = QLineEdit()
-        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
-        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.rentry_auth_code.setPlaceholderText(
-            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
-        )
-        # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
-        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
-
-        github_identity_group = QGroupBox()
-        tab_layout.addWidget(github_identity_group)
-
-        github_identity_layout = QGridLayout()
-        github_identity_group.setLayout(github_identity_layout)
-
-        github_username_label = QLabel(self.tr("GitHub username:"))
-        github_identity_layout.addWidget(
-            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_username = QLineEdit()
-        self.github_username.setTextMargins(GUIInfo().text_field_margins)
-        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_username, 0, 1)
-
-        github_token_label = QLabel(self.tr("GitHub personal access token:"))
-        github_identity_layout.addWidget(
-            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_token = QLineEdit()
-        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
-        self.github_token.setTextMargins(GUIInfo().text_field_margins)
-        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_token, 1, 1)
-
-        self.setTabOrder(self.github_username, self.github_token)
-
-        buttons_layout = QHBoxLayout()
-        tab_layout.addLayout(buttons_layout)
-
-        buttons_layout.addStretch()
-
     def _do_advanced_tab(self) -> None:
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.tab_widget.addTab(scroll_area, self.tr("Advanced"))
+
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Advanced"))
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
+        scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # === Advanced settings group ===
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -1692,7 +1623,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.watchdog_checkbox)
 
-        # Clear button behavior
         self.clear_moves_dlc_checkbox = QCheckBox(self.tr("Clear also moves DLC"))
         group_layout.addWidget(self.clear_moves_dlc_checkbox)
 
@@ -1736,7 +1666,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.include_mod_notes_in_mod_name_filter_checkbox)
 
-        # Put checkbox, label and spinbox on the same horizontal line
         backup_layout = QHBoxLayout()
         self.enable_backup_before_update_checkbox = QCheckBox(
             self.tr("Create backup before RimSort update")
@@ -1758,6 +1687,66 @@ This basically preserves your mod coloring, user notes etc. for this many second
         backup_layout.addWidget(self.max_backups_spinbox)
 
         group_layout.addLayout(backup_layout)
+
+        # === Auxiliary Metadata DB group ===
+        self._do_aux_db_time_limit_group(tab_layout)
+
+        # === Integration with recent save ===
+        self._do_recent_save_integration_group(tab_layout)
+
+        # === Backup Settings ===
+        self._do_backup_settings_group(tab_layout)
+
+        # === Authentication group ===
+        auth_group = QGroupBox()
+        tab_layout.addWidget(auth_group)
+
+        auth_group_layout = QGridLayout()
+        auth_group.setLayout(auth_group_layout)
+
+        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
+        auth_group_layout.addWidget(
+            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.rentry_auth_code = QLineEdit()
+        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
+        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.rentry_auth_code.setPlaceholderText(
+            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
+        )
+        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
+
+        github_identity_group = QGroupBox()
+        tab_layout.addWidget(github_identity_group)
+
+        github_identity_layout = QGridLayout()
+        github_identity_group.setLayout(github_identity_layout)
+
+        github_username_label = QLabel(self.tr("GitHub username:"))
+        github_identity_layout.addWidget(
+            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_username = QLineEdit()
+        self.github_username.setTextMargins(GUIInfo().text_field_margins)
+        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_username, 0, 1)
+
+        github_token_label = QLabel(self.tr("GitHub personal access token:"))
+        github_identity_layout.addWidget(
+            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_token = QLineEdit()
+        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
+        self.github_token.setTextMargins(GUIInfo().text_field_margins)
+        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_token, 1, 1)
+
+        self.setTabOrder(self.github_username, self.github_token)
+
+        tab_layout.addStretch()
 
     def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):

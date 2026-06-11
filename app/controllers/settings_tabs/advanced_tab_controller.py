@@ -1,3 +1,4 @@
+from loguru import logger
 from PySide6.QtCore import Slot
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
@@ -11,7 +12,8 @@ class AdvancedTabController(BaseTabController):
 
     Manages: debug logging, watchdog, clear/DLC behavior, mod update checks,
     rich text rendering, DB auto-update, mod name search scope, backup policy,
-    save-comparison indicators, mod coloring mode.
+    save-comparison indicators, mod coloring mode, Auxiliary DB settings,
+    and Authentication fields.
     """
 
     def __init__(
@@ -28,8 +30,6 @@ class AdvancedTabController(BaseTabController):
                 self._on_toggle_show_save_comparison_indicators
             )
         except (AttributeError, TypeError):
-            from loguru import logger
-
             logger.warning(
                 "show_save_comparison_indicators_checkbox not available for signal wiring"
             )
@@ -50,8 +50,6 @@ class AdvancedTabController(BaseTabController):
                 self.settings.show_save_comparison_indicators
             )
         except (AttributeError, TypeError):
-            from loguru import logger
-
             logger.warning(
                 "show_save_comparison_indicators_checkbox not available for view update"
             )
@@ -90,6 +88,20 @@ class AdvancedTabController(BaseTabController):
         )
         self.dialog.max_backups_spinbox.setValue(self.settings.max_backups)
 
+        # Auxiliary DB
+        self.dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
+        self.dialog.enable_aux_db_behavior_editing.setChecked(
+            self.settings.enable_aux_db_behavior_editing
+        )
+
+        # Authentication
+        self.dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
+        self.dialog.rentry_auth_code.setCursorPosition(0)
+        self.dialog.github_username.setText(self.settings.github_username)
+        self.dialog.github_username.setCursorPosition(0)
+        self.dialog.github_token.setText(self.settings.github_token)
+        self.dialog.github_token.setCursorPosition(0)
+
     def update_model_from_view(self) -> None:
         self.settings.debug_logging_enabled = (
             self.dialog.debug_logging_checkbox.isChecked()
@@ -124,6 +136,21 @@ class AdvancedTabController(BaseTabController):
             self.dialog.enable_backup_before_update_checkbox.isChecked()
         )
         self.settings.max_backups = self.dialog.max_backups_spinbox.value()
+
+        # Auxiliary DB
+        try:
+            self.settings.aux_db_time_limit = int(self.dialog.aux_db_time_limit.text())
+        except Exception:
+            logger.warning("Failed setting Aux DB time limit, falling back to -1")
+            self.settings.aux_db_time_limit = -1
+        self.settings.enable_aux_db_behavior_editing = (
+            self.dialog.enable_aux_db_behavior_editing.isChecked()
+        )
+
+        # Authentication
+        self.settings.rentry_auth_code = self.dialog.rentry_auth_code.text()
+        self.settings.github_username = self.dialog.github_username.text()
+        self.settings.github_token = self.dialog.github_token.text()
 
     @Slot(bool)
     def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:
