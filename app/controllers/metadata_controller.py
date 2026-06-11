@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import msgspec
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QMutex, QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
@@ -225,6 +225,35 @@ class MetadataController(QObject):
                 }
         return self._steamdb_packageid_to_name_cache
 
+    @property
+    def is_abort_requested(self) -> bool:
+        """Whether a metadata refresh abort has been requested."""
+        return getattr(self, "_abort_requested", False)
+
+    @is_abort_requested.setter
+    def is_abort_requested(self, value: bool) -> None:
+        self._abort_requested = value
+
+    def update_workshop_timestamps(
+        self,
+        mod_path: str,
+        time_created: int | None = None,
+        time_updated: int | None = None,
+    ) -> None:
+        """Write workshop timestamps to aux DB for a mod.
+
+        :param mod_path: Mod path (the identity key)
+        :param time_created: Steam Workshop creation timestamp (epoch seconds)
+        :param time_updated: Steam Workshop last-updated timestamp (epoch seconds)
+        """
+        with self.metadata_db_controller.Session() as session:
+            entry = self.metadata_db_controller.get_or_create(session, mod_path)
+            if time_created is not None:
+                entry.external_time_created = time_created
+            if time_updated is not None:
+                entry.external_time_updated = time_updated
+            session.commit()
+
     # ---- Path accessors ----
 
     @property
@@ -410,6 +439,85 @@ class MetadataController(QObject):
         return use_this_instead.get(pid)
 
     # ---- Mutations ----
+
+    @Slot(str, str)
+    def process_creation(self, data_source: str, mod_path: str) -> None:
+        """Parse a single mod and add it to metadata. Emits mod_created_signal."""
+        path = Path(mod_path)
+        if not path.is_dir():
+            return
+        if (
+            self.metadata_mediator.local_mods_path is None
+            or self.metadata_mediator.game_path is None
+        ):
+            return
+        if self.metadata_mediator._mods_metadata is None:
+            return
+
+        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        worker = self.metadata_mediator._ParserWorker(
+            [path],
+            self.metadata_mediator.game_version,
+            self.metadata_mediator.local_mods_path,
+            self.metadata_mediator.game_path,
+            self.metadata_mediator.workshop_mods_path,
+            self.metadata_mediator.user_rules,
+            self.metadata_mediator.community_rules,
+            self.metadata_mediator.steam_db,
+            QMutex(),
+            self.metadata_mediator.mods_metadata,
+            prefer_versioned,
+        )
+        worker.run()
+
+        if mod_path in self.mods_metadata:
+            self._invalidate_caches()
+            self.mod_created_signal.emit(mod_path)
+
+    @Slot(str, str)
+    def process_deletion(self, data_source: str, mod_path: str) -> None:
+        """Remove a mod from metadata and aux DB. Emits mod_deleted_signal."""
+        if mod_path not in self.mods_metadata:
+            return
+        self.metadata_mediator.mods_metadata.pop(mod_path, None)
+        with self.metadata_db_controller.Session() as session:
+            self.metadata_db_controller.delete(session, Path(mod_path))
+        self._invalidate_caches()
+        self.mod_deleted_signal.emit(mod_path)
+
+    @Slot(str, str)
+    def process_update(self, data_source: str, mod_path: str) -> None:
+        """Re-parse a single mod and update metadata. Emits mod_metadata_updated_signal."""
+        path = Path(mod_path)
+        if not path.is_dir():
+            return
+        if (
+            self.metadata_mediator.local_mods_path is None
+            or self.metadata_mediator.game_path is None
+        ):
+            return
+        if self.metadata_mediator._mods_metadata is None:
+            return
+
+        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        worker = self.metadata_mediator._ParserWorker(
+            [path],
+            self.metadata_mediator.game_version,
+            self.metadata_mediator.local_mods_path,
+            self.metadata_mediator.game_path,
+            self.metadata_mediator.workshop_mods_path,
+            self.metadata_mediator.user_rules,
+            self.metadata_mediator.community_rules,
+            self.metadata_mediator.steam_db,
+            QMutex(),
+            self.metadata_mediator.mods_metadata,
+            prefer_versioned,
+        )
+        worker.run()
+
+        if mod_path in self.mods_metadata:
+            self._invalidate_caches()
+            self.mod_metadata_updated_signal.emit(mod_path)
 
     def delete_mod(self, *path: Path) -> None:
         """Delete one or more mods from metadata and aux DB by path.

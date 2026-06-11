@@ -661,3 +661,66 @@ def test_set_steam_db_blacklist_persists_to_disk(
 
     expected_min = int(time.time()) - 10  # allow some slack
     assert raw["version"] >= expected_min
+
+
+def test_process_creation_adds_mod_to_metadata(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_creation should parse a mod and add it to mods_metadata."""
+    mod_path = tmp_path / "test_mod"
+    mod_path.mkdir()
+    about_dir = mod_path / "About"
+    about_dir.mkdir()
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Test Mod</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+
+    metadata_controller.metadata_mediator.local_mods_path = tmp_path
+    metadata_controller.metadata_mediator.game_path = tmp_path
+    metadata_controller.metadata_mediator._game_version = "1.5"
+    metadata_controller.metadata_mediator._mods_metadata = {}
+
+    metadata_controller.process_creation("local", str(mod_path))
+    assert str(mod_path) in metadata_controller.mods_metadata
+
+
+def test_process_deletion_removes_mod(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_deletion should remove a mod from mods_metadata."""
+    mod_path = str(tmp_path / "test_mod")
+    from app.models.metadata.metadata_structure import ListedMod
+
+    metadata_controller.metadata_mediator._mods_metadata = {}
+    mock_mod = MagicMock(spec=ListedMod)
+    metadata_controller.metadata_mediator._mods_metadata[mod_path] = mock_mod
+
+    metadata_controller.process_deletion("local", mod_path)
+    assert mod_path not in metadata_controller.mods_metadata
+
+
+def test_process_update_refreshes_metadata(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_update should re-parse a mod and update mods_metadata."""
+    mod_path = tmp_path / "test_mod"
+    mod_path.mkdir()
+    about_dir = mod_path / "About"
+    about_dir.mkdir()
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Original Name</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+
+    metadata_controller.metadata_mediator.local_mods_path = tmp_path
+    metadata_controller.metadata_mediator.game_path = tmp_path
+    metadata_controller.metadata_mediator._game_version = "1.5"
+    metadata_controller.metadata_mediator._mods_metadata = {}
+
+    metadata_controller.process_creation("local", str(mod_path))
+    assert metadata_controller.mods_metadata[str(mod_path)].name == "Original Name"
+
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Updated Name</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+    metadata_controller.process_update("local", str(mod_path))
+    assert metadata_controller.mods_metadata[str(mod_path)].name == "Updated Name"
