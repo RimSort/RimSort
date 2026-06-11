@@ -264,7 +264,7 @@ class DatabasesTabController(BaseTabController):
             logger.warning("Failed setting database_expiry, falling back to 0")
             self.settings.database_expiry = 0
 
-    @Slot()
+    @Slot(str, str, str)
     def _do_http_download(self, url: str, repo_url: str, display_name: str) -> None:
         """Download a database via HTTP using the URL currently in the settings dialog."""
         if not url:
