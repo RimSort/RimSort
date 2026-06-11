@@ -5,7 +5,6 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from app.controllers.instance_controller import InstanceController
 from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
     AdvancedTabController,
@@ -23,7 +22,6 @@ from app.controllers.settings_tabs import (
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.app_info import AppInfo
-from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.event_bus import EventBus
 from app.utils.generic import extract_git_dir_name
 from app.utils.http_downloader import (
@@ -31,12 +29,7 @@ from app.utils.http_downloader import (
     DownloadResult,
     HttpDownloadWorker,
 )
-from app.views.dialogue import (
-    BinaryChoiceDialog,
-    show_dialogue_file,
-    show_settings_error,
-    show_warning,
-)
+from app.views.dialogue import BinaryChoiceDialog, show_settings_error, show_warning
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -101,8 +94,6 @@ class SettingsController(QObject):
             self.settings,
             self.settings_dialog,
             file_dialog_state=self._file_dialog_state,
-            on_instance_folder_choose=self._on_instance_folder_location_choose_button_clicked,
-            on_instance_folder_clear=self._on_instance_folder_location_clear_button_clicked,
         )
         self._tab_controllers.append(self._locations_tab)
 
@@ -463,68 +454,6 @@ class SettingsController(QObject):
             except Exception as e:
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
-
-    @Slot()
-    def _on_instance_folder_location_choose_button_clicked(self) -> None:
-        """Open folder dialog to select custom instance folder location."""
-        # Only allow changing instance folder location for Default instance
-        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
-            show_warning(
-                title="Cannot Modify Instance Folder",
-                text="Only the Default instance can have a custom folder location.",
-                information="Custom instance folder location is managed by the Default instance.",
-            )
-            return
-
-        instance_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Instance Folder Location",
-            _dir=self._file_dialog_state.last_path,
-        )
-        if not instance_folder_location:
-            return
-
-        # Validate the path before setting it
-
-        test_controller = InstanceController(
-            self.settings.instances[self.settings.current_instance]
-        )
-        test_controller.instance.instance_folder_override = instance_folder_location
-        is_valid, error_msg = test_controller.validate_instance_folder_override()
-
-        if not is_valid:
-            show_warning(
-                title="Invalid Instance Folder",
-                text="Cannot use selected folder as instance location.",
-                information=error_msg,
-            )
-            return
-
-        # Update the instance and UI
-        self.settings.instances[
-            self.settings.current_instance
-        ].instance_folder_override = instance_folder_location
-        self.settings_dialog.instance_folder_location.setText(instance_folder_location)
-        self._file_dialog_state.last_path = str(Path(instance_folder_location).parent)
-        self.settings.save()
-
-    @Slot()
-    def _on_instance_folder_location_clear_button_clicked(self) -> None:
-        """Clear custom instance folder and use default location."""
-        # Only allow changing instance folder location for Default instance
-        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
-            show_warning(
-                title="Cannot Modify Instance Folder",
-                text="Only the Default instance can have a custom folder location.",
-                information="Custom instance folder location is managed by the Default instance.",
-            )
-            return
-
-        self.settings.instances[
-            self.settings.current_instance
-        ].instance_folder_override = ""
-        self.settings_dialog.instance_folder_location.setText("")
-        self.settings.save()
 
     @Slot()
     def _do_reset_settings_file(self) -> None:

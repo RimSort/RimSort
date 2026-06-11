@@ -6,6 +6,7 @@ from loguru import logger
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QLineEdit, QMessageBox
 
+from app.controllers.instance_controller import InstanceController
 from app.controllers.settings_tabs.base_tab_controller import (
     BaseTabController,
     SharedFileDialogState,
@@ -78,12 +79,8 @@ class LocationsTabController(BaseTabController):
         settings: Settings,
         dialog: SettingsDialog,
         file_dialog_state: SharedFileDialogState,
-        on_instance_folder_choose: Callable[[], None],
-        on_instance_folder_clear: Callable[[], None],
     ) -> None:
         super().__init__(settings, dialog, file_dialog_state=file_dialog_state)
-        self._on_instance_folder_choose_callback = on_instance_folder_choose
-        self._on_instance_folder_clear_callback = on_instance_folder_clear
 
         self._groups: list[FolderPathGroup] = [
             FolderPathGroup(
@@ -111,10 +108,10 @@ class LocationsTabController(BaseTabController):
 
         # Instance folder location
         self.dialog.instance_folder_location_choose_button.clicked.connect(
-            self._on_instance_folder_choose_callback
+            self._on_instance_folder_choose
         )
         self.dialog.instance_folder_location_clear_button.clicked.connect(
-            self._on_instance_folder_clear_callback
+            self._on_instance_folder_clear
         )
 
         # Clear and autodetect buttons
@@ -326,6 +323,68 @@ class LocationsTabController(BaseTabController):
                 logger.warning(
                     f"Auto-detected {group.name} folder path does not exist: {group.folder}"
                 )
+
+    # --- Instance folder ---
+
+    @Slot()
+    def _on_instance_folder_choose(self) -> None:
+        """Open folder dialog to select custom instance folder location."""
+        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
+            show_warning(
+                title="Cannot Modify Instance Folder",
+                text="Only the Default instance can have a custom folder location.",
+                information="Custom instance folder location is managed by the Default instance.",
+            )
+            return
+
+        instance_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Instance Folder Location",
+            _dir=self._file_dialog_state.last_path if self._file_dialog_state else "",
+        )
+        if not instance_folder_location:
+            return
+
+        test_controller = InstanceController(
+            self.settings.instances[self.settings.current_instance]
+        )
+        test_controller.instance.instance_folder_override = instance_folder_location
+        is_valid, error_msg = test_controller.validate_instance_folder_override()
+
+        if not is_valid:
+            show_warning(
+                title="Invalid Instance Folder",
+                text="Cannot use selected folder as instance location.",
+                information=error_msg,
+            )
+            return
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].instance_folder_override = instance_folder_location
+        self.dialog.instance_folder_location.setText(instance_folder_location)
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(
+                Path(instance_folder_location).parent
+            )
+        self.settings.save()
+
+    @Slot()
+    def _on_instance_folder_clear(self) -> None:
+        """Clear custom instance folder and use default location."""
+        if self.settings.current_instance != DEFAULT_INSTANCE_NAME:
+            show_warning(
+                title="Cannot Modify Instance Folder",
+                text="Only the Default instance can have a custom folder location.",
+                information="Custom instance folder location is managed by the Default instance.",
+            )
+            return
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].instance_folder_override = ""
+        self.dialog.instance_folder_location.setText("")
+        self.settings.save()
 
     # --- Validation ---
 
