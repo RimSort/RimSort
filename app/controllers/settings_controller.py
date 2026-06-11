@@ -15,10 +15,9 @@ from app.controllers.settings_tabs import (
     BaseTabController,
     DatabasesTabController,
     GameLaunchTabController,
+    InternalToolsTabController,
     LocationsTabController,
     SortingTabController,
-    SteamcmdTabController,
-    ToddsTabController,
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
@@ -128,19 +127,16 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._game_launch_tab)
 
-        self._todds_tab = ToddsTabController(self.settings, self.settings_dialog)
-        self._tab_controllers.append(self._todds_tab)
-
-        self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
-        self._tab_controllers.append(self._advanced_tab)
-
-        self._steamcmd_tab = SteamcmdTabController(
+        self._internal_tools_tab = InternalToolsTabController(
             self.settings,
             self.settings_dialog,
             last_file_dialog_path=str(self._last_file_dialog_path),
             on_path_selected=self._on_locations_path_selected,
         )
-        self._tab_controllers.append(self._steamcmd_tab)
+        self._tab_controllers.append(self._internal_tools_tab)
+
+        self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
+        self._tab_controllers.append(self._advanced_tab)
 
         for tc in self._tab_controllers:
             tc.connect_signals()
@@ -338,11 +334,8 @@ class SettingsController(QObject):
             self.settings.steam_apikey
         )
 
-        # SteamCMD tab
-        self._steamcmd_tab.update_view_from_model()
-
-        # todds tab
-        self._todds_tab.update_view_from_model()
+        # Internal Tools tab
+        self._internal_tools_tab.update_view_from_model()
 
         # External Tools Tab
         self.settings_dialog.text_editor_location.setText(
@@ -391,11 +384,8 @@ class SettingsController(QObject):
             self.settings_dialog.db_builder_steam_api_key.text()
         )
 
-        # SteamCMD tab
-        self._steamcmd_tab.update_model_from_view()
-
-        # todds tab
-        self._todds_tab.update_model_from_view()
+        # Internal Tools tab
+        self._internal_tools_tab.update_model_from_view()
 
         # Other External Tools Tab
         self.settings.text_editor_location = (

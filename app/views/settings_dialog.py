@@ -76,8 +76,7 @@ class SettingsDialog(QDialog):
         self._do_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
-        self._do_steamcmd_tab()
-        self._do_todds_tab()
+        self._do_internal_tools_tab()
         self._do_external_tools_tab()
         self._do_appearance_tab()
         self._do_advanced_tab()
@@ -1052,12 +1051,23 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         item_layout.addWidget(self.db_builder_build_database_button)
 
-    def _do_steamcmd_tab(self) -> None:
+    def _do_internal_tools_tab(self) -> None:
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.tab_widget.addTab(scroll_area, self.tr("Internal Tools"))
+
         tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("SteamCMD"))
+        scroll_area.setWidget(tab)
+        tab.setAutoFillBackground(False)
+        scroll_area.viewport().setAutoFillBackground(False)
 
         tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        # === SteamCMD group ===
+        steamcmd_label = QLabel(self.tr("SteamCMD"))
+        steamcmd_label.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(steamcmd_label)
 
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -1115,8 +1125,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.steamcmd_install_location)
 
-        tab_layout.addStretch()
-
         button_layout = QHBoxLayout()
         tab_layout.addLayout(button_layout)
 
@@ -1141,12 +1149,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.steamcmd_install_button = QPushButton(self.tr("Install SteamCMD"))
         button_layout.addWidget(self.steamcmd_install_button)
 
-    def _do_todds_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("todds"))
-
-        tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # === todds group ===
+        todds_label = QLabel(self.tr("todds"))
+        todds_label.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(todds_label)
 
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -1240,6 +1246,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Connect radio buttons to enable/disable custom command input
         self.todds_preset_optimized_radio.toggled.connect(self._on_preset_radio_toggled)
         self.todds_preset_custom_radio.toggled.connect(self._on_preset_radio_toggled)
+
+        tab_layout.addStretch()
 
     def _do_external_tools_tab(self) -> None:
         tab = QWidget()
