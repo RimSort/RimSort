@@ -14,6 +14,7 @@ from app.controllers.settings_tabs import (
     DatabasesTabController,
     LocationsTabController,
     SortingTabController,
+    WindowLayoutTabController,
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
@@ -116,6 +117,11 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._locations_tab)
 
+        self._window_layout_tab = WindowLayoutTabController(
+            self.settings, self.settings_dialog
+        )
+        self._tab_controllers.append(self._window_layout_tab)
+
         for tc in self._tab_controllers:
             tc.connect_signals()
 
@@ -134,32 +140,6 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.clicked.connect(
             self._on_global_ok_button_clicked
         )
-
-        # Connect launch state radio buttons to update spinbox enabled/disabled state
-        # Main Window
-        self.settings_dialog.main_launch_maximized_radio.toggled.connect(
-            self.settings_dialog.disable_main_custom_size_spinboxes
-        )
-        self.settings_dialog.main_launch_normal_radio.toggled.connect(
-            self.settings_dialog.disable_main_custom_size_spinboxes
-        )
-        self.settings_dialog.main_launch_custom_radio.toggled.connect(
-            self.settings_dialog.enable_main_custom_size_spinboxes
-        )
-        # Browser Window
-        self.settings_dialog.browser_launch_maximized_radio.toggled.connect(
-            self.settings_dialog.disable_browser_custom_size_spinboxes
-        )
-        self.settings_dialog.browser_launch_normal_radio.toggled.connect(
-            self.settings_dialog.disable_browser_custom_size_spinboxes
-        )
-        self.settings_dialog.browser_launch_custom_radio.toggled.connect(
-            self.settings_dialog.enable_browser_custom_size_spinboxes
-        )
-
-        # Settings Window (only custom option, spinboxes always enabled)
-        self.settings_dialog.settings_custom_width_spinbox.setEnabled(True)
-        self.settings_dialog.settings_custom_height_spinbox.setEnabled(True)
 
         # Advanced: wiring for save-comparison indicator toggle
         try:
@@ -492,68 +472,6 @@ class SettingsController(QObject):
         except Exception:
             pass
 
-        # Launch State tab
-        # Dialogue positioning
-        self.settings_dialog.constrain_dialogues_to_main_window_monitor_checkbox.setChecked(
-            self.settings.constrain_dialogues_to_main_window_monitor
-        )
-
-        # Windows launch state
-        # Main Window
-        main_window_launch_state = self.settings.main_window_launch_state
-        if main_window_launch_state == "maximized":
-            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
-            self.settings_dialog.disable_main_custom_size_spinboxes()
-        elif main_window_launch_state == "normal":
-            self.settings_dialog.main_launch_normal_radio.setChecked(True)
-            self.settings_dialog.disable_main_custom_size_spinboxes()
-        elif main_window_launch_state == "custom":
-            self.settings_dialog.main_launch_custom_radio.setChecked(True)
-            self.settings_dialog.enable_main_custom_size_spinboxes()
-            # Validate main window custom width and height before setting
-            min_size, max_size = 400, 1600
-            width = self.settings.main_window_custom_width
-            height = self.settings.main_window_custom_height
-            if not (min_size <= width <= max_size):
-                width = 900
-            if not (min_size <= height <= max_size):
-                height = 600
-            self.settings_dialog.main_custom_width_spinbox.setValue(width)
-            self.settings_dialog.main_custom_height_spinbox.setValue(height)
-        else:
-            self.settings_dialog.main_launch_maximized_radio.setChecked(True)
-        # Browser Window
-        browser_window_launch_state = self.settings.browser_window_launch_state
-        if browser_window_launch_state == "maximized":
-            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
-            self.settings_dialog.disable_browser_custom_size_spinboxes()
-        if browser_window_launch_state == "normal":
-            self.settings_dialog.browser_launch_normal_radio.setChecked(True)
-            self.settings_dialog.disable_browser_custom_size_spinboxes()
-        elif browser_window_launch_state == "custom":
-            self.settings_dialog.browser_launch_custom_radio.setChecked(True)
-            self.settings_dialog.enable_browser_custom_size_spinboxes()
-            # Validate custom width and height before setting
-            min_size, max_size = 400, 1600
-            width = self.settings.browser_window_custom_width
-            height = self.settings.browser_window_custom_height
-            if not (min_size <= width <= max_size):
-                width = 900
-            if not (min_size <= height <= max_size):
-                height = 600
-            self.settings_dialog.browser_custom_width_spinbox.setValue(width)
-            self.settings_dialog.browser_custom_height_spinbox.setValue(height)
-        else:
-            self.settings_dialog.browser_launch_maximized_radio.setChecked(True)
-
-        # Settings Window (only custom option)
-        self.settings_dialog.settings_custom_width_spinbox.setValue(
-            self.settings.settings_window_custom_width
-        )
-        self.settings_dialog.settings_custom_height_spinbox.setValue(
-            self.settings.settings_window_custom_height
-        )
-
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -714,50 +632,6 @@ class SettingsController(QObject):
         )
         self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
         self.settings.language = self.settings_dialog.language_combobox.currentData()
-
-        # Launch State tab
-        # Dialogue positioning
-        self.settings.constrain_dialogues_to_main_window_monitor = self.settings_dialog.constrain_dialogues_to_main_window_monitor_checkbox.isChecked()
-
-        # Windows launch state
-        # Main Window
-        if self.settings_dialog.main_launch_maximized_radio.isChecked():
-            self.settings.main_window_launch_state = "maximized"
-        elif self.settings_dialog.main_launch_normal_radio.isChecked():
-            self.settings.main_window_launch_state = "normal"
-        elif self.settings_dialog.main_launch_custom_radio.isChecked():
-            self.settings.main_window_launch_state = "custom"
-            self.settings.main_window_custom_width = (
-                self.settings_dialog.main_custom_width_spinbox.value()
-            )
-            self.settings.main_window_custom_height = (
-                self.settings_dialog.main_custom_height_spinbox.value()
-            )
-        else:
-            self.settings.main_window_launch_state = "maximized"
-        # Browser Window
-        if self.settings_dialog.browser_launch_maximized_radio.isChecked():
-            self.settings.browser_window_launch_state = "maximized"
-        elif self.settings_dialog.browser_launch_normal_radio.isChecked():
-            self.settings.browser_window_launch_state = "normal"
-        elif self.settings_dialog.browser_launch_custom_radio.isChecked():
-            self.settings.browser_window_launch_state = "custom"
-            self.settings.browser_window_custom_width = (
-                self.settings_dialog.browser_custom_width_spinbox.value()
-            )
-            self.settings.browser_window_custom_height = (
-                self.settings_dialog.browser_custom_height_spinbox.value()
-            )
-        else:
-            self.settings.browser_window_launch_state = "maximized"
-
-        # Settings Window (only custom option)
-        self.settings.settings_window_custom_width = (
-            self.settings_dialog.settings_custom_width_spinbox.value()
-        )
-        self.settings.settings_window_custom_height = (
-            self.settings_dialog.settings_custom_height_spinbox.value()
-        )
 
         # Advanced tab
         self.settings.debug_logging_enabled = (

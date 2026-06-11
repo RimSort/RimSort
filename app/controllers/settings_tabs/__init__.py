@@ -6,10 +6,14 @@ from app.controllers.settings_tabs.locations_tab_controller import (
     LocationsTabController,
 )
 from app.controllers.settings_tabs.sorting_tab_controller import SortingTabController
+from app.controllers.settings_tabs.window_layout_tab_controller import (
+    WindowLayoutTabController,
+)
 
 __all__ = [
     "BaseTabController",
     "DatabasesTabController",
     "LocationsTabController",
     "SortingTabController",
+    "WindowLayoutTabController",
 ]
