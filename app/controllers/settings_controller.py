@@ -3,7 +3,6 @@ from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QApplication
 
 from app.controllers.language_controller import LanguageController
 from app.controllers.settings_tabs import (
@@ -19,7 +18,6 @@ from app.controllers.settings_tabs import (
     SharedFileDialogState,
     SortingTabController,
 )
-from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.event_bus import EventBus
 from app.views.dialogue import BinaryChoiceDialog, show_settings_error
@@ -61,12 +59,6 @@ class SettingsController(QObject):
         self.settings_dialog = view
 
         self._file_dialog_state = SharedFileDialogState(str(Path.home()))
-
-        self.theme_controller = ThemeController()
-
-        self.language_controller = LanguageController()
-
-        self.app_instance = QApplication.instance()
 
         # Initialize per-tab controllers (registry pattern)
         self._tab_controllers: list[BaseTabController] = []
@@ -256,6 +248,11 @@ class SettingsController(QObject):
         self.settings.instances[instance.name] = instance
 
     @property
+    def language_controller(self) -> LanguageController:
+        """Delegate to AppearanceTabController (accessed by AppController)."""
+        return self._appearance_tab.language_controller
+
+    @property
     def active_instance(self) -> Instance:
         """
         Get the active instance.
@@ -263,68 +260,12 @@ class SettingsController(QObject):
         return self.settings.instances[self.settings.current_instance]
 
     def _update_view_from_model(self) -> None:
-        """
-        Update the view from the settings model.
-        """
-
-        # Locations tab
-        self._locations_tab.update_view_from_model()
-
-        # Game Launch tab
-        self._game_launch_tab.update_view_from_model()
-
-        # Databases tab
-        self._databases_tab.update_view_from_model()
-
-        # Sorting tab
-        self._sorting_tab.update_view_from_model()
-
-        # Database Builder tab
-        self._db_builder_tab.update_view_from_model()
-
-        # Internal Tools tab
-        self._internal_tools_tab.update_view_from_model()
-
-        # External Tools tab
-        self._external_tools_tab.update_view_from_model()
-
-        # Appearance tab
-        self._appearance_tab.update_view_from_model()
-
-        # Advanced tab
-        self._advanced_tab.update_view_from_model()
+        for tc in self._tab_controllers:
+            tc.update_view_from_model()
 
     def _update_model_from_view(self) -> None:
-        """
-        Update the settings model from the view.
-        """
-
-        # Locations tab
-        self._locations_tab.update_model_from_view()
-
-        # Game Launch tab
-        self._game_launch_tab.update_model_from_view()
-
-        # Databases tab
-        self._databases_tab.update_model_from_view()
-
-        # Sorting tab
-        self._sorting_tab.update_model_from_view()
-
-        # Database Builder tab
-        self._db_builder_tab.update_model_from_view()
-
-        # Internal Tools tab
-        self._internal_tools_tab.update_model_from_view()
-
-        # External Tools tab
-        self._external_tools_tab.update_model_from_view()
-
-        # Appearance tab
-        self._appearance_tab.update_model_from_view()
-
-        # Advanced tab
-        self._advanced_tab.update_model_from_view()
+        for tc in self._tab_controllers:
+            tc.update_model_from_view()
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
@@ -360,11 +301,9 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
-        self.theme_controller.set_font(
+        self._appearance_tab.apply_theme_and_font(
             self.settings.font_family,
             self.settings.font_size,
-        )
-        self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,
         )

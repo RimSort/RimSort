@@ -184,6 +184,22 @@ class AppearanceTabController(BaseTabController):
             self.dialog.settings_custom_height_spinbox.value()
         )
 
+    def apply_theme_and_font(
+        self,
+        font_family: str,
+        font_size: int,
+        enable_themes: bool,
+        theme_name: str,
+    ) -> None:
+        """Apply theme and font settings (called by SettingsController on OK)."""
+        self._theme_controller.set_font(font_family, font_size)
+        self._theme_controller.apply_selected_theme(enable_themes, theme_name)
+
+    @property
+    def language_controller(self) -> LanguageController:
+        """Public access to the language controller (used by AppController)."""
+        return self._language_controller
+
     @Slot()
     def _on_theme_location_open_button_clicked(self) -> None:
         selected_theme_name = self.dialog.themes_combobox.currentText()
