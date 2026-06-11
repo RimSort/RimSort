@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
-from PySide6.QtGui import QIcon, QMouseEvent
+from PySide6.QtGui import QIcon, QMouseEvent, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -169,11 +169,11 @@ class FlowLayoutContainer(QWidget):
         super().__init__(parent)
         self.setLayout(layout)
 
-    def resizeEvent(self, event) -> None:  # type: ignore[override]
+    def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._sync_height()
 
-    def showEvent(self, event) -> None:  # type: ignore[override]
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._sync_height()
 
