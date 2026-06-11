@@ -13,6 +13,7 @@ from app.controllers.settings_tabs import (
     AdvancedTabController,
     AppearanceTabController,
     BaseTabController,
+    DatabaseBuilderTabController,
     DatabasesTabController,
     ExternalToolsTabController,
     GameLaunchTabController,
@@ -144,6 +145,12 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._external_tools_tab)
 
+        self._db_builder_tab = DatabaseBuilderTabController(
+            self.settings,
+            self.settings_dialog,
+        )
+        self._tab_controllers.append(self._db_builder_tab)
+
         self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
         self._tab_controllers.append(self._advanced_tab)
 
@@ -164,23 +171,6 @@ class SettingsController(QObject):
 
         self.settings_dialog.global_ok_button.clicked.connect(
             self._on_global_ok_button_clicked
-        )
-
-        # Build DB tab
-        self.settings_dialog.db_builder_download_all_mods_via_steamcmd_button.clicked.connect(
-            self._on_db_builder_download_all_mods_via_steamcmd_button_clicked
-        )
-        self.settings_dialog.db_builder_download_all_mods_via_steam_button.clicked.connect(
-            self._on_db_builder_download_all_mods_via_steam_button_clicked
-        )
-        self.settings_dialog.db_builder_compare_databases_button.clicked.connect(
-            self._on_db_builder_compare_databases_button_clicked
-        )
-        self.settings_dialog.db_builder_merge_databases_button.clicked.connect(
-            self._on_db_builder_merge_databases_button_clicked
-        )
-        self.settings_dialog.db_builder_build_database_button.clicked.connect(
-            self._on_db_builder_build_database_button_clicked
         )
 
         # Connect signals from dialogs
@@ -324,19 +314,7 @@ class SettingsController(QObject):
         self._sorting_tab.update_view_from_model()
 
         # Database Builder tab
-        if self.settings.db_builder_include == "all_mods":
-            self.settings_dialog.db_builder_include_all_radio.setChecked(True)
-        elif self.settings.db_builder_include == "no_local":
-            self.settings_dialog.db_builder_include_no_local_radio.setChecked(True)
-        self.settings_dialog.db_builder_query_dlc_checkbox.setChecked(
-            self.settings.build_steam_database_dlc_data
-        )
-        self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.setChecked(
-            self.settings.build_steam_database_update_toggle
-        )
-        self.settings_dialog.db_builder_steam_api_key.setText(
-            self.settings.steam_apikey
-        )
+        self._db_builder_tab.update_view_from_model()
 
         # Internal Tools tab
         self._internal_tools_tab.update_view_from_model()
@@ -368,17 +346,7 @@ class SettingsController(QObject):
         self._sorting_tab.update_model_from_view()
 
         # Database Builder tab
-        if self.settings_dialog.db_builder_include_all_radio.isChecked():
-            self.settings.db_builder_include = "all_mods"
-        elif self.settings_dialog.db_builder_include_no_local_radio.isChecked():
-            self.settings.db_builder_include = "no_local"
-        self.settings.build_steam_database_dlc_data = (
-            self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
-        )
-        self.settings.build_steam_database_update_toggle = self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
-        self.settings.steam_apikey = (
-            self.settings_dialog.db_builder_steam_api_key.text()
-        )
+        self._db_builder_tab.update_model_from_view()
 
         # Internal Tools tab
         self._internal_tools_tab.update_model_from_view()
@@ -981,91 +949,6 @@ class SettingsController(QObject):
             except Exception as e:
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
-
-    @Slot()
-    def _on_db_builder_download_all_mods_via_steamcmd_button_clicked(self) -> None:
-        """
-        Build the Steam Workshop database of all mods using steamcmd.
-        """
-        confirm_diag = BinaryChoiceDialog(
-            "Confirm Build Database (SteamCMD)",
-            "Are you sure you want to download all mods via SteamCMD and build the Steam Workshop database?",
-            (
-                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "This process downloads all mods (not just your own) from the Steam Workshop. "
-                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
-            ),
-            icon=QMessageBox.Icon.Warning,
-        )
-
-        if not confirm_diag.exec_is_positive():
-            return
-
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_download_all_mods_via_steamcmd.emit()
-
-    @Slot()
-    def _on_db_builder_download_all_mods_via_steam_button_clicked(self) -> None:
-        """
-        Build the Steam Workshop database of all mods using steam.
-        """
-        confirm_diag = BinaryChoiceDialog(
-            "Confirm Build Database (Steam Download)",
-            "Are you sure you want to download all mods via Steam and build the Steam Workshop database?",
-            (
-                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "This process will subscribe to and download all mods from the Steam Workshop (not just your own). "
-                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
-                ""
-            ),
-            icon=QMessageBox.Icon.Warning,
-        )
-
-        if not confirm_diag.exec_is_positive():
-            return
-
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_download_all_mods_via_steam.emit()
-
-    @Slot()
-    def _on_db_builder_compare_databases_button_clicked(self) -> None:
-        """
-        Compare the Steam Workshop database.
-        """
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_compare_steam_workshop_databases.emit()
-
-    @Slot()
-    def _on_db_builder_merge_databases_button_clicked(self) -> None:
-        """
-        Merge the Steam Workshop database.
-        """
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_merge_steam_workshop_databases.emit()
-
-    @Slot()
-    def _on_db_builder_build_database_button_clicked(self) -> None:
-        """
-        Build the Steam Workshop database.
-        """
-        confirm_diag = BinaryChoiceDialog(
-            title=self.tr("Confirm Build Database"),
-            text=self.tr("Are you sure you want to build the Steam Workshop database?"),
-            information=(
-                self.tr(
-                    "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                    "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
-                    "This can be a large amount of data and take a long time. Are you sure you want to continue?"
-                )
-            ),
-            icon=QMessageBox.Icon.Warning,
-        )
-
-        if not confirm_diag.exec_is_positive():
-            return
-
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_build_steam_workshop_database.emit()
 
     @Slot()
     def _on_instance_folder_location_choose_button_clicked(self) -> None:
