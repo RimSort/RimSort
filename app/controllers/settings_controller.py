@@ -14,6 +14,7 @@ from app.controllers.settings_tabs import (
     AppearanceTabController,
     BaseTabController,
     DatabasesTabController,
+    ExternalToolsTabController,
     GameLaunchTabController,
     InternalToolsTabController,
     LocationsTabController,
@@ -135,6 +136,14 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._internal_tools_tab)
 
+        self._external_tools_tab = ExternalToolsTabController(
+            self.settings,
+            self.settings_dialog,
+            last_file_dialog_path=str(self._last_file_dialog_path),
+            on_path_selected=self._on_locations_path_selected,
+        )
+        self._tab_controllers.append(self._external_tools_tab)
+
         self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
         self._tab_controllers.append(self._advanced_tab)
 
@@ -172,11 +181,6 @@ class SettingsController(QObject):
         )
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
             self._on_db_builder_build_database_button_clicked
-        )
-
-        # Other External Tools Tab
-        self.settings_dialog.text_editor_location_choose_button.clicked.connect(
-            self._on_text_editor_location_choose_button_clicked
         )
 
         # Connect signals from dialogs
@@ -337,16 +341,8 @@ class SettingsController(QObject):
         # Internal Tools tab
         self._internal_tools_tab.update_view_from_model()
 
-        # External Tools Tab
-        self.settings_dialog.text_editor_location.setText(
-            self.settings.text_editor_location
-        )
-        self.settings_dialog.text_editor_folder_arg.setText(
-            self.settings.text_editor_folder_arg
-        )
-        self.settings_dialog.text_editor_file_arg.setText(
-            self.settings.text_editor_file_arg
-        )
+        # External Tools tab
+        self._external_tools_tab.update_view_from_model()
 
         # Appearance tab
         self._appearance_tab.update_view_from_model()
@@ -387,16 +383,8 @@ class SettingsController(QObject):
         # Internal Tools tab
         self._internal_tools_tab.update_model_from_view()
 
-        # Other External Tools Tab
-        self.settings.text_editor_location = (
-            self.settings_dialog.text_editor_location.text()
-        )
-        self.settings.text_editor_folder_arg = (
-            self.settings_dialog.text_editor_folder_arg.text()
-        )
-        self.settings.text_editor_file_arg = (
-            self.settings_dialog.text_editor_file_arg.text()
-        )
+        # External Tools tab
+        self._external_tools_tab.update_model_from_view()
 
         # Appearance tab
         self._appearance_tab.update_model_from_view()
@@ -993,22 +981,6 @@ class SettingsController(QObject):
             except Exception as e:
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
-
-    @Slot()
-    def _on_text_editor_location_choose_button_clicked(self) -> None:
-        """
-        Open a file dialog to select the Steamcmd install location and handle the result.
-        """
-        text_editor_location = show_dialogue_file(
-            mode="open",
-            caption="Select Text Editor Command",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not text_editor_location:
-            return
-
-        self.settings_dialog.text_editor_location.setText(text_editor_location)
-        self._last_file_dialog_path = str(Path(text_editor_location).parent)
 
     @Slot()
     def _on_db_builder_download_all_mods_via_steamcmd_button_clicked(self) -> None:

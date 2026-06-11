@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable, Optional
 
 from app.models.settings import Settings
 from app.views.settings_dialog import SettingsDialog
@@ -9,15 +10,21 @@ class BaseTabController(ABC):
 
     :param settings: The shared settings model.
     :param dialog: The settings dialog containing all tab widgets.
+    :param last_file_dialog_path: Initial file dialog directory.
+    :param on_path_selected: Callback fired when a file dialog path is chosen.
     """
 
     def __init__(
         self,
         settings: Settings,
         dialog: SettingsDialog,
+        last_file_dialog_path: Optional[str] = None,
+        on_path_selected: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.settings = settings
         self.dialog = dialog
+        self._last_file_dialog_path = last_file_dialog_path
+        self._on_path_selected = on_path_selected
 
     @abstractmethod
     def connect_signals(self) -> None:

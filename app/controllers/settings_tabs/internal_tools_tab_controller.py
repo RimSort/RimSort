@@ -1,13 +1,10 @@
 from pathlib import Path
-from typing import Callable
 
 from PySide6.QtCore import Slot
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
-from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.views.dialogue import show_dialogue_file
-from app.views.settings_dialog import SettingsDialog
 
 
 class InternalToolsTabController(BaseTabController):
@@ -17,17 +14,6 @@ class InternalToolsTabController(BaseTabController):
     install location, action buttons) and todds texture optimization settings
     (quality preset, target scope, dry-run, overwrite, orphaned DDS, auto-run).
     """
-
-    def __init__(
-        self,
-        settings: Settings,
-        dialog: SettingsDialog,
-        last_file_dialog_path: str,
-        on_path_selected: Callable[[str], None],
-    ) -> None:
-        super().__init__(settings, dialog)
-        self._last_file_dialog_path = last_file_dialog_path
-        self._on_path_selected = on_path_selected
 
     def connect_signals(self) -> None:
         # SteamCMD signals
@@ -133,7 +119,8 @@ class InternalToolsTabController(BaseTabController):
             return
 
         self.dialog.steamcmd_install_location.setText(steamcmd_install_location)
-        self._on_path_selected(str(Path(steamcmd_install_location).parent))
+        if self._on_path_selected:
+            self._on_path_selected(str(Path(steamcmd_install_location).parent))
 
     @Slot()
     def _on_clear_depot_cache(self) -> None:
