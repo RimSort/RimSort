@@ -15,6 +15,7 @@ from app.controllers.settings_tabs import (
     GameLaunchTabController,
     LocationsTabController,
     SortingTabController,
+    ToddsTabController,
     WindowLayoutTabController,
 )
 from app.controllers.theme_controller import ThemeController
@@ -128,6 +129,9 @@ class SettingsController(QObject):
         )
         self._tab_controllers.append(self._game_launch_tab)
 
+        self._todds_tab = ToddsTabController(self.settings, self.settings_dialog)
+        self._tab_controllers.append(self._todds_tab)
+
         for tc in self._tab_controllers:
             tc.connect_signals()
 
@@ -146,14 +150,6 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.clicked.connect(
             self._on_global_ok_button_clicked
         )
-
-        # Advanced: wiring for save-comparison indicator toggle
-        try:
-            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
-                self._on_toggle_show_save_comparison_indicators
-            )
-        except Exception:
-            pass
 
         # Build DB tab
         self.settings_dialog.db_builder_download_all_mods_via_steamcmd_button.clicked.connect(
@@ -198,6 +194,16 @@ class SettingsController(QObject):
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
         )
+
+        # Advanced: wiring for save-comparison indicator toggle
+        try:
+            self.settings_dialog.show_save_comparison_indicators_checkbox.toggled.connect(
+                self._on_toggle_show_save_comparison_indicators
+            )
+        except (AttributeError, TypeError):
+            logger.warning(
+                "show_save_comparison_indicators_checkbox not available for signal wiring"
+            )
 
         # Advanced tab
         self.settings_dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
@@ -400,34 +406,7 @@ class SettingsController(QObject):
         )
 
         # todds tab
-        if self.settings.todds_preset == "optimized":
-            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
-            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
-        elif self.settings.todds_preset == "custom":
-            self.settings_dialog.todds_preset_custom_radio.setChecked(True)
-            self.settings_dialog.todds_custom_command_lineedit.setEnabled(True)
-        else:
-            self.settings_dialog.todds_preset_optimized_radio.setChecked(True)
-            self.settings_dialog.todds_custom_command_lineedit.setEnabled(False)
-        if self.settings.todds_active_mods_target:
-            self.settings_dialog.todds_active_mods_only_radio.setChecked(True)
-        else:
-            self.settings_dialog.todds_all_mods_radio.setChecked(True)
-        self.settings_dialog.todds_dry_run_checkbox.setChecked(
-            self.settings.todds_dry_run
-        )
-        self.settings_dialog.todds_overwrite_checkbox.setChecked(
-            self.settings.todds_overwrite
-        )
-        self.settings_dialog.todds_custom_command_lineedit.setText(
-            self.settings.todds_custom_command
-        )
-        self.settings_dialog.auto_delete_orphaned_dds_checkbox.setChecked(
-            self.settings.auto_delete_orphaned_dds
-        )
-        self.settings_dialog.auto_run_todds_before_launch_checkbox.setChecked(
-            self.settings.auto_run_todds_before_launch
-        )
+        self._todds_tab.update_view_from_model()
 
         # External Tools Tab
         self.settings_dialog.text_editor_location.setText(
@@ -461,8 +440,10 @@ class SettingsController(QObject):
             self.settings_dialog.show_save_comparison_indicators_checkbox.setChecked(
                 self.settings.show_save_comparison_indicators
             )
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            logger.warning(
+                "show_save_comparison_indicators_checkbox not available for view update"
+            )
 
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
@@ -568,29 +549,7 @@ class SettingsController(QObject):
         ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
-        if self.settings_dialog.todds_preset_custom_radio.isChecked():
-            self.settings.todds_preset = "custom"
-            self.settings.todds_custom_command = (
-                self.settings_dialog.todds_custom_command_lineedit.text()
-            )
-        else:
-            self.settings.todds_preset = "optimized"
-        if self.settings_dialog.todds_active_mods_only_radio.isChecked():
-            self.settings.todds_active_mods_target = True
-        elif self.settings_dialog.todds_all_mods_radio.isChecked():
-            self.settings.todds_active_mods_target = False
-        self.settings.todds_dry_run = (
-            self.settings_dialog.todds_dry_run_checkbox.isChecked()
-        )
-        self.settings.todds_overwrite = (
-            self.settings_dialog.todds_overwrite_checkbox.isChecked()
-        )
-        self.settings.auto_delete_orphaned_dds = (
-            self.settings_dialog.auto_delete_orphaned_dds_checkbox.isChecked()
-        )
-        self.settings.auto_run_todds_before_launch = (
-            self.settings_dialog.auto_run_todds_before_launch_checkbox.isChecked()
-        )
+        self._todds_tab.update_model_from_view()
 
         # Other External Tools Tab
         self.settings.text_editor_location = (
