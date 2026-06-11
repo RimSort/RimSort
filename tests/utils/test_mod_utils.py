@@ -195,3 +195,163 @@ class TestFilterEligibleModsForUpdate:
             self._setup_aux_timestamps("/mods/steamcmd", external_time_updated=2000)
             result = filter_eligible_mods_for_update({"/mods/steamcmd": mod})
         assert len(result) == 1
+
+    def test_fallback_to_acf_time_updated(self) -> None:
+        """When mod path doesn't exist (internal_time_touched=-1), falls back to acf_time_updated."""
+        mod = _make_update_mod(mod_path="/mods/nopath")
+        # mod path doesn't exist => internal_time_touched returns -1
+        with patch("os.path.exists", return_value=False):
+            self._setup_aux_timestamps(
+                "/mods/nopath",
+                acf_time_updated=1000,
+                external_time_updated=2000,
+            )
+            result = filter_eligible_mods_for_update({"/mods/nopath": mod})
+        assert len(result) == 1
+        assert result[0]["name"] == "Test Mod"
+
+    def test_internal_time_touched_preferred_over_acf_fallback(self) -> None:
+        """internal_time_touched takes priority over acf_time_updated fallback."""
+        mod = _make_update_mod(mod_path="/mods/test2")
+        # internal_time_touched=3000 > external=2000 => not eligible
+        # acf_time_updated=1000 < external=2000 => would be eligible if used
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=3000.0),
+        ):
+            self._setup_aux_timestamps(
+                "/mods/test2",
+                acf_time_updated=1000,
+                external_time_updated=2000,
+            )
+            result = filter_eligible_mods_for_update({"/mods/test2": mod})
+        assert len(result) == 0, (
+            "Should use internal_time_touched, not acf_time_updated"
+        )
+
+    def test_no_internal_timestamps_at_all(self) -> None:
+        """Mods with no internal_time_touched and no acf_time_updated are skipped."""
+        mod = _make_update_mod(mod_path="/mods/nots")
+        with patch("os.path.exists", return_value=False):
+            # No aux entry => no fallback either
+            result = filter_eligible_mods_for_update({"/mods/nots": mod})
+        assert len(result) == 0
+
+    def test_up_to_date_mod_skipped(self) -> None:
+        """Mods where external <= internal are skipped."""
+        mod1 = _make_update_mod(name="Equal", pfid="111", mod_path="/mods/eq")
+        mod2 = _make_update_mod(name="Older External", pfid="222", mod_path="/mods/old")
+        with (
+            patch("os.path.exists", return_value=True),
+            patch(
+                "os.path.getmtime",
+                side_effect=lambda p: 2000.0 if p == Path("/mods/eq") else 3000.0,
+            ),
+        ):
+            self._setup_aux_timestamps("/mods/eq", external_time_updated=2000)
+            # For multi-path mocking, chain side_effect
+            aux_eq = MagicMock()
+            aux_eq.acf_time_updated = -1
+            aux_eq.external_time_updated = 2000
+            aux_old = MagicMock()
+            aux_old.acf_time_updated = -1
+            aux_old.external_time_updated = 1000
+
+            def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
+                if p == "/mods/eq":
+                    return (MagicMock(), aux_eq)
+                if p == "/mods/old":
+                    return (MagicMock(), aux_old)
+                return (None, None)
+
+            self.mock_controller.get_metadata_with_path.side_effect = multi_aux
+            result = filter_eligible_mods_for_update(
+                {
+                    "/mods/eq": mod1,
+                    "/mods/old": mod2,
+                }
+            )
+        assert len(result) == 0
+
+    def test_no_external_time(self) -> None:
+        """Mods with no external_time_updated in aux DB are skipped."""
+        mod = _make_update_mod(mod_path="/mods/noext")
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000.0),
+        ):
+            # No aux entry => no external time
+            result = filter_eligible_mods_for_update({"/mods/noext": mod})
+        assert len(result) == 0
+
+    def test_zero_external_time_treated_as_missing(self) -> None:
+        """external_time_updated=0 should cause the mod to be skipped."""
+        mod = _make_update_mod(mod_path="/mods/zeroext")
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000.0),
+        ):
+            self._setup_aux_timestamps("/mods/zeroext", external_time_updated=0)
+            result = filter_eligible_mods_for_update({"/mods/zeroext": mod})
+        assert len(result) == 0
+
+    def test_mixed_mods(self) -> None:
+        """Only workshop/steamcmd mods with updates are returned from a mixed set."""
+        eligible_ws = _make_update_mod(
+            name="Eligible Workshop", pfid="111", mod_path="/mods/ws"
+        )
+        local_mod = _make_update_mod(
+            name="Local Mod",
+            pfid="222",
+            mod_type=ModType.LOCAL,
+            mod_path="/mods/local",
+        )
+        up_to_date = _make_update_mod(
+            name="Up To Date Workshop", pfid="333", mod_path="/mods/utd"
+        )
+        eligible_cmd = _make_update_mod(
+            name="Eligible SteamCMD",
+            pfid="444",
+            mod_type=ModType.STEAM_CMD,
+            mod_path="/mods/cmd",
+        )
+
+        aux_ws = MagicMock()
+        aux_ws.acf_time_updated = -1
+        aux_ws.external_time_updated = 2000
+        aux_utd = MagicMock()
+        aux_utd.acf_time_updated = -1
+        aux_utd.external_time_updated = 2000
+        aux_cmd = MagicMock()
+        aux_cmd.acf_time_updated = 500
+        aux_cmd.external_time_updated = 2000
+
+        def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
+            mapping: dict[str, MagicMock] = {
+                "/mods/ws": aux_ws,
+                "/mods/utd": aux_utd,
+                "/mods/cmd": aux_cmd,
+            }
+            if p in mapping:
+                return (MagicMock(), mapping[p])
+            return (None, None)
+
+        self.mock_controller.get_metadata_with_path.side_effect = multi_aux
+
+        with (
+            patch("os.path.exists", return_value=True),
+            patch(
+                "os.path.getmtime",
+                side_effect=lambda p: 3000.0 if p == Path("/mods/utd") else 1000.0,
+            ),
+        ):
+            result = filter_eligible_mods_for_update(
+                {
+                    "/mods/ws": eligible_ws,
+                    "/mods/local": local_mod,
+                    "/mods/utd": up_to_date,
+                    "/mods/cmd": eligible_cmd,
+                }
+            )
+        names = {m["name"] for m in result}
+        assert names == {"Eligible Workshop", "Eligible SteamCMD"}

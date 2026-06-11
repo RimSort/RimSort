@@ -101,7 +101,7 @@ class MainWindowController(QObject):
         # Get the active mods list (exclude dividers)
         active_mods = {
             u
-            for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            for u in self.main_window.main_content_panel.mods_panel.active_mods_list.paths
             if not is_divider_uuid(u)
         }
 
@@ -326,7 +326,7 @@ class MainWindowController(QObject):
                         active_mods.add(next(iter(paths)))
 
                 # Update the active mods list with local mods
-                self.main_window.main_content_panel.mods_panel.active_mods_list.uuids = list(
+                self.main_window.main_content_panel.mods_panel.active_mods_list.paths = list(
                     active_mods
                 )
 
@@ -388,7 +388,7 @@ class MainWindowController(QObject):
         )
         current_mod_uuids = [
             u
-            for u in self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            for u in self.main_window.main_content_panel.mods_panel.active_mods_list.paths
             if not is_divider_uuid(u)
         ]
         if (

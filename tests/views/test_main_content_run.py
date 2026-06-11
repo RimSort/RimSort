@@ -79,7 +79,7 @@ def unsaved_main_content(
     mc, save_calls = main_content
     # Set unsaved changes
     mc.mods_panel.active_mods_list.paths = ["a", "b"]
-    mc.active_mods_paths_last_save = ["a"]
+    mc.active_mods_uuids_last_save = ["a"]
     return mc, save_calls
 
 
@@ -117,7 +117,7 @@ def test_run_without_unsaved(
 ) -> None:
     mc, save_calls = main_content
     # No unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a", "b"]
     mc._do_run_game()
     # Dialogue not shown

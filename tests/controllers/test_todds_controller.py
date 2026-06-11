@@ -94,10 +94,10 @@ class TestGenerateToddsTxt:
         )
         assert count == 1
 
-    def test_active_mods_mode_skips_divider_uuids(
+    def test_active_mods_mode_skips_divider_paths(
         self, active_mods_setup: tuple[MagicMock, MagicMock]
     ) -> None:
-        """Divider UUIDs (starting with __divider__) are skipped."""
+        """Divider paths (starting with __divider__) are skipped."""
         settings_controller, metadata_controller = active_mods_setup
 
         tc = ToddsController(
@@ -113,8 +113,8 @@ class TestGenerateToddsTxt:
         assert count == 1
 
 
-class TestActiveModUuidsGuard:
-    def test_generate_todds_txt_returns_zero_when_uuids_missing(
+class TestActiveModPathsGuard:
+    def test_generate_todds_txt_returns_zero_when_paths_missing(
         self, settings_controller: MagicMock, metadata_controller: MagicMock
     ) -> None:
         """When todds_active_mods_target is True but active_mod_paths is None, returns 0."""

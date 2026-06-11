@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import ListedMod
 from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -1219,18 +1220,20 @@ class BaseModsPanel(QWidget):
         self.editor_model.appendRow(items)
 
     def _extract_mod_info_from_metadata(
-        self, uuid: str | None, metadata: dict[str, Any]
+        self, uuid: str | None, metadata: dict[str, Any] | ListedMod
     ) -> ModInfo:
         """
-        Extract ModInfo from metadata dictionary.
+        Extract ModInfo from metadata dictionary or ListedMod object.
 
         Args:
             uuid: UUID of the mod
-            metadata: Metadata dictionary
+            metadata: Metadata dictionary or ListedMod instance
 
         Returns:
             ModInfo object
         """
+        if isinstance(metadata, ListedMod):
+            return ModInfo.from_listed_mod(metadata)
         return ModInfo.from_metadata(uuid, metadata)
 
     def _extract_uuid_from_path(self, path: str) -> str | None:
@@ -1267,7 +1270,7 @@ class BaseModsPanel(QWidget):
 
     def _populate_mods(
         self,
-        groups: dict[str, list[tuple[str, dict[str, Any]]]],
+        groups: dict[str, list[tuple[str, dict[str, Any] | ListedMod]]],
         add_group_headers: bool = False,
     ) -> None:
         """

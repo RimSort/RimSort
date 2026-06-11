@@ -4,6 +4,7 @@ from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_structure import ListedMod
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
 from app.utils.ignore_manager import IgnoreManager
@@ -175,7 +176,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
             return None
 
         try:
-            return ModInfo.from_metadata(uuid, mod_metadata)
+            return ModInfo.from_listed_mod(mod_metadata)
         except ValueError as e:
             logger.warning(f"Failed to extract mod info for UUID {uuid}: {e}")
             return None
@@ -299,14 +300,14 @@ class MissingModPropertiesPanel(BaseModsPanel):
 
     def _build_grouped_mods(
         self,
-    ) -> dict[str, list[tuple[str, dict[str, Any]]]]:
+    ) -> dict[str, list[tuple[str, dict[str, Any] | ListedMod]]]:
         """
         Build dictionary of grouped mods from UUID lists.
 
         Returns:
             Dictionary mapping category names to list of (uuid, metadata) tuples
         """
-        grouped_mods: dict[str, list[tuple[str, dict[str, Any]]]] = {}
+        grouped_mods: dict[str, list[tuple[str, dict[str, Any] | ListedMod]]] = {}
 
         categories = [
             ("Mods with Missing Package ID", self.missing_packageid_mods),
@@ -317,7 +318,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
             if not uuids:
                 continue
 
-            category_mods: list[tuple[str, dict[str, Any]]] = []
+            category_mods: list[tuple[str, dict[str, Any] | ListedMod]] = []
             for uuid in uuids:
                 mod_metadata = self.metadata_controller.mods_metadata.get(uuid)
                 if mod_metadata:

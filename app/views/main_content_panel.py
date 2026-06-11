@@ -38,6 +38,7 @@ from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
+from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.services.import_export_service import ImportExportService
 from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
@@ -894,8 +895,9 @@ class MainContent(QObject):
             package_ids_to_keep_active = package_id_order
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
-            mod_data["packageid"]
+            str(mod_data.package_id)
             for mod_data in self.metadata_controller.mods_metadata.values()
+            if isinstance(mod_data, AboutXmlMod)
         )
         # Iterate over the package IDs we want to keep active
         for package_id in package_ids_to_keep_active:
@@ -904,8 +906,9 @@ class MainContent(QObject):
                 active_mods_uuids.extend(
                     uuid
                     for uuid, mod_data in self.metadata_controller.mods_metadata.items()
-                    if mod_data["data_source"] == "expansion"
-                    and mod_data["packageid"] == package_id
+                    if isinstance(mod_data, AboutXmlMod)
+                    and mod_data.mod_type == ModType.LUDEON
+                    and str(mod_data.package_id) == package_id
                 )
         # Append the remaining UUIDs to inactive_mods_uuids
         inactive_mods_uuids.extend(
@@ -940,7 +943,7 @@ class MainContent(QObject):
         }
 
         # Compile metadata for active mods so newly-added ones have dependency info
-        self.metadata_controller.compile(uuids=list(active_mods))
+        self.metadata_controller.compile()
 
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
@@ -970,7 +973,10 @@ class MainContent(QObject):
                             uuid,
                             mod_data,
                         ) in self.metadata_controller.mods_metadata.items():
-                            if mod_data.get("packageid") == mod_id:
+                            if (
+                                isinstance(mod_data, AboutXmlMod)
+                                and str(mod_data.package_id) == mod_id
+                            ):
                                 if uuid not in active_mods:
                                     active_mods.add(uuid)
                                 break
@@ -994,8 +1000,8 @@ class MainContent(QObject):
         active_mod_paths: set[str] = set()
         for uuid in active_mods:
             mod_data = self.metadata_controller.mods_metadata.get(uuid)
-            if mod_data and mod_data.get("path"):
-                active_mod_paths.add(mod_data["path"])
+            if mod_data and mod_data.mod_path:
+                active_mod_paths.add(str(mod_data.mod_path))
 
         # Get the current order of active mods list and create a copy for comparison
         current_order = active_mods
@@ -1028,9 +1034,8 @@ class MainContent(QObject):
         # Bridge: translate paths back to UUIDs for the list widget
         path_to_uuid: dict[str, str] = {}
         for uuid, mod_data in self.metadata_controller.mods_metadata.items():
-            p = mod_data.get("path")
-            if p:
-                path_to_uuid[p] = uuid
+            if mod_data.mod_path:
+                path_to_uuid[str(mod_data.mod_path)] = uuid
         new_order = [path_to_uuid[p] for p in new_order_paths if p in path_to_uuid]
 
         # Log the sort result and the order
@@ -1165,9 +1170,9 @@ class MainContent(QObject):
         if rentry_import.publishedfileids:
             # Get set of publishedfileids already present locally
             existing_publishedfileids = {
-                mod_data.get("publishedfileid")
+                mod_data.published_file_id
                 for mod_data in self.metadata_controller.mods_metadata.values()
-                if mod_data.get("publishedfileid") is not None
+                if mod_data.published_file_id is not None
             }
             # Filter out publishedfileids that already exist locally
             filtered_publishedfileids = list(
@@ -1705,7 +1710,7 @@ class MainContent(QObject):
 
         started = self.todds_controller.optimize_textures(
             runner=todds_runner,
-            active_mod_uuids=active_uuids,
+            active_mod_paths=active_uuids,
         )
 
         if not started:
@@ -1750,7 +1755,7 @@ class MainContent(QObject):
 
         started = self.todds_controller.delete_dds_textures(
             runner=todds_runner,
-            active_mod_uuids=active_uuids,
+            active_mod_paths=active_uuids,
         )
 
         if not started:

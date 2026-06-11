@@ -1603,7 +1603,7 @@ class ModListWidget(QListWidget):
                     # Retrieve metadata
                     mod = self.metadata_controller.get_mod(uuid)
                     if mod is None:
-                        return
+                        return False
                     mod_metadata = self._mod_to_context_dict(mod)
                     mod_data_source = mod_metadata.get("data_source")
                     # Open folder action text
@@ -3460,7 +3460,7 @@ class ModListWidget(QListWidget):
             # Handle "use this instead" behavior
             if (
                 self._check_use_this_instead(current_item_data)
-                and mod_data["packageid"] not in self.ignore_warning_list
+                and pkg_id_str not in self.ignore_warning_list
             ):
                 mod_errors["use_this_instead"] = True
                 tool_tip_text += self.tr(

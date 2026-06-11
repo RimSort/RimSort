@@ -81,7 +81,7 @@ def assert_diamond_ordering(result: list[str]) -> None:
 
 
 @pytest.fixture
-def metadata_manager_mock() -> Generator[MagicMock, None, None]:
+def metadata_controller_mock() -> Generator[MagicMock, None, None]:
     """Mock MetadataController.instance() for mod_sorting tests (PR 3 scope).
 
     Sets up an empty mods_metadata dict. Tests should populate

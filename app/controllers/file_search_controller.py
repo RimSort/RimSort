@@ -776,9 +776,9 @@ class FileSearchController(QObject):
             # Get all mod IDs by combining active and inactive mods (exclude dividers)
             all_uuids = {
                 u
-                for u in self.mods_panel.active_mods_list.uuids
+                for u in self.mods_panel.active_mods_list.paths
                 if not is_divider_uuid(u)
-            } | set(self.mods_panel.inactive_mods_list.uuids)
+            } | set(self.mods_panel.inactive_mods_list.paths)
             # Use our helper method to get paths and extract IDs
             all_paths = self._get_mod_paths(list(all_uuids))
             for path in all_paths:
@@ -908,7 +908,7 @@ class FileSearchController(QObject):
             mod = self.metadata_controller.get_mod(uuid)
             if mod is not None:
                 mod_path = mod.mod_path
-                if os.path.isdir(mod_path):
+                if mod_path is not None and os.path.isdir(mod_path):
                     mod_paths.append(mod_path)
                     logger.debug(f"Added mod path: {mod_path}")
 
