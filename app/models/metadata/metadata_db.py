@@ -29,7 +29,9 @@ class AuxMetadataEntry(Base):
     path: Mapped[str] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(String, default="Unknown")
 
-    published_file_id: Mapped[int] = mapped_column(Integer, default=-1)
+    published_file_id: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=None
+    )
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
     external_time_created: Mapped[int] = mapped_column(Integer, default=-1)

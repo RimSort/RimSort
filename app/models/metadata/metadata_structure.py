@@ -326,23 +326,24 @@ class ListedMod(BaseMod):
     @functools.cached_property
     def published_file_id(
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
-    ) -> int:
-        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
-        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
+    ) -> str | None:
+        """Return the published file id as a string, or None if absent."""
         if self.mod_path is None:
-            return -1
+            return None
 
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
             with open(expected_path, "r") as file:
-                return int(file.read())
+                content = file.read().strip()
+                if content:
+                    return content
 
         if self.mod_folder is not None and self.mod_folder.isnumeric():
             candidate = int(self.mod_folder)
             if candidate > 0:
-                return candidate
+                return self.mod_folder
 
-        return -1
+        return None
 
     @functools.cached_property
     def c_sharp_mod(self) -> bool:
@@ -662,6 +663,7 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
     blacklist: SteamDbEntryBlacklist = msgspec.field(
         default_factory=SteamDbEntryBlacklist
     )
+    tags: list[dict[str, str]] = msgspec.field(default_factory=list)
 
 
 class SteamDbSchema(msgspec.Struct):

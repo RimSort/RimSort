@@ -130,7 +130,7 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod is not None
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.STEAM_WORKSHOP"
-    assert aux_metadata.published_file_id == 123456789
+    assert aux_metadata.published_file_id == "123456789"
     assert aux_metadata.acf_time_updated > 0
     assert aux_metadata.acf_time_touched > 0
 
@@ -153,7 +153,7 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod is not None
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.STEAM_CMD"
-    assert aux_metadata.published_file_id == 1111
+    assert aux_metadata.published_file_id == "1111"
     assert aux_metadata.acf_time_updated > 0
     assert aux_metadata.acf_time_touched > 0
 
