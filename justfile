@@ -172,7 +172,7 @@ build-version VERSION: submodules-init check i18n-compile
 # Build AppImage from existing Nuitka output (Linux only)
 [linux]
 build-appimage VERSION='1.0.0':
-    bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
+    bash packaging/linux/build-appimage.sh build/app.dist "{{VERSION}}"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Internationalization
