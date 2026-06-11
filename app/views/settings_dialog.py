@@ -1501,17 +1501,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(main_window_title_label)
         group_layout.addWidget(self.main_window_group)
 
-        # Connect main window radio buttons to enable/disable custom size spinboxes dynamically
-        self.main_launch_maximized_radio.toggled.connect(
-            self.disable_main_custom_size_spinboxes
-        )
-        self.main_launch_normal_radio.toggled.connect(
-            self.disable_main_custom_size_spinboxes
-        )
-        self.main_launch_custom_radio.toggled.connect(
-            self.enable_main_custom_size_spinboxes
-        )
-
         # Browser Window
         (
             self.browser_window_group,
@@ -1534,17 +1523,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
         browser_window_title_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(browser_window_title_label)
         group_layout.addWidget(self.browser_window_group)
-
-        # Connect browser window radio buttons to enable/disable custom size spinboxes dynamically
-        self.browser_launch_maximized_radio.toggled.connect(
-            self.disable_browser_custom_size_spinboxes
-        )
-        self.browser_launch_normal_radio.toggled.connect(
-            self.disable_browser_custom_size_spinboxes
-        )
-        self.browser_launch_custom_radio.toggled.connect(
-            self.enable_browser_custom_size_spinboxes
-        )
 
         # Settings Window (only custom option)
         settings_window_title_label = QLabel(self.tr("Settings Window Launch State"))
