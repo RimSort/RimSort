@@ -1,6 +1,6 @@
 import errno
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -241,7 +241,9 @@ class TestModDeletionMenu:
         deletion_menu.settings_controller.settings.aux_db_time_limit = 1
 
         # The metadata_controller.metadata_db_controller is already mocked by conftest
-        mock_aux = deletion_menu.metadata_controller.metadata_db_controller
+        mock_aux = cast(
+            MagicMock, deletion_menu.metadata_controller.metadata_db_controller
+        )
         mock_session = MagicMock()
         mock_aux.Session.return_value.__enter__ = MagicMock(return_value=mock_session)
         mock_aux.Session.return_value.__exit__ = MagicMock(return_value=False)

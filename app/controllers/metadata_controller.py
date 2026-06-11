@@ -444,19 +444,22 @@ class MetadataController(QObject):
 
     # ---- Mutations ----
 
-    @Slot(str, str)
-    def process_creation(self, data_source: str, mod_path: str) -> None:
-        """Parse a single mod and add it to metadata. Emits mod_created_signal."""
+    def _parse_single_mod(self, mod_path: str) -> bool:
+        """Parse a single mod directory and merge the result into metadata.
+
+        :param mod_path: Filesystem path to the mod directory
+        :return: True if the mod was successfully parsed and is present in metadata
+        """
         path = Path(mod_path)
         if not path.is_dir():
-            return
+            return False
         if (
             self.metadata_mediator.local_mods_path is None
             or self.metadata_mediator.game_path is None
         ):
-            return
+            return False
         if self.metadata_mediator._mods_metadata is None:
-            return
+            return False
 
         prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
         worker = self.metadata_mediator._ParserWorker(
@@ -474,7 +477,12 @@ class MetadataController(QObject):
         )
         worker.run()
 
-        if mod_path in self.mods_metadata:
+        return mod_path in self.mods_metadata
+
+    @Slot(str, str)
+    def process_creation(self, data_source: str, mod_path: str) -> None:
+        """Parse a single mod and add it to metadata. Emits mod_created_signal."""
+        if self._parse_single_mod(mod_path):
             self._invalidate_caches()
             self.mod_created_signal.emit(mod_path)
 
@@ -492,34 +500,7 @@ class MetadataController(QObject):
     @Slot(str, str)
     def process_update(self, data_source: str, mod_path: str) -> None:
         """Re-parse a single mod and update metadata. Emits mod_metadata_updated_signal."""
-        path = Path(mod_path)
-        if not path.is_dir():
-            return
-        if (
-            self.metadata_mediator.local_mods_path is None
-            or self.metadata_mediator.game_path is None
-        ):
-            return
-        if self.metadata_mediator._mods_metadata is None:
-            return
-
-        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
-        worker = self.metadata_mediator._ParserWorker(
-            [path],
-            self.metadata_mediator.game_version,
-            self.metadata_mediator.local_mods_path,
-            self.metadata_mediator.game_path,
-            self.metadata_mediator.workshop_mods_path,
-            self.metadata_mediator.user_rules,
-            self.metadata_mediator.community_rules,
-            self.metadata_mediator.steam_db,
-            QMutex(),
-            self.metadata_mediator.mods_metadata,
-            prefer_versioned,
-        )
-        worker.run()
-
-        if mod_path in self.mods_metadata:
+        if self._parse_single_mod(mod_path):
             self._invalidate_caches()
             self.mod_metadata_updated_signal.emit(mod_path)
 

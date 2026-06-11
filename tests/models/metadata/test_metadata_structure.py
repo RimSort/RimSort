@@ -245,53 +245,50 @@ def test_listed_mod_new_fields() -> None:
     assert mod.db_builder_no_name is True
 
 
-def test_published_file_id_returns_string(tmp_path: Path) -> None:
-    """published_file_id should return str when PublishedFileId.txt exists."""
-    mod_path = tmp_path / "test_mod"
+def _create_mod_with_about_xml(
+    tmp_path: Path,
+    folder_name: str = "test_mod",
+    published_file_id: str | None = None,
+) -> ListedMod:
+    """Create a minimal mod directory and parse it, returning the ListedMod.
+
+    :param tmp_path: pytest tmp_path fixture
+    :param folder_name: Name for the mod directory
+    :param published_file_id: If set, written to About/PublishedFileId.txt
+    :return: Parsed ListedMod
+    """
+    from app.models.metadata.metadata_factory import create_listed_mod_from_path
+
+    mod_path = tmp_path / folder_name
     mod_path.mkdir()
     about_dir = mod_path / "About"
     about_dir.mkdir()
     (about_dir / "About.xml").write_text("<ModMetaData><name>Test</name></ModMetaData>")
-    (about_dir / "PublishedFileId.txt").write_text("123456789")
-
-    from app.models.metadata.metadata_factory import create_listed_mod_from_path
+    if published_file_id is not None:
+        (about_dir / "PublishedFileId.txt").write_text(published_file_id)
 
     _valid, mod = create_listed_mod_from_path(
         mod_path, "1.5", tmp_path, tmp_path, None, True
     )
+    return mod
+
+
+def test_published_file_id_returns_string(tmp_path: Path) -> None:
+    """published_file_id should return str when PublishedFileId.txt exists."""
+    mod = _create_mod_with_about_xml(tmp_path, published_file_id="123456789")
     assert mod.published_file_id == "123456789"
     assert isinstance(mod.published_file_id, str)
 
 
 def test_published_file_id_returns_none_when_absent(tmp_path: Path) -> None:
     """published_file_id should return None when no PublishedFileId.txt."""
-    mod_path = tmp_path / "test_mod"
-    mod_path.mkdir()
-    about_dir = mod_path / "About"
-    about_dir.mkdir()
-    (about_dir / "About.xml").write_text("<ModMetaData><name>Test</name></ModMetaData>")
-
-    from app.models.metadata.metadata_factory import create_listed_mod_from_path
-
-    _valid, mod = create_listed_mod_from_path(
-        mod_path, "1.5", tmp_path, tmp_path, None, True
-    )
+    mod = _create_mod_with_about_xml(tmp_path)
     assert mod.published_file_id is None
 
 
 def test_published_file_id_from_folder_name(tmp_path: Path) -> None:
     """published_file_id should return folder name as string when numeric."""
-    mod_path = tmp_path / "987654321"
-    mod_path.mkdir()
-    about_dir = mod_path / "About"
-    about_dir.mkdir()
-    (about_dir / "About.xml").write_text("<ModMetaData><name>Test</name></ModMetaData>")
-
-    from app.models.metadata.metadata_factory import create_listed_mod_from_path
-
-    _valid, mod = create_listed_mod_from_path(
-        mod_path, "1.5", tmp_path, tmp_path, None, True
-    )
+    mod = _create_mod_with_about_xml(tmp_path, folder_name="987654321")
     assert mod.published_file_id == "987654321"
 
 

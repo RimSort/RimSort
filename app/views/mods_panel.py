@@ -1398,13 +1398,15 @@ class ModListWidget(QListWidget):
             return
 
         # Sort by similarity score (highest first) to show most relevant translations first
-        translation_mods.sort(key=lambda x: x["similarity"], reverse=True)
+        translation_mods.sort(key=lambda x: cast(float, x["similarity"]), reverse=True)
 
         # Filter out translations with very low similarity (likely false positives)
         # Keep at least one result even if similarity is low
         SIMILARITY_THRESHOLD = 0.3
         filtered_mods = [
-            m for m in translation_mods if m["similarity"] >= SIMILARITY_THRESHOLD
+            m
+            for m in translation_mods
+            if cast(float, m["similarity"]) >= SIMILARITY_THRESHOLD
         ]
         if not filtered_mods and translation_mods:
             # If all mods filtered out, keep the best match
@@ -1423,7 +1425,7 @@ class ModListWidget(QListWidget):
             logger.info(
                 f"Opening translation: {trans_mod['name']} - {trans_mod['url']}"
             )
-            open_url_browser(trans_mod["url"])
+            open_url_browser(cast(str, trans_mod["url"]))
             return
 
         # If multiple translations, let user choose
@@ -1447,7 +1449,7 @@ class ModListWidget(QListWidget):
         list_widget.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
 
         for trans_mod in translation_mods:
-            item = QListWidgetItem(trans_mod["name"])
+            item = QListWidgetItem(cast(str, trans_mod["name"]))
             item.setData(Qt.ItemDataRole.UserRole, trans_mod["url"])
             list_widget.addItem(item)
 

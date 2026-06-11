@@ -42,6 +42,7 @@ def _make_listed_mod(
 
     If package_id is provided, builds an AboutXmlMod; otherwise a ListedMod.
     """
+    mod: ListedMod | AboutXmlMod
     if package_id is not None:
         mod = AboutXmlMod(
             name=name,
@@ -266,10 +267,18 @@ class TestPathToFilesystemModifiedTime:
 # ---------------------------------------------------------------------------
 
 
+def _make_folder_size_fixtures(
+    path: str = "/mods/mymod",
+) -> tuple[ListedMod | AboutXmlMod, dict[str, ListedMod | None]]:
+    """Build a mod and cached-metadata dict for ``path_to_folder_size`` tests."""
+    mod = _make_listed_mod(path)
+    cached: dict[str, ListedMod | None] = {path: mod}
+    return mod, cached
+
+
 class TestPathToFolderSize:
     def test_directory_exists(self) -> None:
-        mod = _make_listed_mod("/mods/mymod")
-        cached: dict[str, ListedMod | None] = {"/mods/mymod": mod}
+        _mod, cached = _make_folder_size_fixtures()
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=12345.0),
@@ -279,8 +288,7 @@ class TestPathToFolderSize:
         assert result == 4096
 
     def test_path_not_a_directory(self) -> None:
-        mod = _make_listed_mod("/mods/file.txt")
-        cached: dict[str, ListedMod | None] = {"/mods/file.txt": mod}
+        _mod, cached = _make_folder_size_fixtures("/mods/file.txt")
         with patch("app.sort.mod_sorting.os.path.isdir", return_value=False):
             result = path_to_folder_size("/mods/file.txt", cached)
         assert result == 0
@@ -294,8 +302,7 @@ class TestPathToFolderSize:
         assert path_to_folder_size("/mods/mod1", cached) == 0
 
     def test_cache_hit_same_mtime(self) -> None:
-        mod = _make_listed_mod("/mods/mymod")
-        cached: dict[str, ListedMod | None] = {"/mods/mymod": mod}
+        _mod, cached = _make_folder_size_fixtures()
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=12345.0),
@@ -311,8 +318,7 @@ class TestPathToFolderSize:
         from app.sort.mod_sorting import _FOLDER_SIZE_CACHE
 
         _FOLDER_SIZE_CACHE["/mods/mymod"] = (10000, 1024)
-        mod = _make_listed_mod("/mods/mymod")
-        cached: dict[str, ListedMod | None] = {"/mods/mymod": mod}
+        _mod, cached = _make_folder_size_fixtures()
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch("app.sort.mod_sorting.os.path.getmtime", return_value=99999.0),
@@ -323,8 +329,7 @@ class TestPathToFolderSize:
         mock_size.assert_called_once_with("/mods/mymod")
 
     def test_oserror_on_getmtime(self) -> None:
-        mod = _make_listed_mod("/mods/mymod")
-        cached: dict[str, ListedMod | None] = {"/mods/mymod": mod}
+        _mod, cached = _make_folder_size_fixtures()
         with (
             patch("app.sort.mod_sorting.os.path.isdir", return_value=True),
             patch(

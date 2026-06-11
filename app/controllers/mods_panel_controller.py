@@ -129,15 +129,15 @@ class ModsPanelController(QObject):
         inactive_mods = (
             self.mods_panel.inactive_mods_list.get_all_toggled_mod_list_items()
         )
-        for mod in active_mods + inactive_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+        for item in active_mods + inactive_mods:
+            mod_data = item.data(Qt.ItemDataRole.UserRole)
             path = mod_data["path"]
             if path in mods_done:
                 continue
 
             if mod_data["warning_toggled"]:
                 mod_data["warning_toggled"] = False
-                mod.setData(Qt.ItemDataRole.UserRole, mod_data)
+                item.setData(Qt.ItemDataRole.UserRole, mod_data)
                 mod_obj = metadata_controller.get_mod(path)
                 if mod_obj is not None and isinstance(mod_obj, AboutXmlMod):
                     package_id = str(mod_obj.package_id)

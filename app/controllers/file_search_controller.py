@@ -909,7 +909,7 @@ class FileSearchController(QObject):
             if mod is not None:
                 mod_path = mod.mod_path
                 if mod_path is not None and os.path.isdir(mod_path):
-                    mod_paths.append(mod_path)
+                    mod_paths.append(str(mod_path))
                     logger.debug(f"Added mod path: {mod_path}")
 
         logger.info(f"Found {len(mod_paths)} mod paths from {len(uuids)} UUIDs")

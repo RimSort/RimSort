@@ -82,4 +82,4 @@ class TestMainWindowCloseEvent:
         event = QCloseEvent()
         window.closeEvent(event)
 
-        window.main_content_panel.abort_loading.assert_called_once()
+        window.main_content_panel.abort_loading.assert_called_once()  # type: ignore[attr-defined]

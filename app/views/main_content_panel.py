@@ -999,9 +999,9 @@ class MainContent(QObject):
         # Bridge: translate old UUIDs to paths for the new sort system
         active_mod_paths: set[str] = set()
         for uuid in active_mods:
-            mod_data = self.metadata_controller.mods_metadata.get(uuid)
-            if mod_data and mod_data.mod_path:
-                active_mod_paths.add(str(mod_data.mod_path))
+            mod_entry = self.metadata_controller.mods_metadata.get(uuid)
+            if mod_entry and mod_entry.mod_path:
+                active_mod_paths.add(str(mod_entry.mod_path))
 
         # Get the current order of active mods list and create a copy for comparison
         current_order = active_mods
