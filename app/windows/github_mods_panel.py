@@ -13,13 +13,13 @@ from PySide6.QtWidgets import QCheckBox, QMessageBox
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import Base
 from app.utils.event_bus import EventBus
-from app.utils.github.installer import GitHubInstaller  # noqa: F401
+from app.utils.github.installer import GitHubInstaller
 from app.utils.github.models import GitHubModEntry
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
-    MenuItem,  # noqa: F401
+    MenuItem,
 )
 
 # Column indices (after the checkbox column 0 added by BaseModsPanel)
@@ -61,6 +61,20 @@ class GitHubModsPanel(BaseModsPanel):
                 button_type=ButtonType.CUSTOM,
                 text=self.tr("Update Selected"),
                 custom_callback=self._on_update_selected,
+            ),
+            ButtonConfig(
+                button_type=ButtonType.SELECT,
+                text=self.tr("Uninstall"),
+                menu_items=[
+                    MenuItem(
+                        text=self.tr("Delete mod completely"),
+                        callback=self._on_uninstall_delete,
+                    ),
+                    MenuItem(
+                        text=self.tr("Convert to plain git mod"),
+                        callback=self._on_uninstall_convert_to_git,
+                    ),
+                ],
             ),
         ]
 
