@@ -221,9 +221,7 @@ def get_windows_paths() -> DetectedPaths:
                 f"{steam_folder}/steamapps/workshop/content/294100"
             )
         else:
-            steam_mods_folder = (
-                Path(steam_mods_folder_str) / "workshop/content/294100"
-            )
+            steam_mods_folder = Path(steam_mods_folder_str) / "workshop/content/294100"
 
         return DetectedPaths(game_folder, config_folder, steam_mods_folder)
     else:
