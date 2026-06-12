@@ -163,9 +163,7 @@ class FlowLayout(QLayout):
 class FlowLayoutContainer(QWidget):
     """Widget wrapper that keeps a FlowLayout height in sync with its width."""
 
-    def __init__(
-        self, layout: FlowLayout, parent: QWidget | None = None
-    ) -> None:
+    def __init__(self, layout: FlowLayout, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setLayout(layout)
 
