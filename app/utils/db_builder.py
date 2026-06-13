@@ -11,6 +11,7 @@ import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
+from app.utils.dict_utils import recursively_update_dict
 from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
@@ -495,7 +496,7 @@ class DatabaseBuilder(QObject):
 
         # Merge databases
         db_output_c = copy.deepcopy(db_input_a)
-        metadata.recursively_update_dict(
+        recursively_update_dict(
             db_output_c,
             db_input_b,
             prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,
