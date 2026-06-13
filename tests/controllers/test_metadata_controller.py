@@ -12,6 +12,8 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
+    CaseInsensitiveStr,
+    ModType,
     SteamDbSchema,
 )
 from app.models.settings import Settings
@@ -724,3 +726,175 @@ def test_process_update_refreshes_metadata(
     )
     metadata_controller.process_update("local", str(mod_path))
     assert metadata_controller.mods_metadata[str(mod_path)].name == "Updated Name"
+
+
+# ---- Task 4: get_mods_from_list ----
+
+
+def _make_about_xml_mod(
+    name: str,
+    package_id: str,
+    mod_type: ModType,
+    mod_path: str | None = None,
+) -> AboutXmlMod:
+    """Helper to create an AboutXmlMod with the given properties.
+
+    mod_type setter is write-once (from UNKNOWN), so we set it immediately.
+    mod_path setter is also write-once; we bypass it via _mod_path to avoid
+    side-effects on published_file_id cached_property.
+    """
+    mod = AboutXmlMod(name=name, package_id=CaseInsensitiveStr(package_id))
+    mod.mod_type = mod_type
+    if mod_path is not None:
+        mod._mod_path = Path(mod_path)
+    return mod
+
+
+def test_get_mods_from_list_happy_path(
+    metadata_controller: MetadataController,
+) -> None:
+    """Given a list of package IDs, return correct active/inactive split."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+    mod_b = _make_about_xml_mod("Mod B", "author.modb", ModType.LOCAL, "/mods/mod_b")
+    mod_c = _make_about_xml_mod("Mod C", "author.modc", ModType.LOCAL, "/mods/mod_c")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+        "/mods/mod_b": mod_b,
+        "/mods/mod_c": mod_c,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA", "author.modC"]  # case-insensitive
+    )
+
+    assert active == ["/mods/mod_a", "/mods/mod_c"]
+    assert "/mods/mod_b" in inactive
+    assert "/mods/mod_a" not in inactive
+    assert "/mods/mod_c" not in inactive
+    assert duplicates == {}
+    assert missing == []
+
+
+def test_get_mods_from_list_missing_mods(
+    metadata_controller: MetadataController,
+) -> None:
+    """Package IDs not in metadata appear in the missing list."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA", "nonexistent.mod"]
+    )
+
+    assert active == ["/mods/mod_a"]
+    assert "nonexistent.mod" in missing
+    assert len(missing) == 1
+
+
+def test_get_mods_from_list_duplicate_resolution(
+    metadata_controller: MetadataController,
+) -> None:
+    """When duplicate mods exist, resolve by source priority (default: Ludeon > Local > Workshop)."""
+    # Same package ID, different sources
+    mod_local = _make_about_xml_mod(
+        "Core Local", "ludeon.rimworld", ModType.LOCAL, "/mods/local/core"
+    )
+    mod_ludeon = _make_about_xml_mod(
+        "Core Ludeon", "ludeon.rimworld", ModType.LUDEON, "/mods/ludeon/core"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "Core Workshop",
+        "ludeon.rimworld",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/core",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/core": mod_local,
+        "/mods/ludeon/core": mod_ludeon,
+        "/mods/workshop/core": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["Ludeon.RimWorld"]
+    )
+
+    # Should pick Ludeon source (highest priority in default order)
+    assert active == ["/mods/ludeon/core"]
+    assert "/mods/local/core" in inactive
+    assert "/mods/workshop/core" in inactive
+    assert "ludeon.rimworld" in duplicates
+    assert len(duplicates["ludeon.rimworld"]) == 3
+    assert missing == []
+
+
+def test_get_mods_from_list_steam_suffix_priority(
+    metadata_controller: MetadataController,
+) -> None:
+    """The _steam suffix triggers Steam Workshop priority for duplicate resolution."""
+    mod_local = _make_about_xml_mod(
+        "My Mod Local", "author.mymod", ModType.LOCAL, "/mods/local/mymod"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "My Mod Workshop",
+        "author.mymod",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/mymod",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/mymod": mod_local,
+        "/mods/workshop/mymod": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.mymod_steam"]
+    )
+
+    # _steam suffix => SOURCE_PRIORITY_STEAM: Workshop > Local
+    assert active == ["/mods/workshop/mymod"]
+    assert "/mods/local/mymod" in inactive
+    assert missing == []
+
+
+def test_get_mods_from_list_no_duplicates_single_mod(
+    metadata_controller: MetadataController,
+) -> None:
+    """When a package ID has only one mod, no duplicate resolution is needed."""
+    mod_a = _make_about_xml_mod(
+        "Mod A", "author.moda", ModType.STEAM_WORKSHOP, "/mods/mod_a"
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA"]
+    )
+
+    assert active == ["/mods/mod_a"]
+    assert inactive == []
+    assert duplicates == {}
+    assert missing == []
+
+
+def test_get_mods_from_list_empty_list(
+    metadata_controller: MetadataController,
+) -> None:
+    """An empty package ID list should produce all mods as inactive."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list([])
+
+    assert active == []
+    assert inactive == ["/mods/mod_a"]
+    assert missing == []

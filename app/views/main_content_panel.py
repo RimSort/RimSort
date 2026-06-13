@@ -33,8 +33,8 @@ from PySide6.QtWidgets import (
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
-from app.utils.dict_utils import recursively_update_dict
 from app.controllers.metadata_controller import MetadataController
+from app.controllers.settings_controller import SettingsController
 from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
@@ -47,6 +47,7 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.db_builder import DatabaseBuilder
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
 from app.utils.files import create_backup_in_thread
 from app.utils.generic import (
@@ -58,13 +59,6 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.controllers.settings_controller import SettingsController
-from app.utils.steam.workshop_utils import (
-    WorkshopUpdateResult,
-    check_if_pfids_blacklisted,
-    import_steamcmd_acf_data,
-    query_workshop_update_data,
-)
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
@@ -74,6 +68,12 @@ from app.utils.steam.steamworks.wrapper import (
     SteamworksSubscriptionHandler,
 )
 from app.utils.steam.webapi.wrapper import CollectionImport
+from app.utils.steam.workshop_utils import (
+    WorkshopUpdateResult,
+    check_if_pfids_blacklisted,
+    import_steamcmd_acf_data,
+    query_workshop_update_data,
+)
 from app.utils.system_info import SystemInfo
 from app.utils.update_utils import UpdateManager
 from app.utils.zip_extractor import (
@@ -704,7 +704,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = metadata.get_mods_from_list(
+        ) = self.metadata_controller.get_mods_from_list(
             mod_list=str(
                 (
                     Path(
@@ -1108,7 +1108,7 @@ class MainContent(QObject):
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = metadata.get_mods_from_list(mod_list=file_path)
+            ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
@@ -1290,7 +1290,9 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = metadata.get_mods_from_list(mod_list=rentry_import.package_ids)
+        ) = self.metadata_controller.get_mods_from_list(
+            mod_list=rentry_import.package_ids
+        )
 
         # Insert data into lists
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1330,7 +1332,9 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = metadata.get_mods_from_list(mod_list=collection_import.package_ids)
+        ) = self.metadata_controller.get_mods_from_list(
+            mod_list=collection_import.package_ids
+        )
 
         # Insert data into lists
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1479,7 +1483,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = metadata.get_mods_from_list(mod_list=file_path)
+        ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
         logger.info("Got new mods according to imported save file")
 
         self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1632,8 +1636,8 @@ class MainContent(QObject):
         data = self._import_export_service.collect_active_mods(
             self.mods_panel.active_mods_list.paths, self.duplicate_mods
         )
-        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
-            mod_list=data.active_mods
+        active_mods_uuids, inactive_mods_uuids, _, _ = (
+            self.metadata_controller.get_mods_from_list(mod_list=data.active_mods)
         )
         self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(data.active_mods)} active mods for saving")

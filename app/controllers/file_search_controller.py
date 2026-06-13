@@ -9,7 +9,6 @@ from loguru import logger
 from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
-import app.utils.metadata as metadata
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
@@ -956,10 +955,11 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of active mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get active mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        active_uuids, _, _, _ = metadata.get_mods_from_list(mod_list_path)
+        active_uuids, _, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(f"Getting paths for {len(active_uuids)} active mods from mod list")
         return get_mod_paths(active_uuids)
 
@@ -970,10 +970,11 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of inactive mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get inactive mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        _, inactive_uuids, _, _ = metadata.get_mods_from_list(mod_list_path)
+        _, inactive_uuids, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(
             f"Getting paths for {len(inactive_uuids)} inactive mods from mod list"
         )
