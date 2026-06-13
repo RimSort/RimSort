@@ -339,7 +339,9 @@ class DynamicQuery(QObject):
                     f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                 )
                 if metadata.get("tags"):
-                    result["database"][publishedfileid]["tags"] = metadata["tags"]
+                    result["database"][publishedfileid]["tags"] = sorted(
+                        metadata["tags"], key=lambda t: t.get("tag", "")
+                    )
                 if metadata.get("children"):
                     if not result["database"][publishedfileid].get("dependencies"):
                         result["database"][publishedfileid]["dependencies"] = {}
