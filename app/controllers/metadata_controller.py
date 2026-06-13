@@ -18,6 +18,7 @@ from app.models.metadata.metadata_structure import (
     CompiledDependencyData,
     ListedMod,
     ModType,
+    ReplacementInfo,
     SteamDbEntry,
     SteamDbEntryBlacklist,
 )
@@ -431,11 +432,14 @@ class MetadataController(QObject):
         game_major_minor = ".".join(self.game_version.split(".")[:2])
         return game_major_minor not in mod.supported_versions
 
-    def has_alternative_mod(self, path: str) -> dict[str, Any] | None:
+    def has_alternative_mod(self, path: str) -> ReplacementInfo | None:
         """Check if a mod has a recommended replacement from Use This Instead DB.
 
+        Matches by the mod's published_file_id (Steam Workshop ID) against the
+        ``oldWorkshopId`` entries in the database.
+
         :param path: Mod path
-        :return: Replacement info dict or None
+        :return: ReplacementInfo or None
         """
         mod = self.mods_metadata.get(path)
         if not isinstance(mod, AboutXmlMod):
@@ -443,8 +447,20 @@ class MetadataController(QObject):
         use_this_instead = self.metadata_mediator.use_this_instead
         if use_this_instead is None:
             return None
-        pid = str(mod.package_id)
-        return use_this_instead.get(pid)
+        pfid = mod.published_file_id
+        if pfid is None:
+            return None
+        entry = use_this_instead.get(str(pfid))
+        if entry is None:
+            return None
+        return ReplacementInfo(
+            name=entry.get("newName", ""),
+            author=entry.get("newAuthor", ""),
+            packageid=entry.get("newPackageId", ""),
+            pfid=entry.get("newWorkshopId", ""),
+            supportedversions=entry.get("newVersions", []),
+            source="database",
+        )
 
     def get_mods_from_list(
         self,

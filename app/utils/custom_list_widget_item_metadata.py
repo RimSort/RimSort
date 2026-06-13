@@ -158,9 +158,7 @@ class CustomListWidgetItemMetadata:
             mr = metadata_controller.has_alternative_mod(path)
             if mr is None:
                 return None
-            return (
-                f"{mr.get('name', '')} ({mr.get('pfid', '')}) by {mr.get('author', '')}"
-            )
+            return f"{mr.name} ({mr.pfid}) by {mr.author}"
 
         except KeyError:
             logger.info(f"Path {path} not found in metadata - probably non-steam mod")

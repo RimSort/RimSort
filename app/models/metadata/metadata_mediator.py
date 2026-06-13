@@ -121,7 +121,11 @@ class MetadataMediator:
             self._no_version_warning = None
 
     def _load_use_this_instead(self) -> None:
-        """Load Use This Instead replacements DB (JSON, possibly gzip)."""
+        """Load Use This Instead replacements DB (JSON, possibly gzip).
+
+        The raw file is ``{"version": "...", "rules": [...]}``.  We index the
+        rules list into a dict keyed by ``oldWorkshopId`` for O(1) lookup.
+        """
         if (
             self.use_this_instead_path is None
             or not self.use_this_instead_path.exists()
@@ -131,15 +135,21 @@ class MetadataMediator:
         try:
             path = self.use_this_instead_path
             if str(path).endswith(".gz"):
-                with gzip.open(path, "rt", encoding="utf-8") as f:
-                    self._use_this_instead = json.load(f)
+                with gzip.open(path, "rt", encoding="utf-8-sig") as f:
+                    raw = json.load(f)
             else:
-                with open(path, encoding="utf-8") as f:
-                    self._use_this_instead = json.load(f)
-            if self._use_this_instead is not None:
-                logger.info(
-                    f"Loaded {len(self._use_this_instead)} Use This Instead entries"
-                )
+                with open(path, encoding="utf-8-sig") as f:
+                    raw = json.load(f)
+
+            rules = raw.get("rules", []) if isinstance(raw, dict) else []
+            self._use_this_instead = {
+                str(r["oldWorkshopId"]): r
+                for r in rules
+                if isinstance(r, dict) and "oldWorkshopId" in r
+            }
+            logger.info(
+                f"Loaded {len(self._use_this_instead)} Use This Instead entries"
+            )
         except (OSError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load Use This Instead DB: {e}")
             self._use_this_instead = None

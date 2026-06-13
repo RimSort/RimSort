@@ -24,6 +24,18 @@ class ModType(Enum):
     UNKNOWN = "Unknown"
 
 
+@dataclass
+class ReplacementInfo:
+    """A recommended replacement mod from the Use This Instead database."""
+
+    name: str
+    author: str
+    packageid: str
+    pfid: str
+    supportedversions: list[str]
+    source: str = "database"
+
+
 class CaseInsensitiveStr(str):
     """
     Wraps a package Id. Forces the package ID to be case insensitive. Stores it internally as lowercase.

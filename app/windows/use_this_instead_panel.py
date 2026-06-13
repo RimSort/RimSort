@@ -7,7 +7,7 @@ from loguru import logger
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QCheckBox
 
-from app.models.metadata.metadata_structure import AboutXmlMod
+from app.models.metadata.metadata_structure import AboutXmlMod, ReplacementInfo
 from app.utils.mod_info import ModInfo
 from app.views import dialogue
 from app.windows.base_mods_panel import (
@@ -24,27 +24,6 @@ class InstallationStatus(Enum):
 
     INSTALLED = "Installed"
     NOT_INSTALLED = "Not Installed"
-
-
-@dataclass
-class ReplacementInfo:
-    """
-    Represents information about a replacement mod.
-
-    Attributes:
-        name: Name of the replacement mod.
-        author: Author of the replacement mod.
-        packageid: Package ID of the replacement mod.
-        pfid: Published file ID of the replacement mod.
-        supportedversions: Supported versions of the replacement mod.
-    """
-
-    name: str
-    author: str
-    packageid: str
-    pfid: str
-    supportedversions: Any
-    source: str
 
 
 @dataclass
