@@ -97,7 +97,7 @@ ERR_RETRIEVE_RELEASE_TITLE = "Unable to retrieve latest release information"
 ERR_RETRIEVE_RELEASE_TEXT = "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
 
 if TYPE_CHECKING:
-    from app.utils.metadata import SettingsController
+    from app.controllers.settings_controller import SettingsController
 
 
 class UpdateError(Exception):

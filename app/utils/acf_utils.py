@@ -27,9 +27,6 @@ from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 
 if TYPE_CHECKING:
     from app.controllers.metadata_controller import MetadataController
-    from app.utils.metadata import (
-        MetadataManager,  # noqa: F401 — used in string annotations
-    )
 
 
 def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
@@ -71,7 +68,7 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
 
 
 def refresh_acf_metadata(
-    metadata_controller: "MetadataController | MetadataManager",
+    metadata_controller: "MetadataController",
     steamclient: bool = True,
     steamcmd: bool = True,
 ) -> None:
@@ -82,9 +79,7 @@ def refresh_acf_metadata(
     installations, storing the results for later use.
     Each source is loaded independently; errors in one do not affect the other.
 
-    Accepts either MetadataController (new) or MetadataManager (legacy).
-
-    :param metadata_controller: The MetadataController or MetadataManager instance.
+    :param metadata_controller: The MetadataController instance.
     :param steamclient: If True, load Steam client ACF data. Defaults to True.
     :param steamcmd: If True, load SteamCMD ACF data. Defaults to True.
     """
@@ -252,15 +247,13 @@ def _merge_workshop_items_from_sources(
 
 
 def get_acf_workshop_items(
-    metadata_controller: "MetadataController | MetadataManager",
+    metadata_controller: "MetadataController",
 ) -> tuple[list[tuple[str, str, int | None]], dict[str, Any], dict[str, Any]]:
     """
     Merge and deduplicate workshop items from both SteamCMD and Steam sources.
 
     Uses cached ACF data to combine workshop item entries from both ACF sources.
     Prioritizes SteamCMD items over Steam items when duplicates are found.
-
-    Accepts either MetadataController (new) or MetadataManager (legacy).
 
     :param metadata_controller: Instance containing cached ACF data.
     :return: Tuple of (entries, steamcmd_acf_data, workshop_acf_data)
@@ -367,7 +360,7 @@ def _extract_manifest_ids_and_remove_pfid(
 
 
 def steamcmd_purge_mods(
-    metadata_controller: "MetadataController | MetadataManager",
+    metadata_controller: "MetadataController",
     publishedfileids: set[str],
     auto_clear_enabled: bool = True,
 ) -> None:
@@ -376,8 +369,6 @@ def steamcmd_purge_mods(
 
     Deletes specified workshop items from the SteamCMD appworkshop_294100.acf file
     and removes associated manifest files from the depotcache directory.
-
-    Accepts either MetadataController (new) or MetadataManager (legacy).
 
     :param metadata_controller: Instance with SteamCMD paths configured.
     :param publishedfileids: Set of published file IDs (PFIDs) as strings to remove.
