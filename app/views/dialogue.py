@@ -266,8 +266,8 @@ def show_fatal_error(
     :param details: text to pass to setDetailedText
     :param parent: The parent widget
     """
-    logger.info(
-        f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
+    logger.error(
+        f"Fatal error: [{title}] [{text}] [{information}] [{details}]"
     )
 
     parent = _get_parent_if_constrain_enabled(parent)
