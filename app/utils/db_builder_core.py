@@ -104,9 +104,7 @@ def output_database(
             with open(appended_path, "w", encoding="utf-8") as output_f:
                 json.dump(database, output_f, indent=4)
     else:
-        progress_callback(
-            f"\nCaching DynamicQuery result:\n{output_database_path}"
-        )
+        progress_callback(f"\nCaching DynamicQuery result:\n{output_database_path}")
         with open(output_database_path, "w", encoding="utf-8") as output_f:
             json.dump(database, output_f, indent=4)
 

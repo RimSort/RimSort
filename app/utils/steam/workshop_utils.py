@@ -71,9 +71,7 @@ def check_if_pfids_blacklisted(
         blacklisted_mods_report = ""
         for pfid, info in blacklisted_mods.items():
             blacklisted_mods_report += f"{info['name']} ({pfid})\n"
-            blacklisted_mods_report += (
-                f"Reason for blacklisting: {info['comment']}"
-            )
+            blacklisted_mods_report += f"Reason for blacklisting: {info['comment']}"
         answer = show_dialogue_conditional(
             title="Blacklisted mods found",
             text="Some mods are blacklisted in your SteamDB",
