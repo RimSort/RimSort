@@ -956,18 +956,12 @@ Would you like to configure them now?</source>
         <translation>Проверка модов Steam Workshop на наличие обновлений...</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>Нет модов Мастерской для проверки обновлений.</translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
         <translation>Не удалось проверить наличие обновлений</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>RimSort не удалось запросить Steam WebAPI для получения информации об обновлениях!
-</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>Вы подключены к Интернету?</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1248,6 +1242,18 @@ If you just installed Git, please restart RimSort for the PATH changes to take e
     <message>
         <source>Failed to read existing database</source>
         <translation>Не удалось прочитать существующую базу данных</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort не смог проверить ваши моды в Мастерской на наличие обновлений.</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>Проверка обновлений частично завершена</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>Моды Мастерской {failed} из {total} не удалось проверить на наличие обновлений.</translation>
     </message>
     <message>
         <source>Failed to read the existing database!</source>
@@ -3253,6 +3259,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>Несовместимо (согласно другим правилам мода):</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>
 Должен загружаться после:</translation>
@@ -4226,26 +4237,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>Steam Workshop File Not Found</source>
         <translation>Файл мастерской Steam не найден</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>Очистить все местоположения</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>Вы уверены, что хотите очистить все местоположения?</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>Подтвердите создание базы данных</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>Вы уверены, что хотите создать базу данных Steam Workshop?</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>Для большинства пользователей это не обязательно, так как GitHub SteamDB является адекватным. Создание базы данных может занять много времени. В зависимости от ваших настроек, он также может просмотреть всю библиотеку модов Steam через webAPI. Это может быть большой объем данных и занять много времени. Вы уверены, что хотите продолжить?</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4278,10 +4269,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>Автоопределение</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>Местоположение игры</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>Открыть…</translation>
     </message>
@@ -4292,22 +4279,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Clear…</source>
         <translation>Очистить…</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>Местоположение конфигурации</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Местоположение модов Steam</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>Местоположение локальных модов</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>Местоположение папки экземпляра (необязательно)</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4324,10 +4295,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Databases</source>
         <translation>Базы данных</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>Настройки резервного копирования</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4450,10 +4417,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 например (modDependencyByVersion, loadAfterByVersion, loadBeforeByVersion, inсовместимыйWithByVersion,descriptionsByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>Параметры списка модов</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Уведомляет о необходимости загрузки модов, которые могут отсутствовать в активном списке модов.</translation>
     </message>
@@ -4464,10 +4427,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>Скрывает недействительные моды, не рекомендуется включать.</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>Сортировка неактивных модов</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4486,10 +4445,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     <message>
         <source>DB Builder</source>
         <translation>Конструктор БД</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>При создании базы данных:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4544,6 +4499,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>Создать базу данных</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>Внутренние инструменты</translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation>Проверить загруженные моды</translation>
     </message>
@@ -4556,10 +4515,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>Автоматически очищать кэш депо перед загрузкой модов через SteamCMD.
 Это может предотвратить некоторые проблемы с загрузкой модов, такие как сбои загрузки и повторное появление удаленных модов.</translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
-        <translation>Расположение установки SteamCMD</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4582,20 +4537,8 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>Установить SteamCMD</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>todds</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>Предустановка качества</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>Оптимизировано - Рекомендуется для RimWorld</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>При оптимизации текстур</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4616,14 +4559,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>Автоматически запускать тодды перед запуском игры</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>Тема</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>Настройки темы</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4658,10 +4593,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Открыть расположение темы</translation>
     </message>
     <message>
-        <source>Font Settings</source>
-        <translation>Настройки шрифта</translation>
-    </message>
-    <message>
         <source>Font Family</source>
         <translation>Семейство шрифтов</translation>
     </message>
@@ -4674,10 +4605,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Сброс</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>Настройки языка</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>Выберите язык (требуется перезапуск для применения изменений)</translation>
     </message>
@@ -4688,10 +4615,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Advanced</source>
         <translation>Расширенные</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>Требуется перезапуск RimSort для применения некоторых настроек</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4720,6 +4643,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Download missing mods automatically</source>
         <translation>Автоматически загружать недостающие моды</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Появление</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -4756,14 +4683,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Edit Game Run Arguments:</source>
         <translation>Редактировать аргументы запуска игры:</translation>
-    </message>
-    <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>Срок действия базы данных в секундах, например, 604800 для 7 дней и 0 для отсутствия срока действия.</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>Аутентификация</translation>
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
@@ -4830,10 +4749,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
  ПРИМЕЧАНИЕ. Эти аргументы игнорируются, если включен параметр «Запускать игру через протокол Steam».</translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>Ограничение по времени удаления вспомогательных метаданных.(Удалить мгновенно 0, никогда не удаляйте -1)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>Включить редактирование</translation>
     </message>
@@ -4858,10 +4773,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Это полезно, если вы хотите обеспечить обновления чистых модов.</translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation>Государство запуска</translation>
-    </message>
-    <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation>Min IS  и max is .Значения за пределами этого диапазона будут сброшены к по умолчанию. {MIN_SIZE} {MAX_SIZE}</translation>
     </message>
@@ -4878,36 +4789,8 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Пользовательский размер</translation>
     </message>
     <message>
-        <source>Main Window Launch State</source>
-        <translation>Состояние запуска главного окна</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>Состояние запуска окна браузера</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>Настройки окна</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>Пользовательская ширина:</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>Пользовательская высота:</translation>
-    </message>
-    <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>Применить раскраску мода на фон вместо текста</translation>
-    </message>
-    <message>
-        <source>Auxiliary DB</source>
-        <translation>Вспомогательный дБ</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>Интеграция с недавним спасением</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
@@ -4920,10 +4803,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Custom todds command</source>
         <translation>Пользовательская команда TODDS</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>Если -p, как в пути, не указан, будет использоваться путь от активного тока или все моды.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4950,24 +4829,12 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>Внешние инструменты</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>Место команды текстового редактора</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>Дополнительные аргументы (открывающие папки)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>Дополнительные аргументы (открытие одного файла)</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>Метод сортировки</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>Зависимости обрабатывают поведение</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4978,10 +4845,6 @@ This checks may take few seconds depending on the number of .dds files present.<
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>Если включено, вход AlternativePackageids in About.xml может удовлетворить зависимость мода, когда основная зависимость отсутствует.
 Например, 'oels.vehiclemapframework', альтернативы: 'oels.vehiclemapframework.dev'</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>XML -диапазон поведения</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -6002,6 +5865,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>Очистить все локации</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>Вы уверены, что хотите очистить все локации?</translation>
     </message>
 </context>
 <context>

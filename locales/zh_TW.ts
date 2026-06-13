@@ -956,18 +956,12 @@ Would you like to configure them now?</source>
         <translation>正在檢查 Steam 工作坊模組的更新...</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>沒有創意工坊模組來檢查更新</translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
         <translation>無法檢查更新</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>RimSort 無法查詢 Steam WebAPI 以獲取更新資訊！
-</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>你連接到互聯網了嗎？</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1172,6 +1166,18 @@ How would you like to proceed?
     <message>
         <source>git not found</source>
         <translation>找不到 git</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort 無法檢查您的創意工坊模組是否有更新。</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>更新檢查部分完成</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>無法檢查更新的 {failed} 個創意工坊模組（共 {total} 個）。</translation>
     </message>
     <message>
         <source>git executable was not found in $PATH!</source>
@@ -3292,6 +3298,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>不相容（根據其他模組的規則）：</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>
 應在以下模組之後加載：</translation>
@@ -4231,26 +4242,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>Steam Workshop File Not Found</source>
         <translation>未找到 Steam 創意工坊文件</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>清除所有路徑</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>你確定要清除所有路徑嗎？</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>確定構建資料庫</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>你確定要構建工作坊資料庫嗎？</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>對於大多數用戶來說，這不是必要的，因為 GitHub SteamDB 已經足夠了。構建資料庫可能需要很長時間。根據你的設置，它也可能通過 WebAPI 抓取整個工作坊。這可能是一個巨大的數據量，並且需要很長時間。你確定要繼續嗎？</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4283,10 +4274,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>自動檢測</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>遊戲所在路徑</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>開啟</translation>
     </message>
@@ -4297,22 +4284,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Clear…</source>
         <translation>清空</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>配置所在路徑</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Steam 模組所在路徑</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>本地模組所在路徑</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>實例文件夾位置（可選）</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4329,10 +4300,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Databases</source>
         <translation>資料庫</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>備份設置</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4455,10 +4422,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 例如：(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>模組列表選項</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>通知下載活動模組列表中可能缺失的模組</translation>
     </message>
@@ -4469,10 +4432,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>隱藏無效模組，不建議啟用</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>未啟用模組排序</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4491,10 +4450,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     <message>
         <source>DB Builder</source>
         <translation>資料庫構建器</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>當構建資料庫時：</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4549,6 +4504,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>構建資料庫</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>內部工具</translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation>驗證已經下載的模組</translation>
     </message>
@@ -4561,10 +4520,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>在使用 SteamCMD 下載模組前自動清除倉庫緩存。
 這可能避免在下載模組時出現的一些問題，例如下載失敗以及已刪除模組重新生成的情況。</translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
-        <translation>SteamCMD 安裝路徑</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4587,20 +4542,8 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>安裝 SteamCMD</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>紋理</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>品質預設</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>優化 - 推薦用於 RimWorld</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>優化紋理時</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4623,24 +4566,12 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>啟動遊戲前自動運行 todds</translation>
     </message>
     <message>
-        <source>Theme</source>
-        <translation>主題</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>主題設置</translation>
-    </message>
-    <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>"啟用主題/樣式表而非系統預設主題"</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
         <translation>開啟主題路徑</translation>
-    </message>
-    <message>
-        <source>Font Settings</source>
-        <translation>字體設置</translation>
     </message>
     <message>
         <source>Font Family</source>
@@ -4655,10 +4586,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>重置</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>語言設置</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>選擇語言（需要重新啟動以應用更改）</translation>
     </message>
@@ -4669,10 +4596,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Advanced</source>
         <translation>高級</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>某些設置需要重啟 RimSort</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4701,6 +4624,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Download missing mods automatically</source>
         <translation>自動下載缺失的模組</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>外貌</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -4739,22 +4666,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>編輯遊戲啟動參數：</translation>
     </message>
     <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>資料庫過期時間（秒），例如，604800 表示 7 天，0 表示不過期。</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>認證</translation>
-    </message>
-    <message>
-        <source>Launch State</source>
-        <translation>啟動狀態</translation>
-    </message>
-    <message>
-        <source>Main Window Launch State</source>
-        <translation>主窗口啟動狀態</translation>
-    </message>
-    <message>
         <source>Maximized</source>
         <translation>最大化</translation>
     </message>
@@ -4765,22 +4676,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Custom size</source>
         <translation>自定義大小</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>瀏覽器窗口啟動狀態</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>設置窗口啟動狀態</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>自定義寬度：</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>自定義高度：</translation>
     </message>
     <message>
         <source>Delete before update</source>
@@ -4855,10 +4750,6 @@ This may potentially prevent some issues with downloading mods such as download 
  注意：如果啟用“通過 Steam 協議啟動遊戲”，這些參數將被忽略</translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>輔助元數據資料庫刪除時間限制（秒）。 （立即刪除 0，永不刪除 -1）</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>啟用編輯</translation>
     </message>
@@ -4907,14 +4798,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>最小值為 {MIN_SIZE}，最大值為 {MAX_SIZE}。超出此範圍的值將重置為預設值。</translation>
     </message>
     <message>
-        <source>Auxiliary DB</source>
-        <translation>輔助資料庫</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>與最近的存檔集成</translation>
-    </message>
-    <message>
         <source>Compare mod lists with the recent save file</source>
         <translation>將模組列表與最近的存檔文件進行比較</translation>
     </message>
@@ -4925,10 +4808,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Custom todds command</source>
         <translation>自定義 todds 命令</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>如果未指定 -p（路徑），則會選擇使用目前啟用的或所有模組的路徑。</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4955,24 +4834,12 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>外部工具</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>文本編輯器命令位置</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>額外參數（開啟資料夾）</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>額外參數（開啟單一檔案）</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>排序方法</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>依賴項處理行為</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4983,10 +4850,6 @@ This checks may take few seconds depending on the number of .dds files present.<
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>如果啟用了，則在about.xml中的替代packageIdS條目可以滿足MOD的依賴項時，當丟失主要依賴關係時。
 例如，'oels。</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>XML解析行為</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -6006,6 +5869,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} 在 {e.filename} 發生，錯誤代碼 {error_code}。</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>清除所有地點</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>您確定要清除所有位置嗎？</translation>
     </message>
 </context>
 <context>

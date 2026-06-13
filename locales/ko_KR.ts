@@ -954,18 +954,12 @@ Would you like to configure them now?</source>
         <translation>Steam 워크숍 모드 업데이트를 확인하는 중...</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>업데이트를 확인할 워크샵 모드가 없습니다.</translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
         <translation>업데이트를 확인하지 못했습니다</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>RimSort가 Steam WebAPI에서 업데이트 정보를 조회하지 못했습니다!
-</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>인터넷에 연결되어 있습니까?</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1248,6 +1242,18 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
     <message>
         <source>Failed to read existing database</source>
         <translation>기존 데이터베이스를 로드하는 데 실패했습니다</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort가 워크샵 모드의 업데이트를 확인할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>업데이트 확인이 부분적으로 완료되었습니다.</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>{total}개의 워크샵 모드 중 {failed}개에 대한 업데이트를 확인할 수 없습니다.</translation>
     </message>
     <message>
         <source>Failed to read the existing database!</source>
@@ -3292,6 +3298,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>호환되지 않음(다른 모드의 규칙에 따라):</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>
 나중에 불러와야 합니다:</translation>
@@ -4228,26 +4239,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>Steam Workshop File Not Found</source>
         <translation>Steam 창작마당 파일을 찾을 수 없습니다</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>모든 위치 지우기</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>모든 위치를 지우시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>Steam 창작마당 데이터베이스를 빌드하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>Steam 창작마당 데이터베이스를 빌드하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>대부분의 사용자에게는 GitHub SteamDB로 충분합니다. 데이터베이스 빌드에는 시간이 걸릴 수 있습니다. 설정에 따라 WebAPI를 통해 Steam 창작마당 전체를 크롤링할 수도 있습니다. 이는 대량의 데이터를 생성하며 시간이 오래 걸릴 수 있습니다. 계속하시겠습니까?</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4280,10 +4271,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>자동 감지</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>게임 위치</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>열기</translation>
     </message>
@@ -4294,22 +4281,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Clear…</source>
         <translation>지우기…</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>설정 위치</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Steam 모드 위치</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>로컬 모드 위치</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>인스턴스 폴더 위치 (옵션)</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4326,10 +4297,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Databases</source>
         <translation>데이터베이스</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>백업 설정</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4452,10 +4419,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 예: (modDependencyByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibilityWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>모드 리스트 옵션</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>활성 모드 리스트에 없을 수 있는 모드를 다운로드하도록 알림을 표시합니다.</translation>
     </message>
@@ -4466,10 +4429,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>유효하지 않은 모드를 숨깁니다. 활성화하는 것을 권장하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>비활성 모드 정렬</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4488,10 +4447,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     <message>
         <source>DB Builder</source>
         <translation>데이터베이스 빌더</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>데이터베이스를 빌드할 때:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4546,6 +4501,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>데이터베이스 빌드</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>내부 도구</translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation>다운로드된 모드 검증</translation>
     </message>
@@ -4557,10 +4516,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>이것은 다운로드 실패나 삭제된 모드의 재출현 등 다운로드 모드 문제를 방지할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
-        <translation>SteamCMD 설치 위치</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4583,20 +4538,8 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>SteamCMD 설치</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>todds</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>품질 프리셋</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>최적화 - RimWorld 권장</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>텍스처를 최적화할 때</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4617,14 +4560,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>게임을 실행하기 전에 자동으로 todds를 실행합니다</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>테마</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>테마 설정</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4658,10 +4593,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>테마 위치 열기</translation>
     </message>
     <message>
-        <source>Font Settings</source>
-        <translation>글꼴 설정</translation>
-    </message>
-    <message>
         <source>Font Family</source>
         <translation>글꼴 패밀리</translation>
     </message>
@@ -4674,10 +4605,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>초기화</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>언어 설정</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>언어를 선택하십시오 (변경 사항을 적용하려면 재시작이 필요합니다)</translation>
     </message>
@@ -4688,10 +4615,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Advanced</source>
         <translation>고급</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>RimSort 설정을 변경하면 재시작이 필요합니다</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4720,6 +4643,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Download missing mods automatically</source>
         <translation>누락된 모드 자동 다운로드</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>모습</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -4756,14 +4683,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Edit Game Run Arguments:</source>
         <translation>게임 실행 인수 편집:</translation>
-    </message>
-    <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>데이터베이스 만료 시간(초 단위)을 지정합니다. 예를 들어, 604800은 7일, 0은 무기한을 의미합니다.</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>인증</translation>
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
@@ -4830,10 +4749,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
  참고: 'Steam 프로토콜을 통해 게임 실행'이 활성화된 경우 이 인수들은 무시됩니다.</translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>보조 메타데이터 DB 삭제 시간 제한(초)입니다. (0은 즉시 삭제, -1은 삭제 안 함)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>편집 활성화</translation>
     </message>
@@ -4858,10 +4773,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>이것은 클린한 모드 업데이트를 보장하려는 경우에 유용합니다.</translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation>시작 상태</translation>
-    </message>
-    <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation>최솟값은 {MIN_SIZE} 이고, 최댓값은 {MAX_SIZE} 입니다. 이 범위를 벗어나는 값은 기본값으로 재설정됩니다. </translation>
     </message>
@@ -4878,36 +4789,8 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>사용자 지정 크기</translation>
     </message>
     <message>
-        <source>Main Window Launch State</source>
-        <translation>메인 창 시작 상태</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>브라우저 창 시작 상태</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>설정 창 시작 상태</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>사용자 지정 너비:</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>사용자 지정 높이:</translation>
-    </message>
-    <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>텍스트 대신 모드 색상을 배경에 적용합니다</translation>
-    </message>
-    <message>
-        <source>Auxiliary DB</source>
-        <translation>보조 DB</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>최근 저장과의 통합</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
@@ -4920,10 +4803,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Custom todds command</source>
         <translation>사용자 지정 TODDS 명령</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>경로와 같이 -p가 지정되지 않은 경우, 현재 활성화된 모드 또는 모든 모드 선택의 경로가 사용됩니다.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4950,24 +4829,12 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>외부 도구</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>텍스트 에디터 명령 위치</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>추가 인수 (폴더 열기)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>추가 인수 (단일 파일 열기)</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>정렬 방식</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>의존성 처리 동작</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4978,10 +4845,6 @@ This checks may take few seconds depending on the number of .dds files present.<
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>활성화하면 about.xml의 대체 PackageIDS 항목은 주요 종속성이 누락되었을 때 모드 종속성을 충족할 수 있습니다.
 예를 들어, 'oels.vehiclemapframework', 대체: 'oels.vehiclemapframework.dev'</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>XML 해석 동작</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -6003,6 +5866,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.filename}에서 에러 코드 {error_code}로 {e.strerror}가 발생했습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>모든 위치 지우기</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>모든 위치를 삭제하시겠습니까?</translation>
     </message>
 </context>
 <context>

@@ -936,12 +936,12 @@ Manage mods installed from GitHub releases.</source>
         <translation>Mod güncellemeleri için Steam Atölyesi kontrol ediliyor...</translation>
     </message>
     <message>
-        <source>Unable to check for updates</source>
-        <translation>Güncellemeler kontrol edilemedi</translation>
+        <source>No Workshop mods to check for updates</source>
+        <translation>Güncellemeleri kontrol edecek Atölye modu yok</translation>
     </message>
     <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>İnternete bağlı mısınız?</translation>
+        <source>Unable to check for updates</source>
+        <translation>Güncellemeler kontrol edilemedi</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1112,6 +1112,18 @@ Manage mods installed from GitHub releases.</source>
         <translation>git bulunamadı</translation>
     </message>
     <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort, Atölye modlarınızı güncellemeler için kontrol edemedi.</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>Güncelleme kontrolü kısmen tamamlandı</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>{total} Atölye modundan {failed} tanesi güncelleme açısından kontrol edilemedi.</translation>
+    </message>
+    <message>
         <source>git executable was not found in $PATH!</source>
         <translation>git çalıştırıcısı $PATH yolunda bulunamadı!</translation>
     </message>
@@ -1227,11 +1239,6 @@ Would you like to configure them now?</source>
         <translation>URL panonuza kopyalandı:
 
 {ret}</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>Rimsort, güncelleme bilgileri için Steam Webapi'yi sorgulayamadı!</translation>
     </message>
     <message>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
@@ -3286,6 +3293,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>Uyumsuz (diğer modun kurallarına göre):</translation>
+    </message>
+    <message>
+        <source>
 Alternative Dependencies:</source>
         <translation>Alternatif Bağımlılıklar:</translation>
     </message>
@@ -4213,26 +4225,6 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <source>Steam Workshop File Not Found</source>
         <translation>Steam Atölye Dosyası Bulunamadı</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>Tüm yerleri temizleyin</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>Tüm yerleri temizlemek istediğinden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>Yapı Veritabanı'nı onaylayın</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>Steam Workshop veritabanını oluşturmak istediğinizden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>Çoğu kullanıcı için GitHub Steamdb yeterli olduğundan bu gerekli değildir. Veritabanını oluşturmak uzun zaman alabilir. Ayarlarınıza bağlı olarak, WebAPI üzerinden Steam Workshop'un tamamı boyunca da sürünebilir. Bu büyük miktarda veri olabilir ve uzun zaman alabilir. Devam etmek istediğinden emin misin?</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4265,10 +4257,6 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>Otomatik Tespit Et</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>Oyun Lokasyonu</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>Aç...</translation>
     </message>
@@ -4279,22 +4267,6 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     <message>
         <source>Clear…</source>
         <translation>Temizle...</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>Config lokasyonu</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Steam mod lokasyonu</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>Yerel mod lokasyonu</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>Örnek klasör konumu (isteğe bağlı)</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4311,10 +4283,6 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
     <message>
         <source>Databases</source>
         <translation>Veritabanları</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>Yedekleme Ayarları</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4433,10 +4401,6 @@ Eşleşen bir sürüm etiketi mevcut ancak boşsa temel etiket dikkate alınmaz.
 ör.(modDependegencyByVersion, loadAfterByVersion, loadBeforeByVersion, in uyumsuzWithByVersion, açıklamalarByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>Mod listesi seçenekleri</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Etkin mod listesinde eksik olabilecek modların indirilmesi konusunda bildirimde bulunur</translation>
     </message>
@@ -4447,10 +4411,6 @@ Eşleşen bir sürüm etiketi mevcut ancak boşsa temel etiket dikkate alınmaz.
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>Geçersiz modları gizler, etkinleştirilmesi önerilmez</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>Etkin Olmayan Modların Sıralanması</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4469,10 +4429,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
     <message>
         <source>DB Builder</source>
         <translation>Veritabanı Oluşturucu</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>Veritabanını oluşturuken:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4527,10 +4483,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Depo önbelleğini otomatik olarak temizleyin</translation>
     </message>
     <message>
-        <source>SteamCMD installation location</source>
-        <translation>Steamcmd kurulum konumu</translation>
-    </message>
-    <message>
         <source>Clear depot cache</source>
         <translation>Clear Depot önbelleği</translation>
     </message>
@@ -4547,20 +4499,8 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Steamcmd'yi kurun</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>Todds</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>Kalite ön ayar</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>Optimize edilmiş - Rimworld için önerilir</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>Dokuları optimize ederken</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4583,24 +4523,12 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Oyunu başlatmadan önce todds'u otomatik olarak çalıştır</translation>
     </message>
     <message>
-        <source>Theme</source>
-        <translation>Tema</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>Tema Ayarları</translation>
-    </message>
-    <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>Sistem teması yerine tema / stil sayfası kullanmayı etkinleştirin</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
         <translation>Tema Konumu Açık</translation>
-    </message>
-    <message>
-        <source>Font Settings</source>
-        <translation>Yazı tipi ayarları</translation>
     </message>
     <message>
         <source>Font Family</source>
@@ -4615,10 +4543,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Sıfırlamak</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>Dil ayarı</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>Dili seçin (değişiklikleri uygulamak için gerekli yeniden başlat)</translation>
     </message>
@@ -4629,10 +4553,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
     <message>
         <source>Advanced</source>
         <translation>Gelişmiş</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>Bazı ayarlar için gerekli olan rimsort yeniden başlatma</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4691,14 +4611,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Oyun çalıştırma argümanlarını düzenle:</translation>
     </message>
     <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>Veritabanı sona erme, örneğin 7 gün boyunca 604800. ve 0 son kullanma için 0.</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>Kimlik doğrulama</translation>
-    </message>
-    <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
         <translation>Şöyle olmalı: C: ​​\ Program Files (x86) \ Steam \ SteamApps \ Common \ Rimworld</translation>
     </message>
@@ -4715,10 +4627,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Temiz mod güncellemelerini sağlamak istiyorsanız bu yararlıdır.</translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation>Fırlatma durumu</translation>
-    </message>
-    <message>
         <source>Maximized</source>
         <translation>Maksimum</translation>
     </message>
@@ -4729,26 +4637,6 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
     <message>
         <source>Custom size</source>
         <translation>Özel boyut</translation>
-    </message>
-    <message>
-        <source>Main Window Launch State</source>
-        <translation>Ana Pencere Başlatma Durumu</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>Tarayıcı Pencere Başlatma Durumu</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>Ayarlar Pencere Başlatma Durumu</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>Özel genişlik:</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>Özel Yükseklik:</translation>
     </message>
     <message>
         <source>Should be like: C:\Users\UserName\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config</source>
@@ -4807,20 +4695,8 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
  NOT: 'Oyunu Steam protokolü aracılığıyla başlat' seçeneği etkinse bu argümanlar göz ardı edilir</translation>
     </message>
     <message>
-        <source>Auxiliary DB</source>
-        <translation>Yardımcı DB</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>Son Save ile Entegrasyon</translation>
-    </message>
-    <message>
         <source>Compare mod lists with the recent save file</source>
         <translation>Mod listelerini son kaydetme dosyasıyla karşılaştırın</translation>
-    </message>
-    <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>Yardımcı meta veri db silme süresi sınırı saniyeler içinde. (Anında sil 0, asla -1 silmeyin)</translation>
     </message>
     <message>
         <source>Enable editing</source>
@@ -4851,6 +4727,10 @@ Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı ar
         <translation>Güncellenecek modların yüklenmesi gerekmez, çünkü ilk DB buhar atölyesi kazıyarak oluşturulur.</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>Dahili Araçlar</translation>
+    </message>
+    <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>Steamcmd üzerinden modları indirmeden önce depo önbelleğini otomatik olarak temizleyin.
@@ -4859,6 +4739,10 @@ Bu, indirme hataları ve silinen modlar gibi indirme modlarının yeniden düzen
     <message>
         <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
         <translation>Depo önbelleğini manuel olarak temizleyin. Steamcmd aracılığıyla modları indirme sorunları ile karşılaşırsanız bu yararlı olabilir.</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Dış görünüş</translation>
     </message>
     <message>
         <source>To add your own theme / stylesheet 
@@ -4908,10 +4792,6 @@ Klasörün adı temanın adı olarak kullanılacak ve herhangi bir geçersiz tem
         <translation>Özel Todds komutu</translation>
     </message>
     <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>Yolda olduğu gibi -p belirtilmezse, geçerli aktif veya tüm modlar seçimi kullanılır.</translation>
-    </message>
-    <message>
         <source>eg: {todds_example}</source>
         <translation>Örn: {todds_example}</translation>
     </message>
@@ -4936,24 +4816,12 @@ Bu kontroller, mevcut .dds dosyalarının sayısına bağlı olarak birkaç sani
         <translation>Harici araçlar</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>Metin Editörü Komut Konumu</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>Ek Argümanlar (Klasörler Açma)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>Ek bağımsız değişkenler (tek dosyayı açma)</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>Sıralama yöntemi</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>Davranışla ilgili bağımlılıklar</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4964,10 +4832,6 @@ Bu kontroller, mevcut .dds dosyalarının sayısına bağlı olarak birkaç sani
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>Etkinleştirilirse, bir alternatifPackageIds girişi. 
 Örneğin, 'Oels.Vehiclemapframework', alternatifler: 'Oels.Vehiclemapframework.dev'</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>XML ayrıştırma davranışı</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -5988,6 +5852,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>'te hata kodu {error_code} ile gerçekleşti. {e.strerror} {e.filename}</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>Tüm konumları temizle</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>Tüm konumları temizlemek istediğinizden emin misiniz?</translation>
     </message>
 </context>
 <context>
