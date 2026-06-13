@@ -51,7 +51,7 @@ class WindowManager:
         self._child_windows.clear()
         self._tracked_attrs.clear()
 
-    def get_missing_packageid_uuids(self) -> list[str]:
+    def get_missing_packageid_paths(self) -> list[str]:
         """Identify mods lacking a valid Package ID in their About.xml.
 
         Mods without an About.xml (non-AboutXmlMod) are considered to have
@@ -67,7 +67,7 @@ class WindowManager:
                 result.append(path)
         return result
 
-    def get_missing_publishfieldid_uuids(self) -> list[str]:
+    def get_missing_publishfieldid_paths(self) -> list[str]:
         """Identify mods lacking a Publish Field ID (Steam Workshop ID)."""
         ignored_mods = IgnoreManager.load_ignored_mods()
         result: list[str] = []

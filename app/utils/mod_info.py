@@ -18,7 +18,7 @@ DATABASE = "database"
 class ModInfo:
     """Standardized mod information structure."""
 
-    uuid: str | None
+    key: str | None
     name: str
     authors: str
     packageid: str
@@ -40,7 +40,7 @@ class ModInfo:
             self.name = UNKNOWN  # Set to UNKNOWN if empty, but allow it
 
     @classmethod
-    def from_metadata(cls, uuid: str | None, metadata: dict[str, Any]) -> "ModInfo":
+    def from_metadata(cls, key: str | None, metadata: dict[str, Any]) -> "ModInfo":
         """Create ModInfo from metadata dictionary."""
         try:
             name = cls._parse_name(metadata)
@@ -75,15 +75,15 @@ class ModInfo:
             # Input validation for required fields
             if not isinstance(packageid, str) or not packageid.strip():
                 logger.warning(
-                    f"Invalid or missing packageid in metadata for UUID {uuid}"
+                    f"Invalid or missing packageid in metadata for key {key}"
                 )
             if not isinstance(name, str) or not name.strip():
-                logger.warning(f"Invalid or missing name in metadata for UUID {uuid}")
+                logger.warning(f"Invalid or missing name in metadata for key {key}")
             if not isinstance(published_file_id, str):
-                logger.warning(f"Invalid published_file_id in metadata for UUID {uuid}")
+                logger.warning(f"Invalid published_file_id in metadata for key {key}")
 
             return cls(
-                uuid,
+                key,
                 name,
                 authors,
                 packageid,
@@ -105,7 +105,7 @@ class ModInfo:
                 else "Invalid metadata type"
             )
             logger.error(
-                f"Error creating ModInfo from metadata for UUID {uuid}: {e}. Metadata keys: {metadata_keys}"
+                f"Error creating ModInfo from metadata for key {key}: {e}. Metadata keys: {metadata_keys}"
             )
             raise ValueError(f"Failed to create ModInfo from metadata: {e}") from e
 
@@ -154,7 +154,7 @@ class ModInfo:
         workshop_url = cls._generate_workshop_url(published_file_id)
 
         return cls(
-            uuid=None,
+            key=None,
             name=name,
             authors=authors,
             packageid=packageid,

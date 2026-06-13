@@ -1011,16 +1011,16 @@ class BaseModsPanel(QWidget):
 
     # ===== CENTRALIZED METADATA HANDLING =====
 
-    def _get_uuid_from_row(self, row: int, name_column: int = 1) -> str | None:
+    def _get_key_from_row(self, row: int, name_column: int = 1) -> str | None:
         """
-        Extract UUID from a table row's name column.
+        Extract the mod path key from a table row's name column.
 
         Args:
-            row: Row index to extract UUID from
-            name_column: Column index containing the name item with UUID data
+            row: Row index to extract key from
+            name_column: Column index containing the name item with key data
 
         Returns:
-            UUID string if found, None otherwise
+            Path key string if found, None otherwise
         """
         try:
             if row >= self.editor_model.rowCount():
@@ -1032,15 +1032,15 @@ class BaseModsPanel(QWidget):
 
             return name_item.data(Qt.ItemDataRole.UserRole)
         except Exception as e:
-            logger.warning(f"Error accessing UUID from row {row}: {e}")
+            logger.warning(f"Error accessing key from row {row}: {e}")
             return None
 
     def _get_selected_mod_metadata(self) -> list[dict[str, Any]]:
         """
         Get metadata for selected mods in the table.
 
-        Returns a list of compat dicts with keys expected by ModDeletionMenu:
-        path, name, publishedfileid, data_source, packageid, steamcmd, uuid.
+        Returns a list of compat dicts with keys expected by ModDeletionMenu.
+        Note: the "uuid" key is a legacy name; the value is the mod path key.
 
         Returns:
             List of ModMetadata compat dicts for selected mods
@@ -1051,7 +1051,7 @@ class BaseModsPanel(QWidget):
         try:
             for row in range(self.editor_model.rowCount()):
                 if self._row_is_checked(row):
-                    path = self._get_uuid_from_row(row)
+                    path = self._get_key_from_row(row)
                     if path:
                         mod = self.metadata_controller.get_mod(path)
                         if mod is not None:
@@ -1181,9 +1181,9 @@ class BaseModsPanel(QWidget):
         if additional_items:
             base_items.extend(additional_items)
 
-        # Set UUID data on name item for metadata lookup
-        if mod_info.uuid:
-            base_items[0].setData(mod_info.uuid, Qt.ItemDataRole.UserRole)
+        # Set path key on name item for metadata lookup
+        if mod_info.key:
+            base_items[0].setData(mod_info.key, Qt.ItemDataRole.UserRole)
 
         self._add_row(base_items, default_checkbox_state)
 
@@ -1220,31 +1220,30 @@ class BaseModsPanel(QWidget):
         self.editor_model.appendRow(items)
 
     def _extract_mod_info_from_metadata(
-        self, uuid: str | None, metadata: dict[str, Any] | ListedMod
+        self, key: str | None, metadata: dict[str, Any] | ListedMod
     ) -> ModInfo:
         """
         Extract ModInfo from metadata dictionary or ListedMod object.
 
         Args:
-            uuid: UUID of the mod
+            key: Path key of the mod in metadata
             metadata: Metadata dictionary or ListedMod instance
 
         Returns:
             ModInfo object
         """
         if isinstance(metadata, ListedMod):
-            return ModInfo.from_listed_mod(metadata)
-        return ModInfo.from_metadata(uuid, metadata)
+            mod_info = ModInfo.from_listed_mod(metadata)
+            mod_info.key = key
+            return mod_info
+        return ModInfo.from_metadata(key, metadata)
 
-    def _extract_uuid_from_path(self, path: str) -> str | None:
+    def _resolve_path_key(self, path: str) -> str | None:
         """
-        Extract path key from mod path.
-
-        In the new metadata system, the path IS the key, so this is an identity
-        lookup that verifies the path exists in metadata.
+        Verify a mod path exists in metadata and return it as a key.
 
         Args:
-            path: Mod path
+            path: Mod path to verify
 
         Returns:
             The path if found in metadata, None otherwise
@@ -1277,7 +1276,7 @@ class BaseModsPanel(QWidget):
         Populate the table with mod groups.
 
         Args:
-            groups: Dictionary of groups, where key is group name, value is list of (uuid, metadata) tuples.
+            groups: Dictionary of groups, where key is group name, value is list of (path_key, metadata) tuples.
             add_group_headers: Whether to add header rows for each group.
         """
         self._clear_table_model()
@@ -1286,8 +1285,8 @@ class BaseModsPanel(QWidget):
             if add_group_headers and group_key:
                 self._add_group_header_row(group_key)
 
-            for uuid, metadata in mod_list:
-                mod_info = self._extract_mod_info_from_metadata(uuid, metadata)
+            for path_key, metadata in mod_list:
+                mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
                 self._add_mod_row(mod_info)
 
     def _get_standard_mod_columns(self) -> list[HeaderColumn]:
@@ -1419,11 +1418,11 @@ class BaseModsPanel(QWidget):
     ) -> bool:
         """Check if a mod at given row has missing Publish Field ID."""
         if use_explicit_mode:
-            uuid = self._get_uuid_from_row(row)
+            key = self._get_key_from_row(row)
             return bool(
-                uuid
+                key
                 and missing_publishfieldid_mods
-                and uuid in missing_publishfieldid_mods
+                and key in missing_publishfieldid_mods
             )
         else:
             pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)

@@ -255,20 +255,20 @@ class UseThisInsteadPanel(BaseModsPanel):
             originals: List of original mod group items.
 
         Returns:
-            List of (uuid, metadata) tuples.
+            List of (key, metadata) tuples.
         """
         mod_list = []
         for mod_item in originals:
             metadata_copy = self._create_original_metadata(mod_item)
             path = mod_item.metadata.get("path")
-            uuid = self._extract_uuid_from_path(path) if isinstance(path, str) else None
-            mod_list.append((uuid, metadata_copy))
+            key = self._resolve_path_key(path) if isinstance(path, str) else None
+            mod_list.append((key, metadata_copy))
 
         # Add replacement mod
         mod_replacement = originals[0].replacement if originals else None
         if mod_replacement is not None:
-            uuid, fake_metadata = self._create_replacement_metadata(mod_replacement)
-            mod_list.append((uuid, fake_metadata))
+            key, fake_metadata = self._create_replacement_metadata(mod_replacement)
+            mod_list.append((key, fake_metadata))
         return mod_list
 
     def _create_original_metadata(self, mod_item: ModGroupItem) -> dict[str, Any]:
@@ -295,17 +295,17 @@ class UseThisInsteadPanel(BaseModsPanel):
             mod_replacement: The replacement mod information.
 
         Returns:
-            Tuple of (uuid, metadata).
+            Tuple of (key, metadata).
         """
         # Check if the replacement mod already exists locally
-        exists_locally, uuid = self._check_replacement_exists_locally(
+        exists_locally, key = self._check_replacement_exists_locally(
             mod_replacement.pfid
         )
 
         fake_metadata = self._build_replacement_metadata(
-            mod_replacement, exists_locally, uuid
+            mod_replacement, exists_locally, key
         )
-        return uuid, fake_metadata
+        return key, fake_metadata
 
     def _check_replacement_exists_locally(self, pfid: str) -> tuple[bool, str | None]:
         """
@@ -416,7 +416,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         }
 
     def _build_replacement_metadata(
-        self, mod_replacement: ReplacementInfo, exists_locally: bool, uuid: str | None
+        self, mod_replacement: ReplacementInfo, exists_locally: bool, key: str | None
     ) -> dict[str, Any]:
         """
         Build metadata dictionary for replacement mod.
@@ -424,7 +424,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         Args:
             mod_replacement: Replacement mod info.
             exists_locally: Whether it exists locally.
-            uuid: UUID if exists locally.
+            key: Path key if exists locally.
 
         Returns:
             Metadata dictionary.
@@ -432,7 +432,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         fake_metadata = self._create_base_replacement_metadata(
             mod_replacement, exists_locally
         )
-        local_metadata = self._get_local_metadata_for_replacement(uuid)
+        local_metadata = self._get_local_metadata_for_replacement(key)
         return self._merge_local_and_external_metadata(fake_metadata, local_metadata)
 
     def _filter_and_group_mods(self) -> dict[str, list[ModGroupItem]]:
@@ -576,14 +576,14 @@ class UseThisInsteadPanel(BaseModsPanel):
 
             # Path IS the key in the new metadata system
             path = metadata.get("path")
-            uuid = (
+            key = (
                 path
                 if isinstance(path, str) and self.metadata_controller.has_mod(path)
                 else None
             )
 
             # Create ModInfo from metadata
-            mod_info = self._extract_mod_info_from_metadata(uuid, metadata)
+            mod_info = self._extract_mod_info_from_metadata(key, metadata)
 
             mod_info.name = mod_info.name
 
@@ -629,15 +629,15 @@ class UseThisInsteadPanel(BaseModsPanel):
         Returns:
             ModInfo object for the replacement mod.
         """
-        exists_locally, uuid, local_metadata = (
+        exists_locally, key, local_metadata = (
             self._check_and_get_replacement_local_metadata(mod_replacement.pfid)
         )
 
-        if exists_locally and uuid and local_metadata is not None:
+        if exists_locally and key and local_metadata is not None:
             local_metadata_copy = dict(local_metadata)
             local_metadata_copy["type"] = "Replacement"
             local_metadata_copy["installed_status"] = self.tr("Installed")
-            return ModInfo.from_metadata(uuid, local_metadata_copy)
+            return ModInfo.from_metadata(key, local_metadata_copy)
         else:
             metadata = self._create_base_replacement_metadata(mod_replacement, False)
             return ModInfo.from_metadata(None, metadata)

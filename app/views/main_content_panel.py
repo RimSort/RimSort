@@ -631,19 +631,19 @@ class MainContent(QObject):
         """
         try:
             # Identify mods with missing critical properties
-            missing_packageid_uuids = self.window_manager.get_missing_packageid_uuids()
-            missing_publishfieldid_uuids = (
-                self.window_manager.get_missing_publishfieldid_uuids()
+            missing_packageid_paths = self.window_manager.get_missing_packageid_paths()
+            missing_publishfieldid_paths = (
+                self.window_manager.get_missing_publishfieldid_paths()
             )
 
             # If no mods have missing properties, log and return early
-            if not missing_packageid_uuids and not missing_publishfieldid_uuids:
+            if not missing_packageid_paths and not missing_publishfieldid_paths:
                 logger.info("No mods with missing properties found. Skipping...")
                 return
 
             # Log summary statistics for debugging
-            missing_packageid_count = len(missing_packageid_uuids)
-            missing_publishfieldid_count = len(missing_publishfieldid_uuids)
+            missing_packageid_count = len(missing_packageid_paths)
+            missing_publishfieldid_count = len(missing_publishfieldid_paths)
 
             logger.info(
                 f"Found {missing_packageid_count} mod(s) with missing Package ID and "
@@ -654,8 +654,8 @@ class MainContent(QObject):
             # Display a unified panel showing all mods with missing properties,
             # grouped by property type for better user comprehension
             missing_mod_properties_panel = MissingModPropertiesPanel(
-                missing_packageid_mods=missing_packageid_uuids,
-                missing_publishfieldid_mods=missing_publishfieldid_uuids,
+                missing_packageid_mods=missing_packageid_paths,
+                missing_publishfieldid_mods=missing_publishfieldid_paths,
                 settings_controller=self.settings_controller,
             )
             self.window_manager.register(missing_mod_properties_panel)
