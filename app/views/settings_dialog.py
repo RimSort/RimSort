@@ -1552,6 +1552,25 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         group_layout.addLayout(backup_layout)
 
+        # Update channel
+        update_channel_layout = QHBoxLayout()
+        update_channel_label = QLabel(self.tr("Update channel:"))
+        update_channel_layout.addWidget(update_channel_label)
+
+        self.update_stream_combo = QComboBox()
+        self.update_stream_combo.addItems(["Stable", "Beta", "Edge"])
+        self.update_stream_combo.setToolTip(
+            self.tr(
+                "Choose which update channel to receive updates from.\n"
+                "Stable: Production releases (recommended)\n"
+                "Beta: Release candidates, may contain bugs\n"
+                "Edge: Bleeding-edge development builds, expect breakage"
+            )
+        )
+        update_channel_layout.addWidget(self.update_stream_combo)
+        update_channel_layout.addStretch()
+        group_layout.addLayout(update_channel_layout)
+
         # === Auxiliary Metadata DB group ===
         self._do_aux_db_time_limit_group(tab_layout)
 
