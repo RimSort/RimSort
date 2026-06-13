@@ -287,7 +287,7 @@ def uuid_to_mod_updated(
     else:
         metadata = get_mod_metadata(uuid)
 
-    return metadata.get("internal_time_updated") if metadata else None
+    return metadata.get("internal_time_updated") if metadata else 0
 
 
 def get_dir_size(path: str) -> int:
