@@ -610,16 +610,15 @@ class ModInfoPanel:
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
         # Update Aux DB
-        uuid = mod_data["uuid"]
-        if not uuid:
-            logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
+        path = mod_data["path"]
+        if not path:
+            logger.error("Unable to retrieve path when saving user notes to Aux DB.")
             return
-        # In MetadataController, uuid IS the path
-        mod = self.metadata_controller.get_mod(uuid)
+        mod = self.metadata_controller.get_mod(path)
         if mod is None:
-            logger.error(f"Mod not found for uuid {uuid} when saving user notes.")
+            logger.error(f"Mod not found for path {path} when saving user notes.")
             return
-        mod_path = str(mod.mod_path) if mod.mod_path else uuid
+        mod_path = str(mod.mod_path) if mod.mod_path else path
         aux_metadata_controller = self.metadata_controller.metadata_db_controller
         with aux_metadata_controller.Session() as aux_metadata_session:
             aux_metadata_controller.update(
@@ -627,7 +626,7 @@ class ModInfoPanel:
                 mod_path,
                 user_notes=new_notes,
             )
-        logger.debug(f"Finished updating notes for UUID: {mod_data['uuid']}")
+        logger.debug(f"Finished updating notes for path: {mod_data['path']}")
 
     def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
         # Only show notes tab when a mod is selected
@@ -638,7 +637,7 @@ class ModInfoPanel:
         self.notes.blockSignals(True)
         self.notes.setText(mod_notes)
         self.notes.blockSignals(False)
-        logger.debug(f"Finished setting notes for UUID: {mod_data['uuid']}")
+        logger.debug(f"Finished setting notes for path: {mod_data['path']}")
 
     def _add_label_value_to_layout(
         self, layout: QHBoxLayout, label: QLabel, value: QLabel
