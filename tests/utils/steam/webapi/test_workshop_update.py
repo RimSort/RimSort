@@ -3,7 +3,10 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
-from app.utils.steam.workshop_utils import WorkshopUpdateResult, query_workshop_update_data
+from app.utils.steam.workshop_utils import (
+    WorkshopUpdateResult,
+    query_workshop_update_data,
+)
 
 
 def _make_workshop_mod(path: str, pfid: str, mod_type: ModType) -> AboutXmlMod:

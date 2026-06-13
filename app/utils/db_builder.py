@@ -11,9 +11,9 @@ import app.utils.constants as app_constants
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
-from app.utils.dict_utils import recursively_update_dict
 from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
 from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
 from app.windows.runner_panel import RunnerPanel

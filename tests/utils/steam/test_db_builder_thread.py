@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+from app.models.metadata.metadata_structure import AboutXmlMod
 
 
 def test_init_db_from_local_metadata_structure() -> None:

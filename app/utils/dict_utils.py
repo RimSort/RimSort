@@ -36,9 +36,7 @@ def recursively_update_dict(
     keys_to_delete = [
         key
         for key, value in a_dict.items()
-        if isinstance(value, dict)
-        and not value
-        and key not in prune_exceptions
+        if isinstance(value, dict) and not value and key not in prune_exceptions
     ]
     for key in keys_to_delete:
         del a_dict[key]

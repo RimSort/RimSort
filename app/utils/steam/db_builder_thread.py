@@ -153,7 +153,9 @@ class SteamDatabaseBuilder(QThread):
                         "url": f"https://store.steampowered.com/app/{v.steam_app_id}",
                         "packageId": str(v.package_id),
                         "name": v.name,
-                        "authors": ", ".join(v.authors) if v.authors else "Missing XML: <author(s)>",
+                        "authors": ", ".join(v.authors)
+                        if v.authors
+                        else "Missing XML: <author(s)>",
                     }
                     for v in self.mods.values()
                     if isinstance(v, AboutXmlMod) and v.steam_app_id > 0
@@ -161,9 +163,15 @@ class SteamDatabaseBuilder(QThread):
                 **{
                     v.published_file_id: {
                         "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={v.published_file_id}",
-                        "packageId": str(v.package_id) if isinstance(v, AboutXmlMod) else None,
-                        "name": v.name if not v.db_builder_no_name else "Missing XML: <name>",
-                        "authors": ", ".join(v.authors) if isinstance(v, AboutXmlMod) and v.authors else "Missing XML: <author(s)>",
+                        "packageId": str(v.package_id)
+                        if isinstance(v, AboutXmlMod)
+                        else None,
+                        "name": v.name
+                        if not v.db_builder_no_name
+                        else "Missing XML: <name>",
+                        "authors": ", ".join(v.authors)
+                        if isinstance(v, AboutXmlMod) and v.authors
+                        else "Missing XML: <author(s)>",
                         "gameVersions": (
                             list(v.supported_versions)
                             if isinstance(v, AboutXmlMod) and v.supported_versions

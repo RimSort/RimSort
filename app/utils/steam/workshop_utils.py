@@ -14,7 +14,11 @@ from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from app.views.dialogue import show_dialogue_conditional, show_dialogue_file, show_warning
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_file,
+    show_warning,
+)
 
 
 @dataclass
