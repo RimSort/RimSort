@@ -35,10 +35,18 @@ class WindowManager:
         for instance, attr_name in self._tracked_attrs:
             window = getattr(instance, attr_name, None)
             if window is not None:
-                window.close()
+                try:
+                    window.close()
+                except Exception:
+                    # Avoid RuntimeError: libshiboken: Internal C++ object (Panel) already deleted.
+                    pass
         for window in self._child_windows:
             if window is not None:
-                window.close()
+                try:
+                    window.close()
+                except Exception:
+                    # Avoid RuntimeError: libshiboken: Internal C++ object (Panel) already deleted.
+                    pass
         self._child_windows.clear()
         self._tracked_attrs.clear()
 
