@@ -96,6 +96,68 @@ ERR_UPDATE_FAILED_TEXT = "An unexpected error occurred during the update process
 ERR_RETRIEVE_RELEASE_TITLE = "Unable to retrieve latest release information"
 ERR_RETRIEVE_RELEASE_TEXT = "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
 
+
+def filter_releases_by_stream(
+    releases: list[dict[str, Any]], stream: str
+) -> dict[str, Any] | None:
+    """
+    Filter GitHub releases list to find the best match for the given update stream.
+
+    Fallback chain: edge -> beta -> stable, beta -> stable.
+
+    :param releases: List of release dicts from GitHub API
+    :param stream: One of "stable", "beta", "edge"
+    :return: The matching release dict, or None if no releases available
+    """
+    non_draft = [r for r in releases if not r.get("draft", False)]
+
+    if stream == "edge":
+        for r in non_draft:
+            if r.get("tag_name") == "Edge":
+                return r
+        return filter_releases_by_stream(non_draft, "beta")
+
+    if stream == "beta":
+        for r in non_draft:
+            tag = r.get("tag_name", "")
+            if "-beta" in tag.lower():
+                return r
+        return filter_releases_by_stream(non_draft, "stable")
+
+    # Stable (default): first non-prerelease
+    for r in non_draft:
+        if not r.get("prerelease", False):
+            return r
+
+    return None
+
+
+def extract_version_from_edge_release(release_data: dict[str, Any]) -> str:
+    """
+    Extract a PEP 440-compatible version string from an Edge release.
+
+    Edge releases use a rolling 'Edge' tag, so the actual version
+    (e.g., 'v1.2.3-edge5+abc1234') is in the release body or asset filenames.
+    The '-edge' suffix is normalized to '.dev' for PEP 440 compatibility.
+
+    :param release_data: Release dict from GitHub API
+    :return: PEP 440-compatible version string (e.g., '1.2.3.dev5')
+    """
+    for asset in release_data.get("assets", []):
+        name = asset.get("name", "")
+        match = re.search(r"v?(\d+\.\d+\.\d+)-edge(\d+)", name)
+        if match:
+            return f"{match.group(1)}.dev{match.group(2)}"
+
+    body = release_data.get("body", "")
+    match = re.search(r"v?(\d+\.\d+\.\d+)-edge(\d+)", body)
+    if match:
+        return f"{match.group(1)}.dev{match.group(2)}"
+
+    logger.warning("Could not extract version from Edge release, using 0.0.0")
+    return "0.0.0"
+
+
 if TYPE_CHECKING:
     from app.utils.metadata import SettingsController
 
