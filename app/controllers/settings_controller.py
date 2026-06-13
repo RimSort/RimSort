@@ -686,10 +686,10 @@ class SettingsController(QObject):
                 game_folder = self._find_mac_app_bundle(Path(game_folder_str))
                 logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
             else:
-                fallback = steam_root / "steamapps" / "common" / "RimWorld"
-                game_folder = self._find_mac_app_bundle(fallback)
+                fallback_game_folder = steam_root / "steamapps" / "common" / "RimWorld"
+                game_folder = self._find_mac_app_bundle(fallback_game_folder)
                 logger.debug(
-                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                    f"VDF parsing did not find RimWorld, using fallback_game_folder: {game_folder}"
                 )
 
             steam_mods_folder_str = get_path_up_to_string(
@@ -704,7 +704,7 @@ class SettingsController(QObject):
                     Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
                 )
         else:
-            fallback = (
+            fallback_game_folder = (
                 user_home
                 / "Library"
                 / "Application Support"
@@ -713,7 +713,7 @@ class SettingsController(QObject):
                 / "common"
                 / "RimWorld"
             )
-            game_folder = self._find_mac_app_bundle(fallback)
+            game_folder = self._find_mac_app_bundle(fallback_game_folder)
             steam_mods_folder = (
                 user_home
                 / "Library"
