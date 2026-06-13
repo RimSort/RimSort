@@ -15,9 +15,9 @@ def recursively_update_dict(
     - Empty sub-dicts are pruned unless their key is in ``prune_exceptions``.
     - Keys listed in ``purge_keys`` are unconditionally removed from ``a_dict``.
     """
-    for key in set(a_dict.keys()) - set(b_dict.keys()):
-        if recurse_exceptions and key in recurse_exceptions:
-            del a_dict[key]
+    # recurse_exceptions keys present in b_dict overwrite a_dict (lines below).
+    # Keys absent from b_dict are left alone — absence means "no new data",
+    # not "delete existing data".
     for key, value in b_dict.items():
         if recurse_exceptions and key in recurse_exceptions:
             a_dict[key] = value

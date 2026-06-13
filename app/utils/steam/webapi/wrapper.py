@@ -340,8 +340,9 @@ class DynamicQuery(QObject):
                 )
                 if metadata.get("tags"):
                     result["database"][publishedfileid]["tags"] = metadata["tags"]
-                result["database"][publishedfileid]["dependencies"] = {}
                 if metadata.get("children"):
+                    if not result["database"][publishedfileid].get("dependencies"):
+                        result["database"][publishedfileid]["dependencies"] = {}
                     for children in metadata["children"]:
                         child_pfid = children["publishedfileid"]
                         if result["database"].get(child_pfid):

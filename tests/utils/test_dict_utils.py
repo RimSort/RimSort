@@ -39,6 +39,14 @@ def test_recurse_exception_overwrites() -> None:
     assert a["x"] == {"replaced": 2}
 
 
+def test_recurse_exception_preserves_when_absent_from_new() -> None:
+    a = {"x": {"old": 1}, "y": 2}
+    b: dict[str, Any] = {"y": 3}
+    recursively_update_dict(a, b, recurse_exceptions=["x"])
+    assert a["x"] == {"old": 1}
+    assert a["y"] == 3
+
+
 def test_purge_keys() -> None:
     a = {"keep": 1, "remove": 2}
     b: dict[str, Any] = {}
