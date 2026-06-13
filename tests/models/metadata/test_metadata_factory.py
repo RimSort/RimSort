@@ -631,6 +631,46 @@ def test_read_write_mod_config_valid_1(tmp_path: Path) -> None:
     assert new_mods_config_1.version == mods_config.version
 
 
+def test_read_rules_db_missing_fields(tmp_path: Path) -> None:
+    path = tmp_path / "rules.json"
+    path.write_bytes(b'{"rules": {}}')
+    assert read_rules_db(path) is not None
+
+    path.write_bytes(b"{}")
+    assert read_rules_db(path) is not None
+
+
+def test_read_rules_db_invalid_json(tmp_path: Path) -> None:
+    path = tmp_path / "rules.json"
+    path.write_bytes(b"not json")
+    assert read_rules_db(path) is None
+
+
+def test_read_rules_db_missing_file(tmp_path: Path) -> None:
+    path = tmp_path / "nonexistent.json"
+    assert read_rules_db(path) is None
+
+
+def test_read_steam_db_missing_fields(tmp_path: Path) -> None:
+    path = tmp_path / "steam.json"
+    path.write_bytes(b'{"database": {}}')
+    assert read_steam_db(path) is not None
+
+    path.write_bytes(b"{}")
+    assert read_steam_db(path) is not None
+
+
+def test_read_steam_db_invalid_json(tmp_path: Path) -> None:
+    path = tmp_path / "steam.json"
+    path.write_bytes(b"not json")
+    assert read_steam_db(path) is None
+
+
+def test_read_steam_db_missing_file(tmp_path: Path) -> None:
+    path = tmp_path / "nonexistent.json"
+    assert read_steam_db(path) is None
+
+
 def test_read_mod_config_invalid_1() -> None:
     path = Path("tests/data/modconfigs/invalid_1/ModConfig.xml")
     mods_config = read_mods_config(path)

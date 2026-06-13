@@ -617,7 +617,7 @@ class CompiledDependencyData:
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):
-    name: list[str] | str
+    name: list[str] | str = msgspec.field(default_factory=str)
     comment: list[str] | str = msgspec.field(default_factory=str)
 
 
@@ -634,13 +634,13 @@ class ExternalRule(msgspec.Struct, omit_defaults=True):
 
 
 class ExternalRulesSchema(msgspec.Struct, omit_defaults=True):
-    timestamp: int
-    rules: dict[str, ExternalRule]
+    timestamp: int = 0
+    rules: dict[str, ExternalRule] = msgspec.field(default_factory=dict)
 
 
 class SteamDbEntryDependency(msgspec.Struct, omit_defaults=True):
-    name: str
-    url: str
+    name: str = msgspec.field(default_factory=str)
+    url: str = msgspec.field(default_factory=str)
 
 
 class SteamDbEntryBlacklist(msgspec.Struct, omit_defaults=True):
@@ -665,5 +665,5 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
 
 
 class SteamDbSchema(msgspec.Struct):
-    version: int
+    version: int = 0
     database: dict[str, SteamDbEntry] = msgspec.field(default_factory=dict)
