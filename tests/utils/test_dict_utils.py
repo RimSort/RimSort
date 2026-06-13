@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.utils.dict_utils import recursively_update_dict
 
 
@@ -23,8 +25,8 @@ def test_prune_empty_dicts() -> None:
 
 
 def test_prune_exception_preserves_empty() -> None:
-    a = {"keep": {}, "drop": {}}
-    b: dict = {}
+    a: dict[str, Any] = {"keep": {}, "drop": {}}
+    b: dict[str, Any] = {}
     recursively_update_dict(a, b, prune_exceptions=["keep"])
     assert "keep" in a
     assert "drop" not in a
@@ -39,7 +41,7 @@ def test_recurse_exception_overwrites() -> None:
 
 def test_purge_keys() -> None:
     a = {"keep": 1, "remove": 2}
-    b: dict = {}
+    b: dict[str, Any] = {}
     recursively_update_dict(a, b, purge_keys=["remove"])
     assert "remove" not in a
     assert a["keep"] == 1
