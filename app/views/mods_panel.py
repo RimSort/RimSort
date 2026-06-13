@@ -999,7 +999,7 @@ class ModListWidget(QListWidget):
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
         "Tags": ModsPanelSortKey.MOD_TAGS,
-        "Mod Updated": ModsPanelSortKey.MOD_UPDATED,
+        "Workshop Updated": ModsPanelSortKey.MOD_UPDATED,
     }
 
     @staticmethod
@@ -3855,7 +3855,7 @@ class ModsPanel(QWidget):
         "PackageId": ModsPanelSortKey.PACKAGEID,
         "Color": ModsPanelSortKey.MOD_COLOR,
         "Tags": ModsPanelSortKey.MOD_TAGS,
-        "Mod Updated": ModsPanelSortKey.MOD_UPDATED,
+        "Workshop Updated": ModsPanelSortKey.MOD_UPDATED,
     }
 
     # Note: combobox items store their corresponding `ModsPanelSortKey` in
@@ -4234,7 +4234,7 @@ class ModsPanel(QWidget):
             self.tr("Tags"), ModsPanelSortKey.MOD_TAGS
         )
         self.inactive_mods_sort_combobox.addItem(
-            self.tr("Mod Updated"), ModsPanelSortKey.MOD_UPDATED
+            self.tr("Workshop Updated"), ModsPanelSortKey.MOD_UPDATED
         )
         # Set initial combo box selection based on loaded settings by matching
         # the stored enum name to the item userData. Fall back to
