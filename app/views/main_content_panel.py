@@ -31,7 +31,6 @@ from PySide6.QtWidgets import (
 )
 
 import app.utils.constants as app_constants
-import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
@@ -341,7 +340,6 @@ class MainContent(QObject):
 
     def do_metadata_refresh_cache(self) -> None:
         """Force Refresh metadata cache"""
-        metadata.MetadataManager.instance().refresh_cache()
         self.metadata_controller.refresh_metadata()
 
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
@@ -826,8 +824,7 @@ class MainContent(QObject):
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
                 target=partial(
-                    metadata.MetadataManager.instance().refresh_cache,
-                    is_initial=is_initial,
+                    self.metadata_controller.refresh_metadata,
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
@@ -835,9 +832,6 @@ class MainContent(QObject):
             # If loading was aborted (e.g. window closed during scan), skip remaining work
             if result is None and self.metadata_controller.is_abort_requested:
                 return
-
-            # Refresh MetadataController
-            self.metadata_controller.refresh_metadata()
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
