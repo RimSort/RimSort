@@ -898,3 +898,52 @@ def test_get_mods_from_list_empty_list(
     assert active == []
     assert inactive == ["/mods/mod_a"]
     assert missing == []
+
+
+# ---- Local mods path derivation ----
+
+
+def test_reset_paths_derives_local_mods_from_game_when_empty(
+    metadata_controller: MetadataController,
+) -> None:
+    """When local_folder is empty but game_folder is set, local_mods_path is derived as game_path / 'Mods'."""
+    metadata_controller.settings_controller.active_instance.game_folder = (
+        "tests/data/mod_examples/RimWorld"
+    )
+    metadata_controller.settings_controller.active_instance.local_folder = ""
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path == Path(
+        "tests/data/mod_examples/RimWorld/Mods"
+    )
+
+
+def test_reset_paths_preserves_explicit_local_folder(
+    metadata_controller: MetadataController,
+) -> None:
+    """An explicitly set local_folder is NOT overwritten by derivation."""
+    metadata_controller.settings_controller.active_instance.game_folder = (
+        "tests/data/mod_examples/RimWorld"
+    )
+    metadata_controller.settings_controller.active_instance.local_folder = (
+        "tests/data/mod_examples/Local"
+    )
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path == Path(
+        "tests/data/mod_examples/Local"
+    )
+
+
+def test_reset_paths_leaves_local_mods_none_when_no_game(
+    metadata_controller: MetadataController,
+) -> None:
+    """When both game_folder and local_folder are empty, local_mods_path stays None."""
+    metadata_controller.settings_controller.active_instance.game_folder = ""
+    metadata_controller.settings_controller.active_instance.local_folder = ""
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path is None

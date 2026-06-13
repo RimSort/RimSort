@@ -159,6 +159,9 @@ class MetadataController(QObject):
         local_mods_path = _get_path(active_instance.local_folder)
         game_path = _get_path(active_instance.game_folder)
 
+        if local_mods_path is None and game_path is not None:
+            local_mods_path = game_path / "Mods"
+
         self.metadata_mediator.community_rules_path = cr_path
         self.metadata_mediator.steam_db_path = steam_db_path
         self.metadata_mediator.workshop_mods_path = workshop_mods_path
