@@ -234,7 +234,7 @@ class MainWindowController(QObject):
                                     prefer_versioned = False
 
                                 # First check versioned deps if preference enabled
-                                # ByVersion precedence here mirrors MetadataManager.compile_metadata:
+                                # ByVersion precedence here mirrors CompiledDependencyData.build():
                                 # - If ON and matching version key exists:
                                 #   * empty -> suppress base (no fallback)
                                 #   * non-empty -> use versioned only (no additive merge)

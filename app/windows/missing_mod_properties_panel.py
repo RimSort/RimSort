@@ -24,7 +24,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
         missing_packageid_mods (list[str]): List of UUIDs for mods with missing Package ID.
         missing_publishfieldid_mods (list[str]): List of UUIDs for mods with missing Publish Field ID.
         settings_controller (SettingsController): Controller for application settings.
-        metadata_manager: Metadata manager instance from base class for accessing mod data.
+        metadata_controller: Metadata controller instance from base class for accessing mod data.
     """
 
     def __init__(

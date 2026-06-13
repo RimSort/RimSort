@@ -15,7 +15,6 @@ class TestMainWindowCloseEvent:
     def test_close_event_calls_close_child_windows(
         self,
         qapp: object,
-        mock_metadata_manager: MagicMock,
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent delegates to MainContent.close_child_windows."""
@@ -29,7 +28,6 @@ class TestMainWindowCloseEvent:
     def test_close_event_stops_watchdog(
         self,
         qapp: object,
-        mock_metadata_manager: MagicMock,
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent stops the watchdog if running."""
@@ -45,7 +43,6 @@ class TestMainWindowCloseEvent:
     def test_close_event_ignores_none_watchdog(
         self,
         qapp: object,
-        mock_metadata_manager: MagicMock,
         mock_metadata_controller: MagicMock,
     ) -> None:
         """No crash when watchdog_event_handler is None."""
@@ -58,7 +55,6 @@ class TestMainWindowCloseEvent:
     def test_close_event_aborts_metadata(
         self,
         qapp: object,
-        mock_metadata_manager: MagicMock,
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent requests metadata abort."""
@@ -73,7 +69,6 @@ class TestMainWindowCloseEvent:
     def test_close_event_calls_abort_loading(
         self,
         qapp: object,
-        mock_metadata_manager: MagicMock,
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent calls abort_loading on the main content panel."""

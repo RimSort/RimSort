@@ -42,7 +42,6 @@ def main_content(
     monkeypatch: pytest.MonkeyPatch,
     qapp: QApplication,
     mock_settings_controller: MagicMock,
-    mock_metadata_manager: MagicMock,
     mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:

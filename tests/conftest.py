@@ -133,26 +133,6 @@ def fresh_event_bus() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_metadata_manager(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    """Patch MetadataManager.instance() to return a lightweight mock."""
-    from app.utils.metadata import MetadataManager
-
-    manager = MagicMock(spec=MetadataManager)
-    manager.internal_local_metadata = {}
-    manager.external_steam_metadata = {}
-    manager.external_community_rules = {}
-    manager.game_version = "1.5"
-    manager.mod_metadata_dir_mapper = {}
-
-    monkeypatch.setattr(
-        MetadataManager,
-        "instance",
-        classmethod(lambda cls: manager),
-    )
-    return manager
-
-
-@pytest.fixture
 def mock_metadata_controller(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Patch MetadataController.instance() to return a lightweight mock."""
     from app.controllers.metadata_controller import MetadataController
