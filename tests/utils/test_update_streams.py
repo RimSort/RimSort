@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.utils.update_utils import (
+    UpdateManager,
     extract_version_from_edge_release,
     filter_releases_by_stream,
 )
@@ -161,3 +166,109 @@ def test_extract_version_prefers_asset_over_body() -> None:
         "body": "Edge release v1.2.0-edge3.",
     }
     assert extract_version_from_edge_release(release) == "1.3.0.dev7"
+
+
+# --- Tests for UpdateManager downgrade handling ---
+
+
+@pytest.fixture
+def mock_update_manager() -> UpdateManager:
+    """Create an UpdateManager with mocked dependencies."""
+    with patch.object(UpdateManager, "__init__", lambda self, *a, **kw: None):
+        mgr = UpdateManager.__new__(UpdateManager)
+        mgr.settings_controller = MagicMock()
+        mgr.settings_controller.settings.update_stream = "stable"
+        mgr._system = "Linux"
+        mgr._arch = "x86_64"
+        mgr._cached_patterns = UpdateManager._platform_patterns.get("Linux")
+        # Mock QObject methods that aren't available without proper init
+        mgr.tr = lambda s: s  # type: ignore[assignment]
+        # Mock _check_needs_elevation since it inspects filesystem paths
+        mgr._check_needs_elevation = MagicMock(return_value=False)  # type: ignore[assignment]
+    return mgr
+
+
+@patch("app.utils.update_utils.AppInfo")
+@patch(
+    "app.utils.update_utils.dialogue.show_dialogue_conditional",
+    return_value="Wait",
+)
+@patch("app.utils.update_utils.http.get")
+def test_downgrade_declined_returns_none(
+    mock_get: MagicMock,
+    mock_dialogue: MagicMock,
+    mock_app_info: MagicMock,
+    mock_update_manager: UpdateManager,
+) -> None:
+    """When user declines downgrade, no update is returned."""
+    mock_app_info.return_value.app_version = "2.0.0"
+    mock_update_manager.settings_controller.settings.update_stream = "stable"
+    mock_get.return_value = MagicMock(
+        status_code=200,
+        json=MagicMock(
+            return_value=[
+                {
+                    "tag_name": "v1.0.0",
+                    "prerelease": False,
+                    "draft": False,
+                    "assets": [
+                        {
+                            "name": "RimSort-v1.0.0-Linux_x86_64.tar.gz",
+                            "browser_download_url": "https://example.com/dl",
+                        }
+                    ],
+                },
+            ]
+        ),
+    )
+    with patch.object(mock_update_manager, "_parse_current_version") as mock_parse:
+        from packaging import version as pkg_version
+
+        mock_parse.return_value = pkg_version.parse("2.0.0")
+        result = mock_update_manager._fetch_and_compare_versions()
+    assert result is None
+
+
+@patch("app.utils.update_utils.AppInfo")
+@patch(
+    "app.utils.update_utils.dialogue.show_dialogue_conditional",
+    return_value="Downgrade Now",
+)
+@patch("app.utils.update_utils.http.get")
+def test_downgrade_accepted_returns_update_info(
+    mock_get: MagicMock,
+    mock_dialogue: MagicMock,
+    mock_app_info: MagicMock,
+    mock_update_manager: UpdateManager,
+) -> None:
+    """When user accepts downgrade, update info is returned."""
+    mock_app_info.return_value.app_version = "2.0.0"
+    mock_update_manager.settings_controller.settings.update_stream = "stable"
+    mock_get.return_value = MagicMock(
+        status_code=200,
+        json=MagicMock(
+            return_value=[
+                {
+                    "tag_name": "v1.0.0",
+                    "prerelease": False,
+                    "draft": False,
+                    "assets": [
+                        {
+                            "name": "RimSort-v1.0.0-Linux_x86_64.tar.gz",
+                            "browser_download_url": "https://example.com/dl",
+                        }
+                    ],
+                },
+            ]
+        ),
+    )
+    with (
+        patch.object(mock_update_manager, "_parse_current_version") as mock_parse,
+        patch.object(mock_update_manager, "_prompt_user_for_update", return_value=True),
+    ):
+        from packaging import version as pkg_version
+
+        mock_parse.return_value = pkg_version.parse("2.0.0")
+        result = mock_update_manager._fetch_and_compare_versions()
+    assert result is not None
+    assert result["download_url"] == "https://example.com/dl"

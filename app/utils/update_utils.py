@@ -41,7 +41,7 @@ VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
 TAG_PREFIX_PATTERN = re.compile(r"^v", re.IGNORECASE)
 
 # API and network constants
-GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases"
 API_TIMEOUT = 15
 DOWNLOAD_TIMEOUT = 30
 
@@ -736,8 +736,13 @@ class UpdateManager(QObject):
         logger.info(f"Current RimSort version: {current_version}")
 
         # Get the latest release info
-        logger.info("Fetching latest release information from GitHub API...")
-        latest_release_info = self._get_latest_release_info(needs_elevation)
+        stream = self.settings_controller.settings.update_stream
+        logger.info(
+            f"Fetching latest release information from GitHub API (stream: {stream})..."
+        )
+        latest_release_info = self._get_latest_release_info(
+            needs_elevation, stream=stream
+        )
         if not latest_release_info:
             logger.warning("Failed to retrieve latest release information")
             return None
@@ -751,7 +756,25 @@ class UpdateManager(QObject):
 
         # Compare versions
         current_version_parsed = self._parse_current_version(current_version)
-        if current_version_parsed >= latest_version:
+        if current_version_parsed > latest_version:
+            result = dialogue.show_dialogue_conditional(
+                title=self.tr("Downgrade Available"),
+                text=self.tr(
+                    "You're currently on {current} but the latest {stream} release is {latest}. "
+                    "Downgrading may require reconfiguring some settings."
+                ).format(
+                    current=current_version,
+                    stream=stream.capitalize(),
+                    latest=str(latest_version),
+                ),
+                information=self.tr(
+                    "Do you want to downgrade now, or wait for a newer release?"
+                ),
+                button_text_override=["Downgrade Now", "Wait"],
+            )
+            if result != "Downgrade Now":
+                return None
+        elif current_version_parsed == latest_version:
             logger.info("Already running the latest version")
             return None
 
@@ -851,28 +874,32 @@ class UpdateManager(QObject):
             raise UpdateError(f"Update failed: {e}") from e
 
     def _get_latest_release_info(
-        self, needs_elevation: bool = False
+        self, needs_elevation: bool = False, stream: str = "stable"
     ) -> ReleaseInfo | None:
         """
-        Get the latest release information from GitHub API.
+        Get the latest release information from GitHub API for the given stream.
 
-        Args:
-            needs_elevation: Whether elevation is needed (affects Windows asset selection)
-
-        Returns:
-            Dictionary containing version, tag_name, download_url, and is_msi flag, or None if failed
+        :param needs_elevation: Whether elevation is needed (affects Windows asset selection)
+        :param stream: Update stream - "stable", "beta", or "edge"
+        :return: Dictionary containing version, tag_name, download_url, and format flags, or None
         """
         try:
-            # Use releases API for better asset information
             response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT)
             response.raise_for_status()
-            release_data = response.json()
+            releases = response.json()
+
+            release_data = filter_releases_by_stream(releases, stream)
+            if not release_data:
+                logger.warning(f"No matching release found for stream '{stream}'")
+                self.show_update_error()
+                return None
 
             tag_name = release_data.get("tag_name", "")
-            # Normalize tag name by removing prefix 'v' if present
-            normalized_tag = TAG_PREFIX_PATTERN.sub("", str(tag_name))
+            if tag_name == "Edge":
+                normalized_tag = extract_version_from_edge_release(release_data)
+            else:
+                normalized_tag = TAG_PREFIX_PATTERN.sub("", str(tag_name))
 
-            # Parse version
             try:
                 latest_version = version.parse(normalized_tag)
             except Exception as e:
@@ -880,7 +907,6 @@ class UpdateManager(QObject):
                 self.show_update_error()
                 return None
 
-            # Get platform-specific download URL
             download_info = self._get_platform_download_url(
                 release_data.get("assets", []), needs_elevation
             )
