@@ -42,38 +42,38 @@ class WorkshopUpdateResult:
 def check_if_pfids_blacklisted(
     publishedfileids: list[str], steamdb: dict[str, Any]
 ) -> list[str]:
-    # None-check for steamdb
+    """Filter out blacklisted mods from a list of published file IDs.
+
+    :param publishedfileids: List of Steam Workshop published file IDs
+    :param steamdb: SteamDbSchema.database dict (str → SteamDbEntry)
+    :return: Filtered list of published file IDs
+    """
     if not steamdb:
         show_warning(
             title="No SteamDB found",
             text="Unable to check for blacklisted mods. Please configure a SteamDB for RimSort to use in Settings.",
         )
         return publishedfileids
-    # Define defaults for blacklisted mods
-    blacklisted_mods = {}
-    publishedfileid = ""
-    # Check if any of the mods are blacklisted
+
+    blacklisted_mods: dict[str, dict[str, str]] = {}
     for publishedfileid in publishedfileids:
-        if steamdb.get(publishedfileid, {}).get("blacklist"):
+        entry = steamdb.get(publishedfileid) or steamdb.get(str(publishedfileid))
+        if entry is None:
+            continue
+        blacklist = getattr(entry, "blacklist", None)
+        if blacklist and getattr(blacklist, "value", False):
             blacklisted_mods[publishedfileid] = {
-                "name": steamdb[publishedfileid]["steamName"],
-                "comment": steamdb[publishedfileid]["blacklist"]["comment"],
+                "name": getattr(entry, "steamName", ""),
+                "comment": getattr(blacklist, "comment", ""),
             }
-        elif steamdb.get(str(publishedfileid), {}).get(
-            "blacklist"
-        ):  # TODO: Is this needed?
-            blacklisted_mods[publishedfileid] = {
-                "name": steamdb[str(publishedfileid)]["steamName"],
-                "comment": steamdb[str(publishedfileid)]["blacklist"]["comment"],
-            }
-    # Generate report if we have blacklisted mods found
+
     if blacklisted_mods:
         blacklisted_mods_report = ""
-        for publishedfileid in blacklisted_mods:
+        for pfid, info in blacklisted_mods.items():
+            blacklisted_mods_report += f"{info['name']} ({pfid})\n"
             blacklisted_mods_report += (
-                f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})\n"
+                f"Reason for blacklisting: {info['comment']}"
             )
-            blacklisted_mods_report += f"Reason for blacklisting: {blacklisted_mods[publishedfileid]['comment']}"
         answer = show_dialogue_conditional(
             title="Blacklisted mods found",
             text="Some mods are blacklisted in your SteamDB",
@@ -88,16 +88,17 @@ def check_if_pfids_blacklisted(
                 ),
             ],
         )
-        # Remove blacklisted mods from list if user wants to download them still
         answer_str = str(answer)
         download_text = QCoreApplication.translate(
             "check_if_pfids_blacklisted", "Download blacklisted mods"
         )
         if download_text in answer_str:
-            publishedfileids.remove(publishedfileid)
-            logger.debug(
-                f"Skipping download of blacklisted Workshop mod: {publishedfileid}"
-            )
+            for pfid in blacklisted_mods:
+                if pfid in publishedfileids:
+                    publishedfileids.remove(pfid)
+                    logger.debug(
+                        f"Skipping download of blacklisted Workshop mod: {pfid}"
+                    )
 
     return publishedfileids
 
