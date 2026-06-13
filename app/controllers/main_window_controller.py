@@ -6,6 +6,7 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QPushButton
 
 from app.models.divider import is_divider_uuid
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.views.main_window import MainWindow
@@ -62,6 +63,7 @@ class MainWindowController(QObject):
         )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
+        EventBus().settings_have_changed.connect(self._update_rimsort_version_label)
 
     def _parse_workshop_id(self, url: str) -> str | None:
         """Extract a Steam Workshop ID from a dependency URL."""
@@ -398,6 +400,7 @@ class MainWindowController(QObject):
         self.main_window.game_version_label.setText(
             "RimWorld version " + MetadataManager.instance().game_version
         )
+        self._update_rimsort_version_label()
 
     @Slot()
     def on_save_button_animation_start(self) -> None:
@@ -429,6 +432,17 @@ class MainWindowController(QObject):
             self.main_window.save_button.setObjectName("")
             self.main_window.save_button.style().unpolish(self.main_window.save_button)
             self.main_window.save_button.style().polish(self.main_window.save_button)
+
+    def _update_rimsort_version_label(self) -> None:
+        version_str = f"RimSort {AppInfo().app_version}"
+        stream = self.main_window.settings_controller.settings.update_stream
+
+        if stream == "beta":
+            self.main_window.rimsort_version_label.setText(f"{version_str}  [BETA]")
+        elif stream == "edge":
+            self.main_window.rimsort_version_label.setText(f"{version_str}  [EDGE]")
+        else:
+            self.main_window.rimsort_version_label.setText(version_str)
 
     def set_buttons_enabled(self, enabled: bool) -> None:
         for btn in self.buttons:
