@@ -362,7 +362,10 @@ def _parse_optional(
 
 
 def _set_mod_type(
-    mod: ListedMod, local_path: Path | None, rimworld_path: Path, workshop_path: Path | None
+    mod: ListedMod,
+    local_path: Path | None,
+    rimworld_path: Path,
+    workshop_path: Path | None,
 ) -> ListedMod:
     """
     Set the mod type based on the paths given.

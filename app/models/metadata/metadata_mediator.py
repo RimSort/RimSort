@@ -152,10 +152,12 @@ class MetadataMediator:
             ByVersion keys are ignored and only base values are used.
         """
 
-        if self.game_path is None or not self.game_path.exists() or not self.game_path.is_dir():
-            raise ValueError(
-                "Game path is missing, invalid, or not a directory"
-            )
+        if (
+            self.game_path is None
+            or not self.game_path.exists()
+            or not self.game_path.is_dir()
+        ):
+            raise ValueError("Game path is missing, invalid, or not a directory")
 
         self._refresh_game_version()
 
