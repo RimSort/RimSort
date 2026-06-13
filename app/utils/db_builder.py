@@ -8,13 +8,14 @@ from PySide6.QtCore import QEventLoop, QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.constants as app_constants
-import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
+from app.controllers.settings_controller import SettingsController
 from app.utils.dict_utils import recursively_update_dict
 from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
+from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -40,7 +41,7 @@ class DatabaseBuilder(QObject):
             cls._instance = super(DatabaseBuilder, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: metadata.SettingsController) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the Database Builder singleton.
 
@@ -105,7 +106,7 @@ class DatabaseBuilder(QObject):
 
     def _create_database_builder(
         self, mode: str, output_path: str
-    ) -> metadata.SteamDatabaseBuilder:
+    ) -> SteamDatabaseBuilder:
         """
         Factory method to create SteamDatabaseBuilder with appropriate settings.
 
@@ -134,7 +135,7 @@ class DatabaseBuilder(QObject):
         if mode == self.MODE_ALL_MODS:
             base_kwargs["mods"] = self.metadata_controller.mods_metadata
 
-        return metadata.SteamDatabaseBuilder(**base_kwargs)
+        return SteamDatabaseBuilder(**base_kwargs)
 
     def _setup_query_runner(self, title: str) -> RunnerPanel:
         """
@@ -210,7 +211,7 @@ class DatabaseBuilder(QObject):
             Queries the Steam WebAPI to retrieve all available mod PublishedFileIDs,
             filters out existing mods, and emits appropriate download signals.
         """
-        self.db_builder = metadata.SteamDatabaseBuilder(
+        self.db_builder = SteamDatabaseBuilder(
             apikey=self.settings_controller.settings.steam_apikey,
             appid=self.RIMWORLD_APPID,
             database_expiry=self.settings_controller.settings.database_expiry,
