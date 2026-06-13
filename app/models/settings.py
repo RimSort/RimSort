@@ -203,6 +203,9 @@ class Settings(QObject):
         self.enable_backup_before_update: bool = True
         self.max_backups: int = 3
 
+        # Update stream: "stable", "beta", or "edge"
+        self.update_stream: str = "stable"
+
         # Authentication
         self.rentry_auth_code: str = ""
         self.github_username: str = ""
