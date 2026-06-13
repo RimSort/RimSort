@@ -4,7 +4,10 @@ from app.controllers.settings_tabs.advanced_tab_controller import (
 from app.controllers.settings_tabs.appearance_tab_controller import (
     AppearanceTabController,
 )
-from app.controllers.settings_tabs.base_tab_controller import BaseTabController
+from app.controllers.settings_tabs.base_tab_controller import (
+    BaseTabController,
+    SharedFileDialogState,
+)
 from app.controllers.settings_tabs.database_builder_tab_controller import (
     DatabaseBuilderTabController,
 )
@@ -35,5 +38,6 @@ __all__ = [
     "GameLaunchTabController",
     "InternalToolsTabController",
     "LocationsTabController",
+    "SharedFileDialogState",
     "SortingTabController",
 ]

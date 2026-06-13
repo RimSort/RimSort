@@ -113,14 +113,16 @@ class InternalToolsTabController(BaseTabController):
         steamcmd_install_location = show_dialogue_file(
             mode="open_dir",
             caption="Select Steamcmd Install Location",
-            _dir=str(self._last_file_dialog_path),
+            _dir=self._file_dialog_state.last_path if self._file_dialog_state else "",
         )
         if not steamcmd_install_location:
             return
 
         self.dialog.steamcmd_install_location.setText(steamcmd_install_location)
-        if self._on_path_selected:
-            self._on_path_selected(str(Path(steamcmd_install_location).parent))
+        if self._file_dialog_state:
+            self._file_dialog_state.last_path = str(
+                Path(steamcmd_install_location).parent
+            )
 
     @Slot()
     def _on_clear_depot_cache(self) -> None:
