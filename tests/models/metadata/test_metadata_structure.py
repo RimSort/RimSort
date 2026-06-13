@@ -292,6 +292,23 @@ def test_published_file_id_from_folder_name(tmp_path: Path) -> None:
     assert mod.published_file_id == "987654321"
 
 
+def test_published_file_id_strips_utf8_bom(tmp_path: Path) -> None:
+    """published_file_id should strip a UTF-8 BOM prefix (GH-2150)."""
+    from app.models.metadata.metadata_factory import create_listed_mod_from_path
+
+    mod_path = tmp_path / "bom_mod"
+    mod_path.mkdir()
+    about_dir = mod_path / "About"
+    about_dir.mkdir()
+    (about_dir / "About.xml").write_text("<ModMetaData><name>Test</name></ModMetaData>")
+    (about_dir / "PublishedFileId.txt").write_bytes(b"\xef\xbb\xbf3612563959")
+
+    _valid, mod = create_listed_mod_from_path(
+        mod_path, "1.5", tmp_path, tmp_path, None, True
+    )
+    assert mod.published_file_id == "3612563959"
+
+
 def test_steam_db_entry_preserves_tags() -> None:
     """SteamDbEntry should preserve tags through serialization round-trip."""
     import msgspec

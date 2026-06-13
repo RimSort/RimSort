@@ -333,7 +333,7 @@ class ListedMod(BaseMod):
 
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
-            with open(expected_path, "r") as file:
+            with open(expected_path, encoding="utf-8-sig") as file:
                 content = file.read().strip()
                 if content:
                     return content
