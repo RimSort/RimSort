@@ -1,16 +1,7 @@
-import json
-import os
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QThread, Signal
 
-from app.utils.constants import (
-    DB_BUILDER_PRUNE_EXCEPTIONS,
-    DB_BUILDER_RECURSE_EXCEPTIONS,
-    RIMWORLD_DLC_METADATA,
-)
-from app.utils.dict_utils import recursively_update_dict
 from app.utils.steam.webapi.wrapper import DynamicQuery
 
 
@@ -193,79 +184,18 @@ class SteamDatabaseBuilder(QThread):
     def _init_empty_db_from_publishedfileids(
         self, publishedfileids: list[str]
     ) -> dict[str, Any]:
-        database: dict[str, int | dict[str, Any]] = {
-            "version": 0,
-            "database": {
-                **{
-                    appid: {
-                        "appid": True,
-                        "url": f"https://store.steampowered.com/app/{appid}",
-                        "packageid": metadata.get("packageid"),
-                        "name": metadata.get("name"),
-                    }
-                    for appid, metadata in RIMWORLD_DLC_METADATA.items()
-                },
-                **{
-                    publishedfileid: {
-                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                    }
-                    for publishedfileid in publishedfileids
-                },
-            },
-        }
-        total = (
-            len(database["database"].keys())
-            if isinstance(database["database"], dict)
-            else 0
+        from app.utils.db_builder_core import init_empty_db_from_publishedfileids
+
+        return init_empty_db_from_publishedfileids(
+            publishedfileids, self.appid, self.db_builder_message_output_signal.emit
         )
-        self.db_builder_message_output_signal.emit(
-            f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
-        )
-        return database
 
     def _output_database(self, database: dict[str, Any]) -> None:
-        # If user-configured `update` parameter, update old db with new query data recursively
-        if self.update and os.path.exists(self.output_database_path):
-            self.db_builder_message_output_signal.emit(
-                f"\nIn-place DB update configured. Existing DB to update:\n{self.output_database_path}"
-            )
-            if self.output_database_path and os.path.exists(self.output_database_path):
-                with open(self.output_database_path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    self.db_builder_message_output_signal.emit(
-                        "\nReading info from file..."
-                    )
-                    db_to_update = json.loads(json_string)
-                    self.db_builder_message_output_signal.emit(
-                        "Retrieved cached database!\n"
-                    )
-                self.db_builder_message_output_signal.emit(
-                    "Recursively updating previous database with new metadata...\n"
-                )
-                recursively_update_dict(
-                    db_to_update,
-                    database,
-                    prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-                    recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
-                )
-                with open(self.output_database_path, "w", encoding="utf-8") as output:
-                    json.dump(db_to_update, output, indent=4)
-            else:
-                self.db_builder_message_output_signal.emit(
-                    "Unable to load database from specified path! Does the file exist...?"
-                )
-                appended_path = str(
-                    Path(self.output_database_path).parent
-                    / ("NEW_" + Path(self.output_database_path).name)
-                )
-                self.db_builder_message_output_signal.emit(
-                    f"\nCaching DynamicQuery result:\n\n{appended_path}"
-                )
-                with open(appended_path, "w", encoding="utf-8") as output:
-                    json.dump(database, output, indent=4)
-        else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
-            self.db_builder_message_output_signal.emit(
-                f"\nCaching DynamicQuery result:\n{self.output_database_path}"
-            )
-            with open(self.output_database_path, "w", encoding="utf-8") as output:
-                json.dump(database, output, indent=4)
+        from app.utils.db_builder_core import output_database
+
+        output_database(
+            database,
+            self.output_database_path,
+            self.update,
+            self.db_builder_message_output_signal.emit,
+        )

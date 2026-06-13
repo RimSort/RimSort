@@ -20,6 +20,13 @@ def _make_workshop_mod(path: str, pfid: str, mod_type: ModType) -> AboutXmlMod:
     return mod
 
 
+def _make_two_workshop_mods() -> dict[str, Any]:
+    """Create a standard 2-mod dict for tests that need multiple workshop mods."""
+    mod1 = _make_workshop_mod("/fake/workshop/111", "111", ModType.STEAM_WORKSHOP)
+    mod2 = _make_workshop_mod("/fake/workshop/222", "222", ModType.STEAM_WORKSHOP)
+    return {str(mod1.mod_path): mod1, str(mod2.mod_path): mod2}
+
+
 class TestQueryWorkshopUpdateData:
     """Tests for query_workshop_update_data result handling."""
 
@@ -105,14 +112,7 @@ class TestQueryWorkshopUpdateData:
             ["222"],  # one failed pfid
             ["Connection timed out for 1 mods after 3 attempts"],
         )
-        mod1 = _make_workshop_mod("/fake/workshop/111", "111", ModType.STEAM_WORKSHOP)
-        mod2 = _make_workshop_mod("/fake/workshop/222", "222", ModType.STEAM_WORKSHOP)
-        mods: dict[str, Any] = {
-            str(mod1.mod_path): mod1,
-            str(mod2.mod_path): mod2,
-        }
-
-        result = query_workshop_update_data(mods)
+        result = query_workshop_update_data(_make_two_workshop_mods())
         assert result.status == "partial"
         assert result.mods_checked == 2
         assert result.mods_updated == 1
@@ -127,14 +127,7 @@ class TestQueryWorkshopUpdateData:
             ["111", "222"],
             ["Steam API returned HTTP 503 for 2 mods after 3 attempts"],
         )
-        mod1 = _make_workshop_mod("/fake/workshop/111", "111", ModType.STEAM_WORKSHOP)
-        mod2 = _make_workshop_mod("/fake/workshop/222", "222", ModType.STEAM_WORKSHOP)
-        mods: dict[str, Any] = {
-            str(mod1.mod_path): mod1,
-            str(mod2.mod_path): mod2,
-        }
-
-        result = query_workshop_update_data(mods)
+        result = query_workshop_update_data(_make_two_workshop_mods())
         assert result.status == "failed"
         assert result.mods_checked == 2
         assert result.mods_updated == 0
