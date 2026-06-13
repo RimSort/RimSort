@@ -362,7 +362,7 @@ def _parse_optional(
 
 
 def _set_mod_type(
-    mod: ListedMod, local_path: Path, rimworld_path: Path, workshop_path: Path | None
+    mod: ListedMod, local_path: Path | None, rimworld_path: Path, workshop_path: Path | None
 ) -> ListedMod:
     """
     Set the mod type based on the paths given.
@@ -715,7 +715,7 @@ def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
 def create_listed_mod_from_path(
     path: Path,
     target_version: str,
-    local_path: Path,
+    local_path: Path | None,
     rimworld_path: Path,
     workshop_path: Path | None,
     prefer_versioned: bool = True,
