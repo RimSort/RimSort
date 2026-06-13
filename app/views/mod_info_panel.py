@@ -1056,11 +1056,12 @@ class ModInfoPanel:
             metadata["authors"] = mod.authors
             metadata["modversion"] = mod.mod_version
             metadata["url"] = mod.url
+        else:
+            metadata["packageid"] = mod.published_file_id or "unknown"
+            metadata["invalid"] = True
         if isinstance(mod, ScenarioMod):
             metadata["scenario"] = True
             metadata["summary"] = mod.summary
-        if not isinstance(mod, AboutXmlMod):
-            metadata["invalid"] = True
 
         # Derive steam_url from published_file_id
         pfid = mod.published_file_id
