@@ -58,7 +58,13 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.metadata import SettingsController, WorkshopUpdateResult
+from app.controllers.settings_controller import SettingsController
+from app.utils.steam.workshop_utils import (
+    WorkshopUpdateResult,
+    check_if_pfids_blacklisted,
+    import_steamcmd_acf_data,
+    query_workshop_update_data,
+)
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
@@ -1797,7 +1803,7 @@ class MainContent(QObject):
         if import_text in answer_str:
             logger.debug("User confirmed ACF import")
             logger.info("Importing SteamCMD ACF data...")
-            metadata.import_steamcmd_acf_data(
+            import_steamcmd_acf_data(
                 rimsort_storage_path=str(AppInfo().app_storage_folder),
                 steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
             )
@@ -1921,8 +1927,9 @@ class MainContent(QObject):
                 AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
             target=partial(
-                metadata.query_workshop_update_data,
+                query_workshop_update_data,
                 mods=self.metadata_controller.mods_metadata,
+                metadata_controller=self.metadata_controller,
             ),
             text=self.tr("Checking Steam Workshop mods for updates..."),
         )
@@ -2044,7 +2051,7 @@ class MainContent(QObject):
         steam_db_schema = self.metadata_controller.steam_db
         steam_db = steam_db_schema.database if steam_db_schema else {}
         if steam_db:
-            publishedfileids = metadata.check_if_pfids_blacklisted(
+            publishedfileids = check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
                 steamdb=steam_db,
             )
@@ -2208,7 +2215,7 @@ class MainContent(QObject):
         # Check for blacklisted mods for subscription actions
         if instruction[0] == "subscribe":
             assert isinstance(publishedfileids, list)
-            publishedfileids = metadata.check_if_pfids_blacklisted(
+            publishedfileids = check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
                 steamdb=steamdb,
             )
