@@ -152,11 +152,10 @@ class MetadataMediator:
             ByVersion keys are ignored and only base values are used.
         """
 
-        for path in {self.local_mods_path, self.game_path}:
-            if path is None or not path.exists() or not path.is_dir():
-                raise ValueError(
-                    "Essential paths are missing, invalid, or not directories"
-                )
+        if self.game_path is None or not self.game_path.exists() or not self.game_path.is_dir():
+            raise ValueError(
+                "Game path is missing, invalid, or not a directory"
+            )
 
         self._refresh_game_version()
 
@@ -202,7 +201,6 @@ class MetadataMediator:
             mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)
         ]
 
-        assert self.local_mods_path is not None
         assert self.game_path is not None
 
         metadata_mutex = QMutex()
@@ -265,7 +263,7 @@ class MetadataMediator:
             self,
             mod_path: Path | str | list[Path] | list[str],
             target_version: str,
-            local_path: Path,
+            local_path: Path | None,
             rimworld_path: Path,
             workshop_path: Path | None,
             user_rules: ExternalRulesSchema | None,
