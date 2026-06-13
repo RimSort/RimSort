@@ -71,6 +71,9 @@ jobs:
           if [[ "${{ inputs.type }}" == "Stable" ]]; then
               v_format="v\${major}.\${minor}.\${patch}"
               prerelease=false
+          elif [[ "${{ inputs.type }}" == "Beta" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}-beta\${increment}"
+              prerelease=true
           elif [[ "${{ inputs.type }}" == "Edge" ]]; then
               v_format="v\${major}.\${minor}.\${patch}-edge\${increment}"
               prerelease=true
@@ -110,7 +113,7 @@ jobs:
       - name: Get version string
         id: version
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+          if [[ "${{ inputs.type }}" == "Stable" || "${{ inputs.type }}" == "Beta" ]]; then
                     version="${{ steps.sem_version.outputs.version}}"
           else
             version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"

@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - "Stable"
+          - "Beta"
           - "Edge"
       draft:
         description: "Draft release"
@@ -86,6 +87,8 @@ jobs:
         id: tag
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+            tag="${{needs.pre-build.outputs.version_tag}}"
+          elif [[ "${{ github.event.inputs.type }}" == "Beta" ]]; then
             tag="${{needs.pre-build.outputs.version_tag}}"
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
             tag="Edge"
