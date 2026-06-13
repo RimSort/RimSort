@@ -40,6 +40,8 @@ def mock_settings() -> Generator[MagicMock, None, None]:
         mock_settings.external_steam_metadata_repo = ""
         mock_settings.external_no_version_warning_file_path = ""
         mock_settings.external_use_this_instead_file_path = ""
+        mock_settings.external_use_this_instead_metadata_source = "Disabled"
+        mock_settings.external_use_this_instead_repo_path = ""
         mock_settings.prefer_versioned_about_tags = True
         mock_settings.database_expiry = 0
 

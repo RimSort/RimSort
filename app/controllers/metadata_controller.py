@@ -171,8 +171,11 @@ class MetadataController(QObject):
         self.metadata_mediator.no_version_warning_path = _get_path(
             active_settings.external_no_version_warning_file_path
         )
-        self.metadata_mediator.use_this_instead_path = _get_path(
-            active_settings.external_use_this_instead_file_path
+        self.metadata_mediator.use_this_instead_path = self._resolve_db_path(
+            active_settings.external_use_this_instead_metadata_source,
+            active_settings.external_use_this_instead_file_path,
+            active_settings.external_use_this_instead_repo_path,
+            "replacements.json.gz",
         )
 
         self._invalidate_caches()

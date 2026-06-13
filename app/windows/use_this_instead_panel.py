@@ -7,7 +7,11 @@ from loguru import logger
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QCheckBox
 
-from app.models.metadata.metadata_structure import AboutXmlMod, ReplacementInfo
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    ListedMod,
+    ReplacementInfo,
+)
 from app.utils.mod_info import ModInfo
 from app.views import dialogue
 from app.windows.base_mods_panel import (
@@ -236,12 +240,12 @@ class UseThisInsteadPanel(BaseModsPanel):
         Returns:
             List of (key, metadata) tuples.
         """
-        mod_list = []
+        mod_list: list[tuple[str | None, dict[str, Any]]] = []
         for mod_item in originals:
-            metadata_copy = self._create_original_metadata(mod_item)
-            path = mod_item.metadata.get("path")
-            key = self._resolve_path_key(path) if isinstance(path, str) else None
-            mod_list.append((key, metadata_copy))
+            mod_info = self._create_original_mod_info(mod_item)
+            key = mod_info.key
+            metadata: dict[str, Any] = {"type": "Original", "path": mod_info.path}
+            mod_list.append((key, metadata))
 
         # Add replacement mod
         mod_replacement = originals[0].replacement if originals else None
@@ -250,19 +254,26 @@ class UseThisInsteadPanel(BaseModsPanel):
             mod_list.append((key, fake_metadata))
         return mod_list
 
-    def _create_original_metadata(self, mod_item: ModGroupItem) -> dict[str, Any]:
+    def _create_original_mod_info(self, mod_item: ModGroupItem) -> ModInfo:
         """
-        Create metadata for an original mod with type.
+        Create ModInfo for an original mod.
 
         Args:
             mod_item: The mod group item.
 
         Returns:
-            Metadata dictionary with type.
+            ModInfo with type set to "Original".
         """
-        metadata_copy = mod_item.metadata.copy()
-        metadata_copy["type"] = "Original"
-        return metadata_copy
+        metadata = mod_item.metadata
+        key = mod_item.mod_id
+        if isinstance(metadata, ListedMod):
+            mod_info = ModInfo.from_listed_mod(metadata, type="Original")
+            mod_info.key = key
+        else:
+            metadata_copy = metadata.copy()
+            metadata_copy["type"] = "Original"
+            mod_info = ModInfo.from_metadata(key, metadata_copy)
+        return mod_info
 
     def _create_replacement_metadata(
         self, mod_replacement: ReplacementInfo
@@ -547,26 +558,13 @@ class UseThisInsteadPanel(BaseModsPanel):
             is_original: Whether this is an original mod or a replacement.
         """
         try:
-            # Use modified metadata for originals to include type
             if is_original:
-                metadata = self._create_original_metadata(mod_item)
+                mod_info = self._create_original_mod_info(mod_item)
             else:
                 metadata = mod_item.metadata
+                key = mod_item.mod_id
+                mod_info = self._extract_mod_info_from_metadata(key, metadata)
 
-            # Path IS the key in the new metadata system
-            path = metadata.get("path")
-            key = (
-                path
-                if isinstance(path, str) and self.metadata_controller.has_mod(path)
-                else None
-            )
-
-            # Create ModInfo from metadata
-            mod_info = self._extract_mod_info_from_metadata(key, metadata)
-
-            mod_info.name = mod_info.name
-
-            # Use base class method to add the mod row
             self._add_mod_row(mod_info)
             if is_original:
                 self._original_rows.add(current_row)
@@ -613,10 +611,9 @@ class UseThisInsteadPanel(BaseModsPanel):
         )
 
         if exists_locally and key and local_metadata is not None:
-            local_metadata_copy = dict(local_metadata)
-            local_metadata_copy["type"] = "Replacement"
-            local_metadata_copy["installed_status"] = self.tr("Installed")
-            return ModInfo.from_metadata(key, local_metadata_copy)
+            metadata = self._create_base_replacement_metadata(mod_replacement, True)
+            metadata = self._merge_local_and_external_metadata(metadata, local_metadata)
+            return ModInfo.from_metadata(key, metadata)
         else:
             metadata = self._create_base_replacement_metadata(mod_replacement, False)
             return ModInfo.from_metadata(None, metadata)

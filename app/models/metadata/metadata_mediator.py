@@ -126,10 +126,14 @@ class MetadataMediator:
         The raw file is ``{"version": "...", "rules": [...]}``.  We index the
         rules list into a dict keyed by ``oldWorkshopId`` for O(1) lookup.
         """
-        if (
-            self.use_this_instead_path is None
-            or not self.use_this_instead_path.exists()
-        ):
+        if self.use_this_instead_path is None:
+            logger.debug("Use This Instead path not configured")
+            self._use_this_instead = None
+            return
+        if not self.use_this_instead_path.exists():
+            logger.warning(
+                f"Use This Instead DB not found at: {self.use_this_instead_path}"
+            )
             self._use_this_instead = None
             return
         try:
