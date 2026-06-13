@@ -114,7 +114,7 @@ class AppController(QObject):
             dds_utility.delete_dds_files_without_png()
 
     def initialize_metadata_controller(self) -> None:
-        """Initializes the new MetadataController alongside MetadataManager."""
+        """Initializes the MetadataController."""
         from app.controllers.metadata_controller import MetadataController
         from app.controllers.metadata_db_controller import AuxMetadataController
 
