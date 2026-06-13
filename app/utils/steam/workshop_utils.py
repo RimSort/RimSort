@@ -89,10 +89,10 @@ def check_if_pfids_blacklisted(
             ],
         )
         answer_str = str(answer)
-        download_text = QCoreApplication.translate(
-            "check_if_pfids_blacklisted", "Download blacklisted mods"
+        skip_text = QCoreApplication.translate(
+            "check_if_pfids_blacklisted", "Skip blacklisted mods"
         )
-        if download_text in answer_str:
+        if skip_text in answer_str:
             for pfid in blacklisted_mods:
                 if pfid in publishedfileids:
                     publishedfileids.remove(pfid)
