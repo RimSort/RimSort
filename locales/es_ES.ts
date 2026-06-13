@@ -945,18 +945,12 @@ Would you like to configure them now?</source>
         <translation>Comprobando si hay actualizaciones para los mods de Steam Workshop...</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>No hay modificaciones de Workshop para buscar actualizaciones</translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
         <translation>No se pudo comprobar si hay actualizaciones</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>RimSort no pudo consultar la Steam WebAPI para obtener información sobre actualizaciones!
-</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>¿Estás conectado a Internet?</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1245,6 +1239,18 @@ Si acabas de instalar Git, reinicia RimSort para que los cambios en el PATH surt
     <message>
         <source>Unsaved Changes</source>
         <translation>Cambios sin guardar</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort no pudo verificar las modificaciones de tu Taller en busca de actualizaciones.</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>Comprobación de actualización parcialmente completada</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>No se pudieron comprobar las actualizaciones de {failed} de {total} mods de Workshop.</translation>
     </message>
     <message>
         <source>You have unsaved changes. What would you like to do?</source>
@@ -3233,6 +3239,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>Incompatible (según las reglas de otros mods):</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>Debe cargarse después:</translation>
     </message>
@@ -4204,26 +4215,6 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
         <source>Steam Workshop File Not Found</source>
         <translation>Archivo de Steam Workshop no encontrado</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>Borrar todas las ubicaciones</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>¿Estás seguro de que quieres borrar todas las ubicaciones?</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>Confirmar la base de datos de compilación</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>¿Estás seguro de que quieres construir la base de datos de Steam Workshop?</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>Para la mayoría de los usuarios, esto no es necesario ya que el GitHub SteamDB es adecuado. Construir la base de datos puede llevar mucho tiempo. Dependiendo de su configuración, también puede arrastrarse a través de la totalidad del taller de vapor a través del Webapi. Esto puede ser una gran cantidad de datos y tomar mucho tiempo. ¿Estás seguro de que quieres continuar?</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4256,10 +4247,6 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
         <translation>Autodetectar</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>Ubicación del juego</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>Abrir...</translation>
     </message>
@@ -4270,22 +4257,6 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     <message>
         <source>Clear…</source>
         <translation>Limpiar...</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>Ubicación de configuración</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Ubicación de módulos de Steam</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>Ubicación de módulos locales</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>Ubicación de la carpeta de instancia (opcional)</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4302,10 +4273,6 @@ Haga clic en 'Mostrar detalles' para ver una lista de modificaciones que fallaro
     <message>
         <source>Databases</source>
         <translation>Bases de datos</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>Configuración de copia de seguridad</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4428,10 +4395,6 @@ Si existe una etiqueta de versión coincidente pero está vacía, se ignora la e
 por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descripcionesByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>Opciones de lista de modificaciones</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Notifica para descargar mods que pueden faltar en la lista de mods activa</translation>
     </message>
@@ -4442,10 +4405,6 @@ por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, 
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>Oculta modificaciones no válidas, no se recomienda habilitarlas</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>Clasificación de mods inactivos</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4464,10 +4423,6 @@ Deshabilitar esto puede mejorar el rendimiento al evitar cálculos pesados.</tra
     <message>
         <source>DB Builder</source>
         <translation>Constructor de base de datos</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>Cuando se construye la base de datos:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4522,6 +4477,10 @@ Deshabilitar esto puede mejorar el rendimiento al evitar cálculos pesados.</tra
         <translation>Construir base de datos</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>Herramientas internas</translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation>Validar módulos descargados</translation>
     </message>
@@ -4533,10 +4492,6 @@ Deshabilitar esto puede mejorar el rendimiento al evitar cálculos pesados.</tra
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>Esto puede prevenir algunos problemas con la descarga de módulos, como fallos de descarga y módulos eliminados repoblándose.</translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
-        <translation>Ubicación de instalación de SteamCMD</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4559,20 +4514,8 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>Instalar SteamCMD</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>todds</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>Preset de calidad</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>Optimizado - Recomendado para RimWorld</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>Cuando se optimizan texturas</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4593,14 +4536,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>Ejecute todds automáticamente antes de iniciar el juego</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>Tema</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>Configuración del tema</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4635,10 +4570,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
         <translation>Abrir ubicación del tema</translation>
     </message>
     <message>
-        <source>Font Settings</source>
-        <translation>Configuración de fuente</translation>
-    </message>
-    <message>
         <source>Font Family</source>
         <translation>Familia de fuentes</translation>
     </message>
@@ -4651,10 +4582,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
         <translation>Restablecer</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>Configuración de idioma</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>Seleccionar idioma (se requiere reiniciar para aplicar cambios)</translation>
     </message>
@@ -4665,10 +4592,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>Advanced</source>
         <translation>Avanzado</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>RimSort requiere reiniciar para algunas configuraciones</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4697,6 +4620,10 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>Download missing mods automatically</source>
         <translation>Descargar módulos faltantes automáticamente</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Apariencia</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -4733,14 +4660,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>Edit Game Run Arguments:</source>
         <translation>Editar argumentos de ejecución del juego:</translation>
-    </message>
-    <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>Cambiar de la base de datos en segundos, por ejemplo, 604800 durante 7 días. y 0 sin vencimiento.</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>Autenticación</translation>
     </message>
     <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
@@ -4807,10 +4726,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
  NOTA: Estos argumentos se ignoran si "Iniciar juego mediante el protocolo Steam" está habilitado</translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>Límite de tiempo de eliminación de metadatos auxiliares en segundos. (Eliminar instantáneamente 0, nunca eliminar -1)</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>Habilitar edición</translation>
     </message>
@@ -4835,10 +4750,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
         <translation>Esto es útil si desea garantizar actualizaciones de modificación limpia.</translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation>Estado de lanzamiento</translation>
-    </message>
-    <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation>Min es  y max es . Los valores fuera de este rango se restablecerán a los valores predeterminados. {MAX_SIZE} {MIN_SIZE}</translation>
     </message>
@@ -4855,36 +4766,8 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
         <translation>Tamaño personalizado</translation>
     </message>
     <message>
-        <source>Main Window Launch State</source>
-        <translation>Estado de lanzamiento de la ventana principal</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>Estado de lanzamiento de la ventana del navegador</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>Estado de lanzamiento de la ventana de configuración</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>Ancho personalizado:</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>Altura personalizada:</translation>
-    </message>
-    <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>Aplicar colorante mod a fondo en lugar de texto</translation>
-    </message>
-    <message>
-        <source>Auxiliary DB</source>
-        <translation>Db auxiliar</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>Integración con guardado reciente</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
@@ -4897,10 +4780,6 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>Custom todds command</source>
         <translation>Comando personalizado para Todds</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>Si no se especifica -p como en la ruta, se utilizará la ruta de la actualidad activa o todas las modificaciones.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4927,24 +4806,12 @@ Estas verificaciones pueden demorar unos segundos dependiendo del número de arc
         <translation>Herramientas externas</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>Ubicación del comando del editor de texto</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>Argumentos adicionales (carpetas de apertura)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>Argumentos adicionales (apertura de un solo archivo)</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>Método de clasificación</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>Comportamiento de manejo de dependencias</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4955,10 +4822,6 @@ Estas verificaciones pueden demorar unos segundos dependiendo del número de arc
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>Si está habilitado, una entrada alternativePackageIds en aproximadamente.xml puede satisfacer la dependencia de un mod cuando falta la dependencia principal. 
 Por ejemplo, 'oels.VehicleMapFramework', alternativas: 'oels.VehiclemaPframework.dev'</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>Comportamiento de análisis XML</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -5978,6 +5841,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>ocurrió en  con código de error . {e.strerror} {error_code} {e.filename}</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>Borrar todas las ubicaciones</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>¿Está seguro de que desea borrar todas las ubicaciones?</translation>
     </message>
 </context>
 <context>

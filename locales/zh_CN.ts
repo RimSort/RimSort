@@ -956,18 +956,12 @@ Would you like to configure them now?</source>
         <translation>正在检查 Steam 创意工坊模组的更新...</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>没有创意工坊模组来检查更新</translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
         <translation>无法检查更新</translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>RimSort 无法查询 Steam WebAPI 以获取更新信息！
-</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>你连接到互联网了吗？</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -1172,6 +1166,18 @@ How would you like to proceed?
     <message>
         <source>git not found</source>
         <translation>找不到 git</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort 无法检查您的创意工坊模组是否有更新。</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>更新检查部分完成</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>无法检查更新的 {failed} 个创意工坊模组（共 {total} 个）。</translation>
     </message>
     <message>
         <source>git executable was not found in $PATH!</source>
@@ -3303,6 +3309,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>不兼容（根据其他模组的规则）：</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>
 应在以下模组之后加载：</translation>
@@ -4242,26 +4253,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <source>Steam Workshop File Not Found</source>
         <translation>未找到 Steam 创意工坊文件</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>清除所有路径</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>你确定要清除所有路径吗？</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>确定构建数据库</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>你确定要构建创意工坊数据库吗？</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>对于大多数用户来说，这不是必要的，因为 GitHub SteamDB 已经足够了。构建数据库可能需要很长时间。根据你的设置，它也可能通过 WebAPI 抓取整个创意工坊。这可能是一个巨大的数据量，并且需要很长时间。你确定要继续吗？</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4294,10 +4285,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>自动检测</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>游戏所在路径</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>打开</translation>
     </message>
@@ -4308,22 +4295,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Clear…</source>
         <translation>清空</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>配置所在路径</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Steam 模组所在路径</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>本地模组所在路径</translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
-        <translation>实例文件夹所在路径（可选）</translation>
     </message>
     <message>
         <source>Use Default</source>
@@ -4340,10 +4311,6 @@ Click 'Show Details' to see a list of mods that failed.</source>
     <message>
         <source>Databases</source>
         <translation>数据库</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>备份设置</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4466,10 +4433,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 例如：(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>模组列表选项</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>提示下载当前启用的模组列表中可能缺失的模组</translation>
     </message>
@@ -4480,10 +4443,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>隐藏无效模组，不建议启用</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>未启用模组排序</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4502,10 +4461,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     <message>
         <source>DB Builder</source>
         <translation>数据库构建器</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>当构建数据库时：</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4560,6 +4515,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation>构建数据库</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>内部工具</translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation>验证已经下载的模组</translation>
     </message>
@@ -4572,10 +4531,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>在使用 SteamCMD 下载模组前自动清除仓库缓存。
 这可能避免在下载模组时出现的一些问题，例如下载失败以及已删除模组重新生成的情况。</translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
-        <translation>SteamCMD 安装路径</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4598,20 +4553,8 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>安装 SteamCMD</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>纹理</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>质量预设</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>优化 - 推荐用于 RimWorld</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>优化纹理时</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4634,24 +4577,12 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>启动游戏前自动运行 todds</translation>
     </message>
     <message>
-        <source>Theme</source>
-        <translation>主题</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>主题设置</translation>
-    </message>
-    <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>"启用主题/样式表而非系统默认主题"</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
         <translation>打开主题路径</translation>
-    </message>
-    <message>
-        <source>Font Settings</source>
-        <translation>字体设置</translation>
     </message>
     <message>
         <source>Font Family</source>
@@ -4666,10 +4597,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>重置</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>语言设置</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>选择语言（需要重新启动以应用更改）</translation>
     </message>
@@ -4680,10 +4607,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Advanced</source>
         <translation>高级</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>某些设置需要重启 RimSort</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4712,6 +4635,10 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Download missing mods automatically</source>
         <translation>自动下载缺失的模组</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>外貌</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -4750,22 +4677,6 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>编辑游戏启动参数：</translation>
     </message>
     <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>数据库过期时间（秒），例如，604800 表示 7 天，0 表示不过期。</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>认证</translation>
-    </message>
-    <message>
-        <source>Launch State</source>
-        <translation>启动状态</translation>
-    </message>
-    <message>
-        <source>Main Window Launch State</source>
-        <translation>主窗口启动状态</translation>
-    </message>
-    <message>
         <source>Maximized</source>
         <translation>最大化</translation>
     </message>
@@ -4776,22 +4687,6 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Custom size</source>
         <translation>自定义大小</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>浏览器窗口启动状态</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>设置窗口启动状态</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>自定义宽度：</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>自定义高度：</translation>
     </message>
     <message>
         <source>Delete before update</source>
@@ -4866,10 +4761,6 @@ This may potentially prevent some issues with downloading mods such as download 
  注意：如果启用“通过 Steam 协议启动游戏”，这些参数将被忽略</translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>辅助元数据数据库删除时间限制（秒）。 （立即删除 0，永不删除 -1）</translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation>启用编辑</translation>
     </message>
@@ -4918,14 +4809,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>最小值为 {MIN_SIZE}，最大值为 {MAX_SIZE}。超出此范围的值将重置为默认值。</translation>
     </message>
     <message>
-        <source>Auxiliary DB</source>
-        <translation>辅助数据库</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>与最近的存档集成</translation>
-    </message>
-    <message>
         <source>Compare mod lists with the recent save file</source>
         <translation>将模组列表与最近的存档文件进行比较</translation>
     </message>
@@ -4936,10 +4819,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Custom todds command</source>
         <translation>自定义 todds 命令</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>如果未指定 -p（路径），则会选择使用当前启用的或所有模组的路径。</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4966,24 +4845,12 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>外部工具</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>文本编辑器命令位置</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>其他参数（打开文件夹）</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>其他参数（打开单个文件）</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>排序方法</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>依赖处理方式</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4994,10 +4861,6 @@ This checks may take few seconds depending on the number of .dds files present.<
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>如果启用，About.xml 中的 alternativePackageIds 条目可以满足模组的依赖关系，即使主要依赖项缺失。
 例如，'oels.vehiclemapframework'，替代项：'oels.vehiclemapframework.dev'</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>XML解析方式</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -6017,6 +5880,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>{e.strerror} 在 {e.filename} 发生，错误代码 {error_code}。</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>清除所有地点</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>您确定要清除所有位置吗？</translation>
     </message>
 </context>
 <context>

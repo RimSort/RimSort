@@ -921,16 +921,11 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unable to check for updates</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1125,6 +1120,18 @@ How would you like to proceed?
     </message>
     <message>
         <source>git not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3184,6 +3191,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod&apos;s rules):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4115,26 +4127,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <source>Steam Workshop File Not Found</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4167,10 +4159,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4180,22 +4168,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Clear…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Instance folder location (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4212,10 +4184,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Databases</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4333,10 +4301,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4346,10 +4310,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4367,10 +4327,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     </message>
     <message>
         <source>DB Builder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4426,6 +4382,10 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Validate downloaded mods</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4436,10 +4396,6 @@ Disabling this can improve performance by avoiding heavy calculations.</source>
     <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>SteamCMD installation location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4463,19 +4419,7 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4496,14 +4440,6 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Automatically run todds before launching the game</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4529,10 +4465,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Font Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Font Family</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4545,10 +4477,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4558,10 +4486,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Advanced</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4590,6 +4514,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Download missing mods automatically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Appearance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4626,14 +4554,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Authentication</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4683,10 +4603,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Enable editing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4711,10 +4627,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4731,35 +4643,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Main Window Launch State</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Apply mod coloring to background instead of text</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Auxiliary DB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4772,10 +4656,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Custom todds command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4801,23 +4681,11 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4827,10 +4695,6 @@ This checks may take few seconds depending on the number of .dds files present.<
     <message>
         <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
 E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5813,6 +5677,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

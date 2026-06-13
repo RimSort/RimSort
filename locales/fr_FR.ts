@@ -762,6 +762,22 @@ Manage mods installed from GitHub releases.</source>
         <translation>Liste de mod active téléchargée</translation>
     </message>
     <message>
+        <source>No Workshop mods to check for updates</source>
+        <translation>Aucun mod d'atelier pour vérifier les mises à jour</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to check your Workshop mods for updates.</source>
+        <translation>RimSort n'a pas pu vérifier les mises à jour de vos mods Workshop.</translation>
+    </message>
+    <message>
+        <source>Update check partially completed</source>
+        <translation>Vérification de la mise à jour partiellement terminée</translation>
+    </message>
+    <message>
+        <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
+        <translation>{failed} sur {total} mods de l'atelier n'ont pas pu être vérifiés pour les mises à jour.</translation>
+    </message>
+    <message>
         <source>Download or select from local</source>
         <translation>Télécharger ou sélectionner parmi local</translation>
     </message>
@@ -941,11 +957,6 @@ Souhaitez-vous les configurer maintenant?</translation>
 {ret}</translation>
     </message>
     <message>
-        <source>RimSort was unable to query Steam WebAPI for update information!
-</source>
-        <translation>Rimsort n'a pas pu interroger Steam Webapi pour les informations de mise à jour!</translation>
-    </message>
-    <message>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
         <translation>Veuillez configurer un préfixe SteamCMD existant ou configurer un nouveau préfixe avec "Configuration Steamcmd".</translation>
     </message>
@@ -1104,10 +1115,6 @@ Si vous venez d'installer GIT, veuillez redémarrer Rimsort pour que les modific
     <message>
         <source>Unable to check for updates</source>
         <translation>Impossible de vérifier les mises à jour</translation>
-    </message>
-    <message>
-        <source>Are you connected to the Internet?</source>
-        <translation>Êtes-vous connecté à Internet?</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
@@ -3276,6 +3283,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
+Incompatible (per other mod's rules):</source>
+        <translation>Incompatible (selon les règles des autres mods) :</translation>
+    </message>
+    <message>
+        <source>
 Should be Loaded After:</source>
         <translation>Doit être chargé après:</translation>
     </message>
@@ -4211,26 +4223,6 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
         <source>Steam Workshop File Not Found</source>
         <translation>Fichier de l'atelier Steam introuvable</translation>
     </message>
-    <message>
-        <source>Clear all locations</source>
-        <translation>Effacer tous les emplacements</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to clear all locations?</source>
-        <translation>Êtes-vous sûr de vouloir effacer tous les emplacements?</translation>
-    </message>
-    <message>
-        <source>Confirm Build Database</source>
-        <translation>Confirmer la base de données de construction</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation>Êtes-vous sûr de vouloir construire la base de données de l'atelier Steam?</translation>
-    </message>
-    <message>
-        <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation>Pour la plupart des utilisateurs, cela n'est pas nécessaire car le github SteamDB est adéquat. La construction de la base de données peut prendre beaucoup de temps. Selon vos paramètres, il peut également ramper dans l'intégralité de l'atelier Steam via le WebAPI. Cela peut être une grande quantité de données et prendre beaucoup de temps. Êtes-vous sûr de vouloir continuer?</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -4263,10 +4255,6 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
         <translation>Automatiquement</translation>
     </message>
     <message>
-        <source>Game location</source>
-        <translation>Emplacement du jeu</translation>
-    </message>
-    <message>
         <source>Open…</source>
         <translation>Ouvrir…</translation>
     </message>
@@ -4277,18 +4265,6 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
     <message>
         <source>Clear…</source>
         <translation>Clair…</translation>
-    </message>
-    <message>
-        <source>Config location</source>
-        <translation>Emplacement de configuration</translation>
-    </message>
-    <message>
-        <source>Steam mods location</source>
-        <translation>Emplacement des mods Steam</translation>
-    </message>
-    <message>
-        <source>Local mods location</source>
-        <translation>Emplacement des mods locaux</translation>
     </message>
     <message>
         <source>Launch game via Steam protocol (enables Steam overlay)</source>
@@ -4395,6 +4371,10 @@ Cliquez sur «Afficher les détails» pour voir une liste de mods qui ont échou
         <translation>Les mods à mettre à jour ne doivent pas être installés, car la base de données initiale est construite en raclant l'atelier de vapeur.</translation>
     </message>
     <message>
+        <source>Internal Tools</source>
+        <translation>Outils internes</translation>
+    </message>
+    <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>Effacer automatiquement le cache de dépôt avant de télécharger des mods via SteamCMD.
@@ -4403,6 +4383,10 @@ Cela peut potentiellement empêcher certains problèmes de téléchargement de m
     <message>
         <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
         <translation>Effacer le cache de dépôt manuellement. Cela peut être utile si vous rencontrez des problèmes avec le téléchargement des mods via SteamCMD.</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Apparence</translation>
     </message>
     <message>
         <source>To add your own theme / stylesheet 
@@ -4436,10 +4420,6 @@ Le nom du dossier sera utilisé comme nom du thème et tout thème non valide se
         <translation>Base de données "sans version"</translation>
     </message>
     <message>
-        <source>Instance folder location (optional)</source>
-        <translation>Emplacement du dossier d'instance (facultatif)</translation>
-    </message>
-    <message>
         <source>Use Default</source>
         <translation>Utiliser par défaut</translation>
     </message>
@@ -4450,10 +4430,6 @@ Le nom du dossier sera utilisé comme nom du thème et tout thème non valide se
     <message>
         <source>Game Launch</source>
         <translation>Lancement du jeu</translation>
-    </message>
-    <message>
-        <source>Backup Settings</source>
-        <translation>Paramètres de sauvegarde</translation>
     </message>
     <message>
         <source>Automatically backup saves on first daily launch</source>
@@ -4536,10 +4512,6 @@ Si une balise de version correspondante existe mais est vide, la balise de base 
 par exemple (modDependenciesByVersion,loadAfterByVersion,loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
-        <source>Mod list options</source>
-        <translation>Options de la liste de modules</translation>
-    </message>
-    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Notifie le téléchargement des mods qui peuvent manquer dans la liste de mods active</translation>
     </message>
@@ -4550,10 +4522,6 @@ par exemple (modDependenciesByVersion,loadAfterByVersion,loadBeforeByVersion, in
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
         <translation>Hides invalid mods, not recommended to enable</translation>
-    </message>
-    <message>
-        <source>Inactive Mods Sorting</source>
-        <translation>Tri des modules inactifs</translation>
     </message>
     <message>
         <source>Enable inactive mods sorting</source>
@@ -4572,10 +4540,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
     <message>
         <source>DB Builder</source>
         <translation>Db constructeur</translation>
-    </message>
-    <message>
-        <source>When building the database:</source>
-        <translation>Lors de la construction de la base de données:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4630,10 +4594,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Effacer automatiquement le cache de dépôt</translation>
     </message>
     <message>
-        <source>SteamCMD installation location</source>
-        <translation>Emplacement d'installation SteamCMD</translation>
-    </message>
-    <message>
         <source>Clear depot cache</source>
         <translation>Cache de dépôt effacer</translation>
     </message>
@@ -4650,20 +4610,8 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Installer Steamcmd</translation>
     </message>
     <message>
-        <source>todds</source>
-        <translation>todds</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>Préréglage de qualité</translation>
-    </message>
-    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>Optimisé - recommandé pour Rimworld</translation>
-    </message>
-    <message>
-        <source>When optimizing textures</source>
-        <translation>Lors de l'optimisation des textures</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4686,24 +4634,12 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Exécuter automatiquement Todds avant de lancer le jeu</translation>
     </message>
     <message>
-        <source>Theme</source>
-        <translation>Thème</translation>
-    </message>
-    <message>
-        <source>Theme Settings</source>
-        <translation>Paramètres de thème</translation>
-    </message>
-    <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>Activer d'utiliser le thème / la feuille de style au lieu du thème du système</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
         <translation>Emplacement du thème ouvert</translation>
-    </message>
-    <message>
-        <source>Font Settings</source>
-        <translation>Paramètres de police</translation>
     </message>
     <message>
         <source>Font Family</source>
@@ -4718,10 +4654,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Réinitialiser</translation>
     </message>
     <message>
-        <source>Language Setting</source>
-        <translation>Réglage de la langue</translation>
-    </message>
-    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>Sélectionnez la langue (redémarrer requise pour appliquer les modifications)</translation>
     </message>
@@ -4732,10 +4664,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
     <message>
         <source>Advanced</source>
         <translation>Avancé</translation>
-    </message>
-    <message>
-        <source>RimSort restart required for some settings</source>
-        <translation>Redémarrage de Rimsort requis pour certains paramètres</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
@@ -4798,14 +4726,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Modifier les arguments du jeu:</translation>
     </message>
     <message>
-        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
-        <translation>Expiration de la base de données en secondes par exemple, 604800 pendant 7 jours. et 0 pour aucune expiration.</translation>
-    </message>
-    <message>
-        <source>Authentication</source>
-        <translation>Authentification</translation>
-    </message>
-    <message>
         <source>Should be like: C:\Program Files (x86)\Steam\steamapps\common\RimWorld</source>
         <translation>Devrait être comme: C: \ Program Files (x86) \ Steam \ Steamapps \ Common \ Rimworld</translation>
     </message>
@@ -4820,10 +4740,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
     <message>
         <source>should be like: C:\Program Files (x86)\Steam\steamapps\common\Rimworld\Mods</source>
         <translation>devrait être comme: C: \ Program Files (x86) \ Steam \ Steamapps \ Common \ Rimworld \ MODS</translation>
-    </message>
-    <message>
-        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
-        <translation>Métadata auxiliaire DB DIMENT LIMIT DU TEMPS EN SECONDES. (Supprimer instantanément 0, jamais supprimer -1)</translation>
     </message>
     <message>
         <source>Enable editing</source>
@@ -4842,10 +4758,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Ceci est utile si vous souhaitez assurer des mises à jour de mod Clean.</translation>
     </message>
     <message>
-        <source>Launch State</source>
-        <translation>État de lancement</translation>
-    </message>
-    <message>
         <source>Min is {MIN_SIZE} and Max is {MAX_SIZE}. Values outside this range will be reset to defaults.</source>
         <translation>Min est  et max est . Les valeurs en dehors de cette plage seront réinitialisées aux valeurs par défaut. {MAX_SIZE} {MIN_SIZE}</translation>
     </message>
@@ -4862,36 +4774,8 @@ La désactivation de cette option peut améliorer les performances en évitant d
         <translation>Taille personnalisée</translation>
     </message>
     <message>
-        <source>Main Window Launch State</source>
-        <translation>État de lancement de la fenêtre principale</translation>
-    </message>
-    <message>
-        <source>Browser Window Launch State</source>
-        <translation>État de lancement de la fenêtre du navigateur</translation>
-    </message>
-    <message>
-        <source>Settings Window Launch State</source>
-        <translation>État de lancement de la fenêtre des paramètres</translation>
-    </message>
-    <message>
-        <source>Custom Width:</source>
-        <translation>Largeur personnalisée:</translation>
-    </message>
-    <message>
-        <source>Custom Height:</source>
-        <translation>Hauteur personnalisée:</translation>
-    </message>
-    <message>
         <source>Apply mod coloring to background instead of text</source>
         <translation>Appliquer la coloration du mod sur l'arrière-plan au lieu du texte</translation>
-    </message>
-    <message>
-        <source>Auxiliary DB</source>
-        <translation>Db auxiliaire</translation>
-    </message>
-    <message>
-        <source>Integration with recent save</source>
-        <translation>Intégration avec une sauvegarde récente</translation>
     </message>
     <message>
         <source>Compare mod lists with the recent save file</source>
@@ -4904,10 +4788,6 @@ La désactivation de cette option peut améliorer les performances en évitant d
     <message>
         <source>Custom todds command</source>
         <translation>Commande Todds personnalisée</translation>
-    </message>
-    <message>
-        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>Si -p comme dans le chemin, n'est pas spécifié, le chemin à partir de la sélection active active ou de tous les mods sera utilisé.</translation>
     </message>
     <message>
         <source>eg: {todds_example}</source>
@@ -4934,24 +4814,12 @@ Ces vérifications peuvent prendre quelques secondes en fonction du nombre de fi
         <translation>Outils externes</translation>
     </message>
     <message>
-        <source>Text Editor command location</source>
-        <translation>Emplacement de la commande de l'éditeur de texte</translation>
-    </message>
-    <message>
         <source>Additional Arguments (Opening Folders)</source>
         <translation>Arguments supplémentaires (dossiers d'ouverture)</translation>
     </message>
     <message>
         <source>Additional Arguments (Opening Single File)</source>
         <translation>Arguments supplémentaires (ouvrir un seul fichier)</translation>
-    </message>
-    <message>
-        <source>Sorting Method</source>
-        <translation>Méthode de tri</translation>
-    </message>
-    <message>
-        <source>Dependencies Handling Behavior</source>
-        <translation>Comportement de gestion des dépendances</translation>
     </message>
     <message>
         <source>Use alternativePackageIds as satisfying dependencies</source>
@@ -4962,10 +4830,6 @@ Ces vérifications peuvent prendre quelques secondes en fonction du nombre de fi
 E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
         <translation>S'il est activé, une entrée alternativepackageids dans environ.xml peut satisfaire la dépendance d'un mod lorsque la dépendance principale est manquante. 
 Par exemple, «Oels.VehiclemapFramework», alternatives: «oels.vehiclemapframework.dev»</translation>
-    </message>
-    <message>
-        <source>XML Parsing Behavior</source>
-        <translation>Comportement d'analyse XML</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -5985,6 +5849,17 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
         <translation>s'est produit sur  avec le code d'erreur {error_code}. {e.strerror} {e.filename}</translation>
+    </message>
+</context>
+<context>
+    <name>self.dialog</name>
+    <message>
+        <source>Clear all locations</source>
+        <translation>Effacer tous les emplacements</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear all locations?</source>
+        <translation>Êtes-vous sûr de vouloir effacer tous les emplacements ?</translation>
     </message>
 </context>
 <context>
