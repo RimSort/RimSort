@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +11,7 @@ from app.utils.update_utils import (
     filter_releases_by_stream,
 )
 
-MOCK_RELEASES = [
+MOCK_RELEASES: list[dict[str, Any]] = [
     {
         "tag_name": "Edge",
         "prerelease": True,
@@ -182,9 +183,9 @@ def mock_update_manager() -> UpdateManager:
         mgr._arch = "x86_64"
         mgr._cached_patterns = UpdateManager._platform_patterns.get("Linux")
         # Mock QObject methods that aren't available without proper init
-        mgr.tr = lambda s: s  # type: ignore[assignment]
+        mgr.tr = lambda s: s  # type: ignore[assignment,method-assign,misc]
         # Mock _check_needs_elevation since it inspects filesystem paths
-        mgr._check_needs_elevation = MagicMock(return_value=False)  # type: ignore[assignment]
+        mgr._check_needs_elevation = MagicMock(return_value=False)  # type: ignore[method-assign]
     return mgr
 
 
