@@ -164,7 +164,7 @@ class SteamDatabaseBuilder(QThread):
                         if isinstance(v, AboutXmlMod) and v.authors
                         else "Missing XML: <author(s)>",
                         "gameVersions": (
-                            list(v.supported_versions)
+                            sorted(v.supported_versions)
                             if isinstance(v, AboutXmlMod) and v.supported_versions
                             else ["Missing XML: <supportedversions> or <targetversion>"]
                         ),
