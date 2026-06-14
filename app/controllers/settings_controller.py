@@ -683,14 +683,13 @@ class SettingsController(QObject):
         if steam_root:
             game_folder_str = find_steam_rimworld(steam_root)
             if game_folder_str:
-                game_folder = Path(game_folder_str) / "RimworldMac.app"
+                game_folder = self._find_mac_app_bundle(Path(game_folder_str))
                 logger.debug(f"VDF parsing found RimWorld at: {game_folder}")
             else:
-                game_folder = (
-                    steam_root / "steamapps" / "common" / "Rimworld" / "RimworldMac.app"
-                )
+                fallback_game_folder = steam_root / "steamapps" / "common" / "RimWorld"
+                game_folder = self._find_mac_app_bundle(fallback_game_folder)
                 logger.debug(
-                    f"VDF parsing did not find RimWorld, using fallback: {game_folder}"
+                    f"VDF parsing did not find RimWorld, using fallback_game_folder: {game_folder}"
                 )
 
             steam_mods_folder_str = get_path_up_to_string(
@@ -705,16 +704,16 @@ class SettingsController(QObject):
                     Path(steam_mods_folder_str) / "workshop" / "content" / "294100"
                 )
         else:
-            game_folder = (
+            fallback_game_folder = (
                 user_home
                 / "Library"
                 / "Application Support"
                 / "Steam"
                 / "steamapps"
                 / "common"
-                / "Rimworld"
-                / "RimworldMac.app"
+                / "RimWorld"
             )
+            game_folder = self._find_mac_app_bundle(fallback_game_folder)
             steam_mods_folder = (
                 user_home
                 / "Library"
@@ -731,6 +730,19 @@ class SettingsController(QObject):
         )
 
         return game_folder, config_folder, steam_mods_folder
+
+    @staticmethod
+    def _find_mac_app_bundle(rimworld_dir: Path) -> Path:
+        """Find the .app bundle in a RimWorld directory.
+
+        Discovers the actual filesystem-cased name instead of hardcoding it,
+        since macOS is case-insensitive but path comparisons are case-sensitive.
+        """
+        if rimworld_dir.is_dir():
+            apps = list(rimworld_dir.glob("*.app"))
+            if apps:
+                return apps[0]
+        return rimworld_dir / "RimWorldMac.app"
 
     def __get_linux_paths(self) -> tuple[Path, Path, Path]:
         """

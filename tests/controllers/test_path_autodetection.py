@@ -263,9 +263,9 @@ class TestGetDarwinPaths:
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = self._call(_make_controller())
 
-        # Fallback uses "Rimworld" (lowercase w) — matches existing behavior
+        # Fallback uses canonical "RimWorld" casing when no .app bundle found on disk
         expected_game = (
-            steam_root / "steamapps" / "common" / "Rimworld" / "RimworldMac.app"
+            steam_root / "steamapps" / "common" / "RimWorld" / "RimWorldMac.app"
         )
         assert result[0] == expected_game
 
@@ -292,7 +292,7 @@ class TestGetDarwinPaths:
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = self._call(_make_controller())
 
-        assert "RimworldMac.app" in str(result[0])
+        assert "RimWorldMac.app" in str(result[0])
         assert "Config" in str(result[1])
         assert "294100" in str(result[2])
 
