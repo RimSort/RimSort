@@ -71,6 +71,7 @@ class LocationsTabController(BaseTabController):
         dialog: SettingsDialog,
         validate_game_location: Callable[[str], bool],
         validate_config_folder_location: Callable[[str], bool],
+        validate_local_mods_location: Callable[[str], bool],
         on_path_selected: Callable[[str], None],
         on_autodetect: Callable[[], None],
         on_instance_folder_choose: Callable[[], None],
@@ -79,6 +80,7 @@ class LocationsTabController(BaseTabController):
         super().__init__(settings, dialog)
         self._validate_game_location = validate_game_location
         self._validate_config_folder_location = validate_config_folder_location
+        self._validate_local_mods_location = validate_local_mods_location
         self._path_selected_callback = on_path_selected
         self._on_autodetect_callback = on_autodetect
         self._on_instance_folder_choose_callback = on_instance_folder_choose
@@ -210,6 +212,7 @@ class LocationsTabController(BaseTabController):
         )
         if not steam_mods_folder:
             return None
+
         self._path_selected_callback(str(Path(steam_mods_folder).parent))
         return steam_mods_folder
 
@@ -220,6 +223,10 @@ class LocationsTabController(BaseTabController):
         )
         if not local_mods_folder:
             return None
+
+        if not self._validate_local_mods_location(local_mods_folder):
+            return None
+
         self._path_selected_callback(str(Path(local_mods_folder).parent))
         return local_mods_folder
 
