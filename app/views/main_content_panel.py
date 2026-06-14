@@ -1006,9 +1006,10 @@ class MainContent(QObject):
                 text=self.tr("The selected sorting algorithm is not implemented"),
                 information=(
                     self.tr(
-                        "This may be caused by malformed settings or improper migration between versions or different mod manager. "
+                        "This may be caused by malformed settings or improper migration between versions or different mod manager.<br><br>"
                         "Try resetting your settings, selecting a different sorting algorithm, or "
-                        "deleting your settings file. If the issue persists, please report it the developers."
+                        "deleting your settings file.<br><br>"
+                        "If the issue persists, please report it to the developers."
                     )
                 ),
                 details=str(e),
@@ -1176,8 +1177,8 @@ class MainContent(QObject):
                 dialogue.show_information(
                     title=self.tr("Important"),
                     text=self.tr(
-                        "You will need to redo Rentry import again after downloads complete. "
-                        "If there missing mods after download completes, they will be shown inside the missing mods panel. "
+                        "You will need to redo Rentry import again after downloads complete.<br><br>"
+                        "If there missing mods after download completes, they will be shown inside the missing mods panel.<br><br>"
                         "If RimSort is still not able to download some mods, "
                         "It's due to the mod data not being available in both Rentry link and steam database."
                     ),
@@ -1409,7 +1410,7 @@ class MainContent(QObject):
             dialogue.show_information(
                 title=self.tr("Uploaded active mod list"),
                 text=self.tr(
-                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{url}"
+                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:<br><br>{url}"
                 ).format(url=url),
                 information=self.tr('Click "Show Details" to see the full report!'),
                 details=report,
@@ -1569,7 +1570,7 @@ class MainContent(QObject):
                     path=path
                 ),
                 information=self.tr(
-                    "The URL has been copied to your clipboard:\n\n{ret}"
+                    "The URL has been copied to your clipboard:<br><br>{ret}"
                 ).format(ret=ret),
             )
             webbrowser.open(ret)
@@ -1753,7 +1754,7 @@ class MainContent(QObject):
             title=self.tr("No valid paths for todds"),
             text=self.tr("todds could not find any valid mod folders to process."),
             information=self.tr(
-                "None of the configured mod folder paths exist on disk. "
+                "None of the configured mod folder paths exist on disk.<br><br>"
                 "Please verify your Local Mods and Workshop folders are correctly "
                 "set in Settings, then try again."
             ),
@@ -1922,7 +1923,7 @@ class MainContent(QObject):
                 text=self.tr(
                     "RimSort was unable to check your Workshop mods for updates."
                 ),
-                details="\n".join(result.errors) if result.errors else None,
+                details="<br>".join(result.errors) if result.errors else None,
             )
             return
 
@@ -1935,7 +1936,7 @@ class MainContent(QObject):
                     failed=len(result.failed_pfids),
                     total=result.mods_checked,
                 ),
-                details="\n".join(result.errors) if result.errors else None,
+                details="<br>".join(result.errors) if result.errors else None,
             )
 
         # For both "success" and "partial", show the updater panel
@@ -1965,7 +1966,7 @@ class MainContent(QObject):
             dialogue.show_warning(
                 title=self.tr("Steam Client Integration is disabled"),
                 text=self.tr(
-                    "This feature requires Steam Client Integration to be enabled in Settings. "
+                    "This feature requires Steam Client Integration to be enabled in Settings.<br><br>"
                     "Please enable Steam Client Integration if you own the game on Steam."
                 ),
             )
@@ -2346,7 +2347,7 @@ class MainContent(QObject):
                     dialogue.show_warning(
                         title=self.tr("Failed to download zip file"),
                         text=self.tr("The zip file could not be downloaded."),
-                        information=self.tr("File: {file_path}\nError: {e}").format(
+                        information=self.tr("File: {file_path}<br>Error: {e}").format(
                             file_path=temp_path, e=e
                         ),
                     )
@@ -2397,7 +2398,7 @@ class MainContent(QObject):
                 text=self.tr(
                     "This ZIP file uses a compression method that is not supported by this version."
                 ),
-                information=self.tr("File: {file_path}\nError: {e}").format(
+                information=self.tr("File: {file_path}<br>Error: {e}").format(
                     file_path=file_path, e=e
                 ),
             )
@@ -2406,7 +2407,7 @@ class MainContent(QObject):
             dialogue.show_warning(
                 title=self.tr("Failed to extract zip file"),
                 text=self.tr("The zip file could not be extracted."),
-                information=self.tr("File: {file_path}\nError: {e}").format(
+                information=self.tr("File: {file_path}<br>Error: {e}").format(
                     file_path=file_path, e=e
                 ),
             )
@@ -2443,8 +2444,8 @@ class MainContent(QObject):
                     "All files in the archive already exist in the target path."
                 ),
                 information=self.tr(
-                    "How would you like to proceed?\n\n"
-                    "1) Overwrite All — Replace all existing files and directories.\n"
+                    "How would you like to proceed?<br><br>"
+                    "1) Overwrite All — Replace all existing files and directories.<br>"
                     "2) Cancel — Abort the operation."
                 ),
                 button_text_override=["Overwrite All"],
@@ -2459,10 +2460,10 @@ class MainContent(QObject):
                     "The following files or directories already exist in the target path:"
                 ),
                 information=self.tr(
-                    "{conflicts_list}\n\n"
-                    "How would you like to proceed?\n\n"
-                    "1) Overwrite All — Replace all existing files and directories.\n"
-                    "2) Skip Existing — Extract only new files and leave existing ones untouched.\n"
+                    "{conflicts_list}<br><br>"
+                    "How would you like to proceed?<br><br>"
+                    "1) Overwrite All — Replace all existing files and directories.<br>"
+                    "2) Skip Existing — Extract only new files and leave existing ones untouched.<br>"
                     "3) Cancel — Abort the extraction."
                 ).format(
                     conflicts_list="<br/>".join(conflicts[:5])
@@ -2540,7 +2541,7 @@ class MainContent(QObject):
             text=self.tr("git executable was not found in $PATH!"),
             information=(
                 self.tr(
-                    "Git integration will not work without Git installed! Do you want to open download page for Git?\n\n"
+                    "Git integration will not work without Git installed! Do you want to open download page for Git?<br><br>"
                     "If you just installed Git, please restart RimSort for the PATH changes to take effect."
                 )
             ),
@@ -2754,7 +2755,7 @@ class MainContent(QObject):
             title=self.tr("RimSort - DB Builder"),
             text=self.tr("Do you want to continue?"),
             information=self.tr(
-                "This operation will overwrite the {rules_source} database located at the following path:\n\n{path}"
+                "This operation will overwrite the {rules_source} database located at the following path:<br><br>{path}"
             ).format(rules_source=rules_source, path=path),
         )
         if answer == QMessageBox.StandardButton.Yes:
@@ -2876,7 +2877,7 @@ class MainContent(QObject):
                         "todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway."
                     ).format(exit_code=exit_code),
                     information=self.tr(
-                        "You may experience longer loading times or higher memory usage. "
+                        "You may experience longer loading times or higher memory usage.<br><br>"
                         "Check the todds output window for details."
                     ),
                 )

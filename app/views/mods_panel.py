@@ -2084,7 +2084,7 @@ class ModListWidget(QListWidget):
                             "You have selected {len} mods for deletion + re-download."
                         ).format(len=len(steamcmd_publishedfileid_to_redownload)),
                         information=self.tr(
-                            "\nThis operation will recursively delete all mod files, except for .dds textures found, "
+                            "<br>This operation will recursively delete all mod files, except for .dds textures found, "
                             + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"
                         ),
                     )
@@ -2184,7 +2184,7 @@ class ModListWidget(QListWidget):
                             "You have selected {len} mods for resubscribe:(unsubscribe + subscribe)."
                         ).format(len=len(publishedfileids)),
                         information=self.tr(
-                            "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
+                            "<br>This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
                         ),
                     )
                     if answer == QMessageBox.StandardButton.Yes:
@@ -2213,7 +2213,7 @@ class ModListWidget(QListWidget):
                         text=self.tr(
                             "You have selected {len} mods for unsubscribe."
                         ).format(len=len(publishedfileids)),
-                        information=self.tr("\nDo you want to proceed?"),
+                        information=self.tr("<br>Do you want to proceed?"),
                     )
                     if answer == QMessageBox.StandardButton.Yes:
                         logger.debug(
@@ -2287,7 +2287,7 @@ class ModListWidget(QListWidget):
                         text=self.tr("This will remove the selected mod, ")
                         + f"{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get('steamName', steamdb_remove_blacklist)}, "
                         + "from your configured Steam DB blacklist."
-                        + "\nDo you want to proceed?",
+                        + "<br>Do you want to proceed?",
                     )
                     if answer == QMessageBox.StandardButton.Yes:
                         self.steamdb_blacklist_signal.emit(

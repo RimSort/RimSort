@@ -760,7 +760,7 @@ class UpdateManager(QObject):
                 "An update to RimSort has been released: {latest_tag_name}"
             ).format(latest_tag_name=latest_tag_name),
             information=self.tr(
-                "You are running RimSort {current_version}\nDo you want to update now?"
+                "You are running RimSort {current_version}<br>Do you want to update now?"
             ).format(current_version=current_version),
         )
         return answer == QMessageBox.StandardButton.Yes
@@ -1198,7 +1198,7 @@ class UpdateManager(QObject):
                 title=self.tr("Update downloaded"),
                 text=self.tr("Do you want to proceed with the update?"),
                 information=self.tr(
-                    f"\nSuccessfully retrieved latest release.\nThe update will be installed from: {update_source_path}"
+                    f"<br>Successfully retrieved latest release.<br>The update will be installed from: {update_source_path}"
                 ),
             )
 
@@ -1243,7 +1243,7 @@ class UpdateManager(QObject):
             dialogue.show_warning(
                 title=self.tr(ERR_DOWNLOAD_FAILED_TITLE),
                 text=self.tr(ERR_DOWNLOAD_FAILED_TEXT),
-                information=f"Error: {str(e)}\nURL: {download_url}",
+                information=f"Error: {str(e)}<br>URL: {download_url}",
             )
         except UpdateExtractionError as e:
             logger.error(f"Update extraction failed: {e}")
@@ -1264,7 +1264,7 @@ class UpdateManager(QObject):
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
                 text=self.tr(ERR_UPDATE_FAILED_TEXT),
-                information=f"Error: {str(e)}\nURL: {download_url}",
+                information=f"Error: {str(e)}<br>URL: {download_url}",
                 details=traceback.format_exc(),
             )
         finally:

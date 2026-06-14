@@ -415,9 +415,9 @@ class SteamcmdInterface:
             title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
             text=self.translate(
                 "SteamcmdInterface",
-                "RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+                "RimSort was unable to find SteamCMD installed in the configured prefix:<br>",
             ),
-            information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
+            information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}<br><br>"
             + self.translate("SteamcmdInterface", "Do you want to setup SteamCMD?"),
             button_text_override=translated_btn_text,
         )
@@ -535,7 +535,7 @@ class SteamcmdInterface:
                 show_fatal_error(
                     "SteamcmdInterface",
                     f"Failed to download steamcmd for {self.system}",
-                    "Did the file/url change?\nDoes your environment have access to the internet?",
+                    "Did the file/url change?<br>Does your environment have access to the internet?",
                     details=f"Error: {type(e).__name__}: {str(e)}",
                 )
         else:
@@ -582,7 +582,7 @@ class SteamcmdInterface:
                     ),
                     self.translate(
                         "SteamcmdInterface",
-                        "Existing symlink: {symlink_destination_path}\n\nNew symlink:\n[{symlink_source_path}] -> ",
+                        "Existing symlink: {symlink_destination_path}<br><br>New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                         symlink_destination_path=symlink_destination_path,
@@ -613,7 +613,7 @@ class SteamcmdInterface:
                     ),
                     self.translate(
                         "SteamcmdInterface",
-                        "Existing destination: {symlink_destination_path}\n\nNew symlink:\n[{symlink_source_path}] -> ",
+                        "Existing destination: {symlink_destination_path}<br><br>New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                         symlink_destination_path=symlink_destination_path,
@@ -638,7 +638,8 @@ class SteamcmdInterface:
                         + " and is required for SteamCMD mod downloads to work correctly.",
                     ),
                     self.translate(
-                        "SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> "
+                        "SteamcmdInterface",
+                        "New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                     )

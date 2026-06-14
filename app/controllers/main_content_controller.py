@@ -297,10 +297,10 @@ class MainContentController(QObject):
         refresh_now = show_dialogue_conditional(
             title=self.tr("GitHub Auto-Update Complete"),
             text=self.tr(
-                "{count} mod(s) were auto-updated.\n\n{summary}\n\n"
+                "{count} mod(s) were auto-updated.<br><br>{summary}<br><br>"
                 "The updated versions won't appear until you refresh. "
                 "Refresh now?"
-            ).format(count=len(succeeded), summary="\n".join(summary_parts)),
+            ).format(count=len(succeeded), summary="<br>".join(summary_parts)),
         )
         if refresh_now:
             EventBus().do_refresh_mods_lists.emit()
@@ -410,12 +410,12 @@ class MainContentController(QObject):
         logger.debug(f"Found {len(updates)} repositories with updates.")
 
         if results.errors:
-            msg = "\n".join(f"{path}: {err}" for path, err in results.errors.items())
+            msg = "<br>".join(f"{path}: {err}" for path, err in results.errors.items())
             InformationBox(
                 title=self.tr("Errors during update check"),
                 text=self.tr("Some repositories encountered errors."),
                 information=self.tr(
-                    "Errors occurred while checking for updates:\n{errors}"
+                    "Errors occurred while checking for updates:<br>{errors}"
                 ).format(errors=msg),
             ).exec()
             return
@@ -431,9 +431,9 @@ class MainContentController(QObject):
         # Build details for user
         details_msg = ""
         for repo_path, messages in updates.items():
-            details_msg += f"{repo_path}\n"
+            details_msg += f"{repo_path}<br>"
             for msg in messages:
-                details_msg += f"\t{msg}\n"
+                details_msg += f"\t{msg}<br>"
 
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Git Updates Found"),
@@ -499,7 +499,7 @@ class MainContentController(QObject):
                 commit_info = getattr(results, "commit_info", {}).get(
                     str(repo_path), "No commit info"
                 )
-                details_msg += f"✓ {repo_name}\n  └─ {commit_info}\n\n"
+                details_msg += f"✓ {repo_name}<br>  └─ {commit_info}<br><br>"
 
             InformationBox(
                 title=self.tr("Updates Completed"),
@@ -512,7 +512,7 @@ class MainContentController(QObject):
         elif not successful:
             details_msg = ""
             for repo_path, err in failed:
-                details_msg += f"{Path(repo_path).name}: {err}\n"
+                details_msg += f"{Path(repo_path).name}: {err}<br>"
 
             InformationBox(
                 title=self.tr("Failed to update repo!"),
@@ -523,17 +523,17 @@ class MainContentController(QObject):
                 details=details_msg,
             ).exec()
         else:
-            details_msg = self.tr("Successful updates:\n")
+            details_msg = self.tr("Successful updates:<br>")
             for repo_path in successful:
                 repo_name = Path(repo_path).name
                 commit_info = getattr(results, "commit_info", {}).get(
                     str(repo_path), "No commit info"
                 )
-                details_msg += f"  ✓ {repo_name}\n    └─ {commit_info}\n"
+                details_msg += f"  ✓ {repo_name}<br>    └─ {commit_info}<br>"
 
-            details_msg += f"\n{self.tr('Failed updates:')}\n"
+            details_msg += f"<br>{self.tr('Failed updates:')}<br>"
             for repo_path, err in failed:
-                details_msg += f"  ✗ {Path(repo_path).name}: {err}\n"
+                details_msg += f"  ✗ {Path(repo_path).name}: {err}<br>"
 
             InformationBox(
                 title=self.tr("Partial Updates Completed"),
@@ -563,7 +563,7 @@ class MainContentController(QObject):
             information=self.tr(
                 "This will push local commits to the remote repositories."
             ),
-            details="\n".join([str(p) for p in repos_paths]),
+            details="<br>".join([str(p) for p in repos_paths]),
             positive_text=self.tr("Push"),
             negative_text=self.tr("Cancel"),
         )
@@ -621,12 +621,12 @@ class MainContentController(QObject):
                 information=self.tr("{count} repositories were pushed.").format(
                     count=len(successful)
                 ),
-                details="\n".join([Path(p).name for p in successful]),
+                details="<br>".join([Path(p).name for p in successful]),
             ).exec()
         elif not successful:
             details_msg = ""
             for repo_path, err in failed:
-                details_msg += f"{Path(repo_path).name}: {err}\n"
+                details_msg += f"{Path(repo_path).name}: {err}<br>"
 
             InformationBox(
                 title=self.tr("Push Failed"),
@@ -637,12 +637,12 @@ class MainContentController(QObject):
                 details=details_msg,
             ).exec()
         else:
-            details_msg = self.tr("Successful pushes:\n")
+            details_msg = self.tr("Successful pushes:<br>")
             for p in successful:
-                details_msg += f"  ✓ {Path(p).name}\n"
-            details_msg += f"\n{self.tr('Failed pushes:')}\n"
+                details_msg += f"  ✓ {Path(p).name}<br>"
+            details_msg += f"<br>{self.tr('Failed pushes:')}<br>"
             for repo_path, err in failed:
-                details_msg += f"  ✗ {Path(repo_path).name}: {err}\n"
+                details_msg += f"  ✗ {Path(repo_path).name}: {err}<br>"
 
             InformationBox(
                 title=self.tr("Partial Push Completed"),
@@ -673,7 +673,7 @@ class MainContentController(QObject):
         binary_diag = BinaryChoiceDialog(
             title=self.tr("Clone Repository"),
             text=self.tr("Do you want to clone this repository?"),
-            information=self.tr("Repository: {repo_url}\nDestination: {dest}").format(
+            information=self.tr("Repository: {repo_url}<br>Destination: {dest}").format(
                 repo_url=repo_url, dest=str(full_repo_path)
             ),
             positive_text=self.tr("Clone"),
@@ -999,8 +999,8 @@ class MainContentController(QObject):
         InformationBox(
             title=self.tr("Failed to clone repo!"),
             text=self.tr(
-                "The configured repo failed to clone/initialize! "
-                + "Are you connected to the Internet? "
+                "The configured repo failed to clone/initialize!<br><br>"
+                + "Are you connected to the Internet?<br><br>"
                 + "Is your configured repo valid?"
             ),
             information=error_message,
@@ -1396,7 +1396,7 @@ class MainContentController(QObject):
                 title=self.tr("Invalid repository"),
                 text=self.tr("An invalid repository was detected!"),
                 information=self.tr(
-                    "Please reconfigure a repository in settings!\n"
+                    "Please reconfigure a repository in settings!<br>"
                     + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"'
                 ),
             ).exec()
@@ -1411,7 +1411,7 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Invalid repository URL"),
                 text=self.tr("Failed to parse repository information from URL."),
-                information=self.tr("URL: {repo_url}\nError: {error}").format(
+                information=self.tr("URL: {repo_url}<br>Error: {error}").format(
                     repo_url=repo_url, error=str(e)
                 ),
             ).exec()
@@ -1459,7 +1459,7 @@ class MainContentController(QObject):
                     "Please ensure the file exists and then try to upload again!"
                 ),
                 information=self.tr(
-                    "File not found:\n{file_full_path}\nRepository:\n{repo_url}"
+                    "File not found:<br>{file_full_path}<br>Repository:<br>{repo_url}"
                 ).format(file_full_path=file_full_path, repo_url=repo_url),
             ).exec()
             return
@@ -1534,7 +1534,7 @@ class MainContentController(QObject):
                     title=self.tr("Fork created"),
                     text=self.tr("Created fork of repository."),
                     information=self.tr(
-                        "Fork: {fork_name}\nPlease wait a moment for GitHub to set up the fork."
+                        "Fork: {fork_name}<br>Please wait a moment for GitHub to set up the fork."
                     ).format(fork_name=fork_repo.full_name),
                 ).exec()
             except Exception as e:
@@ -2030,7 +2030,7 @@ class MainContentController(QObject):
                 title=self.tr("Pull request created"),
                 text=self.tr("Successfully created pull request!"),
                 information=self.tr(
-                    "Pull request created successfully.\nDo you want to open it in your web browser?\n\nURL: {url}"
+                    "Pull request created successfully.<br>Do you want to open it in your web browser?<br><br>URL: {url}"
                 ).format(url=pull_request.html_url),
             )
 
@@ -2049,8 +2049,8 @@ class MainContentController(QObject):
                 title=self.tr("Pull request failed"),
                 text=self.tr("Failed to create pull request."),
                 information=self.tr(
-                    "The changes were pushed to your fork successfully, but the pull request creation failed.\n\n"
-                    + "You can manually create a pull request on GitHub.\n\nError: {error}"
+                    "The changes were pushed to your fork successfully, but the pull request creation failed.<br><br>"
+                    + "You can manually create a pull request on GitHub.<br><br>Error: {error}"
                 ).format(error=str(e)),
             ).exec()
 

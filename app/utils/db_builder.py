@@ -230,7 +230,7 @@ class DatabaseBuilder(QObject):
                 text=self.tr("DB Builder query did not return any PublishedFileIDs!"),
                 information=self.tr(
                     "This is typically caused by invalid/missing Steam WebAPI key, "
-                    "or a connectivity issue to the Steam WebAPI.\n"
+                    "or a connectivity issue to the Steam WebAPI.<br>"
                     "PublishedFileIDs are needed to retrieve mods from Steam!"
                 ),
             )
@@ -397,10 +397,10 @@ class DatabaseBuilder(QObject):
                 "This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B."
             ),
             information=self.tr(
-                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
-                "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
-                "\n\t1) Select input A"
-                "\n\t2) Select input B"
+                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.<br>"
+                "A report of discrepancies is generated. You will be prompted for these paths in order:<br>"
+                "<br>\t1) Select input A"
+                "<br>\t2) Select input B"
             ),
         )
 
@@ -461,14 +461,14 @@ class DatabaseBuilder(QObject):
                 "This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions."
             ),
             information=self.tr(
-                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-                "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-                "- The following exceptions will be made:\n"
-                "\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
-                "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-                "\n\t1) Select input A (db to-be-updated)"
-                "\n\t2) Select input B (update source)"
-                "\n\t3) Select output C (resultant db)"
+                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.<br>"
+                "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.<br>"
+                "- The following exceptions will be made:<br>"
+                "<br>\t{DB_BUILDER_RECURSE_EXCEPTIONS}<br><br>"
+                "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:<br>"
+                "<br>\t1) Select input A (db to-be-updated)"
+                "<br>\t2) Select input B (update source)"
+                "<br>\t3) Select output C (resultant db)"
             ).format(
                 DB_BUILDER_RECURSE_EXCEPTIONS=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS
             ),

@@ -502,7 +502,7 @@ def platform_specific_open(path: str | Path) -> None:
                     dialogue.show_warning(
                         title="Failed to open file",
                         text="Could not open the file",
-                        information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
+                        information=f"No default application is associated with this file type: {p.suffix}<br><br>Please manually associate an application with {p.suffix} files or open the file manually.",
                         details=str(e),
                     )
             else:
@@ -830,9 +830,9 @@ def show_no_steam_warning() -> None:
         text=translate("SteamworksInterface", "Steam Integration Unavailable"),
         information=translate(
             "SteamworksInterface",
-            "RimSort could not detect Steam client or it may be unresponsive. "
-            "Please make sure Steam is installed and running. "
-            "If you are a Steam user, please check that Steam is running and that you are logged in. "
+            "RimSort could not detect Steam client or it may be unresponsive.<br><br>"
+            "Please make sure Steam is installed and running.<br><br>"
+            "If you are a Steam user, please check that Steam is running and that you are logged in.<br><br>"
             "Try restarting Steam.",
         ),
         details=translate(

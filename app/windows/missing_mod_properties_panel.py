@@ -225,10 +225,10 @@ class MissingModPropertiesPanel(BaseModsPanel):
             skipped_mods: List of mod names that were skipped
         """
         if skipped_mods:
-            skipped_list = "\n".join([f"• {m}" for m in skipped_mods])
+            skipped_list = "<br>".join([f"• {m}" for m in skipped_mods])
             message = (
-                "Cannot add mods with missing Package IDs to the ignore list.\n"
-                "These mods need valid Package IDs first:\n" + skipped_list
+                "Cannot add mods with missing Package IDs to the ignore list.<br>"
+                "These mods need valid Package IDs first:<br>" + skipped_list
             )
             self._show_message("Cannot Add", message, "warning")
         else:

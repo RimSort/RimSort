@@ -414,11 +414,11 @@ class MainWindow(QMainWindow):
             ),
             information=(
                 self.tr(
-                    "Workshop folder: {existing_instance_workshop_folder}\n\n"
-                    + "Option 1: Convert to SteamCMD\n"
-                    + "RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.\n\n"
-                    + "Option 2: Keep Workshop Folder\n"
-                    + "The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.\n\n"
+                    "Workshop folder: {existing_instance_workshop_folder}<br><br>"
+                    + "Option 1: Convert to SteamCMD<br>"
+                    + "RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.<br><br>"
+                    + "Option 2: Keep Workshop Folder<br>"
+                    + "The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.<br><br>"
                     + "How would you like to proceed?"
                 ).format(
                     existing_instance_workshop_folder=existing_instance_workshop_folder
@@ -782,16 +782,16 @@ class MainWindow(QMainWindow):
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
-                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
-                + "\nThis will clone the instance's game, mod, and configuration data. This operation may take a long time depending on the amount of data being cloned.\n"
-                + "\nThe following folders will be cloned:",
-                information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
-                + f"\nConfiguration folder:\n{existing_instance_config_folder if existing_instance_config_folder else '<None>'}\n"
-                + f"\nLocal mods folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
-                + f"\nWorkshop mods folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
-                + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
-                + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n"
-                + f"\nRun arguments:\n{existing_instance_run_args if existing_instance_run_args else '<None>'}\n",
+                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?<br>"
+                + "<br>This will clone the instance's game, mod, and configuration data. This operation may take a long time depending on the amount of data being cloned.<br>"
+                + "<br>The following folders will be cloned:",
+                information=f"Game folder:<br>{existing_instance_game_folder if existing_instance_game_folder else '&lt;None&gt;'}<br>"
+                + f"<br>Configuration folder:<br>{existing_instance_config_folder if existing_instance_config_folder else '&lt;None&gt;'}<br>"
+                + f"<br>Local mods folder:<br>{existing_instance_local_folder if existing_instance_local_folder else '&lt;None&gt;'}<br>"
+                + f"<br>Workshop mods folder:<br>{existing_instance_workshop_folder if existing_instance_workshop_folder else '&lt;None&gt;'}<br>"
+                + "<br>SteamCMD install path (steamcmd + steam folders will be cloned):"
+                + f"<br>{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '&lt;None&gt;'}<br>"
+                + f"<br>Run arguments:<br>{existing_instance_run_args if existing_instance_run_args else '&lt;None&gt;'}<br>",
             )
             if answer.exec_is_positive():
                 # Clone the RimWorld game_folder to the new instance
@@ -1033,8 +1033,8 @@ class MainWindow(QMainWindow):
                         "Would you like to automatically generate run args for the new instance?"
                     ),
                     information=self.tr(
-                        "This will try to generate run args for the new instance based on the configured Game/Config folders.\n\n"
-                        + "Generated run arguments preview:\n{preview}"
+                        "This will try to generate run args for the new instance based on the configured Game/Config folders.<br><br>"
+                        + "Generated run arguments preview:<br>{preview}"
                     ).format(preview=preview_text),
                 )
                 if answer == QMessageBox.StandardButton.Yes:
