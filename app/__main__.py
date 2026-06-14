@@ -96,6 +96,10 @@ def handle_exception(
 sys.excepthook = handle_exception
 
 
+# Process --dev flag if present (before any other initialization)
+if "--dev" in sys.argv:
+    os.environ["RIMSORT_DEV"] = "1"
+
 # Process --disable-updater flag if present (before any other initialization)
 if "--disable-updater" in sys.argv:
     os.environ["RIMSORT_DISABLE_UPDATER"] = "1"
@@ -175,12 +179,12 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
-    # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
-    debug_file_path = AppInfo().app_storage_folder / "DEBUG"
-    if debug_file_path.exists() and debug_file_path.is_file():
+    # Dev mode always enables debug logging; production checks for a DEBUG file
+    if AppInfo().is_dev_mode:
         DEBUG_MODE = True
     else:
-        DEBUG_MODE = False
+        debug_file_path = AppInfo().app_storage_folder / "DEBUG"
+        DEBUG_MODE = debug_file_path.exists() and debug_file_path.is_file()
 
     # We have log_file (foo.log) and old_log_file (foo.old.log). If old_log_file exists,
     # remove it. If log_file exists, rename it to old_log_file. When we pass log_file to
@@ -234,4 +238,8 @@ if __name__ == "__main__":
         logger.debug("Running using Nuitka bundle")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
+    if AppInfo().is_dev_mode:
+        logger.info(
+            f"Running in dev mode - data stored at {AppInfo().app_storage_folder.parent}"
+        )
     main_thread()
