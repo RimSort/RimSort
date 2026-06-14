@@ -205,28 +205,19 @@ def path_to_mod_tags(
     return ", ".join(sorted(tag.lower() for tag in tags))
 
 
-def uuid_to_mod_updated(
-    uuid: str,
-    cached_metadata: Optional[dict[str, Any]] = None,
+def path_to_mod_updated(
+    path: str, path_to_updated: dict[str, int] | None = None
 ) -> int:
     """
     Get time a mod was updated on the Steam Workshop for inactive mods list sorting.
 
-    Returns the update timestamp as int if available, otherwise 0.
-
-    Args:
-        uuid: The UUID of the mod
-        cached_metadata: Optional pre-cached metadata dict to avoid repeated lookups
-
-    Returns:
-        Update timestamp as int, or 0 if not available
+    :param path: The path of the mod
+    :param path_to_updated: Pre-built path→timestamp mapping from aux DB
+    :return: Update timestamp as int, or 0 if not available
     """
-    if cached_metadata is not None:
-        metadata = cached_metadata.get(uuid)
-    else:
-        metadata = get_mod_metadata(uuid)
-
-    return metadata.get("internal_time_updated", 0) if metadata else 0
+    if path_to_updated is not None:
+        return path_to_updated.get(path, 0)
+    return 0
 
 
 def get_dir_size(path: str) -> int:
@@ -301,12 +292,38 @@ def _get_path_to_color_map(
     return path_to_color
 
 
+def _get_path_to_updated_map(
+    paths: list[str],
+    settings_controller: Any,
+) -> dict[str, int]:
+    """Build a path→acf_time_updated mapping from the aux DB for update-time sorting.
+
+    :param paths: List of mod paths to fetch update times for
+    :param settings_controller: SettingsController instance
+    :return: Dictionary mapping path -> update timestamp (only includes mods with valid timestamps)
+    """
+    path_to_updated: dict[str, int] = {}
+    try:
+        aux_controller = AuxMetadataController.get_or_create_cached_instance(
+            settings_controller.settings.aux_db_path
+        )
+        with aux_controller.Session() as aux_session:
+            for path in paths:
+                aux_entry = aux_controller.get(aux_session, path)
+                if aux_entry and aux_entry.acf_time_updated > 0:
+                    path_to_updated[path] = aux_entry.acf_time_updated
+    except Exception as e:
+        logger.warning(f"Failed to fetch update times from auxiliary metadata: {e}")
+    return path_to_updated
+
+
 def _build_sort_key_map(
     paths: list[str],
     key: "ModsPanelSortKey",
     cached_metadata: dict[str, ListedMod | None] | None = None,
     settings_controller: Any | None = None,
     path_to_color: dict[str, str] | None = None,
+    path_to_updated: dict[str, int] | None = None,
 ) -> dict[str, str | int]:
     """
     Pre-compute sort keys for all paths to improve sort performance.
@@ -316,6 +333,7 @@ def _build_sort_key_map(
     :param cached_metadata: Optional pre-cached metadata dict
     :param settings_controller: Optional SettingsController for tag sorting
     :param path_to_color: Optional pre-built path→color mapping for color sorting
+    :param path_to_updated: Optional pre-built path→timestamp mapping for update-time sorting
     :return: Dictionary mapping path -> computed sort key value (str or int).
     """
     sort_key_map: dict[str, str | int] = {}
@@ -339,7 +357,7 @@ def _build_sort_key_map(
                 path, cached_metadata, settings_controller
             )
         elif key == ModsPanelSortKey.MOD_UPDATED:
-            sort_key_map[uuid] = uuid_to_mod_updated(uuid, cached_metadata)
+            sort_key_map[path] = path_to_mod_updated(path, path_to_updated)
         else:
             sort_key_map[path] = path
     return sort_key_map
@@ -406,6 +424,11 @@ def sort_paths(
     if key == ModsPanelSortKey.MOD_COLOR and settings_controller is not None:
         path_to_color = _get_path_to_color_map(paths, settings_controller)
 
+    # Build update-time map if sorting by update time
+    path_to_updated: dict[str, int] | None = None
+    if key == ModsPanelSortKey.MOD_UPDATED and settings_controller is not None:
+        path_to_updated = _get_path_to_updated_map(paths, settings_controller)
+
     # Pre-compute sort keys to avoid repeated function calls during sort
     sort_key_map = _build_sort_key_map(
         paths,
@@ -413,6 +436,7 @@ def sort_paths(
         cached_metadata,
         settings_controller=settings_controller,
         path_to_color=path_to_color,
+        path_to_updated=path_to_updated,
     )
 
     # Get sort direction from default flags or explicit override
