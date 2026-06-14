@@ -171,6 +171,33 @@ def test_extract_version_prefers_asset_over_body() -> None:
 
 # --- Tests for UpdateManager downgrade handling ---
 
+MOCK_DOWNGRADE_RESPONSE: list[dict[str, Any]] = [
+    {
+        "tag_name": "v1.0.0",
+        "prerelease": False,
+        "draft": False,
+        "assets": [
+            {
+                "name": "RimSort-v1.0.0-Linux_x86_64.tar.gz",
+                "browser_download_url": "https://example.com/dl",
+            }
+        ],
+    },
+]
+
+
+def _setup_downgrade_mocks(
+    mock_get: MagicMock,
+    mock_app_info: MagicMock,
+    mock_update_manager: UpdateManager,
+) -> None:
+    mock_app_info.return_value.app_version = "2.0.0"
+    mock_update_manager.settings_controller.settings.update_stream = "stable"
+    mock_get.return_value = MagicMock(
+        status_code=200,
+        json=MagicMock(return_value=MOCK_DOWNGRADE_RESPONSE),
+    )
+
 
 @pytest.fixture
 def mock_update_manager() -> UpdateManager:
@@ -182,9 +209,7 @@ def mock_update_manager() -> UpdateManager:
         mgr._system = "Linux"
         mgr._arch = "x86_64"
         mgr._cached_patterns = UpdateManager._platform_patterns.get("Linux")
-        # Mock QObject methods that aren't available without proper init
         mgr.tr = lambda s: s  # type: ignore[assignment,method-assign,misc]
-        # Mock _check_needs_elevation since it inspects filesystem paths
         mgr._check_needs_elevation = MagicMock(return_value=False)  # type: ignore[method-assign]
     return mgr
 
@@ -202,26 +227,7 @@ def test_downgrade_declined_returns_none(
     mock_update_manager: UpdateManager,
 ) -> None:
     """When user declines downgrade, no update is returned."""
-    mock_app_info.return_value.app_version = "2.0.0"
-    mock_update_manager.settings_controller.settings.update_stream = "stable"
-    mock_get.return_value = MagicMock(
-        status_code=200,
-        json=MagicMock(
-            return_value=[
-                {
-                    "tag_name": "v1.0.0",
-                    "prerelease": False,
-                    "draft": False,
-                    "assets": [
-                        {
-                            "name": "RimSort-v1.0.0-Linux_x86_64.tar.gz",
-                            "browser_download_url": "https://example.com/dl",
-                        }
-                    ],
-                },
-            ]
-        ),
-    )
+    _setup_downgrade_mocks(mock_get, mock_app_info, mock_update_manager)
     with patch.object(mock_update_manager, "_parse_current_version") as mock_parse:
         from packaging import version as pkg_version
 
@@ -243,26 +249,7 @@ def test_downgrade_accepted_returns_update_info(
     mock_update_manager: UpdateManager,
 ) -> None:
     """When user accepts downgrade, update info is returned."""
-    mock_app_info.return_value.app_version = "2.0.0"
-    mock_update_manager.settings_controller.settings.update_stream = "stable"
-    mock_get.return_value = MagicMock(
-        status_code=200,
-        json=MagicMock(
-            return_value=[
-                {
-                    "tag_name": "v1.0.0",
-                    "prerelease": False,
-                    "draft": False,
-                    "assets": [
-                        {
-                            "name": "RimSort-v1.0.0-Linux_x86_64.tar.gz",
-                            "browser_download_url": "https://example.com/dl",
-                        }
-                    ],
-                },
-            ]
-        ),
-    )
+    _setup_downgrade_mocks(mock_get, mock_app_info, mock_update_manager)
     with (
         patch.object(mock_update_manager, "_parse_current_version") as mock_parse,
         patch.object(mock_update_manager, "_prompt_user_for_update", return_value=True),
