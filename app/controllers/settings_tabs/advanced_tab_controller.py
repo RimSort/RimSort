@@ -1,5 +1,6 @@
 from loguru import logger
 from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.models.settings import Settings
@@ -15,6 +16,8 @@ class AdvancedTabController(BaseTabController):
     save-comparison indicators, mod coloring mode, Auxiliary DB settings,
     and Authentication fields.
     """
+
+    STREAM_OPTIONS: tuple[str, ...] = ("stable", "beta", "edge")
 
     def __init__(
         self,
@@ -40,6 +43,10 @@ class AdvancedTabController(BaseTabController):
 
         self.dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
             self._on_include_mod_notes_in_mod_name_filter_changed
+        )
+
+        self.dialog.update_stream_combo.currentIndexChanged.connect(
+            self._on_update_stream_changed
         )
 
         EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
@@ -87,6 +94,14 @@ class AdvancedTabController(BaseTabController):
             self.settings.enable_backup_before_update
         )
         self.dialog.max_backups_spinbox.setValue(self.settings.max_backups)
+
+        self.dialog.update_stream_combo.blockSignals(True)
+        try:
+            idx = self.STREAM_OPTIONS.index(self.settings.update_stream)
+        except ValueError:
+            idx = 0
+        self.dialog.update_stream_combo.setCurrentIndex(idx)
+        self.dialog.update_stream_combo.blockSignals(False)
 
         # Auxiliary DB
         self.dialog.aux_db_time_limit.setText(str(self.settings.aux_db_time_limit))
@@ -137,6 +152,11 @@ class AdvancedTabController(BaseTabController):
         )
         self.settings.max_backups = self.dialog.max_backups_spinbox.value()
 
+        idx = self.dialog.update_stream_combo.currentIndex()
+        self.settings.update_stream = (
+            self.STREAM_OPTIONS[idx] if idx < len(self.STREAM_OPTIONS) else "stable"
+        )
+
         # Auxiliary DB
         try:
             self.settings.aux_db_time_limit = int(self.dialog.aux_db_time_limit.text())
@@ -166,6 +186,46 @@ class AdvancedTabController(BaseTabController):
         self.settings.include_mod_notes_in_mod_name_filter = (
             self.dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
         )
+
+    @Slot(int)
+    def _on_update_stream_changed(self, index: int) -> None:
+        new_stream = (
+            self.STREAM_OPTIONS[index] if index < len(self.STREAM_OPTIONS) else "stable"
+        )
+        old_stream = self.settings.update_stream
+
+        if self.STREAM_OPTIONS.index(new_stream) > self.STREAM_OPTIONS.index(
+            old_stream
+        ):
+            if new_stream == "beta":
+                message = self.dialog.tr(
+                    "Beta builds are release candidates meant as a means to test "
+                    "new features and find bugs before a stable release. They may "
+                    "receive less testing than stable releases. If you find any bugs, "
+                    "please report them as a Github issue or create a thread in the "
+                    "#troubleshooting channel in the discord.\n\n"
+                    "Are you sure you want to switch?"
+                )
+            else:
+                message = self.dialog.tr(
+                    "Edge builds are created automatically from the latest "
+                    "development code every 12 hours. They may contain incomplete "
+                    "features, breaking changes, and bugs.\n\n"
+                    "Are you sure you want to switch?"
+                )
+
+            result = QMessageBox.warning(
+                self.dialog,
+                self.dialog.tr("Switch Update Channel"),
+                message,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if result != QMessageBox.StandardButton.Yes:
+                old_idx = self.STREAM_OPTIONS.index(old_stream)
+                self.dialog.update_stream_combo.blockSignals(True)
+                self.dialog.update_stream_combo.setCurrentIndex(old_idx)
+                self.dialog.update_stream_combo.blockSignals(False)
 
     @Slot()
     def _handle_mod_coloring_mode_changed(self) -> None:

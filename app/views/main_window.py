@@ -133,6 +133,11 @@ class MainWindow(QMainWindow):
         self.game_version_label.setEnabled(False)
         button_layout.addWidget(self.game_version_label)
 
+        self.rimsort_version_label = QLabel()
+        self.rimsort_version_label.setFont(GUIInfo().smaller_font)
+        self.rimsort_version_label.setEnabled(False)
+        button_layout.addWidget(self.rimsort_version_label)
+
         button_layout.addStretch()
 
         # Define button attributes

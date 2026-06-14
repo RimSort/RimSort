@@ -41,7 +41,7 @@ VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
 TAG_PREFIX_PATTERN = re.compile(r"^v", re.IGNORECASE)
 
 # API and network constants
-GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases"
 API_TIMEOUT = 15
 DOWNLOAD_TIMEOUT = 30
 
@@ -95,6 +95,68 @@ ERR_UPDATE_FAILED_TITLE = "Update failed"
 ERR_UPDATE_FAILED_TEXT = "An unexpected error occurred during the update process."
 ERR_RETRIEVE_RELEASE_TITLE = "Unable to retrieve latest release information"
 ERR_RETRIEVE_RELEASE_TEXT = "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
+
+
+def filter_releases_by_stream(
+    releases: list[dict[str, Any]], stream: str
+) -> dict[str, Any] | None:
+    """
+    Filter GitHub releases list to find the best match for the given update stream.
+
+    Fallback chain: edge -> beta -> stable, beta -> stable.
+
+    :param releases: List of release dicts from GitHub API
+    :param stream: One of "stable", "beta", "edge"
+    :return: The matching release dict, or None if no releases available
+    """
+    non_draft = [r for r in releases if not r.get("draft", False)]
+
+    if stream == "edge":
+        for r in non_draft:
+            if r.get("tag_name") == "Edge":
+                return r
+        return filter_releases_by_stream(non_draft, "beta")
+
+    if stream == "beta":
+        for r in non_draft:
+            tag = r.get("tag_name", "")
+            if "-beta" in tag.lower():
+                return r
+        return filter_releases_by_stream(non_draft, "stable")
+
+    # Stable (default): first non-prerelease
+    for r in non_draft:
+        if not r.get("prerelease", False):
+            return r
+
+    return None
+
+
+def extract_version_from_edge_release(release_data: dict[str, Any]) -> str:
+    """
+    Extract a PEP 440-compatible version string from an Edge release.
+
+    Edge releases use a rolling 'Edge' tag, so the actual version
+    (e.g., 'v1.2.3-edge5+abc1234') is in the release body or asset filenames.
+    The '-edge' suffix is normalized to '.dev' for PEP 440 compatibility.
+
+    :param release_data: Release dict from GitHub API
+    :return: PEP 440-compatible version string (e.g., '1.2.3.dev5')
+    """
+    for asset in release_data.get("assets", []):
+        name = asset.get("name", "")
+        match = re.search(r"v?(\d+\.\d+\.\d+)-edge(\d+)", name)
+        if match:
+            return f"{match.group(1)}.dev{match.group(2)}"
+
+    body = release_data.get("body", "")
+    match = re.search(r"v?(\d+\.\d+\.\d+)-edge(\d+)", body)
+    if match:
+        return f"{match.group(1)}.dev{match.group(2)}"
+
+    logger.warning("Could not extract version from Edge release, using 0.0.0")
+    return "0.0.0"
+
 
 if TYPE_CHECKING:
     from app.utils.metadata import SettingsController
@@ -674,8 +736,13 @@ class UpdateManager(QObject):
         logger.info(f"Current RimSort version: {current_version}")
 
         # Get the latest release info
-        logger.info("Fetching latest release information from GitHub API...")
-        latest_release_info = self._get_latest_release_info(needs_elevation)
+        stream = self.settings_controller.settings.update_stream
+        logger.info(
+            f"Fetching latest release information from GitHub API (stream: {stream})..."
+        )
+        latest_release_info = self._get_latest_release_info(
+            needs_elevation, stream=stream
+        )
         if not latest_release_info:
             logger.warning("Failed to retrieve latest release information")
             return None
@@ -689,7 +756,25 @@ class UpdateManager(QObject):
 
         # Compare versions
         current_version_parsed = self._parse_current_version(current_version)
-        if current_version_parsed >= latest_version:
+        if current_version_parsed > latest_version:
+            result = dialogue.show_dialogue_conditional(
+                title=self.tr("Downgrade Available"),
+                text=self.tr(
+                    "You're currently on {current} but the latest {stream} release is {latest}. "
+                    "Downgrading may require reconfiguring some settings."
+                ).format(
+                    current=current_version,
+                    stream=stream.capitalize(),
+                    latest=str(latest_version),
+                ),
+                information=self.tr(
+                    "Do you want to downgrade now, or wait for a newer release?"
+                ),
+                button_text_override=["Downgrade Now", "Wait"],
+            )
+            if result != "Downgrade Now":
+                return None
+        elif current_version_parsed == latest_version:
             logger.info("Already running the latest version")
             return None
 
@@ -789,28 +874,32 @@ class UpdateManager(QObject):
             raise UpdateError(f"Update failed: {e}") from e
 
     def _get_latest_release_info(
-        self, needs_elevation: bool = False
+        self, needs_elevation: bool = False, stream: str = "stable"
     ) -> ReleaseInfo | None:
         """
-        Get the latest release information from GitHub API.
+        Get the latest release information from GitHub API for the given stream.
 
-        Args:
-            needs_elevation: Whether elevation is needed (affects Windows asset selection)
-
-        Returns:
-            Dictionary containing version, tag_name, download_url, and is_msi flag, or None if failed
+        :param needs_elevation: Whether elevation is needed (affects Windows asset selection)
+        :param stream: Update stream - "stable", "beta", or "edge"
+        :return: Dictionary containing version, tag_name, download_url, and format flags, or None
         """
         try:
-            # Use releases API for better asset information
             response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT)
             response.raise_for_status()
-            release_data = response.json()
+            releases = response.json()
+
+            release_data = filter_releases_by_stream(releases, stream)
+            if not release_data:
+                logger.warning(f"No matching release found for stream '{stream}'")
+                self.show_update_error()
+                return None
 
             tag_name = release_data.get("tag_name", "")
-            # Normalize tag name by removing prefix 'v' if present
-            normalized_tag = TAG_PREFIX_PATTERN.sub("", str(tag_name))
+            if tag_name == "Edge":
+                normalized_tag = extract_version_from_edge_release(release_data)
+            else:
+                normalized_tag = TAG_PREFIX_PATTERN.sub("", str(tag_name))
 
-            # Parse version
             try:
                 latest_version = version.parse(normalized_tag)
             except Exception as e:
@@ -818,7 +907,6 @@ class UpdateManager(QObject):
                 self.show_update_error()
                 return None
 
-            # Get platform-specific download URL
             download_info = self._get_platform_download_url(
                 release_data.get("assets", []), needs_elevation
             )
