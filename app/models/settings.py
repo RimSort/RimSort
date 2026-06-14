@@ -191,6 +191,7 @@ class Settings(QObject):
         self.auto_backup_compression_count: int = 10
         self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
+        self.steam_launch_behavior: str = "prompt"
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
         self.include_mod_notes_in_mod_name_filter: bool = False

@@ -2127,7 +2127,10 @@ class MainContent(QObject):
         # use prebuilt libs path
         libs_path = str(AppInfo().libs_folder)
         if not self.steamworks_in_use:
-            if not check_steam_available(_libs=libs_path):
+            if not check_steam_available(
+                _libs=libs_path,
+                settings=self.settings_controller.settings,
+            ):
                 logger.error("Steam is not available, skipping Steamworks API call")
                 return
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
