@@ -346,13 +346,19 @@ class MainContent(QObject):
         config_folder_path = self.settings_controller.settings.instances[
             current_instance
         ].config_folder
-        logger.debug(f"Game folder: {game_folder_path}")
-        logger.debug(f"Config folder: {config_folder_path}")
+        local_mods_folder_path = self.settings_controller.settings.instances[
+            current_instance
+        ].local_folder
+        logger.info(f"Game folder: {game_folder_path}")
+        logger.info(f"Config folder: {config_folder_path}")
+        logger.info(f"Local mods folder: {local_mods_folder_path}")
         if (
             game_folder_path
             and config_folder_path
+            and local_mods_folder_path
             and os.path.exists(game_folder_path)
             and os.path.exists(config_folder_path)
+            and os.path.exists(local_mods_folder_path)
         ):
             logger.info("Essential paths set!")
             return True
@@ -360,13 +366,16 @@ class MainContent(QObject):
             logger.warning("Essential path(s) are invalid or not set!")
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("Essential path(s)"),
-                text=self.tr("Essential path(s) are invalid or not set!\n"),
+                text=self.tr("Essential path(s) are invalid or not set!"),
                 information=(
                     self.tr(
-                        "RimSort requires, at the minimum, for the game install folder and the "
-                        "config folder paths to be set, and that the paths both exist. Please set "
-                        "both of these manually or by using the autodetect functionality.\n\n"
-                        "Would you like to configure them now?"
+                        "RimSort requires the below paths to be set.<br/><br/>"
+                        "1) Game folder (Folder where RimWorld is installed).<br/><br/>"
+                        "2) Config folder (Folder where ModsConfig.xml is located)<br/><br/>"
+                        "3) Local mods folder (Mods folder inside the RimWorld installation).<br/><br/>"
+                        "4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)<br/><br/>"
+                        "Try Using the autodetect functionality to set all paths automatically.<br/><br/>"
+                        "Would you like to open the settings to configure them now?"
                     )
                 ),
             )
