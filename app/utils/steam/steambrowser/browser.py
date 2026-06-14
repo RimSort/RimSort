@@ -379,14 +379,14 @@ class SteamBrowser(QWidget):
                         "Empty list of mods returned, unable to add collection to list!"
                     ),
                     information=self.tr(
-                        "Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord"
+                        "Please reach out to us on Github Issues page or<br>#rimsort-testing on the Rocketman/CAI discord"
                     ),
                 )
         if len(self.downloader_list_dupe_tracking.keys()) > 0:
             # Build a report from our dict
             dupe_report = ""
             for pfid, name in self.downloader_list_dupe_tracking.items():
-                dupe_report = dupe_report + f"{name} | {pfid}\n"
+                dupe_report = dupe_report + f"{name} | {pfid}<br>"
             # Notify the user
             show_warning(
                 title=self.tr("SteamCMD downloader"),

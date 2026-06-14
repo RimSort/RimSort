@@ -2751,7 +2751,7 @@ def check_if_pfids_blacklisted(
         blacklisted_mods_report = ""
         for publishedfileid in blacklisted_mods:
             blacklisted_mods_report += (
-                f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})\n"
+                f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})<br>"
             )
             blacklisted_mods_report += f"Reason for blacklisting: {blacklisted_mods[publishedfileid]['comment']}"
         answer = show_dialogue_conditional(

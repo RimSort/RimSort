@@ -589,7 +589,7 @@ class RunnerPanel(QWidget):
         pfids_to_name = self._resolve_mod_names()
 
         # Compile details of failed mods for the report
-        details = "\n".join(
+        details = "<br>".join(
             f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
             for pfid in self.steamcmd_download_tracking
         )
@@ -597,7 +597,7 @@ class RunnerPanel(QWidget):
         answer = show_dialogue_conditional(
             title=self.tr("SteamCMD downloader"),
             text=self.tr(
-                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\n"
+                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?<br><br>"
                 "Click 'Show Details' to see a list of mods that failed."
             ),
             details=details,

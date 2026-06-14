@@ -661,7 +661,7 @@ class SettingsController(QObject):
                     information=(
                         "Steam installed via Snap is not officially supported and may cause issues. "
                         "We recommend installing Steam via your distribution's native package manager "
-                        "or Flatpak instead.\n\n"
+                        "or Flatpak instead.<br><br>"
                         "Autodetection will continue, but some paths may not work correctly."
                     ),
                 )

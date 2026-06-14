@@ -588,7 +588,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for complete deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will permanently delete the selected mod directories from the filesystem.\n\nDo you want to proceed?"
+                "<br>This operation will permanently delete the selected mod directories from the filesystem.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_mod_directory,
         )
@@ -602,7 +602,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for DDS texture deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will only delete optimized textures (.dds files) from the selected mods.\n\nDo you want to proceed?"
+                "<br>This operation will only delete optimized textures (.dds files) from the selected mods.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_dds_from_mod,
             update_db=False,
@@ -627,7 +627,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for selective deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will delete all mod files except for .dds texture files.\nThe .dds files will be preserved.\n\nDo you want to proceed?"
+                "<br>This operation will delete all mod files except for .dds texture files.<br>The .dds files will be preserved.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_except_dds,
         )
@@ -701,7 +701,7 @@ class ModDeletionMenu(QMenu):
                     action=self.tr(action).capitalize()
                 ),
                 text=self.tr(
-                    "Successfully initiated {action} from {len} Steam Workshop mod(s).\n"
+                    "Successfully initiated {action} from {len} Steam Workshop mod(s).<br>"
                     "The process may take a few moments to complete."
                 ).format(
                     action=self.tr(action).capitalize(),
@@ -763,10 +763,10 @@ class ModDeletionMenu(QMenu):
         if self._confirm_deletion(
             self.tr(f"Confirm Deletion and {action_capitalized}"),
             self.tr(
-                f"You have selected {selected_count} mod(s) for deletion.\n{steam_count} of these are Steam Workshop mods that will also be {action_past}."
+                f"You have selected {selected_count} mod(s) for deletion.<br>{steam_count} of these are Steam Workshop mods that will also be {action_past}."
             ),
             self.tr(
-                f"\nThis operation will:\n• Delete the selected mod directories from your filesystem\n• {action_capitalized} Steam Workshop mods from your Steam account\n\nDo you want to proceed?"
+                f"<br>This operation will:<br>• Delete the selected mod directories from your filesystem<br>• {action_capitalized} Steam Workshop mods from your Steam account<br><br>Do you want to proceed?"
             ),
         ):
             # Synchronize remove_from_uuids with current selected mods before deletion

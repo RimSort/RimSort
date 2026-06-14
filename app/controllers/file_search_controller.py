@@ -1037,7 +1037,7 @@ class FileSearchController(QObject):
                     "There was an error with your regular expression pattern."
                 ),
                 information=self.tr(
-                    "{error_msg}\n\nTry simplifying your pattern or check for syntax errors."
+                    "{error_msg}<br><br>Try simplifying your pattern or check for syntax errors."
                 ).format(error_msg=error_msg),
             )
         elif "permission" in error_msg.lower() or "access" in error_msg.lower():
@@ -1045,7 +1045,7 @@ class FileSearchController(QObject):
                 title=self.tr("File Access Error"),
                 text=self.tr("RimSort doesn't have permission to access some files."),
                 information=self.tr(
-                    "{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions."
+                    "{error_msg}<br><br>Try running RimSort with administrator privileges or check folder permissions."
                 ).format(error_msg=error_msg),
             )
         elif "memory" in error_msg.lower():
@@ -1053,7 +1053,7 @@ class FileSearchController(QObject):
                 title=self.tr("Memory Error"),
                 text=self.tr("RimSort ran out of memory while searching."),
                 information=self.tr(
-                    "{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files."
+                    "{error_msg}<br><br>Try searching in smaller batches or use the 'streaming search' method for very large files."
                 ).format(error_msg=error_msg),
             )
         else:
@@ -1061,7 +1061,7 @@ class FileSearchController(QObject):
                 title=self.tr("Search Error"),
                 text=self.tr("An error occurred during the search."),
                 information=self.tr(
-                    "{error_msg}\n\nPlease check your settings and try again."
+                    "{error_msg}<br><br>Please check your settings and try again."
                 ).format(error_msg=error_msg),
             )
 
