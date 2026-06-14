@@ -346,7 +346,8 @@ class ListedMod(BaseMod):
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
             try:
-                content = open(expected_path, encoding="utf-8-sig").read().strip()
+                with open(expected_path, encoding="utf-8-sig") as f:
+                    content = f.read().strip()
             except OSError as e:
                 logger.error(
                     f"Failed to read PublishedFileId.txt at {expected_path}: {e}"
