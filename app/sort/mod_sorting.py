@@ -266,6 +266,30 @@ def uuid_to_mod_tags(
     return ", ".join(sorted(tag.lower() for tag in tags))
 
 
+def uuid_to_mod_updated(
+    uuid: str,
+    cached_metadata: Optional[dict[str, Any]] = None,
+) -> int:
+    """
+    Get time a mod was updated on the Steam Workshop for inactive mods list sorting.
+
+    Returns the update timestamp as int if available, otherwise 0.
+
+    Args:
+        uuid: The UUID of the mod
+        cached_metadata: Optional pre-cached metadata dict to avoid repeated lookups
+
+    Returns:
+        Update timestamp as int, or 0 if not available
+    """
+    if cached_metadata is not None:
+        metadata = cached_metadata.get(uuid)
+    else:
+        metadata = get_mod_metadata(uuid)
+
+    return metadata.get("internal_time_updated", 0) if metadata else 0
+
+
 def get_dir_size(path: str) -> int:
     total = 0
     stack = [path]
@@ -398,6 +422,8 @@ def _build_sort_key_map(
             sort_key_map[uuid] = uuid_to_mod_tags(
                 uuid, cached_metadata, settings_controller
             )
+        elif key == ModsPanelSortKey.MOD_UPDATED:
+            sort_key_map[uuid] = uuid_to_mod_updated(uuid, cached_metadata)
         else:
             sort_key_map[uuid] = uuid
     return sort_key_map
@@ -417,6 +443,7 @@ class ModsPanelSortKey(Enum):
     VERSION = 6
     MOD_COLOR = 7
     MOD_TAGS = 8
+    MOD_UPDATED = 9
 
 
 # Lookup dictionary for default sort direction flags
@@ -431,6 +458,7 @@ DEFAULT_REVERSE_FLAGS = {
     ModsPanelSortKey.VERSION: False,
     ModsPanelSortKey.MOD_COLOR: False,
     ModsPanelSortKey.MOD_TAGS: False,
+    ModsPanelSortKey.MOD_UPDATED: False,
 }
 
 
@@ -453,7 +481,7 @@ def sort_uuids(
     Args:
         uuids: List of mod UUIDs to sort
         key: ModsPanelSortKey enum specifying the sort attribute
-             (MODNAME, FILESYSTEM_MODIFIED_TIME, AUTHOR, FOLDER_SIZE, PACKAGEID, VERSION, MOD_COLOR)
+             (MODNAME, FILESYSTEM_MODIFIED_TIME, AUTHOR, FOLDER_SIZE, PACKAGEID, VERSION, MOD_COLOR, MOD_UPDATED)
         descending: Optional bool to override default sort direction.
                    If None, uses DEFAULT_REVERSE_FLAGS. If True/False, sorts descending/ascending.
         cached_metadata: Optional pre-cached metadata dict to avoid repeated lookups.
