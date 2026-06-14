@@ -345,10 +345,20 @@ class ListedMod(BaseMod):
 
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
-            with open(expected_path, encoding="utf-8-sig") as file:
-                content = file.read().strip()
-                if content:
-                    return content
+            try:
+                content = open(expected_path, encoding="utf-8-sig").read().strip()
+            except OSError as e:
+                logger.error(
+                    f"Failed to read PublishedFileId.txt at {expected_path}: {e}"
+                )
+                return None
+            if not content.isdigit():
+                logger.error(
+                    f"PublishedFileId.txt at {expected_path} contains non-numeric value: {content!r}"
+                )
+                return None
+            if content:
+                return content
 
         if self.mod_folder is not None and self.mod_folder.isnumeric():
             candidate = int(self.mod_folder)

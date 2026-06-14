@@ -245,6 +245,78 @@ def test_listed_mod_new_fields() -> None:
     assert mod.db_builder_no_name is True
 
 
+class TestPublishedFileId:
+    """Tests for ListedMod.published_file_id with corrupt/edge-case files."""
+
+    def test_normal_id(self, tmp_path: Path) -> None:
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("1234567890")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id == "1234567890"
+
+    def test_id_with_whitespace(self, tmp_path: Path) -> None:
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("  1234567890  \n")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id == "1234567890"
+
+    def test_non_numeric_returns_none(self, tmp_path: Path) -> None:
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("not_a_number")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id is None
+
+    def test_empty_file_returns_none(self, tmp_path: Path) -> None:
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id is None
+
+    def test_bom_handled(self, tmp_path: Path) -> None:
+        """UTF-8 BOM is stripped by utf-8-sig encoding."""
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_bytes(b"\xef\xbb\xbf1234567890")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id == "1234567890"
+
+    def test_concatenated_ids_returns_none(self, tmp_path: Path) -> None:
+        """Two IDs without separator is not a valid numeric ID."""
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("1234567890 9876543210")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id is None
+
+    def test_no_file_uses_folder_name(self, tmp_path: Path) -> None:
+        mod_dir = tmp_path / "1617282896"
+        mod_dir.mkdir()
+        mod = ListedMod()
+        mod.mod_path = mod_dir
+        assert mod.published_file_id == "1617282896"
+
+    def test_no_file_non_numeric_folder(self, tmp_path: Path) -> None:
+        mod_dir = tmp_path / "my_cool_mod"
+        mod_dir.mkdir()
+        mod = ListedMod()
+        mod.mod_path = mod_dir
+        assert mod.published_file_id is None
+
+    def test_no_path_returns_none(self) -> None:
+        mod = ListedMod()
+        assert mod.published_file_id is None
+
+
 def _create_mod_with_about_xml(
     tmp_path: Path,
     folder_name: str = "test_mod",
