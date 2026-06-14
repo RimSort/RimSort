@@ -19,6 +19,7 @@ from app.utils.generic import (
     check_internet_connection,
     extract_git_dir_name,
     extract_git_user_or_org,
+    open_url_browser,
 )
 from app.utils.git_utils import GitOperationConfig, pygit2
 from app.utils.git_worker import (
@@ -2035,13 +2036,7 @@ class MainContentController(QObject):
             )
 
             if answer == QMessageBox.StandardButton.Yes:
-                # Open URL in browser
-                try:
-                    import webbrowser
-
-                    webbrowser.open(pull_request.html_url)
-                except Exception as e:
-                    logger.error(f"Failed to open browser: {e}")
+                open_url_browser(pull_request.html_url)
 
         except Exception as e:
             logger.error(f"Failed to create pull request: {e}")

@@ -5,7 +5,6 @@ import sys
 import tempfile
 import time
 import traceback
-import webbrowser
 from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, cast, overload
@@ -1573,7 +1572,7 @@ class MainContent(QObject):
                     "The URL has been copied to your clipboard:<br><br>{ret}"
                 ).format(ret=ret),
             )
-            webbrowser.open(ret)
+            open_url_browser(ret)
         else:
             dialogue.show_warning(
                 title=self.tr("Failed to upload file."),
