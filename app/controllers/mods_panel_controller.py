@@ -5,12 +5,14 @@ from loguru import logger
 from PySide6.QtCore import QObject, Qt, Slot
 from sqlalchemy import delete, update
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.event_bus import EventBus
 from app.views.dialogue import BinaryChoiceDialog
-from app.views.mods_panel import ModListWidget, ModsPanel
+from app.views.mods_panel import ModsPanel
 
 
 class ModsPanelController(QObject):
@@ -108,6 +110,7 @@ class ModsPanelController(QObject):
         )
         if not binary_diag.exec_is_positive():
             return
+        metadata_controller = MetadataController.instance()
         # Do visible mods first to resize the visible widgets
         loaded_active_mods = (
             self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
@@ -115,31 +118,29 @@ class ModsPanelController(QObject):
         loaded_inactive_mods = self.mods_panel.inactive_mods_list.get_all_loaded_and_toggled_mod_list_items()
         mods_done = set()
         for loaded_mod in loaded_active_mods + loaded_inactive_mods:
-            package_id = loaded_mod.metadata_manager.internal_local_metadata.get(
-                loaded_mod.uuid, {}
-            ).get("packageid")
-            loaded_mod.toggle_warning_signal.emit(package_id, loaded_mod.uuid)
-            mods_done.add(loaded_mod.uuid)
+            mod = metadata_controller.get_mod(loaded_mod.path)
+            package_id = (
+                str(mod.package_id) if mod and isinstance(mod, AboutXmlMod) else None
+            )
+            loaded_mod.toggle_warning_signal.emit(package_id, loaded_mod.path)
+            mods_done.add(loaded_mod.path)
 
         active_mods = self.mods_panel.active_mods_list.get_all_toggled_mod_list_items()
         inactive_mods = (
             self.mods_panel.inactive_mods_list.get_all_toggled_mod_list_items()
         )
-        for mod in active_mods + inactive_mods:
-            mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
-            if uuid in mods_done:
+        for item in active_mods + inactive_mods:
+            mod_data = item.data(Qt.ItemDataRole.UserRole)
+            path = mod_data["path"]
+            if path in mods_done:
                 continue
 
             if mod_data["warning_toggled"]:
                 mod_data["warning_toggled"] = False
-                mod.setData(Qt.ItemDataRole.UserRole, mod_data)
-                widget = mod.listWidget()
-                # Widget should always be of type ModListWidget
-                if isinstance(widget, ModListWidget):
-                    package_id = widget.metadata_manager.internal_local_metadata[
-                        mod_data["uuid"]
-                    ]["packageid"]
+                item.setData(Qt.ItemDataRole.UserRole, mod_data)
+                mod_obj = metadata_controller.get_mod(path)
+                if mod_obj is not None and isinstance(mod_obj, AboutXmlMod):
+                    package_id = str(mod_obj.package_id)
                     self._remove_from_all_ignore_lists(package_id)
                     # Update Aux DB
                     aux_metadata_controller = (
@@ -147,15 +148,13 @@ class ModsPanelController(QObject):
                             self.settings_controller.settings.aux_db_path
                         )
                     )
-                    if not uuid:
+                    if not path:
                         logger.error(
-                            "Unable to retrieve uuid when saving toggle_warning to Aux DB after menu bar reset."
+                            "Unable to retrieve path when saving toggle_warning to Aux DB after menu bar reset."
                         )
                         return
+                    mod_path = str(mod_obj.mod_path) if mod_obj.mod_path else path
                     with aux_metadata_controller.Session() as aux_metadata_session:
-                        mod_path = widget.metadata_manager.internal_local_metadata[
-                            uuid
-                        ]["path"]
                         aux_metadata_controller.update(
                             aux_metadata_session,
                             mod_path,
@@ -187,28 +186,28 @@ class ModsPanelController(QObject):
             return
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
-        active_uuids = [
-            mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in active_mods
+        active_paths = [
+            mod.data(Qt.ItemDataRole.UserRole)["path"] for mod in active_mods
         ]
-        inactive_uuids = [
-            mod.data(Qt.ItemDataRole.UserRole)["uuid"] for mod in inactive_mods
+        inactive_paths = [
+            mod.data(Qt.ItemDataRole.UserRole)["path"] for mod in inactive_mods
         ]
-        self.mods_panel.active_mods_list.reset_all_mod_colors(active_uuids)
-        self.mods_panel.inactive_mods_list.reset_all_mod_colors(inactive_uuids)
+        self.mods_panel.active_mods_list.reset_all_mod_colors(active_paths)
+        self.mods_panel.inactive_mods_list.reset_all_mod_colors(inactive_paths)
 
     def _on_change_mod_coloring_mode(self) -> None:
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         inactive_mods = self.mods_panel.inactive_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
+            uuid = mod_data["path"]
             mod_color = mod_data["mod_color"]
             if mod_color:
                 self.mods_panel.active_mods_list.change_mod_color(uuid, mod_color)
 
         for mod in inactive_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            uuid = mod_data["uuid"]
+            uuid = mod_data["path"]
             mod_color = mod_data["mod_color"]
             if mod_color:
                 self.mods_panel.inactive_mods_list.change_mod_color(uuid, mod_color)

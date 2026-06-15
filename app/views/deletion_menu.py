@@ -1,13 +1,13 @@
 import errno
 from pathlib import Path
 from shutil import rmtree
-from typing import Callable
+from typing import Any, Callable
 
 from loguru import logger
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QMessageBox
 
-from app.controllers.metadata_db_controller import AuxMetadataController
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.event_bus import EventBus
@@ -16,12 +16,14 @@ from app.utils.generic import (
     delete_files_except_extension,
     delete_files_only_extension,
 )
-from app.utils.metadata import MetadataManager, ModMetadata
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_information,
     show_warning,
 )
+
+# Type alias for backward compatibility with consumers of this module
+ModMetadata = dict[str, Any]
 
 
 class DeletionResult:
@@ -64,7 +66,7 @@ class ModDeletionMenu(QMenu):
         super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
-        self.metadata_manager = MetadataManager.instance()
+        self.metadata_controller = MetadataController.instance()
         self.settings_controller = settings_controller
         self.completion_callback = completion_callback
         self._actions_initialized = False
@@ -101,9 +103,8 @@ class ModDeletionMenu(QMenu):
             if not uuid:
                 mod_path = mod.get("path")
                 if mod_path:
-                    uuid = self.metadata_manager.mod_metadata_dir_mapper.get(
-                        str(mod_path)
-                    )
+                    # In MetadataController, path IS the key (uuid)
+                    uuid = str(mod_path)
             if uuid:
                 uuids.append(uuid)
         # Remove duplicates and update the list
@@ -271,7 +272,7 @@ class ModDeletionMenu(QMenu):
         # Purge SteamCMD metadata for deleted mods (only if auto-clear depot cache is enabled)
         if result.steamcmd_purge_ids:
             steamcmd_purge_mods(
-                metadata_manager=self.metadata_manager,
+                metadata_controller=self.metadata_controller,
                 publishedfileids=result.steamcmd_purge_ids,
                 auto_clear_enabled=self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
@@ -376,17 +377,12 @@ class ModDeletionMenu(QMenu):
                 return False
 
             # Retrieve UUID before deletion if not present
-            if "uuid" not in mod_metadata:
-                uuid = self.metadata_manager.mod_metadata_dir_mapper.get(mod_path)
-                if uuid:
-                    mod_metadata["uuid"] = uuid
-                    logger.debug(
-                        f"Retrieved UUID {uuid} for mod {mod_name} before deletion"
-                    )
-                else:
-                    logger.warning(
-                        f"Could not retrieve UUID for mod {mod_name} with path {mod_path} before deletion"
-                    )
+            # In MetadataController, path IS the identity key (uuid)
+            if "uuid" not in mod_metadata and mod_path:
+                mod_metadata["uuid"] = str(mod_path)
+                logger.debug(
+                    f"Set UUID to path {mod_path} for mod {mod_name} before deletion"
+                )
 
             # Perform the deletion operation
             return self._execute_deletion_operation(
@@ -470,23 +466,16 @@ class ModDeletionMenu(QMenu):
             logger.debug("remove_from_uuids is None, skipping UUID removal")
             return
         if "uuid" not in mod_metadata:
-            # Try to retrieve UUID from MetadataManager's mapper using the mod's path
+            # In MetadataController, path IS the identity key (uuid)
             mod_path = mod_metadata.get("path")
             if mod_path:
-                uuid = self.metadata_manager.mod_metadata_dir_mapper.get(str(mod_path))
-                if uuid:
-                    mod_metadata["uuid"] = uuid
-                    logger.debug(
-                        f"Retrieved UUID {uuid} for mod {mod_metadata.get('name', 'Unknown')} from path"
-                    )
-                else:
-                    logger.debug(
-                        f"Could not retrieve UUID for mod {mod_metadata.get('name', 'Unknown')} with path {mod_path}"
-                    )
-                    return
+                mod_metadata["uuid"] = str(mod_path)
+                logger.debug(
+                    f"Set UUID to path {mod_path} for mod {mod_metadata.get('name', 'Unknown')}"
+                )
             else:
                 logger.debug(
-                    f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot retrieve UUID"
+                    f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot determine UUID"
                 )
                 return
         if mod_metadata["uuid"] not in self.remove_from_uuids:
@@ -497,7 +486,7 @@ class ModDeletionMenu(QMenu):
 
         try:
             logger.debug(f"Emitting mod_deleted_signal for {mod_metadata['uuid']}")
-            self.metadata_manager.mod_deleted_signal.emit(mod_metadata["uuid"])
+            self.metadata_controller.mod_deleted_signal.emit(mod_metadata["uuid"])
             logger.debug(f"Removing UUID {mod_metadata['uuid']} from tracking list")
             self.remove_from_uuids.remove(mod_metadata["uuid"])
         except (ValueError, AttributeError) as uuid_error:
@@ -796,9 +785,7 @@ class ModDeletionMenu(QMenu):
             )
             return
 
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
+        aux_metadata_controller = self.metadata_controller.metadata_db_controller
         mod_path = Path(path)
         with aux_metadata_controller.Session() as session:
             if time_limit > 0:

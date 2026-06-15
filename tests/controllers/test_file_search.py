@@ -301,10 +301,6 @@ def test_filter_results(setup_test_files: str) -> None:
 def test_xml_search_only_xml_files(setup_test_files: str) -> None:
     """Test that xml_search only processes .xml files."""
     from app.utils.file_search import FileSearch
-    from app.utils.metadata import MetadataManager
-
-    # Mock settings_controller
-    mock_settings_controller = MagicMock()
 
     # Patch the instance method of SteamcmdInterface
     with patch(
@@ -312,9 +308,9 @@ def test_xml_search_only_xml_files(setup_test_files: str) -> None:
     ) as mock_instance_method:
         mock_instance_method.return_value = MagicMock()  # Return a mock instance
 
-        # Create a FileSearch instance with mocked MetadataManager
-        mock_metadata_manager = MetadataManager(mock_settings_controller)
-        file_search = FileSearch(metadata_manager=mock_metadata_manager)
+        # Create a FileSearch instance with mocked MetadataController
+        mock_metadata_controller = MagicMock()
+        file_search = FileSearch(metadata_controller=mock_metadata_controller)
 
         # Define search parameters
         search_text = "<modmetadata>"
@@ -341,7 +337,7 @@ def test_skip_translations_excludes_language_files(setup_test_files: str) -> Non
     """Test that skip_translations actually excludes files in Languages/ directories."""
     from app.utils.file_search import FileSearch
 
-    file_search = FileSearch(metadata_manager=MagicMock())
+    file_search = FileSearch(metadata_controller=MagicMock())
 
     search_text = "test"
     root_paths = [setup_test_files]
@@ -398,7 +394,7 @@ def test_skip_directories_excludes_matching_folders(setup_test_files: str) -> No
         "<textures>test searchable content</textures>"
     )
 
-    file_search = FileSearch(metadata_manager=MagicMock())
+    file_search = FileSearch(metadata_controller=MagicMock())
     search_text = "searchable"
     root_paths = [setup_test_files]
 
@@ -441,7 +437,7 @@ def test_skip_translations_works_with_standard_search(setup_test_files: str) -> 
     """Test that exclude_options work through standard_search, not just xml_search."""
     from app.utils.file_search import FileSearch
 
-    file_search = FileSearch(metadata_manager=MagicMock())
+    file_search = FileSearch(metadata_controller=MagicMock())
 
     search_text = "test"
     root_paths = [setup_test_files]

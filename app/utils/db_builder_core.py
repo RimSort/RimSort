@@ -15,7 +15,98 @@ from app.utils.constants import (
     DB_BUILDER_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.steam.webapi.wrapper import DynamicQuery
+
+
+def init_empty_db_from_publishedfileids(
+    publishedfileids: list[str],
+    appid: int,
+    progress_callback: Callable[[str], None],
+) -> dict[str, Any]:
+    """Create a skeleton database from DLC metadata and a list of published file IDs.
+
+    :param publishedfileids: List of Steam Workshop PublishedFileIds
+    :param appid: Steam AppId (for progress message)
+    :param progress_callback: Callable for progress messages
+    :return: Database dict with version and skeleton entries
+    """
+    database: dict[str, int | dict[str, Any]] = {
+        "version": 0,
+        "database": {
+            **{
+                appid_key: {
+                    "appid": True,
+                    "url": f"https://store.steampowered.com/app/{appid_key}",
+                    "packageid": meta.get("packageid"),
+                    "name": meta.get("name"),
+                }
+                for appid_key, meta in RIMWORLD_DLC_METADATA.items()
+            },
+            **{
+                pfid: {
+                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                }
+                for pfid in publishedfileids
+            },
+        },
+    }
+    total = len(database["database"]) if isinstance(database["database"], dict) else 0
+    progress_callback(
+        f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {appid}"
+    )
+    return database
+
+
+def output_database(
+    database: dict[str, Any],
+    output_database_path: str,
+    update: bool,
+    progress_callback: Callable[[str], None],
+) -> None:
+    """Write a database dict to disk, optionally merging with an existing file.
+
+    :param database: The database dictionary to write
+    :param output_database_path: Path to the output JSON file
+    :param update: If True and file exists, recursively merge instead of overwrite
+    :param progress_callback: Callable for progress messages
+    """
+    if update and os.path.exists(output_database_path):
+        progress_callback(
+            f"\nIn-place DB update configured. Existing DB to update:\n{output_database_path}"
+        )
+        if output_database_path and os.path.exists(output_database_path):
+            with open(output_database_path, encoding="utf-8") as f:
+                json_string = f.read()
+                progress_callback("\nReading info from file...")
+                db_to_update = json.loads(json_string)
+                progress_callback("Retrieved cached database!\n")
+            progress_callback(
+                "Recursively updating previous database with new metadata...\n"
+            )
+            recursively_update_dict(
+                db_to_update,
+                database,
+                prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
+                recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
+            )
+            with open(output_database_path, "w", encoding="utf-8") as output:
+                json.dump(db_to_update, output, indent=4)
+        else:
+            progress_callback(
+                "Unable to load database from specified path! Does the file exist...?"
+            )
+            appended_path = str(
+                Path(output_database_path).parent
+                / ("NEW_" + Path(output_database_path).name)
+            )
+            progress_callback(f"\nCaching DynamicQuery result:\n\n{appended_path}")
+            with open(appended_path, "w", encoding="utf-8") as output_f:
+                json.dump(database, output_f, indent=4)
+    else:
+        progress_callback(f"\nCaching DynamicQuery result:\n{output_database_path}")
+        with open(output_database_path, "w", encoding="utf-8") as output_f:
+            json.dump(database, output_f, indent=4)
 
 
 class DBBuilderCore:
@@ -119,87 +210,11 @@ class DBBuilderCore:
         Returns:
             Empty database structure with skeleton entries
         """
-        database: dict[str, int | dict[str, Any]] = {
-            "version": 0,
-            "database": {
-                **{
-                    appid: {
-                        "appid": True,
-                        "url": f"https://store.steampowered.com/app/{appid}",
-                        "packageid": metadata.get("packageid"),
-                        "name": metadata.get("name"),
-                    }
-                    for appid, metadata in RIMWORLD_DLC_METADATA.items()
-                },
-                **{
-                    publishedfileid: {
-                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                    }
-                    for publishedfileid in publishedfileids
-                },
-            },
-        }
-        total = (
-            len(database["database"].keys())
-            if isinstance(database["database"], dict)
-            else 0
+        return init_empty_db_from_publishedfileids(
+            publishedfileids, self.appid, self.progress_callback
         )
-        self.progress_callback(
-            f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
-        )
-        return database
 
     def _output_database(self, database: dict[str, Any]) -> None:
-        """
-        Write the database to the output file.
-
-        If update mode is enabled, recursively merges with existing database.
-        Otherwise, overwrites the file.
-
-        Args:
-            database: The database dictionary to write
-        """
-        # Import recursively_update_dict here to avoid circular imports
-        from app.utils.metadata import recursively_update_dict
-
-        # If user-configured `update` parameter, update old db with new query data recursively
-        if self.update and os.path.exists(self.output_database_path):
-            self.progress_callback(
-                f"\nIn-place DB update configured. Existing DB to update:\n{self.output_database_path}"
-            )
-            if self.output_database_path and os.path.exists(self.output_database_path):
-                with open(self.output_database_path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    self.progress_callback("\nReading info from file...")
-                    db_to_update = json.loads(json_string)
-                    self.progress_callback("Retrieved cached database!\n")
-                self.progress_callback(
-                    "Recursively updating previous database with new metadata...\n"
-                )
-                recursively_update_dict(
-                    db_to_update,
-                    database,
-                    prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-                    recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
-                )
-                with open(self.output_database_path, "w", encoding="utf-8") as output:
-                    json.dump(db_to_update, output, indent=4)
-            else:
-                self.progress_callback(
-                    "Unable to load database from specified path! Does the file exist...?"
-                )
-                appended_path = str(
-                    Path(self.output_database_path).parent
-                    / ("NEW_" + Path(self.output_database_path).name)
-                )
-                self.progress_callback(
-                    f"\nCaching DynamicQuery result:\n\n{appended_path}"
-                )
-                with open(appended_path, "w", encoding="utf-8") as output:
-                    json.dump(database, output, indent=4)
-        else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
-            self.progress_callback(
-                f"\nCaching DynamicQuery result:\n{self.output_database_path}"
-            )
-            with open(self.output_database_path, "w", encoding="utf-8") as output:
-                json.dump(database, output, indent=4)
+        output_database(
+            database, self.output_database_path, self.update, self.progress_callback
+        )

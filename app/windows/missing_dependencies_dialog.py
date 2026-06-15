@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
 
 
 class MissingDependenciesDialog(QDialog):
@@ -32,7 +32,7 @@ class MissingDependenciesDialog(QDialog):
         """
         super().__init__(parent)
         self.setObjectName("missingDependenciesDialog")
-        self.metadata_manager = MetadataManager.instance()
+        self.metadata_controller = MetadataController.instance()
         self.selected_mods: set[str] = set()
         self.checkboxes: dict[str, QCheckBox] = {}
         self._setup_ui()
@@ -205,7 +205,7 @@ class MissingDependenciesDialog(QDialog):
             local = deps.get("local", set())
             download = deps.get("download", set())
 
-            mod_name = self.metadata_manager.get_mod_name_from_package_id(mod_id)
+            mod_name = self.metadata_controller.get_mod_name_from_package_id(mod_id)
 
             # --- Mod header with per-mod badge ---
             mod_header_parts = [f"<b>{mod_name}</b>  ({mod_id})"]
@@ -238,7 +238,7 @@ class MissingDependenciesDialog(QDialog):
             # --- Local deps (checkable) ---
             if local:
                 for dep_id in sorted(local):
-                    dep_name = self.metadata_manager.get_mod_name_from_package_id(
+                    dep_name = self.metadata_controller.get_mod_name_from_package_id(
                         dep_id
                     )
                     checkbox = QCheckBox(f"  📦 {dep_name}  ({dep_id})")
@@ -254,7 +254,7 @@ class MissingDependenciesDialog(QDialog):
             # --- Download deps (checkable) ---
             if download:
                 for dep_id in sorted(download):
-                    dep_name = self.metadata_manager.get_mod_name_from_package_id(
+                    dep_name = self.metadata_controller.get_mod_name_from_package_id(
                         dep_id
                     )
                     checkbox = QCheckBox(f"  🌐 {dep_name}  ({dep_id})")

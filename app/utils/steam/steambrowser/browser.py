@@ -37,12 +37,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import extract_page_title_steam_browser
-from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -66,21 +66,21 @@ class SteamBrowser(QWidget):
     # Cleared in closeEvent when the window is closed.
     web_view: QWebEngineView | None
     web_profile: QWebEngineProfile | None
-    metadata_manager: MetadataManager | None
+    metadata_controller: MetadataController | None
     settings_controller: SettingsController | None
     js_bridge: JavaScriptBridge | None
 
     def __init__(
         self,
         startpage: str,
-        metadata_manager: MetadataManager,
+        metadata_controller: MetadataController,
         settongs_controller: SettingsController,
     ):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
 
-        # store metadata manager reference so we can use it to check if mods are installed
-        self.metadata_manager = metadata_manager
+        # store metadata controller reference so we can use it to check if mods are installed
+        self.metadata_controller = metadata_controller
         self.settings_controller = settongs_controller
 
         # This is used to fix issue described here on non-Windows platform:
@@ -807,20 +807,21 @@ class SteamBrowser(QWidget):
 
     def _is_mod_installed(self, publishedfileid: str) -> bool:
         """Check if a mod is installed by looking through local and workshop folders"""
-        assert self.metadata_manager is not None
-        # check all mods in internal metadata
-        for metadata in self.metadata_manager.internal_local_metadata.values():
-            if metadata.get("publishedfileid") == publishedfileid:
+        assert self.metadata_controller is not None
+        # check all mods in metadata
+        for mod in self.metadata_controller.mods_metadata.values():
+            if mod.published_file_id == publishedfileid:
                 return True
         return False
 
     def _get_installed_mods_list(self) -> list[str]:
         """Get list of installed mod IDs"""
-        assert self.metadata_manager is not None
+        assert self.metadata_controller is not None
         installed_mods = []
-        for metadata in self.metadata_manager.internal_local_metadata.values():
-            if metadata.get("publishedfileid"):
-                installed_mods.append(metadata["publishedfileid"])
+        for mod in self.metadata_controller.mods_metadata.values():
+            pfid = mod.published_file_id
+            if pfid is not None:
+                installed_mods.append(pfid)
 
         return installed_mods
 
@@ -886,7 +887,7 @@ class SteamBrowser(QWidget):
             self.web_profile = None
 
         # Clear all references
-        self.metadata_manager = None
+        self.metadata_controller = None
         self.settings_controller = None
         self.js_bridge = None
         self.downloader_list_mods_tracking.clear()

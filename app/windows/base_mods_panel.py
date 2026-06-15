@@ -26,10 +26,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import ListedMod
 from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
-from app.utils.metadata import MetadataManager
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import get_mod_path_from_pfid
 from app.views.deletion_menu import ModDeletionMenu
@@ -129,7 +130,7 @@ class BaseModsPanel(QWidget):
     """
 
     # Type hints for instance variables
-    metadata_manager: MetadataManager
+    metadata_controller: MetadataController
     settings_controller: Any
     editor_model: QStandardItemModel
     editor_table_view: QTableView
@@ -149,9 +150,9 @@ class BaseModsPanel(QWidget):
     COL_WORKSHOP_PAGE = "Workshop Page"
 
     def _setup_metadata(self) -> None:
-        """Set up metadata manager and settings controller."""
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = self.metadata_manager.settings_controller
+        """Set up metadata controller and settings controller."""
+        self.metadata_controller = MetadataController.instance()
+        self.settings_controller = self.metadata_controller.settings_controller
 
     def _get_steam_client_integration_enabled(self) -> bool:
         """
@@ -1010,16 +1011,16 @@ class BaseModsPanel(QWidget):
 
     # ===== CENTRALIZED METADATA HANDLING =====
 
-    def _get_uuid_from_row(self, row: int, name_column: int = 1) -> str | None:
+    def _get_key_from_row(self, row: int, name_column: int = 1) -> str | None:
         """
-        Extract UUID from a table row's name column.
+        Extract the mod path key from a table row's name column.
 
         Args:
-            row: Row index to extract UUID from
-            name_column: Column index containing the name item with UUID data
+            row: Row index to extract key from
+            name_column: Column index containing the name item with key data
 
         Returns:
-            UUID string if found, None otherwise
+            Path key string if found, None otherwise
         """
         try:
             if row >= self.editor_model.rowCount():
@@ -1031,25 +1032,47 @@ class BaseModsPanel(QWidget):
 
             return name_item.data(Qt.ItemDataRole.UserRole)
         except Exception as e:
-            logger.warning(f"Error accessing UUID from row {row}: {e}")
+            logger.warning(f"Error accessing key from row {row}: {e}")
             return None
 
     def _get_selected_mod_metadata(self) -> list[dict[str, Any]]:
         """
         Get metadata for selected mods in the table.
 
+        Returns a list of compat dicts with keys expected by ModDeletionMenu.
+        Note: the "uuid" key is a legacy name; the value is the mod path key.
+
         Returns:
-            List of ModMetadata objects for selected mods
+            List of ModMetadata compat dicts for selected mods
         """
-        selected_mods = []
+        from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+
+        selected_mods: list[dict[str, Any]] = []
         try:
             for row in range(self.editor_model.rowCount()):
                 if self._row_is_checked(row):
-                    uuid = self._get_uuid_from_row(row)
-                    if uuid and uuid in self.metadata_manager.internal_local_metadata:
-                        selected_mods.append(
-                            self.metadata_manager.internal_local_metadata[uuid]
-                        )
+                    path = self._get_key_from_row(row)
+                    if path:
+                        mod = self.metadata_controller.get_mod(path)
+                        if mod is not None:
+                            compat: dict[str, Any] = {
+                                "path": str(mod.mod_path) if mod.mod_path else "",
+                                "uuid": path,
+                                "name": mod.name or "",
+                                "publishedfileid": mod.published_file_id or "",
+                                "steamcmd": mod.mod_type == ModType.STEAM_CMD,
+                            }
+                            if mod.mod_type == ModType.LUDEON:
+                                compat["data_source"] = "expansion"
+                            elif mod.mod_type == ModType.STEAM_WORKSHOP:
+                                compat["data_source"] = "workshop"
+                            elif mod.mod_type == ModType.LOCAL:
+                                compat["data_source"] = "local"
+                            else:
+                                compat["data_source"] = str(mod.mod_type.value)
+                            if isinstance(mod, AboutXmlMod):
+                                compat["packageid"] = str(mod.package_id)
+                            selected_mods.append(compat)
         except Exception as e:
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
@@ -1061,9 +1084,9 @@ class BaseModsPanel(QWidget):
 
         This refreshes the metadata cache and repopulates the table with the updated mod data.
         """
-        logger.warning("Refreshing metadata cache and repopulating table")
-        # Refresh the metadata cache to reflect deletion changes
-        self.metadata_manager.refresh_cache(is_initial=False)
+        logger.warning("Refreshing metadata and repopulating table")
+        # Refresh the metadata to reflect deletion changes
+        self.metadata_controller.refresh_metadata()
         # Repopulate the table with updated data
         self._populate_from_metadata()
 
@@ -1158,9 +1181,9 @@ class BaseModsPanel(QWidget):
         if additional_items:
             base_items.extend(additional_items)
 
-        # Set UUID data on name item for metadata lookup
-        if mod_info.uuid:
-            base_items[0].setData(mod_info.uuid, Qt.ItemDataRole.UserRole)
+        # Set path key on name item for metadata lookup
+        if mod_info.key:
+            base_items[0].setData(mod_info.key, Qt.ItemDataRole.UserRole)
 
         self._add_row(base_items, default_checkbox_state)
 
@@ -1197,31 +1220,37 @@ class BaseModsPanel(QWidget):
         self.editor_model.appendRow(items)
 
     def _extract_mod_info_from_metadata(
-        self, uuid: str | None, metadata: dict[str, Any]
+        self, key: str | None, metadata: dict[str, Any] | ListedMod
     ) -> ModInfo:
         """
-        Extract ModInfo from metadata dictionary.
+        Extract ModInfo from metadata dictionary or ListedMod object.
 
         Args:
-            uuid: UUID of the mod
-            metadata: Metadata dictionary
+            key: Path key of the mod in metadata
+            metadata: Metadata dictionary or ListedMod instance
 
         Returns:
             ModInfo object
         """
-        return ModInfo.from_metadata(uuid, metadata)
+        if isinstance(metadata, ListedMod):
+            mod_info = ModInfo.from_listed_mod(metadata)
+            mod_info.key = key
+            return mod_info
+        return ModInfo.from_metadata(key, metadata)
 
-    def _extract_uuid_from_path(self, path: str) -> str | None:
+    def _resolve_path_key(self, path: str) -> str | None:
         """
-        Extract UUID from mod path using metadata manager.
+        Verify a mod path exists in metadata and return it as a key.
 
         Args:
-            path: Mod path
+            path: Mod path to verify
 
         Returns:
-            UUID if found, None otherwise
+            The path if found in metadata, None otherwise
         """
-        return self.metadata_manager.mod_metadata_dir_mapper.get(path)
+        if self.metadata_controller.has_mod(path):
+            return path
+        return None
 
     def _reconfigure_table_sorting(self, sorting_enabled: bool) -> None:
         """
@@ -1240,14 +1269,14 @@ class BaseModsPanel(QWidget):
 
     def _populate_mods(
         self,
-        groups: dict[str, list[tuple[str, dict[str, Any]]]],
+        groups: dict[str, list[tuple[str, dict[str, Any] | ListedMod]]],
         add_group_headers: bool = False,
     ) -> None:
         """
         Populate the table with mod groups.
 
         Args:
-            groups: Dictionary of groups, where key is group name, value is list of (uuid, metadata) tuples.
+            groups: Dictionary of groups, where key is group name, value is list of (path_key, metadata) tuples.
             add_group_headers: Whether to add header rows for each group.
         """
         self._clear_table_model()
@@ -1256,8 +1285,8 @@ class BaseModsPanel(QWidget):
             if add_group_headers and group_key:
                 self._add_group_header_row(group_key)
 
-            for uuid, metadata in mod_list:
-                mod_info = self._extract_mod_info_from_metadata(uuid, metadata)
+            for path_key, metadata in mod_list:
+                mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
                 self._add_mod_row(mod_info)
 
     def _get_standard_mod_columns(self) -> list[HeaderColumn]:
@@ -1389,11 +1418,11 @@ class BaseModsPanel(QWidget):
     ) -> bool:
         """Check if a mod at given row has missing Publish Field ID."""
         if use_explicit_mode:
-            uuid = self._get_uuid_from_row(row)
+            key = self._get_key_from_row(row)
             return bool(
-                uuid
+                key
                 and missing_publishfieldid_mods
-                and uuid in missing_publishfieldid_mods
+                and key in missing_publishfieldid_mods
             )
         else:
             pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)

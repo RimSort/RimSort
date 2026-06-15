@@ -4,6 +4,7 @@ from tempfile import gettempdir
 
 from loguru import logger
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
 from app.utils.todds.wrapper import ToddsInterface, ToddsRunner
@@ -15,23 +16,23 @@ class ToddsController:
     def __init__(
         self,
         settings_controller: SettingsController,
-        metadata_manager: object,  # TODO(debt): type as a protocol once MetadataManager is refactored (#2051)
+        metadata_controller: MetadataController,
     ) -> None:
         self.settings_controller = settings_controller
-        self.metadata_manager = metadata_manager
+        self.metadata_controller = metadata_controller
 
     def generate_todds_txt(
         self,
-        active_mod_uuids: list[str] | None = None,
+        active_mod_paths: list[str] | None = None,
     ) -> tuple[str, int]:
         """
         Generate the todds.txt path-list file that todds uses as input.
 
         When ``settings.todds_active_mods_target`` is False, writes the
         configured local and workshop mod folders.  When True, writes the
-        path for each mod UUID in *active_mod_uuids*.
+        path for each mod in *active_mod_paths*.
 
-        :param active_mod_uuids: UUIDs of active mods (required when
+        :param active_mod_paths: Paths of active mods (required when
             todds_active_mods_target is True).
         :return: (path_to_todds_txt, number_of_paths_written)
         """
@@ -58,25 +59,23 @@ class ToddsController:
                             f"Folder does not exist, skipping for todds: {abs_path}"
                         )
         else:
-            if active_mod_uuids is None:
+            if active_mod_paths is None:
                 logger.error(
-                    "active_mod_uuids required when todds_active_mods_target is True"
+                    "active_mod_paths required when todds_active_mods_target is True"
                 )
                 return todds_txt_path, 0
 
             with open(todds_txt_path, "a", encoding="utf-8") as f:
-                for uuid in active_mod_uuids:
-                    if is_divider_uuid(uuid):
+                for path in active_mod_paths:
+                    if is_divider_uuid(path):
                         continue
-                    mod_path = os.path.abspath(
-                        self.metadata_manager.internal_local_metadata[uuid]["path"]  # type: ignore[attr-defined]
-                    )
-                    if os.path.isdir(mod_path):
-                        f.write(mod_path + "\n")
+                    abs_mod_path = os.path.abspath(path)
+                    if os.path.isdir(abs_mod_path):
+                        f.write(abs_mod_path + "\n")
                         paths_written += 1
                     else:
                         logger.warning(
-                            f"Mod path does not exist, skipping for todds: {mod_path}"
+                            f"Mod path does not exist, skipping for todds: {abs_mod_path}"
                         )
 
         logger.info(
@@ -87,13 +86,13 @@ class ToddsController:
     def optimize_textures(
         self,
         runner: ToddsRunner,
-        active_mod_uuids: list[str] | None = None,
+        active_mod_paths: list[str] | None = None,
     ) -> bool:
         """
         Run todds texture optimization.
 
         :param runner: Process runner that satisfies the ToddsRunner protocol.
-        :param active_mod_uuids: UUIDs of active mods (used when
+        :param active_mod_paths: Paths of active mods (used when
             todds_active_mods_target is True).
         :return: True if todds was executed (paths found), False otherwise.
         """
@@ -106,7 +105,7 @@ class ToddsController:
             custom_command=settings.todds_custom_command,
         )
 
-        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_uuids)
+        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_paths)
         if paths_written == 0:
             return False
 
@@ -116,13 +115,13 @@ class ToddsController:
     def delete_dds_textures(
         self,
         runner: ToddsRunner,
-        active_mod_uuids: list[str] | None = None,
+        active_mod_paths: list[str] | None = None,
     ) -> bool:
         """
         Delete .dds textures using todds clean preset.
 
         :param runner: Process runner that satisfies the ToddsRunner protocol.
-        :param active_mod_uuids: UUIDs of active mods (used when
+        :param active_mod_paths: Paths of active mods (used when
             todds_active_mods_target is True).
         :return: True if todds was executed (paths found), False otherwise.
         """
@@ -133,7 +132,7 @@ class ToddsController:
             dry_run=settings.todds_dry_run,
         )
 
-        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_uuids)
+        todds_txt_path, paths_written = self.generate_todds_txt(active_mod_paths)
         if paths_written == 0:
             return False
 

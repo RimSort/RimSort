@@ -4,6 +4,7 @@ from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_structure import ListedMod
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
 from app.utils.ignore_manager import IgnoreManager
@@ -20,10 +21,10 @@ class MissingModPropertiesPanel(BaseModsPanel):
     information for each mod and add them to the ignore list.
 
     Attributes:
-        missing_packageid_mods (list[str]): List of UUIDs for mods with missing Package ID.
-        missing_publishfieldid_mods (list[str]): List of UUIDs for mods with missing Publish Field ID.
+        missing_packageid_mods (list[str]): Mod path keys with missing Package ID.
+        missing_publishfieldid_mods (list[str]): Mod path keys with missing Publish Field ID.
         settings_controller (SettingsController): Controller for application settings.
-        metadata_manager: MetadataManager instance from base class for accessing mod data.
+        metadata_controller: Metadata controller instance from base class for accessing mod data.
     """
 
     def __init__(
@@ -36,8 +37,8 @@ class MissingModPropertiesPanel(BaseModsPanel):
         Initialize the MissingModPropertiesPanel with mods data.
 
         Args:
-            missing_packageid_mods: List of UUIDs for mods with missing Package ID.
-            missing_publishfieldid_mods: List of UUIDs for mods with missing Publish Field ID.
+            missing_packageid_mods: Mod path keys with missing Package ID.
+            missing_publishfieldid_mods: Mod path keys with missing Publish Field ID.
             settings_controller: Controller for managing application settings.
         """
         logger.debug("Initializing MissingModPropertiesPanel")
@@ -160,24 +161,26 @@ class MissingModPropertiesPanel(BaseModsPanel):
         )
         return True
 
-    def _get_valid_mod_metadata(self, uuid: str) -> ModInfo | None:
+    def _get_valid_mod_metadata(self, key: str) -> ModInfo | None:
         """
-        Get validated mod info from UUID.
+        Get validated mod info from path key.
 
         Args:
-            uuid: The UUID to lookup
+            key: The mod path key to lookup
 
         Returns:
             ModInfo instance if valid, None otherwise
         """
-        mod_metadata = self.metadata_manager.internal_local_metadata.get(uuid)
+        mod_metadata = self.metadata_controller.mods_metadata.get(key)
         if not mod_metadata:
             return None
 
         try:
-            return ModInfo.from_metadata(uuid, mod_metadata)
+            mod_info = ModInfo.from_listed_mod(mod_metadata)
+            mod_info.key = key
+            return mod_info
         except ValueError as e:
-            logger.warning(f"Failed to extract mod info for UUID {uuid}: {e}")
+            logger.warning(f"Failed to extract mod info for key {key}: {e}")
             return None
 
     def _extract_and_validate_packageids(
@@ -198,11 +201,11 @@ class MissingModPropertiesPanel(BaseModsPanel):
         skipped_mods = []
 
         for row in row_indices:
-            uuid = self._get_uuid_from_row(row)
-            if not uuid:
+            key = self._get_key_from_row(row)
+            if not key:
                 continue
 
-            mod_info = self._get_valid_mod_metadata(uuid)
+            mod_info = self._get_valid_mod_metadata(key)
             if not mod_info:
                 continue
 
@@ -299,31 +302,31 @@ class MissingModPropertiesPanel(BaseModsPanel):
 
     def _build_grouped_mods(
         self,
-    ) -> dict[str, list[tuple[str, dict[str, Any]]]]:
+    ) -> dict[str, list[tuple[str, dict[str, Any] | ListedMod]]]:
         """
-        Build dictionary of grouped mods from UUID lists.
+        Build dictionary of grouped mods from path key lists.
 
         Returns:
-            Dictionary mapping category names to list of (uuid, metadata) tuples
+            Dictionary mapping category names to list of (path_key, metadata) tuples
         """
-        grouped_mods: dict[str, list[tuple[str, dict[str, Any]]]] = {}
+        grouped_mods: dict[str, list[tuple[str, dict[str, Any] | ListedMod]]] = {}
 
         categories = [
             ("Mods with Missing Package ID", self.missing_packageid_mods),
             ("Mods with Missing Publish Field ID", self.missing_publishfieldid_mods),
         ]
 
-        for category_name, uuids in categories:
-            if not uuids:
+        for category_name, path_keys in categories:
+            if not path_keys:
                 continue
 
-            category_mods: list[tuple[str, dict[str, Any]]] = []
-            for uuid in uuids:
-                mod_metadata = self.metadata_manager.internal_local_metadata.get(uuid)
+            category_mods: list[tuple[str, dict[str, Any] | ListedMod]] = []
+            for path_key in path_keys:
+                mod_metadata = self.metadata_controller.mods_metadata.get(path_key)
                 if mod_metadata:
-                    category_mods.append((uuid, mod_metadata))
+                    category_mods.append((path_key, mod_metadata))
                 else:
-                    logger.warning(f"Metadata not found for UUID: {uuid}")
+                    logger.warning(f"Metadata not found for path: {path_key}")
 
             if category_mods:
                 grouped_mods[category_name] = category_mods

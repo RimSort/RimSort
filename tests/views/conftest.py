@@ -90,7 +90,7 @@ def make_mod_data(
     description: str = "A test mod.",
     mod_color: QColor | None = None,
 ) -> dict[str, Any]:
-    """Factory for mod metadata dicts matching the internal_local_metadata structure."""
+    """Factory for mod metadata dicts (legacy format, used by context menu code)."""
     if uuid is None:
         uuid = str(uuid_module.uuid4())
 

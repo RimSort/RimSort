@@ -122,6 +122,8 @@ def test__parse_required_ludeon_royalty() -> None:
     mod = _parse_basic(mod_data, AboutXmlMod())
 
     assert mod.package_id == "ludeon.rimworld.royalty"
+    assert mod.name == "RimWorld - Royalty"
+    assert mod.description == "DLC #1"
     assert mod.authors == ["Ludeon Studios"]
     assert mod.steam_app_id == 1149640
     assert mod.supported_versions == {"1.5"}
@@ -135,6 +137,8 @@ def test__parse_required_ludeon_biotech() -> None:
     mod = _parse_basic(mod_data, AboutXmlMod())
 
     assert mod.package_id == "ludeon.rimworld.biotech"
+    assert mod.name == "RimWorld - Biotech"
+    assert mod.description == "DLC #3"
     assert mod.authors == ["Ludeon Studios"]
     assert mod.steam_app_id == 1826140
     assert mod.supported_versions == {"1.5"}

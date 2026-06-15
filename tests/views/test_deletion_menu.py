@@ -1,6 +1,6 @@
 import errno
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -25,7 +25,7 @@ def sample_mod_metadata() -> Dict[str, Any]:
 @pytest.fixture
 def deletion_menu(
     mock_settings_controller: MagicMock,
-    mock_metadata_manager: MagicMock,
+    mock_metadata_controller: MagicMock,
     qapp: Union[QApplication, QCoreApplication],
 ) -> ModDeletionMenu:
     """Create a ModDeletionMenu instance for testing."""
@@ -240,19 +240,20 @@ class TestModDeletionMenu:
         """Test aux DB marking as outdated when time limit is positive."""
         deletion_menu.settings_controller.settings.aux_db_time_limit = 1
 
-        with patch("app.views.deletion_menu.AuxMetadataController") as mock_aux_class:
-            mock_instance = MagicMock()
-            mock_session = MagicMock()
-            mock_aux_class.get_or_create_cached_instance.return_value = mock_instance
-            mock_instance.Session.return_value.__enter__.return_value = mock_session
-            mock_instance.update = MagicMock()
+        # The metadata_controller.metadata_db_controller is already mocked by conftest
+        mock_aux = cast(
+            MagicMock, deletion_menu.metadata_controller.metadata_db_controller
+        )
+        mock_session = MagicMock()
+        mock_aux.Session.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_aux.Session.return_value.__exit__ = MagicMock(return_value=False)
 
-            deletion_menu.delete_mod_from_aux_db("/fake/path")
+        deletion_menu.delete_mod_from_aux_db("/fake/path")
 
-            # When time_limit > 0, it should call update with outdated=True
-            mock_instance.update.assert_called_once_with(
-                mock_session, Path("/fake/path"), outdated=True
-            )
+        # When time_limit > 0, it should call update with outdated=True
+        mock_aux.update.assert_called_once_with(
+            mock_session, Path("/fake/path"), outdated=True
+        )
 
     def test_dummy_translations(self, deletion_menu: ModDeletionMenu) -> None:
         """Test dummy translations method."""
@@ -261,34 +262,30 @@ class TestModDeletionMenu:
         # No assertions needed, just ensure it doesn't crash
 
     def test_handle_uuid_removal_with_missing_uuid(
-        self, deletion_menu: ModDeletionMenu, mock_metadata_manager: MagicMock
+        self, deletion_menu: ModDeletionMenu, mock_metadata_controller: MagicMock
     ) -> None:
-        """Test _handle_uuid_removal when mod_metadata lacks 'uuid' but has 'path'."""
-        # Setup mod_metadata without 'uuid' but with 'path'
+        """Test _handle_uuid_removal when mod_metadata lacks 'uuid' but has 'path'.
+
+        In MetadataController, path IS the identity key (uuid), so when 'uuid'
+        is missing but 'path' is present, the path is used as the uuid.
+        """
         mod_path = "/fake/mod/path"
-        uuid = "retrieved-uuid-456"
-        mod_metadata = {"name": "Test Mod", "path": mod_path}
+        mod_metadata: Dict[str, Any] = {"name": "Test Mod", "path": mod_path}
 
-        # Setup remove_from_uuids list to include the UUID
-        deletion_menu.remove_from_uuids = [uuid]
-
-        # Mock metadata_manager.mod_metadata_dir_mapper to return the UUID for the path
-        mock_metadata_manager.mod_metadata_dir_mapper = {mod_path: uuid}
-
-        # Patch the metadata_manager instance in deletion_menu to use the mock
-        deletion_menu.metadata_manager = mock_metadata_manager
+        # Setup remove_from_uuids list to include the path (since path = uuid)
+        deletion_menu.remove_from_uuids = [mod_path]
 
         # Patch the mod_deleted_signal.emit method to track calls
         with patch.object(
-            mock_metadata_manager.mod_deleted_signal, "emit"
+            mock_metadata_controller.mod_deleted_signal, "emit"
         ) as mock_emit:
             deletion_menu._handle_uuid_removal(mod_metadata)
 
-            # Assert that the UUID was added to mod_metadata
-            assert mod_metadata["uuid"] == uuid
+            # Assert that the UUID was set to the path
+            assert mod_metadata["uuid"] == mod_path
 
-            # Assert that mod_deleted_signal.emit was called with the UUID
-            mock_emit.assert_called_once_with(uuid)
+            # Assert that mod_deleted_signal.emit was called with the path
+            mock_emit.assert_called_once_with(mod_path)
 
             # Assert that the UUID was removed from remove_from_uuids
-            assert uuid not in deletion_menu.remove_from_uuids
+            assert mod_path not in deletion_menu.remove_from_uuids

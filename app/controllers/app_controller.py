@@ -11,7 +11,6 @@ from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
-from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
@@ -40,9 +39,7 @@ class AppController(QObject):
         self.initialize_steamcmd_interface()
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
-        # Initialize the metadata manager
-        self.initialize_metadata_manager()
-        # Initialize the new MetadataController (runs alongside MetadataManager)
+        # Initialize the new MetadataController
         self.initialize_metadata_controller()
         # Initialize the main window controller
         self.initialize_main_window()
@@ -116,14 +113,8 @@ class AppController(QObject):
             dds_utility = DDSUtility(self.settings_controller)
             dds_utility.delete_dds_files_without_png()
 
-    def initialize_metadata_manager(self) -> None:
-        """Initializes the MetadataManager."""
-        self.metadata_manager = MetadataManager.instance(
-            settings_controller=self.settings_controller
-        )
-
     def initialize_metadata_controller(self) -> None:
-        """Initializes the new MetadataController alongside MetadataManager."""
+        """Initializes the MetadataController."""
         from app.controllers.metadata_controller import MetadataController
         from app.controllers.metadata_db_controller import AuxMetadataController
 

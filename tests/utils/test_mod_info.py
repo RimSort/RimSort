@@ -8,7 +8,7 @@ from app.utils.mod_info import DATABASE, LOCAL, STEAM, STEAM_CMD, UNKNOWN, ModIn
 class TestModInfoInit:
     def test_valid_construction(self) -> None:
         info = ModInfo(
-            uuid="abc",
+            key="abc",
             name="Test Mod",
             authors="Author",
             packageid="test.mod",
@@ -28,7 +28,7 @@ class TestModInfoInit:
     def test_empty_packageid_raises(self) -> None:
         with pytest.raises(ValueError, match="packageid cannot be empty"):
             ModInfo(
-                uuid="abc",
+                key="abc",
                 name="Test",
                 authors="",
                 packageid="",
@@ -46,7 +46,7 @@ class TestModInfoInit:
     def test_whitespace_packageid_raises(self) -> None:
         with pytest.raises(ValueError, match="packageid cannot be empty"):
             ModInfo(
-                uuid="abc",
+                key="abc",
                 name="Test",
                 authors="",
                 packageid="   ",
@@ -63,7 +63,7 @@ class TestModInfoInit:
 
     def test_empty_name_set_to_unknown(self) -> None:
         info = ModInfo(
-            uuid="abc",
+            key="abc",
             name="",
             authors="",
             packageid="valid.id",
@@ -91,7 +91,7 @@ class TestFromMetadata:
             "data_source": "workshop",
             "path": "/mods/cool",
         }
-        info = ModInfo.from_metadata("uuid-1", metadata)
+        info = ModInfo.from_metadata("key-1", metadata)
         assert info.name == "Cool Mod"
         assert info.packageid == "cool.mod"
         assert info.source == STEAM
@@ -101,23 +101,23 @@ class TestFromMetadata:
 
     def test_steamcmd_source(self) -> None:
         metadata = {"name": "Mod", "packageid": "test.mod", "steamcmd": True}
-        info = ModInfo.from_metadata("uuid", metadata)
+        info = ModInfo.from_metadata("key", metadata)
         assert info.source == STEAM_CMD
 
     def test_local_source(self) -> None:
         metadata = {"name": "Mod", "packageid": "test.mod", "data_source": "local"}
-        info = ModInfo.from_metadata("uuid", metadata)
+        info = ModInfo.from_metadata("key", metadata)
         assert info.source == LOCAL
 
     def test_database_source_fallback(self) -> None:
         metadata = {"name": "Mod", "packageid": "test.mod"}
-        info = ModInfo.from_metadata("uuid", metadata)
+        info = ModInfo.from_metadata("key", metadata)
         assert info.source == DATABASE
 
     def test_missing_packageid_raises(self) -> None:
         metadata = {"name": "Mod", "packageid": ""}
         with pytest.raises(ValueError, match="Failed to create ModInfo"):
-            ModInfo.from_metadata("uuid", metadata)
+            ModInfo.from_metadata("key", metadata)
 
     def test_authors_as_list(self) -> None:
         metadata = {
@@ -125,12 +125,12 @@ class TestFromMetadata:
             "packageid": "test.mod",
             "authors": ["Alice", "Bob"],
         }
-        info = ModInfo.from_metadata("uuid", metadata)
+        info = ModInfo.from_metadata("key", metadata)
         assert info.authors == "Alice, Bob"
 
     def test_fallback_name_from_steamname(self) -> None:
         metadata = {"steamName": "Steam Name", "packageid": "test.mod"}
-        info = ModInfo.from_metadata("uuid", metadata)
+        info = ModInfo.from_metadata("key", metadata)
         assert info.name == "Steam Name"
 
 
@@ -197,7 +197,7 @@ class TestTimeProperties:
         updated: float | None = None,
     ) -> ModInfo:
         return ModInfo(
-            uuid="a",
+            key="a",
             name="M",
             authors="",
             packageid="p.id",
