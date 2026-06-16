@@ -847,7 +847,7 @@ class TagEditDialog(QDialog):
         if event.type() == QEvent.Type.KeyPress:
             key = cast(QKeyEvent, event).key()
             if obj is self.tags_text_input and (
-                key == Qt.Key.Key_Down | key == Qt.Key.Key_Tab
+                key in [Qt.Key.Key_Down, Qt.Key.Key_Tab]
             ):
                 self.tags_list.setFocus(Qt.FocusReason.ShortcutFocusReason)
                 return True
