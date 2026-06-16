@@ -53,6 +53,18 @@ def is_junction_or_link(path: str | Path) -> bool:
         return False
 
 
+def resolve_symlink_target(path: str | Path) -> str | None:
+    """Return the resolved target of a symlink/junction if it exists, else None."""
+    try:
+        target = os.readlink(path)
+    except OSError:
+        return None
+    resolved = Path(target) if os.path.isabs(target) else Path(os.path.dirname(str(path))) / target
+    if resolved.exists() and resolved.is_dir():
+        return str(resolved)
+    return None
+
+
 def create_symlink(
     src_path: str,
     dst_path: str,
