@@ -445,9 +445,7 @@ class SettingsController(QObject):
         """
         game_folder = (
             self.settings_dialog.game_location.text().strip()
-            or self.settings.instances[
-                self.settings.current_instance
-            ].game_folder
+            or self.settings.instances[self.settings.current_instance].game_folder
         )
         local_path = Path(local_folder)
         expected_path = Path(game_folder) / "Mods"
