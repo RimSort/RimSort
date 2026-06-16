@@ -437,17 +437,29 @@ class SettingsController(QObject):
     def _validate_local_mods_location(self, local_folder: str) -> bool:
         """
         Validate the local mods folder location and show a warning if invalid.
-        The local mods folder is valid if it is a directory.
+        The local mods folder is valid if it is a directory that is path-equivalent
+        to ``<game_folder>/Mods``.
 
         :param local_folder: Path to the local mods folder as a string.
         :return: True if valid, False otherwise.
         """
-        game_folder = self.settings.instances[
-            self.settings.current_instance
-        ].game_folder
-        if not (Path(local_folder).is_dir()) or local_folder != str(
-            Path(game_folder) / "Mods"
-        ):
+        game_folder = (
+            self.settings_dialog.game_location.text().strip()
+            or self.settings.instances[
+                self.settings.current_instance
+            ].game_folder
+        )
+        local_path = Path(local_folder)
+        expected_path = Path(game_folder) / "Mods"
+        try:
+            paths_match = (
+                local_path.is_dir()
+                and game_folder
+                and local_path.resolve() == expected_path.resolve()
+            )
+        except OSError:
+            paths_match = False
+        if not paths_match:
             QMessageBox.warning(
                 self.settings_dialog,
                 self.tr("Invalid Local Mods Folder"),
