@@ -121,3 +121,53 @@ class TestValidateContentSymlink:
             MockDialog.return_value.exec_is_positive.return_value = False
             result = steamcmd.validate_content_symlink(str(new_target))
             assert result is False
+
+
+class TestDownloadModsValidation:
+    def test_download_mods_aborts_on_broken_symlink(
+        self, steamcmd: SteamcmdInterface, tmp_path: Path
+    ) -> None:
+        gone = tmp_path / "deleted_mods"
+        link = Path(steamcmd.steamcmd_content_path) / "294100"
+        os.symlink(str(gone), str(link))
+
+        steamcmd.symlink_source_path = str(tmp_path / "new_mods")
+        runner = MagicMock()
+
+        with patch(
+            "app.utils.steam.steamcmd.wrapper.BinaryChoiceDialog"
+        ) as MockDialog:
+            MockDialog.return_value.exec_is_positive.return_value = False
+            steamcmd.download_mods(["123456"], runner)
+
+        runner.execute.assert_not_called()
+
+    def test_download_mods_proceeds_on_healthy_symlink(
+        self, steamcmd: SteamcmdInterface, tmp_path: Path
+    ) -> None:
+        target = tmp_path / "local_mods"
+        target.mkdir()
+        link = Path(steamcmd.steamcmd_content_path) / "294100"
+        os.symlink(str(target), str(link))
+
+        steamcmd.symlink_source_path = str(target)
+        steamcmd.steamcmd = "/fake/steamcmd"
+        steamcmd.validate_downloads = False
+        runner = MagicMock()
+
+        steamcmd.download_mods(["123456"], runner)
+
+        runner.execute.assert_called_once()
+
+    def test_download_mods_skips_validation_when_no_source_path(
+        self, steamcmd: SteamcmdInterface, tmp_path: Path
+    ) -> None:
+        """If symlink_source_path was never set, skip validation gracefully."""
+        steamcmd.symlink_source_path = ""
+        steamcmd.steamcmd = "/fake/steamcmd"
+        steamcmd.validate_downloads = False
+        runner = MagicMock()
+
+        steamcmd.download_mods(["123456"], runner)
+
+        runner.execute.assert_called_once()

@@ -52,6 +52,7 @@ class SteamcmdInterface:
         if not hasattr(self, "initialized"):
             self.initialized = True
             self.setup = False
+            self.symlink_source_path = ""
             self.steamcmd_prefix = steamcmd_prefix
             super(SteamcmdInterface, self).__init__()
             logger.debug("Initializing SteamcmdInterface")
@@ -395,6 +396,14 @@ class SteamcmdInterface:
             self.on_steamcmd_not_found(runner=runner)
             return
 
+        if self.symlink_source_path:
+            if not self.validate_content_symlink(self.symlink_source_path):
+                runner.message(
+                    "Download cancelled — SteamCMD content symlink could not be validated."
+                )
+                runner.close()
+                return
+
         total = len(publishedfileids)
         runner.message(
             f"Got it: {self.steamcmd}\n"
@@ -607,6 +616,7 @@ class SteamcmdInterface:
                 runner.message(f"Reinstalling SteamCMD: {self.steamcmd_install_path}")
                 self.setup_steamcmd(symlink_source_path, True, runner)
         if installed:
+            self.symlink_source_path = symlink_source_path
             if not os.path.exists(self.steamcmd_content_path):
                 os.makedirs(self.steamcmd_content_path)
                 runner.message(
