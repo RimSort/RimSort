@@ -807,13 +807,13 @@ class TagEditDialog(QDialog):
         self.tags_text_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
         self.tags_text_input.textChanged.connect(self.filter_tags_list)
         self.tags_text_input.returnPressed.connect(self.upsert_typed_tag)
+        self.tags_text_input.installEventFilter(self)
         self.dialog_layout.addWidget(self.tags_text_input)
 
         self.tags_list = QListWidget(sortingEnabled=True)
         self.tags_list.setObjectName("TagEditDialogList")
         self.tags_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-        # Fix for MacOS to allow pressing down arrow to focus the tag list.
-        self.tags_list.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.tags_list.installEventFilter(self)
         self.dialog_layout.addWidget(self.tags_list)
 
         self.buttons_layout = QHBoxLayout()
@@ -843,6 +843,23 @@ class TagEditDialog(QDialog):
 
         self.populate_tags()
 
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            key = cast(QKeyEvent, event).key()
+            if obj is self.tags_text_input and (
+                key == Qt.Key.Key_Down | key == Qt.Key.Key_Tab
+            ):
+                self.tags_list.setFocus(Qt.FocusReason.ShortcutFocusReason)
+                return True
+            if (
+                obj is self.tags_list
+                and key == Qt.Key.Key_Up
+                and self.tags_list.currentRow() == 0
+            ):
+                self.tags_text_input.setFocus(Qt.FocusReason.ShortcutFocusReason)
+                return True
+        return super().eventFilter(obj, event)
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.keyCombination() in [
             QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Enter),
@@ -866,15 +883,6 @@ class TagEditDialog(QDialog):
         ]:
             # On Enter or Return key press while focused on the tags list, toggle the selection of the current item.
             self.toggle_tag_item_selection(self.tags_list.currentItem())
-            return
-        if self.tags_text_input.hasFocus() and event.key() in [
-            Qt.Key.Key_Down,
-            Qt.Key.Key_Tab,
-        ]:
-            # On the down arrow or the Tab key press while focused on the tag text input field, move focus
-            #  to the tag list for easier tag selection from filtered items.
-            # Prevents having to type the whole tag manually.
-            self.tags_list.setFocus(Qt.FocusReason.ShortcutFocusReason)
             return
 
         super().keyPressEvent(event)
