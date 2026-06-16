@@ -309,6 +309,60 @@ class SteamcmdInterface:
             fh.write("\n".join(script_lines))
         return script_path
 
+    def validate_content_symlink(self, symlink_source_path: str) -> bool:
+        """Check that the workshop content symlink exists and points to a valid target.
+
+        If the symlink is missing or dangling (e.g. after reinstalling the game),
+        prompt the user to re-create it.
+
+        :param symlink_source_path: The local mods directory the symlink should target.
+        :return: True if the symlink is healthy or was successfully re-created.
+        """
+        content_link = Path(self.steamcmd_content_path) / "294100"
+
+        if content_link.exists() and content_link.is_dir():
+            return True
+
+        is_dangling = symlink.is_junction_or_link(str(content_link))
+        if is_dangling:
+            problem = self.translate(
+                "SteamcmdInterface",
+                "The SteamCMD workshop content symlink exists but points to a "
+                "directory that no longer exists. This typically happens after "
+                "reinstalling the game.",
+            )
+        else:
+            problem = self.translate(
+                "SteamcmdInterface",
+                "The SteamCMD workshop content symlink is missing. "
+                "Downloads will fail without it.",
+            )
+
+        logger.warning(f"SteamCMD content symlink invalid: {content_link} (dangling={is_dangling})")
+
+        diag = BinaryChoiceDialog(
+            title=self.translate("SteamcmdInterface", "SteamCMD Symlink Issue"),
+            text=problem,
+            information=self.translate(
+                "SteamcmdInterface",
+                "Would you like RimSort to fix this by re-creating the symlink?",
+            ),
+            details=self.translate(
+                "SteamcmdInterface",
+                "Symlink: [{source}] -> {destination}",
+            ).format(source=symlink_source_path, destination=str(content_link)),
+            positive_text=self.translate("SteamcmdInterface", "Fix && Retry"),
+            negative_text=self.translate("SteamcmdInterface", "Cancel Download"),
+            icon=QMessageBox.Icon.Warning,
+        )
+
+        if not diag.exec_is_positive():
+            return False
+
+        return self.create_symlink(
+            symlink_source_path, str(content_link), force=True
+        )
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
