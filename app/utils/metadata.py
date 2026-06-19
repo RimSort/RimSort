@@ -457,8 +457,11 @@ class MetadataManager(QObject):
             self.parser_threadpool.clear()
             return
 
-        # Process Steam Workshop mods
-        process_data_source_folder("workshop", settings_instance.workshop_folder)
+        # Process Steam Workshop mods (only when Steam client integration is enabled)
+        if settings_instance.steam_client_integration:
+            process_data_source_folder("workshop", settings_instance.workshop_folder)
+        elif settings_instance.workshop_folder:
+            logger.info("Steam client integration is disabled; skipping workshop mods")
 
         if self._abort_requested:
             self.parser_threadpool.clear()

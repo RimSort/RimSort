@@ -1182,6 +1182,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.steam_mods_folder_location_open_button.setEnabled(checked)
         self.steam_mods_folder_location_choose_button.setEnabled(checked)
         self.steam_mods_folder_location_clear_button.setEnabled(checked)
+        self.launch_via_steam_protocol_checkbox.setEnabled(checked)
+        if not checked:
+            self.steam_mods_folder_location.clear()
+            self.launch_via_steam_protocol_checkbox.setChecked(False)
 
     def _on_steam_protocol_toggled(self) -> None:
         # Disable run_args group when Steam protocol launch is enabled

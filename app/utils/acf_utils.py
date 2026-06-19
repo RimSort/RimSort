@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
+from app.utils.constants import RIMWORLD_STEAM_APP_ID
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 
 if TYPE_CHECKING:
@@ -465,6 +466,19 @@ def steamcmd_purge_mods(
                 manifest_path.unlink()
             except Exception as e:
                 logger.error(f"Failed to remove manifest file {manifest_path}: {e}")
+
+
+def is_rimworld_workshop_folder(path: str) -> bool:
+    """
+    Check if a path points to a RimWorld Steam Workshop content folder.
+
+    Validation checks that the path ends with ``294100``, which is the Steam app ID
+    for RimWorld.
+
+    :param path: Path to check, typically a workshop content folder.
+    :return: True if the path ends with ``294100``.
+    """
+    return Path(path).name == RIMWORLD_STEAM_APP_ID
 
 
 def validate_acf_file_exists(steam_mods_location: str) -> bool:
