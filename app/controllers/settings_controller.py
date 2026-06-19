@@ -255,35 +255,6 @@ class SettingsController(QObject):
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
 
-    def create_instance(
-        self,
-        instance_name: str,
-        game_folder: str = "",
-        config_folder: str = "",
-        local_folder: str = "",
-        workshop_folder: str = "",
-        run_args: str = "",
-        steamcmd_install_path: str = "",
-        steam_client_integration: bool = False,
-        instance_folder_override: str = "",
-    ) -> None:
-        """
-        Create and set the instance.
-        """
-        instance = Instance(
-            name=instance_name,
-            game_folder=game_folder,
-            config_folder=config_folder,
-            local_folder=local_folder,
-            workshop_folder=workshop_folder,
-            run_args=run_args,
-            steamcmd_install_path=steamcmd_install_path,
-            steam_client_integration=steam_client_integration,
-            instance_folder_override=instance_folder_override,
-        )
-
-        self.set_instance(instance)
-
     def set_instance(self, instance: Instance) -> None:
         """
         Set the instance with the provided instance.

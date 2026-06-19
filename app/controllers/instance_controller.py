@@ -126,8 +126,8 @@ class InstanceController(QObject):
             return None
         return Path(instance.config_folder)
 
+    @staticmethod
     def create_instance(
-        self,
         instance_name: str,
         game_folder: str = "",
         config_folder: str = "",

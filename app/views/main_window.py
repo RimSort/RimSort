@@ -1049,7 +1049,7 @@ class MainWindow(QMainWindow):
                 if existing_args:
                     run_args = f"{run_args} {existing_args}".strip()
             # Add new instance to Settings
-            self.settings_controller.create_instance(
+            instance = InstanceController.create_instance(
                 instance_name=instance_name,
                 game_folder=instance_data.get("game_folder", ""),
                 local_folder=instance_data.get("local_folder", ""),
@@ -1062,6 +1062,7 @@ class MainWindow(QMainWindow):
                 ),
                 instance_folder_override=instance_folder_override,
             )
+            self.settings_controller.set_instance(instance)
 
             # Save settings
             self.settings_controller.settings.save()
