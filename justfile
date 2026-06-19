@@ -107,14 +107,18 @@ markdownlint-fix:
 shfmt-fix:
     fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
+# Run copy/paste detection (jscpd) using the project's .jscpd.json config
+jscpd:
+    npx jscpd@4 . --config .jscpd.json
+
 # Run all code quality checks: super-linter + typecheck + pyright
 [unix]
 check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright
+# Run all code quality checks available on Windows: typecheck + pyright + jscpd
 [windows]
-check: typecheck pyright
+check: typecheck pyright jscpd
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
