@@ -7,6 +7,9 @@ INSTANCE_FOLDER_NAME = "instances"
 STEAMCMD_FOLDER_NAME = "steamcmd"
 STEAM_FOLDER_NAME = "steam"
 
+# Steam App ID for RimWorld
+RIMWORLD_STEAM_APP_ID = "294100"
+
 # Default packageId for mods with missing or invalid packageId
 DEFAULT_MISSING_PACKAGEID = "missing.packageid"
 
