@@ -1074,8 +1074,8 @@ def git_pull(
                     logger.info(
                         "Aborted merge due to conflicts and reset repository state."
                     )
-                except Exception as e:
-                    logger.error(f"Failed to abort merge and reset state: {e}")
+                except Exception:
+                    logger.exception("Failed to abort merge and reset state")
 
                 return GitPullResult.CONFLICT
             else:

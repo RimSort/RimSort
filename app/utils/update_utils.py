@@ -15,7 +15,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 from tempfile import gettempdir
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
 
 import requests
 from loguru import logger
@@ -154,8 +154,8 @@ class DownloadInfo(TypedDict):
 class PlatformPatterns(TypedDict):
     """Type definition for platform pattern configuration."""
 
-    patterns: List[str]
-    arch_patterns: Dict[str, List[str]]
+    patterns: list[str]
+    arch_patterns: dict[str, list[str]]
 
 
 class ScriptConfig:
@@ -191,7 +191,7 @@ class ScriptConfig:
         needs_elevation: bool = False,
         install_dir: Optional[Path] = None,
         update_manager: Optional["UpdateManager"] = None,
-    ) -> Union[str, List[str]]:
+    ) -> str | list[str]:
         """
         Get the appropriate arguments for launching the update script based on platform and elevation needs.
 
@@ -217,7 +217,7 @@ class ScriptConfig:
         )
 
     @staticmethod
-    def _build_bash_command(base_args: List[str], needs_elevation: bool) -> str:
+    def _build_bash_command(base_args: list[str], needs_elevation: bool) -> str:
         """
         Build a bash command string for launching update script directly.
         Used as primary method for modern terminal emulators and standalone execution.
@@ -237,7 +237,7 @@ class ScriptConfig:
 
     @staticmethod
     def _build_terminal_command(
-        terminal: str, base_args: List[str], needs_elevation: bool
+        terminal: str, base_args: list[str], needs_elevation: bool
     ) -> str:
         """
         Build terminal-specific command string for launching update script.
@@ -283,11 +283,11 @@ class ScriptConfig:
 
     def _build_platform_args(
         self,
-        base_args: List[str],
+        base_args: list[str],
         script_path: Path,
         needs_elevation: bool,
         update_manager: Optional["UpdateManager"] = None,
-    ) -> Union[str, List[str]]:
+    ) -> str | list[str]:
         """
         Build platform-specific arguments for launching the update script.
 
@@ -403,7 +403,7 @@ class TarExtractThread(QThread):
             )
 
         except Exception as e:
-            logger.error(f"tar.gz extraction failed: {e}")
+            logger.exception("tar.gz extraction failed")
             self.finished.emit(False, f"Extraction error: {str(e)}")
 
     def stop(self) -> None:
@@ -441,7 +441,7 @@ class UpdateManager(QObject):
     }
 
     # Platform-specific script configurations
-    _script_configs: Dict[str, ScriptConfig] = {
+    _script_configs: dict[str, ScriptConfig] = {
         "Darwin": ScriptConfig(
             script_name="update.sh",
             start_new_session=False,
@@ -617,7 +617,7 @@ class UpdateManager(QObject):
 
         except Exception as e:
             total_time = (datetime.now() - start_time).total_seconds()
-            logger.error(f"Update check failed after {total_time:.2f}s: {e}")
+            logger.exception(f"Update check failed after {total_time:.2f}s")
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
                 text=self.tr(ERR_UPDATE_FAILED_TEXT),
@@ -657,7 +657,7 @@ class UpdateManager(QObject):
 
         return True
 
-    def _fetch_and_compare_versions(self) -> Optional[Dict[str, Any]]:
+    def _fetch_and_compare_versions(self) -> Optional[dict[str, Any]]:
         """
         Fetch latest release information and compare versions.
 
@@ -765,7 +765,7 @@ class UpdateManager(QObject):
         )
         return answer == QMessageBox.StandardButton.Yes
 
-    def _handle_update_process(self, update_info: Dict[str, Any]) -> None:
+    def _handle_update_process(self, update_info: dict[str, Any]) -> None:
         """
         Handle the actual update process: download, extract, and launch.
 
@@ -855,11 +855,11 @@ class UpdateManager(QObject):
 
     def _asset_matches(
         self,
-        asset: Dict[str, Any],
-        patterns: List[str],
+        asset: dict[str, Any],
+        patterns: list[str],
         extension: str,
         require_arch: bool = False,
-        arch_patterns: List[str] | None = None,
+        arch_patterns: list[str] | None = None,
     ) -> bool:
         """
         Check if an asset matches the given patterns and extension.
@@ -899,7 +899,7 @@ class UpdateManager(QObject):
         return True
 
     def _get_platform_download_url(
-        self, assets: List[Dict[str, Any]], needs_elevation: bool = False
+        self, assets: list[dict[str, Any]], needs_elevation: bool = False
     ) -> DownloadInfo | None:
         """
         Get the appropriate download URL for the current platform.
@@ -915,9 +915,9 @@ class UpdateManager(QObject):
             logger.warning(f"Unsupported system: {self._system}")
             return None
 
-        system_patterns = cast(List[str], self._cached_patterns["patterns"])
+        system_patterns = cast(list[str], self._cached_patterns["patterns"])
         arch_patterns_dict = cast(
-            Dict[str, List[str]], self._cached_patterns["arch_patterns"]
+            dict[str, list[str]], self._cached_patterns["arch_patterns"]
         )
         arch_patterns = arch_patterns_dict.get(self._arch, [])
 
@@ -955,9 +955,9 @@ class UpdateManager(QObject):
 
     def _find_best_asset_match(
         self,
-        assets: List[Dict[str, Any]],
-        system_patterns: List[str],
-        arch_patterns: List[str],
+        assets: list[dict[str, Any]],
+        system_patterns: list[str],
+        arch_patterns: list[str],
         preferred_extension: str,
     ) -> DownloadInfo | None:
         """
@@ -1025,8 +1025,8 @@ class UpdateManager(QObject):
 
     def _find_appimage_asset(
         self,
-        assets: List[Dict[str, Any]],
-        arch_patterns: List[str],
+        assets: list[dict[str, Any]],
+        arch_patterns: list[str],
     ) -> DownloadInfo | None:
         """
         Find an AppImage asset from the release.
@@ -1239,28 +1239,28 @@ class UpdateManager(QObject):
             )
 
         except UpdateDownloadError as e:
-            logger.error(f"Update download failed: {e}")
+            logger.exception("Update download failed")
             dialogue.show_warning(
                 title=self.tr(ERR_DOWNLOAD_FAILED_TITLE),
                 text=self.tr(ERR_DOWNLOAD_FAILED_TEXT),
                 information=f"Error: {str(e)}<br>URL: {download_url}",
             )
         except UpdateExtractionError as e:
-            logger.error(f"Update extraction failed: {e}")
+            logger.exception("Update extraction failed")
             dialogue.show_warning(
                 title=self.tr(ERR_EXTRACTION_FAILED_TITLE),
                 text=self.tr(ERR_EXTRACTION_FAILED_TEXT),
                 information=f"Error: {str(e)}",
             )
         except UpdateScriptLaunchError as e:
-            logger.error(f"Update script launch failed: {e}")
+            logger.exception("Update script launch failed")
             dialogue.show_warning(
                 title=self.tr(ERR_LAUNCH_FAILED_TITLE),
                 text=self.tr(ERR_LAUNCH_FAILED_TEXT),
                 information=f"Error: {str(e)}",
             )
         except Exception as e:
-            logger.error(f"Unexpected update process failure: {e}")
+            logger.exception("Unexpected update process failure")
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
                 text=self.tr(ERR_UPDATE_FAILED_TEXT),
@@ -1904,7 +1904,7 @@ class UpdateManager(QObject):
         return moved_items
 
     def _validate_executable_presence(
-        self, extract_path: Path, children: List[Path]
+        self, extract_path: Path, children: list[Path]
     ) -> None:
         """
         Validate that the expected executable is present in the extracted structure.
@@ -2165,7 +2165,7 @@ class UpdateManager(QObject):
     def _launch_windows_update_script(
         self,
         script_path: Path,
-        args_repr: Union[str, List[str]],
+        args_repr: str | list[str],
         needs_elevation: bool,
     ) -> subprocess.Popen[Any]:
         """
@@ -2229,7 +2229,7 @@ class UpdateManager(QObject):
     def _launch_posix_update_script(
         self,
         script_path: Path,
-        args_repr: Union[str, List[str]],
+        args_repr: str | list[str],
         needs_elevation: bool,
         update_source_path: Path,
         log_path: Path,
@@ -2425,7 +2425,7 @@ class UpdateManager(QObject):
 
     def _get_script_info(
         self, update_source_path: Path, log_path: Path, needs_elevation: bool
-    ) -> tuple[Path, Union[str, List[str]], Optional[bool], Path]:
+    ) -> tuple[Path, str | list[str], Optional[bool], Path]:
         """
         Get the script path, arguments representation, and session flag for the platform.
 
@@ -2506,8 +2506,8 @@ class UpdateManager(QObject):
                 if self.mod_info_panel:
                     self.mod_info_panel.panel.removeWidget(progress_widget)
                     self.mod_info_panel.info_panel_frame.show()
-        except Exception as e:
-            logger.error(f"Error cleaning up progress widget: {e}")
+        except Exception:
+            logger.exception("Error cleaning up progress widget")
 
     def _create_backup_with_progress(self) -> None:
         """Create a backup with a progress widget."""

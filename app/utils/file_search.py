@@ -1,6 +1,7 @@
 import os
 import re
-from typing import Any, Callable, Generator, Optional, Tuple
+from collections.abc import Callable, Generator
+from typing import Any, Optional
 
 from charset_normalizer import from_bytes
 from loguru import logger
@@ -60,7 +61,7 @@ class FileSearch:
         root_paths: list[str],
         options: dict[str, Any],
         result_callback: Optional[Callable[..., None]] = None,
-    ) -> Generator[dict[str, str] | Tuple[str, str, str], None, None]:
+    ) -> Generator[dict[str, str] | tuple[str, str, str], None, None]:
         """
         Generic search method that handles all search types.
 
@@ -124,7 +125,7 @@ class FileSearch:
                                 content_chunk, search_text, case_sensitive, use_regex
                             ):
                                 if return_dict:
-                                    result: dict[str, str] | Tuple[str, str, str] = {
+                                    result: dict[str, str] | tuple[str, str, str] = {
                                         "file_path": file_path,
                                         "preview": self._get_preview(
                                             content_chunk, search_text, case_sensitive
@@ -181,7 +182,7 @@ class FileSearch:
         self, search_type: str
     ) -> Callable[
         [str, list[str], dict[str, Any], Optional[Callable[[str, str, str], None]]],
-        Generator[Tuple[str, str, str], None, None],
+        Generator[tuple[str, str, str], None, None],
     ]:
         """
         Factory method to create specialized search methods.
@@ -198,7 +199,7 @@ class FileSearch:
             root_paths: list[str],
             options: dict[str, Any],
             result_callback: Optional[Callable[[str, str, str], None]] = None,
-        ) -> Generator[Tuple[str, str, str], None, None]:
+        ) -> Generator[tuple[str, str, str], None, None]:
             # Apply search-type specific options
             search_options = options.copy()
             search_options["return_dict"] = False

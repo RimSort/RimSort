@@ -5,7 +5,7 @@ from os import path, rename
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from time import time
-from typing import Any, Dict
+from typing import Any
 
 import msgspec
 from loguru import logger
@@ -542,7 +542,7 @@ class Settings(QObject):
             return arg
         return " ".join(value)
 
-    def _from_dict(self, data: Dict[str, Any]) -> None:
+    def _from_dict(self, data: dict[str, Any]) -> None:
         special_attributes = ["instances"]
 
         for key, value in data.items():
@@ -570,7 +570,7 @@ class Settings(QObject):
                     )
             self.instances = instances
 
-    def _to_dict(self, skip_private: bool = True) -> Dict[str, Any]:
+    def _to_dict(self, skip_private: bool = True) -> dict[str, Any]:
         special_attributes = ["instances"]
         skip_attributes = ["destroyed", "objectNameChanged"]
 

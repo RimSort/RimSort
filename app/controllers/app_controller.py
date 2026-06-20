@@ -1,6 +1,7 @@
 import os
 import sys
 
+from loguru import logger
 from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
@@ -89,7 +90,7 @@ class AppController(QObject):
         if app_translator.load(str(path)):
             QCoreApplication.installTranslator(app_translator)
         else:
-            print(f"Translation file {path} not found.")
+            logger.warning(f"Translation file {path} not found.")
 
         qt_translations_path = QLibraryInfo.path(
             QLibraryInfo.LibraryPath.TranslationsPath
@@ -99,7 +100,7 @@ class AppController(QObject):
         if qt_translator.load(qt_file_path):
             QCoreApplication.installTranslator(qt_translator)
         else:
-            print(f"Qt translation file {qt_file_path} not found.")
+            logger.warning(f"Qt translation file {qt_file_path} not found.")
 
     def initialize_steamcmd_interface(self) -> None:
         """Initializes the SteamcmdInterface."""

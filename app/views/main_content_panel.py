@@ -1471,19 +1471,13 @@ class MainContent(QObject):
         self.__missing_mods_prompt()
 
     def _do_open_app_directory(self) -> None:
-        app_directory = os.getcwd()
-        logger.info(f"Opening app directory: {app_directory}")
-        platform_specific_open(app_directory)
+        self._open_directory("app", path=os.getcwd())
 
     def _do_open_settings_directory(self) -> None:
-        settings_directory = AppInfo().app_storage_folder
-        logger.info(f"Opening settings directory: {settings_directory}")
-        platform_specific_open(settings_directory)
+        self._open_directory("settings", path=str(AppInfo().app_storage_folder))
 
     def _do_open_rimsort_logs_directory(self) -> None:
-        logs_directory = AppInfo().user_log_folder
-        logger.info(f"Opening RimSort logs directory: {logs_directory}")
-        platform_specific_open(logs_directory)
+        self._open_directory("RimSort logs", path=str(AppInfo().user_log_folder))
 
     def _do_open_rimworld_directory(self) -> None:
         self._open_directory("RimWorld game", "game_folder")
@@ -1519,13 +1513,21 @@ class MainContent(QObject):
     def _do_open_steam_mods_directory(self) -> None:
         self._open_directory("Steam mods", "workshop_folder")
 
-    def _open_directory(self, directory_name: str, attribute: str) -> None:
-        current_instance = self.settings_controller.settings.current_instance
-        directory = getattr(
-            self.settings_controller.settings.instances[current_instance],
-            attribute,
-            None,
-        )
+    def _open_directory(
+        self, directory_name: str, attribute: str | None = None, path: str | None = None
+    ) -> None:
+        directory: str | None
+        if path is not None:
+            directory = path
+        elif attribute is not None:
+            current_instance = self.settings_controller.settings.current_instance
+            directory = getattr(
+                self.settings_controller.settings.instances[current_instance],
+                attribute,
+                None,
+            )
+        else:
+            directory = None
         if directory and os.path.exists(directory):
             logger.info(f"Opening {directory_name} directory: {directory}")
             platform_specific_open(directory)

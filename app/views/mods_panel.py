@@ -6,7 +6,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import Any, Dict, Optional, cast
+from typing import Any, Optional, cast
 
 from loguru import logger
 from platformdirs import PlatformDirs
@@ -1677,7 +1677,7 @@ class ModListWidget(QListWidget):
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
             # Track all uuids selected
-            all_selected_uuids: Dict[int, str] = {}
+            all_selected_uuids: dict[int, str] = {}
             # Single item selected
             if len(selected_items) == 1:
                 logger.debug(f"{len(selected_items)} items selected")

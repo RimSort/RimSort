@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -180,9 +179,9 @@ class MetadataManager(QObject):
                 logger.info(
                     f"Retrieved game version from Version.txt: {self.game_version}"
                 )
-            except Exception as e:
-                logger.error(
-                    f"Unable to parse Version.txt from game folder: {version_file_path}: {e}"
+            except Exception:
+                logger.exception(
+                    f"Unable to parse Version.txt from game folder: {version_file_path}"
                 )
         else:
             logger.error(
@@ -246,10 +245,12 @@ class MetadataManager(QObject):
                 future.result(timeout=30)  # 30 second timeout per loader
                 completed_count += 1
             except TimeoutError:
-                logger.error(f"External metadata loader timed out: {loader_names[idx]}")
-            except Exception as e:
-                logger.error(
-                    f"External metadata loader failed ({loader_names[idx]}): {e}"
+                logger.exception(
+                    f"External metadata loader timed out: {loader_names[idx]}"
+                )
+            except Exception:
+                logger.exception(
+                    f"External metadata loader failed ({loader_names[idx]})"
                 )
 
         logger.info(
@@ -1596,7 +1597,7 @@ class ModParser(QRunnable):
                             pfid = pfid_file.read()
                             pfid = pfid.strip()
                     except Exception:
-                        logger.error(f"Failed to read pfid from {pfid_path}")
+                        logger.exception(f"Failed to read pfid from {pfid_path}")
                     break
         # If we were able to find an About.xml, populate mod data...
         if not invalid_about_file_path_found:
@@ -1607,10 +1608,7 @@ class ModParser(QRunnable):
                 # Try to parse .xml
                 mod_data = xml_path_to_json(mod_data_path)
             except Exception:
-                # If there was an issue parsing the .xml, track and exit
-                logger.error(
-                    f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}"
-                )
+                logger.exception(f"Unable to parse {about_file_name}")
                 data_malformed = True
             else:
                 # Case-insensitive `ModMetaData` key.
@@ -1829,10 +1827,7 @@ class ModParser(QRunnable):
                 # Try to parse .rsc
                 scenario_data = xml_path_to_json(scenario_data_path)
             except Exception:
-                # If there was an issue parsing the .rsc, track and exit
-                logger.error(
-                    f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}"
-                )
+                logger.exception(f"Unable to parse {scenario_rsc_file}")
                 data_malformed = True
             else:
                 # Case-insensitive `savedscenario` key.
@@ -1964,9 +1959,8 @@ class ModParser(QRunnable):
             self.metadata_manager.packageid_to_uuids.setdefault(packageid, set()).add(
                 self.uuid
             )
-        except Exception as e:
-            error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
-            logger.error(f"ERROR: Unable to initialize ModParser {error_message}")
+        except Exception:
+            logger.exception("ERROR: Unable to initialize ModParser")
 
 
 # Mod helper functions
