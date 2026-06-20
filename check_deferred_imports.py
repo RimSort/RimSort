@@ -16,9 +16,6 @@ from pathlib import Path
 ALLOWED: set[str] = {
     # __main__ cli entry point — intentionally deferred
     "app/__main__.py: from app.cli.main import cli",
-    # Genuine circular: metadata ↔ db_builder_core
-    "app/utils/metadata.py: from app.utils.db_builder_core import DBBuilderCore",
-    "app/utils/db_builder_core.py: from app.utils.metadata import recursively_update_dict",
     # Genuine circular: worker → updater (noted in code comment)
     "app/utils/github/worker.py: from app.utils.github.updater import check_for_updates",
     # Startup-performance: installer hot path

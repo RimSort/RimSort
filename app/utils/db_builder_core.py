@@ -15,6 +15,7 @@ from app.utils.constants import (
     DB_BUILDER_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.steam.webapi.wrapper import DynamicQuery
 
 
@@ -159,9 +160,6 @@ class DBBuilderCore:
         Args:
             database: The database dictionary to write
         """
-        # Import recursively_update_dict here to avoid circular imports
-        from app.utils.metadata import recursively_update_dict
-
         # If user-configured `update` parameter, update old db with new query data recursively
         if self.update and os.path.exists(self.output_database_path):
             self.progress_callback(
