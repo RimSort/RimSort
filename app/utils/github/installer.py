@@ -138,7 +138,9 @@ class GitHubInstaller:
         :param target_dir: Destination directory for extraction.
         :return: The :class:`UnwrapResult` from the unwrap step.
         """
-        from app.utils import http
+        from app.utils import (
+            http,  # Deferred: hot-path download, avoid import at module scope
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             zip_path = os.path.join(tmp, asset_name)

@@ -99,6 +99,7 @@ class LocationsTabController(BaseTabController):
             FolderPathGroup(
                 prefix="steam_mods_folder",
                 choose_callback=self._on_steam_mods_choose,
+                clear_callback=self._on_steam_mods_clear,
             ),
             FolderPathGroup(
                 prefix="local_mods_folder",
@@ -129,19 +130,17 @@ class LocationsTabController(BaseTabController):
     def update_view_from_model(self) -> None:
         instance = self.settings.instances[self.settings.current_instance]
 
+        self.dialog.steam_client_integration_checkbox.setChecked(
+            instance.steam_client_integration
+        )
+        # Explicitly sync UI enable states so the handler runs even when the
+        # checkbox state hasn't changed (e.g. default unchecked + model unchecked).
+        self.dialog._on_steam_integration_toggled()
+
         self._groups[0].update_view(self.dialog, str(instance.game_folder))
         self._groups[1].update_view(self.dialog, str(instance.config_folder))
         self._groups[2].update_view(self.dialog, str(instance.workshop_folder))
         self._groups[3].update_view(self.dialog, str(instance.local_folder))
-
-        self.dialog.steam_client_integration_checkbox.setChecked(
-            instance.steam_client_integration
-        )
-        checked = self.dialog.steam_client_integration_checkbox.isChecked()
-        self.dialog.steam_mods_folder_location.setEnabled(checked)
-        self.dialog.steam_mods_folder_location_open_button.setEnabled(checked)
-        self.dialog.steam_mods_folder_location_choose_button.setEnabled(checked)
-        self.dialog.steam_mods_folder_location_clear_button.setEnabled(checked)
 
         is_default = self.settings.current_instance == DEFAULT_INSTANCE_NAME
         self.dialog.instance_folder_location.setText(instance.instance_folder_override)
@@ -216,6 +215,11 @@ class LocationsTabController(BaseTabController):
         self._path_selected_callback(str(Path(steam_mods_folder).parent))
         return steam_mods_folder
 
+    @staticmethod
+    def _on_steam_mods_clear(dialog: SettingsDialog) -> None:
+        dialog.steam_client_integration_checkbox.setChecked(False)
+        dialog.launch_via_steam_protocol_checkbox.setChecked(False)
+
     def _on_local_mods_choose(self, dialog: SettingsDialog) -> str | None:
         local_mods_folder = show_dialogue_file(
             mode="open_dir",
@@ -246,3 +250,5 @@ class LocationsTabController(BaseTabController):
         self.dialog.config_folder_location.setText("")
         self.dialog.steam_mods_folder_location.setText("")
         self.dialog.local_mods_folder_location.setText("")
+        self.dialog.steam_client_integration_checkbox.setChecked(False)
+        self.dialog.launch_via_steam_protocol_checkbox.setChecked(False)

@@ -48,6 +48,7 @@ from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
+from app.utils.window_launch_state import apply_window_launch_state
 from app.views.acf_log_reader import AcfLogReader
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -260,8 +261,6 @@ class MainWindow(QMainWindow):
 
     def _launch_main_window(self) -> None:
         """Apply main window launch state from settings"""
-        from app.utils.window_launch_state import apply_window_launch_state
-
         main_window_launch_state = (
             self.settings_controller.settings.main_window_launch_state
         )
@@ -1049,7 +1048,7 @@ class MainWindow(QMainWindow):
                 if existing_args:
                     run_args = f"{run_args} {existing_args}".strip()
             # Add new instance to Settings
-            self.settings_controller.create_instance(
+            instance = InstanceController.create_instance(
                 instance_name=instance_name,
                 game_folder=instance_data.get("game_folder", ""),
                 local_folder=instance_data.get("local_folder", ""),
@@ -1062,6 +1061,7 @@ class MainWindow(QMainWindow):
                 ),
                 instance_folder_override=instance_folder_override,
             )
+            self.settings_controller.set_instance(instance)
 
             # Save settings
             self.settings_controller.settings.save()

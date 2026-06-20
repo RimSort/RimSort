@@ -1,10 +1,11 @@
 import sys
 import traceback
+from collections.abc import Callable
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from time import sleep, time
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -409,7 +410,7 @@ class DynamicQuery(QObject):
             )
 
     def create_steam_db(
-        self, database: Dict[str, Any], publishedfileids: list[str]
+        self, database: dict[str, Any], publishedfileids: list[str]
     ) -> None:
         """
         Builds a database using a chunked WebAPI query of all available
@@ -672,7 +673,7 @@ class DynamicQuery(QObject):
         return result["response"]["next_cursor"]
 
     def ISteamUGC_GetAppDependencies(
-        self, publishedfileids: list[str], query: Dict[str, Any]
+        self, publishedfileids: list[str], query: dict[str, Any]
     ) -> None:
         """
         Given a list of PublishedFileIds and a query, return the query after looking up

@@ -37,8 +37,6 @@ def _find_steam_executable() -> Optional[Path]:
     if sys.platform == "win32":
         from app.utils.win_find_steam import find_steam_folder
 
-        if find_steam_folder is None:
-            return None
         steam_path, found = find_steam_folder()
         if not found:
             return None

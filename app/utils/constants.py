@@ -7,6 +7,9 @@ INSTANCE_FOLDER_NAME = "instances"
 STEAMCMD_FOLDER_NAME = "steamcmd"
 STEAM_FOLDER_NAME = "steam"
 
+# Steam App ID for RimWorld
+RIMWORLD_STEAM_APP_ID = "294100"
+
 # Default packageId for mods with missing or invalid packageId
 DEFAULT_MISSING_PACKAGEID = "missing.packageid"
 
@@ -89,6 +92,13 @@ KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld.anomaly",
     "ludeon.rimworld.odyssey",
 }
+DATABASE_DISPLAY_NAMES: dict[str, str] = {
+    "community_rules": "Community Rules",
+    "steam_workshop": "Steam Workshop",
+    "no_version_warning": "No Version Warning",
+    "use_this_instead": "Use This Instead",
+}
+
 KNOWN_TIER_ONE_MODS = {
     "adaptive.storage.framework",
     "aoba.framework",

@@ -47,6 +47,7 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
+from app.utils.window_launch_state import apply_window_launch_state
 from app.views.dialogue import show_dialogue_conditional, show_warning
 
 from .js_bridge import JavaScriptBridge
@@ -290,8 +291,6 @@ class SteamBrowser(QWidget):
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
-        from app.utils.window_launch_state import apply_window_launch_state
-
         assert self.settings_controller is not None
         browser_window_launch_state = (
             self.settings_controller.settings.browser_window_launch_state
