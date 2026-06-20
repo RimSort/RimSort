@@ -94,67 +94,46 @@ class SettingsController(QObject):
         self._detected_steam_root: Path | None = None
 
         # Initialize per-tab controllers (registry pattern)
-        self._tab_controllers: list[BaseTabController] = []
+        self._tab_controllers: dict[str, BaseTabController] = {
+            "sorting": SortingTabController(self.settings, self.settings_dialog),
+            "databases": DatabasesTabController(
+                self.settings,
+                self.settings_dialog,
+                self._do_http_download_from_dialog,
+            ),
+            "locations": LocationsTabController(
+                self.settings,
+                self.settings_dialog,
+                validate_game_location=self._validate_game_location,
+                validate_config_folder_location=self._validate_config_folder_location,
+                validate_local_mods_location=self._validate_local_mods_location,
+                on_path_selected=self._on_locations_path_selected,
+                on_autodetect=self._on_locations_autodetect_button_clicked,
+                on_instance_folder_choose=self._on_instance_folder_location_choose_button_clicked,
+                on_instance_folder_clear=self._on_instance_folder_location_clear_button_clicked,
+            ),
+            "appearance": AppearanceTabController(self.settings, self.settings_dialog),
+            "game_launch": GameLaunchTabController(self.settings, self.settings_dialog),
+            "internal_tools": InternalToolsTabController(
+                self.settings,
+                self.settings_dialog,
+                last_file_dialog_path=str(self._last_file_dialog_path),
+                on_path_selected=self._on_locations_path_selected,
+            ),
+            "external_tools": ExternalToolsTabController(
+                self.settings,
+                self.settings_dialog,
+                last_file_dialog_path=str(self._last_file_dialog_path),
+                on_path_selected=self._on_locations_path_selected,
+            ),
+            "db_builder": DatabaseBuilderTabController(
+                self.settings,
+                self.settings_dialog,
+            ),
+            "advanced": AdvancedTabController(self.settings, self.settings_dialog),
+        }
 
-        self._sorting_tab = SortingTabController(self.settings, self.settings_dialog)
-        self._tab_controllers.append(self._sorting_tab)
-
-        self._databases_tab = DatabasesTabController(
-            self.settings,
-            self.settings_dialog,
-            self._do_http_download_from_dialog,
-        )
-        self._tab_controllers.append(self._databases_tab)
-
-        self._locations_tab = LocationsTabController(
-            self.settings,
-            self.settings_dialog,
-            validate_game_location=self._validate_game_location,
-            validate_config_folder_location=self._validate_config_folder_location,
-            validate_local_mods_location=self._validate_local_mods_location,
-            on_path_selected=self._on_locations_path_selected,
-            on_autodetect=self._on_locations_autodetect_button_clicked,
-            on_instance_folder_choose=self._on_instance_folder_location_choose_button_clicked,
-            on_instance_folder_clear=self._on_instance_folder_location_clear_button_clicked,
-        )
-        self._tab_controllers.append(self._locations_tab)
-
-        self._appearance_tab = AppearanceTabController(
-            self.settings, self.settings_dialog
-        )
-        self._tab_controllers.append(self._appearance_tab)
-
-        self._game_launch_tab = GameLaunchTabController(
-            self.settings, self.settings_dialog
-        )
-        self._tab_controllers.append(self._game_launch_tab)
-
-        self._internal_tools_tab = InternalToolsTabController(
-            self.settings,
-            self.settings_dialog,
-            last_file_dialog_path=str(self._last_file_dialog_path),
-            on_path_selected=self._on_locations_path_selected,
-        )
-        self._tab_controllers.append(self._internal_tools_tab)
-
-        self._external_tools_tab = ExternalToolsTabController(
-            self.settings,
-            self.settings_dialog,
-            last_file_dialog_path=str(self._last_file_dialog_path),
-            on_path_selected=self._on_locations_path_selected,
-        )
-        self._tab_controllers.append(self._external_tools_tab)
-
-        self._db_builder_tab = DatabaseBuilderTabController(
-            self.settings,
-            self.settings_dialog,
-        )
-        self._tab_controllers.append(self._db_builder_tab)
-
-        self._advanced_tab = AdvancedTabController(self.settings, self.settings_dialog)
-        self._tab_controllers.append(self._advanced_tab)
-
-        for tc in self._tab_controllers:
+        for tc in self._tab_controllers.values():
             tc.connect_signals()
 
         self._update_view_from_model()
@@ -274,68 +253,12 @@ class SettingsController(QObject):
         self.settings._steam_integration_warnings.clear()
 
     def _update_view_from_model(self) -> None:
-        """
-        Update the view from the settings model.
-        """
-
-        # Locations tab
-        self._locations_tab.update_view_from_model()
-
-        # Game Launch tab
-        self._game_launch_tab.update_view_from_model()
-
-        # Databases tab
-        self._databases_tab.update_view_from_model()
-
-        # Sorting tab
-        self._sorting_tab.update_view_from_model()
-
-        # Database Builder tab
-        self._db_builder_tab.update_view_from_model()
-
-        # Internal Tools tab
-        self._internal_tools_tab.update_view_from_model()
-
-        # External Tools tab
-        self._external_tools_tab.update_view_from_model()
-
-        # Appearance tab
-        self._appearance_tab.update_view_from_model()
-
-        # Advanced tab
-        self._advanced_tab.update_view_from_model()
+        for tc in self._tab_controllers.values():
+            tc.update_view_from_model()
 
     def _update_model_from_view(self) -> None:
-        """
-        Update the settings model from the view.
-        """
-
-        # Locations tab
-        self._locations_tab.update_model_from_view()
-
-        # Game Launch tab
-        self._game_launch_tab.update_model_from_view()
-
-        # Databases tab
-        self._databases_tab.update_model_from_view()
-
-        # Sorting tab
-        self._sorting_tab.update_model_from_view()
-
-        # Database Builder tab
-        self._db_builder_tab.update_model_from_view()
-
-        # Internal Tools tab
-        self._internal_tools_tab.update_model_from_view()
-
-        # External Tools tab
-        self._external_tools_tab.update_model_from_view()
-
-        # Appearance tab
-        self._appearance_tab.update_model_from_view()
-
-        # Advanced tab
-        self._advanced_tab.update_model_from_view()
+        for tc in self._tab_controllers.values():
+            tc.update_model_from_view()
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
@@ -474,7 +397,7 @@ class SettingsController(QObject):
         # Model-level Steam integration validation (silently fixes & logs)
         if self.settings._validate_steam_integration_config():
             self._show_steam_integration_warnings()
-            self._locations_tab.update_view_from_model()
+            self._tab_controllers["locations"].update_view_from_model()
             return
 
         # If all validations pass, save settings and close dialog
