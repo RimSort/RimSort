@@ -90,5 +90,3 @@ class TestTagEditDialog:
             tag.checkState() == Qt.CheckState.Unchecked
             for tag in self._get_tags(dialog.tags_list)
         )
-
-
