@@ -6,7 +6,7 @@ from collections.abc import Mapping, MutableSet
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import AbstractSet, Any, Iterable, Iterator
+from typing import AbstractSet, Any, Iterable, Iterator, Literal
 from uuid import uuid4
 
 import msgspec
@@ -666,3 +666,46 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
 class SteamDbSchema(msgspec.Struct):
     version: int = 0
     database: dict[str, SteamDbEntry] = msgspec.field(default_factory=dict)
+
+
+# TODO: Someday, it is probably worth typing out the keys
+# For now, I'm creating this alias to make it clear in new code what this represents.
+ModMetadata = dict[str, Any]
+
+
+class ModReplacement:
+    """Metadata for a mod replacement entry from the Steam database."""
+
+    def __init__(
+        self,
+        name: str,
+        author: str,
+        packageid: str,
+        pfid: str,
+        supportedversions: list[str],
+        source: str = "database",
+    ):
+        self.name = name
+        self.author = author
+        self.packageid = packageid
+        self.pfid = pfid
+        self.supportedversions = supportedversions
+        self.source = source
+
+
+@dataclass
+class WorkshopUpdateResult:
+    """Result of a workshop mod update check.
+
+    :param status: Outcome — success, no_workshop_mods, partial, or failed
+    :param mods_checked: Number of workshop mod pfids we attempted to query
+    :param mods_updated: Number of mods that received update metadata
+    :param failed_pfids: PublishedFileIds that could not be queried
+    :param errors: Human-readable error descriptions for each failure
+    """
+
+    status: Literal["success", "no_workshop_mods", "partial", "failed"]
+    mods_checked: int
+    mods_updated: int
+    failed_pfids: list[str]
+    errors: list[str]
