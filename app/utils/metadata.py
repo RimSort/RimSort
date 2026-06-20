@@ -2,10 +2,9 @@ import json
 import os
 import shutil
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from pathlib import Path
 from re import match
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -19,6 +18,18 @@ from PySide6.QtCore import (
     Signal,
 )
 
+from app.models.metadata.metadata_structure import (
+    ModMetadata,
+    ModReplacement,
+    WorkshopUpdateResult,
+)
+
+__all__ = [
+    "ModMetadata",
+    "ModReplacement",
+    "WorkshopUpdateResult",
+]
+
 from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
@@ -27,6 +38,8 @@ from app.utils.constants import (
     DEFAULT_MISSING_PACKAGEID,
     RIMWORLD_DLC_METADATA,
 )
+from app.utils.db_builder_core import DBBuilderCore
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.external_metadata_loaders import (
     ExternalMetadataLoader,
 )
@@ -48,29 +61,6 @@ from app.views.dialogue import (
 
 if TYPE_CHECKING:
     from app.controllers.settings_controller import SettingsController
-
-
-class ModReplacement:
-    def __init__(
-        self,
-        name: str,
-        author: str,
-        packageid: str,
-        pfid: str,
-        supportedversions: list[str],
-        source: str = "database",
-    ):
-        self.name = name
-        self.author = author
-        self.packageid = packageid
-        self.pfid = pfid
-        self.supportedversions = supportedversions
-        self.source = source
-
-
-# TODO: Someday, it is probably worth typing out the keys
-# For now, I'm creating this alias to make it clear in new code what this represents.
-ModMetadata = dict[str, Any]
 
 
 class MetadataManager(QObject):
@@ -2450,8 +2440,6 @@ class SteamDatabaseBuilder(QThread):
         mods: dict[str, Any] = {},
     ):
         QThread.__init__(self)
-        # Import here to avoid circular dependencies
-        from app.utils.db_builder_core import DBBuilderCore
 
         # For backwards compatibility with GUI code that uses these attributes
         self.apikey = apikey
@@ -2837,24 +2825,6 @@ def import_steamcmd_acf_data(
     dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)
 
 
-@dataclass
-class WorkshopUpdateResult:
-    """Result of a workshop mod update check.
-
-    :param status: Outcome — success, no_workshop_mods, partial, or failed
-    :param mods_checked: Number of workshop mod pfids we attempted to query
-    :param mods_updated: Number of mods that received update metadata
-    :param failed_pfids: PublishedFileIds that could not be queried
-    :param errors: Human-readable error descriptions for each failure
-    """
-
-    status: Literal["success", "no_workshop_mods", "partial", "failed"]
-    mods_checked: int
-    mods_updated: int
-    failed_pfids: list[str]
-    errors: list[str]
-
-
 def query_workshop_update_data(mods: dict[str, Any]) -> WorkshopUpdateResult:
     """
     Query Steam WebAPI for update data for workshop/steamcmd mods.
@@ -2923,52 +2893,3 @@ def query_workshop_update_data(mods: dict[str, Any]) -> WorkshopUpdateResult:
         failed_pfids=failed_pfids,
         errors=errors,
     )
-
-
-def recursively_update_dict(
-    a_dict: dict[str, Any],
-    b_dict: dict[str, Any],
-    prune_exceptions: Iterable[str] = [],
-    purge_keys: Iterable[str] = [],
-    recurse_exceptions: Iterable[str] = [],
-) -> None:
-    # Check for keys in recurse_exceptions in a_dict that are not in b_dict and remove them
-    for key in set(a_dict.keys()) - set(b_dict.keys()):
-        if recurse_exceptions and key in recurse_exceptions:
-            del a_dict[key]
-    # Recursively update A with B, excluding recurse exceptions (list of keys to just overwrite)
-    for key, value in b_dict.items():
-        if recurse_exceptions and key in recurse_exceptions:
-            # If the key is an exception, update its value directly from B
-            a_dict[key] = value
-        elif (
-            key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict)
-        ):
-            # If the key exists in both dictionaries and the values are dictionaries,
-            # recursively update the nested dictionaries except for the recurse exceptions list
-            recursively_update_dict(
-                a_dict[key],
-                value,
-                prune_exceptions=prune_exceptions,
-                purge_keys=purge_keys,
-                recurse_exceptions=recurse_exceptions,
-            )
-        else:
-            # Otherwise, update the value in A with the value from B
-            a_dict[key] = value
-    # Prune keys with empty dictionary values (except for keys in prune exceptions list)
-    keys_to_delete = [
-        key
-        for key, value in a_dict.items()
-        if isinstance(value, dict)
-        and not value
-        and (prune_exceptions is None or key not in prune_exceptions)
-    ]
-    for key in keys_to_delete:
-        del a_dict[key]
-    # Delete keys from the list of keys to delete
-    if purge_keys is not None:
-        for key in purge_keys:
-            if key in a_dict:
-                del a_dict[key]
-    return None
