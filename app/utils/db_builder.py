@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QMessageBox
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.windows.runner_panel import RunnerPanel
@@ -37,7 +38,7 @@ class DatabaseBuilder(QObject):
             cls._instance = super(DatabaseBuilder, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: metadata.SettingsController) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the Database Builder singleton.
 

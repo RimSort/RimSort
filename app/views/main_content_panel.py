@@ -34,6 +34,7 @@ import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
+from app.controllers.settings_controller import SettingsController
 from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
@@ -56,7 +57,7 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.metadata import SettingsController, WorkshopUpdateResult
+from app.utils.metadata import WorkshopUpdateResult
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
