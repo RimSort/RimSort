@@ -10,6 +10,7 @@ from typing import Optional
 from loguru import logger
 
 from app.utils.generic import show_no_steam_warning, show_snap_steam_warning
+from app.utils.win_find_steam import find_steam_folder
 
 # If we're running from a Python interpreter, Ensure SteamworksPy module is in Python path, sys.path ($PYTHONPATH)
 # Ensure that this is available by running via: git submodule update --init --recursive
@@ -35,8 +36,6 @@ def _find_steam_executable() -> Optional[Path]:
         Optional[Path]: Path to Steam executable, or None if not found
     """
     if sys.platform == "win32":
-        from app.utils.win_find_steam import find_steam_folder
-
         if find_steam_folder is None:
             return None
         steam_path, found = find_steam_folder()

@@ -6,6 +6,8 @@ from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
+from app.controllers.metadata_controller import MetadataController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
@@ -125,9 +127,6 @@ class AppController(QObject):
 
     def initialize_metadata_controller(self) -> None:
         """Initializes the new MetadataController alongside MetadataManager."""
-        from app.controllers.metadata_controller import MetadataController
-        from app.controllers.metadata_db_controller import AuxMetadataController
-
         aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
         )
