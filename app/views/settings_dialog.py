@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
 from app.utils.gui_info import GUIInfo
 
@@ -1448,8 +1449,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
-        from app.controllers.theme_controller import ThemeController
-
         if self.enable_themes_checkbox.isChecked():
             theme_controller = ThemeController()
             theme_controller.populate_themes_combobox(self.themes_combobox)

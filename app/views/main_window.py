@@ -48,6 +48,7 @@ from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
+from app.utils.window_launch_state import apply_window_launch_state
 from app.views.acf_log_reader import AcfLogReader
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -260,8 +261,6 @@ class MainWindow(QMainWindow):
 
     def _launch_main_window(self) -> None:
         """Apply main window launch state from settings"""
-        from app.utils.window_launch_state import apply_window_launch_state
-
         main_window_launch_state = (
             self.settings_controller.settings.main_window_launch_state
         )

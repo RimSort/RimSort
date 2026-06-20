@@ -12,6 +12,7 @@ from uuid import uuid4
 import msgspec
 from loguru import logger
 
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.files import subfolder_contains_candidate_path
 
 
@@ -523,8 +524,6 @@ class CompiledDependencyData:
         :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
         :return: A fully-populated ``CompiledDependencyData`` instance.
         """
-        from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
-
         compiled = cls()
 
         compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()

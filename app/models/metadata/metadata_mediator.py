@@ -19,6 +19,7 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     SteamDbSchema,
 )
+from app.utils.xml import xml_path_to_json
 
 
 class MetadataMediator:
@@ -106,8 +107,6 @@ class MetadataMediator:
             self._no_version_warning = None
             return
         try:
-            from app.utils.xml import xml_path_to_json
-
             data = xml_path_to_json(str(self.no_version_warning_path))
             mod_ids = data.get("ModIdsToFix", {}).get("li", [])
             if isinstance(mod_ids, str):

@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from re import match
-from typing import Any, Iterable, Literal, Union
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -19,7 +19,6 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from app.controllers.settings_controller import SettingsController
 from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
@@ -46,6 +45,9 @@ from app.views.dialogue import (
     show_dialogue_file,
     show_warning,
 )
+
+if TYPE_CHECKING:
+    from app.controllers.settings_controller import SettingsController
 
 
 class ModReplacement:
@@ -83,7 +85,7 @@ class MetadataManager(QObject):
             cls._instance = super(MetadataManager, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings_controller: "SettingsController") -> None:
         if not hasattr(self, "initialized"):
             super(MetadataManager, self).__init__()
             logger.info("Initializing MetadataManager")

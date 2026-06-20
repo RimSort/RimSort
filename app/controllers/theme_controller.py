@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
@@ -8,7 +10,9 @@ from PySide6.QtWidgets import QApplication, QComboBox
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.views.dialogue import show_warning
-from app.views.settings_dialog import SettingsDialog
+
+if TYPE_CHECKING:
+    from app.views.settings_dialog import SettingsDialog
 
 
 class ThemeController:

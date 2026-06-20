@@ -116,10 +116,14 @@ jscpd:
 check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright + jscpd
+# Run all code quality checks available on Windows: typecheck + pyright + jscpd + deferred-import guard
 [windows]
-check: typecheck pyright jscpd
+check: typecheck pyright jscpd deferred-imports
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
+
+# Check for new function-local from app/ imports (circular-import regression guard)
+deferred-imports:
+    uv run python check_deferred_imports.py
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
 fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix

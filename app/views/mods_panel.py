@@ -65,6 +65,7 @@ from sqlalchemy import text
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.divider import DividerData, generate_divider_uuid, is_divider_uuid
+from app.models.filter_state import FilterState
 from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
@@ -4905,8 +4906,6 @@ class ModsPanel(QWidget):
         :param list_type: The type of list to search within (Active or Inactive).
         :param pattern: The pattern to search for.
         """
-        from app.models.filter_state import FilterState
-
         _filter: QComboBox
         filter_state: bool  # The 'Hide Filter' state
         uuids: list[str]
