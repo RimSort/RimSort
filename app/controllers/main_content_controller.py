@@ -11,7 +11,9 @@ from loguru import logger
 from PySide6.QtCore import QObject, QThreadPool, Slot
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_db import Base
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
 from app.utils.constants import DATABASE_DISPLAY_NAMES
@@ -34,6 +36,7 @@ from app.utils.git_worker import (
     GitStageCommitWorker,
     PushConfig,
 )
+from app.utils.github.models import CacheBase, GitHubModEntry
 from app.utils.github.provider import (
     GitHubProvider,
     GitHubRateLimitError,
@@ -137,17 +140,11 @@ class MainContentController(QObject):
 
     def _start_github_update_check(self) -> None:
         """Run a background GitHub update check if enabled in settings."""
-        from app.utils.github.worker import GitHubUpdateCheckWorker
-
         settings = self.settings_controller.settings
         if not settings.github_update_check_enabled:
             return
 
         try:
-            from app.controllers.metadata_db_controller import AuxMetadataController
-            from app.models.metadata.metadata_db import Base
-            from app.utils.github.models import GitHubModEntry
-
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 settings.aux_db_path
             )
@@ -256,9 +253,6 @@ class MainContentController(QObject):
         self._github_auto_update_results.append((owner_repo, success))
 
         if success:
-            from app.controllers.metadata_db_controller import AuxMetadataController
-            from app.utils.github.models import GitHubModEntry
-
             settings = self.settings_controller.settings
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 settings.aux_db_path
@@ -353,8 +347,6 @@ class MainContentController(QObject):
         """Create a session for the global GitHub release cache DB."""
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
-
-        from app.utils.github.models import CacheBase
 
         cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
         engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
@@ -453,9 +445,6 @@ class MainContentController(QObject):
 
     def _filter_non_github_repos(self, repos_paths: List[Path]) -> List[Path]:
         """Filter out paths tracked as GitHub mods in the current instance."""
-        from app.controllers.metadata_db_controller import AuxMetadataController
-        from app.utils.github.models import GitHubModEntry
-
         settings = self.settings_controller.settings
         try:
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
@@ -1192,10 +1181,6 @@ class MainContentController(QObject):
             ).exec()
             return
 
-        from app.controllers.metadata_db_controller import AuxMetadataController
-        from app.models.metadata.metadata_db import Base
-        from app.utils.github.models import GitHubModEntry
-
         settings = self.settings_controller.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
             settings.aux_db_path
@@ -1243,11 +1228,6 @@ class MainContentController(QObject):
     @Slot(str, str)
     def _on_github_version_switch(self, mod_path: str, selected_tag: str) -> None:
         """Handle version switch request from the mod info panel combo box."""
-        from app.controllers.metadata_db_controller import AuxMetadataController
-        from app.models.metadata.metadata_db import Base
-        from app.utils.github.models import GitHubModEntry
-        from app.utils.github.worker import GitHubVersionSwitchWorker
-
         settings = self.settings_controller.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
             settings.aux_db_path
@@ -1329,9 +1309,6 @@ class MainContentController(QObject):
                 ),
             ).exec()
             return
-
-        from app.controllers.metadata_db_controller import AuxMetadataController
-        from app.utils.github.models import GitHubModEntry
 
         settings = self.settings_controller.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
