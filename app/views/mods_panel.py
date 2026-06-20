@@ -781,6 +781,7 @@ class TagEditDialog(QDialog):
         self.new_tags_input = QLineEdit()
         self.new_tags_input.setObjectName("TagEditDialogInput")
         self.new_tags_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
+        self.new_tags_input.textChanged.connect(self._filter_tags)
         self.dialog_layout.addWidget(self.new_tags_input)
 
         self.tags_list = QListWidget()
@@ -831,6 +832,11 @@ class TagEditDialog(QDialog):
                 else Qt.CheckState.Unchecked
             )
             self.tags_list.addItem(item)
+
+    def _filter_tags(self, text: str) -> None:
+        for index in range(self.tags_list.count()):
+            item = self.tags_list.item(index)
+            item.setHidden(text not in item.text() if text else False)
 
     def select_all(self) -> None:
         for index in range(self.tags_list.count()):
