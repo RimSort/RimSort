@@ -1,18 +1,19 @@
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtGui import QColor
 from sqlalchemy.orm.session import Session
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.aux_db_utils import (
     auxdb_get_mod_color,
     auxdb_get_mod_tags,
     auxdb_get_mod_user_notes,
     auxdb_get_mod_warning_toggled,
 )
-from app.utils.metadata import MetadataManager
 
 
 class CustomListWidgetItemMetadata:
@@ -22,7 +23,7 @@ class CustomListWidgetItemMetadata:
 
     def __init__(
         self,
-        uuid: str,
+        path: str,
         settings_controller: SettingsController,
         errors_warnings: str = "",
         errors: str = "",
@@ -35,37 +36,37 @@ class CustomListWidgetItemMetadata:
         mismatch: bool | None = None,
         mod_color: QColor | None = None,
         mod_tags: list[str] | None = None,
-        alternative: Optional[str] = None,
+        alternative: str | None = None,
         list_type: str | None = None,
         aux_metadata_controller: AuxMetadataController | None = None,
         aux_metadata_session: Session | None = None,
     ) -> None:
         """
-        Must provide a uuid, the rest is optional.
+        Must provide a path, the rest is optional.
 
-        Unless explicitly provided, invalid and mismatch are automatically set based on the uuid using metadata manager.
+        Unless explicitly provided, invalid and mismatch are automatically set based on the path using metadata controller.
 
-        :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
+        :param path: str, the path of the mod which corresponds to a mod's metadata key
         :param settings_controller: SettingsController, instance of settings controller
         :param errors_warnings: a string of errors and warnings
         :param errors: a string of errors for the notification tooltip
         :param warnings: a string of warnings for the notification tooltip
         :param warning_toggled: a bool representing if the warning/error icons are toggled off
         :param filtered: a bool representing whether the widget's item is filtered
-        :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
+        :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param user_notes: str, representing the users own notes for this mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
         :param mod_color: QColor, the color of the mod's text/background in the modlist
-        :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
+        :param alternative: a string representing whether the widget's item has an alternative mod
         :param aux_metadata_controller: AuxMetadataController, an instance of the controller used for fetching mod color
         :param aux_metadata_session: Session, an instance of the session used for fetching mod color
         """
-        # Do not cache the metadata manager, aux metadata controller or settings controller
+        # Do not cache the metadata controller, aux metadata controller or settings controller
         # They will cause freezes/crashes when dragging mods from inactive->active or vice versa
 
         # Metadata attributes
-        self.uuid = uuid
+        self.path = path
         self.errors_warnings = errors_warnings
         self.errors = errors
         self.warnings = warnings
@@ -73,30 +74,30 @@ class CustomListWidgetItemMetadata:
         self.hidden_by_filter = hidden_by_filter
         if not warning_toggled:
             self.warning_toggled = auxdb_get_mod_warning_toggled(
-                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+                settings_controller, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.warning_toggled = warning_toggled
         self.invalid = (
-            invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
+            invalid if invalid is not None else self.get_invalid_by_path(path)
         )
         self.mismatch = (
-            mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
+            mismatch if mismatch is not None else self.get_mismatch_by_path(path)
         )
         if mod_color is None:
             self.mod_color = auxdb_get_mod_color(
-                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+                settings_controller, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.mod_color = mod_color
         self.alternative = (
             alternative
             if alternative is not None
-            else self.get_alternative_by_uuid(uuid)
+            else self.get_alternative_by_path(path)
         )
         self.mod_tags = (
             auxdb_get_mod_tags(
-                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+                settings_controller, path, aux_metadata_controller, aux_metadata_session
             )
             if mod_tags is None
             else mod_tags
@@ -105,59 +106,62 @@ class CustomListWidgetItemMetadata:
         self.list_type = list_type
 
         logger.debug(
-            f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
+            f"Finished initializing CustomListWidgetItemMetadata for path: {path}"
         )
         if user_notes == "":
             self.user_notes = auxdb_get_mod_user_notes(
-                settings_controller, uuid, aux_metadata_controller, aux_metadata_session
+                settings_controller, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.user_notes = user_notes
 
-    def get_invalid_by_uuid(self, uuid: str) -> bool:
+    def get_invalid_by_path(self, path: str) -> bool:
         """
-        Get the invalid status of the mod by its uuid.
+        Get the invalid status of the mod by its path.
 
-        :param uuid: str, the uuid of the mod
+        :param path: str, the path of the mod
         :return: bool, the invalid status of the mod
         """
-        metadata_manager = MetadataManager.instance()
+        metadata_controller = MetadataController.instance()
         try:
-            return metadata_manager.internal_local_metadata[uuid].get("invalid", False)
+            mod = metadata_controller.get_mod(path)
+            if mod is None:
+                return False
+            return not isinstance(mod, AboutXmlMod)
         except KeyError:
-            logger.error(f"UUID {uuid} not found in metadata")
+            logger.error(f"Path {path} not found in metadata")
             return False
 
-    def get_mismatch_by_uuid(self, uuid: str) -> bool:
+    def get_mismatch_by_path(self, path: str) -> bool:
         """
-        Get the version mismatch status of the mod by its uuid.
+        Get the version mismatch status of the mod by its path.
 
-        :param uuid: str, the uuid of the mod
+        :param path: str, the path of the mod
         :return: bool, the version mismatch status of the mod
         """
-        metadata_manager = MetadataManager.instance()
+        metadata_controller = MetadataController.instance()
         try:
-            return metadata_manager.is_version_mismatch(uuid)
+            return metadata_controller.is_version_mismatch(path)
         except KeyError:
-            logger.error(f"UUID {uuid} not found in metadata")
+            logger.error(f"Path {path} not found in metadata")
             return False
 
-    def get_alternative_by_uuid(self, uuid: str) -> str | None:
+    def get_alternative_by_path(self, path: str) -> str | None:
         """
-        Get the "has alternative" status of the mod by its uuid.
+        Get the "has alternative" status of the mod by its path.
 
-        :param uuid: str, the uuid of the mod
-        :return: None if there is no mismatch, otherwise the replacement string.
+        :param path: str, the path of the mod
+        :return: None if there is no alternative, otherwise the replacement string.
         """
-        metadata_manager = MetadataManager.instance()
+        metadata_controller = MetadataController.instance()
         try:
-            mr = metadata_manager.has_alternative_mod(uuid)
+            mr = metadata_controller.has_alternative_mod(path)
             if mr is None:
                 return None
             return f"{mr.name} ({mr.pfid}) by {mr.author}"
 
         except KeyError:
-            logger.info(f"UUID {uuid} not found in metadata - probably non-steam mod")
+            logger.info(f"Path {path} not found in metadata - probably non-steam mod")
             return None
 
     def __getitem__(self, key: str) -> Any:

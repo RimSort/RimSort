@@ -25,6 +25,18 @@ class ModType(Enum):
     UNKNOWN = "Unknown"
 
 
+@dataclass
+class ReplacementInfo:
+    """A recommended replacement mod from the Use This Instead database."""
+
+    name: str
+    author: str
+    packageid: str
+    pfid: str
+    supportedversions: list[str]
+    source: str = "database"
+
+
 class CaseInsensitiveStr(str):
     """
     Wraps a package Id. Forces the package ID to be case insensitive. Stores it internally as lowercase.
@@ -327,23 +339,35 @@ class ListedMod(BaseMod):
     @functools.cached_property
     def published_file_id(
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
-    ) -> int:
-        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
-        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
+    ) -> str | None:
+        """Return the published file id as a string, or None if absent."""
         if self.mod_path is None:
-            return -1
+            return None
 
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
-            with open(expected_path, "r") as file:
-                return int(file.read())
+            try:
+                with open(expected_path, encoding="utf-8-sig") as f:
+                    content = f.read().strip()
+            except OSError as e:
+                logger.error(
+                    f"Failed to read PublishedFileId.txt at {expected_path}: {e}"
+                )
+                return None
+            if not content.isdigit():
+                logger.error(
+                    f"PublishedFileId.txt at {expected_path} contains non-numeric value: {content!r}"
+                )
+                return None
+            if content:
+                return content
 
         if self.mod_folder is not None and self.mod_folder.isnumeric():
             candidate = int(self.mod_folder)
             if candidate > 0:
-                return candidate
+                return self.mod_folder
 
-        return -1
+        return None
 
     @functools.cached_property
     def c_sharp_mod(self) -> bool:
@@ -661,6 +685,7 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
     blacklist: SteamDbEntryBlacklist = msgspec.field(
         default_factory=SteamDbEntryBlacklist
     )
+    tags: list[dict[str, str]] = msgspec.field(default_factory=list)
 
 
 class SteamDbSchema(msgspec.Struct):

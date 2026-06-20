@@ -284,15 +284,23 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     elif mod.package_id in get_dlc_packageid_appid_map():
         mod.steam_app_id = int(get_dlc_packageid_appid_map()[mod.package_id])
 
+    # Official DLC About.xml files omit <name> and <description>
+    dlc_appid = get_dlc_packageid_appid_map().get(mod.package_id)
+    dlc_meta = RIMWORLD_DLC_METADATA.get(dlc_appid, {}) if dlc_appid else {}
+
     name = value_extractor(mod_data.get("name", False))
     if isinstance(name, str):
         mod.name = name
+    elif dlc_meta:
+        mod.name = dlc_meta["name"]
     else:
         mod.name = mod.package_id
 
     description = value_extractor(mod_data.get("description", False))
     if isinstance(description, str):
         mod.description = description
+    elif dlc_meta:
+        mod.description = dlc_meta["description"]
 
     author = value_extractor(mod_data.get("author", False))
     authors = value_extractor(mod_data.get("authors", False))

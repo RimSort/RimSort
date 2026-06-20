@@ -8,11 +8,14 @@ from PySide6.QtCore import QEventLoop, QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.constants as app_constants
-import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
+from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -50,7 +53,7 @@ class DatabaseBuilder(QObject):
             logger.info("Initializing DatabaseBuilder")
 
             self.settings_controller = settings_controller
-            self.metadata_manager = metadata.MetadataManager.instance()
+            self.metadata_controller = MetadataController.instance()
             self.query_runner: RunnerPanel | None = None
 
             logger.info("Finished DatabaseBuilder initialization")
@@ -103,7 +106,7 @@ class DatabaseBuilder(QObject):
 
     def _create_database_builder(
         self, mode: str, output_path: str
-    ) -> metadata.SteamDatabaseBuilder:
+    ) -> SteamDatabaseBuilder:
         """
         Factory method to create SteamDatabaseBuilder with appropriate settings.
 
@@ -130,9 +133,9 @@ class DatabaseBuilder(QObject):
         }
 
         if mode == self.MODE_ALL_MODS:
-            base_kwargs["mods"] = self.metadata_manager.internal_local_metadata
+            base_kwargs["mods"] = self.metadata_controller.mods_metadata
 
-        return metadata.SteamDatabaseBuilder(**base_kwargs)
+        return SteamDatabaseBuilder(**base_kwargs)
 
     def _setup_query_runner(self, title: str) -> RunnerPanel:
         """
@@ -183,18 +186,15 @@ class DatabaseBuilder(QObject):
         """
         existing_ids: set[str] = set()
 
-        for mod_metadata in self.metadata_manager.internal_local_metadata.values():
-            mod_pfid = mod_metadata.get("publishedfileid")
+        for mod in self.metadata_controller.mods_metadata.values():
+            mod_pfid = mod.published_file_id
             if not mod_pfid:
                 continue
 
-            if check_mode == "steamcmd" and mod_metadata.get("steamcmd"):
+            if check_mode == "steamcmd" and mod.mod_type == ModType.STEAM_CMD:
                 logger.debug(f"Skipping download of existing SteamCMD mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
-            elif (
-                check_mode == "steamworks"
-                and mod_metadata.get("data_source") == "workshop"
-            ):
+            elif check_mode == "steamworks" and mod.mod_type == ModType.STEAM_WORKSHOP:
                 logger.warning(f"Skipping download of existing Steam mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
 
@@ -211,7 +211,7 @@ class DatabaseBuilder(QObject):
             Queries the Steam WebAPI to retrieve all available mod PublishedFileIDs,
             filters out existing mods, and emits appropriate download signals.
         """
-        self.db_builder = metadata.SteamDatabaseBuilder(
+        self.db_builder = SteamDatabaseBuilder(
             apikey=self.settings_controller.settings.steam_apikey,
             appid=self.RIMWORLD_APPID,
             database_expiry=self.settings_controller.settings.database_expiry,
@@ -497,7 +497,7 @@ class DatabaseBuilder(QObject):
 
         # Merge databases
         db_output_c = copy.deepcopy(db_input_a)
-        metadata.recursively_update_dict(
+        recursively_update_dict(
             db_output_c,
             db_input_b,
             prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,

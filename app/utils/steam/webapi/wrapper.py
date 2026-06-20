@@ -4,7 +4,6 @@ from collections.abc import Callable
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
-from pathlib import Path
 from time import sleep, time
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
@@ -15,6 +14,7 @@ from PySide6.QtCore import QCoreApplication, QObject, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
@@ -26,7 +26,7 @@ STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
 
 # Prevent circular dependencies for type checking
 if TYPE_CHECKING:
-    from app.utils.metadata import MetadataManager
+    from app.controllers.metadata_controller import MetadataController
 
 
 # This is redundant since it is also done in `logger-tt` config,
@@ -45,14 +45,13 @@ class CollectionImport:
     Class to handle importing workshop collection links and extracting package IDs.
     """
 
-    def __init__(self, metadata_manager: "MetadataManager") -> None:
+    def __init__(self, metadata_controller: "MetadataController") -> None:
         """
         Initialize the CollectionImport instance.
 
-        Args:
-            metadata_manager: The metadata manager instance.
+        :param metadata_controller: The MetadataController instance.
         """
-        self.metadata_manager = metadata_manager
+        self.metadata_controller = metadata_controller
         self.translate = QCoreApplication.translate
         self.package_ids: list[
             str
@@ -198,47 +197,40 @@ class CollectionImport:
         )
 
     def _get_package_id_from_pfid_using_metadata(self, pfid: str) -> str | None:
-        metadata_manager = self.metadata_manager
-        if not metadata_manager:
+        metadata_controller = self.metadata_controller
+        if not metadata_controller:
             return None
-        return next(
-            (
-                package_id
-                for mod in metadata_manager.internal_local_metadata.values()
-                if str(_find_value_in_dict(mod, "publishedfileid")) == pfid
-                if (package_id := _find_value_in_dict(mod, "packageid"))
-            ),
-            None,
-        )
+        for mod in metadata_controller.mods_metadata.values():
+            if mod.published_file_id == pfid and isinstance(mod, AboutXmlMod):
+                return str(mod.package_id)
+        return None
 
     def _get_package_id_from_pfid_using_steamdb(self, pfid: str) -> str | None:
-        steamdb = (
-            self.metadata_manager.external_steam_metadata
-            if self.metadata_manager
-            else None
-        )
-        if not steamdb:
+        if not self.metadata_controller:
             return None
-        mod = steamdb.get(pfid)
-        if not mod:
+        steam_db = self.metadata_controller.steam_db
+        if steam_db is None:
             return None
-        return _find_value_in_dict(mod, "packageid")
+        entry = steam_db.database.get(pfid)
+        if entry is None:
+            return None
+        # SteamDbEntry uses camelCase: .packageId
+        return entry.packageId if entry.packageId else None
 
     def _get_package_id_from_pfid_using_mod_folder_name(self, pfid: str) -> str | None:
-        metadata_manager = self.metadata_manager
-        if not metadata_manager:
+        metadata_controller = self.metadata_controller
+        if not metadata_controller:
             return None
-        return next(
-            (
-                package_id
-                for mod in metadata_manager.internal_local_metadata.values()
-                if (str_path := _find_value_in_dict(mod, "path"))
-                if ((path := Path(str_path)).is_dir())
-                if (path.name == pfid)
-                if (package_id := _find_value_in_dict(mod, "packageid"))
-            ),
-            None,
-        )
+        for mod in metadata_controller.mods_metadata.values():
+            if mod.mod_path is None:
+                continue
+            if not mod.mod_path.is_dir():
+                continue
+            if mod.mod_path.name != pfid:
+                continue
+            if isinstance(mod, AboutXmlMod):
+                return str(mod.package_id)
+        return None
 
 
 def _find_value_in_dict(coll: dict[str, Any], key: str) -> Any:
@@ -345,9 +337,12 @@ class DynamicQuery(QObject):
                     f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                 )
                 if metadata.get("tags"):
-                    result["database"][publishedfileid]["tags"] = metadata["tags"]
-                result["database"][publishedfileid]["dependencies"] = {}
+                    result["database"][publishedfileid]["tags"] = sorted(
+                        metadata["tags"], key=lambda t: t.get("tag", "")
+                    )
                 if metadata.get("children"):
+                    if not result["database"][publishedfileid].get("dependencies"):
+                        result["database"][publishedfileid]["dependencies"] = {}
                     for children in metadata["children"]:
                         child_pfid = children["publishedfileid"]
                         if result["database"].get(child_pfid):

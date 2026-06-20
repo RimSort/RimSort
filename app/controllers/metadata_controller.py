@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import msgspec
-from PySide6.QtCore import QObject, Signal, Slot
+from loguru import logger
+from natsort import natsorted
+from PySide6.QtCore import QMutex, QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
@@ -15,12 +18,15 @@ from app.models.metadata.metadata_structure import (
     CompiledDependencyData,
     ListedMod,
     ModType,
+    ReplacementInfo,
     SteamDbEntry,
     SteamDbEntryBlacklist,
 )
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
+from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 if TYPE_CHECKING:
     from app.models.metadata.metadata_db import AuxMetadataEntry
@@ -100,9 +106,13 @@ class MetadataController(QObject):
 
         with self.metadata_db_controller.Session() as session:
             for path, mod_data in self.metadata_mediator.mods_metadata.items():
-                entry = self.metadata_db_controller.get_or_create(session, path)
-                entry.type = str(mod_data.mod_type)
-                entry.published_file_id = mod_data.published_file_id
+                try:
+                    entry = self.metadata_db_controller.get_or_create(session, path)
+                    entry.type = str(mod_data.mod_type)
+                    entry.published_file_id = mod_data.published_file_id
+                except Exception:
+                    session.rollback()
+                    logger.exception(f"Failed to update aux metadata for mod at {path}")
 
             self.metadata_db_controller.update_from_acf(
                 session,
@@ -154,6 +164,9 @@ class MetadataController(QObject):
         local_mods_path = _get_path(active_instance.local_folder)
         game_path = _get_path(active_instance.game_folder)
 
+        if local_mods_path is None and game_path is not None:
+            local_mods_path = game_path / "Mods"
+
         self.metadata_mediator.community_rules_path = cr_path
         self.metadata_mediator.steam_db_path = steam_db_path
         self.metadata_mediator.workshop_mods_path = workshop_mods_path
@@ -162,8 +175,11 @@ class MetadataController(QObject):
         self.metadata_mediator.no_version_warning_path = _get_path(
             active_settings.external_no_version_warning_file_path
         )
-        self.metadata_mediator.use_this_instead_path = _get_path(
-            active_settings.external_use_this_instead_file_path
+        self.metadata_mediator.use_this_instead_path = self._resolve_db_path(
+            active_settings.external_use_this_instead_metadata_source,
+            active_settings.external_use_this_instead_file_path,
+            active_settings.external_use_this_instead_repo_path,
+            "replacements.json.gz",
         )
 
         self._invalidate_caches()
@@ -224,6 +240,35 @@ class MetadataController(QObject):
                     if entry.packageId and (entry.steamName or entry.name)
                 }
         return self._steamdb_packageid_to_name_cache
+
+    @property
+    def is_abort_requested(self) -> bool:
+        """Whether a metadata refresh abort has been requested."""
+        return getattr(self, "_abort_requested", False)
+
+    @is_abort_requested.setter
+    def is_abort_requested(self, value: bool) -> None:
+        self._abort_requested = value
+
+    def update_workshop_timestamps(
+        self,
+        mod_path: str,
+        time_created: int | None = None,
+        time_updated: int | None = None,
+    ) -> None:
+        """Write workshop timestamps to aux DB for a mod.
+
+        :param mod_path: Mod path (the identity key)
+        :param time_created: Steam Workshop creation timestamp (epoch seconds)
+        :param time_updated: Steam Workshop last-updated timestamp (epoch seconds)
+        """
+        with self.metadata_db_controller.Session() as session:
+            entry = self.metadata_db_controller.get_or_create(session, mod_path)
+            if time_created is not None:
+                entry.external_time_created = time_created
+            if time_updated is not None:
+                entry.external_time_updated = time_updated
+            session.commit()
 
     # ---- Path accessors ----
 
@@ -394,11 +439,14 @@ class MetadataController(QObject):
         game_major_minor = ".".join(self.game_version.split(".")[:2])
         return game_major_minor not in mod.supported_versions
 
-    def has_alternative_mod(self, path: str) -> dict[str, Any] | None:
+    def has_alternative_mod(self, path: str) -> ReplacementInfo | None:
         """Check if a mod has a recommended replacement from Use This Instead DB.
 
+        Matches by the mod's published_file_id (Steam Workshop ID) against the
+        ``oldWorkshopId`` entries in the database.
+
         :param path: Mod path
-        :return: Replacement info dict or None
+        :return: ReplacementInfo or None
         """
         mod = self.mods_metadata.get(path)
         if not isinstance(mod, AboutXmlMod):
@@ -406,10 +454,199 @@ class MetadataController(QObject):
         use_this_instead = self.metadata_mediator.use_this_instead
         if use_this_instead is None:
             return None
-        pid = str(mod.package_id)
-        return use_this_instead.get(pid)
+        pfid = mod.published_file_id
+        if pfid is None:
+            return None
+        entry = use_this_instead.get(str(pfid))
+        if entry is None:
+            return None
+        return ReplacementInfo(
+            name=entry.get("newName", ""),
+            author=entry.get("newAuthor", ""),
+            packageid=entry.get("newPackageId", ""),
+            pfid=entry.get("newWorkshopId", ""),
+            supportedversions=entry.get("newVersions", []),
+            source="database",
+        )
+
+    def get_mods_from_list(
+        self,
+        mod_list: str | list[str],
+    ) -> tuple[list[str], list[str], dict[str, list[str]], list[str]]:
+        """Given a mod list (file path or list of package IDs), compute active/inactive/duplicate/missing.
+
+        :param mod_list: Path to .rws/.xml mod list file, or list of package IDs
+        :return: (active_mod_paths, inactive_mod_paths, duplicate_mods, missing_mods)
+        """
+        SOURCE_PRIORITY_STEAM: list[ModType] = [ModType.STEAM_WORKSHOP, ModType.LOCAL]
+        SOURCE_PRIORITY_DEFAULT: list[ModType] = [
+            ModType.LUDEON,
+            ModType.LOCAL,
+            ModType.STEAM_WORKSHOP,
+        ]
+
+        all_mods = self.mods_metadata
+        active_mod_paths: list[str] = []
+        inactive_mod_paths: list[str] = []
+        duplicate_mods: dict[str, list[str]] = {}
+        duplicates_processed: list[str] = []
+        missing_mods: list[str] = []
+        populated_mods: list[str] = []
+        to_populate: list[str] = []
+
+        logger.debug("Started generating active and inactive mods")
+
+        for path, mod_data in all_mods.items():
+            if isinstance(mod_data, AboutXmlMod):
+                pid = str(mod_data.package_id)
+                duplicate_mods.setdefault(pid, []).append(path)
+        duplicate_mods = {k: v for k, v in duplicate_mods.items() if len(v) > 1}
+
+        if isinstance(mod_list, str):
+            if not os.path.exists(mod_list):
+                logger.debug(f"Could not find mods list at: {mod_list}")
+                logger.debug("Creating an empty list with available expansions...")
+                generated_xml = generate_rimworld_mods_list(
+                    self.game_version, ["Ludeon.RimWorld"]
+                )
+                logger.debug(f"Saving new mods list to: {mod_list}")
+                json_to_xml_write(generated_xml, mod_list)
+            logger.info(f"Retrieving active mods from RimWorld mod list: {mod_list}")
+            mod_data_xml = xml_path_to_json(mod_list)
+            package_ids_to_import = validate_rimworld_mods_list(mod_data_xml)
+        elif isinstance(mod_list, list):
+            logger.info("Retrieving active mods from the provided list of package ids")
+            package_ids_to_import = mod_list
+
+        logger.info("Generating active mod list")
+        for package_id in package_ids_to_import:
+            package_id_normalized = package_id.lower()
+            package_id_steam_suffix = "_steam"
+            package_id_normalized_stripped = package_id_normalized.replace(
+                package_id_steam_suffix, ""
+            )
+            is_steam = package_id_steam_suffix in package_id_normalized
+            target_id = (
+                package_id_normalized_stripped if is_steam else package_id_normalized
+            )
+            to_populate.append(target_id)
+            sources_order = (
+                SOURCE_PRIORITY_STEAM if is_steam else SOURCE_PRIORITY_DEFAULT
+            )
+            for path, mod in all_mods.items():
+                if not isinstance(mod, AboutXmlMod):
+                    continue
+                metadata_package_id = str(mod.package_id)
+                if metadata_package_id in [
+                    package_id_normalized,
+                    package_id_normalized_stripped,
+                ]:
+                    if target_id not in duplicate_mods:
+                        populated_mods.append(target_id)
+                        active_mod_paths.append(path)
+                    else:
+                        if target_id in duplicates_processed:
+                            continue
+                        logger.info(
+                            f"Found duplicate mod present in active mods list: {target_id}"
+                        )
+                        for source_type in sources_order:
+                            logger.debug(
+                                f"Checking for duplicate with source: {source_type.value}"
+                            )
+                            matching_paths: list[str] = []
+                            for dup_path in duplicate_mods[target_id]:
+                                dup_mod = all_mods.get(dup_path)
+                                if (
+                                    isinstance(dup_mod, AboutXmlMod)
+                                    and dup_mod.mod_type == source_type
+                                ):
+                                    matching_paths.append(dup_path)
+                            source_paths_sorted = natsorted(matching_paths)
+                            if source_paths_sorted:
+                                calculated_dup = source_paths_sorted[0]
+                                logger.debug(
+                                    f"Using duplicate {source_type.value} mod for {target_id}: {calculated_dup}"
+                                )
+                                populated_mods.append(target_id)
+                                duplicates_processed.append(target_id)
+                                active_mod_paths.append(calculated_dup)
+                                break
+
+        missing_mods = list(set(to_populate) - set(populated_mods))
+        logger.debug(f"Generated active mods with {len(active_mod_paths)} mods")
+
+        logger.info("Generating inactive mod list")
+        inactive_mod_paths = [
+            path for path in all_mods.keys() if path not in active_mod_paths
+        ]
+        logger.info(f"# active mods: {len(active_mod_paths)}")
+        logger.info(f"# inactive mods: {len(inactive_mod_paths)}")
+        logger.info(f"# duplicate mods: {len(duplicate_mods)}")
+        logger.info(f"# missing mods: {len(missing_mods)}")
+        return active_mod_paths, inactive_mod_paths, duplicate_mods, missing_mods
 
     # ---- Mutations ----
+
+    def _parse_single_mod(self, mod_path: str) -> bool:
+        """Parse a single mod directory and merge the result into metadata.
+
+        :param mod_path: Filesystem path to the mod directory
+        :return: True if the mod was successfully parsed and is present in metadata
+        """
+        path = Path(mod_path)
+        if not path.is_dir():
+            return False
+        if (
+            self.metadata_mediator.local_mods_path is None
+            or self.metadata_mediator.game_path is None
+        ):
+            return False
+        if self.metadata_mediator._mods_metadata is None:
+            return False
+
+        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        worker = self.metadata_mediator._ParserWorker(
+            [path],
+            self.metadata_mediator.game_version,
+            self.metadata_mediator.local_mods_path,
+            self.metadata_mediator.game_path,
+            self.metadata_mediator.workshop_mods_path,
+            self.metadata_mediator.user_rules,
+            self.metadata_mediator.community_rules,
+            self.metadata_mediator.steam_db,
+            QMutex(),
+            self.metadata_mediator.mods_metadata,
+            prefer_versioned,
+        )
+        worker.run()
+
+        return mod_path in self.mods_metadata
+
+    @Slot(str, str)
+    def process_creation(self, data_source: str, mod_path: str) -> None:
+        """Parse a single mod and add it to metadata. Emits mod_created_signal."""
+        if self._parse_single_mod(mod_path):
+            self._invalidate_caches()
+            self.mod_created_signal.emit(mod_path)
+
+    @Slot(str, str)
+    def process_deletion(self, data_source: str, mod_path: str) -> None:
+        """Remove a mod from metadata and aux DB. Emits mod_deleted_signal."""
+        if mod_path not in self.mods_metadata:
+            return
+        self.metadata_mediator.mods_metadata.pop(mod_path, None)
+        with self.metadata_db_controller.Session() as session:
+            self.metadata_db_controller.delete(session, Path(mod_path))
+        self._invalidate_caches()
+        self.mod_deleted_signal.emit(mod_path)
+
+    @Slot(str, str)
+    def process_update(self, data_source: str, mod_path: str) -> None:
+        """Re-parse a single mod and update metadata. Emits mod_metadata_updated_signal."""
+        if self._parse_single_mod(mod_path):
+            self._invalidate_caches()
+            self.mod_metadata_updated_signal.emit(mod_path)
 
     def delete_mod(self, *path: Path) -> None:
         """Delete one or more mods from metadata and aux DB by path.

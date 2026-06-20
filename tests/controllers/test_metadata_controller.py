@@ -12,6 +12,8 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
+    CaseInsensitiveStr,
+    ModType,
     SteamDbSchema,
 )
 from app.models.settings import Settings
@@ -38,6 +40,8 @@ def mock_settings() -> Generator[MagicMock, None, None]:
         mock_settings.external_steam_metadata_repo = ""
         mock_settings.external_no_version_warning_file_path = ""
         mock_settings.external_use_this_instead_file_path = ""
+        mock_settings.external_use_this_instead_metadata_source = "Disabled"
+        mock_settings.external_use_this_instead_repo_path = ""
         mock_settings.prefer_versioned_about_tags = True
         mock_settings.database_expiry = 0
 
@@ -130,7 +134,7 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod is not None
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.STEAM_WORKSHOP"
-    assert aux_metadata.published_file_id == 123456789
+    assert aux_metadata.published_file_id == "123456789"
     assert aux_metadata.acf_time_updated > 0
     assert aux_metadata.acf_time_touched > 0
 
@@ -153,7 +157,7 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod is not None
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.STEAM_CMD"
-    assert aux_metadata.published_file_id == 1111
+    assert aux_metadata.published_file_id == "1111"
     assert aux_metadata.acf_time_updated > 0
     assert aux_metadata.acf_time_touched > 0
 
@@ -661,3 +665,287 @@ def test_set_steam_db_blacklist_persists_to_disk(
 
     expected_min = int(time.time()) - 10  # allow some slack
     assert raw["version"] >= expected_min
+
+
+def test_process_creation_adds_mod_to_metadata(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_creation should parse a mod and add it to mods_metadata."""
+    mod_path = tmp_path / "test_mod"
+    mod_path.mkdir()
+    about_dir = mod_path / "About"
+    about_dir.mkdir()
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Test Mod</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+
+    metadata_controller.metadata_mediator.local_mods_path = tmp_path
+    metadata_controller.metadata_mediator.game_path = tmp_path
+    metadata_controller.metadata_mediator._game_version = "1.5"
+    metadata_controller.metadata_mediator._mods_metadata = {}
+
+    metadata_controller.process_creation("local", str(mod_path))
+    assert str(mod_path) in metadata_controller.mods_metadata
+
+
+def test_process_deletion_removes_mod(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_deletion should remove a mod from mods_metadata."""
+    mod_path = str(tmp_path / "test_mod")
+    from app.models.metadata.metadata_structure import ListedMod
+
+    metadata_controller.metadata_mediator._mods_metadata = {}
+    mock_mod = MagicMock(spec=ListedMod)
+    metadata_controller.metadata_mediator._mods_metadata[mod_path] = mock_mod
+
+    metadata_controller.process_deletion("local", mod_path)
+    assert mod_path not in metadata_controller.mods_metadata
+
+
+def test_process_update_refreshes_metadata(
+    metadata_controller: MetadataController, tmp_path: Path
+) -> None:
+    """process_update should re-parse a mod and update mods_metadata."""
+    mod_path = tmp_path / "test_mod"
+    mod_path.mkdir()
+    about_dir = mod_path / "About"
+    about_dir.mkdir()
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Original Name</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+
+    metadata_controller.metadata_mediator.local_mods_path = tmp_path
+    metadata_controller.metadata_mediator.game_path = tmp_path
+    metadata_controller.metadata_mediator._game_version = "1.5"
+    metadata_controller.metadata_mediator._mods_metadata = {}
+
+    metadata_controller.process_creation("local", str(mod_path))
+    assert metadata_controller.mods_metadata[str(mod_path)].name == "Original Name"
+
+    (about_dir / "About.xml").write_text(
+        "<ModMetaData><name>Updated Name</name><packageId>test.mod</packageId></ModMetaData>"
+    )
+    metadata_controller.process_update("local", str(mod_path))
+    assert metadata_controller.mods_metadata[str(mod_path)].name == "Updated Name"
+
+
+# ---- Task 4: get_mods_from_list ----
+
+
+def _make_about_xml_mod(
+    name: str,
+    package_id: str,
+    mod_type: ModType,
+    mod_path: str | None = None,
+) -> AboutXmlMod:
+    """Helper to create an AboutXmlMod with the given properties.
+
+    mod_type setter is write-once (from UNKNOWN), so we set it immediately.
+    mod_path setter is also write-once; we bypass it via _mod_path to avoid
+    side-effects on published_file_id cached_property.
+    """
+    mod = AboutXmlMod(name=name, package_id=CaseInsensitiveStr(package_id))
+    mod.mod_type = mod_type
+    if mod_path is not None:
+        mod._mod_path = Path(mod_path)
+    return mod
+
+
+def test_get_mods_from_list_happy_path(
+    metadata_controller: MetadataController,
+) -> None:
+    """Given a list of package IDs, return correct active/inactive split."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+    mod_b = _make_about_xml_mod("Mod B", "author.modb", ModType.LOCAL, "/mods/mod_b")
+    mod_c = _make_about_xml_mod("Mod C", "author.modc", ModType.LOCAL, "/mods/mod_c")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+        "/mods/mod_b": mod_b,
+        "/mods/mod_c": mod_c,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA", "author.modC"]  # case-insensitive
+    )
+
+    assert active == ["/mods/mod_a", "/mods/mod_c"]
+    assert "/mods/mod_b" in inactive
+    assert "/mods/mod_a" not in inactive
+    assert "/mods/mod_c" not in inactive
+    assert duplicates == {}
+    assert missing == []
+
+
+def test_get_mods_from_list_missing_mods(
+    metadata_controller: MetadataController,
+) -> None:
+    """Package IDs not in metadata appear in the missing list."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA", "nonexistent.mod"]
+    )
+
+    assert active == ["/mods/mod_a"]
+    assert "nonexistent.mod" in missing
+    assert len(missing) == 1
+
+
+def test_get_mods_from_list_duplicate_resolution(
+    metadata_controller: MetadataController,
+) -> None:
+    """When duplicate mods exist, resolve by source priority (default: Ludeon > Local > Workshop)."""
+    # Same package ID, different sources
+    mod_local = _make_about_xml_mod(
+        "Core Local", "ludeon.rimworld", ModType.LOCAL, "/mods/local/core"
+    )
+    mod_ludeon = _make_about_xml_mod(
+        "Core Ludeon", "ludeon.rimworld", ModType.LUDEON, "/mods/ludeon/core"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "Core Workshop",
+        "ludeon.rimworld",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/core",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/core": mod_local,
+        "/mods/ludeon/core": mod_ludeon,
+        "/mods/workshop/core": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["Ludeon.RimWorld"]
+    )
+
+    # Should pick Ludeon source (highest priority in default order)
+    assert active == ["/mods/ludeon/core"]
+    assert "/mods/local/core" in inactive
+    assert "/mods/workshop/core" in inactive
+    assert "ludeon.rimworld" in duplicates
+    assert len(duplicates["ludeon.rimworld"]) == 3
+    assert missing == []
+
+
+def test_get_mods_from_list_steam_suffix_priority(
+    metadata_controller: MetadataController,
+) -> None:
+    """The _steam suffix triggers Steam Workshop priority for duplicate resolution."""
+    mod_local = _make_about_xml_mod(
+        "My Mod Local", "author.mymod", ModType.LOCAL, "/mods/local/mymod"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "My Mod Workshop",
+        "author.mymod",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/mymod",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/mymod": mod_local,
+        "/mods/workshop/mymod": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.mymod_steam"]
+    )
+
+    # _steam suffix => SOURCE_PRIORITY_STEAM: Workshop > Local
+    assert active == ["/mods/workshop/mymod"]
+    assert "/mods/local/mymod" in inactive
+    assert missing == []
+
+
+def test_get_mods_from_list_no_duplicates_single_mod(
+    metadata_controller: MetadataController,
+) -> None:
+    """When a package ID has only one mod, no duplicate resolution is needed."""
+    mod_a = _make_about_xml_mod(
+        "Mod A", "author.moda", ModType.STEAM_WORKSHOP, "/mods/mod_a"
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.modA"]
+    )
+
+    assert active == ["/mods/mod_a"]
+    assert inactive == []
+    assert duplicates == {}
+    assert missing == []
+
+
+def test_get_mods_from_list_empty_list(
+    metadata_controller: MetadataController,
+) -> None:
+    """An empty package ID list should produce all mods as inactive."""
+    mod_a = _make_about_xml_mod("Mod A", "author.moda", ModType.LOCAL, "/mods/mod_a")
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/mod_a": mod_a,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list([])
+
+    assert active == []
+    assert inactive == ["/mods/mod_a"]
+    assert missing == []
+
+
+# ---- Local mods path derivation ----
+
+
+def test_reset_paths_derives_local_mods_from_game_when_empty(
+    metadata_controller: MetadataController,
+) -> None:
+    """When local_folder is empty but game_folder is set, local_mods_path is derived as game_path / 'Mods'."""
+    metadata_controller.settings_controller.active_instance.game_folder = (
+        "tests/data/mod_examples/RimWorld"
+    )
+    metadata_controller.settings_controller.active_instance.local_folder = ""
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path == Path(
+        "tests/data/mod_examples/RimWorld/Mods"
+    )
+
+
+def test_reset_paths_preserves_explicit_local_folder(
+    metadata_controller: MetadataController,
+) -> None:
+    """An explicitly set local_folder is NOT overwritten by derivation."""
+    metadata_controller.settings_controller.active_instance.game_folder = (
+        "tests/data/mod_examples/RimWorld"
+    )
+    metadata_controller.settings_controller.active_instance.local_folder = (
+        "tests/data/mod_examples/Local"
+    )
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path == Path(
+        "tests/data/mod_examples/Local"
+    )
+
+
+def test_reset_paths_leaves_local_mods_none_when_no_game(
+    metadata_controller: MetadataController,
+) -> None:
+    """When both game_folder and local_folder are empty, local_mods_path stays None."""
+    metadata_controller.settings_controller.active_instance.game_folder = ""
+    metadata_controller.settings_controller.active_instance.local_folder = ""
+
+    metadata_controller.reset_paths()
+
+    assert metadata_controller.metadata_mediator.local_mods_path is None

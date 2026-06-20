@@ -9,7 +9,7 @@ from loguru import logger
 from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
-import app.utils.metadata as metadata
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
 from app.models.search_result import SearchResult
@@ -17,7 +17,7 @@ from app.models.settings import Settings
 from app.utils.file_search import FileSearch
 from app.utils.generic import format_file_size
 from app.utils.ignore_extensions import IGNORE_EXTENSIONS
-from app.utils.mod_utils import get_mod_paths_from_uuids
+from app.utils.mod_utils import get_mod_paths
 from app.views.dialogue import show_warning
 from app.views.file_search_dialog import FileSearchDialog
 from app.views.mods_panel import ModsPanel
@@ -620,8 +620,8 @@ class FileSearchController(QObject):
         self.search_results: list[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
         self.searcher = FileSearch()
-        # Initialize MetadataManager
-        self.metadata_manager = metadata.MetadataManager.instance()
+        # Initialize MetadataController
+        self.metadata_controller = MetadataController.instance()
 
         # connect signals
         self.dialog.search_button.clicked.connect(self._on_search_clicked)
@@ -775,11 +775,11 @@ class FileSearchController(QObject):
             # Get all mod IDs by combining active and inactive mods (exclude dividers)
             all_uuids = {
                 u
-                for u in self.mods_panel.active_mods_list.uuids
+                for u in self.mods_panel.active_mods_list.paths
                 if not is_divider_uuid(u)
-            } | set(self.mods_panel.inactive_mods_list.uuids)
+            } | set(self.mods_panel.inactive_mods_list.paths)
             # Use our helper method to get paths and extract IDs
-            all_paths = self._get_mod_paths_from_uuids(list(all_uuids))
+            all_paths = self._get_mod_paths(list(all_uuids))
             for path in all_paths:
                 mod_id = os.path.basename(path)
                 mod_ids_for_search.add(mod_id)
@@ -889,7 +889,7 @@ class FileSearchController(QObject):
 
         return root_paths
 
-    def _get_mod_paths_from_uuids(self, uuids: list[str]) -> list[str]:
+    def _get_mod_paths(self, uuids: list[str]) -> list[str]:
         """
         Helper method to get mod paths from a list of UUIDs.
 
@@ -904,10 +904,11 @@ class FileSearchController(QObject):
 
         for uuid in uuids:
             # Check if the mod is in local metadata
-            if uuid in self.metadata_manager.internal_local_metadata:
-                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-                if os.path.isdir(mod_path):
-                    mod_paths.append(mod_path)
+            mod = self.metadata_controller.get_mod(uuid)
+            if mod is not None:
+                mod_path = mod.mod_path
+                if mod_path is not None and os.path.isdir(mod_path):
+                    mod_paths.append(str(mod_path))
                     logger.debug(f"Added mod path: {mod_path}")
 
         logger.info(f"Found {len(mod_paths)} mod paths from {len(uuids)} UUIDs")
@@ -954,12 +955,13 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of active mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get active mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        active_uuids, _, _, _ = metadata.get_mods_from_list(mod_list_path)
+        active_uuids, _, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(f"Getting paths for {len(active_uuids)} active mods from mod list")
-        return get_mod_paths_from_uuids(active_uuids)
+        return get_mod_paths(active_uuids)
 
     def get_inactive_mods_paths(self) -> list[str]:
         """
@@ -968,14 +970,15 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of inactive mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get inactive mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        _, inactive_uuids, _, _ = metadata.get_mods_from_list(mod_list_path)
+        _, inactive_uuids, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(
             f"Getting paths for {len(inactive_uuids)} inactive mods from mod list"
         )
-        return get_mod_paths_from_uuids(inactive_uuids)
+        return get_mod_paths(inactive_uuids)
 
     def _on_stop_clicked(self) -> None:
         """

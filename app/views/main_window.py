@@ -28,6 +28,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
@@ -45,7 +46,6 @@ from app.utils.constants import (
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
-from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.utils.window_launch_state import apply_window_launch_state
@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
 
         self.todds_controller = ToddsController(
             settings_controller=self.settings_controller,
-            metadata_manager=self.main_content_panel.metadata_manager,
+            metadata_controller=self.main_content_panel.metadata_controller,
         )
         self.main_content_panel.todds_controller = self.todds_controller
 
@@ -288,7 +288,7 @@ class MainWindow(QMainWindow):
         :param event: The close event to handle.
         """
         # Abort any in-progress metadata scanning so background threads stop
-        MetadataManager.instance().request_abort()
+        MetadataController.instance().is_abort_requested = True
 
         # Break out of the nested QEventLoop in do_threaded_loading_animation
         # so the startup sequence can unwind and the process can exit
@@ -1165,16 +1165,16 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
         )
         self.watchdog_event_handler.acf_changed.connect(
-            partial(refresh_acf_metadata, self.main_content_panel.metadata_manager)
+            partial(refresh_acf_metadata, self.main_content_panel.metadata_controller)
         )
         self.watchdog_event_handler.mod_created.connect(
-            self.main_content_panel.metadata_manager.process_creation
+            self.main_content_panel.metadata_controller.process_creation
         )
         self.watchdog_event_handler.mod_deleted.connect(
-            self.main_content_panel.metadata_manager.process_deletion
+            self.main_content_panel.metadata_controller.process_deletion
         )
         self.watchdog_event_handler.mod_updated.connect(
-            self.main_content_panel.metadata_manager.process_update
+            self.main_content_panel.metadata_controller.process_update
         )
         self.watchdog_event_handler.start()
 

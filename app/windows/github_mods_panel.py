@@ -121,16 +121,13 @@ class GitHubModsPanel(BaseModsPanel):
             finally:
                 cache_session.close()
 
-            path_to_uuid = self.metadata_manager.mod_metadata_dir_mapper
-            local_metadata = self.metadata_manager.internal_local_metadata
             update_highlight = QBrush(QColor(255, 200, 50, 60))
 
             for mod in mod_data:
                 mod_name: str = mod["owner_repo"]
-                uuid = path_to_uuid.get(mod["mod_path"])
-                if uuid and uuid in local_metadata:
-                    meta = local_metadata[uuid]
-                    mod_name = meta.get("name", mod_name)
+                listed_mod = self.metadata_controller.get_mod(mod["mod_path"])
+                if listed_mod is not None:
+                    mod_name = listed_mod.name or mod_name
 
                 latest_version = "—"
                 has_update = False

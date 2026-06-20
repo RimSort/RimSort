@@ -6,16 +6,18 @@ from typing import Any, Optional
 from charset_normalizer import from_bytes
 from loguru import logger
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
 from app.utils.mod_utils import get_mod_name_from_pfid
 
 
 class FileSearch:
     """Utility class for performing file searches with advanced features."""
 
-    def __init__(self, metadata_manager: Optional[MetadataManager] = None) -> None:
+    def __init__(
+        self, metadata_controller: Optional[MetadataController] = None
+    ) -> None:
         self.stop_requested = False
-        self.metadata_manager = metadata_manager or MetadataManager.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
 
     def stop_search(self) -> None:
         """Stop the current search operation."""

@@ -1,7 +1,6 @@
 import os
 import sys
 
-from loguru import logger
 from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
@@ -14,7 +13,6 @@ from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
-from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
@@ -43,9 +41,7 @@ class AppController(QObject):
         self.initialize_steamcmd_interface()
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
-        # Initialize the metadata manager
-        self.initialize_metadata_manager()
-        # Initialize the new MetadataController (runs alongside MetadataManager)
+        # Initialize the new MetadataController
         self.initialize_metadata_controller()
         # Initialize the main window controller
         self.initialize_main_window()
@@ -92,7 +88,7 @@ class AppController(QObject):
         if app_translator.load(str(path)):
             QCoreApplication.installTranslator(app_translator)
         else:
-            logger.warning(f"Translation file {path} not found.")
+            print(f"Translation file {path} not found.")
 
         qt_translations_path = QLibraryInfo.path(
             QLibraryInfo.LibraryPath.TranslationsPath
@@ -102,7 +98,7 @@ class AppController(QObject):
         if qt_translator.load(qt_file_path):
             QCoreApplication.installTranslator(qt_translator)
         else:
-            logger.warning(f"Qt translation file {qt_file_path} not found.")
+            print(f"Qt translation file {qt_file_path} not found.")
 
     def initialize_steamcmd_interface(self) -> None:
         """Initializes the SteamcmdInterface."""
@@ -119,14 +115,8 @@ class AppController(QObject):
             dds_utility = DDSUtility(self.settings_controller)
             dds_utility.delete_dds_files_without_png()
 
-    def initialize_metadata_manager(self) -> None:
-        """Initializes the MetadataManager."""
-        self.metadata_manager = MetadataManager.instance(
-            settings_controller=self.settings_controller
-        )
-
     def initialize_metadata_controller(self) -> None:
-        """Initializes the new MetadataController alongside MetadataManager."""
+        """Initializes the MetadataController."""
         aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
             self.settings_controller.settings.aux_db_path
         )

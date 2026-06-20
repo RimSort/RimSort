@@ -42,7 +42,7 @@ def main_content(
     monkeypatch: pytest.MonkeyPatch,
     qapp: QApplication,
     mock_settings_controller: MagicMock,
-    mock_metadata_manager: MagicMock,
+    mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:
     # Ensure active_mods_dividers is set on the settings object
@@ -77,7 +77,7 @@ def unsaved_main_content(
 ) -> Tuple[MainContent, List[bool]]:
     mc, save_calls = main_content
     # Set unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a"]
     return mc, save_calls
 
@@ -116,7 +116,7 @@ def test_run_without_unsaved(
 ) -> None:
     mc, save_calls = main_content
     # No unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a", "b"]
     mc._do_run_game()
     # Dialogue not shown

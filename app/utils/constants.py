@@ -25,7 +25,6 @@ DB_BUILDER_PRUNE_EXCEPTIONS = [
 ]
 DB_BUILDER_PURGE_KEYS = ["external_time_created", "external_time_updated"]
 DB_BUILDER_RECURSE_EXCEPTIONS = [
-    "dependencies",
     "incompatibleWith",
     "loadBefore",
     "loadAfter",
