@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.controllers.language_controller import LanguageController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
 from app.utils.gui_info import GUIInfo
@@ -1457,6 +1456,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.themes_combobox.clear()
 
     def connect_populate_languages_combobox(self) -> None:
+        from app.controllers.language_controller import LanguageController
+
         language_controller = LanguageController()
         language_controller.populate_languages_combobox(self.language_combobox)
 
