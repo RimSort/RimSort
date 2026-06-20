@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.models.settings import Settings
@@ -69,9 +70,9 @@ class LocationsTabController(BaseTabController):
         self,
         settings: Settings,
         dialog: SettingsDialog,
-        validate_game_location: Callable[[str], bool],
-        validate_config_folder_location: Callable[[str], bool],
-        validate_local_mods_location: Callable[[str], bool],
+        validate_game_location: Callable[[str], tuple[bool, str]],
+        validate_config_folder_location: Callable[[str], tuple[bool, str]],
+        validate_local_mods_location: Callable[[str], tuple[bool, str]],
         on_path_selected: Callable[[str], None],
         on_autodetect: Callable[[], None],
         on_instance_folder_choose: Callable[[], None],
@@ -179,7 +180,13 @@ class LocationsTabController(BaseTabController):
                 return None
             result = Path(game_location).resolve()
 
-        if not self._validate_game_location(str(result)):
+        is_valid, error_msg = self._validate_game_location(str(result))
+        if not is_valid:
+            QMessageBox.information(
+                dialog,
+                dialog.tr("Invalid Game Location"),
+                error_msg,
+            )
             return None
 
         dialog.local_mods_folder_location.setText(str(result / "Mods"))
@@ -198,7 +205,13 @@ class LocationsTabController(BaseTabController):
         if not config_folder:
             return None
 
-        if not self._validate_config_folder_location(config_folder):
+        is_valid, error_msg = self._validate_config_folder_location(config_folder)
+        if not is_valid:
+            QMessageBox.warning(
+                dialog,
+                dialog.tr("Invalid Config Folder"),
+                error_msg,
+            )
             return None
 
         self._path_selected_callback(str(Path(config_folder).parent))
@@ -228,7 +241,13 @@ class LocationsTabController(BaseTabController):
         if not local_mods_folder:
             return None
 
-        if not self._validate_local_mods_location(local_mods_folder):
+        is_valid, error_msg = self._validate_local_mods_location(local_mods_folder)
+        if not is_valid:
+            QMessageBox.warning(
+                dialog,
+                dialog.tr("Invalid Local Mods Folder"),
+                error_msg,
+            )
             return None
 
         self._path_selected_callback(str(Path(local_mods_folder).parent))

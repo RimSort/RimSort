@@ -366,57 +366,47 @@ class SettingsController(QObject):
         """Update the last selected path for file dialog default directories."""
         self._last_file_dialog_path = path
 
-    def _validate_game_location(self, game_folder: str) -> bool:
+    def _validate_game_location(self, game_folder: str) -> tuple[bool, str]:
         """
-        Validate the game location and show a warning if invalid.
+        Validate the game location.
 
         :param game_folder: Path to the game folder as a string.
-        :return: True if valid, False otherwise.
+        :return: (is_valid, error_message)
         """
         if not validate_game_executable(game_folder):
-            QMessageBox.information(
-                self.settings_dialog,
-                self.tr("Invalid Game Location"),
-                self.tr(
-                    "The selected game folder does not contain a valid RimWorld executable.<br><br>"
-                    "Please select a valid game location.<br><br>"
-                    "Windows: RimWorldWin64.exe or RimWorldWin.exe<br><br>"
-                    "Mac: RimworldMac.app<br><br>"
-                    "Linux: RimWorldLinux<br><br>"
-                    "RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux"
-                ),
+            return False, self.tr(
+                "The selected game folder does not contain a valid RimWorld executable.<br><br>"
+                "Please select a valid game location.<br><br>"
+                "Windows: RimWorldWin64.exe or RimWorldWin.exe<br><br>"
+                "Mac: RimworldMac.app<br><br>"
+                "Linux: RimWorldLinux<br><br>"
+                "RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux"
             )
-            return False
-        return True
+        return True, ""
 
-    def _validate_config_folder_location(self, config_folder: str) -> bool:
+    def _validate_config_folder_location(self, config_folder: str) -> tuple[bool, str]:
         """
-        Validate the config folder location and show a warning if invalid.
+        Validate the config folder location.
 
         :param config_folder: Path to the config folder as a string.
-        :return: True if valid, False otherwise.
+        :return: (is_valid, error_message)
         """
         if not (Path(config_folder) / "ModsConfig.xml").exists():
-            QMessageBox.warning(
-                self.settings_dialog,
-                self.tr("Invalid Config Folder"),
-                self.tr(
-                    "The selected config folder does not contain ModsConfig.xml.<br><br>"
-                    "Please select a valid config folder.<br><br>"
-                    "If you have not launched the game before,<br><br>"
-                    "Please launch the game at least once to generate the necessary config files."
-                ),
+            return False, self.tr(
+                "The selected config folder does not contain ModsConfig.xml.<br><br>"
+                "Please select a valid config folder.<br><br>"
+                "If you have not launched the game before,<br><br>"
+                "Please launch the game at least once to generate the necessary config files."
             )
-            return False
-        return True
+        return True, ""
 
-    def _validate_local_mods_location(self, local_folder: str) -> bool:
+    def _validate_local_mods_location(self, local_folder: str) -> tuple[bool, str]:
         """
-        Validate the local mods folder location and show a warning if invalid.
+        Validate the local mods folder location.
         The local mods folder is valid if it is a directory.
 
         :param local_folder: Path to the local mods folder as a string.
-        :return: True if valid, False otherwise.
+        :return: (is_valid, error_message)
         """
         game_folder = self.settings.instances[
             self.settings.current_instance
@@ -424,17 +414,12 @@ class SettingsController(QObject):
         if not (Path(local_folder).is_dir()) or local_folder != str(
             Path(game_folder) / "Mods"
         ):
-            QMessageBox.warning(
-                self.settings_dialog,
-                self.tr("Invalid Local Mods Folder"),
-                self.tr(
-                    "The selected local mods folder location is not a valid directory.<br><br>"
-                    "Please select a valid folder for local mods.<br><br>"
-                    "The local mods folder should be a 'Mods' subfolder within the game folder."
-                ),
+            return False, self.tr(
+                "The selected local mods folder location is not a valid directory.<br><br>"
+                "Please select a valid folder for local mods.<br><br>"
+                "The local mods folder should be a 'Mods' subfolder within the game folder."
             )
-            return False
-        return True
+        return True, ""
 
     @Slot()
     def _on_global_ok_button_clicked(self) -> None:
@@ -446,24 +431,45 @@ class SettingsController(QObject):
 
         # Validate game folder if set
         game_folder_text = self.settings_dialog.game_location.text().strip()
-        if game_folder_text and not self._validate_game_location(game_folder_text):
-            return
+        if game_folder_text:
+            is_valid, error_msg = self._validate_game_location(game_folder_text)
+            if not is_valid:
+                QMessageBox.information(
+                    self.settings_dialog,
+                    self.tr("Invalid Game Location"),
+                    error_msg,
+                )
+                return
 
         # Validate config folder if set
         config_folder_text = self.settings_dialog.config_folder_location.text().strip()
-        if config_folder_text and not self._validate_config_folder_location(
-            config_folder_text
-        ):
-            return
+        if config_folder_text:
+            is_valid, error_msg = self._validate_config_folder_location(
+                config_folder_text
+            )
+            if not is_valid:
+                QMessageBox.warning(
+                    self.settings_dialog,
+                    self.tr("Invalid Config Folder"),
+                    error_msg,
+                )
+                return
 
         # Validate local mods folder if set
         local_mods_folder_text = (
             self.settings_dialog.local_mods_folder_location.text().strip()
         )
-        if local_mods_folder_text and not self._validate_local_mods_location(
-            local_mods_folder_text
-        ):
-            return
+        if local_mods_folder_text:
+            is_valid, error_msg = self._validate_local_mods_location(
+                local_mods_folder_text
+            )
+            if not is_valid:
+                QMessageBox.warning(
+                    self.settings_dialog,
+                    self.tr("Invalid Local Mods Folder"),
+                    error_msg,
+                )
+                return
 
         # Model-level Steam integration validation (silently fixes & logs)
         if self.settings._validate_steam_integration_config():
