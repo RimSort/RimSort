@@ -4,7 +4,7 @@ import datetime
 import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, cast
+from typing import TYPE_CHECKING, Callable, List, Optional, cast
 
 from github import Github, Repository
 from loguru import logger
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QInputDialog, QMessageBox
 from app.controllers.settings_controller import SettingsController
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
+from app.utils.constants import DATABASE_DISPLAY_NAMES
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     check_internet_connection,
@@ -94,7 +95,7 @@ class MainContentController(QObject):
                 lambda: (
                     self.settings_controller.settings.external_community_rules_metadata_source
                 ),
-                "Community Rules",
+                DATABASE_DISPLAY_NAMES["community_rules"],
             ),
             EventBus().do_download_steam_workshop_db_from_github: (
                 AppInfo().databases_folder,
@@ -103,7 +104,7 @@ class MainContentController(QObject):
                 lambda: (
                     self.settings_controller.settings.external_steam_metadata_source
                 ),
-                "Steam Workshop",
+                DATABASE_DISPLAY_NAMES["steam_workshop"],
             ),
             EventBus().do_download_use_this_instead_db_from_github: (
                 AppInfo().databases_folder,
@@ -114,7 +115,7 @@ class MainContentController(QObject):
                 lambda: (
                     self.settings_controller.settings.external_use_this_instead_metadata_source
                 ),
-                "Use This Instead",
+                DATABASE_DISPLAY_NAMES["use_this_instead"],
             ),
             EventBus().do_download_no_version_warning_db_from_github: (
                 AppInfo().databases_folder,
@@ -127,7 +128,7 @@ class MainContentController(QObject):
                 lambda: (
                     self.settings_controller.settings.external_no_version_warning_metadata_source
                 ),
-                "No Version Warning",
+                DATABASE_DISPLAY_NAMES["no_version_warning"],
             ),
         }
 
@@ -736,25 +737,25 @@ class MainContentController(QObject):
                 settings.external_community_rules_metadata_source,
                 settings.external_community_rules_repo,
                 settings.external_community_rules_url,
-                "Community Rules",
+                DATABASE_DISPLAY_NAMES["community_rules"],
             ),
             (
                 settings.external_steam_metadata_source,
                 settings.external_steam_metadata_repo,
                 settings.external_steam_metadata_url,
-                "Steam Workshop",
+                DATABASE_DISPLAY_NAMES["steam_workshop"],
             ),
             (
                 settings.external_no_version_warning_metadata_source,
                 settings.external_no_version_warning_repo_path,
                 settings.external_no_version_warning_url,
-                "No Version Warning",
+                DATABASE_DISPLAY_NAMES["no_version_warning"],
             ),
             (
                 settings.external_use_this_instead_metadata_source,
                 settings.external_use_this_instead_repo_path,
                 settings.external_use_this_instead_url,
-                "Use This Instead",
+                DATABASE_DISPLAY_NAMES["use_this_instead"],
             ),
         ]
 
@@ -778,7 +779,7 @@ class MainContentController(QObject):
                 self._do_auto_database_update(str(AppInfo().databases_folder), repo_url)
 
         if http_tasks:
-            self._start_http_download_silent(http_tasks)
+            self._start_http_download(http_tasks, self._notify_http_result_silent)
 
     def _do_auto_database_update(self, base_path: str, repo_url: str) -> None:
         """Handle automatic database update: silently update existing or clone new."""
@@ -835,7 +836,7 @@ class MainContentController(QObject):
                 repo_name=repo_name,
                 display_name=display_name,
             )
-            self._start_http_download_interactive([task])
+            self._start_http_download([task], self._notify_http_result_interactive)
         elif source == "Configured git repository" and repo_url:
             self._do_git_clone(base_path=str(base_path), repo_url=repo_url)
         else:
@@ -852,27 +853,42 @@ class MainContentController(QObject):
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
 
-    def _start_http_download_silent(self, tasks: list[DatabaseDownloadTask]) -> None:
-        """Start an HTTP download worker in silent mode (no user dialogs)."""
+    def _start_http_download(
+        self,
+        tasks: list[DatabaseDownloadTask],
+        notify: Callable[[list[str], list[str], list[str]], None],
+    ) -> None:
+        """Start an HTTP download worker, calling *notify* with results."""
         self._cleanup_http_download_worker()
 
         self._http_download_worker = HttpDownloadWorker(tasks)
         self._http_download_worker.download_finished.connect(
-            self._on_http_download_finished_silent
+            lambda results: self._on_http_download_finished(results, notify)
         )
         self._http_download_worker.progress.connect(
-            lambda msg: logger.info(f"HTTP DB update: {msg}")
+            lambda msg: logger.info(f"HTTP DB download: {msg}")
         )
         logger.info(f"Starting HTTP download for {len(tasks)} database(s)")
         self._http_download_worker.start()
 
-    @Slot(dict)
-    def _on_http_download_finished_silent(
-        self, results: dict[str, DownloadResult]
+    def _on_http_download_finished(
+        self,
+        results: dict[str, DownloadResult],
+        notify: Callable[[list[str], list[str], list[str]], None],
     ) -> None:
-        """Handle HTTP download completion silently (log only)."""
+        """Handle HTTP download completion."""
         updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
+        up_to_date = [
+            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
+        ]
         failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
+        notify(updated, up_to_date, failed)
+        self._cleanup_http_download_worker()
+
+    def _notify_http_result_silent(
+        self, updated: list[str], up_to_date: list[str], failed: list[str]
+    ) -> None:
+        """Log HTTP download results (silent mode)."""
         if updated:
             logger.info(
                 f"HTTP DB update: {len(updated)} database(s) updated: {', '.join(updated)}"
@@ -881,34 +897,11 @@ class MainContentController(QObject):
             logger.warning(
                 f"HTTP DB update: {len(failed)} database(s) failed: {', '.join(failed)}"
             )
-        self._cleanup_http_download_worker()
 
-    def _start_http_download_interactive(
-        self, tasks: list[DatabaseDownloadTask]
+    def _notify_http_result_interactive(
+        self, updated: list[str], up_to_date: list[str], failed: list[str]
     ) -> None:
-        """Start an HTTP download worker with user-facing result dialogs."""
-        self._cleanup_http_download_worker()
-
-        self._http_download_worker = HttpDownloadWorker(tasks)
-        self._http_download_worker.download_finished.connect(
-            self._on_http_download_finished_interactive
-        )
-        self._http_download_worker.progress.connect(
-            lambda msg: logger.info(f"HTTP DB download: {msg}")
-        )
-        self._http_download_worker.start()
-
-    @Slot(dict)
-    def _on_http_download_finished_interactive(
-        self, results: dict[str, DownloadResult]
-    ) -> None:
-        """Handle HTTP download completion with user-facing dialogs."""
-        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
-        up_to_date = [
-            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
-        ]
-        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
-
+        """Show HTTP download results via user-facing dialogs."""
         if failed:
             InformationBox(
                 title=self.tr("Download failed"),
@@ -933,8 +926,6 @@ class MainContentController(QObject):
                     names=", ".join(up_to_date)
                 ),
             ).exec()
-
-        self._cleanup_http_download_worker()
 
     def _start_git_clone_worker(
         self,
@@ -1861,8 +1852,8 @@ class MainContentController(QObject):
                         logger.info(
                             f"Moved commit to branch: {branch_name} and reset main branch"
                         )
-                    except Exception as e:
-                        logger.error(f"Failed to move commit to new branch: {e}")
+                    except Exception:
+                        logger.exception("Failed to move commit to new branch")
                         # If this fails, the commit is still on main, but we can continue
                         # Just switch to the new branch and the commit will be duplicated
                         repo.head.set_target(
@@ -1929,7 +1920,7 @@ class MainContentController(QObject):
                                 ).exec()
 
                         except Exception as e:
-                            logger.error(f"Error during force push: {e}")
+                            logger.exception("Error during force push")
                             InformationBox(
                                 title=self.tr("Force push error"),
                                 text=self.tr(
@@ -1962,7 +1953,7 @@ class MainContentController(QObject):
                     ).exec()
 
         except Exception as e:
-            logger.error(f"Git operations failed: {e}")
+            logger.exception("Git operations failed")
             InformationBox(
                 title=self.tr("Git operation error"),
                 text=self.tr("Failed to perform git operations."),
@@ -2040,11 +2031,11 @@ class MainContentController(QObject):
                     import webbrowser
 
                     webbrowser.open(pull_request.html_url)
-                except Exception as e:
-                    logger.error(f"Failed to open browser: {e}")
+                except Exception:
+                    logger.exception("Failed to open browser")
 
         except Exception as e:
-            logger.error(f"Failed to create pull request: {e}")
+            logger.exception("Failed to create pull request")
             InformationBox(
                 title=self.tr("Pull request failed"),
                 text=self.tr("Failed to create pull request."),
@@ -2057,34 +2048,41 @@ class MainContentController(QObject):
     @Slot()
     def _on_do_upload_steam_workshop_db_to_github(self) -> None:
         """Ask user for confirmation before uploading Steam Workshop database."""
-        binary_diag = BinaryChoiceDialog(
+        self._confirm_and_upload_db(
             title=self.tr("Upload Steam Workshop Database"),
             text=self.tr(
                 "Are you sure you want to upload the Steam Workshop database to GitHub?"
             ),
-            information=self.tr(
-                "This will create a pull request with your local database changes."
-            ),
-            positive_text=self.tr("Upload"),
-            negative_text=self.tr("Cancel"),
+            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            file_name="steamDB.json",
+            log_label="Steam Workshop",
         )
-
-        if binary_diag.exec_is_positive():
-            self._do_upload_db_to_repo(
-                repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-                file_name="steamDB.json",
-            )
-        else:
-            logger.debug("User cancelled Steam Workshop database upload.")
 
     @Slot()
     def _on_do_upload_community_db_to_github(self) -> None:
         """Ask user for confirmation before uploading Community Rules database."""
-        binary_diag = BinaryChoiceDialog(
+        self._confirm_and_upload_db(
             title=self.tr("Upload Community Rules Database"),
             text=self.tr(
                 "Are you sure you want to upload the Community Rules database to GitHub?"
             ),
+            repo_url=self.settings_controller.settings.external_community_rules_repo,
+            file_name="communityRules.json",
+            log_label="Community Rules",
+        )
+
+    def _confirm_and_upload_db(
+        self,
+        title: str,
+        text: str,
+        repo_url: str,
+        file_name: str,
+        log_label: str,
+    ) -> None:
+        """Show confirmation dialog and upload database to repo."""
+        binary_diag = BinaryChoiceDialog(
+            title=title,
+            text=text,
             information=self.tr(
                 "This will create a pull request with your local database changes."
             ),
@@ -2094,11 +2092,11 @@ class MainContentController(QObject):
 
         if binary_diag.exec_is_positive():
             self._do_upload_db_to_repo(
-                repo_url=self.settings_controller.settings.external_community_rules_repo,
-                file_name="communityRules.json",
+                repo_url=repo_url,
+                file_name=file_name,
             )
         else:
-            logger.debug("User cancelled Community Rules database upload.")
+            logger.debug(f"User cancelled {log_label} database upload.")
 
     @Slot(object)
     def _handle_batch_update_results_silent(

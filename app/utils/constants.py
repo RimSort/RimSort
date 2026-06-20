@@ -93,6 +93,13 @@ KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld.anomaly",
     "ludeon.rimworld.odyssey",
 }
+DATABASE_DISPLAY_NAMES: dict[str, str] = {
+    "community_rules": "Community Rules",
+    "steam_workshop": "Steam Workshop",
+    "no_version_warning": "No Version Warning",
+    "use_this_instead": "Use This Instead",
+}
+
 KNOWN_TIER_ONE_MODS = {
     "adaptive.storage.framework",
     "aoba.framework",
