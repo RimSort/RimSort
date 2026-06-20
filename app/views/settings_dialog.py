@@ -1498,6 +1498,29 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
+        steam_launch_layout = QHBoxLayout()
+        steam_launch_label = QLabel(self.tr("When Steam is not running:"))
+        steam_launch_layout.addWidget(steam_launch_label)
+
+        self.steam_launch_behavior_combobox = QComboBox()
+        self.steam_launch_behavior_combobox.addItems(
+            [
+                self.tr("Ask me"),
+                self.tr("Launch automatically"),
+                self.tr("Show warning"),
+            ]
+        )
+        self.steam_launch_behavior_combobox.setToolTip(
+            self.tr(
+                "Controls what happens when a Steam operation is requested but Steam is not running. "
+                "'Ask me' shows a prompt each time. "
+                "'Launch automatically' starts Steam without asking. "
+                "'Show warning' skips the operation and shows a warning."
+            )
+        )
+        steam_launch_layout.addWidget(self.steam_launch_behavior_combobox)
+        group_layout.addLayout(steam_launch_layout)
+
         self.render_unity_rich_text_checkbox = QCheckBox(
             self.tr("Render Unity Rich Text in mod descriptions")
         )

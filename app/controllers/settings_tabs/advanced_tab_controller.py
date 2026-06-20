@@ -6,6 +6,8 @@ from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.views.settings_dialog import SettingsDialog
 
+_STEAM_LAUNCH_BEHAVIOR_OPTIONS = ["prompt", "always", "never"]
+
 
 class AdvancedTabController(BaseTabController):
     """Controller for the Advanced settings tab.
@@ -74,6 +76,13 @@ class AdvancedTabController(BaseTabController):
         self.dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
+        behavior = self.settings.steam_launch_behavior
+        if behavior in _STEAM_LAUNCH_BEHAVIOR_OPTIONS:
+            self.dialog.steam_launch_behavior_combobox.setCurrentIndex(
+                _STEAM_LAUNCH_BEHAVIOR_OPTIONS.index(behavior)
+            )
+        else:
+            self.dialog.steam_launch_behavior_combobox.setCurrentIndex(0)
         self.dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
         )
@@ -123,6 +132,9 @@ class AdvancedTabController(BaseTabController):
         self.settings.steam_mods_update_check = (
             self.dialog.show_mod_updates_checkbox.isChecked()
         )
+        self.settings.steam_launch_behavior = _STEAM_LAUNCH_BEHAVIOR_OPTIONS[
+            self.dialog.steam_launch_behavior_combobox.currentIndex()
+        ]
         self.settings.render_unity_rich_text = (
             self.dialog.render_unity_rich_text_checkbox.isChecked()
         )

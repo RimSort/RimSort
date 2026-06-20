@@ -5,11 +5,16 @@ import sys
 from collections.abc import MutableMapping
 from pathlib import Path
 from time import sleep
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication, QThread, Signal
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 
 from app.utils.generic import show_no_steam_warning, show_snap_steam_warning
+
+if TYPE_CHECKING:
+    from app.models.settings import Settings
 
 # If we're running from a Python interpreter, Ensure SteamworksPy module is in Python path, sys.path ($PYTHONPATH)
 # Ensure that this is available by running via: git submodule update --init --recursive
@@ -26,13 +31,17 @@ SNAP_STEAM_PATH = (
     Path.home() / "snap" / "steam" / "common" / ".local" / "share" / "Steam"
 )
 
+_STEAM_LAUNCH_BEHAVIOR_PROMPT = "prompt"
+_STEAM_LAUNCH_BEHAVIOR_ALWAYS = "always"
+_STEAM_LAUNCH_BEHAVIOR_NEVER = "never"
 
-def _find_steam_executable() -> Optional[Path]:
+
+def _find_steam_executable() -> Path | None:
     """
     Find the Steam executable path based on the current platform.
 
     Returns:
-        Optional[Path]: Path to Steam executable, or None if not found
+        Path | None: Path to Steam executable, or None if not found
     """
     if sys.platform == "win32":
         from app.utils.win_find_steam import find_steam_folder
@@ -50,9 +59,10 @@ def _find_steam_executable() -> Optional[Path]:
         return None
 
 
-def _is_steam_running() -> bool:
+def is_steam_running() -> bool:
     """
     Check if Steam is currently running by looking for Steam processes.
+    Single-pass check with no retries — suitable for synchronous UI calls.
 
     Returns:
         bool: True if Steam is running, False otherwise
@@ -63,7 +73,6 @@ def _is_steam_running() -> bool:
         logger.warning("psutil not available, cannot check if Steam is running")
         return False
     try:
-        # Define platform-specific Steam process indicators once
         if sys.platform == "win32":
             steam_indicators = {
                 "steam.exe",
@@ -83,19 +92,14 @@ def _is_steam_running() -> bool:
                 "steamwebhelper",
             }
 
-        # Retry up to 5 times with 2 second delay to account for process startup time
-        for attempt in range(5):
-            for process in psutil.process_iter(attrs=["name"]):
-                try:
-                    name = process.info["name"]
-                    if name and name.lower() in steam_indicators:
-                        logger.debug(f"Found Steam process: {name}")
-                        return True
-                except (psutil.AccessDenied, psutil.NoSuchProcess):
-                    continue
-
-            if attempt < 4:
-                sleep(2)
+        for process in psutil.process_iter(attrs=["name"]):
+            try:
+                name = process.info["name"]
+                if name and name.lower() in steam_indicators:
+                    logger.debug(f"Found Steam process: {name}")
+                    return True
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
 
         return False
     except Exception as e:
@@ -116,151 +120,264 @@ def _setup_snap_steam_env(env: MutableMapping[str, str]) -> None:
         env["STEAMRUNTIME_PATH"] = str(SNAP_STEAM_PATH / "ubuntu12_32")
 
 
-def _launch_steam(_libs: str) -> bool:
-    """
-    Launch Steam if it's not running and wait for it to start.
+class SteamLaunchWorker(QThread):
+    """Background worker that launches Steam and waits for it to be ready."""
 
-    Args:
-        _libs: Path to the Steamworks library directory
+    launch_finished = Signal(bool)
+    progress = Signal(str)
 
-    Returns:
-        bool: True if Steam was launched successfully, False otherwise
-    """
-    try:
-        steam_exe = _find_steam_executable()
-        if steam_exe is None:
-            if not sys.platform.startswith("linux"):
+    def __init__(self, libs: str) -> None:
+        super().__init__()
+        self._libs = libs
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        self._cancelled = True
+
+    def run(self) -> None:
+        try:
+            steam_exe = _find_steam_executable()
+            if steam_exe is None and not sys.platform.startswith("linux"):
                 logger.warning("Steam executable not found")
-                return False
+                self.progress.emit("Steam executable not found")
+                self.launch_finished.emit(False)
+                return
 
-            # For Linux, try to launch steam in a terminal emulator
-            logger.info("Launching Steam via 'steam' command in a terminal...")
+            self.progress.emit("Launching Steam...")
+            if not self._start_steam_process(steam_exe):
+                self.launch_finished.emit(False)
+                return
+
+            sleep(SLEEP_TIME)
+            if self._cancelled:
+                self.launch_finished.emit(False)
+                return
+
+            if is_steam_running():
+                self.progress.emit(
+                    "Steam processes detected, waiting for initialization..."
+                )
+                sleep(SLEEP_TIME)
+                self.launch_finished.emit(True)
+                return
+
+            for attempt in range(MAX_ATTEMPTS):
+                if self._cancelled:
+                    self.launch_finished.emit(False)
+                    return
+                self.progress.emit(
+                    f"Waiting for Steam to start ({attempt + 1}/{MAX_ATTEMPTS})..."
+                )
+                sleep(SLEEP_TIME)
+                if is_steam_running():
+                    self.progress.emit("Steam detected, finalizing...")
+                    sleep(SLEEP_TIME)
+                    self.launch_finished.emit(True)
+                    return
+
+            self.progress.emit("Steam failed to start within timeout")
+            logger.warning("Steam failed to start within timeout")
+            self.launch_finished.emit(False)
+
+        except Exception as e:
+            logger.warning(f"Error launching Steam: {e}")
+            self.progress.emit(f"Error: {e}")
+            self.launch_finished.emit(False)
+
+    def _start_steam_process(self, steam_exe: Path | None) -> bool:
+        try:
             env = os.environ.copy()
-            env["LD_LIBRARY_PATH"] = _libs + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+            if sys.platform.startswith("linux"):
+                env["LD_LIBRARY_PATH"] = (
+                    self._libs + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+                )
+                _setup_snap_steam_env(env)
 
-            _setup_snap_steam_env(env)
-
-            terminal_candidates = [
-                "gnome-terminal",
-                "konsole",
-                "xfce4-terminal",
-                "mate-terminal",
-                "xterm",
-                "x-terminal-emulator",
-            ]
-            terminal = next((t for t in terminal_candidates if shutil.which(t)), None)
-
-            try:
-                if terminal:
-                    logger.debug(f"Using terminal emulator: {terminal}")
-                    if terminal == "gnome-terminal":
-                        subprocess.Popen([terminal, "--", "steam"], env=env)
-                    else:
-                        subprocess.Popen([terminal, "-e", "steam"], env=env)
-                else:
-                    logger.warning(
-                        "No terminal emulator found, falling back to direct launch"
-                    )
-                    subprocess.Popen(["steam"], env=env)
-            except FileNotFoundError:
-                logger.warning("Steam executable or terminal emulator not found")
-                return False
-        else:
+            if steam_exe is None:
+                return self._launch_linux_steam(env)
             if not steam_exe.exists():
                 logger.warning("Steam executable not found")
+                self.progress.emit("Steam executable not found")
                 return False
-            logger.info("Launching Steam...")
-            env = os.environ.copy()
             if sys.platform.startswith("linux"):
                 _setup_snap_steam_env(env)
             subprocess.Popen([str(steam_exe)], env=env)
-        # Give Steam some initial time to start up before checking
-        sleep(SLEEP_TIME)
-
-        # First check if Steam processes are running after initial launch
-        if _is_steam_running():
-            logger.info("Steam processes detected after launch")
-            # Give Steam a bit more time to fully initialize
-            sleep(SLEEP_TIME)
             return True
+        except FileNotFoundError:
+            logger.warning("Steam executable not found")
+            self.progress.emit("Steam executable not found")
+            return False
 
-        # Wait for Steam to start checks every SLEEP_TIME (15 seconds), MAX_ATTEMPTS (10 attempts).
-        for attempt in range(MAX_ATTEMPTS):
-            sleep(SLEEP_TIME)
-            # Check both process detection and API initialization
-            if _is_steam_running():
-                logger.info("Steam processes detected during API wait")
-                # Give Steam a bit more time to fully initialize
-                sleep(SLEEP_TIME)
-                return True
-            try:
-                # Try to create a temporary Steamworks instance to test if Steam is ready
-                from steamworks import STEAMWORKS  # type: ignore
-
-                test_steamworks = STEAMWORKS()
-                test_steamworks.initialize()
-                test_steamworks.unload()
-                logger.info("Steam launched and API initialized successfully")
-                # Give Steam a bit more time to fully initialize
-                sleep(SLEEP_TIME)
-                return True
-            except Exception as e:
-                error_msg = f"{e.__class__.__name__}: {e}"
-                logger.debug(
-                    f"Steam API not ready yet (attempt {attempt + 1}/{MAX_ATTEMPTS}): {error_msg}"
+    def _launch_linux_steam(self, env: dict[str, str]) -> bool:
+        terminal_candidates = [
+            "gnome-terminal",
+            "konsole",
+            "xfce4-terminal",
+            "mate-terminal",
+            "xterm",
+            "x-terminal-emulator",
+        ]
+        terminal = next((t for t in terminal_candidates if shutil.which(t)), None)
+        try:
+            if terminal:
+                logger.debug(f"Using terminal emulator: {terminal}")
+                if terminal == "gnome-terminal":
+                    subprocess.Popen([terminal, "--", "steam"], env=env)
+                else:
+                    subprocess.Popen([terminal, "-e", "steam"], env=env)
+            else:
+                logger.warning(
+                    "No terminal emulator found, falling back to direct launch"
                 )
-                # Log more details on the last attempt
-                if attempt == MAX_ATTEMPTS - 1:
-                    total_time = SLEEP_TIME + (MAX_ATTEMPTS * SLEEP_TIME)
-                    logger.warning(
-                        f"Steamworks initialization failed after {total_time} seconds: {error_msg}"
-                    )
-                    if "snap" in str(Path.home()):
-                        logger.warning(
-                            "Snap Steam detected - ensure you have a native Steam installation for Steamworks support"
-                        )
-                continue
-
-        logger.warning("Steam failed to start within timeout")
-        return False
-
-    except Exception as e:
-        logger.warning(f"Error launching Steam: {e}")
-        return False
+                subprocess.Popen(["steam"], env=env)
+            return True
+        except FileNotFoundError:
+            logger.warning("Steam executable or terminal emulator not found")
+            self.progress.emit("Steam executable not found")
+            return False
 
 
-def check_steam_available(_libs: str) -> bool:
+def run_steam_launch_with_progress(libs: str) -> bool:
     """
-    Check if Steam is available and running.
+    Launch Steam on a background thread and show a modal progress dialog.
 
-    Checks if Steam is running, and if not, attempts to launch it.
-    Also checks for snap Steam incompatibility.
-
-    Args:
-        _libs: Path to the Steamworks library directory
-
-    Returns:
-        bool: True if Steam is available, False otherwise
+    :param libs: Path to the Steamworks library directory
+    :return: True if Steam launched successfully
     """
-    # Check for snap Steam (incompatible with Steamworks)
-    is_snap_steam = SNAP_STEAM_PATH.exists()
+    worker = SteamLaunchWorker(libs)
+    result = [False]
 
-    if is_snap_steam and sys.platform.startswith("linux"):
+    _tr = QCoreApplication.translate
+
+    dialog = QDialog()
+    dialog.setWindowTitle(_tr("SteamAvailability", "Launching Steam"))
+    dialog.setModal(True)
+    dialog.setMinimumWidth(350)
+
+    layout = QVBoxLayout(dialog)
+    status_label = QLabel(_tr("SteamAvailability", "Starting Steam..."))
+    layout.addWidget(status_label)
+
+    cancel_button = QPushButton(_tr("SteamAvailability", "Cancel"))
+    layout.addWidget(cancel_button)
+
+    def on_progress(message: str) -> None:
+        status_label.setText(message)
+
+    def on_finished(success: bool) -> None:
+        result[0] = success
+        dialog.accept()
+
+    def on_cancel() -> None:
+        worker.cancel()
+        status_label.setText("Cancelling...")
+        cancel_button.setEnabled(False)
+
+    worker.progress.connect(on_progress)
+    worker.launch_finished.connect(on_finished)
+    cancel_button.clicked.connect(on_cancel)
+    dialog.rejected.connect(on_cancel)
+
+    worker.start()
+    dialog.exec()
+    worker.wait()
+
+    return result[0]
+
+
+_BUTTON_YES = "Yes"
+_BUTTON_YES_ALWAYS = "Yes, always"
+_BUTTON_NO = "No"
+_BUTTON_NO_NEVER = "No, never ask"
+
+_BUTTON_LABELS = [_BUTTON_YES, _BUTTON_YES_ALWAYS, _BUTTON_NO, _BUTTON_NO_NEVER]
+
+_BUTTON_TO_CHOICE = {
+    _BUTTON_YES: "yes",
+    _BUTTON_YES_ALWAYS: "yes_always",
+    _BUTTON_NO: "no",
+    _BUTTON_NO_NEVER: "no_never",
+}
+
+
+def _show_steam_launch_prompt() -> str:
+    """
+    Show a dialog asking the user what to do when Steam isn't running.
+    Returns one of: "yes", "yes_always", "no", "no_never", "cancel".
+    """
+    import app.views.dialogue as dialogue
+
+    translated_to_key = {
+        QCoreApplication.translate("show_dialogue_conditional", label): label
+        for label in _BUTTON_LABELS
+    }
+
+    response = dialogue.show_dialogue_conditional(
+        title=QCoreApplication.translate("SteamAvailability", "Steam Not Running"),
+        text=QCoreApplication.translate(
+            "SteamAvailability",
+            "Steam is required for this operation but is not running.",
+        ),
+        information=QCoreApplication.translate(
+            "SteamAvailability",
+            "Would you like to launch Steam?\n\n(You can also change this in Settings)",
+        ),
+        button_text_override=_BUTTON_LABELS,
+    )
+    if isinstance(response, str):
+        original_label = translated_to_key.get(response)
+        if original_label is not None:
+            return _BUTTON_TO_CHOICE[original_label]
+    return "cancel"
+
+
+def check_steam_available(_libs: str, settings: "Settings") -> bool:
+    """
+    Check if Steam is available and running. Respects user's launch behavior preference.
+
+    :param _libs: Path to the Steamworks library directory
+    :param settings: Application settings (for steam_launch_behavior and instance config)
+    :return: True if Steam is available, False otherwise
+    """
+    current = settings.instances.get(settings.current_instance)
+    if current is None or not current.steam_client_integration:
+        return True
+
+    if SNAP_STEAM_PATH.exists() and sys.platform.startswith("linux"):
         logger.warning(
-            "Snap Steam detected. Snap Steam is incompatible with Steamworks due to sandboxing. "
-            "Steam integration is unavailable."
+            "Snap Steam detected. Snap Steam is incompatible with Steamworks due to sandboxing."
         )
-        # Show snap steam warning
         show_snap_steam_warning()
         return False
 
-    # Check if Steam is running
-    if not _is_steam_running():
-        logger.info("Steam is not running, attempting to launch...")
-        if not _launch_steam(_libs):
-            logger.error("Failed to launch Steam")
-            # Show no steam warning
-            show_no_steam_warning()
-            return False
+    if is_steam_running():
+        return True
 
-    return True
+    logger.info("Steam is not running")
+    behavior = settings.steam_launch_behavior
+
+    if behavior == _STEAM_LAUNCH_BEHAVIOR_NEVER:
+        show_no_steam_warning()
+        return False
+
+    if behavior == _STEAM_LAUNCH_BEHAVIOR_ALWAYS:
+        return run_steam_launch_with_progress(_libs)
+
+    choice = _show_steam_launch_prompt()
+
+    if choice == "yes_always":
+        settings.steam_launch_behavior = _STEAM_LAUNCH_BEHAVIOR_ALWAYS
+        settings.save()
+        return run_steam_launch_with_progress(_libs)
+    elif choice == "yes":
+        return run_steam_launch_with_progress(_libs)
+    elif choice == "no_never":
+        settings.steam_launch_behavior = _STEAM_LAUNCH_BEHAVIOR_NEVER
+        settings.save()
+        show_no_steam_warning()
+        return False
+    elif choice == "no":
+        show_no_steam_warning()
+        return False
+    else:
+        return False

@@ -5,8 +5,13 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
 from app.controllers.settings_controller import SettingsController
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import open_url_browser
+from app.utils.steam.availability import (
+    is_steam_running,
+    run_steam_launch_with_progress,
+)
 from app.views.menu_bar import MenuBar
 
 
@@ -182,6 +187,11 @@ class MenuBarController(QObject):
         self.menu_bar.github_action.triggered.connect(
             self._on_menu_bar_github_triggered
         )
+        # Steam status actions
+        self.menu_bar.check_steam_connection_action.triggered.connect(
+            self._on_check_steam_connection
+        )
+        self.menu_bar.launch_steam_action.triggered.connect(self._on_launch_steam)
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
@@ -275,6 +285,45 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_github_triggered(self) -> None:
         open_url_browser("https://github.com/RimSort/RimSort")
+
+    @Slot()
+    def _on_check_steam_connection(self) -> None:
+        import app.views.dialogue as dialogue
+
+        if is_steam_running():
+            dialogue.show_information(
+                title=self.tr("Steam Status"),
+                text=self.tr("Steam is running"),
+                information=self.tr("Steam client is detected and available."),
+            )
+        else:
+            dialogue.show_warning(
+                title=self.tr("Steam Status"),
+                text=self.tr("Steam is not running"),
+                information=self.tr(
+                    "Steam client is not detected. Start Steam manually or use "
+                    "Help → Launch Steam."
+                ),
+            )
+
+    @Slot()
+    def _on_launch_steam(self) -> None:
+        import app.views.dialogue as dialogue
+
+        if is_steam_running():
+            dialogue.show_information(
+                title=self.tr("Steam Status"),
+                text=self.tr("Steam is already running"),
+                information=self.tr("Steam client is already detected and available."),
+            )
+            return
+
+        libs_path = str(AppInfo().libs_folder)
+        success = run_steam_launch_with_progress(libs_path)
+        if not success:
+            from app.utils.generic import show_no_steam_warning
+
+            show_no_steam_warning()
 
     @Slot()
     def _on_refresh_started(self) -> None:
