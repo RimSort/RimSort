@@ -5,7 +5,7 @@ from typing import Any
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
-from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
 
 
 def get_mod_path_from_pfid(pfid: str) -> str | None:
@@ -100,8 +100,6 @@ def filter_eligible_mods_for_update(
     :param mods_metadata: Dictionary of mods metadata keyed by path.
     :return: List of metadata dictionaries for mods eligible for update.
     """
-    from app.models.metadata.metadata_structure import ModType
-
     eligible: list[dict[str, Any]] = []
 
     skipped_not_workshop = 0

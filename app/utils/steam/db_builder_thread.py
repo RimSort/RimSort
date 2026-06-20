@@ -2,6 +2,12 @@ from typing import Any
 
 from PySide6.QtCore import QThread, Signal
 
+from app.models.metadata.metadata_structure import AboutXmlMod
+from app.utils.db_builder_core import (
+    DBBuilderCore,
+    init_empty_db_from_publishedfileids,
+    output_database,
+)
 from app.utils.steam.webapi.wrapper import DynamicQuery
 
 
@@ -20,8 +26,6 @@ class SteamDatabaseBuilder(QThread):
         mods: dict[str, Any] = {},
     ):
         QThread.__init__(self)
-        # Import here to avoid circular dependencies
-        from app.utils.db_builder_core import DBBuilderCore
 
         # For backwards compatibility with GUI code that uses these attributes
         self.apikey = apikey
@@ -133,8 +137,6 @@ class SteamDatabaseBuilder(QThread):
             )
 
     def _init_db_from_local_metadata(self) -> dict[str, Any]:
-        from app.models.metadata.metadata_structure import AboutXmlMod
-
         db_from_local_metadata: dict[str, Any] = {
             "version": 0,
             "database": {
@@ -184,15 +186,11 @@ class SteamDatabaseBuilder(QThread):
     def _init_empty_db_from_publishedfileids(
         self, publishedfileids: list[str]
     ) -> dict[str, Any]:
-        from app.utils.db_builder_core import init_empty_db_from_publishedfileids
-
         return init_empty_db_from_publishedfileids(
             publishedfileids, self.appid, self.db_builder_message_output_signal.emit
         )
 
     def _output_database(self, database: dict[str, Any]) -> None:
-        from app.utils.db_builder_core import output_database
-
         output_database(
             database,
             self.output_database_path,

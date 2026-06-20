@@ -14,6 +14,7 @@ from PySide6.QtCore import QCoreApplication, QObject, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
@@ -196,8 +197,6 @@ class CollectionImport:
         )
 
     def _get_package_id_from_pfid_using_metadata(self, pfid: str) -> str | None:
-        from app.models.metadata.metadata_structure import AboutXmlMod
-
         metadata_controller = self.metadata_controller
         if not metadata_controller:
             return None
@@ -219,8 +218,6 @@ class CollectionImport:
         return entry.packageId if entry.packageId else None
 
     def _get_package_id_from_pfid_using_mod_folder_name(self, pfid: str) -> str | None:
-        from app.models.metadata.metadata_structure import AboutXmlMod
-
         metadata_controller = self.metadata_controller
         if not metadata_controller:
             return None

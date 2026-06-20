@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.metadata_controller import MetadataController
-from app.models.metadata.metadata_structure import ListedMod
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
 from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -1047,8 +1047,6 @@ class BaseModsPanel(QWidget):
         Returns:
             List of ModMetadata compat dicts for selected mods
         """
-        from app.models.metadata.metadata_structure import AboutXmlMod, ModType
-
         selected_mods: list[dict[str, Any]] = []
         try:
             for row in range(self.editor_model.rowCount()):

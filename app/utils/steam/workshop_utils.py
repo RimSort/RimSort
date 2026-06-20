@@ -9,6 +9,7 @@ from typing import Any, Literal
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
+from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.utils.dict_utils import recursively_update_dict
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from app.utils.steam.webapi.wrapper import (
@@ -170,8 +171,6 @@ def query_workshop_update_data(
     :param metadata_controller: MetadataController instance for writing timestamps to aux DB
     :return: WorkshopUpdateResult describing what happened
     """
-    from app.models.metadata.metadata_structure import AboutXmlMod, ModType
-
     logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
 
     workshop_mods_pfid_to_path: dict[str, str] = {}
