@@ -27,9 +27,14 @@ ALLOWED: set[str] = {
     "app/utils/github/installer.py: from app.utils.git_utils import GitOperationConfig",
     # Window import is heavy; TYPE_CHECKING also covers the type
     "app/controllers/main_content_controller.py: from app.windows.github_mods_panel import GitHubModsPanel",
+    # Genuine circular: settings_dialog ↔ language_controller
+    "app/views/settings_dialog.py: from app.controllers.language_controller import LanguageController",
+    # Platform-guarded: find_steam_folder only defined on win32
+    "app/controllers/settings_controller.py: from app.utils.win_find_steam import find_steam_folder",
+    "app/utils/steam/availability.py: from app.utils.win_find_steam import find_steam_folder",
 }
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 
 def _normalise(line: str) -> str:
