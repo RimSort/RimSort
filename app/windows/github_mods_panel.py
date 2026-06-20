@@ -13,6 +13,8 @@ from app.models.metadata.metadata_db import Base
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.github.models import CacheBase, GitHubModEntry, GitHubReleaseCache
+from app.utils.github.provider import GitHubProvider, ReleaseInfo, _releases_from_json
+from app.utils.github.worker import GitHubUpdateCheckWorker
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
@@ -86,12 +88,6 @@ class GitHubModsPanel(BaseModsPanel):
         try:
             from sqlalchemy import create_engine
             from sqlalchemy.orm import sessionmaker as sa_sessionmaker
-
-            from app.utils.github.provider import (
-                GitHubProvider,
-                ReleaseInfo,
-                _releases_from_json,
-            )
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 self.settings_controller.settings.aux_db_path
@@ -208,9 +204,6 @@ class GitHubModsPanel(BaseModsPanel):
         try:
             from sqlalchemy import create_engine
             from sqlalchemy.orm import sessionmaker as sa_sessionmaker
-
-            from app.utils.github.provider import GitHubProvider
-            from app.utils.github.worker import GitHubUpdateCheckWorker
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 self.settings_controller.settings.aux_db_path

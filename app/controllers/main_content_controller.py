@@ -355,7 +355,9 @@ class MainContentController(QObject):
 
     def _on_open_github_mods_panel(self) -> None:
         """Open the GitHub Mods panel, reusing the existing window if open."""
-        from app.windows.github_mods_panel import GitHubModsPanel
+        from app.windows.github_mods_panel import (
+            GitHubModsPanel,  # Deferred: window import is heavy
+        )
 
         if self._github_mods_panel is not None and self._github_mods_panel.isVisible():
             self._github_mods_panel.raise_()

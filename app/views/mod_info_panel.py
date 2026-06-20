@@ -26,8 +26,10 @@ from app.sort.mod_sorting import uuid_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.event_bus import EventBus
 from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.github.models import CacheBase, GitHubModEntry, GitHubReleaseCache
+from app.utils.github.provider import GitHubProvider, _releases_from_json
 from app.utils.metadata import MetadataManager
 from app.utils.mod_info import UNKNOWN, ModInfo
 from app.views.description_widget import DescriptionWidget
@@ -447,8 +449,6 @@ class ModInfoPanel:
 
         self.hide_github_info()
 
-        from app.utils.event_bus import EventBus
-
         EventBus().do_refresh_mods_lists.connect(self._refresh_github_info)
 
         logger.debug("Finished ModInfo initialization")
@@ -493,8 +493,6 @@ class ModInfoPanel:
 
     def _on_github_version_selected(self, index: int) -> None:
         """Handle user selecting a different version in the combo box."""
-        from app.utils.event_bus import EventBus
-
         selected = self.mod_info_github_version_combo.itemText(index)
         if selected == self._github_installed_version:
             return
@@ -550,11 +548,6 @@ class ModInfoPanel:
             try:
                 from sqlalchemy import create_engine
                 from sqlalchemy.orm import sessionmaker as sa_sessionmaker
-
-                from app.utils.github.provider import (
-                    GitHubProvider,
-                    _releases_from_json,
-                )
 
                 cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
                 cache_engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
