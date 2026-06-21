@@ -23,19 +23,11 @@ from app.controllers.settings_tabs import (
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
+from app.services.http_download_service import HttpDownloadService
 from app.services.path_autodetect_service import PathAutodetectService
-from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.event_bus import EventBus
-from app.utils.generic import (
-    extract_git_dir_name,
-    validate_game_executable,
-)
-from app.utils.http_downloader import (
-    DatabaseDownloadTask,
-    DownloadResult,
-    HttpDownloadWorker,
-)
+from app.utils.generic import validate_game_executable
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -88,7 +80,7 @@ class SettingsController(QObject):
 
         self.app_instance = QApplication.instance()
 
-        self._http_download_worker: HttpDownloadWorker | None = None
+        self._http_download_service = HttpDownloadService()
 
         # Initialize per-tab controllers (registry pattern)
         self._tab_controllers: dict[str, BaseTabController] = {
@@ -96,7 +88,7 @@ class SettingsController(QObject):
             "databases": DatabasesTabController(
                 self.settings,
                 self.settings_dialog,
-                self._do_http_download_from_dialog,
+                self._http_download_service.start_download,
             ),
             "locations": LocationsTabController(
                 self.settings,
@@ -495,80 +487,6 @@ class SettingsController(QObject):
                 logger.warning(
                     f"Auto-detected {group.name} folder path does not exist: {group.folder}"
                 )
-
-    @Slot(bool)
-    def _do_http_download_from_dialog(
-        self, url: str, repo_url: str, display_name: str
-    ) -> None:
-        """Download a database via HTTP using the URL currently in the settings dialog."""
-        if not url:
-            show_warning(
-                title="No URL configured",
-                text=f"No URL is configured for {display_name}.",
-                information="Please enter a URL in the text field.",
-            )
-            return
-
-        repo_name = (
-            extract_git_dir_name(repo_url)
-            if repo_url
-            else display_name.replace(" ", "-")
-        )
-        task = DatabaseDownloadTask(
-            url=url,
-            target_dir=AppInfo().databases_folder,
-            repo_name=repo_name,
-            display_name=display_name,
-        )
-
-        if self._http_download_worker is not None:
-            try:
-                self._http_download_worker.download_finished.disconnect()
-                self._http_download_worker.quit()
-                self._http_download_worker.wait()
-            except Exception as e:
-                logger.debug(f"Error during HTTP worker cleanup: {e}")
-            self._http_download_worker = None
-
-        self._http_download_worker = HttpDownloadWorker([task])
-        self._http_download_worker.download_finished.connect(
-            self._on_http_download_from_dialog_finished
-        )
-        self._http_download_worker.start()
-
-    @Slot(dict)
-    def _on_http_download_from_dialog_finished(
-        self, results: dict[str, DownloadResult]
-    ) -> None:
-        updated = [name for name, r in results.items() if r == DownloadResult.UPDATED]
-        up_to_date = [
-            name for name, r in results.items() if r == DownloadResult.UP_TO_DATE
-        ]
-        failed = [name for name, r in results.items() if r == DownloadResult.FAILED]
-
-        if failed:
-            show_warning(
-                title="Download failed",
-                text=f"Failed to download: {', '.join(failed)}",
-                information="Please check your internet connection and the configured URL.",
-            )
-        elif updated:
-            show_warning(
-                title="Download complete",
-                text=f"Downloaded successfully: {', '.join(updated)}",
-            )
-        elif up_to_date:
-            show_warning(
-                title="Already up to date",
-                text=f"Already up to date: {', '.join(up_to_date)}",
-            )
-
-        if self._http_download_worker:
-            try:
-                self._http_download_worker.download_finished.disconnect()
-            except Exception as e:
-                logger.debug(f"Error during HTTP worker cleanup: {e}")
-            self._http_download_worker = None
 
     @Slot()
     def _on_instance_folder_location_choose_button_clicked(self) -> None:
