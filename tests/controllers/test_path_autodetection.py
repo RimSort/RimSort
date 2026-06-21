@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from app.controllers.settings_controller import SettingsController
+from app.services.path_autodetect_service import PathAutodetectService
 
 
 def _vdf_escape(path: Path) -> str:
@@ -18,24 +18,20 @@ def _setup_steam_root(tmp_path: Path, subdir: str) -> Path:
     return steam_root
 
 
-def _make_controller() -> SettingsController:
-    """Create a SettingsController without __init__ (which requires Qt widgets).
-
-    Safe because the path detection methods only use Path.home(), static
-    methods, and module-level utility functions — no instance attributes.
-    """
-    return SettingsController.__new__(SettingsController)
+def _make_service() -> PathAutodetectService:
+    """Create a PathAutodetectService (no __init__ setup needed)."""
+    return PathAutodetectService()
 
 
 class TestFindSteamRoot:
-    """Tests for SettingsController._find_steam_root()."""
+    """Tests for PathAutodetectService._find_steam_root()."""
 
     def test_returns_first_valid_candidate_with_steamapps(self, tmp_path: Path) -> None:
         candidate = tmp_path / ".steam" / "steam"
         candidate.mkdir(parents=True)
         (candidate / "steamapps").mkdir()
 
-        result = SettingsController._find_steam_root([candidate])
+        result = _make_service()._find_steam_root([candidate])
         assert result == candidate
 
     def test_returns_first_valid_candidate_with_vdf(self, tmp_path: Path) -> None:
@@ -43,7 +39,7 @@ class TestFindSteamRoot:
         (candidate / "config").mkdir(parents=True)
         (candidate / "config" / "libraryfolders.vdf").touch()
 
-        result = SettingsController._find_steam_root([candidate])
+        result = _make_service()._find_steam_root([candidate])
         assert result == candidate
 
     def test_skips_nonexistent_candidates(self, tmp_path: Path) -> None:
@@ -52,18 +48,18 @@ class TestFindSteamRoot:
         valid.mkdir()
         (valid / "steamapps").mkdir()
 
-        result = SettingsController._find_steam_root([nonexistent, valid])
+        result = _make_service()._find_steam_root([nonexistent, valid])
         assert result == valid
 
     def test_skips_candidates_without_steamapps_or_vdf(self, tmp_path: Path) -> None:
         empty_dir = tmp_path / "empty"
         empty_dir.mkdir()
 
-        result = SettingsController._find_steam_root([empty_dir])
+        result = _make_service()._find_steam_root([empty_dir])
         assert result is None
 
     def test_returns_none_when_no_candidates_match(self, tmp_path: Path) -> None:
-        result = SettingsController._find_steam_root([tmp_path / "a", tmp_path / "b"])
+        result = _make_service()._find_steam_root([tmp_path / "a", tmp_path / "b"])
         assert result is None
 
     def test_respects_priority_order(self, tmp_path: Path) -> None:
@@ -75,25 +71,25 @@ class TestFindSteamRoot:
         second.mkdir()
         (second / "steamapps").mkdir()
 
-        result = SettingsController._find_steam_root([first, second])
+        result = _make_service()._find_steam_root([first, second])
         assert result == first
 
     def test_returns_none_for_empty_list(self) -> None:
-        result = SettingsController._find_steam_root([])
+        result = _make_service()._find_steam_root([])
         assert result is None
 
 
 class TestGetLinuxPaths:
-    """Tests for SettingsController.__get_linux_paths() via the name-mangled accessor."""
+    """Tests for PathAutodetectService.get_linux_paths()."""
 
-    def _call(self, controller: SettingsController) -> tuple[Path, Path, Path]:
-        return controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+    def _call(self) -> tuple[Path, Path, Path]:
+        return _make_service().get_linux_paths()
 
     def test_debian_installation_path(self, tmp_path: Path) -> None:
         steam_root = _setup_steam_root(tmp_path, ".steam/debian-installation")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
         assert result[2] == steam_root / "steamapps" / "workshop" / "content" / "294100"
@@ -102,7 +98,7 @@ class TestGetLinuxPaths:
         steam_root = _setup_steam_root(tmp_path, ".steam/steam")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
 
@@ -110,7 +106,7 @@ class TestGetLinuxPaths:
         steam_root = _setup_steam_root(tmp_path, ".local/share/Steam")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
 
@@ -121,7 +117,7 @@ class TestGetLinuxPaths:
         )
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
 
@@ -129,7 +125,7 @@ class TestGetLinuxPaths:
         steam_root = _setup_steam_root(tmp_path, "snap/steam/common/.local/share/Steam")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
 
@@ -150,7 +146,7 @@ class TestGetLinuxPaths:
         (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == secondary_lib / "steamapps" / "common" / "RimWorld"
         assert (
@@ -177,7 +173,7 @@ class TestGetLinuxPaths:
         proton_config.mkdir(parents=True)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[1] == proton_config
 
@@ -193,13 +189,13 @@ class TestGetLinuxPaths:
         )
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[1] == native_config
 
     def test_no_steam_root_returns_fallback_paths(self, tmp_path: Path) -> None:
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert "steamapps" in str(result[0])
         assert "Config" in str(result[1])
@@ -210,13 +206,13 @@ class TestGetLinuxPaths:
         _setup_steam_root(tmp_path, ".steam/steam")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[0] == debian_root / "steamapps" / "common" / "RimWorld"
 
 
 class TestGetDarwinPaths:
-    """Tests for SettingsController.__get_darwin_paths().
+    """Tests for PathAutodetectService.get_darwin_paths().
 
     Note: macOS uses "Rimworld" (lowercase w) in hardcoded fallback paths,
     while VDF parsing returns "RimWorld" (capital W). This is fine because
@@ -224,8 +220,8 @@ class TestGetDarwinPaths:
     exact casing each code path produces.
     """
 
-    def _call(self, controller: SettingsController) -> tuple[Path, Path, Path]:
-        return controller._SettingsController__get_darwin_paths()  # type: ignore[attr-defined]
+    def _call(self) -> tuple[Path, Path, Path]:
+        return _make_service().get_darwin_paths()
 
     @staticmethod
     def _make_darwin_steam_root(tmp_path: Path) -> Path:
@@ -249,7 +245,7 @@ class TestGetDarwinPaths:
         (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         # VDF returns "RimWorld" (capital W)
         assert (
@@ -261,7 +257,7 @@ class TestGetDarwinPaths:
         steam_root = self._make_darwin_steam_root(tmp_path)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         # Fallback uses canonical "RimWorld" casing when no .app bundle found on disk
         expected_game = (
@@ -273,7 +269,7 @@ class TestGetDarwinPaths:
         self._make_darwin_steam_root(tmp_path)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         expected_config = (
             tmp_path / "Library" / "Application Support" / "Rimworld" / "Config"
@@ -284,13 +280,13 @@ class TestGetDarwinPaths:
         self._make_darwin_steam_root(tmp_path)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert result[2].parts[-3:] == ("workshop", "content", "294100")
 
     def test_no_steam_root_returns_hardcoded_paths(self, tmp_path: Path) -> None:
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call(_make_controller())
+            result = self._call()
 
         assert "RimWorldMac.app" in str(result[0])
         assert "Config" in str(result[1])
@@ -298,42 +294,42 @@ class TestGetDarwinPaths:
 
 
 class TestSnapWarning:
-    """Tests for Snap detection via _detected_steam_root."""
+    """Tests for Snap detection via PathAutodetectService.detected_steam_root."""
 
     def test_snap_steam_root_detected(self, tmp_path: Path) -> None:
         _setup_steam_root(tmp_path, "snap/steam/common/.local/share/Steam")
-        controller = _make_controller()
+        service = _make_service()
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+            service.get_linux_paths()
 
-        assert controller._detected_steam_root is not None
-        assert "snap" in controller._detected_steam_root.parts
+        assert service.detected_steam_root is not None
+        assert "snap" in service.detected_steam_root.parts
 
     def test_native_steam_root_not_flagged(self, tmp_path: Path) -> None:
         _setup_steam_root(tmp_path, ".steam/steam")
-        controller = _make_controller()
+        service = _make_service()
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+            service.get_linux_paths()
 
-        assert controller._detected_steam_root is not None
-        assert "snap" not in controller._detected_steam_root.parts
+        assert service.detected_steam_root is not None
+        assert "snap" not in service.detected_steam_root.parts
 
     def test_no_steam_root_not_flagged(self, tmp_path: Path) -> None:
-        controller = _make_controller()
+        service = _make_service()
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+            service.get_linux_paths()
 
-        assert controller._detected_steam_root is None
+        assert service.detected_steam_root is None
 
 
 class TestVdfEdgeCases:
     """Tests for VDF parsing edge cases in path autodetection."""
 
-    def _call_linux(self, controller: SettingsController) -> tuple[Path, Path, Path]:
-        return controller._SettingsController__get_linux_paths()  # type: ignore[attr-defined]
+    def _call_linux(self) -> tuple[Path, Path, Path]:
+        return _make_service().get_linux_paths()
 
     def test_malformed_vdf_falls_back_to_default(self, tmp_path: Path) -> None:
         steam_root = tmp_path / ".steam" / "steam"
@@ -344,7 +340,7 @@ class TestVdfEdgeCases:
         (vdf_dir / "libraryfolders.vdf").write_text("this is not valid vdf {{{")
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call_linux(_make_controller())
+            result = self._call_linux()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
         assert result[2] == steam_root / "steamapps" / "workshop" / "content" / "294100"
@@ -371,6 +367,6 @@ class TestVdfEdgeCases:
         (vdf_dir / "libraryfolders.vdf").write_text(vdf_content)
 
         with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call_linux(_make_controller())
+            result = self._call_linux()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
