@@ -5,7 +5,6 @@ from pathlib import Path
 from loguru import logger
 
 from app.utils.generic import find_steam_rimworld, get_path_up_to_string
-from app.utils.win_find_steam import find_steam_folder
 
 
 class PathAutodetectService:
@@ -187,6 +186,8 @@ class PathAutodetectService:
 
         :return: (game_folder, config_folder, steam_mods_folder)
         """
+        from app.utils.win_find_steam import find_steam_folder
+
         user_home = Path.home()
 
         steam_folder, found = find_steam_folder()
