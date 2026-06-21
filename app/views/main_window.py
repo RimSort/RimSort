@@ -1162,7 +1162,7 @@ class MainWindow(QMainWindow):
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
         self.watchdog_event_handler = WatchdogHandler(
-            settings_controller=self.settings_controller,
+            instance=self.settings_controller.active_instance,
         )
         self.watchdog_event_handler.acf_changed.connect(
             partial(refresh_acf_metadata, self.main_content_panel.metadata_controller)

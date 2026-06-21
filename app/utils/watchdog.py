@@ -12,7 +12,8 @@ from watchdog.observers.api import BaseObserver
 from watchdog.observers.polling import PollingObserver
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
+from app.models.instance import Instance
+from app.services.mod_path_service import get_mod_paths, resolve_data_source
 
 
 class WatchdogHandler(FileSystemEventHandler, QObject):
@@ -21,13 +22,13 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
     mod_deleted = Signal(str, str)
     mod_updated = Signal(str, str)
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, instance: Instance) -> None:
         """Initialize the WatchdogHandler.
 
         The WatchdogHandler is a subclass of :class:`watchdog.events.FileSystemEventHandler`
         and :class:`PySide6.QtCore.QObject`. It is used to monitor relevant mod files for changes.
 
-        :param settings_controller: The settings controller for the application
+        :param instance: The active game instance
 
         :return: None
         """
@@ -39,7 +40,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             str(workshop_acf) if workshop_acf is not None else None
         )
         self.steamcmd_appworkshop_acf_path = self.metadata_controller.steamcmd_acf_path
-        self.settings_controller: SettingsController = settings_controller
+        self._instance = instance
         # Steam .acf file monitoring
         self.watchdog_acf_observer: BaseObserver | None
         self.watchdog_acf_observer = PollingObserver()
@@ -49,7 +50,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         # Keep track of cooldowns for each mod path
         self.cooldown_timers: dict[str, Any] = {}
         self.__add_acf_observers()
-        self.__add_mod_observers(self.settings_controller.get_mod_paths())
+        self.__add_mod_observers(get_mod_paths(self._instance))
 
     def start(self) -> None:
         """Start all configured observers.
@@ -217,7 +218,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         if self.__check_acf_file(event, Path(event_scr_path_str)):
             return
         # If we are still here, assume we need to try to resolve the mod's data source from the potential mod path
-        data_source = self.settings_controller.resolve_data_source(event_scr_path_str)
+        data_source = resolve_data_source(self._instance, event_scr_path_str)
         # Check if this is a new mod directory (not already tracked)
         is_new_mod_dir = (
             event.is_directory
