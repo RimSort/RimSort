@@ -550,14 +550,9 @@ class MainContent(QObject):
         # Restore dividers into the active list
         if saved_dividers:
             self.mods_panel.active_mods_list.restore_dividers(saved_dividers)
-        # Determine sort key and descending for inactive mods
-        if self.settings.inactive_mods_sorting:
-            # Use current UI state from the combobox and button
-            sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
-            descending = self.mods_panel.inactive_sort_descending
-        else:
-            sort_key = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
-            descending = True
+        # Use current UI state from the combobox and button for inactive mods.
+        sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
+        descending = self.mods_panel.inactive_sort_descending
         self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
             list_type="inactive",
             uuids=inactive_mods_uuids,

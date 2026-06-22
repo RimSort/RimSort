@@ -826,35 +826,19 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
 
         # Inactive mods sorting group
-        self.inactive_mods_sorting_group_box = QGroupBox()
-        tab_layout.addWidget(self.inactive_mods_sorting_group_box)
+        self.inactive_mods_sort_group_box = QGroupBox()
+        tab_layout.addWidget(self.inactive_mods_sort_group_box)
 
-        inactive_mods_sorting_group_box_layout = QVBoxLayout()
-        self.inactive_mods_sorting_group_box.setLayout(
-            inactive_mods_sorting_group_box_layout
-        )
+        inactive_mods_sort_group_box_layout = QVBoxLayout()
+        self.inactive_mods_sort_group_box.setLayout(inactive_mods_sort_group_box_layout)
 
-        inactive_mods_sorting_label = self._make_section_label("Inactive Mods Sorting")
-        inactive_mods_sorting_group_box_layout.addWidget(inactive_mods_sorting_label)
-
-        # Inactive mods sorting options checkbox
-        self.inactive_mods_sorting_checkbox = QCheckBox(
-            self.tr("Enable inactive mods sorting")
-        )
-        self.inactive_mods_sorting_checkbox.setToolTip(
-            self.tr(
-                "Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods \n"
-                "Disabling this can improve performance by avoiding heavy calculations."
-            )
-        )
-        inactive_mods_sorting_group_box_layout.addWidget(
-            self.inactive_mods_sorting_checkbox
-        )
+        inactive_mods_sort_label = self._make_section_label("Inactive Mods Sorting")
+        inactive_mods_sort_group_box_layout.addWidget(inactive_mods_sort_label)
 
         self.save_inactive_mods_sort_state_checkbox = QCheckBox(
             self.tr("Save inactive mods sort state")
         )
-        inactive_mods_sorting_group_box_layout.addWidget(
+        inactive_mods_sort_group_box_layout.addWidget(
             self.save_inactive_mods_sort_state_checkbox
         )
 

@@ -703,11 +703,8 @@ class ModInfoPanel:
     def _set_folder_size_info(self, uuid: str) -> None:
         """Set folder size information using optimized calculation."""
         try:
-            if self.settings.inactive_mods_sorting:
-                size_bytes = path_to_folder_size(uuid)
-                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
-            else:
-                self.mod_info_folder_size_value.setText("Not available")
+            size_bytes = path_to_folder_size(uuid)
+            self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
         except Exception as e:
             logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
             self.mod_info_folder_size_value.setText("Not available")
@@ -729,11 +726,7 @@ class ModInfoPanel:
 
     def _set_filesystem_time_info(self, mod_path: str | None) -> None:
         """Set filesystem modification time information."""
-        if (
-            self.settings.inactive_mods_sorting
-            and mod_path
-            and os.path.exists(mod_path)
-        ):
+        if mod_path and os.path.exists(mod_path):
             try:
                 fs_time = int(os.path.getmtime(mod_path))
                 self._set_timestamp_info(

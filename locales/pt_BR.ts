@@ -4435,16 +4435,6 @@ por exemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, 
         <translation>Oculta mods inválidos, não recomendado para ativar</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>Ativar classificação de mods inativos</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>Opções adicionais como nome, autor, tamanho da pasta e data de modificação estarão disponíveis no painel de mods para classificar mods inativos 
-Desabilitar isso pode melhorar o desempenho, evitando cálculos pesados.</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>Salvar estado de classificação de mods inativos</translation>
     </message>

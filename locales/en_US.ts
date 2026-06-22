@@ -4313,15 +4313,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation type="unfinished"></translation>
     </message>

@@ -4431,16 +4431,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation>유효하지 않은 모드를 숨깁니다. 활성화하는 것을 권장하지 않습니다.</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>비활성 모드 정렬 활성화</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>이름, 제작자, 폴더 크기, 수정 날짜 등의 추가 옵션을 비활성 모드 정렬을 위한 모드 패널에서 사용할 수 있게 됩니다. 
-이 기능을 비활성화하면 대량의 계산을 방지하여 성능이 향상됩니다.</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>비활성 모드 정렬 상태 저장</translation>
     </message>

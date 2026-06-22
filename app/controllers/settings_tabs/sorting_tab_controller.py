@@ -51,9 +51,6 @@ class SortingTabController(BaseTabController):
         self.dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering
         )
-        self.dialog.inactive_mods_sorting_checkbox.setChecked(
-            self.settings.inactive_mods_sorting
-        )
         self.dialog.save_inactive_mods_sort_state_checkbox.setChecked(
             self.settings.save_inactive_mods_sort_state
         )
@@ -82,9 +79,6 @@ class SortingTabController(BaseTabController):
         )
         self.settings.hide_invalid_mods_when_filtering = (
             self.dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
-        )
-        self.settings.inactive_mods_sorting = (
-            self.dialog.inactive_mods_sorting_checkbox.isChecked()
         )
         self.settings.save_inactive_mods_sort_state = (
             self.dialog.save_inactive_mods_sort_state_checkbox.isChecked()
