@@ -4431,16 +4431,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation>無効な MOD を非表示にします。有効にすることはお勧めしません</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>非アクティブなMODのソートを有効にする</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>名前、作成者、フォルダーのサイズ、変更日などの追加オプションが、非アクティブな MOD を並べ替えるための MOD パネルで利用可能になります。 
-これを無効にすると、大量の計算が回避され、パフォーマンスが向上します。</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>非アクティブなMODのソート状態を保存する</translation>
     </message>

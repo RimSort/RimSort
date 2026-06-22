@@ -489,11 +489,10 @@ class ModListItemInner(QWidget):
         # Add folder size and filesystem modification time information without heavy IO on hover
         # Folder size: read from in-memory cache only; avoid computing on tooltip
         folder_size_line = "Folder Size: Not available\n"
-        if self.settings.inactive_mods_sorting:
-            if mod is not None and mod.mod_path is not None:
-                cached = _FOLDER_SIZE_CACHE.get(str(mod.mod_path))
-                if cached:
-                    folder_size_line = f"Folder Size: {format_file_size(cached[1])}\n"
+        if mod is not None and mod.mod_path is not None:
+            cached = _FOLDER_SIZE_CACHE.get(str(mod.mod_path))
+            if cached:
+                folder_size_line = f"Folder Size: {format_file_size(cached[1])}\n"
 
         # Filesystem modified time: prefer cached metadata value
         fs_time_val = mod.internal_time_touched if mod is not None else None
@@ -3613,18 +3612,13 @@ class ModListWidget(QListWidget):
         Returns:
             None
         """
-        filtering = self.settings.inactive_mods_sorting
-
-        if filtering:
-            sorted_uuids = sort_paths(
-                uuids,
-                key=key,
-                descending=descending,
-                settings=self.settings,
-            )
-            self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
-        else:
-            self.recreate_mod_list(list_type, uuids)
+        sorted_uuids = sort_paths(
+            uuids,
+            key=key,
+            descending=descending,
+            settings=self.settings,
+        )
+        self.recreate_mod_list(list_type, sorted_uuids, filtering=True)
 
     def recreate_mod_list(
         self, list_type: str, uuids: list[str], filtering: bool = False
@@ -3639,11 +3633,7 @@ class ModListWidget(QListWidget):
         # Skip sorting if UUIDs are already filtered/sorted (filtering=True)
         if not filtering:
             # Sort inactive mods using saved settings if enabled
-            if (
-                list_type == "Inactive"
-                and self.settings.save_inactive_mods_sort_state
-                and self.settings.inactive_mods_sorting
-            ):
+            if list_type == "Inactive" and self.settings.save_inactive_mods_sort_state:
                 sort_key = ModsPanelSortKey[self.settings.inactive_mods_sort_key]
                 descending = self.settings.inactive_mods_sort_descending
                 uuids = sort_paths(
@@ -3962,10 +3952,7 @@ class ModsPanel(QWidget):
         self.settings = settings
 
         # Load inactive mods sort settings
-        if (
-            self.settings.inactive_mods_sorting
-            and self.settings.save_inactive_mods_sort_state
-        ):
+        if self.settings.save_inactive_mods_sort_state:
             self.inactive_mods_sort_key = self.settings.inactive_mods_sort_key
             self.inactive_mods_sort_descending = (
                 self.settings.inactive_mods_sort_descending
@@ -4329,11 +4316,6 @@ class ModsPanel(QWidget):
         )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
-        # Set initial visibility based on settings
-        if self.settings.inactive_mods_sorting:
-            self.inactive_mods_sort_combobox.setVisible(True)
-            self.inactive_mods_sort_order_button.setVisible(True)
-
     def connect_signals(self) -> None:
         self.active_mods_list.list_update_signal.connect(
             self.on_active_mods_list_updated
@@ -4374,18 +4356,14 @@ class ModsPanel(QWidget):
         )
 
         # Save if enabled
-        if (
-            self.settings.inactive_mods_sorting
-            and self.settings.save_inactive_mods_sort_state
-        ):
+        if self.settings.save_inactive_mods_sort_state:
             self.settings.inactive_mods_sort_descending = self.inactive_sort_descending
             self.settings.save()
 
         # Apply updated sort direction - re-sort with new descending flag
-        if self.settings.inactive_mods_sorting:
-            current_text = self.inactive_mods_sort_combobox.currentText()
-            # Re-sort list with updated descending flag
-            self.on_inactive_mods_sort_changed(current_text)
+        current_text = self.inactive_mods_sort_combobox.currentText()
+        # Re-sort list with updated descending flag
+        self.on_inactive_mods_sort_changed(current_text)
 
     @Slot(int, int)
     def _on_folder_size_progress(self, current: int, total: int) -> None:
@@ -4549,10 +4527,6 @@ class ModsPanel(QWidget):
         Args:
             text: The selected sort option text from the combobox
         """
-        # Check if inactive mods sorting is enabled
-        if not self.settings.inactive_mods_sorting:
-            return
-
         # Prefer the enum stored in the combobox itemData (userData). This is
         # robust across locales and reordering. Fall back to the text->enum map
         # if no userData is available.
@@ -4612,10 +4586,7 @@ class ModsPanel(QWidget):
                 self._sort_debounce_timer.start(200)
 
                 # Save the sort key immediately if enabled
-                if (
-                    self.settings.inactive_mods_sorting
-                    and self.settings.save_inactive_mods_sort_state
-                ):
+                if self.settings.save_inactive_mods_sort_state:
                     self.settings.inactive_mods_sort_key = sort_key.name
                     self.settings.save()
                 self.inactive_mods_sort_key = sort_key.name

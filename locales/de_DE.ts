@@ -4415,16 +4415,6 @@ z. B. (modDependenciesByVersion, LoadAfterByVersion, LoadBeforeByVersion, inkomp
         <translation>Versteckt ungültige Mods, deren Aktivierung wird nicht empfohlen</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>Aktivieren Sie die Sortierung inaktiver Mods</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>Im Mods-Bereich stehen zusätzliche Optionen wie Name, Autor, Ordnergröße und Änderungsdatum zum Sortieren inaktiver Mods zur Verfügung 
-Wenn Sie dies deaktivieren, kann die Leistung verbessert werden, da aufwändige Berechnungen vermieden werden.</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>Sortierstatus inaktiver Mods speichern</translation>
     </message>

@@ -4434,16 +4434,6 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation>隱藏無效模組，不建議啟用</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>啟用未啟用模組排序</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>在模組面板中將提供額外選項，如名稱、作者、資料夾大小、修改日期，用於對未啟用的模組進行排序
-禁用此選項可通過避免大量計算來提升性能。</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>保存未啟用模組排序狀態</translation>
     </message>

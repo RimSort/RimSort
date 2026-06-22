@@ -123,8 +123,6 @@ class Settings(QObject):
         self.mod_type_filter: bool = True
         # Whether to hide invalid mods
         self.hide_invalid_mods_when_filtering: bool = False
-        # Whether to enable inactive mods sorting options
-        self.inactive_mods_sorting: bool = True
         # Inactive mods sort state saving
         self.save_inactive_mods_sort_state: bool = False
         self.inactive_mods_sort_key: str = "FILESYSTEM_MODIFIED_TIME"

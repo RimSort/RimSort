@@ -4413,16 +4413,6 @@ Eşleşen bir sürüm etiketi mevcut ancak boşsa temel etiket dikkate alınmaz.
         <translation>Geçersiz modları gizler, etkinleştirilmesi önerilmez</translation>
     </message>
     <message>
-        <source>Enable inactive mods sorting</source>
-        <translation>Etkin olmayan modların sıralamasını etkinleştir</translation>
-    </message>
-    <message>
-        <source>Additional options like name, author, folder size, modified date will be available in the mods panel for sorting inactive mods 
-Disabling this can improve performance by avoiding heavy calculations.</source>
-        <translation>Etkin olmayan modları sıralamak için ad, yazar, klasör boyutu, değiştirilme tarihi gibi ek seçenekler mod panelinde mevcut olacak 
-Bunu devre dışı bırakmak, ağır hesaplamalardan kaçınarak performansı artırabilir.</translation>
-    </message>
-    <message>
         <source>Save inactive mods sort state</source>
         <translation>Etkin olmayan modların sıralama durumunu kaydet</translation>
     </message>
