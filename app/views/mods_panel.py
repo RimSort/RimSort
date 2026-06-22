@@ -4998,9 +4998,7 @@ class ModsPanel(QWidget):
             # User tag filtering (from FilterState)
             if not item_filtered and (fs.tags or fs.include_no_tags):
                 tags_set = set(item_data["mod_tags"])
-                matches_selected_tags = bool(tags_set.intersection(fs.tags))
-                matches_no_tags = fs.include_no_tags and len(tags_set) == 0
-                if not matches_selected_tags and not matches_no_tags:
+                if not fs.matches_tags(tags_set):
                     item_filtered = True
 
             # Check if the item should be filtered or hidden based on filter state
