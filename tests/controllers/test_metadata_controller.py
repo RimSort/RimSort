@@ -9,7 +9,7 @@ import pytest
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
+from app.models.instance import Instance
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     CaseInsensitiveStr,
@@ -53,15 +53,13 @@ def mock_settings_dialog() -> MagicMock:
     return MagicMock(spec=SettingsDialog)
 
 
-@pytest.fixture
-def settings_controller(
-    mock_settings: Settings,
-) -> SettingsController:
-    mock_sc = MagicMock(spec=SettingsController)
-    mock_sc._update_view_from_model.return_value = None
-    mock_sc.settings = mock_settings
-
-    return mock_sc
+@pytest.fixture()
+def mock_active_instance() -> MagicMock:
+    instance = MagicMock(spec=Instance)
+    instance.game_folder = ""
+    instance.local_folder = ""
+    instance.workshop_folder = ""
+    return instance
 
 
 @pytest.fixture()
@@ -73,7 +71,8 @@ def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
 
 @pytest.fixture()
 def metadata_controller(
-    settings_controller: SettingsController,
+    mock_settings: Settings,
+    mock_active_instance: MagicMock,
     temp_db: AuxMetadataController,
 ) -> MetadataController:
     with (
@@ -89,7 +88,7 @@ def metadata_controller(
                 / "appworkshop_294100.acf"
             )
         )
-        return MetadataController(settings_controller, temp_db)
+        return MetadataController(mock_settings, lambda: mock_active_instance, temp_db)
 
 
 def test_metadata_controller_creation(metadata_controller: MetadataController) -> None:
@@ -101,17 +100,14 @@ def test_metadata_controller_creation(metadata_controller: MetadataController) -
 @pytest.fixture
 def metadata_controller_p(
     metadata_controller: MetadataController,
+    mock_active_instance: MagicMock,
 ) -> MetadataController:
-    metadata_controller.settings_controller.settings.external_steam_metadata_file_path = "tests/data/dbs/steamDB.json"
-    metadata_controller.settings_controller.active_instance.game_folder = (
-        "tests/data/mod_examples/RimWorld"
+    metadata_controller.settings.external_steam_metadata_file_path = (
+        "tests/data/dbs/steamDB.json"
     )
-    metadata_controller.settings_controller.active_instance.local_folder = (
-        "tests/data/mod_examples/Local"
-    )
-    metadata_controller.settings_controller.active_instance.workshop_folder = (
-        "tests/data/mod_examples/Steam"
-    )
+    mock_active_instance.game_folder = "tests/data/mod_examples/RimWorld"
+    mock_active_instance.local_folder = "tests/data/mod_examples/Local"
+    mock_active_instance.workshop_folder = "tests/data/mod_examples/Steam"
 
     metadata_controller.reset_paths()
     return metadata_controller
@@ -167,7 +163,9 @@ def metadata_controller_with_steamdb(
     metadata_controller_p: MetadataController,
 ) -> MetadataController:
     """metadata_controller_p with Steam DB source enabled."""
-    metadata_controller_p.settings_controller.settings.external_steam_metadata_source = "Configured file path"
+    metadata_controller_p.settings.external_steam_metadata_source = (
+        "Configured file path"
+    )
     metadata_controller_p.reset_paths()
     return metadata_controller_p
 
@@ -283,7 +281,7 @@ def test_workshop_acf_path_when_no_workshop(
     metadata_controller: MetadataController,
 ) -> None:
     """Verify workshop_acf_path returns None when workshop is not configured."""
-    metadata_controller.settings_controller.active_instance.workshop_folder = ""
+    metadata_controller._get_active_instance().workshop_folder = ""
     metadata_controller.reset_paths()
     acf_path = metadata_controller.workshop_acf_path
     assert acf_path is None
@@ -437,8 +435,12 @@ def test_community_rules_path_when_configured(
     metadata_controller_p: MetadataController,
 ) -> None:
     """Verify community_rules_path returns a Path when community rules are configured."""
-    metadata_controller_p.settings_controller.settings.external_community_rules_metadata_source = "Configured file path"
-    metadata_controller_p.settings_controller.settings.external_community_rules_file_path = "tests/data/dbs/communityRules.json"
+    metadata_controller_p.settings.external_community_rules_metadata_source = (
+        "Configured file path"
+    )
+    metadata_controller_p.settings.external_community_rules_file_path = (
+        "tests/data/dbs/communityRules.json"
+    )
     metadata_controller_p.reset_paths()
     result = metadata_controller_p.community_rules_path
     assert result is not None
@@ -909,10 +911,10 @@ def test_reset_paths_derives_local_mods_from_game_when_empty(
     metadata_controller: MetadataController,
 ) -> None:
     """When local_folder is empty but game_folder is set, local_mods_path is derived as game_path / 'Mods'."""
-    metadata_controller.settings_controller.active_instance.game_folder = (
+    metadata_controller._get_active_instance().game_folder = (
         "tests/data/mod_examples/RimWorld"
     )
-    metadata_controller.settings_controller.active_instance.local_folder = ""
+    metadata_controller._get_active_instance().local_folder = ""
 
     metadata_controller.reset_paths()
 
@@ -925,10 +927,10 @@ def test_reset_paths_preserves_explicit_local_folder(
     metadata_controller: MetadataController,
 ) -> None:
     """An explicitly set local_folder is NOT overwritten by derivation."""
-    metadata_controller.settings_controller.active_instance.game_folder = (
+    metadata_controller._get_active_instance().game_folder = (
         "tests/data/mod_examples/RimWorld"
     )
-    metadata_controller.settings_controller.active_instance.local_folder = (
+    metadata_controller._get_active_instance().local_folder = (
         "tests/data/mod_examples/Local"
     )
 
@@ -943,8 +945,8 @@ def test_reset_paths_leaves_local_mods_none_when_no_game(
     metadata_controller: MetadataController,
 ) -> None:
     """When both game_folder and local_folder are empty, local_mods_path stays None."""
-    metadata_controller.settings_controller.active_instance.game_folder = ""
-    metadata_controller.settings_controller.active_instance.local_folder = ""
+    metadata_controller._get_active_instance().game_folder = ""
+    metadata_controller._get_active_instance().local_folder = ""
 
     metadata_controller.reset_paths()
 

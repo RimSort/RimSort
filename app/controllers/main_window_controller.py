@@ -124,7 +124,7 @@ class MainWindowController(QObject):
             if isinstance(mod, AboutXmlMod):
                 all_local_package_ids.add(str(mod.package_id))
 
-        consider_alternatives = self.metadata_controller.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
+        consider_alternatives = self.metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
 
         # Check each active mod's dependencies
         for path in active_mods:
@@ -229,7 +229,7 @@ class MainWindowController(QObject):
 
                                 prefer_versioned = False
                                 try:
-                                    prefer_versioned = self.metadata_controller.settings_controller.settings.prefer_versioned_about_tags
+                                    prefer_versioned = self.metadata_controller.settings.prefer_versioned_about_tags
                                 except Exception:
                                     prefer_versioned = False
 

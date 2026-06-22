@@ -121,7 +121,8 @@ class AppController(QObject):
             self.settings_controller.settings.aux_db_path
         )
         self.metadata_controller = MetadataController.instance(
-            settings_controller=self.settings_controller,
+            settings=self.settings_controller.settings,
+            get_active_instance=lambda: self.settings_controller.active_instance,
             metadata_db_controller=aux_db_controller,
         )
 

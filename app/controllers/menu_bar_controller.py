@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from functools import partial
 
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.utils.generic import open_url_browser
 from app.views.menu_bar import MenuBar
@@ -14,12 +15,14 @@ class MenuBarController(QObject):
     def __init__(
         self,
         view: MenuBar,
-        settings_controller: SettingsController,
+        settings: Settings,
+        show_settings_dialog: Callable[[], None],
     ) -> None:
         super().__init__()
 
         self.menu_bar = view
-        self.settings_controller = settings_controller
+        self.settings = settings
+        self._show_settings_dialog = show_settings_dialog
 
         # Application menu
         instance = QApplication.instance()
@@ -37,13 +40,11 @@ class MenuBarController(QObject):
                 self._on_menu_bar_check_for_updates_on_startup_triggered
             )
             self.menu_bar.check_for_updates_on_startup_action.setChecked(
-                self.settings_controller.settings.check_for_update_startup
+                self.settings.check_for_update_startup
             )
 
         # Settings menu
-        self.menu_bar.settings_action.triggered.connect(
-            self.settings_controller.show_settings_dialog
-        )
+        self.menu_bar.settings_action.triggered.connect(self._show_settings_dialog)
 
         # File menu
         self.menu_bar.open_mod_list_action.triggered.connect(
@@ -188,14 +189,10 @@ class MenuBarController(QObject):
         EventBus().refresh_finished.connect(self._on_refresh_finished)
 
     def _on_do_backup_current_instance(self) -> None:
-        EventBus().do_backup_existing_instance.emit(
-            self.settings_controller.settings.current_instance
-        )
+        EventBus().do_backup_existing_instance.emit(self.settings.current_instance)
 
     def _on_do_clone_current_instance(self) -> None:
-        EventBus().do_clone_existing_instance.emit(
-            self.settings_controller.settings.current_instance
-        )
+        EventBus().do_clone_existing_instance.emit(self.settings.current_instance)
 
     def _on_instances_submenu_population(self, instance_names: list[str]) -> None:
         self.menu_bar.instances_submenu.clear()
@@ -241,8 +238,8 @@ class MenuBarController(QObject):
         if self.menu_bar.check_for_updates_on_startup_action is None:
             return
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
-        self.settings_controller.settings.check_for_update_startup = is_checked
-        self.settings_controller.settings.save()
+        self.settings.check_for_update_startup = is_checked
+        self.settings.save()
 
     @Slot()
     def _on_menu_bar_cut_triggered(self) -> None:

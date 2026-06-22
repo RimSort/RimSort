@@ -91,7 +91,9 @@ class TestMenuBarControllerWithDisabledUpdater:
 
             # This should not raise an exception even though actions are None
             with patch("app.controllers.menu_bar_controller.EventBus"):
-                controller = MenuBarController(menu_bar, mock_settings_controller)
+                controller = MenuBarController(
+                    menu_bar, mock_settings_controller.settings, lambda: None
+                )
 
             # Verify the controller was created successfully
             assert controller is not None
@@ -112,7 +114,9 @@ class TestMenuBarControllerWithDisabledUpdater:
 
             # This should not raise an exception
             with patch("app.controllers.menu_bar_controller.EventBus"):
-                controller = MenuBarController(menu_bar, mock_settings_controller)
+                controller = MenuBarController(
+                    menu_bar, mock_settings_controller.settings, lambda: None
+                )
 
             # Verify the controller was created successfully
             assert controller is not None

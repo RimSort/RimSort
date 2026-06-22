@@ -20,10 +20,10 @@ from PySide6.QtWidgets import (
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
 from app.models.metadata.metadata_db import Base
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ScenarioMod
+from app.models.settings import Settings
 from app.sort.mod_sorting import path_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
@@ -110,7 +110,7 @@ class ModInfoPanel:
     mod information panel on the GUI.
     """
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         """
         Initialize the class.
         """
@@ -118,7 +118,7 @@ class ModInfoPanel:
 
         # Cache MetadataController instance
         self.metadata_controller = MetadataController.instance()
-        self.settings_controller = settings_controller
+        self.settings = settings
 
         # Used to keep track of which mod items notes we are viewing/editing
         # This is set when a mod is clicked on
@@ -528,7 +528,7 @@ class ModInfoPanel:
 
         try:
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
-                self.settings_controller.settings.aux_db_path
+                self.settings.aux_db_path
             )
             Base.metadata.create_all(aux_controller.engine)
 
@@ -685,7 +685,7 @@ class ModInfoPanel:
     def _set_mod_tags_info(self, uuid: str) -> None:
         """Set user-defined tags information."""
         try:
-            tags = auxdb_get_mod_tags(self.settings_controller.settings, uuid)
+            tags = auxdb_get_mod_tags(self.settings, uuid)
         except Exception as e:
             logger.debug(f"Failed to load tags for mod info panel UUID {uuid}: {e}")
             tags = []
@@ -701,7 +701,7 @@ class ModInfoPanel:
     def _set_folder_size_info(self, uuid: str) -> None:
         """Set folder size information using optimized calculation."""
         try:
-            if self.settings_controller.settings.inactive_mods_sorting:
+            if self.settings.inactive_mods_sorting:
                 size_bytes = path_to_folder_size(uuid)
                 self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
             else:
@@ -728,7 +728,7 @@ class ModInfoPanel:
     def _set_filesystem_time_info(self, mod_path: str | None) -> None:
         """Set filesystem modification time information."""
         if (
-            self.settings_controller.settings.inactive_mods_sorting
+            self.settings.inactive_mods_sorting
             and mod_path
             and os.path.exists(mod_path)
         ):

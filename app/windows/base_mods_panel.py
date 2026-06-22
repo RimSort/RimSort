@@ -152,7 +152,7 @@ class BaseModsPanel(QWidget):
     def _setup_metadata(self) -> None:
         """Set up metadata controller and settings controller."""
         self.metadata_controller = MetadataController.instance()
-        self.settings_controller = self.metadata_controller.settings_controller
+        self.settings = self.metadata_controller.settings
 
     def _get_steam_client_integration_enabled(self) -> bool:
         """
@@ -161,8 +161,8 @@ class BaseModsPanel(QWidget):
         Returns:
             True if Steam client integration is enabled, False otherwise.
         """
-        return self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        return self.settings.instances[
+            self.settings.current_instance
         ].steam_client_integration
 
     def _setup_ui_elements(
@@ -600,9 +600,7 @@ class BaseModsPanel(QWidget):
     def _delete_selected_mods(
         self, pfid_column: int, mode: OperationMode | str | int
     ) -> None:
-        delete_before_update_state = (
-            self.settings_controller.settings.steamcmd_delete_before_update
-        )
+        delete_before_update_state = self.settings.steamcmd_delete_before_update
         if delete_before_update_state:
             pfid_fn = self._get_selected_text_by_column(pfid_column)
             get_mode = self._resolve_mode_getter(mode)

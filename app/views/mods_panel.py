@@ -3166,7 +3166,7 @@ class ModListWidget(QListWidget):
         alternative_deps: set[str] = set()
         if not isinstance(mod_data, AboutXmlMod):
             return missing_deps, alternative_deps
-        consider_alternatives = self.metadata_controller.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
+        consider_alternatives = self.metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
         for dep_id, dep_mod in mod_data.overall_rules.dependencies.items():
             alt_ids: set[str] = {str(a) for a in dep_mod.alternative_package_ids}
 
@@ -3400,7 +3400,7 @@ class ModListWidget(QListWidget):
                     self.tr("\nIncompatible (per other mod's rules):"),
                 ),
             ]
-            if self.metadata_controller.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
+            if self.metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies:
                 tooltip_sections.insert(
                     1,
                     (

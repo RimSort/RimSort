@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.settings_controller = settings_controller
+        self.settings = settings_controller.settings
 
         # Set global references
         globals.MAIN_WINDOW = self
@@ -95,7 +96,7 @@ class MainWindow(QMainWindow):
         # Watchdog
         self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
-        current_instance = self.settings_controller.settings.current_instance
+        current_instance = self.settings.current_instance
         self.__set_window_title(current_instance)
 
         # Create the window layout
@@ -174,7 +175,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
 
         # Create and add the Player Log tab
-        self.player_log_widget = PlayerLogTab(self.settings_controller.settings)
+        self.player_log_widget = PlayerLogTab(self.settings)
         self.tab_widget.addTab(self.player_log_widget, self.tr("Player Log"))
 
         # Create and add the Search tab
@@ -185,7 +186,7 @@ class MainWindow(QMainWindow):
         # Instantiate the SearchWindow and add it to the tab
         self.file_search_dialog = FileSearchDialog()
         self.file_search_controller = FileSearchController(
-            settings=self.settings_controller.settings,
+            settings=self.settings,
             settings_controller=self.settings_controller,
             dialog=self.file_search_dialog,
         )
@@ -201,7 +202,7 @@ class MainWindow(QMainWindow):
         # Instantiate the TroubleshootingDialog and add it to the tab
         self.troubleshooting_dialog = TroubleshootingDialog()
         self.troubleshooting_controller = TroubleshootingController(
-            settings=self.settings_controller.settings,
+            settings=self.settings,
             dialog=self.troubleshooting_dialog,
         )
         self.troubleshooting_layout.addWidget(self.troubleshooting_dialog)
@@ -223,24 +224,23 @@ class MainWindow(QMainWindow):
 
         self.mods_panel_controller = ModsPanelController(
             view=self.main_content_panel.mods_panel,
-            settings=self.settings_controller.settings,
+            settings=self.settings,
         )
 
-        self.menu_bar = MenuBar(
-            menu_bar=self.menuBar(), settings=self.settings_controller.settings
-        )
+        self.menu_bar = MenuBar(menu_bar=self.menuBar(), settings=self.settings)
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
-            settings_controller=self.settings_controller,
+            settings=self.settings,
+            show_settings_dialog=self.settings_controller.show_settings_dialog,
         )
 
         self.main_content_controller = MainContentController(
             view=self.main_content_panel,
-            settings=self.settings_controller.settings,
+            settings=self.settings,
         )
 
         self.todds_controller = ToddsController(
-            settings=self.settings_controller.settings,
+            settings=self.settings,
             metadata_controller=self.main_content_panel.metadata_controller,
         )
         self.main_content_panel.todds_controller = self.todds_controller
@@ -261,11 +261,9 @@ class MainWindow(QMainWindow):
 
     def _launch_main_window(self) -> None:
         """Apply main window launch state from settings"""
-        main_window_launch_state = (
-            self.settings_controller.settings.main_window_launch_state
-        )
-        custom_width = self.settings_controller.settings.main_window_custom_width
-        custom_height = self.settings_controller.settings.main_window_custom_height
+        main_window_launch_state = self.settings.main_window_launch_state
+        custom_width = self.settings.main_window_custom_width
+        custom_height = self.settings.main_window_custom_height
 
         apply_window_launch_state(
             self, main_window_launch_state, custom_width, custom_height
@@ -311,10 +309,10 @@ class MainWindow(QMainWindow):
         EventBus().do_set_all_entries_in_aux_db_as_outdated.emit()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
-            instance_names=list(self.settings_controller.settings.instances.keys())
+            instance_names=list(self.settings.instances.keys())
         )
         self.menu_bar_controller._on_set_current_instance(
-            self.settings_controller.settings.current_instance
+            self.settings.current_instance
         )
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
@@ -329,7 +327,9 @@ class MainWindow(QMainWindow):
         ):
             if not self.settings_controller.active_instance.steamcmd_ignore:
                 self.steamcmd_wrapper.on_steamcmd_not_found(
-                    ask_ignore=True, settings_controller=self.settings_controller
+                    ask_ignore=True,
+                    settings=self.settings,
+                    active_instance=self.settings_controller.active_instance,
                 )
         else:
             self.steamcmd_wrapper.setup = True
@@ -340,7 +340,7 @@ class MainWindow(QMainWindow):
             self.main_content_controller._update_databases_on_startup_if_enabled_silent()
 
         # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.settings_controller.settings.watchdog_toggle:
+        if self.settings.watchdog_toggle:
             # Setup watchdog
             self.initialize_watchdog()
 
@@ -349,9 +349,9 @@ class MainWindow(QMainWindow):
         # Force initial setup to False and save settings
         if self.settings_controller.active_instance.initial_setup:
             self.settings_controller.active_instance.initial_setup = False
-            self.settings_controller.settings.save()
+            self.settings.save()
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.settings_controller.settings.check_for_update_startup:
+        if self.settings.check_for_update_startup:
             EventBus().do_check_for_application_update.emit()
         # Delete outdated entries in aux DB
         EventBus().do_delete_outdated_entries_in_aux_db.emit()
@@ -435,7 +435,7 @@ class MainWindow(QMainWindow):
     def __backup_existing_instance(self, instance_name: str) -> None:
         """Backup an instance to a ZIP archive."""
         # Get instance data from Settings
-        instance = self.settings_controller.settings.instances.get(instance_name)
+        instance = self.settings.instances.get(instance_name)
 
         # If the instance_name is "Default", prompt the user for a new instance name.
         if instance_name == DEFAULT_INSTANCE_NAME:
@@ -747,10 +747,8 @@ class MainWindow(QMainWindow):
         if not self.main_content_panel.check_if_essential_paths_are_set(prompt=True):
             return
         # Get instance data from Settings
-        current_instances = list(self.settings_controller.settings.instances.keys())
-        existing_instance = self.settings_controller.settings.instances[
-            existing_instance_name
-        ]
+        current_instances = list(self.settings.instances.keys())
+        existing_instance = self.settings.instances[existing_instance_name]
 
         existing_instance_game_folder = existing_instance.game_folder
         game_folder_name = os.path.split(existing_instance_game_folder)[1]
@@ -988,7 +986,7 @@ class MainWindow(QMainWindow):
                 logger.info("User cancelled operation")
                 return
             instance_name = new_instance_name
-        current_instances = list(self.settings_controller.settings.instances.keys())
+        current_instances = list(self.settings.instances.keys())
         if (
             instance_name
             and instance_name != DEFAULT_INSTANCE_NAME
@@ -1000,8 +998,8 @@ class MainWindow(QMainWindow):
             # If not provided in instance_data, check the current instance's override
             # This allows new instances to use the custom folder set in settings
             if not instance_folder_override:
-                current_instance = self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
+                current_instance = self.settings.instances[
+                    self.settings.current_instance
                 ]
                 instance_folder_override = current_instance.instance_folder_override
             # Create new instance folder if it does not exist
@@ -1011,9 +1009,7 @@ class MainWindow(QMainWindow):
             if not instance_path.exists():
                 instance_path.mkdir(parents=True, exist_ok=True)
             # Fall back to current instance's folders if missing or empty (e.g., Create Instance)
-            current_inst = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ]
+            current_inst = self.settings.instances[self.settings.current_instance]
             if not instance_data.get("game_folder"):
                 instance_data["game_folder"] = current_inst.game_folder
             if not instance_data.get("config_folder"):
@@ -1064,7 +1060,7 @@ class MainWindow(QMainWindow):
             self.settings_controller.set_instance(instance)
 
             # Save settings
-            self.settings_controller.settings.save()
+            self.settings.save()
             # Switch to new instance and initialize content
             self.__switch_to_instance(instance_name)
         else:
@@ -1078,22 +1074,20 @@ class MainWindow(QMainWindow):
 
     def __delete_current_instance(self) -> None:
         """Delete the current instance and all its data."""
-        if self.settings_controller.settings.current_instance == DEFAULT_INSTANCE_NAME:
+        if self.settings.current_instance == DEFAULT_INSTANCE_NAME:
             show_warning(
                 title=self.tr("Problem deleting instance"),
                 text=self.tr("Unable to delete instance {current_instance}.").format(
-                    current_instance=self.settings_controller.settings.current_instance
+                    current_instance=self.settings.current_instance
                 ),
                 information=self.tr("The default instance cannot be deleted."),
             )
             return
-        elif not self.settings_controller.settings.instances.get(
-            self.settings_controller.settings.current_instance
-        ):
+        elif not self.settings.instances.get(self.settings.current_instance):
             show_fatal_error(
                 title=self.tr("Error deleting instance"),
                 text=self.tr("Unable to delete instance {current_instance}.").format(
-                    current_instance=self.settings_controller.settings.current_instance
+                    current_instance=self.settings.current_instance
                 ),
                 information=self.tr("The selected instance does not exist."),
             )
@@ -1101,7 +1095,7 @@ class MainWindow(QMainWindow):
         else:
             answer = BinaryChoiceDialog(
                 title=self.tr("Delete instance {current_instance}").format(
-                    current_instance=self.settings_controller.settings.current_instance
+                    current_instance=self.settings.current_instance
                 ),
                 text=self.tr(
                     "Are you sure you want to delete the selected instance and all of its data?"
@@ -1111,7 +1105,7 @@ class MainWindow(QMainWindow):
             if answer.exec_is_positive():
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
-                        self.settings_controller.settings.aux_db_path
+                        self.settings.aux_db_path
                     )
                 )
                 aux_metadata_controller.engine.dispose()
@@ -1121,7 +1115,7 @@ class MainWindow(QMainWindow):
                             Path(
                                 AppInfo().app_storage_folder
                                 / INSTANCE_FOLDER_NAME
-                                / self.settings_controller.settings.current_instance
+                                / self.settings.current_instance
                             )
                         ),
                         ignore_errors=False,
@@ -1130,22 +1124,20 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     logger.error(f"Error deleting instance: {e}")
                 # Remove instance from settings and reset to Default
-                self.settings_controller.settings.instances.pop(
-                    self.settings_controller.settings.current_instance
-                )
+                self.settings.instances.pop(self.settings.current_instance)
                 self.__switch_to_instance(DEFAULT_INSTANCE_NAME)
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""
         self.shutdown_watchdog()
         # Set current instance
-        self.settings_controller.settings.current_instance = instance
+        self.settings.current_instance = instance
         instance_path = str(InstanceController.get_instance_folder_path(instance))
-        self.settings_controller.settings.current_instance_path = instance_path
+        self.settings.current_instance_path = instance_path
         # Update window title with current instance
         self.__set_window_title(instance)
         # Save settings
-        self.settings_controller.settings.save()
+        self.settings.save()
         # Clear mod lists
         self.main_content_panel._insert_data_into_lists([], [])
         # Initialize content
