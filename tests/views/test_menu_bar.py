@@ -20,7 +20,7 @@ def menu_bar_instance(
         mock_settings_controller.settings, "check_for_update_startup", False
     )
     qt_menu_bar = QMenuBar()
-    menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
+    menu_bar = MenuBar(qt_menu_bar, mock_settings_controller.settings)
     return menu_bar
 
 
@@ -39,7 +39,7 @@ class TestMenuBarUpdateMenuCreation:
                 del os.environ["RIMSORT_DISABLE_UPDATER"]
 
             qt_menu_bar = QMenuBar()
-            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
+            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller.settings)
 
             # Verify that update actions were created
             assert menu_bar.check_for_updates_action is not None
@@ -61,7 +61,7 @@ class TestMenuBarUpdateMenuCreation:
         # Set the environment variable
         with patch.dict(os.environ, {"RIMSORT_DISABLE_UPDATER": "1"}):
             qt_menu_bar = QMenuBar()
-            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
+            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller.settings)
 
             # Verify that update actions were not created (should be None)
             assert menu_bar.check_for_updates_action is None
@@ -87,7 +87,7 @@ class TestMenuBarControllerWithDisabledUpdater:
         # Set the environment variable
         with patch.dict(os.environ, {"RIMSORT_DISABLE_UPDATER": "1"}):
             qt_menu_bar = QMenuBar()
-            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
+            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller.settings)
 
             # This should not raise an exception even though actions are None
             with patch("app.controllers.menu_bar_controller.EventBus"):
@@ -108,7 +108,7 @@ class TestMenuBarControllerWithDisabledUpdater:
                 del os.environ["RIMSORT_DISABLE_UPDATER"]
 
             qt_menu_bar = QMenuBar()
-            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller)
+            menu_bar = MenuBar(qt_menu_bar, mock_settings_controller.settings)
 
             # This should not raise an exception
             with patch("app.controllers.menu_bar_controller.EventBus"):

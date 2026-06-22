@@ -25,7 +25,9 @@ class TestTagEditDialog:
         ):
             dialog = TagEditDialog(
                 title="Test Dialog",
-                settings_controller=MagicMock(spec=SettingsController),
+                settings_controller=MagicMock(
+                    spec=SettingsController, settings=MagicMock()
+                ),
                 existing_selected_tags={"a", "aa", "b", "bb"},
             )
             qtbot.addWidget(dialog)

@@ -37,6 +37,7 @@ class DuplicateModsPanel(BaseModsPanel):
         logger.debug("Initializing DuplicateModsPanel")
         self.duplicate_mods = duplicate_mods
         self.settings_controller = settings_controller
+        self.settings_controller = settings_controller
 
         super().__init__(
             object_name="duplicateModsPanel",

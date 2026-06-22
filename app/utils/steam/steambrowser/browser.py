@@ -38,8 +38,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import extract_page_title_steam_browser
@@ -68,21 +68,21 @@ class SteamBrowser(QWidget):
     web_view: QWebEngineView | None
     web_profile: QWebEngineProfile | None
     metadata_controller: MetadataController | None
-    settings_controller: SettingsController | None
+    settings: Settings | None
     js_bridge: JavaScriptBridge | None
 
     def __init__(
         self,
         startpage: str,
         metadata_controller: MetadataController,
-        settongs_controller: SettingsController,
+        settings: Settings,
     ):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
 
         # store metadata controller reference so we can use it to check if mods are installed
         self.metadata_controller = metadata_controller
-        self.settings_controller = settongs_controller
+        self.settings = settings
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -291,12 +291,10 @@ class SteamBrowser(QWidget):
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
-        assert self.settings_controller is not None
-        browser_window_launch_state = (
-            self.settings_controller.settings.browser_window_launch_state
-        )
-        custom_width = self.settings_controller.settings.browser_window_custom_width
-        custom_height = self.settings_controller.settings.browser_window_custom_height
+        assert self.settings is not None
+        browser_window_launch_state = self.settings.browser_window_launch_state
+        custom_width = self.settings.browser_window_custom_width
+        custom_height = self.settings.browser_window_custom_height
 
         apply_window_launch_state(
             self, browser_window_launch_state, custom_width, custom_height
@@ -887,7 +885,7 @@ class SteamBrowser(QWidget):
 
         # Clear all references
         self.metadata_controller = None
-        self.settings_controller = None
+        self.settings = None
         self.js_bridge = None
         self.downloader_list_mods_tracking.clear()
         self.downloader_list_dupe_tracking.clear()

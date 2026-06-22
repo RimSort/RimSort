@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.rentry.wrapper import RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
@@ -42,10 +42,10 @@ class ImportExportService:
     def __init__(
         self,
         metadata_controller: MetadataController,
-        settings_controller: SettingsController,
+        settings: Settings,
     ) -> None:
         self.metadata_controller = metadata_controller
-        self.settings_controller = settings_controller
+        self.settings = settings
 
     def collect_active_mods(
         self,
@@ -289,10 +289,8 @@ class ImportExportService:
         :return: the path to the saved file
         :raises Exception: on write failure
         """
-        current_instance = self.settings_controller.settings.current_instance
-        config_folder = self.settings_controller.settings.instances[
-            current_instance
-        ].config_folder
+        current_instance = self.settings.current_instance
+        config_folder = self.settings.instances[current_instance].config_folder
         mods_config_path = str(Path(config_folder) / "ModsConfig.xml")
 
         mods_config_data = generate_rimworld_mods_list(

@@ -3,7 +3,7 @@ from glob import glob
 
 from loguru import logger
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 
 
 class DDSUtility:
@@ -11,8 +11,8 @@ class DDSUtility:
     Utility class for handling DDS files in the application.
     """
 
-    def __init__(self, settings_controller: SettingsController) -> None:
-        self.settings_controller = settings_controller
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
         logger.info("DDSUtility initialized.")
 
     def delete_dds_files_without_png(self) -> None:
@@ -20,11 +20,11 @@ class DDSUtility:
         logger.info(
             "Running checks for deleting DDS files without corresponding PNG files..."
         )
-        local_mods_target = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        local_mods_target = self.settings.instances[
+            self.settings.current_instance
         ].local_folder
-        workshop_mods_target = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        workshop_mods_target = self.settings.instances[
+            self.settings.current_instance
         ].workshop_folder
 
         # Combine both paths to search for DDS files

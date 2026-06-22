@@ -4,12 +4,12 @@ from PySide6.QtGui import QColor
 from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry, TagsEntry
+from app.models.settings import Settings
 
 
 def auxdb_get_aux_db_entry(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -17,7 +17,7 @@ def auxdb_get_aux_db_entry(
     """
     Get the AuxMetadataEntry for a given mod path from the Aux Metadata DB.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path: str, the filesystem path of the mod
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
@@ -25,9 +25,7 @@ def auxdb_get_aux_db_entry(
     """
     local_controller = (
         aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+        or AuxMetadataController.get_or_create_cached_instance(settings.aux_db_path)
     )
     local_session = session or local_controller.Session()
     try:
@@ -42,7 +40,7 @@ def auxdb_get_aux_db_entry(
 
 
 def auxdb_get_mod_color(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -50,15 +48,13 @@ def auxdb_get_mod_color(
     """
     Get the mod color from Aux Metadata DB.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path: str, the filesystem path of the mod
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: QColor | None, Color of the mod, or None if no color
     """
-    entry = auxdb_get_aux_db_entry(
-        settings_controller, path, aux_db_controller, session
-    )
+    entry = auxdb_get_aux_db_entry(settings, path, aux_db_controller, session)
     mod_color = None
     if entry:
         color_text = entry.color_hex
@@ -69,7 +65,7 @@ def auxdb_get_mod_color(
 
 
 def auxdb_get_mod_user_notes(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -77,15 +73,13 @@ def auxdb_get_mod_user_notes(
     """
     Get the user notes for a mod from Aux Metadata DB.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path: str, the filesystem path of the mod
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: str, User notes for the mod, or empty string if no notes
     """
-    entry = auxdb_get_aux_db_entry(
-        settings_controller, path, aux_db_controller, session
-    )
+    entry = auxdb_get_aux_db_entry(settings, path, aux_db_controller, session)
     user_notes = ""
     if entry:
         user_notes = entry.user_notes
@@ -94,7 +88,7 @@ def auxdb_get_mod_user_notes(
 
 
 def auxdb_get_mod_warning_toggled(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -102,15 +96,13 @@ def auxdb_get_mod_warning_toggled(
     """
     Get the warning_toggled status for a mod from Aux Metadata DB.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path: str, the filesystem path of the mod
     :param aux_db_controller: AuxMetadataController | None, optional aux metadata controller instance
     :param session: Session | None, optional SQLAlchemy session to use for the query; if None, a new session will be created and closed within this function
     :return: bool, Warning toggled status for the mod
     """
-    entry = auxdb_get_aux_db_entry(
-        settings_controller, path, aux_db_controller, session
-    )
+    entry = auxdb_get_aux_db_entry(settings, path, aux_db_controller, session)
     warning_toggled = False
     if entry:
         warning_toggled = entry.ignore_warnings
@@ -119,7 +111,7 @@ def auxdb_get_mod_warning_toggled(
 
 
 def auxdb_update_mod_color(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     color: QColor | None,
     aux_db_controller: AuxMetadataController | None = None,
@@ -128,7 +120,7 @@ def auxdb_update_mod_color(
     """
     Update the mod color in the Aux Metadata DB.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path: str, the filesystem path of the mod
     :param color: QColor | None, the new color to set for the mod, or None to clear the color
     :param aux_db_controller: AuxMetadataController, the aux metadata controller instance to use for the update
@@ -136,9 +128,7 @@ def auxdb_update_mod_color(
     """
     local_controller = (
         aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+        or AuxMetadataController.get_or_create_cached_instance(settings.aux_db_path)
     )
 
     local_session = session or local_controller.Session()
@@ -154,7 +144,7 @@ def auxdb_update_mod_color(
 
 
 def auxdb_update_all_mod_colors(
-    settings_controller: SettingsController,
+    settings: Settings,
     path_color_mapping: dict[str, QColor | None],
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -162,16 +152,14 @@ def auxdb_update_all_mod_colors(
     """
     Update the mod colors in the Aux Metadata DB for multiple mods.
 
-    :param settings_controller: SettingsController, settings controller instance
+    :param settings: Settings, settings controller instance
     :param path_color_mapping: dict[str, QColor | None], a mapping of mod paths to their new colors (or None to clear the color)
     :param aux_db_controller: AuxMetadataController, the aux metadata controller instance to use for the update
     :param session: Session | None, optional SQLAlchemy session to use for the update; if None, a new session will be created and closed within this function
     """
     local_controller = (
         aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+        or AuxMetadataController.get_or_create_cached_instance(settings.aux_db_path)
     )
 
     local_session = session or local_controller.Session()
@@ -191,7 +179,7 @@ def auxdb_update_all_mod_colors(
 
 
 def auxdb_get_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -201,9 +189,7 @@ def auxdb_get_mod_tags(
     """
     local_controller = (
         aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+        or AuxMetadataController.get_or_create_cached_instance(settings.aux_db_path)
     )
     local_session = session or local_controller.Session()
     try:
@@ -218,23 +204,19 @@ def auxdb_get_mod_tags(
 
 
 def auxdb_get_all_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
 ) -> list[str]:
     """
     Get all user-defined mod tags from Aux Metadata DB.
     """
-    if aux_db_controller is None and not hasattr(
-        settings_controller.settings, "aux_db_path"
-    ):
+    if aux_db_controller is None and not hasattr(settings, "aux_db_path"):
         return []
 
     local_controller = (
         aux_db_controller
-        or AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
-        )
+        or AuxMetadataController.get_or_create_cached_instance(settings.aux_db_path)
     )
     local_session = session or local_controller.Session()
     try:
@@ -250,11 +232,11 @@ def _normalize_tags(tags: list[str]) -> list[str]:
 
 
 def _get_aux_controller(
-    settings_controller: SettingsController,
+    settings: Settings,
     aux_db_controller: AuxMetadataController | None = None,
 ) -> AuxMetadataController:
     return aux_db_controller or AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+        settings.aux_db_path
     )
 
 
@@ -268,14 +250,14 @@ def _get_or_create_tag_entry(session: Session, tag_text: str) -> TagsEntry:
 
 
 def _update_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     tags: list[str] | None,
     mode: Literal["add", "replace", "remove"],
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
 ) -> None:
-    local_controller = _get_aux_controller(settings_controller, aux_db_controller)
+    local_controller = _get_aux_controller(settings, aux_db_controller)
     local_session = session or local_controller.Session()
 
     try:
@@ -301,7 +283,7 @@ def _update_mod_tags(
 
 
 def auxdb_add_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     tags: list[str],
     aux_db_controller: AuxMetadataController | None = None,
@@ -311,7 +293,7 @@ def auxdb_add_mod_tags(
     Add tags to a mod without removing existing tags.
     """
     _update_mod_tags(
-        settings_controller=settings_controller,
+        settings=settings,
         path=path,
         tags=tags,
         mode="add",
@@ -321,7 +303,7 @@ def auxdb_add_mod_tags(
 
 
 def auxdb_replace_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     tags: list[str],
     aux_db_controller: AuxMetadataController | None = None,
@@ -331,7 +313,7 @@ def auxdb_replace_mod_tags(
     Replace all tags for a mod.
     """
     _update_mod_tags(
-        settings_controller=settings_controller,
+        settings=settings,
         path=path,
         tags=tags,
         mode="replace",
@@ -341,7 +323,7 @@ def auxdb_replace_mod_tags(
 
 
 def auxdb_remove_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     path: str,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
@@ -350,7 +332,7 @@ def auxdb_remove_mod_tags(
     Remove all tags from a mod.
     """
     _update_mod_tags(
-        settings_controller=settings_controller,
+        settings=settings,
         path=path,
         tags=None,
         mode="remove",
@@ -360,7 +342,7 @@ def auxdb_remove_mod_tags(
 
 
 def auxdb_update_all_mod_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     paths: list[str],
     tags: list[str],
     replace: bool,
@@ -369,13 +351,13 @@ def auxdb_update_all_mod_tags(
     Update tags for multiple mods.
     """
     aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
-        settings_controller.settings.aux_db_path
+        settings.aux_db_path
     )
     with aux_db_controller.Session() as aux_metadata_session:
         for path in paths:
             if replace:
                 auxdb_replace_mod_tags(
-                    settings_controller,
+                    settings,
                     path,
                     tags,
                     aux_db_controller,
@@ -383,7 +365,7 @@ def auxdb_update_all_mod_tags(
                 )
             else:
                 auxdb_add_mod_tags(
-                    settings_controller,
+                    settings,
                     path,
                     tags,
                     aux_db_controller,
@@ -392,14 +374,14 @@ def auxdb_update_all_mod_tags(
 
 
 def auxdb_cleanup_unused_tags(
-    settings_controller: SettingsController,
+    settings: Settings,
     aux_db_controller: AuxMetadataController | None = None,
     session: Session | None = None,
 ) -> None:
     """
     Delete tags that are no longer assigned to any mod.
     """
-    local_controller = _get_aux_controller(settings_controller, aux_db_controller)
+    local_controller = _get_aux_controller(settings, aux_db_controller)
     local_session = session or local_controller.Session()
 
     try:

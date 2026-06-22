@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
@@ -316,9 +316,9 @@ class PlayerLogTab(QWidget):
     _error_pattern = re.compile(r"\b(error|failed|fatal)\b|\[E\]", re.IGNORECASE)
     _exception_pattern = re.compile(r"exception", re.IGNORECASE)
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         super().__init__()
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.player_log_path: Optional[Path] = None
         self.log_storage = LogContentStorage()  # Use new memory-efficient storage
         self.current_log_content: str = ""
@@ -382,14 +382,14 @@ class PlayerLogTab(QWidget):
         return collapsed_lines
 
     def _delayed_load_log(self) -> None:
-        if self.settings_controller.settings.auto_load_player_log_on_startup:
+        if self.settings.auto_load_player_log_on_startup:
             self.player_log_path = self._get_player_log_path()
             if self.player_log_path is not None:
                 self.load_log()
 
     def _on_auto_load_player_log_on_startup_toggled(self, checked: bool) -> None:
-        self.settings_controller.settings.auto_load_player_log_on_startup = checked
-        self.settings_controller.settings.save()
+        self.settings.auto_load_player_log_on_startup = checked
+        self.settings.save()
 
     def set_highlight_color(self, color: QColor) -> None:
         self.highlighter.set_highlight_color(color)
@@ -429,10 +429,8 @@ class PlayerLogTab(QWidget):
 
     def _get_player_log_path(self) -> Optional[Path]:
         try:
-            current_instance: str = self.settings_controller.settings.current_instance
-            config_folder: str = self.settings_controller.settings.instances[
-                current_instance
-            ].config_folder
+            current_instance: str = self.settings.current_instance
+            config_folder: str = self.settings.instances[current_instance].config_folder
             player_log_path: Path = Path(config_folder).parent / "Player.log"
             if player_log_path.exists():
                 return player_log_path
@@ -627,7 +625,7 @@ class PlayerLogTab(QWidget):
         )
         controls_layout.addWidget(self.auto_load_player_log_on_startup_checkbox)
         self.auto_load_player_log_on_startup_checkbox.setChecked(
-            self.settings_controller.settings.auto_load_player_log_on_startup
+            self.settings.auto_load_player_log_on_startup
         )
         self.auto_load_player_log_on_startup_checkbox.toggled.connect(
             self._on_auto_load_player_log_on_startup_toggled
@@ -1394,11 +1392,10 @@ class PlayerLogTab(QWidget):
         menu.exec(self.log_display.mapToGlobal(pos))
 
     def open_file(self, file_path: str) -> None:
-        if self.settings_controller.settings.text_editor_location:
+        if self.settings.text_editor_location:
             launch_process(
-                self.settings_controller.settings.text_editor_location,
-                self.settings_controller.settings.text_editor_file_arg.split(" ")
-                + [file_path],
+                self.settings.text_editor_location,
+                self.settings.text_editor_file_arg.split(" ") + [file_path],
                 str(AppInfo().application_folder),
             )
 

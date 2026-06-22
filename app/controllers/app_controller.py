@@ -112,7 +112,7 @@ class AppController(QObject):
     def do_dds_cleanup(self) -> None:
         """Performs cleanup of orphaned DDS files if the setting is enabled."""
         if self.settings.auto_delete_orphaned_dds:
-            dds_utility = DDSUtility(self.settings_controller)
+            dds_utility = DDSUtility(self.settings_controller.settings)
             dds_utility.delete_dds_files_without_png()
 
     def initialize_metadata_controller(self) -> None:
