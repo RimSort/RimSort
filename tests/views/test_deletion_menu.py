@@ -32,7 +32,7 @@ def deletion_menu(
     # The shared fixture defaults aux_db_time_limit to -1; override to enable DB ops.
     QObject.__setattr__(mock_settings_controller.settings, "aux_db_time_limit", 1)
     menu = ModDeletionMenu(
-        settings_controller=mock_settings_controller,
+        settings=mock_settings_controller.settings,
         get_selected_mod_metadata=lambda: [],
         menu_title="Test Menu",
     )
@@ -228,7 +228,7 @@ class TestModDeletionMenu:
         self, deletion_menu: ModDeletionMenu
     ) -> None:
         """Test aux DB deletion when time limit is negative."""
-        deletion_menu.settings_controller.settings.aux_db_time_limit = -1
+        deletion_menu.settings.aux_db_time_limit = -1
 
         with patch("app.views.deletion_menu.logger") as mock_logger:
             deletion_menu.delete_mod_from_aux_db("/fake/path")
@@ -238,7 +238,7 @@ class TestModDeletionMenu:
         self, deletion_menu: ModDeletionMenu
     ) -> None:
         """Test aux DB marking as outdated when time limit is positive."""
-        deletion_menu.settings_controller.settings.aux_db_time_limit = 1
+        deletion_menu.settings.aux_db_time_limit = 1
 
         # The metadata_controller.metadata_db_controller is already mocked by conftest
         mock_aux = cast(

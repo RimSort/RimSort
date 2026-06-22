@@ -7,22 +7,20 @@ from sqlalchemy import delete, update
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_structure import AboutXmlMod
+from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.views.dialogue import BinaryChoiceDialog
 from app.views.mods_panel import ModsPanel
 
 
 class ModsPanelController(QObject):
-    def __init__(
-        self, view: ModsPanel, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, view: ModsPanel, settings: Settings) -> None:
         super().__init__()
 
         self.mods_panel = view
-        self.settings_controller = settings_controller
+        self.settings = settings
 
         # Only one label can be active at a time; these are used only in the active modlist.
 
@@ -39,7 +37,7 @@ class ModsPanelController(QObject):
         # New mods filter label (only when save-comparison feature enabled)
         if (
             hasattr(self.mods_panel, "new_text")
-            and self.settings_controller.settings.show_save_comparison_indicators
+            and self.settings.show_save_comparison_indicators
         ):
             self.mods_panel.new_text.clicked.connect(
                 self._change_visibility_of_new_mods
@@ -83,7 +81,7 @@ class ModsPanelController(QObject):
         elif (
             self.news_label_active
             and hasattr(self.mods_panel, "new_text")
-            and self.settings_controller.settings.show_save_comparison_indicators
+            and self.settings.show_save_comparison_indicators
         ):
             self.mods_panel.new_text.clicked.emit()
 
@@ -145,7 +143,7 @@ class ModsPanelController(QObject):
                     # Update Aux DB
                     aux_metadata_controller = (
                         AuxMetadataController.get_or_create_cached_instance(
-                            self.settings_controller.settings.aux_db_path
+                            self.settings.aux_db_path
                         )
                     )
                     if not path:
@@ -282,7 +280,7 @@ class ModsPanelController(QObject):
         This means the previously outdated items DO NOT have their db_time_touched updated.
         """
         # This is more performant, but we dont update db_time_touched. But that should be ok
-        time_limit = self.settings_controller.settings.aux_db_time_limit
+        time_limit = self.settings.aux_db_time_limit
         if time_limit < 0:
             logger.debug(
                 "Skipping the setting entries as outdated because time limit is negative."
@@ -290,7 +288,7 @@ class ModsPanelController(QObject):
             return
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
+            self.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             stmt = (
@@ -311,7 +309,7 @@ class ModsPanelController(QObject):
         This is used at init phases of the applicaiton. Keeps DB
         updated even if mods have been deleted etc. outside of RimSort.
         """
-        time_limit = self.settings_controller.settings.aux_db_time_limit
+        time_limit = self.settings.aux_db_time_limit
         if time_limit < 0:
             logger.debug(
                 "Skipping the deletion of outdated entries because time limit is negative."
@@ -319,7 +317,7 @@ class ModsPanelController(QObject):
             return
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
+            self.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(

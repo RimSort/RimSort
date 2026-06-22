@@ -62,10 +62,10 @@ from sqlalchemy import text
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.divider import DividerData, generate_divider_uuid, is_divider_uuid
 from app.models.filter_state import FilterState
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.models.settings import Settings
 from app.sort.mod_sorting import (
     _FOLDER_SIZE_CACHE,
     FolderSizeWorker,
@@ -128,7 +128,7 @@ class ModListItemInner(QWidget):
         invalid: bool,
         mismatch: bool,
         alternative: bool,
-        settings_controller: SettingsController,
+        settings: Settings,
         path: str,
         mod_color: QColor,
         show_tags: bool = False,
@@ -147,7 +147,7 @@ class ModListItemInner(QWidget):
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param mismatch: a bool representing whether the widget's item has a version mismatch
         :param alternative: a bool representing whether the widget's item has a recommended alternative mod
-        :param settings_controller: an instance of SettingsController for accessing settings
+        :param settings: an instance of Settings for accessing settings
         :param path: str, the path of the mod which corresponds to a mod's metadata
         :param mod_color: QColor, the color of the mod's text/background in the modlist
         """
@@ -175,7 +175,7 @@ class ModListItemInner(QWidget):
         # Cache alternative state of widget's item - used to determine warning icon visibility
         self.alternative = alternative
         # Cache SettingsManager instance
-        self.settings_controller = settings_controller
+        self.settings = settings
         # Cache whether tags should be displayed
         self.show_tags = show_tags
         # Cache the mod color
@@ -205,7 +205,7 @@ class ModListItemInner(QWidget):
         # Icons that are conditional
         self.csharp_icon = None
         self.xml_icon = None
-        if self.settings_controller.settings.mod_type_filter:
+        if self.settings.mod_type_filter:
             if mod is not None and mod.c_sharp_mod:
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
@@ -322,7 +322,7 @@ class ModListItemInner(QWidget):
             self.mod_tags_label, Qt.AlignmentFlag.AlignCenter
         )
         self.update_tags_label()
-        if self.settings_controller.settings.show_save_comparison_indicators:
+        if self.settings.show_save_comparison_indicators:
             self.main_item_layout.addWidget(
                 self.in_save_icon_label, Qt.AlignmentFlag.AlignRight
             )
@@ -452,7 +452,7 @@ class ModListItemInner(QWidget):
 
         name_line = f"Mod: {mod.name if mod is not None else 'Not specified'}\n"
 
-        tags = auxdb_get_mod_tags(self.settings_controller.settings, self.path)
+        tags = auxdb_get_mod_tags(self.settings, self.path)
         tags_line = f"Tags: {', '.join(tags) if tags else 'None'}\n"
 
         if isinstance(mod, AboutXmlMod) and mod.authors:
@@ -489,7 +489,7 @@ class ModListItemInner(QWidget):
         # Add folder size and filesystem modification time information without heavy IO on hover
         # Folder size: read from in-memory cache only; avoid computing on tooltip
         folder_size_line = "Folder Size: Not available\n"
-        if self.settings_controller.settings.inactive_mods_sorting:
+        if self.settings.inactive_mods_sorting:
             if mod is not None and mod.mod_path is not None:
                 cached = _FOLDER_SIZE_CACHE.get(str(mod.mod_path))
                 if cached:
@@ -640,9 +640,7 @@ class ModListItemInner(QWidget):
         # Read list_type from persisted item metadata instead of Qt widget to satisfy static typing
         list_type = cast(str | None, item_data.__dict__.get("list_type"))
         # Respect setting toggle
-        show_indicators = (
-            self.settings_controller.settings.show_save_comparison_indicators
-        )
+        show_indicators = self.settings.show_save_comparison_indicators
         if not show_indicators:
             self.new_icon_label.setHidden(True)
             self.in_save_icon_label.setHidden(True)
@@ -692,7 +690,7 @@ class ModListItemInner(QWidget):
 
         """
         new_mod_color_name: Optional[str] = None
-        if self.settings_controller.settings.color_background_instead_of_text_toggle:
+        if self.settings.color_background_instead_of_text_toggle:
             # Color background
             if init:
                 if self.mod_color:
@@ -731,7 +729,7 @@ class ModListItemInner(QWidget):
 
     def update_tags_label(self, tags: list[str] | None = None) -> None:
         if tags is None:
-            tags = auxdb_get_mod_tags(self.settings_controller.settings, self.path)
+            tags = auxdb_get_mod_tags(self.settings, self.path)
 
         if not self.show_tags or not tags:
             self.mod_tags_label.setText("")
@@ -755,13 +753,13 @@ class ModListItemInner(QWidget):
 class TagEditDialog(QDialog):
     def __init__(
         self,
-        settings_controller: SettingsController,
+        settings: Settings,
         title: str,
         existing_selected_tags: set[str] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.existing_selected_tags = existing_selected_tags or set()
 
         self.setObjectName("TagEditDialog")
@@ -818,7 +816,7 @@ class TagEditDialog(QDialog):
 
     def populate_tags(self) -> None:
         try:
-            tags = auxdb_get_all_tags(self.settings_controller.settings)
+            tags = auxdb_get_all_tags(self.settings)
         except Exception as e:
             logger.debug(f"Unable to load existing tags: {e}")
             tags = []
@@ -1000,7 +998,7 @@ class ModListWidget(QListWidget):
     update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
 
-    def __init__(self, list_type: str, settings_controller: SettingsController) -> None:
+    def __init__(self, list_type: str, settings: Settings) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -1015,7 +1013,7 @@ class ModListWidget(QListWidget):
         # Cache MetadataController instance
         self.metadata_controller = MetadataController.instance()
 
-        self.settings_controller = settings_controller
+        self.settings = settings
 
         super(ModListWidget, self).__init__()
 
@@ -1077,7 +1075,7 @@ class ModListWidget(QListWidget):
         self.show_tags: bool = False
 
         self.deletion_sub_menu = ModDeletionMenu(
-            self.settings_controller,
+            self.settings,
             self._get_selected_metadata,
             self.paths,
         )  # TODO: should we enable items conditionally? For now use all
@@ -1619,7 +1617,7 @@ class ModListWidget(QListWidget):
                     open_folder_action = QAction()
                     open_folder_action.setText(self.tr("Open folder"))
                     # Open folder in text editor text
-                    if self.settings_controller.settings.text_editor_location:
+                    if self.settings.text_editor_location:
                         open_folder_text_editor_action = QAction()
                         open_folder_text_editor_action.setText(
                             self.tr("Open folder in text editor")
@@ -1648,8 +1646,8 @@ class ModListWidget(QListWidget):
                     # If we have a "steam_uri"
                     if (
                         mod_metadata.get("steam_uri")
-                        and self.settings_controller.settings.instances[
-                            self.settings_controller.settings.current_instance
+                        and self.settings.instances[
+                            self.settings.current_instance
                         ].steam_client_integration
                     ):
                         open_mod_steam_action = QAction()
@@ -1716,8 +1714,8 @@ class ModListWidget(QListWidget):
                             self.tr("Convert Steam mod to local")
                         )
                         # Only enable subscription actions if user has enabled Steam client integration
-                        if self.settings_controller.settings.instances[
-                            self.settings_controller.settings.current_instance
+                        if self.settings.instances[
+                            self.settings.current_instance
                         ].steam_client_integration:
                             # Re-subscribe steam mods
                             re_steam_action = QAction()
@@ -1792,7 +1790,7 @@ class ModListWidget(QListWidget):
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText(self.tr("Open folder(s)"))
-                        if self.settings_controller.settings.text_editor_location:
+                        if self.settings.text_editor_location:
                             open_folder_text_editor_action = QAction()
                             open_folder_text_editor_action.setText(
                                 self.tr("Open folder(s) in text editor")
@@ -1888,8 +1886,8 @@ class ModListWidget(QListWidget):
                                     self.tr("Convert Steam mod(s) to local")
                                 )
                             # Only enable subscription actions if user has enabled Steam client integration
-                            if self.settings_controller.settings.instances[
-                                self.settings_controller.settings.current_instance
+                            if self.settings.instances[
+                                self.settings.current_instance
                             ].steam_client_integration:
                                 # Re-subscribe steam mods
                                 if not re_steam_action:
@@ -1963,8 +1961,8 @@ class ModListWidget(QListWidget):
                 or add_to_steamdb_blacklist_action
                 or remove_from_steamdb_blacklist_action
             ):
-                local_folder = self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
+                local_folder = self.settings.instances[
+                    self.settings.current_instance
                 ].local_folder
                 workshop_actions_menu = QMenu(title=self.tr("Workshop mods options"))
                 if local_folder and convert_local_steamcmd_action:
@@ -2030,8 +2028,8 @@ class ModListWidget(QListWidget):
                     action == convert_local_steamcmd_action
                     and len(local_steamcmd_name_to_publishedfileid) > 0
                 ):
-                    local_folder = self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
+                    local_folder = self.settings.instances[
+                        self.settings.current_instance
                     ].local_folder
                     for (
                         folder_name,
@@ -2062,8 +2060,8 @@ class ModListWidget(QListWidget):
                     action == convert_steamcmd_local_action
                     and len(steamcmd_publishedfileid_to_name) > 0
                 ):
-                    local_folder = self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
+                    local_folder = self.settings.instances[
+                        self.settings.current_instance
                     ].local_folder
                     for (
                         publishedfileid,
@@ -2137,8 +2135,8 @@ class ModListWidget(QListWidget):
                             steamcmd_purge_mods(
                                 metadata_controller=self.metadata_controller,
                                 publishedfileids=steamcmd_acf_pfid_purge,
-                                auto_clear_enabled=self.settings_controller.settings.instances[
-                                    self.settings_controller.settings.current_instance
+                                auto_clear_enabled=self.settings.instances[
+                                    self.settings.current_instance
                                 ].steamcmd_auto_clear_depot_cache,
                             )
                         # Emit signal to steamcmd downloader to re-download
@@ -2164,8 +2162,8 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             (
                                 Path(
-                                    self.settings_controller.settings.instances[
-                                        self.settings_controller.settings.current_instance
+                                    self.settings.instances[
+                                        self.settings.current_instance
                                     ].local_folder
                                 )
                                 / (
@@ -2337,7 +2335,7 @@ class ModListWidget(QListWidget):
                     )
 
                     tag_dialog = TagEditDialog(
-                        settings_controller=self.settings_controller,
+                        settings=self.settings,
                         title=(
                             self.tr("Replace tags")
                             if action == replace_mod_tags_action
@@ -2353,13 +2351,13 @@ class ModListWidget(QListWidget):
                         for selected_uuid in selected_uuids:
                             if action == replace_mod_tags_action:
                                 auxdb_replace_mod_tags(
-                                    self.settings_controller.settings,
+                                    self.settings,
                                     selected_uuid,
                                     tags,
                                 )
                             else:
                                 auxdb_add_mod_tags(
-                                    self.settings_controller.settings,
+                                    self.settings,
                                     selected_uuid,
                                     tags,
                                 )
@@ -2367,7 +2365,7 @@ class ModListWidget(QListWidget):
                             self.refresh_mod_tags_for_uuid(selected_uuid)
 
                         if action == replace_mod_tags_action:
-                            auxdb_cleanup_unused_tags(self.settings_controller.settings)
+                            auxdb_cleanup_unused_tags(self.settings)
 
                         self.tags_changed_signal.emit()
                         return True
@@ -2376,11 +2374,9 @@ class ModListWidget(QListWidget):
                 if action == remove_mod_tags_action:
                     selected_uuids = list(all_selected_paths.values())
                     for selected_uuid in selected_uuids:
-                        auxdb_remove_mod_tags(
-                            self.settings_controller.settings, selected_uuid
-                        )
+                        auxdb_remove_mod_tags(self.settings, selected_uuid)
                         self.refresh_mod_tags_for_uuid(selected_uuid)
-                    auxdb_cleanup_unused_tags(self.settings_controller.settings)
+                    auxdb_cleanup_unused_tags(self.settings)
                     self.tags_changed_signal.emit()
                     return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
@@ -2458,10 +2454,8 @@ class ModListWidget(QListWidget):
                                     f"Opening folder in text editor: {mod_path}"
                                 )
                                 launch_process(
-                                    self.settings_controller.settings.text_editor_location,
-                                    self.settings_controller.settings.text_editor_folder_arg.split(
-                                        " "
-                                    )
+                                    self.settings.text_editor_location,
+                                    self.settings.text_editor_folder_arg.split(" ")
                                     + [mod_path],
                                     str(AppInfo().application_folder),
                                 )
@@ -2602,7 +2596,7 @@ class ModListWidget(QListWidget):
         """
         Sets the user's custom colors in the QColorDialog from settings.json.
         """
-        settings = self.settings_controller.settings
+        settings = self.settings
         colors = settings.color_picker_custom_colors
         if len(colors) != 16:
             return
@@ -2613,7 +2607,7 @@ class ModListWidget(QListWidget):
         """
         Saves the user's custom colors from the QColorDialog to settings.json as list of hex strings.
         """
-        settings = self.settings_controller.settings
+        settings = self.settings
         colors = []
         for i in range(16):
             color = color_dlg.customColor(i)
@@ -2629,7 +2623,7 @@ class ModListWidget(QListWidget):
         mod = self.metadata_controller.get_mod(uuid)
         mod_path = str(mod.mod_path) if mod and mod.mod_path else uuid
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
+            self.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
             aux_metadata_controller.get_or_create(aux_metadata_session, mod_path)
@@ -2641,7 +2635,7 @@ class ModListWidget(QListWidget):
                 list_type=self.list_type,
                 aux_metadata_controller=aux_metadata_controller,
                 aux_metadata_session=aux_metadata_session,
-                settings=self.settings_controller.settings,
+                settings=self.settings,
             )
             data.__dict__["show_tags"] = self.show_tags
         # Create item without a parent first so we can set data before adding to the list.
@@ -2756,7 +2750,7 @@ class ModListWidget(QListWidget):
                 invalid=invalid,
                 mismatch=mismatch,
                 alternative=alternative,
-                settings_controller=self.settings_controller,
+                settings=self.settings,
                 path=uuid,
                 mod_color=mod_color,
                 show_tags=show_tags,
@@ -3295,8 +3289,7 @@ class ModListWidget(QListWidget):
                 "load_after_violations": set() if self.list_type == "Active" else None,
                 "version_mismatch": True,
                 "use_this_instead": set()
-                if self.settings_controller.settings.external_use_this_instead_metadata_source
-                != "None"
+                if self.settings.external_use_this_instead_metadata_source != "None"
                 else None,
             }
             for uuid in mod_uuids
@@ -3308,9 +3301,7 @@ class ModListWidget(QListWidget):
         total_error_text = ""
 
         # Load latest save package ids once for this run, only if feature enabled
-        save_compare_enabled: bool = (
-            self.settings_controller.settings.show_save_comparison_indicators
-        )
+        save_compare_enabled: bool = self.settings.show_save_comparison_indicators
         if save_compare_enabled:
             latest_save_ids = self._get_latest_save_package_ids()
         else:
@@ -3535,15 +3526,15 @@ class ModListWidget(QListWidget):
         Returns a set of packageIds in the save, or None on failure. Cached per list instance.
         """
         # Respect setting: fully disable feature to avoid performance impact
-        if not self.settings_controller.settings.show_save_comparison_indicators:
+        if not self.settings.show_save_comparison_indicators:
             return None
         if self._latest_save_package_ids is not None:
             return self._latest_save_package_ids
 
         try:
             # Config path typically points to the RimWorld config folder; Saves is sibling folder
-            cfg_path = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
+            cfg_path = self.settings.instances[
+                self.settings.current_instance
             ].config_folder
             if not cfg_path:
                 return None
@@ -3616,14 +3607,14 @@ class ModListWidget(QListWidget):
         Returns:
             None
         """
-        filtering = self.settings_controller.settings.inactive_mods_sorting
+        filtering = self.settings.inactive_mods_sorting
 
         if filtering:
             sorted_uuids = sort_paths(
                 uuids,
                 key=key,
                 descending=descending,
-                settings=self.settings_controller.settings,
+                settings=self.settings,
             )
             self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
         else:
@@ -3644,20 +3635,16 @@ class ModListWidget(QListWidget):
             # Sort inactive mods using saved settings if enabled
             if (
                 list_type == "Inactive"
-                and self.settings_controller.settings.save_inactive_mods_sort_state
-                and self.settings_controller.settings.inactive_mods_sorting
+                and self.settings.save_inactive_mods_sort_state
+                and self.settings.inactive_mods_sorting
             ):
-                sort_key = ModsPanelSortKey[
-                    self.settings_controller.settings.inactive_mods_sort_key
-                ]
-                descending = (
-                    self.settings_controller.settings.inactive_mods_sort_descending
-                )
+                sort_key = ModsPanelSortKey[self.settings.inactive_mods_sort_key]
+                descending = self.settings.inactive_mods_sort_descending
                 uuids = sort_paths(
                     uuids,
                     key=sort_key,
                     descending=descending,
-                    settings=self.settings_controller.settings,
+                    settings=self.settings,
                 )
             else:
                 if list_type == "Inactive":
@@ -3665,7 +3652,7 @@ class ModListWidget(QListWidget):
                         uuids,
                         key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
                         descending=True,
-                        settings=self.settings_controller.settings,
+                        settings=self.settings,
                     )
         # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
@@ -3689,7 +3676,7 @@ class ModListWidget(QListWidget):
                 mod_path = str(_mod.mod_path) if _mod and _mod.mod_path else uuid_key
                 aux_metadata_controller = (
                     AuxMetadataController.get_or_create_cached_instance(
-                        self.settings_controller.settings.aux_db_path
+                        self.settings.aux_db_path
                     )
                 )
                 with aux_metadata_controller.Session() as aux_metadata_session:
@@ -3705,7 +3692,7 @@ class ModListWidget(QListWidget):
                         list_type=self.list_type,
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
-                        settings=self.settings_controller.settings,
+                        settings=self.settings,
                     )
                     data.__dict__["show_tags"] = self.show_tags
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
@@ -3753,7 +3740,7 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         # Update Aux DB
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
+            self.settings.aux_db_path
         )
         mod_path = item_data["path"]
         if not mod_path:
@@ -3776,7 +3763,7 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
-        auxdb_update_mod_color(self.settings_controller.settings, uuid, new_color)
+        auxdb_update_mod_color(self.settings, uuid, new_color)
 
     def change_all_mod_colors(self, uuids: list[str], new_color: QColor) -> None:
         uuid_to_color: dict[str, QColor | None] = {}
@@ -3787,7 +3774,7 @@ class ModListWidget(QListWidget):
             item_data["mod_color"] = new_color
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = new_color
-        auxdb_update_all_mod_colors(self.settings_controller.settings, uuid_to_color)
+        auxdb_update_all_mod_colors(self.settings, uuid_to_color)
 
     def reset_mod_color(self, uuid: str) -> None:
         current_mod_index = self.paths.index(uuid)
@@ -3795,7 +3782,7 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = None
         item.setData(Qt.ItemDataRole.UserRole, item_data)
-        auxdb_update_mod_color(self.settings_controller.settings, uuid, None)
+        auxdb_update_mod_color(self.settings, uuid, None)
 
     def reset_all_mod_colors(self, uuids: list[str]) -> None:
         uuid_to_color: dict[str, QColor | None] = {}
@@ -3806,13 +3793,13 @@ class ModListWidget(QListWidget):
             item_data["mod_color"] = None
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = None
-        auxdb_update_all_mod_colors(self.settings_controller.settings, uuid_to_color)
+        auxdb_update_all_mod_colors(self.settings, uuid_to_color)
 
     def get_common_selected_tags(self, uuids: list[str]) -> set[str]:
         common_tags: set[str] | None = None
 
         for uuid in uuids:
-            tags = set(auxdb_get_mod_tags(self.settings_controller.settings, uuid))
+            tags = set(auxdb_get_mod_tags(self.settings, uuid))
             if common_tags is None:
                 common_tags = tags
             else:
@@ -3827,9 +3814,7 @@ class ModListWidget(QListWidget):
         current_mod_index = self.paths.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        item_data["mod_tags"] = auxdb_get_mod_tags(
-            self.settings_controller.settings, uuid
-        )
+        item_data["mod_tags"] = auxdb_get_mod_tags(self.settings, uuid)
         item_data.__dict__["show_tags"] = bool(
             item_data.__dict__.get("show_tags", False)
         )
@@ -3934,12 +3919,8 @@ class ModsPanel(QWidget):
 
         Restores the saved sort key and direction to the UI combobox and button.
         """
-        self.inactive_mods_sort_key = (
-            self.settings_controller.settings.inactive_mods_sort_key
-        )
-        self.inactive_mods_sort_descending = (
-            self.settings_controller.settings.inactive_mods_sort_descending
-        )
+        self.inactive_mods_sort_key = self.settings.inactive_mods_sort_key
+        self.inactive_mods_sort_descending = self.settings.inactive_mods_sort_descending
         # Select the combo box entry by matching stored enum name to item userData
         try:
             desired_enum = ModsPanelSortKey[self.inactive_mods_sort_key]
@@ -3959,7 +3940,7 @@ class ModsPanel(QWidget):
             self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
         )
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -3970,18 +3951,16 @@ class ModsPanel(QWidget):
         # Cache MetadataController instance and initialize panel
         logger.debug("Initializing ModsPanel")
         self.metadata_controller = MetadataController.instance()
-        self.settings_controller = settings_controller
+        self.settings = settings
 
         # Load inactive mods sort settings
         if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
+            self.settings.inactive_mods_sorting
+            and self.settings.save_inactive_mods_sort_state
         ):
-            self.inactive_mods_sort_key = (
-                self.settings_controller.settings.inactive_mods_sort_key
-            )
+            self.inactive_mods_sort_key = self.settings.inactive_mods_sort_key
             self.inactive_mods_sort_descending = (
-                self.settings_controller.settings.inactive_mods_sort_descending
+                self.settings.inactive_mods_sort_descending
             )
         else:
             self.inactive_mods_sort_key = "FILESYSTEM_MODIFIED_TIME"
@@ -4063,7 +4042,7 @@ class ModsPanel(QWidget):
         self.active_mods_label.setObjectName("summaryValue")
         self.active_mods_list = ModListWidget(
             list_type="Active",
-            settings_controller=self.settings_controller,
+            settings=self.settings,
         )
         # Active mods search widgets
         self.active_mods_search_layout = QHBoxLayout()
@@ -4083,7 +4062,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_label.setObjectName("summaryValue")
         self.inactive_mods_list = ModListWidget(
             list_type="Inactive",
-            settings_controller=self.settings_controller,
+            settings=self.settings,
         )
 
         # Inactive mods search layout
@@ -4341,7 +4320,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_sort_order_button)
 
         # Set initial visibility based on settings
-        if self.settings_controller.settings.inactive_mods_sorting:
+        if self.settings.inactive_mods_sorting:
             self.inactive_mods_sort_combobox.setVisible(True)
             self.inactive_mods_sort_order_button.setVisible(True)
 
@@ -4386,16 +4365,14 @@ class ModsPanel(QWidget):
 
         # Save if enabled
         if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and self.settings_controller.settings.save_inactive_mods_sort_state
+            self.settings.inactive_mods_sorting
+            and self.settings.save_inactive_mods_sort_state
         ):
-            self.settings_controller.settings.inactive_mods_sort_descending = (
-                self.inactive_sort_descending
-            )
-            self.settings_controller.settings.save()
+            self.settings.inactive_mods_sort_descending = self.inactive_sort_descending
+            self.settings.save()
 
         # Apply updated sort direction - re-sort with new descending flag
-        if self.settings_controller.settings.inactive_mods_sorting:
+        if self.settings.inactive_mods_sorting:
             current_text = self.inactive_mods_sort_combobox.currentText()
             # Re-sort list with updated descending flag
             self.on_inactive_mods_sort_changed(current_text)
@@ -4458,7 +4435,7 @@ class ModsPanel(QWidget):
             # Get aux controller once for performance
             aux_metadata_controller = (
                 AuxMetadataController.get_or_create_cached_instance(
-                    self.settings_controller.settings.aux_db_path
+                    self.settings.aux_db_path
                 )
             )
 
@@ -4470,7 +4447,7 @@ class ModsPanel(QWidget):
                     data = CustomListWidgetItemMetadata(
                         path=uuid_key,
                         list_type=lw.list_type,
-                        settings=self.settings_controller.settings,
+                        settings=self.settings,
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
                     )
@@ -4563,7 +4540,7 @@ class ModsPanel(QWidget):
             text: The selected sort option text from the combobox
         """
         # Check if inactive mods sorting is enabled
-        if not self.settings_controller.settings.inactive_mods_sorting:
+        if not self.settings.inactive_mods_sorting:
             return
 
         # Prefer the enum stored in the combobox itemData (userData). This is
@@ -4626,13 +4603,11 @@ class ModsPanel(QWidget):
 
                 # Save the sort key immediately if enabled
                 if (
-                    self.settings_controller.settings.inactive_mods_sorting
-                    and self.settings_controller.settings.save_inactive_mods_sort_state
+                    self.settings.inactive_mods_sorting
+                    and self.settings.save_inactive_mods_sort_state
                 ):
-                    self.settings_controller.settings.inactive_mods_sort_key = (
-                        sort_key.name
-                    )
-                    self.settings_controller.settings.save()
+                    self.settings.inactive_mods_sort_key = sort_key.name
+                    self.settings.save()
                 self.inactive_mods_sort_key = sort_key.name
 
     def mod_list_updated(
@@ -4683,7 +4658,7 @@ class ModsPanel(QWidget):
     def refresh_all_tag_filter_selectors(self) -> None:
         """Refresh the available tags in both filter panels from the aux DB."""
         try:
-            tags = auxdb_get_all_tags(self.settings_controller.settings)
+            tags = auxdb_get_all_tags(self.settings)
         except Exception as e:
             logger.debug(f"Unable to load tag filter list: {e}")
             tags = []
@@ -4748,7 +4723,7 @@ class ModsPanel(QWidget):
 
             # Count new mods (not in latest save). Only if save comparison is enabled
             new_count = 0
-            if self.settings_controller.settings.show_save_comparison_indicators:
+            if self.settings.show_save_comparison_indicators:
                 try:
                     for item in self.active_mods_list.get_all_mod_list_items():
                         if item.data(Qt.ItemDataRole.UserRole).__dict__.get(
@@ -4836,7 +4811,7 @@ class ModsPanel(QWidget):
         """)
 
         aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
+            self.settings.aux_db_path
         )
         with aux_metadata_controller.engine.connect() as conn:
             result = conn.execute(SEARCH_SQL, {"limit": limit})
@@ -4919,7 +4894,7 @@ class ModsPanel(QWidget):
             search_filter == "notes"
             or (
                 search_filter == "name"
-                and self.settings_controller.settings.include_mod_notes_in_mod_name_filter
+                and self.settings.include_mod_notes_in_mod_name_filter
             )
         ):
             matches = self.search_mod_notes(pattern)
@@ -4943,7 +4918,7 @@ class ModsPanel(QWidget):
             if mod_obj is None:
                 continue
             # Hide invalid items if enabled in settings
-            if self.settings_controller.settings.hide_invalid_mods_when_filtering:
+            if self.settings.hide_invalid_mods_when_filtering:
                 invalid = item_data["invalid"]
                 if invalid and filters_active:
                     item_data["filtered"] = True
@@ -4984,7 +4959,7 @@ class ModsPanel(QWidget):
             elif (
                 pattern.strip()
                 and search_filter == "name"
-                and self.settings_controller.settings.include_mod_notes_in_mod_name_filter
+                and self.settings.include_mod_notes_in_mod_name_filter
             ):
                 if not pattern.strip():
                     item_filtered = False

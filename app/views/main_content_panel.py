@@ -149,7 +149,7 @@ class MainContent(QObject):
             settings_controller=self.settings_controller,
         )
         self.mods_panel = ModsPanel(
-            settings_controller=self.settings_controller,
+            settings=self.settings_controller.settings,
         )
         self.mod_info_container = QWidget()
         self.mod_info_container.setLayout(self.mod_info_panel.panel)
