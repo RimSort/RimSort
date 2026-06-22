@@ -3,6 +3,7 @@ from typing import Any, Iterable
 from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import ListedMod
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
@@ -29,9 +30,10 @@ class MissingModPropertiesPanel(BaseModsPanel):
         self,
         missing_packageid_mods: list[str],
         missing_publishfieldid_mods: list[str],
+        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
-        Initialize the MissingModPropertiesPanel with mods data.
+        Initialize the MissingModPropertiesPanel.
 
         Args:
             missing_packageid_mods: Mod path keys with missing Package ID.
@@ -52,6 +54,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
                 "Please contact the mod authors to add these properties to their mods."
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=metadata_controller,
         )
 
         # Build button configurations

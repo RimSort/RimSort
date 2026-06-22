@@ -998,7 +998,12 @@ class ModListWidget(QListWidget):
     update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
 
-    def __init__(self, list_type: str, settings: Settings) -> None:
+    def __init__(
+        self,
+        list_type: str,
+        settings: Settings,
+        metadata_controller: MetadataController | None = None,
+    ) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -1011,7 +1016,7 @@ class ModListWidget(QListWidget):
         self.list_type = list_type
 
         # Cache MetadataController instance
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
 
         self.settings = settings
 
@@ -1077,7 +1082,8 @@ class ModListWidget(QListWidget):
         self.deletion_sub_menu = ModDeletionMenu(
             self.settings,
             self._get_selected_metadata,
-            self.paths,
+            metadata_controller=self.metadata_controller,
+            remove_from_uuids=self.paths,
         )  # TODO: should we enable items conditionally? For now use all
         logger.debug("Finished ModListWidget initialization")
 
@@ -3940,7 +3946,9 @@ class ModsPanel(QWidget):
             self.tr("Desc") if self.inactive_mods_sort_descending else self.tr("Asc")
         )
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self, settings: Settings, metadata_controller: MetadataController | None = None
+    ) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -3950,7 +3958,7 @@ class ModsPanel(QWidget):
 
         # Cache MetadataController instance and initialize panel
         logger.debug("Initializing ModsPanel")
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
         self.settings = settings
 
         # Load inactive mods sort settings
@@ -4043,6 +4051,7 @@ class ModsPanel(QWidget):
         self.active_mods_list = ModListWidget(
             list_type="Active",
             settings=self.settings,
+            metadata_controller=self.metadata_controller,
         )
         # Active mods search widgets
         self.active_mods_search_layout = QHBoxLayout()
@@ -4063,6 +4072,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_list = ModListWidget(
             list_type="Inactive",
             settings=self.settings,
+            metadata_controller=self.metadata_controller,
         )
 
         # Inactive mods search layout

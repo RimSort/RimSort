@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
         get_active_instance: Callable[[], Instance],
         set_instance: Callable[[Instance], None],
         show_settings_dialog: Callable[..., None],
+        metadata_controller: MetadataController,
         settings_dialog: "SettingsDialog | None" = None,
         debug_mode: bool = False,
     ) -> None:
@@ -95,6 +96,7 @@ class MainWindow(QMainWindow):
         self._get_active_instance = get_active_instance
         self._set_instance = set_instance
         self._show_settings_dialog = show_settings_dialog
+        self.metadata_controller = metadata_controller
 
         # Set global references
         globals.MAIN_WINDOW = self
@@ -125,6 +127,7 @@ class MainWindow(QMainWindow):
             settings=self.settings,
             show_settings_dialog=self._show_settings_dialog,
             settings_dialog=settings_dialog,
+            metadata_controller=self.metadata_controller,
         )
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
@@ -182,6 +185,7 @@ class MainWindow(QMainWindow):
         # Instantiate the AcfDataWindow and add it to the tab
         self.acf_log_reader = AcfLogReader(
             active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
+            metadata_controller=self.metadata_controller,
         )
         self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
@@ -298,7 +302,7 @@ class MainWindow(QMainWindow):
         :param event: The close event to handle.
         """
         # Abort any in-progress metadata scanning so background threads stop
-        MetadataController.instance().is_abort_requested = True
+        self.metadata_controller.is_abort_requested = True
 
         # Break out of the nested QEventLoop in do_threaded_loading_animation
         # so the startup sequence can unwind and the process can exit

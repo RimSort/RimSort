@@ -123,6 +123,7 @@ class MainContent(QObject):
         settings: Settings,
         show_settings_dialog: Callable[..., None] | None = None,
         settings_dialog: SettingsDialog | None = None,
+        metadata_controller: MetadataController | None = None,
     ) -> None:
         if not hasattr(self, "initialized"):
             super().__init__()
@@ -130,6 +131,9 @@ class MainContent(QObject):
             self.settings = settings
             self._show_settings_dialog = show_settings_dialog
             self._settings_dialog = settings_dialog
+            self.metadata_controller = (
+                metadata_controller or MetadataController.instance()
+            )
             self._init_services()
             self._init_widgets()
             self._setup_layout()
@@ -143,7 +147,6 @@ class MainContent(QObject):
         self.steam_browser: SteamBrowser | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
-        self.metadata_controller = MetadataController.instance()
         self._import_export_service = ImportExportService(
             self.metadata_controller, self.settings
         )
@@ -155,9 +158,11 @@ class MainContent(QObject):
     def _init_widgets(self) -> None:
         self.mod_info_panel = ModInfoPanel(
             settings=self.settings,
+            metadata_controller=self.metadata_controller,
         )
         self.mods_panel = ModsPanel(
             settings=self.settings,
+            metadata_controller=self.metadata_controller,
         )
         self.mod_info_container = QWidget()
         self.mod_info_container.setLayout(self.mod_info_panel.panel)
@@ -584,7 +589,9 @@ class MainContent(QObject):
             logger.info(
                 f"Found {duplicate_mods_count} duplicate mods. Opening DuplicateModsPanel..."
             )
-            duplicate_mods_panel = DuplicateModsPanel(self.duplicate_mods)
+            duplicate_mods_panel = DuplicateModsPanel(
+                self.duplicate_mods, metadata_controller=self.metadata_controller
+            )
             self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
@@ -608,7 +615,10 @@ class MainContent(QObject):
                 f"Found {missing_mods_count} missing mods. Opening MissingModsPrompt..."
             )
             # Always open the MissingModsPrompt panel, allowing manual entry if Steam database is unavailable
-            self.missing_mods_prompt = MissingModsPrompt(packageids=self.missing_mods)
+            self.missing_mods_prompt = MissingModsPrompt(
+                packageids=self.missing_mods,
+                metadata_controller=self.metadata_controller,
+            )
             self.window_manager.register_attr(self, "missing_mods_prompt")
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
@@ -659,6 +669,7 @@ class MainContent(QObject):
             missing_mod_properties_panel = MissingModPropertiesPanel(
                 missing_packageid_mods=missing_packageid_paths,
                 missing_publishfieldid_mods=missing_publishfieldid_paths,
+                metadata_controller=self.metadata_controller,
             )
             self.window_manager.register(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
@@ -955,7 +966,9 @@ class MainContent(QObject):
                 active_mods
             )
             if missing_deps:
-                dialog = MissingDependenciesDialog()
+                dialog = MissingDependenciesDialog(
+                    metadata_controller=self.metadata_controller
+                )
                 self.window_manager.register(dialog)
 
                 # Build a deps_summary from the missing deps for the dialog display
@@ -1959,7 +1972,9 @@ class MainContent(QObject):
             )
 
         # For both "success" and "partial", show the updater panel
-        workshop_mod_updater = WorkshopModUpdaterPanel()
+        workshop_mod_updater = WorkshopModUpdaterPanel(
+            metadata_controller=self.metadata_controller
+        )
         self.window_manager.register(workshop_mod_updater)
         if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
@@ -2934,7 +2949,8 @@ class MainContent(QObject):
             return
 
         self.use_this_instead_dialog = UseThisInsteadPanel(
-            mod_metadata=self.metadata_controller.mods_metadata
+            mod_metadata=self.metadata_controller.mods_metadata,
+            metadata_controller=self.metadata_controller,
         )
         self.window_manager.register_attr(self, "use_this_instead_dialog")
         if not self.use_this_instead_dialog.show_if_has_alternatives():

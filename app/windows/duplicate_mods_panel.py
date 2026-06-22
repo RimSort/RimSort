@@ -1,5 +1,6 @@
 from loguru import logger
 
+from app.controllers.metadata_controller import MetadataController
 from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import (
     BaseModsPanel,
@@ -23,6 +24,7 @@ class DuplicateModsPanel(BaseModsPanel):
     def __init__(
         self,
         duplicate_mods: dict[str, list[str]],
+        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
         Initialize the DuplicateModsPanel with duplicate mods data.
@@ -42,6 +44,7 @@ class DuplicateModsPanel(BaseModsPanel):
                 "Select which versions to keep and choose an action."
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=metadata_controller,
         )
 
         button_configs = self._get_base_button_configs()

@@ -26,13 +26,17 @@ class MissingDependenciesDialog(QDialog):
         - Dependencies that need to be downloaded
     """
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        metadata_controller: MetadataController | None = None,
+    ) -> None:
         """
         Initialize the MissingDependenciesDialog.
         """
         super().__init__(parent)
         self.setObjectName("missingDependenciesDialog")
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
         self.selected_mods: set[str] = set()
         self.checkboxes: dict[str, QCheckBox] = {}
         self._setup_ui()

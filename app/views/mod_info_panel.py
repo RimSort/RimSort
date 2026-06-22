@@ -110,14 +110,16 @@ class ModInfoPanel:
     mod information panel on the GUI.
     """
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self, settings: Settings, metadata_controller: MetadataController | None = None
+    ) -> None:
         """
         Initialize the class.
         """
         logger.debug("Initializing ModInfo")
 
         # Cache MetadataController instance
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
         self.settings = settings
 
         # Used to keep track of which mod items notes we are viewing/editing

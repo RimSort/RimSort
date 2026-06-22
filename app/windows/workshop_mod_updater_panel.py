@@ -23,7 +23,10 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
     keep their mods up-to-date with the latest versions from the Workshop.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        metadata_controller: MetadataController | None = None,
+    ) -> None:
         """
         Initialize the WorkshopModUpdaterPanel.
 
@@ -31,7 +34,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         for updating via SteamCMD or Steam client (if enabled).
         """
         logger.debug("Initializing WorkshopModUpdaterPanel")
-        self.metadata_controller = MetadataController.instance()
+        self._metadata_controller = metadata_controller
         self.eligible_metadata: list[tuple[str, dict[str, Any]]] = []
 
         super().__init__(
@@ -42,6 +45,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                 "\nThe following table displays Workshop mods available for update from Steam."
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=self._metadata_controller,
         )
 
         button_configs = [

@@ -18,7 +18,7 @@ class TestMainWindowCloseEvent:
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent delegates to MainContent.close_child_windows."""
-        window = make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
 
         event = QCloseEvent()
         window.closeEvent(event)
@@ -31,7 +31,7 @@ class TestMainWindowCloseEvent:
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent stops the watchdog if running."""
-        window = make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
         mock_handler = MagicMock()
         window.watchdog_event_handler = mock_handler
 
@@ -46,7 +46,7 @@ class TestMainWindowCloseEvent:
         mock_metadata_controller: MagicMock,
     ) -> None:
         """No crash when watchdog_event_handler is None."""
-        window = make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
         assert window.watchdog_event_handler is None
 
         event = QCloseEvent()
@@ -58,12 +58,12 @@ class TestMainWindowCloseEvent:
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent requests metadata abort."""
-        window = make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        # MetadataController.instance().is_abort_requested should be set to True
+        # metadata_controller.is_abort_requested should be set to True
         assert mock_metadata_controller.is_abort_requested is True
 
     def test_close_event_calls_abort_loading(
@@ -72,7 +72,7 @@ class TestMainWindowCloseEvent:
         mock_metadata_controller: MagicMock,
     ) -> None:
         """Verify closeEvent calls abort_loading on the main content panel."""
-        window = make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
 
         event = QCloseEvent()
         window.closeEvent(event)

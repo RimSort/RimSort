@@ -54,6 +54,7 @@ class ModDeletionMenu(QMenu):
         self,
         settings: Settings,
         get_selected_mod_metadata: Callable[[], list[ModMetadata]],
+        metadata_controller: MetadataController | None = None,
         remove_from_uuids: list[str] | None = None,
         menu_title: str = "Deletion options",
         enable_delete_mod: bool = True,
@@ -66,7 +67,7 @@ class ModDeletionMenu(QMenu):
         super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
         self.settings = settings
         self.completion_callback = completion_callback
         self._actions_initialized = False

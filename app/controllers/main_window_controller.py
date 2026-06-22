@@ -177,7 +177,9 @@ class MainWindowController(QObject):
                 missing_deps[mod_id] = local | download
 
         # Always show the dialog (even if no missing deps)
-        dialog = MissingDependenciesDialog(self.main_window)
+        dialog = MissingDependenciesDialog(
+            self.main_window, metadata_controller=self.metadata_controller
+        )
         selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
         if not missing_deps:
