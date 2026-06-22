@@ -1,9 +1,13 @@
 import os
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from app.views.settings_dialog import SettingsDialog
 
 from loguru import logger
 from PySide6.QtCore import QTimer
@@ -31,9 +35,10 @@ from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
-from app.controllers.settings_controller import SettingsController
 from app.controllers.todds_controller import ToddsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
+from app.models.instance import Instance
+from app.models.settings import Settings
 from app.utils import globals
 from app.utils.acf_utils import refresh_acf_metadata
 from app.utils.app_info import AppInfo
@@ -71,7 +76,13 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(
-        self, settings_controller: SettingsController, debug_mode: bool = False
+        self,
+        settings: Settings,
+        get_active_instance: Callable[[], Instance],
+        set_instance: Callable[[Instance], None],
+        show_settings_dialog: Callable[..., None],
+        settings_dialog: "SettingsDialog | None" = None,
+        debug_mode: bool = False,
     ) -> None:
         """
         Initialize the main application window. Construct the layout,
@@ -80,12 +91,13 @@ class MainWindow(QMainWindow):
         logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
-        self.settings_controller = settings_controller
-        self.settings = settings_controller.settings
+        self.settings = settings
+        self._get_active_instance = get_active_instance
+        self._set_instance = set_instance
+        self._show_settings_dialog = show_settings_dialog
 
         # Set global references
         globals.MAIN_WINDOW = self
-        globals.SETTINGS_CONTROLLER = settings_controller
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
@@ -110,7 +122,9 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         self.main_content_panel: MainContent = MainContent(
-            settings_controller=self.settings_controller
+            settings=self.settings,
+            show_settings_dialog=self._show_settings_dialog,
+            settings_dialog=settings_dialog,
         )
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
@@ -167,7 +181,6 @@ class MainWindow(QMainWindow):
 
         # Instantiate the AcfDataWindow and add it to the tab
         self.acf_log_reader = AcfLogReader(
-            settings_controller,
             active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
         )
         self.acf_log_reader_layout.addWidget(self.acf_log_reader)
@@ -187,7 +200,6 @@ class MainWindow(QMainWindow):
         self.file_search_dialog = FileSearchDialog()
         self.file_search_controller = FileSearchController(
             settings=self.settings,
-            settings_controller=self.settings_controller,
             dialog=self.file_search_dialog,
         )
         self.file_search_layout.addWidget(self.file_search_dialog)
@@ -231,7 +243,7 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings=self.settings,
-            show_settings_dialog=self.settings_controller.show_settings_dialog,
+            show_settings_dialog=self._show_settings_dialog,
         )
 
         self.main_content_controller = MainContentController(
@@ -325,11 +337,11 @@ class MainWindow(QMainWindow):
         ) or not self.steamcmd_wrapper.check_for_steamcmd(
             prefix=self.steamcmd_wrapper.steamcmd_prefix
         ):
-            if not self.settings_controller.active_instance.steamcmd_ignore:
+            if not self._get_active_instance().steamcmd_ignore:
                 self.steamcmd_wrapper.on_steamcmd_not_found(
                     ask_ignore=True,
                     settings=self.settings,
-                    active_instance=self.settings_controller.active_instance,
+                    active_instance=self._get_active_instance(),
                 )
         else:
             self.steamcmd_wrapper.setup = True
@@ -347,8 +359,8 @@ class MainWindow(QMainWindow):
         self.__check_steam_integration()
 
         # Force initial setup to False and save settings
-        if self.settings_controller.active_instance.initial_setup:
-            self.settings_controller.active_instance.initial_setup = False
+        if self._get_active_instance().initial_setup:
+            self._get_active_instance().initial_setup = False
             self.settings.save()
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings.check_for_update_startup:
@@ -358,7 +370,7 @@ class MainWindow(QMainWindow):
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
-        instance = self.settings_controller.active_instance
+        instance = self._get_active_instance()
 
         if instance.initial_setup and not instance.steam_client_integration:
             diag = BinaryChoiceDialog(
@@ -373,7 +385,7 @@ class MainWindow(QMainWindow):
             )
             if diag.exec_is_positive():
                 instance.steam_client_integration = True
-                self.settings_controller.set_instance(instance)
+                self._set_instance(instance)
 
         return
 
@@ -605,7 +617,7 @@ class MainWindow(QMainWindow):
                     "Skipping steamcmd symlink restoration: Local folder not set. The symlink will need to be manually updated."
                 )
 
-            self.settings_controller.set_instance(instance_controller.instance)
+            self._set_instance(instance_controller.instance)
             self.__switch_to_instance(instance_controller.instance.name)
         else:
             show_warning(
@@ -1057,7 +1069,7 @@ class MainWindow(QMainWindow):
                 ),
                 instance_folder_override=instance_folder_override,
             )
-            self.settings_controller.set_instance(instance)
+            self._set_instance(instance)
 
             # Save settings
             self.settings.save()
@@ -1154,7 +1166,7 @@ class MainWindow(QMainWindow):
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
         self.watchdog_event_handler = WatchdogHandler(
-            instance=self.settings_controller.active_instance,
+            instance=self._get_active_instance(),
         )
         self.watchdog_event_handler.acf_changed.connect(
             partial(refresh_acf_metadata, self.main_content_panel.metadata_controller)

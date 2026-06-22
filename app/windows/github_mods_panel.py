@@ -90,7 +90,7 @@ class GitHubModsPanel(BaseModsPanel):
             from sqlalchemy.orm import sessionmaker as sa_sessionmaker
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
-                self.settings_controller.settings.aux_db_path
+                self.settings.aux_db_path
             )
             Base.metadata.create_all(aux_controller.engine)
 
@@ -177,7 +177,7 @@ class GitHubModsPanel(BaseModsPanel):
 
         try:
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
-                self.settings_controller.settings.aux_db_path
+                self.settings.aux_db_path
             )
             Base.metadata.create_all(aux_controller.engine)
 
@@ -203,7 +203,7 @@ class GitHubModsPanel(BaseModsPanel):
             from sqlalchemy.orm import sessionmaker as sa_sessionmaker
 
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
-                self.settings_controller.settings.aux_db_path
+                self.settings.aux_db_path
             )
             Base.metadata.create_all(aux_controller.engine)
 
@@ -216,7 +216,7 @@ class GitHubModsPanel(BaseModsPanel):
             CacheBase.metadata.create_all(cache_engine)
             cache_session = sa_sessionmaker(bind=cache_engine)()
 
-            settings = self.settings_controller.settings
+            settings = self.settings
             provider = GitHubProvider(
                 github_token=settings.github_token or None,
                 cache_session=cache_session,

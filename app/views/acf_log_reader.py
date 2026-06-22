@@ -33,7 +33,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.csv_export_utils import export_to_csv
 from app.utils.event_bus import EventBus
@@ -70,17 +69,14 @@ class AcfLogReader(BaseModsPanel):
 
     def __init__(
         self,
-        settings_controller: SettingsController,
         active_mods_list: object | None = None,
     ) -> None:
         """
         Initialize ACF Log Reader using BaseModsPanel.
 
         Args:
-            settings_controller: Settings controller instance
             active_mods_list: Optional active mods list for highlighting
         """
-        self.settings_controller = settings_controller
         self.active_mods_list = active_mods_list
         self.metadata_controller = MetadataController.instance()
         # Set of PFIDs that are currently active in the game

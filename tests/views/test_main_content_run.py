@@ -51,8 +51,8 @@ def main_content(
     instance = mock_settings_controller.settings.instances["Default"]
     instance.game_folder = "/fake/path"
     instance.run_args = "--test"
-    # Initialize MainContent with the shared mock settings controller
-    mc = MainContent(mock_settings_controller)
+    # Initialize MainContent with settings from the mock settings controller
+    mc = MainContent(mock_settings_controller.settings)
     # Patch _do_save to capture calls
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))

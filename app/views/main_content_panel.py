@@ -33,12 +33,12 @@ from PySide6.QtWidgets import (
 import app.utils.constants as app_constants
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+from app.models.settings import Settings
 from app.services.import_export_service import ImportExportService
 from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
@@ -85,6 +85,7 @@ from app.views.mods_panel import (
     ModListWidget,
     ModsPanel,
 )
+from app.views.settings_dialog import SettingsDialog
 from app.views.task_progress_window import TaskProgressWindow
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.ignore_json_editor import IgnoreJsonEditor
@@ -117,12 +118,18 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        show_settings_dialog: Callable[..., None] | None = None,
+        settings_dialog: SettingsDialog | None = None,
+    ) -> None:
         if not hasattr(self, "initialized"):
             super().__init__()
             logger.debug("Initializing MainContent")
-            self.settings_controller = settings_controller
-            self.settings = settings_controller.settings
+            self.settings = settings
+            self._show_settings_dialog = show_settings_dialog
+            self._settings_dialog = settings_dialog
             self._init_services()
             self._init_widgets()
             self._setup_layout()
@@ -384,8 +391,11 @@ class MainContent(QObject):
                     )
                 ),
             )
-            if answer == QMessageBox.StandardButton.Yes:
-                self.settings_controller.show_settings_dialog("Locations")
+            if (
+                answer == QMessageBox.StandardButton.Yes
+                and self._show_settings_dialog is not None
+            ):
+                self._show_settings_dialog("Locations")
             return False
 
     def ___get_relative_middle(self, some_list: ModListWidget) -> int:
@@ -574,9 +584,7 @@ class MainContent(QObject):
             logger.info(
                 f"Found {duplicate_mods_count} duplicate mods. Opening DuplicateModsPanel..."
             )
-            duplicate_mods_panel = DuplicateModsPanel(
-                self.duplicate_mods, self.settings_controller
-            )
+            duplicate_mods_panel = DuplicateModsPanel(self.duplicate_mods)
             self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)
             duplicate_mods_panel.show()
@@ -651,7 +659,6 @@ class MainContent(QObject):
             missing_mod_properties_panel = MissingModPropertiesPanel(
                 missing_packageid_mods=missing_packageid_paths,
                 missing_publishfieldid_mods=missing_publishfieldid_paths,
-                settings_controller=self.settings_controller,
             )
             self.window_manager.register(missing_mod_properties_panel)
             # Make the panel modal to ensure user acknowledges the issues
@@ -854,9 +861,12 @@ class MainContent(QObject):
             )
             # Wait for settings dialog to be closed before continuing.
             # This is to ensure steamcmd check and other ops are done after the user has a chance to set paths
-            if not self.settings_controller.settings_dialog.isHidden():
+            if (
+                self._settings_dialog is not None
+                and not self._settings_dialog.isHidden()
+            ):
                 loop = QEventLoop()
-                self.settings_controller.settings_dialog.finished.connect(loop.quit)
+                self._settings_dialog.finished.connect(loop.quit)
                 loop.exec_()
                 logger.debug("Settings dialog closed. Continuing with refresh...")
 
@@ -1553,8 +1563,8 @@ class MainContent(QObject):
         )
         answer_str = str(answer)
         download_text = self.tr("Open settings")
-        if download_text in answer_str:
-            self.settings_controller.show_settings_dialog()
+        if download_text in answer_str and self._show_settings_dialog is not None:
+            self._show_settings_dialog()
 
     def _upload_file(self, path: Path | None) -> None:
         if not path or not os.path.exists(path):

@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.models.settings import Settings
 from app.utils.button_factory import ButtonFactory, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -131,7 +132,7 @@ class BaseModsPanel(QWidget):
 
     # Type hints for instance variables
     metadata_controller: MetadataController
-    settings_controller: Any
+    settings: Any
     editor_model: QStandardItemModel
     editor_table_view: QTableView
     ui_elements: UIElements
@@ -796,7 +797,7 @@ class BaseModsPanel(QWidget):
 
     def _create_deletion_button(
         self,
-        settings_controller: Any,
+        settings: Settings,
         get_selected_mod_metadata: Callable[[], list[dict[str, Any]]],
         completion_callback: Callable[[], None] | None,
         menu_title: str,
@@ -810,7 +811,7 @@ class BaseModsPanel(QWidget):
         Create a standardized deletion button with menu.
 
         Args:
-            settings_controller: The settings controller instance.
+            settings: The settings model instance.
             get_selected_mod_metadata: Function to get selected mod metadata.
             menu_title: Title for the deletion menu.
             completion_callback: Callback after deletion completes.
@@ -824,14 +825,14 @@ class BaseModsPanel(QWidget):
             QPushButton: Configured deletion button with dropdown menu.
         """
         # Check if Steam client integration is enabled
-        steam_client_integration_enabled = settings_controller.settings.instances[
-            settings_controller.settings.current_instance
+        steam_client_integration_enabled = settings.instances[
+            settings.current_instance
         ].steam_client_integration
 
         button = QPushButton()
         button.setText(self.tr("Delete"))
         deletion_menu = ModDeletionMenu(
-            settings=settings_controller.settings,
+            settings=settings,
             get_selected_mod_metadata=get_selected_mod_metadata,
             completion_callback=completion_callback,
             menu_title=menu_title,
