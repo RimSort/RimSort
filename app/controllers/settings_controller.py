@@ -24,6 +24,7 @@ from app.controllers.settings_tabs import (
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.services.http_download_service import HttpDownloadService
+from app.services.mod_path_service import get_mod_paths, resolve_data_source
 from app.services.path_autodetect_service import PathAutodetectService
 from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.event_bus import EventBus
@@ -158,56 +159,10 @@ class SettingsController(QObject):
             show_settings_error()
 
     def get_mod_paths(self) -> list[str]:
-        """
-        Get the mod paths for the current instance. Return the Default instance if the current instance is not found.
-        """
-        return [
-            str(
-                Path(
-                    self.settings.instances[self.settings.current_instance].game_folder
-                )
-                / "Data"
-            ),
-            str(
-                Path(
-                    self.settings.instances[self.settings.current_instance].local_folder
-                )
-            ),
-            str(
-                Path(
-                    self.settings.instances[
-                        self.settings.current_instance
-                    ].workshop_folder
-                )
-            ),
-        ]
+        return get_mod_paths(self.active_instance)
 
     def resolve_data_source(self, path: str) -> str | None:
-        """
-        Resolve the data source for the provided path string.
-        """
-        # Pathlib the provided path string
-        sanitized_path = Path(path)
-        # Grab paths from Settings
-        expansions_path = (
-            Path(self.settings.instances[self.settings.current_instance].game_folder)
-            / "Data"
-        )
-        local_path = Path(
-            self.settings.instances[self.settings.current_instance].local_folder
-        )
-        workshop_path = Path(
-            self.settings.instances[self.settings.current_instance].workshop_folder
-        )
-        # Validate data source, then emit if path is valid and not mapped
-        if sanitized_path.parent == expansions_path:
-            return "expansion"
-        elif sanitized_path.parent == local_path:
-            return "local"
-        elif sanitized_path.parent == workshop_path:
-            return "workshop"
-        else:
-            return None
+        return resolve_data_source(self.active_instance, path)
 
     def show_settings_dialog(self, tab_name: str = "") -> None:
         """
