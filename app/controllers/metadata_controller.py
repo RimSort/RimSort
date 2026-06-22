@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -11,7 +12,6 @@ from natsort import natsorted
 from PySide6.QtCore import QMutex, QObject, Signal, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_mediator import MetadataMediator
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -22,6 +22,7 @@ from app.models.metadata.metadata_structure import (
     SteamDbEntry,
     SteamDbEntryBlacklist,
 )
+from app.models.settings import Instance, Settings
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
@@ -50,12 +51,14 @@ class MetadataController(QObject):
 
     def __init__(
         self,
-        settings_controller: SettingsController,
+        settings: Settings,
+        get_active_instance: Callable[[], Instance],
         metadata_db_controller: AuxMetadataController,
     ) -> None:
         super().__init__()
 
-        self.settings_controller = settings_controller
+        self.settings = settings
+        self._get_active_instance = get_active_instance
 
         self.metadata_mediator = MetadataMediator(
             user_rules_path=AppInfo().user_rules_file,
@@ -79,29 +82,35 @@ class MetadataController(QObject):
     @classmethod
     def instance(
         cls,
-        settings_controller: SettingsController | None = None,
+        settings: Settings | None = None,
+        get_active_instance: Callable[[], Instance] | None = None,
         metadata_db_controller: AuxMetadataController | None = None,
     ) -> MetadataController:
         """Get or create the singleton instance.
 
-        :param settings_controller: Required on first call
+        :param settings: Required on first call
+        :param get_active_instance: Required on first call
         :param metadata_db_controller: Required on first call
         :return: The singleton instance
         :raises RuntimeError: If called before initialization
         """
         if cls._instance is None:
-            if settings_controller is None or metadata_db_controller is None:
+            if (
+                settings is None
+                or get_active_instance is None
+                or metadata_db_controller is None
+            ):
                 raise RuntimeError(
                     "MetadataController.instance() called before initialization"
                 )
-            cls._instance = cls(settings_controller, metadata_db_controller)
+            cls._instance = cls(settings, get_active_instance, metadata_db_controller)
         return cls._instance
 
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
         self.reset_paths()
-        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        prefer_versioned = self.settings.prefer_versioned_about_tags
         self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
 
         with self.metadata_db_controller.Session() as session:
@@ -145,8 +154,8 @@ class MetadataController(QObject):
         def _get_path(path_str: str) -> Path | None:
             return Path(path_str) if path_str else None
 
-        active_instance = self.settings_controller.active_instance
-        active_settings = self.settings_controller.settings
+        active_instance = self._get_active_instance()
+        active_settings = self.settings
 
         cr_path = self._resolve_db_path(
             active_settings.external_community_rules_metadata_source,
@@ -605,7 +614,7 @@ class MetadataController(QObject):
         if self.metadata_mediator._mods_metadata is None:
             return False
 
-        prefer_versioned = self.settings_controller.settings.prefer_versioned_about_tags
+        prefer_versioned = self.settings.prefer_versioned_about_tags
         worker = self.metadata_mediator._ParserWorker(
             [path],
             self.metadata_mediator.game_version,
@@ -734,9 +743,7 @@ class MetadataController(QObject):
         if steam_db is None or steam_db_path is None:
             return False
 
-        steam_db.version = int(
-            time.time() + self.settings_controller.settings.database_expiry
-        )
+        steam_db.version = int(time.time() + self.settings.database_expiry)
         encoded = msgspec.json.encode(steam_db)
         formatted = msgspec.json.format(encoded, indent=4)
         steam_db_path.write_bytes(formatted)

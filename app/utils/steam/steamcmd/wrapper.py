@@ -14,7 +14,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.symlink as symlink
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Instance, Settings
 from app.utils import http
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -389,7 +389,8 @@ class SteamcmdInterface:
         self,
         runner: RunnerPanel | None = None,
         ask_ignore: bool = False,
-        settings_controller: SettingsController | None = None,
+        settings: Settings | None = None,
+        active_instance: Instance | None = None,
     ) -> bool:
         """Asks if the user wants to setup SteamCMD. If the user chooses to ignore the dialogue, set the steamcmd ignore flag in the settings.
 
@@ -397,8 +398,10 @@ class SteamcmdInterface:
         :type runner: RunnerPanel | None, optional
         :param ask_ignore: Whether to ask the user to ignore the dialogue, defaults to False
         :type ask_ignore: bool, optional
-        :param settings_controller: The settings controller used to set steamcmd ignore flag, defaults to None
-        :type settings_controller: SettingsController | None, optional
+        :param settings: The settings model used to save steamcmd ignore flag, defaults to None
+        :type settings: Settings | None, optional
+        :param active_instance: The active instance used to set steamcmd ignore flag, defaults to None
+        :type active_instance: Instance | None, optional
         :return: Whenever or not the user chose to ignore the dialogue
         :rtype: bool
         """
@@ -430,9 +433,9 @@ class SteamcmdInterface:
             runner.close()
 
         if ask_ignore and answer == dont_ask_text:
-            if settings_controller is not None:
-                settings_controller.active_instance.steamcmd_ignore = True
-                settings_controller.settings.save()
+            if settings is not None and active_instance is not None:
+                active_instance.steamcmd_ignore = True
+                settings.save()
 
             return True
         return False

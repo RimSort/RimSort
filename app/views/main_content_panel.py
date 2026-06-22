@@ -122,6 +122,7 @@ class MainContent(QObject):
             super().__init__()
             logger.debug("Initializing MainContent")
             self.settings_controller = settings_controller
+            self.settings = settings_controller.settings
             self._init_services()
             self._init_widgets()
             self._setup_layout()
@@ -131,13 +132,13 @@ class MainContent(QObject):
             self.initialized = True
 
     def _init_services(self) -> None:
-        self.db_builder = DatabaseBuilder(self.settings_controller.settings)
+        self.db_builder = DatabaseBuilder(self.settings)
         self.steam_browser: SteamBrowser | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
         self.metadata_controller = MetadataController.instance()
         self._import_export_service = ImportExportService(
-            self.metadata_controller, self.settings_controller.settings
+            self.metadata_controller, self.settings
         )
         self.query_runner: RunnerPanel | None = None
         self.steamworks_in_use = False
@@ -146,10 +147,10 @@ class MainContent(QObject):
 
     def _init_widgets(self) -> None:
         self.mod_info_panel = ModInfoPanel(
-            settings_controller=self.settings_controller,
+            settings=self.settings,
         )
         self.mods_panel = ModsPanel(
-            settings=self.settings_controller.settings,
+            settings=self.settings,
         )
         self.mod_info_container = QWidget()
         self.mod_info_container.setLayout(self.mod_info_panel.panel)
@@ -349,16 +350,10 @@ class MainContent(QObject):
         not throw a fatal error trying to load mods until the
         user has had a chance to set paths.
         """
-        current_instance = self.settings_controller.settings.current_instance
-        game_folder_path = self.settings_controller.settings.instances[
-            current_instance
-        ].game_folder
-        config_folder_path = self.settings_controller.settings.instances[
-            current_instance
-        ].config_folder
-        local_mods_folder_path = self.settings_controller.settings.instances[
-            current_instance
-        ].local_folder
+        current_instance = self.settings.current_instance
+        game_folder_path = self.settings.instances[current_instance].game_folder
+        config_folder_path = self.settings.instances[current_instance].config_folder
+        local_mods_folder_path = self.settings.instances[current_instance].local_folder
         logger.info(f"Game folder: {game_folder_path}")
         logger.info(f"Config folder: {config_folder_path}")
         logger.info(f"Local mods folder: {local_mods_folder_path}")
@@ -532,8 +527,8 @@ class MainContent(QObject):
         # Snapshot live divider state before the list is cleared
         live_dividers = self.mods_panel.active_mods_list.get_dividers_data()
         if live_dividers:
-            self.settings_controller.settings.active_mods_dividers = live_dividers
-        saved_dividers = self.settings_controller.settings.active_mods_dividers
+            self.settings.active_mods_dividers = live_dividers
+        saved_dividers = self.settings.active_mods_dividers
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
@@ -541,7 +536,7 @@ class MainContent(QObject):
         if saved_dividers:
             self.mods_panel.active_mods_list.restore_dividers(saved_dividers)
         # Determine sort key and descending for inactive mods
-        if self.settings_controller.settings.inactive_mods_sorting:
+        if self.settings.inactive_mods_sorting:
             # Use current UI state from the combobox and button
             sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
             descending = self.mods_panel.inactive_sort_descending
@@ -565,13 +560,13 @@ class MainContent(QObject):
         """
         Opens the DuplicateModsPanel to allow user to resolve duplicate mods.
         """
-        if not self.settings_controller.settings.duplicate_mods_warning:
+        if not self.settings.duplicate_mods_warning:
             logger.warning(
                 "User preference is not configured to display duplicate mods. Skipping..."
             )
             return
         elif (
-            self.settings_controller.settings.duplicate_mods_warning
+            self.settings.duplicate_mods_warning
             and self.duplicate_mods
             and len(self.duplicate_mods) > 0
         ):
@@ -590,13 +585,13 @@ class MainContent(QObject):
 
     def __missing_mods_prompt(self) -> None:
         """Open the MissingModsPrompt to allow user to download missing mods."""
-        if not self.settings_controller.settings.try_download_missing_mods:
+        if not self.settings.try_download_missing_mods:
             logger.warning(
                 "User preference is not configured to attempt downloading missing mods. Skipping..."
             )
             return
         elif (
-            self.settings_controller.settings.try_download_missing_mods
+            self.settings.try_download_missing_mods
             and self.missing_mods
             and len(self.missing_mods) > 0
         ):
@@ -684,7 +679,7 @@ class MainContent(QObject):
         """
         self.mod_info_panel.display_mod_info(
             uuid=uuid,
-            render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
+            render_unity_rt=self.settings.render_unity_rich_text,
         )
         self.mod_info_panel.show_user_mod_notes(item)
 
@@ -706,8 +701,8 @@ class MainContent(QObject):
             mod_list=str(
                 (
                     Path(
-                        self.settings_controller.settings.instances[
-                            self.settings_controller.settings.current_instance
+                        self.settings.instances[
+                            self.settings.current_instance
                         ].config_folder
                     )
                     / "ModsConfig.xml"
@@ -726,9 +721,7 @@ class MainContent(QObject):
         """
         Check for RimSort updates using UpdateManager.
         """
-        update_manager = UpdateManager(
-            self.settings_controller.settings, self, self.mod_info_panel
-        )
+        update_manager = UpdateManager(self.settings, self, self.mod_info_panel)
         update_manager.do_check_for_update()
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
@@ -847,7 +840,7 @@ class MainContent(QObject):
             self.__check_and_warn_missing_mod_properties()
 
             # Check Workshop mods for updates if configured
-            if self.settings_controller.settings.steam_mods_update_check:
+            if self.settings.steam_mods_update_check:
                 logger.info("Checking Workshop mods for updates...")
                 self._do_check_for_workshop_updates()
             else:
@@ -890,7 +883,7 @@ class MainContent(QObject):
             app_constants.RIMWORLD_DLC_METADATA["3022790"]["packageid"],
         ]
         # If user wants Clear to also move DLC, only keep the base game in Active
-        if self.settings_controller.settings.clear_moves_dlc and package_id_order:
+        if self.settings.clear_moves_dlc and package_id_order:
             package_ids_to_keep_active = [package_id_order[0]]  # Base game only
         else:
             package_ids_to_keep_active = package_id_order
@@ -918,8 +911,8 @@ class MainContent(QObject):
             if uuid not in active_mods_uuids
         )
         # Clear dividers on list clear
-        self.settings_controller.settings.active_mods_dividers = []
-        self.settings_controller.settings.save()
+        self.settings.active_mods_dividers = []
+        self.settings.save()
         # Disable widgets while inserting
         self.disable_enable_widgets_signal.emit(False)
         # Insert data into lists
@@ -947,7 +940,7 @@ class MainContent(QObject):
         self.metadata_controller.compile()
 
         # Check for missing dependencies if enabled in settings and check_deps is True
-        if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
+        if check_deps and self.settings.check_dependencies_on_sort:
             missing_deps = self.metadata_controller.get_missing_dependencies(
                 active_mods
             )
@@ -985,8 +978,8 @@ class MainContent(QObject):
         # Compile dependency data from MetadataController
         try:
             compiled_data = self.metadata_controller.compile(
-                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
-                use_alternative_package_ids=self.settings_controller.settings.use_alternative_package_ids_as_satisfying_dependencies,
+                use_moddependencies_as_loadTheseBefore=self.settings.use_moddependencies_as_loadTheseBefore,
+                use_alternative_package_ids=self.settings.use_alternative_package_ids_as_satisfying_dependencies,
             )
         except ValueError:
             dialogue.show_warning(
@@ -1008,7 +1001,7 @@ class MainContent(QObject):
         current_order = active_mods
         try:
             sorter = Sorter(
-                self.settings_controller.settings.sorting_algorithm,
+                self.settings.sorting_algorithm,
                 compiled_data=compiled_data,
                 mods_metadata=self.metadata_controller.mods_metadata,
                 active_mod_paths=active_mod_paths,
@@ -1055,8 +1048,8 @@ class MainContent(QObject):
             for i, div in enumerate(saved_dividers):
                 div["index"] = bottom + i
                 div["collapsed"] = False
-            self.settings_controller.settings.active_mods_dividers = saved_dividers
-            self.settings_controller.settings.save()
+            self.settings.active_mods_dividers = saved_dividers
+            self.settings.save()
             # Disable widgets while inserting
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
@@ -1159,7 +1152,7 @@ class MainContent(QObject):
         - If Prompts the user about duplicate or missing mods.
         """
         # Create an instance of RentryImport
-        rentry_import = RentryImport(self.settings_controller.settings)
+        rentry_import = RentryImport(self.settings)
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1215,8 +1208,8 @@ class MainContent(QObject):
                     notify_user()
 
             def dowmload_using_steam() -> None:
-                current_instance = self.settings_controller.settings.current_instance
-                steam_client_integration = self.settings_controller.settings.instances[
+                current_instance = self.settings.current_instance
+                steam_client_integration = self.settings.instances[
                     current_instance
                 ].steam_client_integration
 
@@ -1450,9 +1443,7 @@ class MainContent(QObject):
         # Default to the instance's Saves directory (sibling of Config)
         saves_dir = str(
             Path(
-                self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].config_folder
+                self.settings.instances[self.settings.current_instance].config_folder
             ).parent
             / "Saves"
         )
@@ -1538,9 +1529,9 @@ class MainContent(QObject):
         self._open_directory("Steam mods", "workshop_folder")
 
     def _open_directory(self, directory_name: str, attribute: str) -> None:
-        current_instance = self.settings_controller.settings.current_instance
+        current_instance = self.settings.current_instance
         directory = getattr(
-            self.settings_controller.settings.instances[current_instance],
+            self.settings.instances[current_instance],
             attribute,
             None,
         )
@@ -1603,9 +1594,8 @@ class MainContent(QObject):
         if path and path.exists():
             logger.info(f"Opening file in default editor: {path}")
             launch_process(
-                self.settings_controller.settings.text_editor_location,
-                self.settings_controller.settings.text_editor_folder_arg.split(" ")
-                + [str(path)],
+                self.settings.text_editor_location,
+                self.settings.text_editor_folder_arg.split(" ") + [str(path)],
                 str(AppInfo().application_folder),
             )
         else:
@@ -1622,10 +1612,10 @@ class MainContent(QObject):
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         # Persist divider data before saving
-        self.settings_controller.settings.active_mods_dividers = (
+        self.settings.active_mods_dividers = (
             self.mods_panel.active_mods_list.get_dividers_data()
         )
-        self.settings_controller.settings.save()
+        self.settings.save()
 
         data = self._import_export_service.collect_active_mods(
             self.mods_panel.active_mods_list.paths, self.duplicate_mods
@@ -1683,7 +1673,7 @@ class MainContent(QObject):
     # TODDS ACTIONS
     def _create_todds_runner(self, is_pre_launch: bool) -> RunnerPanel:
         runner = RunnerPanel(
-            todds_dry_run_support=self.settings_controller.settings.todds_dry_run,
+            todds_dry_run_support=self.settings.todds_dry_run,
             auto_close_on_complete=is_pre_launch,
         )
 
@@ -1907,7 +1897,7 @@ class MainContent(QObject):
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/",
             self.metadata_controller,
-            self.settings_controller.settings,
+            self.settings,
         )
         self.window_manager.register_attr(self, "steam_browser")
 
@@ -1972,8 +1962,8 @@ class MainContent(QObject):
     def do_steam_verify_game_files(self) -> None:
         """Verify RimWorld game files through Steam."""
         # Retrieve settings for the current RimWorld instance
-        steam_client_integration_enabled = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        steam_client_integration_enabled = self.settings.instances[
+            self.settings.current_instance
         ].steam_client_integration
 
         # Check if Steam Client Integration is enabled
@@ -2015,8 +2005,8 @@ class MainContent(QObject):
                 + self.steamcmd_runner.process.program(),
             )
             return
-        local_mods_path = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        local_mods_path = self.settings.instances[
+            self.settings.current_instance
         ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
@@ -2097,8 +2087,8 @@ class MainContent(QObject):
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids,
                 runner=self.steamcmd_runner,
-                clear_cache=self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
+                clear_cache=self.settings.instances[
+                    self.settings.current_instance
                 ].steamcmd_auto_clear_depot_cache,
             )
         else:
@@ -2401,9 +2391,7 @@ class MainContent(QObject):
             return
 
         base_path = str(
-            self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].local_folder
+            self.settings.instances[self.settings.current_instance].local_folder
         )
 
         try:
@@ -2599,10 +2587,8 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
-            self.settings_controller.settings.external_steam_metadata_file_path = (
-                input_path
-            )
-            self.settings_controller.settings.save()
+            self.settings.external_steam_metadata_file_path = input_path
+            self.settings.save()
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
@@ -2618,10 +2604,8 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
-            self.settings_controller.settings.external_community_rules_file_path = (
-                input_path
-            )
-            self.settings_controller.settings.save()
+            self.settings.external_community_rules_file_path = input_path
+            self.settings.save()
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
@@ -2635,11 +2619,11 @@ class MainContent(QObject):
             None,
             self.tr("Edit Steam DB repo"),
             self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
-            text=self.settings_controller.settings.external_steam_metadata_repo,
+            text=self.settings.external_steam_metadata_repo,
         )
         if ok:
-            self.settings_controller.settings.external_steam_metadata_repo = args
-            self.settings_controller.settings.save()
+            self.settings.external_steam_metadata_repo = args
+            self.settings.save()
 
     def _do_configure_community_rules_db_repo(self) -> None:
         """
@@ -2650,11 +2634,11 @@ class MainContent(QObject):
             None,
             self.tr("Edit Community Rules DB repo"),
             self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
-            text=self.settings_controller.settings.external_community_rules_repo,
+            text=self.settings.external_community_rules_repo,
         )
         if ok:
-            self.settings_controller.settings.external_community_rules_repo = args
-            self.settings_controller.settings.save()
+            self.settings.external_community_rules_repo = args
+            self.settings.save()
 
     def _do_blacklist_action_steamdb(self, instruction: list[Any]) -> None:
         logger.info(f"Updating SteamDB blacklist status for item: {instruction}")
@@ -2686,11 +2670,11 @@ class MainContent(QObject):
             None,
             self.tr("Edit Steam WebAPI key"),
             self.tr("Enter your personal 32 character Steam WebAPI key here:"),
-            text=self.settings_controller.settings.steam_apikey,
+            text=self.settings.steam_apikey,
         )
         if ok:
-            self.settings_controller.settings.steam_apikey = args
-            self.settings_controller.settings.save()
+            self.settings.steam_apikey = args
+            self.settings.save()
 
     def _do_update_rules_database(self, instruction: list[Any]) -> None:
         rules_source = instruction[0]
@@ -2761,12 +2745,12 @@ class MainContent(QObject):
             self.tr(
                 "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):"
             ),
-            text=str(self.settings_controller.settings.database_expiry),
+            text=str(self.settings.database_expiry),
         )
         if ok:
             try:
-                self.settings_controller.settings.database_expiry = int(args)
-                self.settings_controller.settings.save()
+                self.settings.database_expiry = int(args)
+                self.settings.save()
             except ValueError:
                 dialogue.show_warning(
                     self.tr(
@@ -2779,12 +2763,10 @@ class MainContent(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
-        instance = self.settings_controller.settings.instances.get(
-            self.settings_controller.settings.current_instance
-        )
+        instance = self.settings.instances.get(self.settings.current_instance)
         if not instance:
             logger.warning(
-                f"Tried to access instance {self.settings_controller.settings.current_instance} that does not exist!"
+                f"Tried to access instance {self.settings.current_instance} that does not exist!"
             )
             return None
 
@@ -2793,10 +2775,10 @@ class MainContent(QObject):
         if steamcmd_prefix:
             self.steamcmd_wrapper.initialize_prefix(
                 steamcmd_prefix=str(steamcmd_prefix),
-                validate=self.settings_controller.settings.steamcmd_validate_downloads,
+                validate=self.settings.steamcmd_validate_downloads,
             )
         self.steamcmd_wrapper.validate_downloads = (
-            self.settings_controller.settings.steamcmd_validate_downloads
+            self.settings.steamcmd_validate_downloads
         )
 
     @Slot()
@@ -2823,7 +2805,7 @@ class MainContent(QObject):
         if not self.check_if_essential_paths_are_set(prompt=True):
             return
 
-        create_backup_in_thread(self.settings_controller.settings)
+        create_backup_in_thread(self.settings)
 
         # Check for unsaved mod list changes and prompt user
         current_mod_uuids = [
@@ -2850,7 +2832,7 @@ class MainContent(QObject):
                 return
 
         # Run todds before launch if auto-run is enabled
-        if self.settings_controller.settings.auto_run_todds_before_launch:
+        if self.settings.auto_run_todds_before_launch:
             success, exit_code = self._do_optimize_textures(block_until_complete=True)
 
             # Show error message if todds failed, but continue to launch game
@@ -2867,20 +2849,16 @@ class MainContent(QObject):
                 )
 
         # Retrieve instance configuration
-        current_instance = self.settings_controller.settings.current_instance
-        game_install_path = Path(
-            self.settings_controller.settings.instances[current_instance].game_folder
-        )
-        run_args = self.settings_controller.settings.instances[
-            current_instance
-        ].run_args
+        current_instance = self.settings.current_instance
+        game_install_path = Path(self.settings.instances[current_instance].game_folder)
+        run_args = self.settings.instances[current_instance].run_args
 
         # Retrieve Steam-related settings for this instance
-        steam_client_integration = self.settings_controller.settings.instances[
+        steam_client_integration = self.settings.instances[
             current_instance
         ].steam_client_integration
 
-        launch_via_steam_protocol = self.settings_controller.settings.instances[
+        launch_via_steam_protocol = self.settings.instances[
             current_instance
         ].launch_via_steam_protocol
 
@@ -2936,10 +2914,7 @@ class MainContent(QObject):
         """
         When clicked, opens the Use This Instead panel.
         """
-        if (
-            self.settings_controller.settings.external_use_this_instead_metadata_source
-            == "None"
-        ):
+        if self.settings.external_use_this_instead_metadata_source == "None":
             dialogue.show_warning(
                 title=self.tr("Use This Instead"),
                 text=self.tr(
