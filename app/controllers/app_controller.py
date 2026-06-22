@@ -4,6 +4,7 @@ import sys
 from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
+import app.utils.globals as app_globals
 from app.controllers.main_window_controller import MainWindowController
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
@@ -77,6 +78,7 @@ class AppController(QObject):
         self.settings_controller = SettingsController(
             model=self.settings, view=self.settings_dialog
         )
+        app_globals.SETTINGS = self.settings
 
     def initialize_theme_controller(self) -> None:
         """Initializes the ThemeController."""
@@ -128,7 +130,12 @@ class AppController(QObject):
 
     def initialize_main_window(self) -> None:
         """Initializes the main window and its controller."""
-        self.main_window = MainWindow(settings_controller=self.settings_controller)
+        self.main_window = MainWindow(
+            settings=self.settings,
+            get_active_instance=lambda: self.settings_controller.active_instance,
+            set_instance=self.settings_controller.set_instance,
+            show_settings_dialog=self.settings_controller.show_settings_dialog,
+        )
         self.main_window_controller = MainWindowController(self.main_window)
 
     def run(self) -> int:

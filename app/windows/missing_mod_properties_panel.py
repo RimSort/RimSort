@@ -3,7 +3,6 @@ from typing import Any, Iterable
 from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import ListedMod
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
@@ -23,7 +22,6 @@ class MissingModPropertiesPanel(BaseModsPanel):
     Attributes:
         missing_packageid_mods (list[str]): Mod path keys with missing Package ID.
         missing_publishfieldid_mods (list[str]): Mod path keys with missing Publish Field ID.
-        settings_controller (SettingsController): Controller for application settings.
         metadata_controller: Metadata controller instance from base class for accessing mod data.
     """
 
@@ -31,7 +29,6 @@ class MissingModPropertiesPanel(BaseModsPanel):
         self,
         missing_packageid_mods: list[str],
         missing_publishfieldid_mods: list[str],
-        settings_controller: SettingsController,
     ) -> None:
         """
         Initialize the MissingModPropertiesPanel with mods data.
@@ -39,12 +36,10 @@ class MissingModPropertiesPanel(BaseModsPanel):
         Args:
             missing_packageid_mods: Mod path keys with missing Package ID.
             missing_publishfieldid_mods: Mod path keys with missing Publish Field ID.
-            settings_controller: Controller for managing application settings.
         """
         logger.debug("Initializing MissingModPropertiesPanel")
         self.missing_packageid_mods = missing_packageid_mods
         self.missing_publishfieldid_mods = missing_publishfieldid_mods
-        self.settings_controller = settings_controller
 
         super().__init__(
             object_name="missingModPropertiesPanel",

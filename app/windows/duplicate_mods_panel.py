@@ -1,6 +1,5 @@
 from loguru import logger
 
-from app.controllers.settings_controller import SettingsController
 from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import (
     BaseModsPanel,
@@ -18,26 +17,21 @@ class DuplicateModsPanel(BaseModsPanel):
     Attributes:
         duplicate_mods (dict[str, list[str]]): Dictionary mapping package IDs to lists of UUIDs
             of duplicate mods.
-        settings_controller (SettingsController): Controller for application settings.
         metadata_controller: MetadataController instance from base class for accessing mod data.
     """
 
     def __init__(
         self,
         duplicate_mods: dict[str, list[str]],
-        settings_controller: SettingsController,
     ) -> None:
         """
         Initialize the DuplicateModsPanel with duplicate mods data.
 
         Args:
             duplicate_mods: Dictionary mapping package IDs to lists of UUIDs of duplicate mods.
-            settings_controller: Controller for managing application settings.
         """
         logger.debug("Initializing DuplicateModsPanel")
         self.duplicate_mods = duplicate_mods
-        self.settings_controller = settings_controller
-        self.settings_controller = settings_controller
 
         super().__init__(
             object_name="duplicateModsPanel",

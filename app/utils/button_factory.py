@@ -61,7 +61,7 @@ class ButtonFactory:
     ) -> QPushButton:
         """Create a deletion button with menu."""
         return self.panel._create_deletion_button(
-            self.panel.settings_controller,
+            self.panel.settings,
             self.panel._get_selected_mod_metadata,
             completion_callback,
             menu_title,

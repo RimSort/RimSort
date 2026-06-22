@@ -44,9 +44,9 @@ def _get_parent_if_constrain_enabled(parent: QWidget | None = None) -> QWidget |
         parent is None
         and hasattr(app_globals, "MAIN_WINDOW")
         and app_globals.MAIN_WINDOW
-        and hasattr(app_globals, "SETTINGS_CONTROLLER")
-        and app_globals.SETTINGS_CONTROLLER
-        and app_globals.SETTINGS_CONTROLLER.settings.constrain_dialogues_to_main_window_monitor
+        and hasattr(app_globals, "SETTINGS")
+        and app_globals.SETTINGS
+        and app_globals.SETTINGS.constrain_dialogues_to_main_window_monitor
     ):
         return app_globals.MAIN_WINDOW
     return parent

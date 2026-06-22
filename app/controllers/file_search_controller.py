@@ -10,7 +10,6 @@ from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
 from app.models.search_result import SearchResult
 from app.models.settings import Settings
@@ -594,7 +593,6 @@ class FileSearchController(QObject):
     def __init__(
         self,
         settings: Settings,
-        settings_controller: SettingsController,
         dialog: FileSearchDialog,
         active_mod_ids: Optional[set[str]] = None,
     ) -> None:
@@ -603,14 +601,12 @@ class FileSearchController(QObject):
 
         Args:
             settings (Settings): Application settings instance.
-            settings_controller (SettingsController): Controller for settings management.
             dialog (FileSearchDialog): The file search dialog UI component.
             active_mod_ids (Optional[Set[str]]): Set of active mod IDs for filtering.
         """
         super().__init__()
         self.settings = settings
         self.dialog = dialog
-        self.settings_controller = settings_controller
         self.mods_panel = ModsPanel(
             settings=self.settings,
         )
