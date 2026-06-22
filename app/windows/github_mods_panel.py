@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from app.controllers.metadata_controller import MetadataController
 
 from loguru import logger
 from PySide6.QtCore import Qt
@@ -31,7 +34,10 @@ _COL_AUTO_UPDATE = 5
 class GitHubModsPanel(BaseModsPanel):
     """Panel for managing GitHub mods -- view installed, check updates, switch versions."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        metadata_controller: MetadataController | None = None,
+    ) -> None:
         self._update_worker: Any = None
         self._auto_update_signals_blocked = False
 
@@ -47,6 +53,7 @@ class GitHubModsPanel(BaseModsPanel):
                 "Latest Version",
                 "Auto-Update",
             ],
+            metadata_controller=metadata_controller,
         )
 
         button_configs = [

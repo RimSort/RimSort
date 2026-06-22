@@ -135,6 +135,7 @@ class AppController(QObject):
             get_active_instance=lambda: self.settings_controller.active_instance,
             set_instance=self.settings_controller.set_instance,
             show_settings_dialog=self.settings_controller.show_settings_dialog,
+            metadata_controller=self.metadata_controller,
         )
         self.main_window_controller = MainWindowController(self.main_window)
 

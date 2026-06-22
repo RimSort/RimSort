@@ -152,7 +152,10 @@ class BaseModsPanel(QWidget):
 
     def _setup_metadata(self) -> None:
         """Set up metadata controller and settings controller."""
-        self.metadata_controller = MetadataController.instance()
+        if self._metadata_controller is not None:
+            self.metadata_controller = self._metadata_controller
+        else:
+            self.metadata_controller = MetadataController.instance()
         self.settings = self.metadata_controller.settings
 
     def _get_steam_client_integration_enabled(self) -> bool:
@@ -353,8 +356,10 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: Sequence[HeaderColumn],
+        metadata_controller: MetadataController | None = None,
     ):
         super().__init__()
+        self._metadata_controller = metadata_controller
         self._initialize_ui_elements()
         self._initialize_layouts()
         self._initialize_components()
@@ -834,6 +839,7 @@ class BaseModsPanel(QWidget):
         deletion_menu = ModDeletionMenu(
             settings=settings,
             get_selected_mod_metadata=get_selected_mod_metadata,
+            metadata_controller=self.metadata_controller,
             completion_callback=completion_callback,
             menu_title=menu_title,
             enable_delete_mod=enable_delete_mod,

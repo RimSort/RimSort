@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QCheckBox
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     ListedMod,
@@ -52,7 +53,11 @@ class UseThisInsteadPanel(BaseModsPanel):
     Groups mods by replacement mod and provides actions for subscription, unsubscription, and deletion.
     """
 
-    def __init__(self, mod_metadata: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        mod_metadata: dict[str, Any],
+        metadata_controller: MetadataController | None = None,
+    ) -> None:
         """
         Initialize the UseThisInsteadPanel with mod metadata.
 
@@ -71,6 +76,7 @@ class UseThisInsteadPanel(BaseModsPanel):
                 'according to the "Use This Instead" database, grouped by replacement mod.'
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=metadata_controller,
         )
 
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()

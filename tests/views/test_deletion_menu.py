@@ -34,6 +34,7 @@ def deletion_menu(
     menu = ModDeletionMenu(
         settings=mock_settings_controller.settings,
         get_selected_mod_metadata=lambda: [],
+        metadata_controller=mock_metadata_controller,
         menu_title="Test Menu",
     )
     return menu

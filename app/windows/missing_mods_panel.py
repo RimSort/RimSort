@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
+from app.controllers.metadata_controller import MetadataController
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.windows.base_mods_panel import (
     BaseModsPanel,
@@ -27,6 +28,7 @@ class MissingModsPrompt(BaseModsPanel):
     def __init__(
         self,
         packageids: list[str],
+        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
         Initialize the MissingModsPrompt.
@@ -53,6 +55,7 @@ class MissingModsPrompt(BaseModsPanel):
                 self.tr(self.COL_PUBLISHED_FILE_ID),
                 self.tr(self.COL_WORKSHOP_PAGE),
             ],
+            metadata_controller=metadata_controller,
         )
 
         self.data_by_variants: dict[str, dict[str, Any]] = {}
