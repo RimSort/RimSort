@@ -612,7 +612,7 @@ class FileSearchController(QObject):
         self.dialog = dialog
         self.settings_controller = settings_controller
         self.mods_panel = ModsPanel(
-            settings_controller=self.settings_controller,
+            settings=self.settings,
         )
         self.active_mod_ids = (
             active_mod_ids or set()

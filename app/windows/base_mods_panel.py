@@ -833,7 +833,7 @@ class BaseModsPanel(QWidget):
         button = QPushButton()
         button.setText(self.tr("Delete"))
         deletion_menu = ModDeletionMenu(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             get_selected_mod_metadata=get_selected_mod_metadata,
             completion_callback=completion_callback,
             menu_title=menu_title,

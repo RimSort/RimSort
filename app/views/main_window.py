@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
 
         self.mods_panel_controller = ModsPanelController(
             view=self.main_content_panel.mods_panel,
-            settings_controller=self.settings_controller,
+            settings=self.settings_controller.settings,
         )
 
         self.menu_bar = MenuBar(
@@ -236,11 +236,11 @@ class MainWindow(QMainWindow):
 
         self.main_content_controller = MainContentController(
             view=self.main_content_panel,
-            settings_controller=self.settings_controller,
+            settings=self.settings_controller.settings,
         )
 
         self.todds_controller = ToddsController(
-            settings_controller=self.settings_controller,
+            settings=self.settings_controller.settings,
             metadata_controller=self.main_content_panel.metadata_controller,
         )
         self.main_content_panel.todds_controller = self.todds_controller

@@ -8,7 +8,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QMessageBox
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
@@ -52,7 +52,7 @@ class ModDeletionMenu(QMenu):
 
     def __init__(
         self,
-        settings_controller: SettingsController,
+        settings: Settings,
         get_selected_mod_metadata: Callable[[], list[ModMetadata]],
         remove_from_uuids: list[str] | None = None,
         menu_title: str = "Deletion options",
@@ -67,7 +67,7 @@ class ModDeletionMenu(QMenu):
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_controller = MetadataController.instance()
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.completion_callback = completion_callback
         self._actions_initialized = False
 
@@ -274,8 +274,8 @@ class ModDeletionMenu(QMenu):
             steamcmd_purge_mods(
                 metadata_controller=self.metadata_controller,
                 publishedfileids=result.steamcmd_purge_ids,
-                auto_clear_enabled=self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
+                auto_clear_enabled=self.settings.instances[
+                    self.settings.current_instance
                 ].steamcmd_auto_clear_depot_cache,
             )
 
@@ -778,7 +778,7 @@ class ModDeletionMenu(QMenu):
 
         This only deletes the mod for the relevant instance.
         """
-        time_limit = self.settings_controller.settings.aux_db_time_limit
+        time_limit = self.settings.aux_db_time_limit
         if time_limit < 0:
             logger.debug(
                 "Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative."

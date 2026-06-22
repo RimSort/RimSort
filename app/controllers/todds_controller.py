@@ -5,8 +5,8 @@ from tempfile import gettempdir
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.divider import is_divider_uuid
+from app.models.settings import Settings
 from app.utils.todds.wrapper import ToddsInterface, ToddsRunner
 
 
@@ -15,10 +15,10 @@ class ToddsController:
 
     def __init__(
         self,
-        settings_controller: SettingsController,
+        settings: Settings,
         metadata_controller: MetadataController,
     ) -> None:
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.metadata_controller = metadata_controller
 
     def generate_todds_txt(
@@ -42,7 +42,7 @@ class ToddsController:
             os.remove(todds_txt_path)
 
         paths_written = 0
-        settings = self.settings_controller.settings
+        settings = self.settings
 
         if not settings.todds_active_mods_target:
             instance = settings.instances[settings.current_instance]
@@ -96,7 +96,7 @@ class ToddsController:
             todds_active_mods_target is True).
         :return: True if todds was executed (paths found), False otherwise.
         """
-        settings = self.settings_controller.settings
+        settings = self.settings
 
         todds_interface = ToddsInterface(
             preset=settings.todds_preset,
@@ -125,7 +125,7 @@ class ToddsController:
             todds_active_mods_target is True).
         :return: True if todds was executed (paths found), False otherwise.
         """
-        settings = self.settings_controller.settings
+        settings = self.settings
 
         todds_interface = ToddsInterface(
             preset="clean",

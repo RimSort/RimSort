@@ -12,8 +12,8 @@ from PySide6.QtCore import QObject, QThreadPool, Slot
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import Base
+from app.models.settings import Settings
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
 from app.utils.constants import DATABASE_DISPLAY_NAMES
@@ -71,12 +71,10 @@ if TYPE_CHECKING:
 class MainContentController(QObject):
     """Controller with concurrent checking/updating and improved structure."""
 
-    def __init__(
-        self, view: MainContent, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, view: MainContent, settings: Settings) -> None:
         super().__init__()
         self.view = view
-        self.settings_controller = settings_controller
+        self.settings = settings
         self._git_clone_worker: Optional[GitCloneWorker] = None
         self._git_push_worker: Optional[GitPushWorker] = None
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
@@ -93,44 +91,30 @@ class MainContentController(QObject):
         self.download_signals = {
             EventBus().do_download_community_rules_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: self.settings_controller.settings.external_community_rules_repo,
-                lambda: self.settings_controller.settings.external_community_rules_url,
-                lambda: (
-                    self.settings_controller.settings.external_community_rules_metadata_source
-                ),
+                lambda: self.settings.external_community_rules_repo,
+                lambda: self.settings.external_community_rules_url,
+                lambda: self.settings.external_community_rules_metadata_source,
                 DATABASE_DISPLAY_NAMES["community_rules"],
             ),
             EventBus().do_download_steam_workshop_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: self.settings_controller.settings.external_steam_metadata_repo,
-                lambda: self.settings_controller.settings.external_steam_metadata_url,
-                lambda: (
-                    self.settings_controller.settings.external_steam_metadata_source
-                ),
+                lambda: self.settings.external_steam_metadata_repo,
+                lambda: self.settings.external_steam_metadata_url,
+                lambda: self.settings.external_steam_metadata_source,
                 DATABASE_DISPLAY_NAMES["steam_workshop"],
             ),
             EventBus().do_download_use_this_instead_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: (
-                    self.settings_controller.settings.external_use_this_instead_repo_path
-                ),
-                lambda: self.settings_controller.settings.external_use_this_instead_url,
-                lambda: (
-                    self.settings_controller.settings.external_use_this_instead_metadata_source
-                ),
+                lambda: self.settings.external_use_this_instead_repo_path,
+                lambda: self.settings.external_use_this_instead_url,
+                lambda: self.settings.external_use_this_instead_metadata_source,
                 DATABASE_DISPLAY_NAMES["use_this_instead"],
             ),
             EventBus().do_download_no_version_warning_db_from_github: (
                 AppInfo().databases_folder,
-                lambda: (
-                    self.settings_controller.settings.external_no_version_warning_repo_path
-                ),
-                lambda: (
-                    self.settings_controller.settings.external_no_version_warning_url
-                ),
-                lambda: (
-                    self.settings_controller.settings.external_no_version_warning_metadata_source
-                ),
+                lambda: self.settings.external_no_version_warning_repo_path,
+                lambda: self.settings.external_no_version_warning_url,
+                lambda: self.settings.external_no_version_warning_metadata_source,
                 DATABASE_DISPLAY_NAMES["no_version_warning"],
             ),
         }
@@ -140,7 +124,7 @@ class MainContentController(QObject):
 
     def _start_github_update_check(self) -> None:
         """Run a background GitHub update check if enabled in settings."""
-        settings = self.settings_controller.settings
+        settings = self.settings
         if not settings.github_update_check_enabled:
             return
 
@@ -253,7 +237,7 @@ class MainContentController(QObject):
         self._github_auto_update_results.append((owner_repo, success))
 
         if success:
-            settings = self.settings_controller.settings
+            settings = self.settings
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 settings.aux_db_path
             )
@@ -447,7 +431,7 @@ class MainContentController(QObject):
 
     def _filter_non_github_repos(self, repos_paths: List[Path]) -> List[Path]:
         """Filter out paths tracked as GitHub mods in the current instance."""
-        settings = self.settings_controller.settings
+        settings = self.settings
         try:
             aux_controller = AuxMetadataController.get_or_create_cached_instance(
                 settings.aux_db_path
@@ -586,8 +570,8 @@ class MainContentController(QObject):
         config = GitOperationConfig(notify_errors=True)
 
         # Get GitHub authentication from settings
-        username = self.settings_controller.settings.github_username
-        token = self.settings_controller.settings.github_token
+        username = self.settings.github_username
+        token = self.settings.github_token
 
         push_config = PushConfig(
             username=username,
@@ -713,14 +697,14 @@ class MainContentController(QObject):
         Silently update databases on startup if enabled.
         Dispatches to HTTP or git depending on each database's configured source.
         """
-        if not self.settings_controller.settings.update_databases_on_startup:
+        if not self.settings.update_databases_on_startup:
             logger.info("Update databases on startup is disabled.")
             return
 
         if not check_internet_connection():
             return
 
-        settings = self.settings_controller.settings
+        settings = self.settings
         http_tasks: list[DatabaseDownloadTask] = []
 
         db_configs = [
@@ -1001,9 +985,7 @@ class MainContentController(QObject):
             return
 
         base_path = str(
-            self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ].local_folder
+            self.settings.instances[self.settings.current_instance].local_folder
         )
 
         parsed = parse_github_url(args)
@@ -1020,7 +1002,7 @@ class MainContentController(QObject):
         if not check_internet_connection():
             return
 
-        settings = self.settings_controller.settings
+        settings = self.settings
         cache_session = self._get_github_cache_session()
         provider = GitHubProvider(
             github_token=settings.github_token or None,
@@ -1183,7 +1165,7 @@ class MainContentController(QObject):
             ).exec()
             return
 
-        settings = self.settings_controller.settings
+        settings = self.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
             settings.aux_db_path
         )
@@ -1230,7 +1212,7 @@ class MainContentController(QObject):
     @Slot(str, str)
     def _on_github_version_switch(self, mod_path: str, selected_tag: str) -> None:
         """Handle version switch request from the mod info panel combo box."""
-        settings = self.settings_controller.settings
+        settings = self.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
             settings.aux_db_path
         )
@@ -1312,7 +1294,7 @@ class MainContentController(QObject):
             ).exec()
             return
 
-        settings = self.settings_controller.settings
+        settings = self.settings
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
             settings.aux_db_path
         )
@@ -1388,8 +1370,8 @@ class MainContentController(QObject):
             return
 
         # Check GitHub credentials
-        github_username = self.settings_controller.settings.github_username
-        github_token = self.settings_controller.settings.github_token
+        github_username = self.settings.github_username
+        github_token = self.settings.github_token
 
         if not github_username or not github_token:
             InformationBox(
@@ -1440,10 +1422,7 @@ class MainContentController(QObject):
                 database = json.loads(f.read())
 
             if database.get("version"):
-                database_version = (
-                    database["version"]
-                    - self.settings_controller.settings.database_expiry
-                )
+                database_version = database["version"] - self.settings.database_expiry
             elif database.get("timestamp"):
                 database_version = database["timestamp"]
             else:
@@ -2032,7 +2011,7 @@ class MainContentController(QObject):
             text=self.tr(
                 "Are you sure you want to upload the Steam Workshop database to GitHub?"
             ),
-            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            repo_url=self.settings.external_steam_metadata_repo,
             file_name="steamDB.json",
             log_label="Steam Workshop",
         )
@@ -2045,7 +2024,7 @@ class MainContentController(QObject):
             text=self.tr(
                 "Are you sure you want to upload the Community Rules database to GitHub?"
             ),
-            repo_url=self.settings_controller.settings.external_community_rules_repo,
+            repo_url=self.settings.external_community_rules_repo,
             file_name="communityRules.json",
             log_label="Community Rules",
         )

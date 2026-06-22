@@ -54,7 +54,7 @@ class TestGenerateToddsTxt:
         (tmp_path / "workshop").mkdir()
 
         tc = ToddsController(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt()
@@ -73,7 +73,7 @@ class TestGenerateToddsTxt:
     ) -> None:
         """When directories don't exist, they are skipped."""
         tc = ToddsController(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt()
@@ -86,7 +86,7 @@ class TestGenerateToddsTxt:
         settings_controller, metadata_controller = active_mods_setup
 
         tc = ToddsController(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt(
@@ -101,7 +101,7 @@ class TestGenerateToddsTxt:
         settings_controller, metadata_controller = active_mods_setup
 
         tc = ToddsController(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
         path, count = tc.generate_todds_txt(
@@ -120,7 +120,7 @@ class TestActiveModPathsGuard:
         """When todds_active_mods_target is True but active_mod_paths is None, returns 0."""
         settings_controller.settings.todds_active_mods_target = True
         tc = ToddsController(
-            settings_controller=settings_controller,
+            settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
         _, count = tc.generate_todds_txt(active_mod_paths=None)

@@ -5,7 +5,8 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
-from app.views.mods_panel import SettingsController, TagEditDialog
+from app.models.settings import Settings
+from app.views.mods_panel import TagEditDialog
 
 
 class TestTagEditDialog:
@@ -25,9 +26,7 @@ class TestTagEditDialog:
         ):
             dialog = TagEditDialog(
                 title="Test Dialog",
-                settings_controller=MagicMock(
-                    spec=SettingsController, settings=MagicMock()
-                ),
+                settings=MagicMock(spec=Settings),
                 existing_selected_tags={"a", "aa", "b", "bb"},
             )
             qtbot.addWidget(dialog)
