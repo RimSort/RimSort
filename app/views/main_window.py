@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
 
         # Create and add the Player Log tab
-        self.player_log_widget = PlayerLogTab(self.settings_controller)
+        self.player_log_widget = PlayerLogTab(self.settings_controller.settings)
         self.tab_widget.addTab(self.player_log_widget, self.tr("Player Log"))
 
         # Create and add the Search tab
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
         )
 
         self.menu_bar = MenuBar(
-            menu_bar=self.menuBar(), settings_controller=self.settings_controller
+            menu_bar=self.menuBar(), settings=self.settings_controller.settings
         )
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,

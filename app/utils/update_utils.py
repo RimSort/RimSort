@@ -97,7 +97,7 @@ ERR_RETRIEVE_RELEASE_TITLE = "Unable to retrieve latest release information"
 ERR_RETRIEVE_RELEASE_TEXT = "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
 
 if TYPE_CHECKING:
-    from app.controllers.settings_controller import SettingsController
+    from app.models.settings import Settings
 
 
 class UpdateError(Exception):
@@ -461,12 +461,12 @@ class UpdateManager(QObject):
 
     def __init__(
         self,
-        settings_controller: "SettingsController",
+        settings: "Settings",
         main_content: Any,
         mod_info_panel: Optional[Any] = None,
     ) -> None:
         super().__init__()
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.main_content = main_content
         self.mod_info_panel = mod_info_panel
         self._update_content: bytes | None = None
@@ -1219,10 +1219,7 @@ class UpdateManager(QObject):
                 return
 
             # AppImage updates use .bak rename as the backup — skip ZIP backup
-            if (
-                not is_appimage
-                and self.settings_controller.settings.enable_backup_before_update
-            ):
+            if not is_appimage and self.settings.enable_backup_before_update:
                 # Create backup of current installation with progress window
                 self._create_backup_with_progress()
                 # Clean up old backups after successful backup creation
@@ -2605,7 +2602,7 @@ class UpdateManager(QObject):
         Clean up old backups, keeping only the most recent ones based on max_backups setting.
         """
         app_backup_folder = AppInfo().application_backups_folder
-        max_backups = self.settings_controller.settings.max_backups
+        max_backups = self.settings.max_backups
 
         try:
             # Get all backup files

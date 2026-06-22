@@ -685,7 +685,7 @@ class ModInfoPanel:
     def _set_mod_tags_info(self, uuid: str) -> None:
         """Set user-defined tags information."""
         try:
-            tags = auxdb_get_mod_tags(self.settings_controller, uuid)
+            tags = auxdb_get_mod_tags(self.settings_controller.settings, uuid)
         except Exception as e:
             logger.debug(f"Failed to load tags for mod info panel UUID {uuid}: {e}")
             tags = []

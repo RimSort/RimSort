@@ -452,7 +452,7 @@ class ModListItemInner(QWidget):
 
         name_line = f"Mod: {mod.name if mod is not None else 'Not specified'}\n"
 
-        tags = auxdb_get_mod_tags(self.settings_controller, self.path)
+        tags = auxdb_get_mod_tags(self.settings_controller.settings, self.path)
         tags_line = f"Tags: {', '.join(tags) if tags else 'None'}\n"
 
         if isinstance(mod, AboutXmlMod) and mod.authors:
@@ -731,7 +731,7 @@ class ModListItemInner(QWidget):
 
     def update_tags_label(self, tags: list[str] | None = None) -> None:
         if tags is None:
-            tags = auxdb_get_mod_tags(self.settings_controller, self.path)
+            tags = auxdb_get_mod_tags(self.settings_controller.settings, self.path)
 
         if not self.show_tags or not tags:
             self.mod_tags_label.setText("")
@@ -818,7 +818,7 @@ class TagEditDialog(QDialog):
 
     def populate_tags(self) -> None:
         try:
-            tags = auxdb_get_all_tags(self.settings_controller)
+            tags = auxdb_get_all_tags(self.settings_controller.settings)
         except Exception as e:
             logger.debug(f"Unable to load existing tags: {e}")
             tags = []
@@ -2353,17 +2353,21 @@ class ModListWidget(QListWidget):
                         for selected_uuid in selected_uuids:
                             if action == replace_mod_tags_action:
                                 auxdb_replace_mod_tags(
-                                    self.settings_controller, selected_uuid, tags
+                                    self.settings_controller.settings,
+                                    selected_uuid,
+                                    tags,
                                 )
                             else:
                                 auxdb_add_mod_tags(
-                                    self.settings_controller, selected_uuid, tags
+                                    self.settings_controller.settings,
+                                    selected_uuid,
+                                    tags,
                                 )
 
                             self.refresh_mod_tags_for_uuid(selected_uuid)
 
                         if action == replace_mod_tags_action:
-                            auxdb_cleanup_unused_tags(self.settings_controller)
+                            auxdb_cleanup_unused_tags(self.settings_controller.settings)
 
                         self.tags_changed_signal.emit()
                         return True
@@ -2372,9 +2376,11 @@ class ModListWidget(QListWidget):
                 if action == remove_mod_tags_action:
                     selected_uuids = list(all_selected_paths.values())
                     for selected_uuid in selected_uuids:
-                        auxdb_remove_mod_tags(self.settings_controller, selected_uuid)
+                        auxdb_remove_mod_tags(
+                            self.settings_controller.settings, selected_uuid
+                        )
                         self.refresh_mod_tags_for_uuid(selected_uuid)
-                    auxdb_cleanup_unused_tags(self.settings_controller)
+                    auxdb_cleanup_unused_tags(self.settings_controller.settings)
                     self.tags_changed_signal.emit()
                     return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
@@ -2635,7 +2641,7 @@ class ModListWidget(QListWidget):
                 list_type=self.list_type,
                 aux_metadata_controller=aux_metadata_controller,
                 aux_metadata_session=aux_metadata_session,
-                settings_controller=self.settings_controller,
+                settings=self.settings_controller.settings,
             )
             data.__dict__["show_tags"] = self.show_tags
         # Create item without a parent first so we can set data before adding to the list.
@@ -3617,7 +3623,7 @@ class ModListWidget(QListWidget):
                 uuids,
                 key=key,
                 descending=descending,
-                settings_controller=self.settings_controller,
+                settings=self.settings_controller.settings,
             )
             self.recreate_mod_list(list_type, sorted_uuids, filtering=filtering)
         else:
@@ -3651,7 +3657,7 @@ class ModListWidget(QListWidget):
                     uuids,
                     key=sort_key,
                     descending=descending,
-                    settings_controller=self.settings_controller,
+                    settings=self.settings_controller.settings,
                 )
             else:
                 if list_type == "Inactive":
@@ -3659,7 +3665,7 @@ class ModListWidget(QListWidget):
                         uuids,
                         key=ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME,
                         descending=True,
-                        settings_controller=self.settings_controller,
+                        settings=self.settings_controller.settings,
                     )
         # Disable updates and disconnect model signals during rebuild
         self.setUpdatesEnabled(False)
@@ -3699,7 +3705,7 @@ class ModListWidget(QListWidget):
                         list_type=self.list_type,
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
-                        settings_controller=self.settings_controller,
+                        settings=self.settings_controller.settings,
                     )
                     data.__dict__["show_tags"] = self.show_tags
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
@@ -3770,7 +3776,7 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
-        auxdb_update_mod_color(self.settings_controller, uuid, new_color)
+        auxdb_update_mod_color(self.settings_controller.settings, uuid, new_color)
 
     def change_all_mod_colors(self, uuids: list[str], new_color: QColor) -> None:
         uuid_to_color: dict[str, QColor | None] = {}
@@ -3781,7 +3787,7 @@ class ModListWidget(QListWidget):
             item_data["mod_color"] = new_color
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = new_color
-        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
+        auxdb_update_all_mod_colors(self.settings_controller.settings, uuid_to_color)
 
     def reset_mod_color(self, uuid: str) -> None:
         current_mod_index = self.paths.index(uuid)
@@ -3789,7 +3795,7 @@ class ModListWidget(QListWidget):
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = None
         item.setData(Qt.ItemDataRole.UserRole, item_data)
-        auxdb_update_mod_color(self.settings_controller, uuid, None)
+        auxdb_update_mod_color(self.settings_controller.settings, uuid, None)
 
     def reset_all_mod_colors(self, uuids: list[str]) -> None:
         uuid_to_color: dict[str, QColor | None] = {}
@@ -3800,13 +3806,13 @@ class ModListWidget(QListWidget):
             item_data["mod_color"] = None
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = None
-        auxdb_update_all_mod_colors(self.settings_controller, uuid_to_color)
+        auxdb_update_all_mod_colors(self.settings_controller.settings, uuid_to_color)
 
     def get_common_selected_tags(self, uuids: list[str]) -> set[str]:
         common_tags: set[str] | None = None
 
         for uuid in uuids:
-            tags = set(auxdb_get_mod_tags(self.settings_controller, uuid))
+            tags = set(auxdb_get_mod_tags(self.settings_controller.settings, uuid))
             if common_tags is None:
                 common_tags = tags
             else:
@@ -3821,7 +3827,9 @@ class ModListWidget(QListWidget):
         current_mod_index = self.paths.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        item_data["mod_tags"] = auxdb_get_mod_tags(self.settings_controller, uuid)
+        item_data["mod_tags"] = auxdb_get_mod_tags(
+            self.settings_controller.settings, uuid
+        )
         item_data.__dict__["show_tags"] = bool(
             item_data.__dict__.get("show_tags", False)
         )
@@ -4462,7 +4470,7 @@ class ModsPanel(QWidget):
                     data = CustomListWidgetItemMetadata(
                         path=uuid_key,
                         list_type=lw.list_type,
-                        settings_controller=self.settings_controller,
+                        settings=self.settings_controller.settings,
                         aux_metadata_controller=aux_metadata_controller,
                         aux_metadata_session=aux_metadata_session,
                     )
@@ -4675,7 +4683,7 @@ class ModsPanel(QWidget):
     def refresh_all_tag_filter_selectors(self) -> None:
         """Refresh the available tags in both filter panels from the aux DB."""
         try:
-            tags = auxdb_get_all_tags(self.settings_controller)
+            tags = auxdb_get_all_tags(self.settings_controller.settings)
         except Exception as e:
             logger.debug(f"Unable to load tag filter list: {e}")
             tags = []

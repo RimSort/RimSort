@@ -1,7 +1,6 @@
 import os
 import time
 from enum import Enum
-from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
@@ -9,6 +8,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod
+from app.models.settings import Settings
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.generic import scanpath
 
@@ -185,7 +185,7 @@ def path_to_mod_color(path: str, path_to_color: dict[str, str] | None = None) ->
 def path_to_mod_tags(
     path: str,
     cached_metadata: dict[str, ListedMod | None] | None = None,
-    settings_controller: Any | None = None,
+    settings: Settings | None = None,
 ) -> str:
     """
     Get user tags for inactive mods list sorting.
@@ -193,11 +193,11 @@ def path_to_mod_tags(
     Mods without tags sort first by an empty string. Tagged mods are sorted by
     their comma-separated, normalized tag list.
     """
-    if settings_controller is None:
+    if settings is None:
         return ""
 
     try:
-        tags = auxdb_get_mod_tags(settings_controller, path)
+        tags = auxdb_get_mod_tags(settings, path)
     except Exception as e:
         logger.debug(f"Failed to retrieve tags for sorting path {path}: {e}")
         return ""
@@ -269,18 +269,18 @@ def get_cached_metadata_for_batch(
 
 def _get_path_to_color_map(
     paths: list[str],
-    settings_controller: Any,
+    settings: Settings,
 ) -> dict[str, str]:
     """Build a path→color_hex mapping from the aux DB for color-based sorting.
 
     :param paths: List of mod paths to fetch colors for
-    :param settings_controller: SettingsController instance
+    :param settings: Settings instance
     :return: Dictionary mapping path -> color_hex string (only includes mods with colors)
     """
     path_to_color: dict[str, str] = {}
     try:
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
+            settings.aux_db_path
         )
         with aux_controller.Session() as aux_session:
             for path in paths:
@@ -294,18 +294,18 @@ def _get_path_to_color_map(
 
 def _get_path_to_updated_map(
     paths: list[str],
-    settings_controller: Any,
+    settings: Settings,
 ) -> dict[str, int]:
     """Build a path→acf_time_updated mapping from the aux DB for update-time sorting.
 
     :param paths: List of mod paths to fetch update times for
-    :param settings_controller: SettingsController instance
+    :param settings: Settings instance
     :return: Dictionary mapping path -> update timestamp (only includes mods with valid timestamps)
     """
     path_to_updated: dict[str, int] = {}
     try:
         aux_controller = AuxMetadataController.get_or_create_cached_instance(
-            settings_controller.settings.aux_db_path
+            settings.aux_db_path
         )
         with aux_controller.Session() as aux_session:
             for path in paths:
@@ -321,7 +321,7 @@ def _build_sort_key_map(
     paths: list[str],
     key: "ModsPanelSortKey",
     cached_metadata: dict[str, ListedMod | None] | None = None,
-    settings_controller: Any | None = None,
+    settings: Settings | None = None,
     path_to_color: dict[str, str] | None = None,
     path_to_updated: dict[str, int] | None = None,
 ) -> dict[str, str | int]:
@@ -331,7 +331,7 @@ def _build_sort_key_map(
     :param paths: List of mod paths to compute keys for
     :param key: The ModsPanelSortKey enum indicating which attribute to extract
     :param cached_metadata: Optional pre-cached metadata dict
-    :param settings_controller: Optional SettingsController for tag sorting
+    :param settings: Optional Settings for tag sorting
     :param path_to_color: Optional pre-built path→color mapping for color sorting
     :param path_to_updated: Optional pre-built path→timestamp mapping for update-time sorting
     :return: Dictionary mapping path -> computed sort key value (str or int).
@@ -353,9 +353,7 @@ def _build_sort_key_map(
         elif key == ModsPanelSortKey.MOD_COLOR:
             sort_key_map[path] = path_to_mod_color(path, path_to_color)
         elif key == ModsPanelSortKey.MOD_TAGS:
-            sort_key_map[path] = path_to_mod_tags(
-                path, cached_metadata, settings_controller
-            )
+            sort_key_map[path] = path_to_mod_tags(path, cached_metadata, settings)
         elif key == ModsPanelSortKey.MOD_UPDATED:
             sort_key_map[path] = path_to_mod_updated(path, path_to_updated)
         else:
@@ -401,7 +399,7 @@ def sort_paths(
     key: ModsPanelSortKey,
     descending: bool | None = None,
     cached_metadata: dict[str, ListedMod | None] | None = None,
-    settings_controller: Any | None = None,
+    settings: Settings | None = None,
 ) -> list[str]:
     """
     Sort mod paths by the specified attribute.
@@ -413,7 +411,7 @@ def sort_paths(
     :param key: ModsPanelSortKey enum specifying the sort attribute
     :param descending: Optional bool to override default sort direction.
     :param cached_metadata: Optional pre-cached metadata dict.
-    :param settings_controller: Optional SettingsController for fetching auxiliary metadata.
+    :param settings: Optional Settings for fetching auxiliary metadata.
     :return: Sorted list of paths in the specified order.
     """
     # Performance instrumentation - track sort timing
@@ -421,20 +419,20 @@ def sort_paths(
 
     # Build color map if sorting by color
     path_to_color: dict[str, str] | None = None
-    if key == ModsPanelSortKey.MOD_COLOR and settings_controller is not None:
-        path_to_color = _get_path_to_color_map(paths, settings_controller)
+    if key == ModsPanelSortKey.MOD_COLOR and settings is not None:
+        path_to_color = _get_path_to_color_map(paths, settings)
 
     # Build update-time map if sorting by update time
     path_to_updated: dict[str, int] | None = None
-    if key == ModsPanelSortKey.MOD_UPDATED and settings_controller is not None:
-        path_to_updated = _get_path_to_updated_map(paths, settings_controller)
+    if key == ModsPanelSortKey.MOD_UPDATED and settings is not None:
+        path_to_updated = _get_path_to_updated_map(paths, settings)
 
     # Pre-compute sort keys to avoid repeated function calls during sort
     sort_key_map = _build_sort_key_map(
         paths,
         key,
         cached_metadata,
-        settings_controller=settings_controller,
+        settings=settings,
         path_to_color=path_to_color,
         path_to_updated=path_to_updated,
     )

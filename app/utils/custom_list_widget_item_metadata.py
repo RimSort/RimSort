@@ -6,8 +6,8 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import AboutXmlMod
+from app.models.settings import Settings
 from app.utils.aux_db_utils import (
     auxdb_get_mod_color,
     auxdb_get_mod_tags,
@@ -24,7 +24,7 @@ class CustomListWidgetItemMetadata:
     def __init__(
         self,
         path: str,
-        settings_controller: SettingsController,
+        settings: Settings,
         errors_warnings: str = "",
         errors: str = "",
         warnings: str = "",
@@ -47,7 +47,7 @@ class CustomListWidgetItemMetadata:
         Unless explicitly provided, invalid and mismatch are automatically set based on the path using metadata controller.
 
         :param path: str, the path of the mod which corresponds to a mod's metadata key
-        :param settings_controller: SettingsController, instance of settings controller
+        :param settings: Settings, settings model instance
         :param errors_warnings: a string of errors and warnings
         :param errors: a string of errors for the notification tooltip
         :param warnings: a string of warnings for the notification tooltip
@@ -74,7 +74,7 @@ class CustomListWidgetItemMetadata:
         self.hidden_by_filter = hidden_by_filter
         if not warning_toggled:
             self.warning_toggled = auxdb_get_mod_warning_toggled(
-                settings_controller, path, aux_metadata_controller, aux_metadata_session
+                settings, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.warning_toggled = warning_toggled
@@ -86,7 +86,7 @@ class CustomListWidgetItemMetadata:
         )
         if mod_color is None:
             self.mod_color = auxdb_get_mod_color(
-                settings_controller, path, aux_metadata_controller, aux_metadata_session
+                settings, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.mod_color = mod_color
@@ -97,7 +97,7 @@ class CustomListWidgetItemMetadata:
         )
         self.mod_tags = (
             auxdb_get_mod_tags(
-                settings_controller, path, aux_metadata_controller, aux_metadata_session
+                settings, path, aux_metadata_controller, aux_metadata_session
             )
             if mod_tags is None
             else mod_tags
@@ -110,7 +110,7 @@ class CustomListWidgetItemMetadata:
         )
         if user_notes == "":
             self.user_notes = auxdb_get_mod_user_notes(
-                settings_controller, path, aux_metadata_controller, aux_metadata_session
+                settings, path, aux_metadata_controller, aux_metadata_session
             )
         else:
             self.user_notes = user_notes

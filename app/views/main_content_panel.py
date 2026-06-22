@@ -131,13 +131,13 @@ class MainContent(QObject):
             self.initialized = True
 
     def _init_services(self) -> None:
-        self.db_builder = DatabaseBuilder(self.settings_controller)
+        self.db_builder = DatabaseBuilder(self.settings_controller.settings)
         self.steam_browser: SteamBrowser | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
         self.metadata_controller = MetadataController.instance()
         self._import_export_service = ImportExportService(
-            self.metadata_controller, self.settings_controller
+            self.metadata_controller, self.settings_controller.settings
         )
         self.query_runner: RunnerPanel | None = None
         self.steamworks_in_use = False
@@ -727,7 +727,7 @@ class MainContent(QObject):
         Check for RimSort updates using UpdateManager.
         """
         update_manager = UpdateManager(
-            self.settings_controller, self, self.mod_info_panel
+            self.settings_controller.settings, self, self.mod_info_panel
         )
         update_manager.do_check_for_update()
 
@@ -1159,7 +1159,7 @@ class MainContent(QObject):
         - If Prompts the user about duplicate or missing mods.
         """
         # Create an instance of RentryImport
-        rentry_import = RentryImport(self.settings_controller)
+        rentry_import = RentryImport(self.settings_controller.settings)
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1907,7 +1907,7 @@ class MainContent(QObject):
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/",
             self.metadata_controller,
-            self.settings_controller,
+            self.settings_controller.settings,
         )
         self.window_manager.register_attr(self, "steam_browser")
 

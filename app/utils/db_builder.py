@@ -10,8 +10,8 @@ from PySide6.QtWidgets import QMessageBox
 import app.utils.constants as app_constants
 import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_structure import ModType
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
@@ -41,18 +41,18 @@ class DatabaseBuilder(QObject):
             cls._instance = super(DatabaseBuilder, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         """
         Initialize the Database Builder singleton.
 
         Args:
-            settings_controller: The settings controller for the application.
+            settings: The settings model for the application.
         """
         if not hasattr(self, "initialized"):
             super(DatabaseBuilder, self).__init__()
             logger.info("Initializing DatabaseBuilder")
 
-            self.settings_controller = settings_controller
+            self.settings = settings
             self.metadata_controller = MetadataController.instance()
             self.query_runner: RunnerPanel | None = None
 
@@ -123,13 +123,13 @@ class DatabaseBuilder(QObject):
             - MODE_ALL_MODS: Includes locally available mod metadata with packageids.
         """
         base_kwargs: dict[str, Any] = {
-            "apikey": self.settings_controller.settings.steam_apikey,
+            "apikey": self.settings.steam_apikey,
             "appid": self.RIMWORLD_APPID,
-            "database_expiry": self.settings_controller.settings.database_expiry,
+            "database_expiry": self.settings.database_expiry,
             "mode": mode,
             "output_database_path": output_path,
-            "get_appid_deps": self.settings_controller.settings.build_steam_database_dlc_data,
-            "update": self.settings_controller.settings.build_steam_database_update_toggle,
+            "get_appid_deps": self.settings.build_steam_database_dlc_data,
+            "update": self.settings.build_steam_database_update_toggle,
         }
 
         if mode == self.MODE_ALL_MODS:
@@ -166,7 +166,7 @@ class DatabaseBuilder(QObject):
             logger.debug("USER ACTION: cancelled selection")
             return
 
-        mode = self.settings_controller.settings.db_builder_include
+        mode = self.settings.db_builder_include
         self.db_builder = self._create_database_builder(mode, output_path)
         self._setup_query_runner(f"RimSort - DB Builder ({mode})")
         self.db_builder.start()
@@ -212,9 +212,9 @@ class DatabaseBuilder(QObject):
             filters out existing mods, and emits appropriate download signals.
         """
         self.db_builder = SteamDatabaseBuilder(
-            apikey=self.settings_controller.settings.steam_apikey,
+            apikey=self.settings.steam_apikey,
             appid=self.RIMWORLD_APPID,
-            database_expiry=self.settings_controller.settings.database_expiry,
+            database_expiry=self.settings.database_expiry,
             mode=self.MODE_PFIDS_BY_APPID,
         )
 

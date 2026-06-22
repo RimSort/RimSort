@@ -394,8 +394,8 @@ class TestGetDirSize:
 
 
 class TestPathToModTags:
-    def test_no_settings_controller(self) -> None:
-        assert path_to_mod_tags("/mods/mod1", settings_controller=None) == ""
+    def test_no_settings(self) -> None:
+        assert path_to_mod_tags("/mods/mod1", settings=None) == ""
 
     def test_normal_tags(self) -> None:
         mock_sc = MagicMock()
@@ -403,13 +403,13 @@ class TestPathToModTags:
             "app.sort.mod_sorting.auxdb_get_mod_tags",
             return_value=["Zebra", "Alpha", "Beta"],
         ):
-            result = path_to_mod_tags("/mods/mod1", settings_controller=mock_sc)
+            result = path_to_mod_tags("/mods/mod1", settings=mock_sc)
         assert result == "alpha, beta, zebra"
 
     def test_empty_tags(self) -> None:
         mock_sc = MagicMock()
         with patch("app.sort.mod_sorting.auxdb_get_mod_tags", return_value=[]):
-            result = path_to_mod_tags("/mods/mod1", settings_controller=mock_sc)
+            result = path_to_mod_tags("/mods/mod1", settings=mock_sc)
         assert result == ""
 
     def test_exception_returns_empty(self) -> None:
@@ -418,13 +418,13 @@ class TestPathToModTags:
             "app.sort.mod_sorting.auxdb_get_mod_tags",
             side_effect=RuntimeError("db error"),
         ):
-            result = path_to_mod_tags("/mods/mod1", settings_controller=mock_sc)
+            result = path_to_mod_tags("/mods/mod1", settings=mock_sc)
         assert result == ""
 
     def test_single_tag(self) -> None:
         mock_sc = MagicMock()
         with patch("app.sort.mod_sorting.auxdb_get_mod_tags", return_value=["OnlyTag"]):
-            result = path_to_mod_tags("/mods/mod1", settings_controller=mock_sc)
+            result = path_to_mod_tags("/mods/mod1", settings=mock_sc)
         assert result == "onlytag"
 
 
@@ -564,7 +564,7 @@ class TestBuildSortKeyMap:
                 ["/mods/m"],
                 ModsPanelSortKey.MOD_TAGS,
                 cached,
-                settings_controller=mock_sc,
+                settings=mock_sc,
             )
         assert result["/mods/m"] == "tag1, tag2"
 
