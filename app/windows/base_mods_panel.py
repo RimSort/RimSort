@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
 from app.models.settings import Settings
-from app.utils.button_factory import ButtonFactory, MenuItem
+from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType, MenuItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.mod_info import ModInfo
@@ -83,46 +83,11 @@ class ColumnIndex(Enum):
     WORKSHOP_PAGE = 10
 
 
-class ButtonType(Enum):
-    """Enumeration of button types for standardized button creation."""
-
-    REFRESH = "refresh"
-    STEAMCMD = "steamcmd"
-    SUBSCRIBE = "subscribe"
-    UNSUBSCRIBE = "unsubscribe"
-    DELETE = "delete"
-    SELECT = "select"
-    CUSTOM = "custom"
-
-
 class OperationMode(Enum):
     """Enumeration for mod update operation modes."""
 
     STEAMCMD = "SteamCMD"
     STEAM = "Steam"
-
-
-@dataclass
-class ButtonConfig:
-    """Configuration for creating standardized buttons."""
-
-    button_type: ButtonType
-    text: str = ""
-    pfid_column: int | None = None
-    # Callbacks to refresh the panel after deletion
-    completion_callback: Callable[[], None] | None = None
-    menu_items: list[MenuItem] | None = None
-    # For delete buttons
-    get_selected_mod_metadata: Callable[[], list[dict[str, Any]]] | None = None
-    # deletion menu
-    menu_title: str | None = None
-    enable_delete_mod: bool = True
-    enable_delete_keep_dds: bool = False
-    enable_delete_dds_only: bool = False
-    enable_delete_and_unsubscribe: bool = True
-    enable_delete_and_resubscribe: bool = False
-    # For custom buttons
-    custom_callback: Callable[[], None] | None = None
 
 
 class BaseModsPanel(QWidget):
@@ -746,30 +711,6 @@ class BaseModsPanel(QWidget):
                     self._create_update_callback(pfid_column, OperationMode.STEAMCMD),
                     "actionButton",
                 )
-        elif button_type == ButtonType.SUBSCRIBE:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Subscribe selected"),
-                    self._create_update_callback(
-                        pfid_column,
-                        OperationMode.STEAM,
-                        "subscribe",
-                        completion_callback,
-                    ),
-                    "actionButton",
-                )
-        elif button_type == ButtonType.UNSUBSCRIBE:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Unsubscribe selected"),
-                    self._create_update_callback(
-                        pfid_column,
-                        OperationMode.STEAM,
-                        "unsubscribe",
-                        completion_callback,
-                    ),
-                    "dangerButton",
-                )
         elif button_type == ButtonType.CUSTOM:
             return self._create_button(text, custom_callback, "primaryButton")
 
@@ -790,25 +731,43 @@ class BaseModsPanel(QWidget):
             ButtonType.STEAMCMD, pfid_column=pfid_column
         )
 
-    def _create_subscribe_button(
+    def _create_steam_button(
         self, pfid_column: int, completion_callback: Callable[[], None] | None = None
     ) -> QPushButton:
-        """Create a standardized subscribe button."""
-        return self._create_standardized_button(
-            ButtonType.SUBSCRIBE,
-            pfid_column=pfid_column,
-            completion_callback=completion_callback,
-        )
+        """Create a Steam button with dropdown for subscribe/unsubscribe."""
+        button = QPushButton()
+        button.setText(self.tr("Steam"))
+        button.setObjectName("actionButton")
 
-    def _create_unsubscribe_button(
-        self, pfid_column: int, completion_callback: Callable[[], None] | None = None
-    ) -> QPushButton:
-        """Create a standardized unsubscribe button."""
-        return self._create_standardized_button(
-            ButtonType.UNSUBSCRIBE,
-            pfid_column=pfid_column,
-            completion_callback=completion_callback,
+        menu = QMenu(button)
+
+        subscribe_action = QAction(self.tr("Subscribe selected"), self)
+        subscribe_action.triggered.connect(
+            self._create_update_callback(
+                pfid_column,
+                OperationMode.STEAM,
+                "subscribe",
+                completion_callback,
+            )
         )
+        menu.addAction(subscribe_action)
+
+        unsubscribe_action = QAction(self.tr("Unsubscribe selected"), self)
+        unsubscribe_action.triggered.connect(
+            self._create_update_callback(
+                pfid_column,
+                OperationMode.STEAM,
+                "unsubscribe",
+                completion_callback,
+            )
+        )
+        menu.addAction(unsubscribe_action)
+
+        button.setMenu(menu)
+        button.clicked.connect(
+            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
+        )
+        return button
 
     def _create_deletion_button(
         self,
@@ -908,10 +867,8 @@ class BaseModsPanel(QWidget):
             return self._create_refresh_button_from_config(config, factory)
         elif config.button_type == ButtonType.STEAMCMD:
             return self._create_steamcmd_button_from_config(config, factory)
-        elif config.button_type == ButtonType.SUBSCRIBE:
-            return self._create_subscribe_button_from_config(config, factory)
-        elif config.button_type == ButtonType.UNSUBSCRIBE:
-            return self._create_unsubscribe_button_from_config(config, factory)
+        elif config.button_type == ButtonType.STEAM:
+            return self._create_steam_button_from_config(config, factory)
         elif config.button_type == ButtonType.DELETE:
             return self._create_delete_button_from_config(config, factory)
         elif config.button_type == ButtonType.CUSTOM:
@@ -934,22 +891,12 @@ class BaseModsPanel(QWidget):
             return factory.create_steamcmd_button(config.pfid_column)
         return None
 
-    def _create_subscribe_button_from_config(
+    def _create_steam_button_from_config(
         self, config: ButtonConfig, factory: ButtonFactory
     ) -> QWidget | None:
-        """Create a subscribe button from config."""
+        """Create a Steam button from config."""
         if config.pfid_column is not None:
-            return factory.create_subscribe_button(
-                config.pfid_column, config.completion_callback
-            )
-        return None
-
-    def _create_unsubscribe_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
-        """Create an unsubscribe button from config."""
-        if config.pfid_column is not None:
-            return factory.create_unsubscribe_button(
+            return factory.create_steam_button(
                 config.pfid_column, config.completion_callback
             )
         return None
@@ -1359,17 +1306,11 @@ class BaseModsPanel(QWidget):
         """
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()
         if steam_client_integration_enabled:
-            button_configs.extend(
-                [
-                    ButtonConfig(
-                        button_type=ButtonType.SUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                    ),
-                    ButtonConfig(
-                        button_type=ButtonType.UNSUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                    ),
-                ]
+            button_configs.append(
+                ButtonConfig(
+                    button_type=ButtonType.STEAM,
+                    pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
+                ),
             )
         return button_configs
 

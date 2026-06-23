@@ -2,11 +2,44 @@
 Button factory utilities for creating standardized buttons in mod panels.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Callable
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
+
+
+class ButtonType(Enum):
+    """Enumeration of button types for standardized button creation."""
+
+    REFRESH = "refresh"
+    STEAMCMD = "steamcmd"
+    STEAM = "steam"
+    DELETE = "delete"
+    SELECT = "select"
+    CUSTOM = "custom"
+
+
+@dataclass
+class ButtonConfig:
+    """Configuration for creating standardized buttons."""
+
+    button_type: ButtonType
+    text: str = ""
+    pfid_column: int | None = None
+    completion_callback: Callable[[], None] | None = None
+    menu_items: list[MenuItem] | None = None
+    get_selected_mod_metadata: Callable[[], list[dict[str, Any]]] | None = None
+    menu_title: str | None = None
+    enable_delete_mod: bool = True
+    enable_delete_keep_dds: bool = False
+    enable_delete_dds_only: bool = False
+    enable_delete_and_unsubscribe: bool = True
+    enable_delete_and_resubscribe: bool = False
+    custom_callback: Callable[[], None] | None = None
 
 
 @dataclass
@@ -33,21 +66,13 @@ class ButtonFactory:
         """Create a SteamCMD download button."""
         return self.panel._create_steamcmd_button(pfid_column)
 
-    def create_subscribe_button(
+    def create_steam_button(
         self,
         pfid_column: int,
         completion_callback: Callable[[], None] | None = None,
     ) -> QPushButton:
-        """Create a subscribe button."""
-        return self.panel._create_subscribe_button(pfid_column, completion_callback)
-
-    def create_unsubscribe_button(
-        self,
-        pfid_column: int,
-        completion_callback: Callable[[], None] | None = None,
-    ) -> QPushButton:
-        """Create an unsubscribe button."""
-        return self.panel._create_unsubscribe_button(pfid_column, completion_callback)
+        """Create a Steam button with subscribe/unsubscribe dropdown."""
+        return self.panel._create_steam_button(pfid_column, completion_callback)
 
     def create_delete_button(
         self,
