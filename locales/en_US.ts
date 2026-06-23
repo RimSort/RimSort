@@ -90,9 +90,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.
-
-Try subscribing to the collection first</source>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -107,8 +105,7 @@ Try subscribing to the collection first</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
-PublishedFileIDs are needed to retrieve mods from Steam!</source>
+        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.&lt;br&gt;PublishedFileIDs are needed to retrieve mods from Steam!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -132,11 +129,11 @@ PublishedFileIDs are needed to retrieve mods from Steam!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
-A report of discrepancies is generated. You will be prompted for these paths in order:
-
-	1) Select input A
-	2) Select input B</source>
+        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.&lt;br&gt;A report of discrepancies is generated. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A&lt;br&gt;	2) Select input B</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -149,20 +146,6 @@ A report of discrepancies is generated. You will be prompted for these paths in 
     </message>
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.
-- The following exceptions will be made:
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
-
-	1) Select input A (db to-be-updated)
-	2) Select input B (update source)
-	3) Select output C (resultant db)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -268,9 +251,19 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try simplifying your pattern or check for syntax errors.</source>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try simplifying your pattern or check for syntax errors.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try running RimSort with administrator privileges or check folder permissions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -282,12 +275,6 @@ Try simplifying your pattern or check for syntax errors.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Memory Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -296,23 +283,11 @@ Try running RimSort with administrator privileges or check folder permissions.</
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Search Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>An error occurred during the search.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Please check your settings and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -672,17 +647,6 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Essential path(s) are invalid or not set!
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
-
-Would you like to configure them now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -703,10 +667,6 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Failed to export to file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -716,10 +676,6 @@ Would you like to configure them now?</source>
     </message>
     <message>
         <source>Important</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -783,6 +739,10 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Failed to upload</source>
         <translation type="unfinished"></translation>
     </message>
@@ -827,12 +787,6 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The URL has been copied to your clipboard:
-
-{ret}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Failed to upload file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -870,10 +824,6 @@ Would you like to configure them now?</source>
     </message>
     <message>
         <source>todds could not find any valid mod folders to process.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -934,10 +884,6 @@ Would you like to configure them now?</source>
     </message>
     <message>
         <source>Steam Client Integration is disabled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1017,11 +963,6 @@ Would you like to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>File: {file_path}
-Error: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The selected file does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1054,24 +995,7 @@ Error: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Cancel — Abort the operation.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The following files or directories already exist in the target path:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>{conflicts_list}
-
-How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Skip Existing — Extract only new files and leave existing ones untouched.
-3) Cancel — Abort the extraction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1091,15 +1015,19 @@ How would you like to proceed?
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Git integration will not work without Git installed! Do you want to open download page for Git?&lt;br&gt;&lt;br&gt;If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This operation will overwrite the {rules_source} database located at the following path:&lt;br&gt;&lt;br&gt;{path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>todds Optimization Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1123,6 +1051,30 @@ How would you like to proceed?
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This may be caused by malformed settings or improper migration between versions or different mod manager.&lt;br&gt;&lt;br&gt;Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file.&lt;br&gt;&lt;br&gt;If the issue persists, please report it to the developers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>RimSort was unable to check your Workshop mods for updates.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1135,13 +1087,23 @@ How would you like to proceed?
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>git executable was not found in $PATH!</source>
+        <source>This feature requires Steam Client Integration to be enabled in Settings.&lt;br&gt;&lt;br&gt;Please enable Steam Client Integration if you own the game on Steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Git integration will not work without Git installed! Do you want to open download page for Git?
-
-If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
+        <source>File: {file_path}&lt;br&gt;Error: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Cancel — Abort the operation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{conflicts_list}&lt;br&gt;&lt;br&gt;How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Skip Existing — Extract only new files and leave existing ones untouched.&lt;br&gt;3) Cancel — Abort the extraction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>git executable was not found in $PATH!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1185,12 +1147,6 @@ If you just installed Git, please restart RimSort for the PATH changes to take e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This operation will overwrite the {rules_source} database located at the following path:
-
-{path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Edit SteamDB expiry:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1204,6 +1160,10 @@ If you just installed Git, please restart RimSort for the PATH changes to take e
     </message>
     <message>
         <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You may experience longer loading times or higher memory usage.&lt;br&gt;&lt;br&gt;Check the todds output window for details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1228,12 +1188,6 @@ If you just installed Git, please restart RimSort for the PATH changes to take e
     </message>
     <message>
         <source>Import from RimWorld Save File</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
-
-{url}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1308,14 +1262,6 @@ If you just installed Git, please restart RimSort for the PATH changes to take e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.
-
-{summary}
-
-The updated versions won&apos;t appear until you refresh. Refresh now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>No Repositories</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1341,11 +1287,6 @@ The updated versions won&apos;t appear until you refresh. Refresh now?</source>
     </message>
     <message>
         <source>Some repositories encountered errors.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Errors occurred while checking for updates:
-{errors}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1398,11 +1339,6 @@ The updated versions won&apos;t appear until you refresh. Refresh now?</source>
     </message>
     <message>
         <source>{count} repositories could not be updated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successful updates:
-</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1482,11 +1418,6 @@ The updated versions won&apos;t appear until you refresh. Refresh now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successful pushes:
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Partial Push Completed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1500,11 +1431,6 @@ The updated versions won&apos;t appear until you refresh. Refresh now?</source>
     </message>
     <message>
         <source>Do you want to clone this repository?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Repository: {repo_url}
-Destination: {dest}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1573,10 +1499,6 @@ Destination: {dest}</source>
     </message>
     <message>
         <source>Failed to clone repo!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1708,21 +1630,11 @@ Destination: {dest}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Invalid repository URL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to parse repository information from URL.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>URL: {repo_url}
-Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1755,13 +1667,6 @@ Error: {error}</source>
     </message>
     <message>
         <source>Please ensure the file exists and then try to upload again!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>File not found:
-{file_full_path}
-Repository:
-{repo_url}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1798,11 +1703,6 @@ Repository:
     </message>
     <message>
         <source>Created fork of repository.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fork: {fork_name}
-Please wait a moment for GitHub to set up the fork.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1950,26 +1850,11 @@ Please wait a moment for GitHub to set up the fork.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Pull request created successfully.
-Do you want to open it in your web browser?
-
-URL: {url}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Pull request failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to create pull request.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The changes were pushed to your fork successfully, but the pull request creation failed.
-
-You can manually create a pull request on GitHub.
-
-Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1990,6 +1875,54 @@ Error: {error}</source>
     </message>
     <message>
         <source>Upload Community Rules Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won&apos;t appear until you refresh. Refresh now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Errors occurred while checking for updates:&lt;br&gt;{errors}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successful updates:&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successful pushes:&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The configured repo failed to clone/initialize!&lt;br&gt;&lt;br&gt;Are you connected to the Internet?&lt;br&gt;&lt;br&gt;Is your configured repo valid?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>URL: {repo_url}&lt;br&gt;Error: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File not found:&lt;br&gt;{file_full_path}&lt;br&gt;Repository:&lt;br&gt;{repo_url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fork: {fork_name}&lt;br&gt;Please wait a moment for GitHub to set up the fork.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pull request created successfully.&lt;br&gt;Do you want to open it in your web browser?&lt;br&gt;&lt;br&gt;URL: {url}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The changes were pushed to your fork successfully, but the pull request creation failed.&lt;br&gt;&lt;br&gt;You can manually create a pull request on GitHub.&lt;br&gt;&lt;br&gt;Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2071,6 +2004,10 @@ Error: {error}</source>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2166,18 +2103,15 @@ Error: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
-
-Generated run arguments preview:
-{preview}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Create new instance [{instance_name}]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2226,18 +2160,6 @@ Generated run arguments preview:
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-Option 1: Convert to SteamCMD
-RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
-
-Option 2: Keep Workshop Folder
-The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
-
-How would you like to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2488,22 +2410,6 @@ How would you like to proceed?</source>
     </message>
 </context>
 <context>
-    <name>MetadataManager</name>
-    <message>
-        <source>Missing Version.txt</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>MissingDependenciesDialog</name>
     <message>
         <source>Showing dependencies of your active mods.
@@ -2663,13 +2569,6 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-This operation will permanently delete the selected mod directories from the filesystem.
-
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Please select at least one mod to process.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2678,22 +2577,7 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-This operation will only delete optimized textures (.dds files) from the selected mods.
-
-Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm Selective Deletion</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will delete all mod files except for .dds texture files.
-The .dds files will be preserved.
-
-Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2709,12 +2593,15 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
+        <source>{action} Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{action} Error</source>
+        <source>You have selected {selected_count} mod(s) for deletion.&lt;br&gt;{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will:&lt;br&gt;• Delete the selected mod directories from your filesystem&lt;br&gt;• {action_capitalized} Steam Workshop mods from your Steam account&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2754,7 +2641,15 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will permanently delete the selected mod directories from the filesystem.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will only delete optimized textures (.dds files) from the selected mods.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2762,21 +2657,15 @@ The process may take a few moments to complete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will delete all mod files except for .dds texture files.&lt;br&gt;The .dds files will be preserved.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).&lt;br&gt;The process may take a few moments to complete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm Deletion and {action_capitalized}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have selected {selected_count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action_capitalized} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3073,17 +2962,7 @@ Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3119,12 +2998,11 @@ This operation will potentially delete .dds textures leftover. Steam is unreliab
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <source>&lt;br&gt;This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-Do you want to proceed?</source>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3213,6 +3091,14 @@ Should be Loaded Before:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>
 Mod and Game Version Mismatch</source>
         <translation type="unfinished"></translation>
@@ -3249,6 +3135,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop Updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4009,9 +3899,7 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
-
-Click &apos;Show Details&apos; to see a list of mods that failed.</source>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4080,6 +3968,10 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
 <context>
     <name>SettingsController</name>
     <message>
+        <source>Steam Integration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reset to defaults</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4088,43 +3980,27 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>The selected game folder does not contain a valid RimWorld executable.&lt;br&gt;&lt;br&gt;Please select a valid game location.&lt;br&gt;&lt;br&gt;Windows: RimWorldWin64.exe or RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimworldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml.&lt;br&gt;&lt;br&gt;Please select a valid config folder.&lt;br&gt;&lt;br&gt;If you have not launched the game before,&lt;br&gt;&lt;br&gt;Please launch the game at least once to generate the necessary config files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a &apos;Mods&apos; subfolder within the game folder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invalid Game Location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
+        <source>Invalid Local Mods Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invalid Config Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam Client Integration Disabled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file &apos;appworkshop_294100.acf&apos; was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam Mods Location Required</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam Workshop File Not Found</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4804,8 +4680,7 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please reach out to us on Github Issues page or
-#rimsort-testing on the Rocketman/CAI discord</source>
+        <source>Please reach out to us on Github Issues page or&lt;br&gt;#rimsort-testing on the Rocketman/CAI discord</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4828,8 +4703,7 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>RimSort was unable to find SteamCMD installed in the configured prefix:
-</source>
+        <source>RimSort was unable to find SteamCMD installed in the configured prefix:&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4861,21 +4735,19 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Existing symlink: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
+        <source>Existing symlink: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Existing destination: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Existing destination: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4884,11 +4756,6 @@ New symlink:
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New symlink:
-[{symlink_source_path}] -&gt; </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4911,7 +4778,7 @@ New symlink:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
+        <source>RimSort could not detect Steam client or it may be unresponsive.&lt;br&gt;&lt;br&gt;Please make sure Steam is installed and running.&lt;br&gt;&lt;br&gt;If you are a Steam user, please check that Steam is running and that you are logged in.&lt;br&gt;&lt;br&gt;Try restarting Steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5001,28 +4868,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Could not automatically start game installation through Steam.
-
-Please manually verify/install the game through Steam.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Deleted all files in the Steam mods directory.
-
- Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Steam Workshop Redownload</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
-
-If mods don&apos;t download automatically, try:
-1. Restart Steam
-2. Verify game files in Steam
-3. Visit the Workshop page of each mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5054,12 +4900,6 @@ If mods don&apos;t download automatically, try:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Are you sure you want to delete all mods?
-
-WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5084,24 +4924,47 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successfully deleted Steam&apos;s downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not delete Steam&apos;s downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No installed games found in this Steam library folder.&lt;br&gt;You may have games installed in a different Steam library folder or drive.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will verify all {len} games in your Steam library.&lt;br&gt;This may take a while. Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam will now verify {len} games.&lt;br&gt;You can monitor progress in the Steam client.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not repair Steam library.&lt;br&gt;Please verify your games manually through Steam.&lt;br&gt;Details: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>ACF File Not Found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Could not find the Steam Workshop ACF file at:
-{acf_path}</source>
+        <source>Could not find the Steam Workshop ACF file at:&lt;br&gt;{acf_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.&lt;br&gt;&lt;br&gt;A backup will be created before any changes are made.&lt;br&gt;&lt;br&gt;Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clean Orphaned Workshop Items</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
-
-A backup will be created before any changes are made.
-
-Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5134,6 +4997,22 @@ Continue?</source>
     </message>
     <message>
         <source>Confirm Export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not automatically start game installation through Steam.&lt;br&gt;&lt;br&gt;Please manually verify/install the game through Steam.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleted all files in the Steam mods directory.&lt;br&gt;&lt;br&gt; Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don&apos;t download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete all mods?&lt;br&gt;&lt;br&gt;WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5173,17 +5052,7 @@ Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The selected file is not a valid mod list file.
-Details: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Cache Cleared</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully deleted Steam&apos;s downloading folder.
-Restart Steam for the changes to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5199,12 +5068,6 @@ Restart Steam for the changes to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Could not delete Steam&apos;s downloading folder.
-Please delete it manually: Steam/steamapps/downloading
-Details: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Steam Action Failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5213,32 +5076,11 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No installed games found in this Steam library folder.
-You may have games installed in a different Steam library folder or drive.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm Library Repair</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This will verify all {len} games in your Steam library.
-This may take a while. Continue?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Library Repair Started</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam will now verify {len} games.
-You can monitor progress in the Steam client.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not repair Steam library.
-Please verify your games manually through Steam.
-Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5436,18 +5278,7 @@ Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-Successfully retrieved latest release.
-The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5459,7 +5290,15 @@ The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>You are running RimSort {current_version}&lt;br&gt;Do you want to update now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Do you want to proceed with the update?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5596,6 +5435,21 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
 </context>
 <context>
+    <name>dialog</name>
+    <message>
+        <source>Invalid Game Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid Local Mods Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
@@ -5679,24 +5533,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
     <message>
         <source>Are you sure you want to clear all locations?</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>self.manager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
