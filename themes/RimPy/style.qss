@@ -1015,3 +1015,176 @@ QPushButton#TagEditDialogButton:hover {
 QPushButton#TagEditDialogButton:pressed {
     background-color: #3e4a52;
 }
+
+/* Player Log Tab styling */
+QLabel#growthLabel {
+    color: green;
+    font-weight: bold;
+}
+
+QPushButton#statButtonGreen {
+    color: #00FF00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonGreen:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonGreen:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonYellow {
+    color: #EEFF00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonYellow:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonYellow:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonOrange {
+    color: #FF8C00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonOrange:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonOrange:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonRed {
+    color: #FF0000;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonRed:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonRed:pressed {
+    background: transparent;
+    border: none;
+}
+
+/* Player Log Tab - Group boxes */
+QGroupBox#fileInfoGroup,
+QGroupBox#statsGroup,
+QGroupBox#controlsGroup,
+QGroupBox#searchFilterGroup,
+QGroupBox#navGroup {
+    background-color: transparent;
+    border: 1px solid #455364;
+    border-radius: 4px;
+    margin-top: 14px;
+    padding: 12px 4px 4px 4px;
+    font-size: 12px;
+}
+
+QGroupBox#fileInfoGroup::title,
+QGroupBox#statsGroup::title,
+QGroupBox#controlsGroup::title,
+QGroupBox#searchFilterGroup::title,
+QGroupBox#navGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 2px 8px;
+    background-color: #22303d;
+    color: #e6edf3;
+    border-radius: 3px;
+}
+
+/* Player Log Tab - Log display */
+QTextEdit#logDisplay {
+    background-color: #0f1923;
+    color: #e6edf3;
+    border: 1px solid #455364;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+/* Player Log Tab - Splitter */
+QSplitter#logSplitter::handle {
+    background-color: #455364;
+    width: 1px;
+}
+
+/* Player Log Tab - File info labels */
+QLabel#filePathLabel,
+QLabel#fileSizeLabel,
+QLabel#lastModifiedLabel {
+    color: #cfcfcf;
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+/* Player Log Tab - Navigation buttons */
+QPushButton#navButton {
+    background-color: #22303d;
+    color: #e6edf3;
+    border: 1px solid #2b3d4e;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 11px;
+}
+
+QPushButton#navButton:hover {
+    background-color: #2b3d4e;
+}
+
+QPushButton#navButton:pressed {
+    background-color: #1B2838;
+}
+
+/* Player Log Tab - Navigation labels */
+QLabel#navLabel {
+    color: #e6edf3;
+    font-size: 11px;
+    padding: 0px 4px;
+}
+
+/* Player Log Tab - Match count label */
+QLabel#match_count_label {
+    color: #cfcfcf;
+    font-size: 11px;
+    padding: 0px 4px;
+}
+
+/* Player Log Tab - Progress bar */
+QProgressBar#logProgressBar {
+    background-color: #19232d;
+    border: 1px solid #455364;
+    border-radius: 3px;
+    text-align: center;
+    color: #e6edf3;
+    font-size: 11px;
+    height: 18px;
+}
+
+QProgressBar#logProgressBar::chunk {
+    background-color: #22303d;
+    border-radius: 2px;
+}
