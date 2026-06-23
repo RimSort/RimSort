@@ -24,7 +24,7 @@ class DuplicateModsPanel(BaseModsPanel):
     def __init__(
         self,
         duplicate_mods: dict[str, list[str]],
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the DuplicateModsPanel with duplicate mods data.

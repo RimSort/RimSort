@@ -152,10 +152,7 @@ class BaseModsPanel(QWidget):
 
     def _setup_metadata(self) -> None:
         """Set up metadata controller and settings controller."""
-        if self._metadata_controller is not None:
-            self.metadata_controller = self._metadata_controller
-        else:
-            self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = self._metadata_controller
         self.settings = self.metadata_controller.settings
         self.metadata_controller.metadata_refreshed.connect(
             self._populate_from_metadata
@@ -359,7 +356,7 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: Sequence[HeaderColumn],
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ):
         super().__init__()
         self._metadata_controller = metadata_controller

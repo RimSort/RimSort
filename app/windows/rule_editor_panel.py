@@ -137,6 +137,7 @@ class RuleEditor(QWidget):
 
     def __init__(
         self,
+        metadata_controller: MetadataController,
         initial_mode: str,
         compact: bool | None = None,
         edit_packageid: str | None = None,
@@ -145,7 +146,7 @@ class RuleEditor(QWidget):
         logger.debug("Initializing RuleEditor")
 
         # Cache MetadataController instance
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller
 
         # STYLESHEET
         self.setObjectName("RuleEditor")

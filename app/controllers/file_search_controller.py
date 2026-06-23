@@ -594,6 +594,7 @@ class FileSearchController(QObject):
         self,
         settings: Settings,
         dialog: FileSearchDialog,
+        metadata_controller: MetadataController,
         active_mod_ids: Optional[set[str]] = None,
     ) -> None:
         """
@@ -602,22 +603,23 @@ class FileSearchController(QObject):
         Args:
             settings (Settings): Application settings instance.
             dialog (FileSearchDialog): The file search dialog UI component.
+            metadata_controller (MetadataController): Metadata controller instance.
             active_mod_ids (Optional[Set[str]]): Set of active mod IDs for filtering.
         """
         super().__init__()
         self.settings = settings
         self.dialog = dialog
+        self.metadata_controller = metadata_controller
         self.mods_panel = ModsPanel(
             settings=self.settings,
+            metadata_controller=metadata_controller,
         )
         self.active_mod_ids = (
             active_mod_ids or set()
         )  # This is used for the controller, not the worker
         self.search_results: list[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
-        self.searcher = FileSearch()
-        # Initialize MetadataController
-        self.metadata_controller = MetadataController.instance()
+        self.searcher = FileSearch(metadata_controller=metadata_controller)
 
         # connect signals
         self.dialog.search_button.clicked.connect(self._on_search_clicked)
@@ -853,7 +855,7 @@ class FileSearchController(QObject):
             mod_ids (Optional[Set[str]]): Set of mod IDs for filtering.
             scope (str): Search scope ("active mods", "inactive mods", "all mods", etc.).
         """
-        self.searcher = FileSearch()
+        self.searcher = FileSearch(metadata_controller=self.metadata_controller)
 
         # Update the dialog's search paths
         self.dialog.set_search_paths(root_paths)

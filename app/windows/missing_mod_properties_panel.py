@@ -30,7 +30,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
         self,
         missing_packageid_mods: list[str],
         missing_publishfieldid_mods: list[str],
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the MissingModPropertiesPanel.
