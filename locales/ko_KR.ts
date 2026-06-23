@@ -90,12 +90,8 @@
         <translation>불완전한 가져오기</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
-
-Try subscribing to the collection first</source>
-        <translation>패키지 ID를 찾을 수 없어 {len(failed_mods)}개의 모드를 가져오지 못했습니다. 이는 모든 모드를 다운로드하지 않았을 때 발생할 수 있습니다.
-
-먼저 컬렉션을 구독해 보세요.</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>패키지 ID 누락으로 인해 {len(failed_mods)} 모드를 가져올 수 없습니다. 모든 모드를 다운로드하지 않은 경우 이런 일이 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;먼저 컬렉션을 구독해 보세요.</translation>
     </message>
 </context>
 <context>
@@ -109,10 +105,8 @@ Try subscribing to the collection first</source>
         <translation>DB Builder 쿼리가 PublishedFileID를 반환하지 않았습니다!</translation>
     </message>
     <message>
-        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
-PublishedFileIDs are needed to retrieve mods from Steam!</source>
-        <translation>이는 일반적으로 Steam WebAPI 키가 유효하지 않거나 누락되었거나 Steam WebAPI에 대한 연결 문제로 인해 발생합니다.
-Steam에서 모드를 검색하려면 PublishedFileID가 필요합니다!</translation>
+        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.&lt;br&gt;PublishedFileIDs are needed to retrieve mods from Steam!</source>
+        <translation>이는 일반적으로 Steam WebAPI 키가 유효하지 않거나 누락되었거나 Steam WebAPI에 대한 연결 문제로 인해 발생합니다.&lt;br&gt;Steam에서 모드를 검색하려면 PublishedFileID가 필요합니다!</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -135,16 +129,12 @@ Steam에서 모드를 검색하려면 PublishedFileID가 필요합니다!</trans
         <translation>이 작업은 A의 종속성과 B의 종속성을 확인하여 2개의 데이터베이스 A와 B를 비교합니다.</translation>
     </message>
     <message>
-        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
-A report of discrepancies is generated. You will be prompted for these paths in order:
-
-	1) Select input A
-	2) Select input B</source>
-        <translation>- 이를 통해 2개의 Steam DB 간의 종속성 데이터를 정확하게 비교할 수 있습니다.
-불일치 보고서가 생성됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.
-
-	1) 입력 A를 선택합니다.
-	2) 입력 B를 선택합니다.</translation>
+        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.&lt;br&gt;A report of discrepancies is generated. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A&lt;br&gt;	2) Select input B</source>
+        <translation>- 이렇게 하면 2개의 Steam DB 간의 종속성 데이터를 정확하게 비교할 수 있습니다.&lt;br&gt;불일치 보고서가 생성됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.&lt;br&gt;&lt;br&gt; 1) 입력 A 선택&lt;br&gt; 2) 입력 B 선택</translation>
+    </message>
+    <message>
+        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
+        <translation>- 결과 데이터베이스에 A의 키/값을 B의 키/값으로 재귀적으로 덮어씁니다.&lt;br&gt;- 예외는 재귀적으로 업데이트되지 않습니다. 대신 B의 키로 완전히 덮어쓰게 됩니다.&lt;br&gt;- 다음과 같은 예외가 적용됩니다.&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;결과 데이터베이스 C는 사용자가 지정한 경로에 저장됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.&lt;br&gt;&lt;br&gt; 1) 입력 A(업데이트할 DB) 선택&lt;br&gt; 2) 입력 B(업데이트 소스) 선택&lt;br&gt; 3) 출력 C(결과 DB) 선택</translation>
     </message>
     <message>
         <source>Steam DB comparison report: {count} found</source>
@@ -157,30 +147,6 @@ A report of discrepancies is generated. You will be prompted for these paths in 
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
         <translation>이 작업은 예외를 제외하고 A를 B로 재귀적으로 업데이트하여 2개의 데이터베이스 A와 B를 병합합니다.</translation>
-    </message>
-    <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.
-- The following exceptions will be made:
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
-
-	1) Select input A (db to-be-updated)
-	2) Select input B (update source)
-	3) Select output C (resultant db)</source>
-        <translation>- 결과 데이터베이스에 A의 키/값을 B의 키/값으로 재귀적으로 덮어쓰게 됩니다.
-- 예외는 반복적으로 업데이트되지 않습니다. 대신 B의 키로 완전히 덮어쓰게 됩니다.
-- 다음과 같은 예외가 적용됩니다.
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-결과 데이터베이스 C는 사용자가 지정한 경로에 저장됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.
-
-	1) 입력 A(업데이트할 DB)를 선택합니다.
-	2) 입력 B(업데이트 소스)를 선택합니다.
-	3) 출력 C(결과 db)를 선택합니다.</translation>
     </message>
     <message>
         <source>Save Error</source>
@@ -285,12 +251,20 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>정규 표현식 패턴에 오류가 있습니다.</translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try simplifying your pattern or check for syntax errors.</source>
-        <translation>{error_msg}
-
-패턴을 단순화하거나 구문 오류를 확인하십시오.</translation>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try simplifying your pattern or check for syntax errors.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;패턴을 단순화하거나 구문 오류를 확인해보세요.</translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try running RimSort with administrator privileges or check folder permissions.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;관리자 권한으로 RimSort를 실행하거나 폴더 권한을 확인해보세요.</translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;작은 배치로 검색해 보거나 대용량 파일의 경우 '스트리밍 검색' 방법을 사용하세요.</translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;설정을 확인하고 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>File Access Error</source>
@@ -301,14 +275,6 @@ Try simplifying your pattern or check for syntax errors.</source>
         <translation>RimSort에 일부 파일에 액세스할 수 있는 권한이 없습니다.</translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation>{error_msg}
-
-RimSort를 관리자 권한으로 실행하거나 폴더의 액세스 권한을 확인하십시오.</translation>
-    </message>
-    <message>
         <source>Memory Error</source>
         <translation>메모리 오류</translation>
     </message>
@@ -317,28 +283,12 @@ RimSort를 관리자 권한으로 실행하거나 폴더의 액세스 권한을 
         <translation>RimSort 검색 중 메모리가 부족해졌습니다.</translation>
     </message>
     <message>
-        <source>{error_msg}
-
-Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg}
-
-작은 배치로 검색하거나 매우 큰 파일에는 '스트리밍 검색' 방식을 사용하십시오.</translation>
-    </message>
-    <message>
         <source>Search Error</source>
         <translation>검색 오류</translation>
     </message>
     <message>
         <source>An error occurred during the search.</source>
         <translation>검색 중 오류가 발생했습니다.</translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Please check your settings and try again.</source>
-        <translation>{error_msg}
-
-설정을 확인하고 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
@@ -701,19 +651,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>필수 경로</translation>
     </message>
     <message>
-        <source>Essential path(s) are invalid or not set!
-</source>
-        <translation>필수 경로가 유효하지 않거나 설정되지 않았습니다!</translation>
-    </message>
-    <message>
-        <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
-
-Would you like to configure them now?</source>
-        <translation>RimSort를 사용하려면 게임 설치 폴더와 설정 폴더의 경로를 설정해야 하며, 두 경로가 모두 존재해야 합니다. 이 경로들을 수동으로 설정하거나 자동 감지 기능을 사용하십시오.
-
-지금 구성하시겠습니까?</translation>
-    </message>
-    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>모드 소스를 스캔하여 메타데이터를 추가하고 있습니다...</translation>
     </message>
@@ -734,10 +671,6 @@ Would you like to configure them now?</source>
         <translation>선택된 정렬 알고리즘은 구현되지 않았습니다</translation>
     </message>
     <message>
-        <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
-        <translation>이는 설정이 잘못되었거나 버전 간 또는 서로 다른 모드 매니저 간의 마이그레이션이 부적절하기 때문일 수 있습니다. 설정을 초기화하거나, 다른 정렬 알고리즘을 선택하거나, 설정 파일을 삭제해 보십시오. 문제가 지속되면 개발자에게 보고해 주세요.</translation>
-    </message>
-    <message>
         <source>Failed to export to file</source>
         <translation>파일로 내보내기에 실패했습니다</translation>
     </message>
@@ -748,10 +681,6 @@ Would you like to configure them now?</source>
     <message>
         <source>Important</source>
         <translation>중요</translation>
-    </message>
-    <message>
-        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
-        <translation>다운로드가 완료되면 Rentry 가져오기를 다시 실행해야 합니다. 다운로드가 완료된 후에도 누락된 모드가 있는 경우, 해당 모드들은 누락된 모드 패널에 표시됩니다. RimSort가 일부 모드를 다운로드할 수 없는 경우, 이는 Rentry 링크와 Steam 데이터베이스 모두에서 모드 데이터를 사용할 수 없기 때문입니다.</translation>
     </message>
     <message>
         <source>Steam client integration not set up</source>
@@ -814,6 +743,10 @@ Would you like to configure them now?</source>
         <translation>활성 모드를 Rentry.co에 업로드</translation>
     </message>
     <message>
+        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{url}</source>
+        <translation>활성 모드 목록 보고서를 Rentry.co에 업로드했습니다! URL이 클립보드에 복사되었습니다:&lt;br&gt;&lt;br&gt;{url}</translation>
+    </message>
+    <message>
         <source>Failed to upload</source>
         <translation>업로드에 실패했습니다</translation>
     </message>
@@ -858,12 +791,8 @@ Would you like to configure them now?</source>
         <translation>파일을 업로드했습니다</translation>
     </message>
     <message>
-        <source>The URL has been copied to your clipboard:
-
-{ret}</source>
-        <translation>URL이 클립보드에 복사되었습니다:
-
-{ret}</translation>
+        <source>You may experience longer loading times or higher memory usage.&lt;br&gt;&lt;br&gt;Check the todds output window for details.</source>
+        <translation>로딩 시간이 길어지거나 메모리 사용량이 높아질 수 있습니다.&lt;br&gt;&lt;br&gt;자세한 내용은 todds 출력 창을 확인하세요.</translation>
     </message>
     <message>
         <source>Failed to upload file.</source>
@@ -904,10 +833,6 @@ Would you like to configure them now?</source>
     <message>
         <source>todds could not find any valid mod folders to process.</source>
         <translation>todds가 처리할 유효한 모드 폴더를 찾을 수 없었습니다.</translation>
-    </message>
-    <message>
-        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
-        <translation>설정된 모드 폴더 경로가 디스크에 존재하지 않습니다. 설정에서 로컬 모드 폴더와 워크숍 폴더가 올바르게 설정되었는지 확인한 후 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>Confirm ACF import</source>
@@ -968,10 +893,6 @@ Would you like to configure them now?</source>
     <message>
         <source>Steam Client Integration is disabled</source>
         <translation>Steam 클라이언트 통합이 비활성화되어 있습니다</translation>
-    </message>
-    <message>
-        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
-        <translation>이 기능을 사용하려면 설정에서 Steam 클라이언트 통합을 활성화해야 합니다. Steam에서 게임을 소유하고 있다면 Steam 클라이언트 통합을 활성화해 주세요.</translation>
     </message>
     <message>
         <source>RimSort - SteamCMD setup</source>
@@ -1050,12 +971,6 @@ Would you like to configure them now?</source>
         <translation>ZIP 파일을 다운로드할 수 없습니다.</translation>
     </message>
     <message>
-        <source>File: {file_path}
-Error: {e}</source>
-        <translation>파일: {file_path}
-오류: {e}</translation>
-    </message>
-    <message>
         <source>The selected file does not exist.</source>
         <translation>선택한 파일이 존재하지 않습니다.</translation>
     </message>
@@ -1088,36 +1003,8 @@ Error: {e}</source>
         <translation>아카이브 내의 모든 파일이 대상 경로에 이미 존재합니다.</translation>
     </message>
     <message>
-        <source>How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Cancel — Abort the operation.</source>
-        <translation>계속할 방법을 선택해 주세요.
-
-1) 모두 덮어쓰기 — 기존의 모든 파일과 디렉터리를 교체합니다.
-2) 취소 — 작업을 중지합니다.</translation>
-    </message>
-    <message>
         <source>The following files or directories already exist in the target path:</source>
         <translation>다음 파일 또는 디렉터리가 대상 경로에 이미 존재합니다:</translation>
-    </message>
-    <message>
-        <source>{conflicts_list}
-
-How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Skip Existing — Extract only new files and leave existing ones untouched.
-3) Cancel — Abort the extraction.</source>
-        <translation>다음 파일 또는 디렉터리가 대상 경로에 이미 존재합니다:
-
-{conflicts_list}
-
-계속할 방법을 선택해 주세요.
-
-1) 모두 덮어쓰기 — 기존의 모든 파일과 디렉터리를 교체합니다.
-2) 기존 파일 건너뛰기 — 새 파일만 압축 해제하고 기존 파일은 그대로 둡니다.
-3) 취소 — 압축 해제를 중지합니다.</translation>
     </message>
     <message>
         <source>Extraction completed</source>
@@ -1142,14 +1029,6 @@ How would you like to proceed?
     <message>
         <source>git executable was not found in $PATH!</source>
         <translation>git 실행 파일을 $PATH에서 찾을 수 없습니다!</translation>
-    </message>
-    <message>
-        <source>Git integration will not work without Git installed! Do you want to open download page for Git?
-
-If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
-        <translation>Git이 설치되어 있지 않으면 Git 통합 기능이 작동하지 않습니다! Git 다운로드 페이지를 여시겠습니까?
-
-Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort를 다시 시작해 주세요.</translation>
     </message>
     <message>
         <source>Edit Steam DB repo</source>
@@ -1184,14 +1063,6 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
         <translation>계속하시겠습니까?</translation>
     </message>
     <message>
-        <source>This operation will overwrite the {rules_source} database located at the following path:
-
-{path}</source>
-        <translation>이 작업은 다음 경로에 있는 {rules_source} 데이터베이스를 덮어씁니다.
-
-{path}</translation>
-    </message>
-    <message>
         <source>Edit SteamDB expiry:</source>
         <translation>SteamDB 만료 시간 편집:</translation>
     </message>
@@ -1214,10 +1085,6 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
     <message>
         <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
         <translation>todds 텍스처 최적화에 실패했습니다 (종료 코드: {exit_code}). 하지만 게임은 실행됩니다.</translation>
-    </message>
-    <message>
-        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
-        <translation>로딩 시간이 길어지거나 메모리 사용량이 증가할 수 있습니다. 자세한 내용은 todds 출력 창을 확인하십시오.</translation>
     </message>
     <message>
         <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
@@ -1244,6 +1111,30 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
         <translation>기존 데이터베이스를 로드하는 데 실패했습니다</translation>
     </message>
     <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>필수 경로가 잘못되었거나 설정되지 않았습니다!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort를 사용하려면 아래 경로를 설정해야 합니다.&lt;br/&gt;&lt;br/&gt;1) 게임 폴더(RimWorld가 설치된 폴더)&lt;br/&gt;&lt;br/&gt;2) Config 폴더(ModsConfig.xml이 있는 폴더)&lt;br/&gt;&lt;br/&gt;3) 로컬 mods 폴더(RimWorld 설치 내의 Mods 폴더)&lt;br/&gt;&lt;br/&gt;4) Steam mods 폴더(Steam 사용자가 Steam을 활성화하는 경우에만 설정됨) 클라이언트 통합)&lt;br/&gt;&lt;br/&gt;자동 감지 기능을 사용하여 모든 경로를 자동으로 설정해 보세요.&lt;br/&gt;&lt;br/&gt;지금 설정을 열고 구성하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>This may be caused by malformed settings or improper migration between versions or different mod manager.&lt;br&gt;&lt;br&gt;Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file.&lt;br&gt;&lt;br&gt;If the issue persists, please report it to the developers.</source>
+        <translation>이는 잘못된 설정이나 버전 간 또는 다른 모드 관리자 간의 부적절한 마이그레이션으로 인해 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;설정을 재설정하거나, 다른 정렬 알고리즘을 선택하거나, 설정 파일을 삭제해 보세요.&lt;br&gt;&lt;br&gt;문제가 지속되면 개발자에게 신고해 주세요.</translation>
+    </message>
+    <message>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
+        <translation>다운로드가 완료된 후 Rentry 가져오기를 다시 실행해야 합니다.&lt;br&gt;&lt;br&gt;다운로드가 완료된 후 누락된 모드가 있는 경우 누락된 모드 패널 내에 표시됩니다.&lt;br&gt;&lt;br&gt;RimSort가 여전히 일부 모드를 다운로드할 수 없는 경우 이는 Rentry 링크와 Steam 데이터베이스 모두에서 모드 데이터를 사용할 수 없기 때문입니다.</translation>
+    </message>
+    <message>
+        <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
+        <translation>URL이 클립보드에 복사되었습니다:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>구성된 mod 폴더 경로가 디스크에 존재하지 않습니다.&lt;br&gt;&lt;br&gt;로컬 Mods 및 Workshop 폴더가 설정에서 올바르게 설정되었는지 확인한 후 다시 시도하십시오.</translation>
+    </message>
+    <message>
         <source>RimSort was unable to check your Workshop mods for updates.</source>
         <translation>RimSort가 워크샵 모드의 업데이트를 확인할 수 없습니다.</translation>
     </message>
@@ -1256,8 +1147,32 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
         <translation>{total}개의 워크샵 모드 중 {failed}개에 대한 업데이트를 확인할 수 없습니다.</translation>
     </message>
     <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings.&lt;br&gt;&lt;br&gt;Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>이 기능을 사용하려면 설정에서 Steam 클라이언트 통합을 활성화해야 합니다.&lt;br&gt;&lt;br&gt;Steam에서 게임을 소유하고 있다면 Steam 클라이언트 통합을 활성화하세요.</translation>
+    </message>
+    <message>
+        <source>File: {file_path}&lt;br&gt;Error: {e}</source>
+        <translation>파일: {file_path}&lt;br&gt;오류: {e}</translation>
+    </message>
+    <message>
+        <source>How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Cancel — Abort the operation.</source>
+        <translation>어떻게 진행하시겠습니까?&lt;br&gt;&lt;br&gt;1) 모두 덮어쓰기 — 기존 파일과 디렉터리를 모두 교체합니다.&lt;br&gt;2) 취소 — 작업을 중단합니다.</translation>
+    </message>
+    <message>
+        <source>{conflicts_list}&lt;br&gt;&lt;br&gt;How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Skip Existing — Extract only new files and leave existing ones untouched.&lt;br&gt;3) Cancel — Abort the extraction.</source>
+        <translation>&lt;br&gt;&lt;br&gt;어떻게 진행하시겠습니까?&lt;br&gt;&lt;br&gt;1) 모두 덮어쓰기 — 기존 파일 및 디렉터리를 모두 교체합니다.&lt;br&gt;2) 기존 파일 건너뛰기 — 새 파일만 추출하고 기존 파일은 그대로 둡니다.&lt;br&gt;3) 취소 — 추출을 중단합니다. {conflicts_list}</translation>
+    </message>
+    <message>
+        <source>Git integration will not work without Git installed! Do you want to open download page for Git?&lt;br&gt;&lt;br&gt;If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
+        <translation>Git 통합은 Git을 설치하지 않으면 작동하지 않습니다! Git 다운로드 페이지를 열시겠습니까?&lt;br&gt;&lt;br&gt;Git를 방금 설치한 경우 PATH 변경 사항을 적용하려면 RimSort를 다시 시작하세요.</translation>
+    </message>
+    <message>
         <source>Failed to read the existing database!</source>
         <translation>기존 데이터베이스를 불러오는 데 실패했습니다!</translation>
+    </message>
+    <message>
+        <source>This operation will overwrite the {rules_source} database located at the following path:&lt;br&gt;&lt;br&gt;{path}</source>
+        <translation>이 작업은 다음 경로에 있는 {rules_source} 데이터베이스를 덮어씁니다:&lt;br&gt;&lt;br&gt;{path}</translation>
     </message>
     <message>
         <source>Unsaved Changes</source>
@@ -1278,14 +1193,6 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
     <message>
         <source>Import from RimWorld Save File</source>
         <translation>RimWorld 저장 파일에서 가져오기</translation>
-    </message>
-    <message>
-        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
-
-{url}</source>
-        <translation>활성 모드 목록 보고서를 Rentry.co에 업로드했습니다! URL이 클립보드에 복사되었습니다:
-
-{url}</translation>
     </message>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
@@ -1359,18 +1266,6 @@ Git을 방금 설치했다면, PATH 변경 사항을 적용하기 위해 RimSort
         <translation>GitHub 자동 업데이트 완료</translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.
-
-{summary}
-
-The updated versions won't appear until you refresh. Refresh now?</source>
-        <translation>{count}개의 모드가 자동 업데이트되었습니다.
-
-
-
-업데이트된 버전은 새로 고칠 때까지 표시되지 않습니다. 지금 새로고침하시겠습니까? {summary}</translation>
-    </message>
-    <message>
         <source>No Repositories</source>
         <translation>저장소가 없습니다</translation>
     </message>
@@ -1397,12 +1292,6 @@ The updated versions won't appear until you refresh. Refresh now?</source>
     <message>
         <source>Some repositories encountered errors.</source>
         <translation>일부 리포지토리에서 오류가 발생했습니다.</translation>
-    </message>
-    <message>
-        <source>Errors occurred while checking for updates:
-{errors}</source>
-        <translation>업데이트 확인 중 오류가 발생했습니다:
-{errors}</translation>
     </message>
     <message>
         <source>No updates found</source>
@@ -1455,12 +1344,6 @@ The updated versions won't appear until you refresh. Refresh now?</source>
     <message>
         <source>{count} repositories could not be updated.</source>
         <translation>{count}개의 저장소를 업데이트할 수 없었습니다.</translation>
-    </message>
-    <message>
-        <source>Successful updates:
-</source>
-        <translation>성공한 업데이트:
-</translation>
     </message>
     <message>
         <source>Partial Updates Completed</source>
@@ -1539,12 +1422,6 @@ The updated versions won't appear until you refresh. Refresh now?</source>
         <translation>{count}개의 저장소를 푸시할 수 없었습니다.</translation>
     </message>
     <message>
-        <source>Successful pushes:
-</source>
-        <translation>성공한 푸시:
-</translation>
-    </message>
-    <message>
         <source>Partial Push Completed</source>
         <translation>부분적인 푸시가 완료되었습니다</translation>
     </message>
@@ -1559,12 +1436,6 @@ The updated versions won't appear until you refresh. Refresh now?</source>
     <message>
         <source>Do you want to clone this repository?</source>
         <translation>이 저장소를 복제하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Repository: {repo_url}
-Destination: {dest}</source>
-        <translation>저장소: {repo_url}
-대상: {dest}</translation>
     </message>
     <message>
         <source>Clone</source>
@@ -1633,10 +1504,6 @@ Destination: {dest}</source>
     <message>
         <source>Failed to clone repo!</source>
         <translation>리포지토리 복제에 실패했습니다!</translation>
-    </message>
-    <message>
-        <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
-        <translation>설정된 리포지토리의 복제/초기화에 실패했습니다! 인터넷에 연결되어 있습니까? 설정된 리포지토리가 유효합니까?</translation>
     </message>
     <message>
         <source>Enter git repo</source>
@@ -1767,24 +1634,12 @@ Destination: {dest}</source>
         <translation>유효하지 않은 저장소가 감지되었습니다!</translation>
     </message>
     <message>
-        <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
-        <translation>설정에서 저장소를 다시 구성해 주세요!
-유효한 저장소는 비어 있지 않으며 "http://" 또는 "https://"로 시작하는 저장소 URL입니다.</translation>
-    </message>
-    <message>
         <source>Invalid repository URL</source>
         <translation>유효하지 않은 저장소 URL</translation>
     </message>
     <message>
         <source>Failed to parse repository information from URL.</source>
         <translation>URL에서 저장소 정보를 분석할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>URL: {repo_url}
-Error: {error}</source>
-        <translation>URL: {repo_url}
-오류: {error}</translation>
     </message>
     <message>
         <source>GitHub credentials missing</source>
@@ -1817,16 +1672,6 @@ Error: {error}</source>
     <message>
         <source>Please ensure the file exists and then try to upload again!</source>
         <translation>파일이 존재하는지 확인하고 다시 업로드를 시도해 주세요!</translation>
-    </message>
-    <message>
-        <source>File not found:
-{file_full_path}
-Repository:
-{repo_url}</source>
-        <translation>파일을 찾을 수 없습니다:
-{file_full_path}
-리포지토리:
-{repo_url}</translation>
     </message>
     <message>
         <source>Invalid database</source>
@@ -1863,12 +1708,6 @@ Repository:
     <message>
         <source>Created fork of repository.</source>
         <translation>저장소 포크가 생성되었습니다.</translation>
-    </message>
-    <message>
-        <source>Fork: {fork_name}
-Please wait a moment for GitHub to set up the fork.</source>
-        <translation>포크: {fork_name}
-GitHub에서 포크를 설정할 때까지 잠시 기다려 주세요.</translation>
     </message>
     <message>
         <source>Fork creation failed</source>
@@ -2015,34 +1854,12 @@ GitHub에서 포크를 설정할 때까지 잠시 기다려 주세요.</translat
         <translation>풀 리퀘스트가 성공적으로 생성되었습니다!</translation>
     </message>
     <message>
-        <source>Pull request created successfully.
-Do you want to open it in your web browser?
-
-URL: {url}</source>
-        <translation>풀 리퀘스트가 성공적으로 생성되었습니다.
-웹 브라우저에서 여시겠습니까?
-
-URL: {url}</translation>
-    </message>
-    <message>
         <source>Pull request failed</source>
         <translation>풀 리퀘스트 생성에 실패했습니다</translation>
     </message>
     <message>
         <source>Failed to create pull request.</source>
         <translation>풀 리퀘스트 생성에 실패했습니다.</translation>
-    </message>
-    <message>
-        <source>The changes were pushed to your fork successfully, but the pull request creation failed.
-
-You can manually create a pull request on GitHub.
-
-Error: {error}</source>
-        <translation>변경 사항이 포크에 성공적으로 푸시되었으나, 풀 리퀘스트 생성에 실패했습니다.
-
-GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
-
-오류: {error}</translation>
     </message>
     <message>
         <source>Upload Steam Workshop Database</source>
@@ -2063,6 +1880,54 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
     <message>
         <source>Upload Community Rules Database</source>
         <translation>커뮤니티 규칙 데이터베이스 업로드</translation>
+    </message>
+    <message>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
+        <translation>{count}개의 모드가 자동 업데이트되었습니다.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;업데이트된 버전은 새로 고칠 때까지 표시되지 않습니다. 지금 새로고침하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Errors occurred while checking for updates:&lt;br&gt;{errors}</source>
+        <translation>업데이트를 확인하는 동안 오류가 발생했습니다:&lt;br&gt;{errors}</translation>
+    </message>
+    <message>
+        <source>Successful updates:&lt;br&gt;</source>
+        <translation>성공적인 업데이트:&lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Successful pushes:&lt;br&gt;</source>
+        <translation>성공적인 푸시:&lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
+        <translation>저장소: {repo_url}&lt;br&gt;대상: {dest}</translation>
+    </message>
+    <message>
+        <source>The configured repo failed to clone/initialize!&lt;br&gt;&lt;br&gt;Are you connected to the Internet?&lt;br&gt;&lt;br&gt;Is your configured repo valid?</source>
+        <translation>구성된 저장소가 복제/초기화되지 못했습니다!&lt;br&gt;&lt;br&gt;인터넷에 연결되어 있습니까?&lt;br&gt;&lt;br&gt;구성된 저장소가 유효합니까?</translation>
+    </message>
+    <message>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
+        <translation>설정에서 저장소를 다시 구성하세요!&lt;br&gt;유효한 저장소는 비어 있지 않고 "http://" 또는 "https://"로 시작하는 저장소 URL입니다.</translation>
+    </message>
+    <message>
+        <source>URL: {repo_url}&lt;br&gt;Error: {error}</source>
+        <translation>URL: {repo_url}&lt;br&gt;오류: {error}</translation>
+    </message>
+    <message>
+        <source>File not found:&lt;br&gt;{file_full_path}&lt;br&gt;Repository:&lt;br&gt;{repo_url}</source>
+        <translation>파일을 찾을 수 없습니다:&lt;br&gt;{file_full_path}&lt;br&gt;저장소:&lt;br&gt;{repo_url}</translation>
+    </message>
+    <message>
+        <source>Fork: {fork_name}&lt;br&gt;Please wait a moment for GitHub to set up the fork.</source>
+        <translation>포크: {fork_name}&lt;br&gt;GitHub가 포크를 설정할 때까지 잠시 기다려 주세요.</translation>
+    </message>
+    <message>
+        <source>Pull request created successfully.&lt;br&gt;Do you want to open it in your web browser?&lt;br&gt;&lt;br&gt;URL: {url}</source>
+        <translation>풀 요청이 생성되었습니다.&lt;br&gt;웹 브라우저에서 열시겠습니까?&lt;br&gt;&lt;br&gt;URL: {url}</translation>
+    </message>
+    <message>
+        <source>The changes were pushed to your fork successfully, but the pull request creation failed.&lt;br&gt;&lt;br&gt;You can manually create a pull request on GitHub.&lt;br&gt;&lt;br&gt;Error: {error}</source>
+        <translation>변경 사항이 포크에 성공적으로 푸시되었지만 풀 요청 생성에 실패했습니다.&lt;br&gt;&lt;br&gt;GitHub에서 풀 요청을 수동으로 만들 수 있습니다.&lt;br&gt;&lt;br&gt;오류: {error}</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
@@ -2146,6 +2011,10 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>설정된 창작마당 모드 폴더를 어떻게 하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>창작마당 폴더: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;옵션 1: SteamCMD로 변환&lt;br&gt;RimSort는 모든 창작마당 모드를 새 인스턴스의 로컬 mods 폴더에 복사하여 새 인스턴스 내에서 관리할 수 있는 SteamCMD 모드로 변환합니다. 모드 중복을 방지하기 위해 이 인스턴스에서는 Workshop 폴더가 무시됩니다.&lt;br&gt;&lt;br&gt;옵션 2: Workshop 폴더 유지&lt;br&gt;새 인스턴스는 원본 인스턴스와 동일한 Workshop 폴더를 사용합니다. 필요한 경우 나중에 설정에서 변경할 수 있습니다.&lt;br&gt;&lt;br&gt;어떻게 진행하시겠습니까?</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -2240,19 +2109,16 @@ GitHub에서 수동으로 풀 리퀘스트를 생성할 수 있습니다.
         <translation>{DEFAULT_INSTANCE_NAME}</translation>
     </message>
     <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
-
-Generated run arguments preview:
-{preview}</source>
-        <translation>{preview}</translation>
-    </message>
-    <message>
         <source>Create new instance [{instance_name}]</source>
         <translation>새 인스턴스 [{instance_name}] 생성</translation>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
         <translation>새 인스턴스의 실행 인수를 자동으로 생성하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>구성된 Game/Config 폴더를 기반으로 새 인스턴스에 대한 실행 인수를 생성하려고 시도합니다.&lt;br&gt;&lt;br&gt;생성된 실행 인수 미리보기:&lt;br&gt;{preview}</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2301,18 +2167,6 @@ Generated run arguments preview:
     <message>
         <source>Input a unique name for the backed up instance that is not "{name}"</source>
         <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-Option 1: Convert to SteamCMD
-RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
-
-Option 2: Keep Workshop Folder
-The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
-
-How would you like to proceed?</source>
-        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Keep Workshop Folder</source>
@@ -2562,23 +2416,6 @@ How would you like to proceed?</source>
     </message>
 </context>
 <context>
-    <name>MetadataManager</name>
-    <message>
-        <source>Missing Version.txt</source>
-        <translation>Version.txt를 찾을 수 없습니다</translation>
-    </message>
-    <message>
-        <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation>RimSort가 예상 경로 [{version_file_path}]에서 게임 버전을 가져올 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>
-Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation>
-게임 경로 {folder}가 올바르게 설정되었나요? 게임 설치 디렉토리에 Version.txt 파일이 있어야 합니다.</translation>
-    </message>
-</context>
-<context>
     <name>MissingDependenciesDialog</name>
     <message>
         <source>Showing dependencies of your active mods.
@@ -2749,16 +2586,6 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>완전 삭제 확인</translation>
     </message>
     <message>
-        <source>
-This operation will permanently delete the selected mod directories from the filesystem.
-
-Do you want to proceed?</source>
-        <translation>
-이 작업은 선택한 MOD 디렉토리를 파일 시스템에서 영구적으로 삭제합니다.
-
-계속하시겠습니까?</translation>
-    </message>
-    <message>
         <source>Please select at least one mod to process.</source>
         <translation>처리할 MOD를 적어도 하나 이상 선택해 주세요.</translation>
     </message>
@@ -2767,30 +2594,8 @@ Do you want to proceed?</source>
         <translation>DDS 삭제 확인</translation>
     </message>
     <message>
-        <source>
-This operation will only delete optimized textures (.dds files) from the selected mods.
-
-Do you want to proceed?</source>
-        <translation>
-이 작업은 선택한 MOD에서 최적화된 텍스처(.dds 파일)만 삭제합니다.
-
-계속하시겠습니까?</translation>
-    </message>
-    <message>
         <source>Confirm Selective Deletion</source>
         <translation>선택적 삭제 확인</translation>
-    </message>
-    <message>
-        <source>
-This operation will delete all mod files except for .dds texture files.
-The .dds files will be preserved.
-
-Do you want to proceed?</source>
-        <translation>
-이 작업은 .dds 텍스처 파일을 제외한 모든 MOD 파일을 삭제합니다.
-.dds 파일은 유지됩니다.
-
-계속하시겠습니까?</translation>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
@@ -2805,14 +2610,16 @@ Do you want to proceed?</source>
         <translation>Steam  {action}</translation>
     </message>
     <message>
-        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation>{len}개의 Steam 창작마당 MOD에서 {action}을(를) 성공적으로 시작했습니다.
-프로세스가 완료될 때까지 시간이 다소 걸릴 수 있습니다.</translation>
-    </message>
-    <message>
         <source>{action} Error</source>
         <translation>오류 {action}</translation>
+    </message>
+    <message>
+        <source>You have selected {selected_count} mod(s) for deletion.&lt;br&gt;{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>삭제하기 위해 {selected_count}개의 모드를 선택했습니다.&lt;br&gt;이 중 {steam_count}개는 Steam 창작마당 모드이며 역시 {action_past}입니다.</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will:&lt;br&gt;• Delete the selected mod directories from your filesystem&lt;br&gt;• {action_capitalized} Steam Workshop mods from your Steam account&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업은 다음을 수행합니다.&lt;br&gt;• 파일 시스템에서 선택한 모드 디렉터리 삭제&lt;br&gt;• Steam 계정에서 Steam 창작마당 모드 {action_capitalized}&lt;br&gt;&lt;br&gt;계속하시겠습니까?</translation>
     </message>
     <message>
         <source>unsubscribe</source>
@@ -2851,35 +2658,32 @@ The process may take a few moments to complete.</source>
         <translation>완전한 삭제를 위해 {selected_count}개의 모드를 선택했습니다.</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will permanently delete the selected mod directories from the filesystem.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업은 선택한 모드 디렉터리를 파일 시스템에서 영구적으로 삭제합니다.&lt;br&gt;&lt;br&gt;계속하시겠습니까?</translation>
+    </message>
+    <message>
         <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
         <translation>DDS 텍스처 삭제를 위해 {selected_count}개의 모드를 선택했습니다.</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will only delete optimized textures (.dds files) from the selected mods.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업은 선택한 모드에서 최적화된 텍스처(.dds 파일)만 삭제합니다.&lt;br&gt;&lt;br&gt;계속하시겠습니까?</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for selective deletion.</source>
         <translation>선택적 삭제를 위해 {selected_count}개의 모드를 선택했습니다.</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will delete all mod files except for .dds texture files.&lt;br&gt;The .dds files will be preserved.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업을 수행하면 .dds 텍스처 파일을 제외한 모든 모드 파일이 삭제됩니다.&lt;br&gt;.dds 파일은 보존됩니다.&lt;br&gt;&lt;br&gt;계속하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).&lt;br&gt;The process may take a few moments to complete.</source>
+        <translation>{len} Steam 창작마당 모드에서 {action}을(를) 성공적으로 시작했습니다.&lt;br&gt;프로세스를 완료하는 데 몇 분 정도 걸릴 수 있습니다.</translation>
+    </message>
+    <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>삭제를 확인하고 {action_capitalized}</translation>
-    </message>
-    <message>
-        <source>You have selected {selected_count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
-        <translation>삭제를 위해 {selected_count}개의 모드를 선택했습니다.
-이들은 Steam 창작마당 모드이기도 합니다. {action_past} {steam_count}</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action_capitalized} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>이 작업은 다음과 같습니다.
-•파일 시스템에서 선택한 모드 디렉터리를 삭제합니다
-•Steam 창작마당 모드에서 Steam 창작마당 모드를 {action_capitalized}
-
-계속하시겠습니까?</translation>
     </message>
 </context>
 <context>
@@ -3175,20 +2979,8 @@ Do you want to proceed?</source>
         <translation>{len}개의 삭제 후 다시 다운로드할 모드를 선택했습니다.</translation>
     </message>
     <message>
-        <source>
-This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
-        <translation>
-이 작업은 모드 파일을 재귀적으로 삭제하며, .dds 텍스처를 제외한 모든 모드 파일을 삭제하고 SteamCMD를 사용하여 모드를 다시 다운로드하려고 시도합니다. 계속하시겠습니까?</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>{len}개의 구독 해제할 모드를 선택했습니다.</translation>
-    </message>
-    <message>
-        <source>
-This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
-        <translation>
-이 작업은 잠재적으로 .dds 텍스처를 삭제합니다. Steam은 이 작업에 대해 불안정합니다. 계속하시겠습니까?</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -3223,14 +3015,12 @@ This operation will potentially delete .dds textures leftover. Steam is unreliab
         <translation>취소</translation>
     </message>
     <message>
-        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
-        <translation>재구독을 위해 {len}개의 모드를 선택했습니다: (구독 해제 + 구독).</translation>
+        <source>&lt;br&gt;This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업은 발견된 .dds 텍스처를 제외한 모든 모드 파일을 반복적으로 삭제하고 SteamCMD를 통해 모드를 다시 다운로드하려고 시도합니다. 계속하시겠습니까?</translation>
     </message>
     <message>
-        <source>
-Do you want to proceed?</source>
-        <translation>
-계속하시겠습니까?</translation>
+        <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
+        <translation>재구독을 위해 {len}개의 모드를 선택했습니다: (구독 해제 + 구독).</translation>
     </message>
     <message>
         <source>Add comment</source>
@@ -3322,6 +3112,14 @@ Should be Loaded Before:</source>
         <translation>모드 색상을 초기화합니다</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <translation>&lt;br&gt;이 작업은 남은 .dds 텍스처를 삭제할 가능성이 있습니다. Steam은 이에 대해 신뢰할 수 없습니다. 계속하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;계속하시겠습니까?</translation>
+    </message>
+    <message>
         <source>
 Mod and Game Version Mismatch</source>
         <translation>모드 및 게임 버전 불일치</translation>
@@ -3360,6 +3158,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Tags</source>
         <translation>태그</translation>
+    </message>
+    <message>
+        <source>Workshop Updated</source>
+        <translation>워크샵이 업데이트되었습니다.</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4119,12 +3921,8 @@ Alternative Dependencies:</source>
         <translation>SteamCMD 다운로더</translation>
     </message>
     <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
-
-Click 'Show Details' to see a list of mods that failed.</source>
-        <translation>SteamCMD가 모드 다운로드에 실패했습니다! 다운로드에 실패한 모드를 다시 다운로드하시겠습니까?
-
-'Show Details'를 클릭하여 실패한 모드 목록을 확인하십시오.</translation>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
+        <translation>SteamCMD가 모드를 다운로드하지 못했습니다! 실패한 모드를 다시 다운로드하시겠습니까?&lt;br&gt;&lt;br&gt;실패한 모드 목록을 보려면 '세부정보 표시'를 클릭하세요.</translation>
     </message>
     <message>
         <source>Process Complete</source>
@@ -4192,6 +3990,10 @@ Click 'Show Details' to see a list of mods that failed.</source>
 <context>
     <name>SettingsController</name>
     <message>
+        <source>Steam Integration</source>
+        <translation>스팀 통합</translation>
+    </message>
+    <message>
         <source>Reset to defaults</source>
         <translation>기본값으로 복원</translation>
     </message>
@@ -4200,44 +4002,28 @@ Click 'Show Details' to see a list of mods that failed.</source>
         <translation>모든 설정을 기본값으로 복원하시겠습니까?</translation>
     </message>
     <message>
+        <source>The selected game folder does not contain a valid RimWorld executable.&lt;br&gt;&lt;br&gt;Please select a valid game location.&lt;br&gt;&lt;br&gt;Windows: RimWorldWin64.exe or RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimworldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux</source>
+        <translation>선택한 게임 폴더에 유효한 RimWorld 실행 파일이 없습니다.&lt;br&gt;&lt;br&gt;유효한 게임 위치를 선택하십시오.&lt;br&gt;&lt;br&gt;Windows: RimWorldWin64.exe 또는 RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimworldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorldWin64.exe 또는 RimWorldWin.exe(Linux에서 Windows 버전의 게임을 사용하는 경우)</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml.&lt;br&gt;&lt;br&gt;Please select a valid config folder.&lt;br&gt;&lt;br&gt;If you have not launched the game before,&lt;br&gt;&lt;br&gt;Please launch the game at least once to generate the necessary config files.</source>
+        <translation>선택한 구성 폴더에 ModsConfig.xml이 포함되어 있지 않습니다.&lt;br&gt;&lt;br&gt;유효한 구성 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;이전에 게임을 실행한 적이 없다면&lt;br&gt;&lt;br&gt;게임을 한 번 이상 실행하여 필요한 구성 파일을 생성하세요.</translation>
+    </message>
+    <message>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a 'Mods' subfolder within the game folder.</source>
+        <translation>선택한 로컬 모드 폴더 위치는 유효한 디렉터리가 아닙니다.&lt;br&gt;&lt;br&gt;로컬 모드에 대해 유효한 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;로컬 모드 폴더는 게임 폴더 내의 'Mods' 하위 폴더여야 합니다.</translation>
+    </message>
+    <message>
         <source>Invalid Game Location</source>
         <translation>유효하지 않은 게임 위치</translation>
     </message>
     <message>
-        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
-        <translation>선택한 게임 폴더에 유효한 RimWorld 실행 파일이 포함되어 있지 않습니다. 유효한 게임 위치를 선택해 주세요.</translation>
+        <source>Invalid Local Mods Folder</source>
+        <translation>잘못된 로컬 Mods 폴더</translation>
     </message>
     <message>
         <source>Invalid Config Folder</source>
         <translation>유효하지 않은 구성 폴더</translation>
-    </message>
-    <message>
-        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
-        <translation>선택한 구성 폴더에 ModsConfig.xml이 포함되어 있지 않습니다. 유효한 구성 폴더를 선택해 주세요.</translation>
-    </message>
-    <message>
-        <source>Steam Client Integration Disabled</source>
-        <translation>Steam 클라이언트 통합이 비활성화되었습니다</translation>
-    </message>
-    <message>
-        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
-        <translation>Steam 클라이언트 통합이 비활성화되었습니다. Steam 모드 위치와 Steam 프로토콜 실행 설정이 초기화됩니다.</translation>
-    </message>
-    <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
-        <translation>Steam 클라이언트 통합을 위해서는 Steam 모드 위치를 설정해야 합니다. Steam 클라이언트 통합, Steam 모드 위치, Steam 프로토콜 실행이 비활성화되었습니다.</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Steam 창작마당 파일 'appworkshop_294100.acf'를 예상된 위치에서 찾을 수 없습니다. Steam 클라이언트 통합, Steam 모드 위치, Steam 프로토콜 실행이 비활성화되었습니다. Steam이 올바르게 설치되었는지, RimWorld 창작마당 데이터가 다운로드되었는지 확인해 주세요.</translation>
-    </message>
-    <message>
-        <source>Steam Mods Location Required</source>
-        <translation>Steam 모드 위치가 필요합니다</translation>
-    </message>
-    <message>
-        <source>Steam Workshop File Not Found</source>
-        <translation>Steam 창작마당 파일을 찾을 수 없습니다</translation>
     </message>
 </context>
 <context>
@@ -4953,10 +4739,8 @@ Please choose one of the following options to proceed.</source>
         <translation>모드 목록이 비어 있습니다. 컬렉션을 목록에 추가할 수 없습니다!</translation>
     </message>
     <message>
-        <source>Please reach out to us on Github Issues page or
-#rimsort-testing on the Rocketman/CAI discord</source>
-        <translation>Github의 Issues 페이지 또는
-Rocketman/CAI Discord의 #rimsort-testing으로 문의해 주세요.</translation>
+        <source>Please reach out to us on Github Issues page or&lt;br&gt;#rimsort-testing on the Rocketman/CAI discord</source>
+        <translation>Github 문제 페이지 또는 Rocketman/CAI 디스코드의&lt;br&gt;#rimsort-testing을 통해 문의해 주세요.</translation>
     </message>
     <message>
         <source>You already have these mods in your download list!</source>
@@ -4978,10 +4762,8 @@ Rocketman/CAI Discord의 #rimsort-testing으로 문의해 주세요.</translatio
         <translation>RimSort - SteamCMD 설정</translation>
     </message>
     <message>
-        <source>RimSort was unable to find SteamCMD installed in the configured prefix:
-</source>
-        <translation>RimSort가 설정된 프리픽스에서 설치된 SteamCMD를 찾을 수 없습니다:
-</translation>
+        <source>RimSort was unable to find SteamCMD installed in the configured prefix:&lt;br&gt;</source>
+        <translation>RimSort가 구성된 접두사에 설치된 SteamCMD를 찾을 수 없습니다:&lt;br&gt;</translation>
     </message>
     <message>
         <source>Do you want to setup SteamCMD?</source>
@@ -5012,28 +4794,20 @@ Rocketman/CAI Discord의 #rimsort-testing으로 문의해 주세요.</translatio
         <translation>이 심볼릭 링크를 통해 SteamCMD가 모드를 로컬 모드 폴더로 다운로드하며, SteamCMD의 모드 다운로드가 올바르게 작동하는 데 필요합니다.</translation>
     </message>
     <message>
-        <source>Existing symlink: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>기존 심볼릭 링크: {symlink_destination_path}
-
-새 심볼릭 링크:
-[{symlink_source_path}] -&amp;gt; </translation>
+        <source>Existing symlink: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>기존 심볼릭 링크: {symlink_destination_path}&lt;br&gt;&lt;br&gt;새 심볼릭 링크:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
+    </message>
+    <message>
+        <source>Existing destination: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>기존 대상: {symlink_destination_path}&lt;br&gt;&lt;br&gt;새 Symlink:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
+    </message>
+    <message>
+        <source>New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>새 심볼릭 링크:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
         <translation>심볼릭 링크 대상 경로가 이미 존재합니다. 기존 대상을 삭제하고 해당 위치에 새 심볼릭 링크를 만드시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Existing destination: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>기존 대상: {symlink_destination_path}
-
-새 심볼릭 링크:
-[{symlink_source_path}] -&amp;gt; </translation>
     </message>
     <message>
         <source>Create Symlink?</source>
@@ -5042,12 +4816,6 @@ New symlink:
     <message>
         <source>Do you want to create a symlink?</source>
         <translation>심볼릭 링크를 만드시겠습니까?</translation>
-    </message>
-    <message>
-        <source>New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>새 심볼릭 링크:
-[{symlink_source_path}] -&amp;gt; </translation>
     </message>
     <message>
         <source>&amp;Yes</source>
@@ -5069,8 +4837,8 @@ New symlink:
         <translation>Steam 통합을 사용할 수 없습니다.</translation>
     </message>
     <message>
-        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
-        <translation>RimSort가 Steam 클라이언트를 감지할 수 없거나 응답하지 않을 수 있습니다. Steam이 설치되어 실행 중인지 확인하세요. Steam 사용자라면 Steam이 실행 중인지, 로그인되어 있는지 확인하세요. Steam을 다시 시작해 보세요.</translation>
+        <source>RimSort could not detect Steam client or it may be unresponsive.&lt;br&gt;&lt;br&gt;Please make sure Steam is installed and running.&lt;br&gt;&lt;br&gt;If you are a Steam user, please check that Steam is running and that you are logged in.&lt;br&gt;&lt;br&gt;Try restarting Steam.</source>
+        <translation>RimSort가 Steam 클라이언트를 감지할 수 없거나 응답하지 않을 수 있습니다.&lt;br&gt;&lt;br&gt;Steam이 설치되어 실행 중인지 확인하세요.&lt;br&gt;&lt;br&gt;Steam 사용자라면 Steam이 실행 중이고 로그인되어 있는지 확인하세요.&lt;br&gt;&lt;br&gt;Steam을 다시 시작해 보세요.</translation>
     </message>
     <message>
         <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
@@ -5161,38 +4929,8 @@ Please reach out to us for support at: {support_url}</source>
         <translation>Steam을 시작하지 못했습니다.</translation>
     </message>
     <message>
-        <source>Could not automatically start game installation through Steam.
-
-Please manually verify/install the game through Steam.</source>
-        <translation>Steam을 통해 게임 설치를 자동으로 시작할 수 없습니다.
-
-Steam을 통해 게임을 수동으로 확인/설치해 주십시오.</translation>
-    </message>
-    <message>
-        <source>Deleted all files in the Steam mods directory.
-
- Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation>Steam의 모드 디렉터리 내 모든 파일을 삭제했습니다.
-
-구독 중인 모드의 자동 재다운로드를 트리거하기 위해 Steam을 재시작하는 중입니다.</translation>
-    </message>
-    <message>
         <source>Steam Workshop Redownload</source>
         <translation>Steam 창작마당 재다운로드</translation>
-    </message>
-    <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
-
-If mods don't download automatically, try:
-1. Restart Steam
-2. Verify game files in Steam
-3. Visit the Workshop page of each mod</source>
-        <translation>모드가 삭제되었습니다. Steam을 재시작하여 구독 중인 모드의 자동 재다운로드를 트리거하십시오.
-
-모드가 자동으로 다운로드되지 않는 경우 다음 단계를 시도해 보십시오.
-1. Steam 재시작
-2. Steam에서 게임 파일 무결성 검사
-3. 각 모드의 창작마당 페이지 방문</translation>
     </message>
     <message>
         <source>Deleted all files in the {config_dir} successfully.</source>
@@ -5223,14 +4961,6 @@ If mods don't download automatically, try:
         <translation>모든 모드를 삭제하시겠습니까?</translation>
     </message>
     <message>
-        <source>Are you sure you want to delete all mods?
-
-WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
-        <translation>모든 모드를 삭제하시겠습니까?
-
-경고: 이 작업은 Mods 폴더 내의 모든 모드를 완전히 삭제하고 바닐라 상태로 초기화합니다.</translation>
-    </message>
-    <message>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
         <translation>모든 모드를 삭제했습니다. ModsConfig.xml을 바닐라 상태로 초기화했습니다.</translation>
     </message>
@@ -5255,30 +4985,48 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
         <translation>모드 내보내기</translation>
     </message>
     <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
+        <translation>선택한 파일은 유효한 모드 목록 파일이 아닙니다.&lt;br&gt;세부정보: {e}</translation>
+    </message>
+    <message>
+        <source>Successfully deleted Steam's downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <translation>Steam의 다운로드 폴더를 삭제했습니다.&lt;br&gt;변경 사항을 적용하려면 Steam을 다시 시작하세요.</translation>
+    </message>
+    <message>
+        <source>Could not delete Steam's downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <translation>Steam의 다운로드 폴더를 삭제할 수 없습니다.&lt;br&gt;수동으로 삭제하세요: Steam/steamapps/downloading&lt;br&gt;세부정보: {e}</translation>
+    </message>
+    <message>
+        <source>No installed games found in this Steam library folder.&lt;br&gt;You may have games installed in a different Steam library folder or drive.</source>
+        <translation>이 Steam 라이브러리 폴더에는 설치된 게임이 없습니다.&lt;br&gt;다른 Steam 라이브러리 폴더나 드라이브에 게임이 설치되어 있을 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>This will verify all {len} games in your Steam library.&lt;br&gt;This may take a while. Continue?</source>
+        <translation>Steam 라이브러리에 있는 모든 {len} 게임을 확인합니다.&lt;br&gt;이 작업은 다소 시간이 걸릴 수 있습니다. 계속하다?</translation>
+    </message>
+    <message>
+        <source>Steam will now verify {len} games.&lt;br&gt;You can monitor progress in the Steam client.</source>
+        <translation>이제 Steam에서 {len} 게임을 확인합니다.&lt;br&gt;Steam 클라이언트에서 진행 상황을 모니터링할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Could not repair Steam library.&lt;br&gt;Please verify your games manually through Steam.&lt;br&gt;Details: {e}</source>
+        <translation>Steam 라이브러리를 복구할 수 없습니다.&lt;br&gt;Steam을 통해 게임을 수동으로 확인하세요.&lt;br&gt;세부정보: {e}</translation>
+    </message>
+    <message>
         <source>ACF File Not Found</source>
         <translation>ACF 파일을 찾을 수 없습니다</translation>
     </message>
     <message>
-        <source>Could not find the Steam Workshop ACF file at:
-{acf_path}</source>
-        <translation>다음 위치에서 Steam 창작마당 ACF 파일을 찾을 수 없습니다.
-{acf_path}</translation>
+        <source>Could not find the Steam Workshop ACF file at:&lt;br&gt;{acf_path}</source>
+        <translation>다음 위치에서 Steam 창작마당 ACF 파일을 찾을 수 없습니다:&lt;br&gt;{acf_path}</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.&lt;br&gt;&lt;br&gt;A backup will be created before any changes are made.&lt;br&gt;&lt;br&gt;Continue?</source>
+        <translation>이렇게 하면 디스크에 더 이상 존재하지 않는 모드에 대한 오래된 창작마당 항목이 ACF 메타데이터 파일에서 제거됩니다.&lt;br&gt;&lt;br&gt;변경 사항이 적용되기 전에 백업이 생성됩니다.&lt;br&gt;&lt;br&gt;계속하시겠습니까?</translation>
     </message>
     <message>
         <source>Clean Orphaned Workshop Items</source>
         <translation>고아가 된 작업장 아이템 청소하기</translation>
-    </message>
-    <message>
-        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
-
-A backup will be created before any changes are made.
-
-Continue?</source>
-        <translation>이렇게 하면 디스크에 더 이상 존재하지 않는 모드에 대한 ACF 메타데이터 파일에서 오래된 워크샵 항목이 제거됩니다.
-
-변경이 이루어지기 전에 백업이 생성됩니다.
-
-계속하다?</translation>
     </message>
     <message>
         <source>Cleanup Complete</source>
@@ -5311,6 +5059,22 @@ Continue?</source>
     <message>
         <source>Confirm Export</source>
         <translation>내보내기 확인</translation>
+    </message>
+    <message>
+        <source>Could not automatically start game installation through Steam.&lt;br&gt;&lt;br&gt;Please manually verify/install the game through Steam.</source>
+        <translation>Steam을 통해 게임 설치를 자동으로 시작할 수 없습니다.&lt;br&gt;&lt;br&gt;Steam을 통해 게임을 수동으로 확인/설치하세요.</translation>
+    </message>
+    <message>
+        <source>Deleted all files in the Steam mods directory.&lt;br&gt;&lt;br&gt; Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
+        <translation>Steam mods 디렉토리의 모든 파일을 삭제했습니다.&lt;br&gt;&lt;br&gt; 구독한 모드의 자동 재다운로드를 실행하기 위해 Steam을 다시 시작하려고 합니다.</translation>
+    </message>
+    <message>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <translation>모드가 삭제되었습니다. 구독한 모드의 자동 재다운로드를 실행하려면 Steam을 다시 시작하세요.&lt;br&gt;&lt;br&gt;모드가 자동으로 다운로드되지 않으면 다음을 시도해 보세요.&lt;br&gt;1. Steam을 다시 시작하세요&lt;br&gt;2. Steam&lt;br&gt;3에서 게임 파일을 확인하세요. 각 모드의 창작마당 페이지를 방문하세요.</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete all mods?&lt;br&gt;&lt;br&gt;WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
+        <translation>모든 모드를 삭제하시겠습니까?&lt;br&gt;&lt;br&gt;경고: 이렇게 하면 Mods 폴더의 모든 모드가 영구적으로 삭제되고 바닐라 상태로 재설정됩니다.</translation>
     </message>
     <message>
         <source>Export current mod list to file?</source>
@@ -5349,20 +5113,8 @@ Continue?</source>
         <translation>모드 리스트를 가져오는 데 실패했습니다.</translation>
     </message>
     <message>
-        <source>The selected file is not a valid mod list file.
-Details: {e}</source>
-        <translation>선택한 파일은 유효한 모드 리스트 파일이 아닙니다.
-상세: {e}</translation>
-    </message>
-    <message>
         <source>Cache Cleared</source>
         <translation>캐시가 삭제되었습니다</translation>
-    </message>
-    <message>
-        <source>Successfully deleted Steam's downloading folder.
-Restart Steam for the changes to take effect.</source>
-        <translation>Steam 다운로드 폴더가 성공적으로 삭제되었습니다.
-변경 사항을 적용하려면 Steam을 재시작하세요.</translation>
     </message>
     <message>
         <source>Cache Clear</source>
@@ -5377,14 +5129,6 @@ Restart Steam for the changes to take effect.</source>
         <translation>캐시를 지우지 못했습니다.</translation>
     </message>
     <message>
-        <source>Could not delete Steam's downloading folder.
-Please delete it manually: Steam/steamapps/downloading
-Details: {e}</source>
-        <translation>Steam 다운로드 폴더를 삭제하지 못했습니다.
-수동으로 삭제해 주세요: Steam/steamapps/downloading
-상세: {e}</translation>
-    </message>
-    <message>
         <source>Steam Action Failed</source>
         <translation>Steam 작업을 수행하지 못했습니다.</translation>
     </message>
@@ -5393,38 +5137,12 @@ Details: {e}</source>
         <translation>게임을 찾을 수 없습니다.</translation>
     </message>
     <message>
-        <source>No installed games found in this Steam library folder.
-You may have games installed in a different Steam library folder or drive.</source>
-        <translation>이 Steam 라이브러리 폴더에 설치된 게임을 찾을 수 없습니다.
-다른 Steam 라이브러리 폴더 또는 드라이브에 게임이 설치되어 있을 수 있습니다.</translation>
-    </message>
-    <message>
         <source>Confirm Library Repair</source>
         <translation>라이브러리 복구 확인</translation>
     </message>
     <message>
-        <source>This will verify all {len} games in your Steam library.
-This may take a while. Continue?</source>
-        <translation>이 작업은 Steam 라이브러리 내의 모든 {len}개 게임을 확인합니다.
-시간이 다소 걸릴 수 있습니다. 계속하시겠습니까?</translation>
-    </message>
-    <message>
         <source>Library Repair Started</source>
         <translation>라이브러리 복구가 시작되었습니다.</translation>
-    </message>
-    <message>
-        <source>Steam will now verify {len} games.
-You can monitor progress in the Steam client.</source>
-        <translation>Steam에서 현재 {len}개 게임을 확인하고 있습니다.
-Steam 클라이언트에서 진행 상황을 확인할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Could not repair Steam library.
-Please verify your games manually through Steam.
-Details: {e}</source>
-        <translation>Steam 라이브러리 복구에 실패했습니다.
-수동으로 Steam 게임을 확인해 주세요.
-상세: {e}</translation>
     </message>
     <message>
         <source>Path not set, Please check your settings and Try again.</source>
@@ -5622,20 +5340,8 @@ Details: {e}</source>
         <translation>rimsort 업데이트가 출시되었습니다: {latest_tag_name}</translation>
     </message>
     <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>rimsort {current_version} 버전을 실행 중입니다
-지금 업데이트하시겠습니까?</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>rimsort {tag_name} 릴리스 다운로드 중...</translation>
-    </message>
-    <message>
-        <source>
-Successfully retrieved latest release.
-The update will be installed from: {update_source_path}</source>
-        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
@@ -5646,8 +5352,16 @@ The update will be installed from: {update_source_path}</source>
         <translation>다운로드된 업데이트</translation>
     </message>
     <message>
+        <source>You are running RimSort {current_version}&lt;br&gt;Do you want to update now?</source>
+        <translation>RimSort {current_version}&lt;br&gt;을(를) 실행 중입니다. 지금 업데이트하시겠습니까?</translation>
+    </message>
+    <message>
         <source>Do you want to proceed with the update?</source>
         <translation>업데이트를 진행하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
+        <translation>&lt;br&gt;최신 릴리스를 성공적으로 검색했습니다.&lt;br&gt;업데이트는 다음 위치에서 설치됩니다: {update_source_path}</translation>
     </message>
 </context>
 <context>
@@ -5783,6 +5497,21 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
 </context>
 <context>
+    <name>dialog</name>
+    <message>
+        <source>Invalid Game Location</source>
+        <translation>잘못된 게임 위치</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>잘못된 구성 폴더</translation>
+    </message>
+    <message>
+        <source>Invalid Local Mods Folder</source>
+        <translation>잘못된 로컬 Mods 폴더</translation>
+    </message>
+</context>
+<context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
@@ -5867,26 +5596,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Are you sure you want to clear all locations?</source>
         <translation>모든 위치를 삭제하시겠습니까?</translation>
-    </message>
-</context>
-<context>
-    <name>self.manager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam DB 메타데이터의 유효 기간이 만료되었습니다</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB의 유효 기간이 만료되었습니다. 업데이트를 고려해 보세요.</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam DB 마지막 업데이트: {last_updated}
-
-캐시된 데이터로 대체하고 있지만, 만료된 Steam 데이터베이스입니다...</translation>
     </message>
 </context>
 <context>

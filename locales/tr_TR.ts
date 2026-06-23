@@ -90,12 +90,8 @@
         <translation>Eksik içe aktarma</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.
-
-Try subscribing to the collection first</source>
-        <translation>Eksik paket kimlikleri nedeniyle {len(failed_mods)} mod içe aktarılamadı.Tüm modları indirmediyseniz bu durum meydana gelebilir.
-
-Önce koleksiyona abone olmayı deneyin</translation>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>Eksik paket kimlikleri nedeniyle {len(failed_mods)} mod içe aktarılamadı. Tüm modları indirmediyseniz bu durum meydana gelebilir.&lt;br&gt;&lt;br&gt;Önce koleksiyona abone olmayı deneyin</translation>
     </message>
 </context>
 <context>
@@ -109,10 +105,8 @@ Try subscribing to the collection first</source>
         <translation>DB Builder sorgusu herhangi bir PublishedFileID döndürmedi!</translation>
     </message>
     <message>
-        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
-PublishedFileIDs are needed to retrieve mods from Steam!</source>
-        <translation>Bu genellikle geçersiz/eksik Steam WebAPI anahtarından veya Steam WebAPI'ye bağlantı sorunundan kaynaklanır.
-Steam'den modları almak için PublishedFileID'ler gereklidir!</translation>
+        <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.&lt;br&gt;PublishedFileIDs are needed to retrieve mods from Steam!</source>
+        <translation>Bu genellikle geçersiz/eksik Steam WebAPI anahtarından veya Steam WebAPI'ye olan bağlantı sorunundan kaynaklanır.&lt;br&gt;Steam'den modları almak için Yayınlanan Dosya Kimlikleri gereklidir!</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -135,16 +129,12 @@ Steam'den modları almak için PublishedFileID'ler gereklidir!</translation>
         <translation>Bu işlem, A'dan gelen bağımlılıkları B'den gelen bağımlılıklarla kontrol ederek 2 veritabanını (A ve B) karşılaştıracaktır.</translation>
     </message>
     <message>
-        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
-A report of discrepancies is generated. You will be prompted for these paths in order:
-
-	1) Select input A
-	2) Select input B</source>
-        <translation>- Bu, 2 Steam Veritabanı arasındaki bağımlılık verilerinin doğru bir şekilde karşılaştırılmasını sağlayacaktır.
-Bir tutarsızlık raporu oluşturulur. Sizden sırayla şu yollar istenecektir:
-
-	1) A girişini seçin
-	2) B girişini seçin</translation>
+        <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.&lt;br&gt;A report of discrepancies is generated. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A&lt;br&gt;	2) Select input B</source>
+        <translation>- Bu, 2 Steam Veritabanı arasındaki bağımlılık verilerinin doğru bir karşılaştırmasını sağlayacaktır.&lt;br&gt;Bir tutarsızlık raporu oluşturulur. Sizden sırayla şu yollar istenecektir:&lt;br&gt;&lt;br&gt; 1) A girişini seçin&lt;br&gt; 2) B girişini seçin</translation>
+    </message>
+    <message>
+        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
+        <translation>- Bu, elde edilen veritabanına etkili bir şekilde A'nın anahtarının/değerinin üzerine B'nin anahtarı/değerinin üzerine yazılacaktır.&lt;br&gt;- İstisnalar yinelemeli olarak güncellenmeyecektir. Bunun yerine, B'nin anahtarı tamamen bunların üzerine yazılacaktır.&lt;br&gt;- Aşağıdaki istisnalar uygulanacaktır:&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS&lt;br&gt;&lt;br&gt;Sonuçta ortaya çıkan C veritabanı, kullanıcı tarafından belirlenen bir yola kaydedilir. Sizden sırayla şu yollar istenecektir:&lt;br&gt;&lt;br&gt; 1) A girişini seçin (güncellenecek veri tabanı)&lt;br&gt; 2) B girişini seçin (güncelleme kaynağı)&lt;br&gt; 3) C çıkışını seçin (sonuç veri tabanı) {DB_BUILDER_RECURSE_EXCEPTIONS}</translation>
     </message>
     <message>
         <source>Steam DB comparison report: {count} found</source>
@@ -157,30 +147,6 @@ Bir tutarsızlık raporu oluşturulur. Sizden sırayla şu yollar istenecektir:
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
         <translation>Bu işlem, istisnalar hariç, A'yı B ile yinelemeli olarak güncelleyerek 2 veritabanını (A ve B) birleştirecektir.</translation>
-    </message>
-    <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.
-- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.
-- The following exceptions will be made:
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:
-
-	1) Select input A (db to-be-updated)
-	2) Select input B (update source)
-	3) Select output C (resultant db)</source>
-        <translation>- Bu, sonuç veritabanına etkili bir şekilde A'nın anahtarının/değerinin üzerine B'nin anahtarı/değeri ile yazacaktır.
-- İstisnalar yinelemeli olarak güncellenmeyecektir. Bunun yerine, B'nin anahtarı tamamen bunların üzerine yazılacaktır.
-- Aşağıdaki istisnalar uygulanacaktır:
-
-	{DB_BUILDER_RECURSE_EXCEPTIONS}
-
-Ortaya çıkan veritabanı C, kullanıcı tarafından belirlenen bir yola kaydedilir. Sizden sırayla şu yollar istenecektir:
-
-	1) A girişini seçin (güncellenecek veri tabanı)
-	2) B girişini seçin (güncelleme kaynağı)
-	3) C çıkışını seçin (sonuç db)</translation>
     </message>
     <message>
         <source>Save Error</source>
@@ -285,12 +251,20 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Regular expression paterninizle bir hata oluştu</translation>
     </message>
     <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try simplifying your pattern or check for syntax errors.</source>
+        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Deseninizi basitleştirmeyi deneyin veya sözdizimi hatalarını kontrol edin. {error_msg}</translation>
+    </message>
+    <message>
         <source>File Access Error</source>
         <translation>Dosya erişimi hatası</translation>
     </message>
     <message>
         <source>RimSort doesn't have permission to access some files.</source>
         <translation>RimSort'un bazı dosyala erişim izni yok</translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try running RimSort with administrator privileges or check folder permissions.</source>
+        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;RimSort'u yönetici ayrıcalıklarıyla çalıştırmayı deneyin veya klasör izinlerini kontrol edin. {error_msg}</translation>
     </message>
     <message>
         <source>Memory Error</source>
@@ -301,12 +275,20 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>RimSort arama yaparken bellek yetersizliği yaşadı</translation>
     </message>
     <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
+        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Daha küçük gruplar halinde arama yapmayı deneyin veya çok büyük dosyalar için 'akışlı arama' yöntemini kullanın. {error_msg}</translation>
+    </message>
+    <message>
         <source>Search Error</source>
         <translation>Arama Hatası</translation>
     </message>
     <message>
         <source>An error occurred during the search.</source>
         <translation>Arama sırasında bir hata oluştu</translation>
+    </message>
+    <message>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
+        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Lütfen ayarlarınızı kontrol edip tekrar deneyin. {error_msg}</translation>
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
@@ -319,38 +301,6 @@ The following table displays duplicate mods grouped by package ID. Select which 
     <message>
         <source>Location Not Set</source>
         <translation>Yer belirtilmemiş</translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Try simplifying your pattern or check for syntax errors.</source>
-        <translation>{error_msg}
-
-Deseninizi basitleştirmeyi deneyin veya sözdizimi hatalarını kontrol edin.</translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation>{error_msg}
-
-Yönetici ayrıcalıklarıyla rimsort çalıştırmayı deneyin veya klasör izinlerini kontrol edin.</translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg}
-
-Daha küçük gruplarda arama yapmayı deneyin veya çok büyük dosyalar için 'akış arama' yöntemini kullanın.</translation>
-    </message>
-    <message>
-        <source>{error_msg}
-
-Please check your settings and try again.</source>
-        <translation>{error_msg}
-
-Lütfen ayarlarınızı kontrol edin ve tekrar deneyin.</translation>
     </message>
     <message>
         <source>No valid search location is available for the selected scope. Please configure your game folders in the settings.</source>
@@ -702,6 +652,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>Temel yol(lar)</translation>
     </message>
     <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>Temel yollar geçersiz veya ayarlanmamış!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort aşağıdaki yolların ayarlanmasını gerektirir.&lt;br/&gt;&lt;br/&gt;1) Oyun klasörü (RimWorld'ün kurulu olduğu klasör).&lt;br/&gt;&lt;br/&gt;2) Config klasörü (ModsConfig.xml'nin bulunduğu klasör)&lt;br/&gt;&lt;br/&gt;3) Yerel modlar klasörü (RimWorld kurulumunun içindeki Modlar klasörü).&lt;br/&gt;&lt;br/&gt;4) Steam modları klasörü (Yalnızca Steam kullanıcısı Steam İstemcisini de etkinleştiriyorsa ayarlayın. Entegrasyon)&lt;br/&gt;&lt;br/&gt;Tüm yolları otomatik olarak ayarlamak için otomatik algılama işlevini kullanmayı deneyin.&lt;br/&gt;&lt;br/&gt;Ayarları şimdi yapılandırmak için açmak ister misiniz?</translation>
+    </message>
+    <message>
         <source>Scanning mod sources and populating metadata...</source>
         <translation>Mod kaynakları kontrol ediliyor ve metaveriler güncelleniyor...</translation>
     </message>
@@ -722,6 +680,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Seçilen sıralama algoritması tanımlanmamış</translation>
     </message>
     <message>
+        <source>This may be caused by malformed settings or improper migration between versions or different mod manager.&lt;br&gt;&lt;br&gt;Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file.&lt;br&gt;&lt;br&gt;If the issue persists, please report it to the developers.</source>
+        <translation>Bunun nedeni, hatalı biçimlendirilmiş ayarlar veya sürümler arasında hatalı geçiş veya farklı mod yöneticisi olabilir.&lt;br&gt;&lt;br&gt;Ayarlarınızı sıfırlamayı, farklı bir sıralama algoritması seçmeyi veya ayarlar dosyanızı silmeyi deneyin.&lt;br&gt;&lt;br&gt;Sorun devam ederse, lütfen bunu geliştiricilere bildirin.</translation>
+    </message>
+    <message>
         <source>Failed to export to file</source>
         <translation>Dosyaya aktarma başarısız oldu</translation>
     </message>
@@ -732,6 +694,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Important</source>
         <translation>Önemli</translation>
+    </message>
+    <message>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
+        <translation>İndirme işlemi tamamlandıktan sonra Rentry'yi yeniden içe aktarmanız gerekecektir.&lt;br&gt;&lt;br&gt;İndirme tamamlandıktan sonra eksik modlar varsa, bunlar eksik modlar panelinde gösterilecektir.&lt;br&gt;&lt;br&gt;RimSort hala bazı modları indiremiyorsa, bunun nedeni mod verilerinin hem Rentry bağlantısında hem de Steam veritabanında mevcut olmamasıdır.</translation>
     </message>
     <message>
         <source>Steam client integration not set up</source>
@@ -796,14 +762,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Aktif mod listesi yüklendi</translation>
     </message>
     <message>
-        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
-
-{url}</source>
-        <translation>Aktif mod listesi raporu Rentry.co'ya yüklendi! URL panonuza kopyalandı:
-
-{url}</translation>
-    </message>
-    <message>
         <source>Failed to upload</source>
         <translation>Yükleme başarısız</translation>
     </message>
@@ -848,6 +806,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Dosya yüklendi</translation>
     </message>
     <message>
+        <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
+        <translation>URL panonuza kopyalandı:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
         <source>Failed to upload file.</source>
         <translation>Dosya yükleme başarısız.</translation>
     </message>
@@ -886,10 +848,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>todds could not find any valid mod folders to process.</source>
         <translation>todds işlenecek geçerli mod klasörü bulamadı.</translation>
-    </message>
-    <message>
-        <source>None of the configured mod folder paths exist on disk. Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
-        <translation>Diskte yapılandırılmış mod klasörü yollarının hiçbiri mevcut değil. Lütfen Yerel Modlar ve Atölye klasörlerinizin Ayarlar'da doğru şekilde ayarlandığını doğrulayın ve tekrar deneyin.</translation>
     </message>
     <message>
         <source>Confirm ACF import</source>
@@ -950,10 +908,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Steam Client Integration is disabled</source>
         <translation>Steam İstemcisi Entegrasyonu devre dışı bırakıldı</translation>
-    </message>
-    <message>
-        <source>This feature requires Steam Client Integration to be enabled in Settings. Please enable Steam Client Integration if you own the game on Steam.</source>
-        <translation>Bu özellik, Steam İstemcisi Entegrasyonunun Ayarlar'da etkinleştirilmesini gerektirir. Oyunun Steam'de sahibiyseniz lütfen Steam İstemci Entegrasyonunu etkinleştirin.</translation>
     </message>
     <message>
         <source>RimSort - SteamCMD setup</source>
@@ -1028,6 +982,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Zip dosyası indirilemedi.</translation>
     </message>
     <message>
+        <source>File: {file_path}&lt;br&gt;Error: {e}</source>
+        <translation>Dosya:  {file_path} {e} &lt;br&gt;</translation>
+    </message>
+    <message>
         <source>The selected file does not exist.</source>
         <translation>Seçilen dosya mevcut değil.</translation>
     </message>
@@ -1060,8 +1018,16 @@ Manage mods installed from GitHub releases.</source>
         <translation>Arşivdeki tüm dosyalar zaten hedef yolda mevcut.</translation>
     </message>
     <message>
+        <source>How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Cancel — Abort the operation.</source>
+        <translation>Nasıl devam etmek istersiniz?&lt;br&gt;&lt;br&gt;1) Tümünün Üzerine Yaz — Mevcut tüm dosya ve dizinleri değiştirin.&lt;br&gt;2) İptal — İşlemi iptal edin.</translation>
+    </message>
+    <message>
         <source>The following files or directories already exist in the target path:</source>
         <translation>Aşağıdaki dosyalar veya dosya yolları zaten hedef yolda mevcut:</translation>
+    </message>
+    <message>
+        <source>{conflicts_list}&lt;br&gt;&lt;br&gt;How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Skip Existing — Extract only new files and leave existing ones untouched.&lt;br&gt;3) Cancel — Abort the extraction.</source>
+        <translation>{conflicts_list&gt;&lt;br&gt;&lt;br&gt;Nasıl devam etmek istersiniz?&lt;br&gt;&lt;br&gt;1) Tümünün Üzerine Yaz — Mevcut tüm dosya ve dizinleri değiştirin.&lt;br&gt;2) Mevcut Olanı Atla — Yalnızca yeni dosyaları çıkarın ve mevcut dosyalara dokunmadan bırakın.&lt;br&gt;3) İptal — Çıkarma işlemini iptal edin. {conflicts_list}</translation>
     </message>
     <message>
         <source>Extraction completed</source>
@@ -1080,16 +1046,20 @@ Manage mods installed from GitHub releases.</source>
         <translation>Çıkartma sırasında bir hata oluştu.</translation>
     </message>
     <message>
+        <source>Git integration will not work without Git installed! Do you want to open download page for Git?&lt;br&gt;&lt;br&gt;If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
+        <translation>Git entegrasyonu Git kurulmadan çalışmaz! Git için indirme sayfasını açmak istiyor musunuz?&lt;br&gt;&lt;br&gt;Git'i yeni yüklediyseniz, PATH değişikliklerinin etkili olması için lütfen RimSort'u yeniden başlatın.</translation>
+    </message>
+    <message>
+        <source>This operation will overwrite the {rules_source} database located at the following path:&lt;br&gt;&lt;br&gt;{path}</source>
+        <translation>Bu işlem şu yolda bulunan {rules_source} veritabanının üzerine yazacaktır:&lt;br&gt;&lt;br&gt;{path}</translation>
+    </message>
+    <message>
         <source>todds Optimization Failed</source>
         <translation>todds Optimizasyonu Başarısız</translation>
     </message>
     <message>
         <source>todds texture optimization failed (exit code: {exit_code}), but the game will launch anyway.</source>
         <translation>todds doku optimizasyonu başarısız oldu (çıkış kodu: {exit_code}), ancak oyun yine de başlayacak.</translation>
-    </message>
-    <message>
-        <source>You may experience longer loading times or higher memory usage. Check the todds output window for details.</source>
-        <translation>Daha uzun yükleme süreleri veya daha yüksek bellek kullanımıyla karşılaşabilirsiniz. Ayrıntılar için todds çıktı penceresini kontrol edin.</translation>
     </message>
     <message>
         <source>Steam protocol launch requires Steam Client Integration to be enabled.</source>
@@ -1112,6 +1082,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>git bulunamadı</translation>
     </message>
     <message>
+        <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{url}</source>
+        <translation>Aktif mod listesi raporu Rentry.co'ya yüklendi! URL panonuza kopyalandı:&lt;br&gt;&lt;br&gt;{url}</translation>
+    </message>
+    <message>
+        <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
+        <translation>Yapılandırılmış mod klasörü yollarının hiçbiri diskte mevcut değil.&lt;br&gt;&lt;br&gt;Lütfen Yerel Modlar ve Atölye klasörlerinizin Ayarlar'da doğru şekilde ayarlandığını doğrulayın ve ardından tekrar deneyin.</translation>
+    </message>
+    <message>
         <source>RimSort was unable to check your Workshop mods for updates.</source>
         <translation>RimSort, Atölye modlarınızı güncellemeler için kontrol edemedi.</translation>
     </message>
@@ -1122,6 +1100,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>{failed} out of {total} Workshop mods could not be checked for updates.</source>
         <translation>{total} Atölye modundan {failed} tanesi güncelleme açısından kontrol edilemedi.</translation>
+    </message>
+    <message>
+        <source>This feature requires Steam Client Integration to be enabled in Settings.&lt;br&gt;&lt;br&gt;Please enable Steam Client Integration if you own the game on Steam.</source>
+        <translation>Bu özellik, Steam İstemcisi Entegrasyonunun Ayarlar'da etkinleştirilmesini gerektirir.&lt;br&gt;&lt;br&gt;Steam'de oyun sahibiyseniz lütfen Steam İstemcisi Entegrasyonunu etkinleştirin.</translation>
     </message>
     <message>
         <source>git executable was not found in $PATH!</source>
@@ -1180,6 +1162,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Dinamik sorguyu bir tamsayı olmayan bir değerle yapılandırmayı denedi.</translation>
     </message>
     <message>
+        <source>You may experience longer loading times or higher memory usage.&lt;br&gt;&lt;br&gt;Check the todds output window for details.</source>
+        <translation>Daha uzun yükleme süreleri veya daha yüksek bellek kullanımıyla karşılaşabilirsiniz.&lt;br&gt;&lt;br&gt;Ayrıntılar için todds çıktı penceresini kontrol edin.</translation>
+    </message>
+    <message>
         <source>Use This Instead</source>
         <translation>Bunun yerine bunu kullan</translation>
     </message>
@@ -1200,27 +1186,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Yine de koş</translation>
     </message>
     <message>
-        <source>Essential path(s) are invalid or not set!
-</source>
-        <translation>Temel yollar geçersiz veya ayarlanmamış!</translation>
-    </message>
-    <message>
-        <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
-
-Would you like to configure them now?</source>
-        <translation>Rimsort, minimum olarak, oyun yükleme klasörü ve yapılandırma klasör yollarının ayarlanmasını ve yolların her ikisinin de var olmasını gerektirir.Lütfen bunların her ikisini de manuel olarak veya AutoDetect işlevini kullanarak ayarlayın.
-
-Şimdi bunları yapılandırmak ister misiniz?</translation>
-    </message>
-    <message>
-        <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
-        <translation>Bu, hatalı biçimlendirilmiş ayarlardan veya sürümler veya farklı Mod Manager arasındaki yanlış geçişten kaynaklanabilir.Ayarlarınızı sıfırlamayı, farklı bir sıralama algoritması seçmeyi veya ayarlar dosyanızı silmeyi deneyin.Sorun devam ederse, lütfen geliştiricileri bildirin.</translation>
-    </message>
-    <message>
-        <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
-        <translation>İndirmeler tamamlandıktan sonra Rentry Import'u tekrar tekrar yapmanız gerekecektir.İndirme tamamlandıktan sonra eksik modlar varsa, eksik modlar panelinde gösterilecektir.Rimsort hala bazı modları indiremiyorsa, MOD verilerinin hem Rentry Link hem de Steam veritabanında bulunmaması nedeniyle.</translation>
-    </message>
-    <message>
         <source>Import from RimWorld Save File</source>
         <translation>Rimworld Kaydet dosyasından içe aktarın</translation>
     </message>
@@ -1233,62 +1198,8 @@ Would you like to configure them now?</source>
         <translation>adresine https://0x0.st/ {path.name}</translation>
     </message>
     <message>
-        <source>The URL has been copied to your clipboard:
-
-{ret}</source>
-        <translation>URL panonuza kopyalandı:
-
-{ret}</translation>
-    </message>
-    <message>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
         <translation>Lütfen mevcut bir Steamcmd önekini ayarlayın veya "Kurulum Steamcmd" ile yeni bir önek ayarlayın.</translation>
-    </message>
-    <message>
-        <source>File: {file_path}
-Error: {e}</source>
-        <translation>Dosya: {file_path}
-Hata: {e}</translation>
-    </message>
-    <message>
-        <source>How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Cancel — Abort the operation.</source>
-        <translation>Nasıl devam etmek istersiniz?
-
-1) Tümünün üzerine yazın - Mevcut tüm dosyaları ve dizinleri değiştirin.
-2) İptal - işlemi iptal edin.</translation>
-    </message>
-    <message>
-        <source>{conflicts_list}
-
-How would you like to proceed?
-
-1) Overwrite All — Replace all existing files and directories.
-2) Skip Existing — Extract only new files and leave existing ones untouched.
-3) Cancel — Abort the extraction.</source>
-        <translation>Nasıl devam etmek istersiniz?
-
-1) Tümünün üzerine yazın - Mevcut tüm dosyaları ve dizinleri değiştirin.
-2) Mevcut atla - yalnızca yeni dosyaları çıkarın ve mevcut olanları el değmemiş bırakın.
-3) İptal - Ekstraksiyonu iptal edin. {conflicts_list}</translation>
-    </message>
-    <message>
-        <source>Git integration will not work without Git installed! Do you want to open download page for Git?
-
-If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
-        <translation>Git entegrasyonu git yüklenmeden çalışmaz!Git için indirme sayfasını açmak istiyor musunuz?
-
-Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için lütfen Rimsort'u yeniden başlatın.</translation>
-    </message>
-    <message>
-        <source>This operation will overwrite the {rules_source} database located at the following path:
-
-{path}</source>
-        <translation>Bu işlem, aşağıdaki yolda bulunan  veritabanının üzerine yazacaktır:
-
- {rules_source} {path}</translation>
     </message>
     <message>
         <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
@@ -1362,6 +1273,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
         <translation>Bazı depolar hatalarla karşılaştı.</translation>
     </message>
     <message>
+        <source>Errors occurred while checking for updates:&lt;br&gt;{errors}</source>
+        <translation>Güncellemeler kontrol edilirken hatalar oluştu:&lt;br&gt;{errors}</translation>
+    </message>
+    <message>
         <source>No updates found</source>
         <translation>Güncelleme bulunamadı</translation>
     </message>
@@ -1412,6 +1327,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>{count} repositories could not be updated.</source>
         <translation>{count} depolar güncellenemedi.</translation>
+    </message>
+    <message>
+        <source>Successful updates:&lt;br&gt;</source>
+        <translation>Başarılı güncellemeler:&lt;br&gt;</translation>
     </message>
     <message>
         <source>Partial Updates Completed</source>
@@ -1490,6 +1409,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
         <translation>{count} depolar itilemedi.</translation>
     </message>
     <message>
+        <source>Successful pushes:&lt;br&gt;</source>
+        <translation>Başarılı hamleler:&lt;br&gt;</translation>
+    </message>
+    <message>
         <source>Partial Push Completed</source>
         <translation>Kısmi itme tamamlandı</translation>
     </message>
@@ -1504,6 +1427,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>Do you want to clone this repository?</source>
         <translation>Bu depoyu klonlamak ister misiniz?</translation>
+    </message>
+    <message>
+        <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
+        <translation>Depo:  {repo_url} {dest} &lt;br&gt;</translation>
     </message>
     <message>
         <source>Clone</source>
@@ -1568,6 +1495,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>Failed to clone repo!</source>
         <translation>Repo'yu klonlayamadı!</translation>
+    </message>
+    <message>
+        <source>The configured repo failed to clone/initialize!&lt;br&gt;&lt;br&gt;Are you connected to the Internet?&lt;br&gt;&lt;br&gt;Is your configured repo valid?</source>
+        <translation>Yapılandırılmış depo klonlanamadı/başlatılamadı!&lt;br&gt;&lt;br&gt;İnternete bağlı mısınız?&lt;br&gt;&lt;br&gt;Yapılandırılan deponuz geçerli mi?</translation>
     </message>
     <message>
         <source>Enter git repo</source>
@@ -1698,12 +1629,20 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
         <translation>Geçersiz bir depo tespit edildi!</translation>
     </message>
     <message>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
+        <translation>Lütfen ayarlarda bir veri havuzunu yeniden yapılandırın!&lt;br&gt;Geçerli bir veri havuzu, boş olmayan ve "http://" veya "https://" ön eki olan bir veri havuzu URL'sidir.</translation>
+    </message>
+    <message>
         <source>Invalid repository URL</source>
         <translation>Geçersiz Depo URL</translation>
     </message>
     <message>
         <source>Failed to parse repository information from URL.</source>
         <translation>Depo bilgilerini URL'den ayrıştırılamadı.</translation>
+    </message>
+    <message>
+        <source>URL: {repo_url}&lt;br&gt;Error: {error}</source>
+        <translation>URL:  {error} {repo_url} &lt;br&gt;</translation>
     </message>
     <message>
         <source>GitHub credentials missing</source>
@@ -1736,6 +1675,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>Please ensure the file exists and then try to upload again!</source>
         <translation>Lütfen dosyanın var olduğundan emin olun ve ardından tekrar yüklemeye çalışın!</translation>
+    </message>
+    <message>
+        <source>File not found:&lt;br&gt;{file_full_path}&lt;br&gt;Repository:&lt;br&gt;{repo_url}</source>
+        <translation>Dosya bulunamadı:&lt;br&gt; {file_full_path} {repo_url} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Invalid database</source>
@@ -1772,6 +1715,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>Created fork of repository.</source>
         <translation>Depo çatalı oluşturuldu.</translation>
+    </message>
+    <message>
+        <source>Fork: {fork_name}&lt;br&gt;Please wait a moment for GitHub to set up the fork.</source>
+        <translation>Çatal: {fork_name&gt;&lt;br&gt;GitHub'ın çatalı ayarlaması için lütfen biraz bekleyin. {fork_name}</translation>
     </message>
     <message>
         <source>Fork creation failed</source>
@@ -1914,12 +1861,20 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
         <translation>Başarılı bir şekilde oluşturulan çekme isteği!</translation>
     </message>
     <message>
+        <source>Pull request created successfully.&lt;br&gt;Do you want to open it in your web browser?&lt;br&gt;&lt;br&gt;URL: {url}</source>
+        <translation>Çekme isteği başarıyla oluşturuldu.&lt;br&gt;Bunu web tarayıcınızda açmak istiyor musunuz?&lt;br&gt;&lt;br&gt;URL: {url}</translation>
+    </message>
+    <message>
         <source>Pull request failed</source>
         <translation>Çekme isteği başarısız oldu</translation>
     </message>
     <message>
         <source>Failed to create pull request.</source>
         <translation>Çekme isteği oluşturulamadı.</translation>
+    </message>
+    <message>
+        <source>The changes were pushed to your fork successfully, but the pull request creation failed.&lt;br&gt;&lt;br&gt;You can manually create a pull request on GitHub.&lt;br&gt;&lt;br&gt;Error: {error}</source>
+        <translation>Değişiklikler çatalınıza başarıyla aktarıldı ancak çekme isteği oluşturma işlemi başarısız oldu.&lt;br&gt;&lt;br&gt;GitHub'da manuel olarak çekme isteği oluşturabilirsiniz.&lt;br&gt;&lt;br&gt;Hata: {error}</translation>
     </message>
     <message>
         <source>Upload Steam Workshop Database</source>
@@ -1940,6 +1895,10 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
     <message>
         <source>Upload Community Rules Database</source>
         <translation>Topluluk Kuralları Veritabanını Yükle</translation>
+    </message>
+    <message>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
+        <translation>{count} mod otomatik olarak güncellendi.&lt;br&gt;&lt;br&gt;{summary&lt;br&gt;&lt;br&gt;Güncellenen sürümler siz yenileyene kadar görünmeyecektir. Şimdi yenilensin mi? {summary}</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
@@ -1974,100 +1933,12 @@ Git'i yeni yüklediyseniz, yol değişikliklerinin yürürlüğe girmesi için l
         <translation>GitHub Otomatik Güncelleme Tamamlandı</translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.
-
-{summary}
-
-The updated versions won't appear until you refresh. Refresh now?</source>
-        <translation>{count} mod otomatik olarak güncellendi.
-
-
-
-Güncellenen sürümler siz yenileyene kadar görünmeyecektir. Şimdi yenilensin mi? {summary}</translation>
-    </message>
-    <message>
-        <source>Errors occurred while checking for updates:
-{errors}</source>
-        <translation>Güncellemeleri kontrol ederken hatalar meydana geldi:
- {errors}</translation>
-    </message>
-    <message>
-        <source>Successful updates:
-</source>
-        <translation>Başarılı Güncellemeler:</translation>
-    </message>
-    <message>
-        <source>Successful pushes:
-</source>
-        <translation>Başarılı Pushalar:</translation>
-    </message>
-    <message>
-        <source>Repository: {repo_url}
-Destination: {dest}</source>
-        <translation>Depo: {repo_url}
-Hedef:  {dest}</translation>
-    </message>
-    <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
         <translation>{repo_folder} &lt;br/&gt; Nasıl başa çıkmak istersiniz? Seçeneği seçin: &lt;br/&gt; &lt;br/&gt; 1) Yeni depo klon (mevcut ve değiştirir) &lt;br/&gt; 2) Mevcut depoyu güncelleyin (Yerinde Force-Update)</translation>
     </message>
     <message>
-        <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
-        <translation>Yapılandırılmış repo klonlayamadı/başlatamadı! İnternete bağlı mısınız? Yapılandırılmış repo'nuz geçerli mi?</translation>
-    </message>
-    <message>
-        <source>Please reconfigure a repository in settings!
-A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
-        <translation>Lütfen ayarlarda bir depoyu yeniden yapılandırın!
-Geçerli bir depo, boş olmayan ve "http: //" veya "https: //" ile ön ek olan bir depo URL'sidir.</translation>
-    </message>
-    <message>
-        <source>URL: {repo_url}
-Error: {error}</source>
-        <translation>Url: {repo_url}
-Hata:  {error}</translation>
-    </message>
-    <message>
-        <source>File not found:
-{file_full_path}
-Repository:
-{repo_url}</source>
-        <translation>Dosya bulunamadı:
-{file_full_path}
-Depo:
-{repo_url}</translation>
-    </message>
-    <message>
-        <source>Fork: {fork_name}
-Please wait a moment for GitHub to set up the fork.</source>
-        <translation>Çatal: {fork_name}
-Github'ın çatalı kurması için lütfen bir dakika bekleyin.</translation>
-    </message>
-    <message>
         <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
         <translation>Yerel değişiklikleriniz uzaktan değişikliklerle çelişti. Depo, en son uzaktan değişikliklerle temiz bir duruma sıfırlandı. Orijinal değişiklikleriniz veritabanı dosyasında korunur ve işlenir.</translation>
-    </message>
-    <message>
-        <source>Pull request created successfully.
-Do you want to open it in your web browser?
-
-URL: {url}</source>
-        <translation>Çekme isteği başarıyla yaratıldı.
-Web tarayıcınızda açmak ister misiniz?
-
-Url: {url}</translation>
-    </message>
-    <message>
-        <source>The changes were pushed to your fork successfully, but the pull request creation failed.
-
-You can manually create a pull request on GitHub.
-
-Error: {error}</source>
-        <translation>Değişiklikler çatalınıza başarıyla itildi, ancak çekme isteği oluşturma başarısız oldu.
-
-GitHub'da manuel olarak bir çekme isteği oluşturabilirsiniz.
-
-Hata:  {error}</translation>
     </message>
 </context>
 <context>
@@ -2135,18 +2006,6 @@ Hata:  {error}</translation>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
         <translation>Yapılandırılmış Atölye Mods klasörü ile ne yapmak istersiniz?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}
-
-Option 1: Convert to SteamCMD
-RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.
-
-Option 2: Keep Workshop Folder
-The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.
-
-How would you like to proceed?</source>
-        <translation>{existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -2237,11 +2096,8 @@ How would you like to proceed?</source>
         <translation>Yeni örnek için otomatik olarak Run Args oluşturmak ister misiniz?</translation>
     </message>
     <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.
-
-Generated run arguments preview:
-{preview}</source>
-        <translation>{preview}</translation>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>Bu, yapılandırılmış Oyun/Yapılandırma klasörlerine dayalı olarak yeni örnek için çalıştırma değişkenleri oluşturmaya çalışacaktır.&lt;br&gt;&lt;br&gt;Oluşturulan çalıştırma bağımsız değişkenleri önizlemesi:&lt;br&gt;{preview}</translation>
     </message>
     <message>
         <source>Error creating instance</source>
@@ -2310,6 +2166,10 @@ Generated run arguments preview:
         <translation>Bu, Steam istemcisini gerektiren rimsort özelliklerini kullanmanıza olanak tanır. Bu, diğer şeylerin yanı sıra, atölye modlarından abone olmayı ve Steam istemcisi aracılığıyla atölye bağlantıları açmayı içerir. 
                 &lt;br&gt; &lt;br&gt;
                 Bunu Gelişmiş sekmesinin altındaki ayarlarda değiştirebilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>Atölye klasörü: {existing_instance_workshop_folder&lt;br&gt;&lt;br&gt;Seçenek 1: SteamCMD'ye Dönüştür&lt;br&gt;RimSort, tüm Atölye modlarını yeni örneğin yerel modlar klasörüne kopyalayarak bunları yeni örnekte yönetebileceğiniz SteamCMD modlarına dönüştürecektir. Modların kopyalanmasını önlemek için bu örnekte Atölye klasörü yok sayılacaktır.&lt;br&gt;&lt;br&gt;2. Seçenek: Atölye Klasörünü Sakla&lt;br&gt;Yeni örnek, orijinal örnekle aynı Atölye klasörünü kullanacaktır. Gerekirse bunu daha sonra ayarlardan değiştirebilirsiniz.&lt;br&gt;&lt;br&gt;Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
     </message>
     <message>
         <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
@@ -2559,22 +2419,6 @@ Generated run arguments preview:
     </message>
 </context>
 <context>
-    <name>MetadataManager</name>
-    <message>
-        <source>Missing Version.txt</source>
-        <translation>Eksik Versiyon.txt</translation>
-    </message>
-    <message>
-        <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation>Rimsort, oyun sürümünü beklenen yolda alamaz: []. {version_file_path}</translation>
-    </message>
-    <message>
-        <source>
-Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation>Oyun yolunuz  doğru ayarlanmış mı? Oyun yükleme dizinindeki bir sürüm.txt dosyası olmalıdır. {folder}</translation>
-    </message>
-</context>
-<context>
     <name>MissingDependenciesDialog</name>
     <message>
         <source>Showing dependencies of your active mods.
@@ -2768,6 +2612,14 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>hatası {action}</translation>
     </message>
     <message>
+        <source>You have selected {selected_count} mod(s) for deletion.&lt;br&gt;{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
+        <translation>Silmek üzere {selected_count} mod seçtiniz.&lt;br&gt;{steam_count} tanesi Steam Atölyesi modlarıdır ve aynı zamanda {action_past} olacaktır.</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will:&lt;br&gt;• Delete the selected mod directories from your filesystem&lt;br&gt;• {action_capitalized} Steam Workshop mods from your Steam account&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem şunları yapacaktır:&lt;br&gt;• Seçilen mod dizinlerini dosya sisteminizden siler&lt;br&gt;• Steam hesabınızdan {action_capitalized} Steam Atölyesi modlarını siler&lt;br&gt;&lt;br&gt;Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
         <source>unsubscribe</source>
         <translation>abartmak</translation>
     </message>
@@ -2786,41 +2638,6 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
     <message>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
         <translation>Mod dizini boş değildi. Lütfen dizindeki dosyalara veya alt klasörlere erişen tüm programları kapatın (dosya yöneticiniz dahil) ve tekrar deneyin.</translation>
-    </message>
-    <message>
-        <source>
-This operation will permanently delete the selected mod directories from the filesystem.
-
-Do you want to proceed?</source>
-        <translation>Bu işlem, seçilen Mod Dizinlerini dosya sisteminden kalıcı olarak siler.
-
-Devam etmek ister misin?</translation>
-    </message>
-    <message>
-        <source>
-This operation will only delete optimized textures (.dds files) from the selected mods.
-
-Do you want to proceed?</source>
-        <translation>Bu işlem yalnızca seçilen modlardan optimize edilmiş dokuları (.dds dosyaları) silecektir.
-
-Devam etmek ister misin?</translation>
-    </message>
-    <message>
-        <source>
-This operation will delete all mod files except for .dds texture files.
-The .dds files will be preserved.
-
-Do you want to proceed?</source>
-        <translation>Bu işlem .dds doku dosyaları hariç tüm MOD dosyalarını siler.
-.Dds dosyaları korunacaktır.
-
-Devam etmek ister misin?</translation>
-    </message>
-    <message>
-        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).
-The process may take a few moments to complete.</source>
-        <translation>Steam Workshop Mod (lar) dan başarılı bir şekilde  başlatıldı.
-Sürecin tamamlanması birkaç dakika sürebilir. {len} {action}</translation>
     </message>
     <message>
         <source>Successfully deleted {result.success_count} selected mods.</source>
@@ -2843,35 +2660,32 @@ Sürecin tamamlanması birkaç dakika sürebilir. {len} {action}</translation>
         <translation>Tam silme için  Mod (lar) seçtiniz. {selected_count}</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will permanently delete the selected mod directories from the filesystem.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem seçilen mod dizinlerini dosya sisteminden kalıcı olarak silecektir.&lt;br&gt;&lt;br&gt;Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
         <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
         <translation>DDS doku silme için  Mod (lar) seçtiniz. {selected_count}</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will only delete optimized textures (.dds files) from the selected mods.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem yalnızca seçilen modlardan optimize edilmiş dokuları (.dds dosyaları) silecektir.&lt;br&gt;&lt;br&gt;Devam etmek istiyor musunuz?</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for selective deletion.</source>
         <translation>Seçici silme için  Mod (lar) seçtiniz. {selected_count}</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will delete all mod files except for .dds texture files.&lt;br&gt;The .dds files will be preserved.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem, .dds doku dosyaları dışındaki tüm mod dosyalarını silecektir.&lt;br&gt;.dds dosyaları korunacaktır.&lt;br&gt;&lt;br&gt;Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>Successfully initiated {action} from {len} Steam Workshop mod(s).&lt;br&gt;The process may take a few moments to complete.</source>
+        <translation>{len} Steam Atölyesi mod(lar)ından başarıyla {action} başlatıldı.&lt;br&gt;İşlemin tamamlanması birkaç dakika sürebilir.</translation>
+    </message>
+    <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>Silinmeyi onaylayın ve  {action_capitalized}</translation>
-    </message>
-    <message>
-        <source>You have selected {selected_count} mod(s) for deletion.
-{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
-        <translation>Silme için  Mod (lar) seçtiniz.
- Bunlardan  olacak Steam Workshop modlarıdır. {steam_count} {selected_count} {action_past}</translation>
-    </message>
-    <message>
-        <source>
-This operation will:
-• Delete the selected mod directories from your filesystem
-• {action_capitalized} Steam Workshop mods from your Steam account
-
-Do you want to proceed?</source>
-        <translation>Bu işlem:
-• Dosya sisteminizden seçilen mod dizinlerini silin
-•  Steam Hesabınızdan Steam Atölye Modları
-
-Devam etmek ister misin? {action_capitalized}</translation>
     </message>
 </context>
 <context>
@@ -3167,8 +2981,20 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Silinme + Yeniden Download için  Mods seçtiniz. {len}</translation>
     </message>
     <message>
+        <source>&lt;br&gt;This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem, bulunan .dds dokuları dışındaki tüm mod dosyalarını yinelemeli olarak silecek ve modları SteamCMD aracılığıyla yeniden indirmeyi deneyecektir. Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
+        <translation>&lt;br&gt;Bu işlem potansiyel olarak kalan .dds dokularını silecektir. Steam bu konuda güvenilmez. Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>Abonelikten çıkma için {len} modlarını seçtiniz.</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Do you want to proceed?</source>
+        <translation>&lt;br&gt;Devam etmek istiyor musunuz?</translation>
     </message>
     <message>
         <source>Add comment</source>
@@ -3223,23 +3049,8 @@ Devam etmek ister misin? {action_capitalized}</translation>
         <translation>Mod Rengi Sıfırla</translation>
     </message>
     <message>
-        <source>
-This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
-        <translation>Bu işlem, bulunan .DDS dokuları hariç, tüm MOD dosyalarını tekrarlı olarak silecek ve MOD'ları Steamcmd üzerinden yeniden indirmeye çalışacaktır. Devam etmek ister misin?</translation>
-    </message>
-    <message>
         <source>You have selected {len} mods for resubscribe:(unsubscribe + subscribe).</source>
         <translation>Yeniden abone olmak için {len} mod seçtiniz:(abonelikten çık + abone ol).</translation>
-    </message>
-    <message>
-        <source>
-This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
-        <translation>Bu işlem potansiyel olarak .DDS dokularını artık silecektir. Buhar bunun için güvenilmez. Devam etmek ister misin?</translation>
-    </message>
-    <message>
-        <source>
-Do you want to proceed?</source>
-        <translation>Devam etmek ister misin?</translation>
     </message>
     <message>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
@@ -3345,6 +3156,10 @@ An alternative updated mod is recommended:
     <message>
         <source>Tags</source>
         <translation>Etiketler</translation>
+    </message>
+    <message>
+        <source>Workshop Updated</source>
+        <translation>Atölye Güncellendi</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4105,6 +3920,10 @@ An alternative updated mod is recommended:
         <translation>Steamcmd indirici</translation>
     </message>
     <message>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
+        <translation>SteamCMD mod(lar)ı indiremedi! Başarısız olan modları yeniden indirmeyi denemek ister misiniz?&lt;br&gt;&lt;br&gt;Başarısız olan modların listesini görmek için 'Ayrıntıları Göster'i tıklayın.</translation>
+    </message>
+    <message>
         <source>Process Complete</source>
         <translation>Süreç tamamlandı</translation>
     </message>
@@ -4119,14 +3938,6 @@ An alternative updated mod is recommended:
     <message>
         <source>Ok</source>
         <translation>Tamam</translation>
-    </message>
-    <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
-
-Click 'Show Details' to see a list of mods that failed.</source>
-        <translation>Steamcmd mod (lar) indiremedi! Başarısız olan modların indirilmesini yeniden denemek ister misiniz?
-
-Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'i tıklayın.</translation>
     </message>
     <message>
         <source>SteamCMD Downloader Login error</source>
@@ -4178,6 +3989,10 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
 <context>
     <name>SettingsController</name>
     <message>
+        <source>Steam Integration</source>
+        <translation>Buhar Entegrasyonu</translation>
+    </message>
+    <message>
         <source>Reset to defaults</source>
         <translation>Varsayılanlara sıfırlayın</translation>
     </message>
@@ -4186,44 +4001,28 @@ Başarısız olan modların bir listesini görmek için 'Ayrıntıları Göster'
         <translation>Tüm ayarları varsayılan değerlerine sıfırlamak istediğinizden emin misiniz?</translation>
     </message>
     <message>
+        <source>The selected game folder does not contain a valid RimWorld executable.&lt;br&gt;&lt;br&gt;Please select a valid game location.&lt;br&gt;&lt;br&gt;Windows: RimWorldWin64.exe or RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimworldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux</source>
+        <translation>Seçilen oyun klasörü geçerli bir RimWorld yürütülebilir dosyası içermiyor.&lt;br&gt;&lt;br&gt;Lütfen geçerli bir oyun konumu seçin.&lt;br&gt;&lt;br&gt;Windows: RimWorldWin64.exe veya RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimworldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorldWin64.exe veya oyunun Linux'ta Windows sürümünü kullanıyorsanız RimWorldWin.exe</translation>
+    </message>
+    <message>
+        <source>The selected config folder does not contain ModsConfig.xml.&lt;br&gt;&lt;br&gt;Please select a valid config folder.&lt;br&gt;&lt;br&gt;If you have not launched the game before,&lt;br&gt;&lt;br&gt;Please launch the game at least once to generate the necessary config files.</source>
+        <translation>Seçilen yapılandırma klasörü ModsConfig.xml içermiyor.&lt;br&gt;&lt;br&gt;Lütfen geçerli bir yapılandırma klasörü seçin.&lt;br&gt;&lt;br&gt;Oyunu daha önce başlatmadıysanız,&lt;br&gt;&lt;br&gt;Gerekli yapılandırma dosyalarını oluşturmak için lütfen oyunu en az bir kez başlatın.</translation>
+    </message>
+    <message>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a 'Mods' subfolder within the game folder.</source>
+        <translation>Seçilen yerel modlar klasörü konumu geçerli bir dizin değil.&lt;br&gt;&lt;br&gt;Lütfen yerel modlar için geçerli bir klasör seçin.&lt;br&gt;&lt;br&gt;Yerel modlar klasörü, oyun klasörü içindeki bir 'Modlar' alt klasörü olmalıdır.</translation>
+    </message>
+    <message>
         <source>Invalid Game Location</source>
         <translation>Geçersiz Oyun Konumu</translation>
     </message>
     <message>
-        <source>The selected game folder does not contain a valid RimWorld executable. Please select a valid game location.</source>
-        <translation>Seçilen oyun klasörü geçerli bir RimWorld yürütülebilir dosyası içermiyor.Lütfen geçerli bir oyun konumu seçin.</translation>
+        <source>Invalid Local Mods Folder</source>
+        <translation>Geçersiz Yerel Modlar Klasörü</translation>
     </message>
     <message>
         <source>Invalid Config Folder</source>
         <translation>Geçersiz Yapılandırma Klasörü</translation>
-    </message>
-    <message>
-        <source>The selected config folder does not contain ModsConfig.xml. Please select a valid config folder.</source>
-        <translation>Seçilen yapılandırma klasörü ModsConfig.xml içermiyor.Lütfen geçerli bir yapılandırma klasörü seçin.</translation>
-    </message>
-    <message>
-        <source>Steam Client Integration Disabled</source>
-        <translation>Steam İstemcisi Entegrasyonu Devre Dışı</translation>
-    </message>
-    <message>
-        <source>Steam client integration is disabled. Steam mods location and Steam protocol launch will be cleared.</source>
-        <translation>Steam istemci entegrasyonu devre dışı bırakıldı. Steam modlarının konumu ve Steam protokolünün başlatılması temizlenecektir.</translation>
-    </message>
-    <message>
-        <source>Steam client integration requires a Steam mods location to be configured. Steam client integration, Steam mods location, and Steam protocol launch have been disabled.</source>
-        <translation>Steam istemci entegrasyonu, bir Steam mod konumunun yapılandırılmasını gerektirir. Steam istemci entegrasyonu, Steam modlarının konumu ve Steam protokolünün başlatılması devre dışı bırakıldı.</translation>
-    </message>
-    <message>
-        <source>The Steam Workshop file 'appworkshop_294100.acf' was not found at the expected location. Steam client integration, Steam mods location, and Steam protocol launch have been disabled. Please ensure Steam is properly installed and has downloaded RimWorld Workshop data.</source>
-        <translation>Steam Atölyesi dosyası 'appworkshop_294100.acf' beklenen konumda bulunamadı. Steam istemci entegrasyonu, Steam modlarının konumu ve Steam protokolünün başlatılması devre dışı bırakıldı. Lütfen Steam'in düzgün kurulduğundan ve RimWorld Workshop verilerini indirdiğinden emin olun.</translation>
-    </message>
-    <message>
-        <source>Steam Mods Location Required</source>
-        <translation>Steam Modlarının Konumu Gerekli</translation>
-    </message>
-    <message>
-        <source>Steam Workshop File Not Found</source>
-        <translation>Steam Atölye Dosyası Bulunamadı</translation>
     </message>
 </context>
 <context>
@@ -4932,6 +4731,10 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Boş Mod Listesi Geri Döndü, Listeye Koleksiyon Eklemiyor!</translation>
     </message>
     <message>
+        <source>Please reach out to us on Github Issues page or&lt;br&gt;#rimsort-testing on the Rocketman/CAI discord</source>
+        <translation>Lütfen Github Sorunları sayfasından veya Rocketman/CAI anlaşmazlığında&lt;br&gt;#rimsort-testing adresinden bize ulaşın</translation>
+    </message>
+    <message>
         <source>You already have these mods in your download list!</source>
         <translation>İndirme listenizde zaten bu modlar var!</translation>
     </message>
@@ -4951,18 +4754,16 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <source>Add Mods by Workshop ID</source>
         <translation>Atölye Kimliğine Göre Mod Ekle</translation>
     </message>
-    <message>
-        <source>Please reach out to us on Github Issues page or
-#rimsort-testing on the Rocketman/CAI discord</source>
-        <translation>Lütfen GitHub sorunları sayfasında bize ulaşın veya
-#Rocketman/CAI Discord'da Rimsort testi</translation>
-    </message>
 </context>
 <context>
     <name>SteamcmdInterface</name>
     <message>
         <source>RimSort - SteamCMD setup</source>
         <translation>Rimsort - Steamcmd kurulumu</translation>
+    </message>
+    <message>
+        <source>RimSort was unable to find SteamCMD installed in the configured prefix:&lt;br&gt;</source>
+        <translation>RimSort, yapılandırılan önekte kurulu SteamCMD'yi bulamadı:&lt;br&gt;</translation>
     </message>
     <message>
         <source>Do you want to setup SteamCMD?</source>
@@ -4989,12 +4790,24 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Mevcut bir Symlink zaten var. SymLink'i silmek ve yeniden yaratmak ister misiniz?</translation>
     </message>
     <message>
+        <source>Existing symlink: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>Mevcut sembolik bağlantı: ] -&gt; {symlink_source_path} {symlink_destination_path} &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Existing destination: {symlink_destination_path}&lt;br&gt;&lt;br&gt;New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>Mevcut hedef: ] -&gt; {symlink_source_path} {symlink_destination_path} &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
+    </message>
+    <message>
         <source>Create Symlink?</source>
         <translation>SymLink Oluştur?</translation>
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
         <translation>Symlink oluşturmak ister misiniz?</translation>
+    </message>
+    <message>
+        <source>New symlink:&lt;br&gt;[{symlink_source_path}] -&gt; </source>
+        <translation>Yeni sembolik bağlantı:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
         <source>&amp;Yes</source>
@@ -5005,43 +4818,12 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Tekrar sorma</translation>
     </message>
     <message>
-        <source>RimSort was unable to find SteamCMD installed in the configured prefix:
-</source>
-        <translation>Rimsort, yapılandırılmış önekte kurulu Steamcmd'yi bulamadı:</translation>
-    </message>
-    <message>
         <source>The symlink makes SteamCMD download mods to the local mods folder and is required for SteamCMD mod downloads to work correctly.</source>
         <translation>SymLink, yerel Mods klasörüne Steamcmd İndirme Modları yapar ve Steamcmd mod indirmelerinin doğru çalışması için gereklidir.</translation>
     </message>
     <message>
-        <source>Existing symlink: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>Mevcut SymLink: 
-
-Yeni Symlink:
-[{symlink_source_path}] -&gt; {symlink_destination_path}</translation>
-    </message>
-    <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
         <translation>SymLink hedef yolu zaten var. Mevcut hedefi kaldırmak ve yerinde yeni bir sembolik oluşturmak ister misiniz?</translation>
-    </message>
-    <message>
-        <source>Existing destination: {symlink_destination_path}
-
-New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>Mevcut hedef: 
-
-Yeni Symlink:
-[{symlink_source_path}] -&gt; {symlink_destination_path}</translation>
-    </message>
-    <message>
-        <source>New symlink:
-[{symlink_source_path}] -&gt; </source>
-        <translation>Yeni Symlink:
-[{symlink_source_path}] -&gt;</translation>
     </message>
 </context>
 <context>
@@ -5055,8 +4837,8 @@ Yeni Symlink:
         <translation>Steam Entegrasyonu Mevcut Değil</translation>
     </message>
     <message>
-        <source>RimSort could not detect Steam client or it may be unresponsive. Please make sure Steam is installed and running. If you are a Steam user, please check that Steam is running and that you are logged in. Try restarting Steam.</source>
-        <translation>RimSort, Steam istemcisini algılayamadı veya yanıt vermiyor olabilir. Lütfen Steam'in kurulu ve çalışır durumda olduğundan emin olun. Eğer Steam kullanıcısıysanız, lütfen Steam'in çalıştığını ve oturum açtığınızı kontrol edin. Steam'i yeniden başlatmayı deneyin.</translation>
+        <source>RimSort could not detect Steam client or it may be unresponsive.&lt;br&gt;&lt;br&gt;Please make sure Steam is installed and running.&lt;br&gt;&lt;br&gt;If you are a Steam user, please check that Steam is running and that you are logged in.&lt;br&gt;&lt;br&gt;Try restarting Steam.</source>
+        <translation>RimSort, Steam istemcisini algılayamadı veya yanıt vermiyor olabilir.&lt;br&gt;&lt;br&gt;Lütfen Steam'in kurulu ve çalışır durumda olduğundan emin olun.&lt;br&gt;&lt;br&gt;Eğer Steam kullanıcısıysanız, lütfen Steam'in çalıştığını ve oturum açtığınızı kontrol edin.&lt;br&gt;&lt;br&gt;Steam'i yeniden başlatmayı deneyin.</translation>
     </message>
     <message>
         <source>If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues</source>
@@ -5147,8 +4929,20 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
         <translation>Steam lansmanı başarısız oldu</translation>
     </message>
     <message>
+        <source>Could not automatically start game installation through Steam.&lt;br&gt;&lt;br&gt;Please manually verify/install the game through Steam.</source>
+        <translation>Oyun kurulumu Steam aracılığıyla otomatik olarak başlatılamadı.&lt;br&gt;&lt;br&gt;Lütfen oyunu Steam aracılığıyla manuel olarak doğrulayın/yükleyin.</translation>
+    </message>
+    <message>
+        <source>Deleted all files in the Steam mods directory.&lt;br&gt;&lt;br&gt; Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
+        <translation>Steam modları dizinindeki tüm dosyalar silindi.&lt;br&gt;&lt;br&gt; Abone olunan modların otomatik olarak yeniden indirilmesini tetiklemek için Steam yeniden başlatılmaya çalışılıyor.</translation>
+    </message>
+    <message>
         <source>Steam Workshop Redownload</source>
         <translation>Steam Workshop Redownload</translation>
+    </message>
+    <message>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <translation>Modlar silindi. Abone olunan modların otomatik olarak yeniden indirilmesini tetiklemek için lütfen Steam'i yeniden başlatın.&lt;br&gt;&lt;br&gt;Modlar otomatik olarak indirilmezse şunu deneyin:&lt;br&gt;1. Steam&lt;br&gt;2'yi yeniden başlatın. Steam'deki oyun dosyalarını doğrulayın&lt;br&gt;3. Her modun Atölye sayfasını ziyaret edin</translation>
     </message>
     <message>
         <source>Deleted all files in the {config_dir} successfully.</source>
@@ -5179,6 +4973,10 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
         <translation>Net onaylayın</translation>
     </message>
     <message>
+        <source>Are you sure you want to delete all mods?&lt;br&gt;&lt;br&gt;WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
+        <translation>Tüm modları silmek istediğinizden emin misiniz?&lt;br&gt;&lt;br&gt;UYARI: Bu, Modlar klasörünüzdeki tüm modları kalıcı olarak silecek ve vanilya durumuna sıfırlanacaktır.</translation>
+    </message>
+    <message>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
         <translation>Tüm modları başarıyla sildi ve modsconfig.xml'yi vanilya eyaletine sıfırladı.</translation>
     </message>
@@ -5203,30 +5001,40 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
         <translation>Dışa Aktar Mod Listesi</translation>
     </message>
     <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
+        <translation>Seçilen dosya geçerli bir mod listesi dosyası değil.&lt;br&gt;Ayrıntılar: {e}</translation>
+    </message>
+    <message>
+        <source>Successfully deleted Steam's downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <translation>Steam'in indirme klasörü başarıyla silindi.&lt;br&gt;Değişikliklerin etkili olması için Steam'i yeniden başlatın.</translation>
+    </message>
+    <message>
+        <source>Could not delete Steam's downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <translation>Steam'in indirme klasörü silinemedi.&lt;br&gt;Lütfen manuel olarak silin: Steam/steamapps/downloading&lt;br&gt;Ayrıntılar: {e}</translation>
+    </message>
+    <message>
+        <source>No installed games found in this Steam library folder.&lt;br&gt;You may have games installed in a different Steam library folder or drive.</source>
+        <translation>Bu Steam kütüphanesi klasöründe yüklü oyun bulunamadı.&lt;br&gt;Farklı bir Steam kütüphanesi klasörüne veya sürücüsüne kurulu oyunlarınız olabilir.</translation>
+    </message>
+    <message>
+        <source>This will verify all {len} games in your Steam library.&lt;br&gt;This may take a while. Continue?</source>
+        <translation>Bu, Steam kitaplığınızdaki tüm {len} oyunları doğrulayacaktır.&lt;br&gt;Bu biraz zaman alabilir. Devam etmek?</translation>
+    </message>
+    <message>
+        <source>Steam will now verify {len} games.&lt;br&gt;You can monitor progress in the Steam client.</source>
+        <translation>Steam artık {len} oyunu doğrulayacak.&lt;br&gt;İlerlemeyi Steam istemcisinden izleyebilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Could not repair Steam library.&lt;br&gt;Please verify your games manually through Steam.&lt;br&gt;Details: {e}</source>
+        <translation>Steam kitaplığı onarılamadı.&lt;br&gt;Lütfen oyunlarınızı Steam aracılığıyla manuel olarak doğrulayın.&lt;br&gt;Ayrıntılar: {e}</translation>
+    </message>
+    <message>
         <source>ACF File Not Found</source>
         <translation>ACF Dosyası Bulunamadı</translation>
     </message>
     <message>
-        <source>Could not find the Steam Workshop ACF file at:
-{acf_path}</source>
-        <translation>Steam Workshop ACF dosyası şu adreste bulunamadı:
-{acf_path}</translation>
-    </message>
-    <message>
         <source>Clean Orphaned Workshop Items</source>
         <translation>Yetim Atölye Öğelerini Temizleyin</translation>
-    </message>
-    <message>
-        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.
-
-A backup will be created before any changes are made.
-
-Continue?</source>
-        <translation>Bu, artık diskte bulunmayan modlar için ACF meta veri dosyasından eski atölye girişlerini kaldıracaktır.
-
-Herhangi bir değişiklik yapılmadan önce bir yedek oluşturulacaktır.
-
-Devam etmek?</translation>
     </message>
     <message>
         <source>Cleanup Complete</source>
@@ -5329,6 +5137,14 @@ Devam etmek?</translation>
         <translation>Kütüphane onarımı başladı</translation>
     </message>
     <message>
+        <source>Could not find the Steam Workshop ACF file at:&lt;br&gt;{acf_path}</source>
+        <translation>Steam Atölyesi ACF dosyası şu konumda bulunamadı:&lt;br&gt;{acf_path}</translation>
+    </message>
+    <message>
+        <source>This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.&lt;br&gt;&lt;br&gt;A backup will be created before any changes are made.&lt;br&gt;&lt;br&gt;Continue?</source>
+        <translation>Bu, artık diskte bulunmayan modlar için ACF meta veri dosyasındaki eski atölye girişlerini kaldıracaktır.&lt;br&gt;&lt;br&gt;Herhangi bir değişiklik yapılmadan önce bir yedek oluşturulacaktır.&lt;br&gt;&lt;br&gt;Devam etmek istiyor musunuz?</translation>
+    </message>
+    <message>
         <source>Path not set, Please check your settings and Try again.</source>
         <translation>Yol ayarlanmamış, lütfen ayarlarınızı kontrol edin ve tekrar deneyin.</translation>
     </message>
@@ -5355,90 +5171,6 @@ Devam etmek?</translation>
     <message>
         <source>Error: {e}</source>
         <translation>Hata: {e}</translation>
-    </message>
-    <message>
-        <source>Could not automatically start game installation through Steam.
-
-Please manually verify/install the game through Steam.</source>
-        <translation>Steam yoluyla oyun kurulumunu otomatik olarak başlatamadı.
-
-Lütfen oyunu Steam aracılığıyla manuel olarak doğrulayın/yükleyin.</translation>
-    </message>
-    <message>
-        <source>Deleted all files in the Steam mods directory.
-
- Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation>Steam Mods dizinindeki tüm dosyaları sildi.
-
- Abone olan modların otomatik yeniden yüklenmesini tetiklemek için Steam'i yeniden başlatmaya çalışıyorum.</translation>
-    </message>
-    <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
-
-If mods don't download automatically, try:
-1. Restart Steam
-2. Verify game files in Steam
-3. Visit the Workshop page of each mod</source>
-        <translation>Modlar silindi. Abone olan modların otomatik yeniden yüklenmesini tetiklemek için lütfen Steam'i yeniden başlatın.
-
-Modlar otomatik olarak indirilmezse:
-1. Buharı yeniden başlatın
-2. Oyun dosyalarını buharda doğrulayın
-3. Her modun atölye sayfasını ziyaret edin</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete all mods?
-
-WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
-        <translation>Tüm modları silmek istediğinizden emin misiniz?
-
-UYARI: Bu, Mods klasörünüzdeki tüm modları kalıcı olarak siler ve Vanilla Eyaletine sıfırlar.</translation>
-    </message>
-    <message>
-        <source>The selected file is not a valid mod list file.
-Details: {e}</source>
-        <translation>Seçilen dosya geçerli bir mod listesi dosyası değildir.
-Ayrıntılar: {e}</translation>
-    </message>
-    <message>
-        <source>Successfully deleted Steam's downloading folder.
-Restart Steam for the changes to take effect.</source>
-        <translation>Steam'in indirme klasörünü başarıyla sildi.
-Etkinleştirilmesi için değişikliklerin buharını yeniden başlatın.</translation>
-    </message>
-    <message>
-        <source>Could not delete Steam's downloading folder.
-Please delete it manually: Steam/steamapps/downloading
-Details: {e}</source>
-        <translation>Steam'in indirme klasörünü silemedi.
-Lütfen manuel olarak silin: Steam/SteamApps/İndirme
-Ayrıntılar: {e}</translation>
-    </message>
-    <message>
-        <source>No installed games found in this Steam library folder.
-You may have games installed in a different Steam library folder or drive.</source>
-        <translation>Bu Steam Kütüphanesi klasöründe yüklü oyun bulunamadı.
-Farklı bir Steam Kütüphanesi klasörüne veya sürücüsüne yüklü oyunlar olabilir.</translation>
-    </message>
-    <message>
-        <source>This will verify all {len} games in your Steam library.
-This may take a while. Continue?</source>
-        <translation>Bu, Steam kütüphanenizdeki tüm {len} oyunlarını doğrulayacaktır.
-Bu biraz zaman alabilir. Devam etmek?</translation>
-    </message>
-    <message>
-        <source>Steam will now verify {len} games.
-You can monitor progress in the Steam client.</source>
-        <translation>Steam şimdi {len} oyunlarını doğrulayacak.
-Steam istemcisindeki ilerlemeyi izleyebilirsiniz.</translation>
-    </message>
-    <message>
-        <source>Could not repair Steam library.
-Please verify your games manually through Steam.
-Details: {e}</source>
-        <translation>Buhar kütüphanesini onaramadı.
-Lütfen oyunlarınızı buharla manuel olarak doğrulayın.
-Ayrıntılar: {e}</translation>
     </message>
 </context>
 <context>
@@ -5608,20 +5340,8 @@ Ayrıntılar: {e}</translation>
         <translation>Rimsort için bir güncelleme yayınlandı:  {latest_tag_name}</translation>
     </message>
     <message>
-        <source>You are running RimSort {current_version}
-Do you want to update now?</source>
-        <translation>Rimsort'u çalıştırıyorsunuz {current_version}
-Şimdi güncellemek istiyor musunuz?</translation>
-    </message>
-    <message>
         <source>Downloading RimSort {tag_name} release...</source>
         <translation>Rimsort {tag_name} sürümünü indirme ...</translation>
-    </message>
-    <message>
-        <source>
-Successfully retrieved latest release.
-The update will be installed from: {update_source_path}</source>
-        <translation>{update_source_path}</translation>
     </message>
     <message>
         <source>Creating backup... (this may take several minutes)</source>
@@ -5632,8 +5352,16 @@ The update will be installed from: {update_source_path}</source>
         <translation>Güncelleme İndirildi</translation>
     </message>
     <message>
+        <source>You are running RimSort {current_version}&lt;br&gt;Do you want to update now?</source>
+        <translation>RimSort'u çalıştırıyorsunuz {current_version&gt;&lt;br&gt;Şimdi güncellemek istiyor musunuz? {current_version}</translation>
+    </message>
+    <message>
         <source>Do you want to proceed with the update?</source>
         <translation>Güncellemeye devam etmek ister misiniz?</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
+        <translation>&lt;br&gt;En son sürüm başarıyla alındı.&lt;br&gt;Güncelleme şuradan yüklenecek: {update_source_path}</translation>
     </message>
 </context>
 <context>
@@ -5769,6 +5497,21 @@ The following table displays Workshop mods available for update from Steam.</sou
     </message>
 </context>
 <context>
+    <name>dialog</name>
+    <message>
+        <source>Invalid Game Location</source>
+        <translation>Geçersiz Oyun Konumu</translation>
+    </message>
+    <message>
+        <source>Invalid Config Folder</source>
+        <translation>Geçersiz Yapılandırma Klasörü</translation>
+    </message>
+    <message>
+        <source>Invalid Local Mods Folder</source>
+        <translation>Geçersiz Yerel Modlar Klasörü</translation>
+    </message>
+</context>
+<context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
@@ -5853,26 +5596,6 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>Are you sure you want to clear all locations?</source>
         <translation>Tüm konumları temizlemek istediğinizden emin misiniz?</translation>
-    </message>
-</context>
-<context>
-    <name>self.manager</name>
-    <message>
-        <source>Steam DB metadata expired</source>
-        <translation>Steam DB meta verilerinin süresi doldu</translation>
-    </message>
-    <message>
-        <source>Steam DB is expired! Consider updating!
-</source>
-        <translation>Steam DB'nin süresi doldu! Güncellemeyi düşünün!</translation>
-    </message>
-    <message>
-        <source>Steam DB last updated: {last_updated}
-
-Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation>Steam Veritabanının son güncellenme tarihi: {last_updated}
-
-Önbelleğe alınıyor ancak SÜRESİ DOLMUŞ Steam Veritabanına geri dönülüyor...</translation>
     </message>
 </context>
 <context>
