@@ -46,6 +46,8 @@ class MetadataController(QObject):
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
+    metadata_refreshed = Signal()
+    steam_db_updated = Signal()
 
     # ---- Lifecycle ----
 
@@ -146,6 +148,7 @@ class MetadataController(QObject):
             self.workshop_acf_data = {}
 
         self._invalidate_caches()
+        self.metadata_refreshed.emit()
 
     @Slot()
     def reset_paths(self) -> None:
@@ -674,6 +677,19 @@ class MetadataController(QObject):
 
         self._invalidate_caches()
 
+    def notify_files_deleted(self, mod_path: str) -> None:
+        """Clean up metadata after a mod's files have been deleted externally.
+
+        Removes the mod from the in-memory metadata cache and invalidates
+        caches. Does not touch aux DB or filesystem — the caller is
+        responsible for those.
+
+        :param mod_path: The mod path key to remove from metadata
+        """
+        self.metadata_mediator.mods_metadata.pop(mod_path, None)
+        self._invalidate_caches()
+        self.mod_deleted_signal.emit(mod_path)
+
     def set_steam_db_blacklist(
         self,
         published_file_id: str,
@@ -704,7 +720,10 @@ class MetadataController(QObject):
         else:
             entry.blacklist = SteamDbEntryBlacklist()
 
-        return self._persist_steam_db()
+        result = self._persist_steam_db()
+        if result:
+            self.steam_db_updated.emit()
+        return result
 
     # ---- Private helpers ----
 

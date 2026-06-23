@@ -157,6 +157,9 @@ class BaseModsPanel(QWidget):
         else:
             self.metadata_controller = MetadataController.instance()
         self.settings = self.metadata_controller.settings
+        self.metadata_controller.metadata_refreshed.connect(
+            self._populate_from_metadata
+        )
 
     def _get_steam_client_integration_enabled(self) -> bool:
         """
@@ -1088,12 +1091,12 @@ class BaseModsPanel(QWidget):
         Refreshes the metadata cache and repopulates the table.
 
         This refreshes the metadata cache and repopulates the table with the updated mod data.
+        ``_populate_from_metadata`` is triggered automatically via
+        ``metadata_refreshed`` signal.
         """
         logger.warning("Refreshing metadata and repopulating table")
         # Refresh the metadata to reflect deletion changes
         self.metadata_controller.refresh_metadata()
-        # Repopulate the table with updated data
-        self._populate_from_metadata()
 
     def get_button_factory(self) -> ButtonFactory:
         """Get a button factory instance for this panel."""

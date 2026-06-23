@@ -1118,8 +1118,8 @@ class RuleEditor(QWidget):
         else:
             raise ValueError(f"Invalid rule source: {rules_source}")
         self.update_database_signal.emit([rules_source, metadata])
-        # Ensure metadata and UI are refreshed after saving
-        self.metadata_controller.refresh_metadata()
+        # The signal handler (_do_update_rules_database) handles disk write and
+        # refreshes metadata via _do_refresh after the user confirms.
         self._clear_widget()
         self._populate_from_metadata()
 

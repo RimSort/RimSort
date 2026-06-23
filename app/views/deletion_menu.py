@@ -486,8 +486,10 @@ class ModDeletionMenu(QMenu):
             return
 
         try:
-            logger.debug(f"Emitting mod_deleted_signal for {mod_metadata['uuid']}")
-            self.metadata_controller.mod_deleted_signal.emit(mod_metadata["uuid"])
+            mod_path = mod_metadata.get("path") or mod_metadata.get("uuid")
+            if mod_path:
+                logger.debug(f"Notifying MetadataController of deleted mod: {mod_path}")
+                self.metadata_controller.notify_files_deleted(mod_path)
             logger.debug(f"Removing UUID {mod_metadata['uuid']} from tracking list")
             self.remove_from_uuids.remove(mod_metadata["uuid"])
         except (ValueError, AttributeError) as uuid_error:
