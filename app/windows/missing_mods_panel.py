@@ -28,7 +28,7 @@ class MissingModsPrompt(BaseModsPanel):
     def __init__(
         self,
         packageids: list[str],
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the MissingModsPrompt.

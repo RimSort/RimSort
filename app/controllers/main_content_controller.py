@@ -11,6 +11,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, QThreadPool, Slot
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import Base
 from app.models.settings import Settings
@@ -71,10 +72,16 @@ if TYPE_CHECKING:
 class MainContentController(QObject):
     """Controller with concurrent checking/updating and improved structure."""
 
-    def __init__(self, view: MainContent, settings: Settings) -> None:
+    def __init__(
+        self,
+        view: MainContent,
+        settings: Settings,
+        metadata_controller: MetadataController,
+    ) -> None:
         super().__init__()
         self.view = view
         self.settings = settings
+        self.metadata_controller = metadata_controller
         self._git_clone_worker: Optional[GitCloneWorker] = None
         self._git_push_worker: Optional[GitPushWorker] = None
         self._git_stage_commit_worker: Optional[GitStageCommitWorker] = None
@@ -352,7 +359,9 @@ class MainContentController(QObject):
             self._github_mods_panel.close()
             self._github_mods_panel.deleteLater()
 
-        self._github_mods_panel = GitHubModsPanel()
+        self._github_mods_panel = GitHubModsPanel(
+            metadata_controller=self.metadata_controller
+        )
         self.view.window_manager.register(self._github_mods_panel)
         self._github_mods_panel.show()
 

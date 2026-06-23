@@ -132,6 +132,7 @@ class ModListItemInner(QWidget):
         path: str,
         mod_color: QColor,
         show_tags: bool = False,
+        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
         Initialize the QWidget with mod path. Metadata can be accessed via MetadataController.
@@ -160,7 +161,7 @@ class ModListItemInner(QWidget):
         self._hovered = False
 
         # Cache MetadataController instance
-        self.metadata_controller = MetadataController.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
 
         # Cache error and warning strings for tooltips
         self.errors_warnings = errors_warnings
@@ -1001,7 +1002,7 @@ class ModListWidget(QListWidget):
         self,
         list_type: str,
         settings: Settings,
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the ListWidget with a dict of mods.
@@ -1015,7 +1016,7 @@ class ModListWidget(QListWidget):
         self.list_type = list_type
 
         # Cache MetadataController instance
-        self.metadata_controller = metadata_controller or MetadataController.instance()
+        self.metadata_controller = metadata_controller
 
         self.settings = settings
 
@@ -2759,6 +2760,7 @@ class ModListWidget(QListWidget):
                 path=uuid,
                 mod_color=mod_color,
                 show_tags=show_tags,
+                metadata_controller=self.metadata_controller,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -3937,7 +3939,7 @@ class ModsPanel(QWidget):
         )
 
     def __init__(
-        self, settings: Settings, metadata_controller: MetadataController | None = None
+        self, settings: Settings, metadata_controller: MetadataController
     ) -> None:
         """
         Initialize the class.
@@ -3948,7 +3950,7 @@ class ModsPanel(QWidget):
 
         # Cache MetadataController instance and initialize panel
         logger.debug("Initializing ModsPanel")
-        self.metadata_controller = metadata_controller or MetadataController.instance()
+        self.metadata_controller = metadata_controller
         self.settings = settings
 
         # Load inactive mods sort settings

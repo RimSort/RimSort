@@ -56,7 +56,7 @@ class UseThisInsteadPanel(BaseModsPanel):
     def __init__(
         self,
         mod_metadata: dict[str, Any],
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the UseThisInsteadPanel with mod metadata.

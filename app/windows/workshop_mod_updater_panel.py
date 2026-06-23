@@ -25,7 +25,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
 
     def __init__(
         self,
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the WorkshopModUpdaterPanel.

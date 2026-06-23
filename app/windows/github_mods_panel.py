@@ -36,7 +36,7 @@ class GitHubModsPanel(BaseModsPanel):
 
     def __init__(
         self,
-        metadata_controller: MetadataController | None = None,
+        metadata_controller: MetadataController,
     ) -> None:
         self._update_worker: Any = None
         self._auto_update_signals_blocked = False

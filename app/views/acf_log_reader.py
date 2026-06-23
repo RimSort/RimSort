@@ -69,8 +69,8 @@ class AcfLogReader(BaseModsPanel):
 
     def __init__(
         self,
+        metadata_controller: MetadataController,
         active_mods_list: object | None = None,
-        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
         Initialize ACF Log Reader using BaseModsPanel.
@@ -79,7 +79,7 @@ class AcfLogReader(BaseModsPanel):
             active_mods_list: Optional active mods list for highlighting
         """
         self.active_mods_list = active_mods_list
-        self.metadata_controller = metadata_controller or MetadataController.instance()
+        self.metadata_controller = metadata_controller
         # Set of PFIDs that are currently active in the game
         self.active_pfids: set[str] = set()
         # Timer for debouncing search input (300ms delay)

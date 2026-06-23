@@ -184,8 +184,8 @@ class MainWindow(QMainWindow):
 
         # Instantiate the AcfDataWindow and add it to the tab
         self.acf_log_reader = AcfLogReader(
-            active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
             metadata_controller=self.metadata_controller,
+            active_mods_list=self.main_content_panel.mods_panel.active_mods_list,
         )
         self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
         self.file_search_controller = FileSearchController(
             settings=self.settings,
             dialog=self.file_search_dialog,
+            metadata_controller=self.metadata_controller,
         )
         self.file_search_layout.addWidget(self.file_search_dialog)
 
@@ -253,6 +254,7 @@ class MainWindow(QMainWindow):
         self.main_content_controller = MainContentController(
             view=self.main_content_panel,
             settings=self.settings,
+            metadata_controller=self.metadata_controller,
         )
 
         self.todds_controller = ToddsController(

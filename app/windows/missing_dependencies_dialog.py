@@ -28,15 +28,15 @@ class MissingDependenciesDialog(QDialog):
 
     def __init__(
         self,
+        metadata_controller: MetadataController,
         parent: QWidget | None = None,
-        metadata_controller: MetadataController | None = None,
     ) -> None:
         """
         Initialize the MissingDependenciesDialog.
         """
         super().__init__(parent)
         self.setObjectName("missingDependenciesDialog")
-        self.metadata_controller = metadata_controller or MetadataController.instance()
+        self.metadata_controller = metadata_controller
         self.selected_mods: set[str] = set()
         self.checkboxes: dict[str, QCheckBox] = {}
         self._setup_ui()

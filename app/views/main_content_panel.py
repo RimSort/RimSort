@@ -121,9 +121,9 @@ class MainContent(QObject):
     def __init__(
         self,
         settings: Settings,
+        metadata_controller: MetadataController,
         show_settings_dialog: Callable[..., None] | None = None,
         settings_dialog: SettingsDialog | None = None,
-        metadata_controller: MetadataController | None = None,
     ) -> None:
         if not hasattr(self, "initialized"):
             super().__init__()
@@ -131,9 +131,7 @@ class MainContent(QObject):
             self.settings = settings
             self._show_settings_dialog = show_settings_dialog
             self._settings_dialog = settings_dialog
-            self.metadata_controller = (
-                metadata_controller or MetadataController.instance()
-            )
+            self.metadata_controller = metadata_controller
             self._init_services()
             self._init_widgets()
             self._setup_layout()
@@ -2596,7 +2594,7 @@ class MainContent(QObject):
         self, compact: bool, initial_mode: str, packageid: str | None = None
     ) -> None:
         self.rule_editor = RuleEditor(
-            # Initialization options
+            metadata_controller=self.metadata_controller,
             compact=compact,
             edit_packageid=packageid,
             initial_mode=initial_mode,
