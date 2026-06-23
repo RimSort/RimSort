@@ -5,11 +5,12 @@ from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import ListedMod
+from app.utils.button_factory import ButtonConfig, ButtonType
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.event_bus import EventBus
 from app.utils.ignore_manager import IgnoreManager
 from app.utils.mod_info import ModInfo
-from app.windows.base_mods_panel import BaseModsPanel, ButtonConfig, ButtonType
+from app.windows.base_mods_panel import BaseModsPanel
 
 
 class MissingModPropertiesPanel(BaseModsPanel):

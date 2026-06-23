@@ -13,14 +13,11 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     ReplacementInfo,
 )
+from app.utils.button_factory import ButtonConfig, ButtonType, MenuItem
 from app.utils.mod_info import ModInfo
-from app.views import dialogue
 from app.windows.base_mods_panel import (
     BaseModsPanel,
-    ButtonConfig,
-    ButtonType,
     ColumnIndex,
-    MenuItem,
 )
 
 
@@ -100,19 +97,11 @@ class UseThisInsteadPanel(BaseModsPanel):
         button_configs.extend(self._get_base_button_configs())
 
         if steam_client_integration_enabled:
-            button_configs.extend(
-                [
-                    ButtonConfig(
-                        button_type=ButtonType.SUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                        completion_callback=self._on_subscribe_completed,
-                    ),
-                    ButtonConfig(
-                        button_type=ButtonType.UNSUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                        completion_callback=self._on_unsubscribe_completed,
-                    ),
-                ]
+            button_configs.append(
+                ButtonConfig(
+                    button_type=ButtonType.STEAM,
+                    pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
+                ),
             )
 
         button_configs.append(
@@ -141,31 +130,6 @@ class UseThisInsteadPanel(BaseModsPanel):
             self.showNormal()
             return True
         return False
-
-    def _on_mod_action_completed(self, action: str, count: int) -> None:
-        """Handle successful mod action completion."""
-        dialogue.show_information(
-            self.tr("Use This Instead"),
-            self.tr(f"Successfully {action}d {count} mods"),
-        )
-
-    def _on_subscribe_completed(self) -> None:
-        """Handle subscribe completion."""
-        count = self._get_selected_count()
-        self._on_mod_action_completed("subscribe", count)
-
-    def _on_unsubscribe_completed(self) -> None:
-        """Handle unsubscribe completion."""
-        count = self._get_selected_count()
-        self._on_mod_action_completed("unsubscribe", count)
-
-    def _get_selected_count(self) -> int:
-        """Get the count of selected mods."""
-        count = 0
-        for row in range(self.editor_model.rowCount()):
-            if self._row_is_checked(row):
-                count += 1
-        return count
 
     def _populate_from_metadata(self) -> None:
         """
