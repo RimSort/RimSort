@@ -178,7 +178,7 @@ class MainWindowController(QObject):
 
         # Always show the dialog (even if no missing deps)
         dialog = MissingDependenciesDialog(
-            self.main_window, metadata_controller=self.metadata_controller
+            metadata_controller=self.metadata_controller, parent=self.main_window
         )
         selected_deps = dialog.show_dialog(deps_summary, missing_deps)
 
