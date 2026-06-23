@@ -337,8 +337,8 @@ class BaseModsPanel(QWidget):
             editor_select_all_button=QPushButton(self.tr("Select all")),
             editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
         )
-        self.ui_elements.editor_deselect_all_button.setObjectName("secondaryButton")
-        self.ui_elements.editor_select_all_button.setObjectName("secondaryButton")
+        self.ui_elements.editor_deselect_all_button.setObjectName("primaryButton")
+        self.ui_elements.editor_select_all_button.setObjectName("primaryButton")
         self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
 
     def _initialize_layouts(self) -> None:
@@ -737,7 +737,7 @@ class BaseModsPanel(QWidget):
         """
         if button_type == ButtonType.REFRESH:
             return self._create_button(
-                self.tr("Refresh"), custom_callback, "secondaryButton"
+                self.tr("Refresh"), custom_callback, "primaryButton"
             )
         elif button_type == ButtonType.STEAMCMD:
             if pfid_column is not None:
@@ -774,7 +774,7 @@ class BaseModsPanel(QWidget):
             return self._create_button(text, custom_callback, "primaryButton")
 
         # Fallback
-        return self._create_button(text or "Button", custom_callback, "secondaryButton")
+        return self._create_button(text or "Button", custom_callback, "primaryButton")
 
     def _create_refresh_button(
         self, callback: Callable[[], None] | None

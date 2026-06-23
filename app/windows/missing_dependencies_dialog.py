@@ -70,7 +70,7 @@ class MissingDependenciesDialog(QDialog):
         button_layout = QHBoxLayout()
 
         select_all_button = QPushButton(self.tr("Select All"))
-        select_all_button.setObjectName("secondaryButton")
+        select_all_button.setObjectName("primaryButton")
         select_all_button.clicked.connect(self.select_all)
         button_layout.addWidget(select_all_button)
 
@@ -84,7 +84,7 @@ class MissingDependenciesDialog(QDialog):
         button_layout.addWidget(add_button)
 
         ignore_button = QPushButton(self.tr("Sort Without Adding"))
-        ignore_button.setObjectName("secondaryButton")
+        ignore_button.setObjectName("primaryButton")
         ignore_button.clicked.connect(self.reject)
         ignore_button.setShortcut("Escape")  # Esc key
         button_layout.addWidget(ignore_button)
