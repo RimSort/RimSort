@@ -704,13 +704,6 @@ class BaseModsPanel(QWidget):
             return self._create_button(
                 self.tr("Refresh"), custom_callback, "primaryButton"
             )
-        elif button_type == ButtonType.STEAMCMD:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Download selected with SteamCMD"),
-                    self._create_update_callback(pfid_column, OperationMode.STEAMCMD),
-                    "actionButton",
-                )
         elif button_type == ButtonType.CUSTOM:
             return self._create_button(text, custom_callback, "primaryButton")
 
@@ -723,12 +716,6 @@ class BaseModsPanel(QWidget):
         """Create a standardized refresh button."""
         return self._create_standardized_button(
             ButtonType.REFRESH, custom_callback=callback
-        )
-
-    def _create_steamcmd_button(self, pfid_column: int) -> QPushButton:
-        """Create a standardized SteamCMD button."""
-        return self._create_standardized_button(
-            ButtonType.STEAMCMD, pfid_column=pfid_column
         )
 
     def _create_steam_button(

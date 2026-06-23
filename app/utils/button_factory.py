@@ -63,8 +63,26 @@ class ButtonFactory:
         return self.panel._create_refresh_button(callback)
 
     def create_steamcmd_button(self, pfid_column: int) -> QPushButton:
-        """Create a SteamCMD download button."""
-        return self.panel._create_steamcmd_button(pfid_column)
+        """Create a SteamCMD button with dropdown menu."""
+        button = QPushButton()
+        button.setText(self.panel.tr("SteamCMD"))
+        button.setObjectName("actionButton")
+
+        from app.windows.base_mods_panel import OperationMode
+
+        menu = QMenu(button)
+
+        download_action = QAction(self.panel.tr("Download with SteamCMD"), self.panel)
+        download_action.triggered.connect(
+            self.panel._create_update_callback(pfid_column, OperationMode.STEAMCMD)
+        )
+        menu.addAction(download_action)
+
+        button.setMenu(menu)
+        button.clicked.connect(
+            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
+        )
+        return button
 
     def create_steam_button(
         self,
