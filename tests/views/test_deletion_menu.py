@@ -276,17 +276,13 @@ class TestModDeletionMenu:
         # Setup remove_from_uuids list to include the path (since path = uuid)
         deletion_menu.remove_from_uuids = [mod_path]
 
-        # Patch the mod_deleted_signal.emit method to track calls
-        with patch.object(
-            mock_metadata_controller.mod_deleted_signal, "emit"
-        ) as mock_emit:
-            deletion_menu._handle_uuid_removal(mod_metadata)
+        deletion_menu._handle_uuid_removal(mod_metadata)
 
-            # Assert that the UUID was set to the path
-            assert mod_metadata["uuid"] == mod_path
+        # Assert that the UUID was set to the path
+        assert mod_metadata["uuid"] == mod_path
 
-            # Assert that mod_deleted_signal.emit was called with the path
-            mock_emit.assert_called_once_with(mod_path)
+        # Assert that notify_files_deleted was called with the path
+        mock_metadata_controller.notify_files_deleted.assert_called_once_with(mod_path)
 
-            # Assert that the UUID was removed from remove_from_uuids
-            assert mod_path not in deletion_menu.remove_from_uuids
+        # Assert that the UUID was removed from remove_from_uuids
+        assert mod_path not in deletion_menu.remove_from_uuids

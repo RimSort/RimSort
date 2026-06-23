@@ -281,6 +281,7 @@ class MainContent(QObject):
         self.metadata_controller.mod_metadata_updated_signal.connect(
             self.mods_panel.on_mod_metadata_updated
         )
+        self.metadata_controller.metadata_refreshed.connect(self._on_metadata_refreshed)
         self.mods_panel.active_mods_list.key_press_signal.connect(
             self.__handle_active_mod_key_press
         )
@@ -325,6 +326,7 @@ class MainContent(QObject):
         self._extract_progress_widget: Optional[TaskProgressWindow] = None
         self.window_manager = WindowManager(self.metadata_controller)
         self._active_loading_loop: QEventLoop | None = None
+        self._refresh_in_progress: bool = False
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -333,6 +335,20 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    @Slot()
+    def _on_metadata_refreshed(self) -> None:
+        """Handle metadata refreshes triggered outside the main refresh flow.
+
+        When ``_refresh_in_progress`` is True, the main ``_do_refresh`` flow is
+        already handling repopulation explicitly (so this is a no-op).
+        When False — e.g. from ``do_metadata_refresh_cache`` — we repopulate
+        the mod lists here so the UI reflects the updated metadata.
+        """
+        if self._refresh_in_progress:
+            return
+        self.__repopulate_lists()
+        self.mods_panel.refresh_all_tag_filter_selectors()
 
     def abort_loading(self) -> None:
         """Abort any in-progress loading animation by quitting its nested event loop.
@@ -825,6 +841,7 @@ class MainContent(QObject):
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
+            self._refresh_in_progress = True
             result = self.do_threaded_loading_animation(
                 gif_path=str(
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
@@ -834,6 +851,7 @@ class MainContent(QObject):
                 ),
                 text=self.tr("Scanning mod sources and populating metadata..."),
             )
+            self._refresh_in_progress = False
 
             # If loading was aborted (e.g. window closed during scan), skip remaining work
             if result is None and self.metadata_controller.is_abort_requested:
