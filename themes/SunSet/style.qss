@@ -661,6 +661,50 @@ QWidget#baseModsPanel {
     color: #ffffff;
 }
 
+/* GitHubModsPanel styling */
+QWidget#githubModsPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* DuplicateModsPanel styling */
+QWidget#duplicateModsPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* MissingModPropertiesPanel styling */
+QWidget#missingModPropertiesPanel {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
+/* AcfLogReader styling */
+QWidget#AcfLogReader {
+    background-color: #2e1a1a;
+    border-style: solid;
+    border-color: #4a3a3a;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #ffffff;
+}
+
 /* MissingDependenciesDialog styling */
 QDialog#missingDependenciesDialog {
     background-color: #2e1a1a;

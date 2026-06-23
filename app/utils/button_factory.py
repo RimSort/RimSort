@@ -77,6 +77,7 @@ class ButtonFactory:
     ) -> QPushButton:
         """Create a custom button."""
         button = QPushButton(text)
+        button.setObjectName("primaryButton")
         button.clicked.connect(callback)
         return button
 
@@ -86,6 +87,7 @@ class ButtonFactory:
         """Create a select button with dropdown menu."""
         button = QToolButton()
         button.setText(text)
+        button.setObjectName("selectToolButton")
         menu = QMenu(button)
         for menu_item in menu_items:
             action = QAction(menu_item.text, self.panel)
