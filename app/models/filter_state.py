@@ -12,12 +12,14 @@ class FilterState:
     :param sources: Set of enabled mod sources (workshop, local, expansion, steamcmd, git_repo)
     :param mod_type: Mod type filter ("all", "csharp", or "xml")
     :param tags: Set of selected tags to filter by
+    :param tag_match_mode: Tag matching mode ("or" to match any tag, "and" to match all tags)
     :param include_no_tags: Whether to include mods with no tags assigned
     """
 
     sources: set[str] = field(default_factory=lambda: set(FilterState.ALL_SOURCES))
     mod_type: str = "all"
     tags: set[str] = field(default_factory=set)
+    tag_match_mode: str = "or"
     include_no_tags: bool = False
 
     ALL_SOURCES: ClassVar[frozenset[str]] = frozenset(
@@ -61,3 +63,27 @@ class FilterState:
         if self.tags or self.include_no_tags:
             count += 1
         return count
+
+    def matches_tags(self, mod_tags: set[str]) -> bool:
+        """
+        Check whether a mod's tags match the active tag filter.
+
+        The "No tags" filter is additive: when enabled, untagged mods match
+        regardless of the selected named tag mode.
+
+        :param mod_tags: Tags assigned to the mod
+        :return: True if the mod matches the tag filter
+        """
+        if not self.tags and not self.include_no_tags:
+            return True
+
+        if self.include_no_tags and len(mod_tags) == 0:
+            return True
+
+        if not self.tags:
+            return False
+
+        if self.tag_match_mode == "and":
+            return self.tags.issubset(mod_tags)
+
+        return bool(mod_tags.intersection(self.tags))

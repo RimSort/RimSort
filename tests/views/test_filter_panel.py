@@ -107,6 +107,7 @@ class TestFilterPanel:
         assert state.sources == FilterState.ALL_SOURCES
         assert state.mod_type == "all"
         assert state.tags == set()
+        assert state.tag_match_mode == "or"
         assert state.include_no_tags is False
         assert state.has_active_filters() is False
 
@@ -130,6 +131,12 @@ class TestFilterPanel:
         state = panel.filter_state
         assert "Favorites" in state.tags
 
+    def test_tag_match_mode_updates_state(self, panel: FilterPanel) -> None:
+        """Selecting All changes tag matching to AND mode."""
+        panel._tag_match_mode_radios["and"].setChecked(True)
+        state = panel.filter_state
+        assert state.tag_match_mode == "and"
+
     def test_no_tags_chip(self, panel: FilterPanel) -> None:
         """Activating the 'no tags' chip sets include_no_tags."""
         panel._no_tags_chip.set_active(True)
@@ -152,6 +159,7 @@ class TestFilterPanel:
         assert state.sources == FilterState.ALL_SOURCES
         assert state.mod_type == "all"
         assert state.tags == set()
+        assert state.tag_match_mode == "or"
         assert state.include_no_tags is False
 
     def test_filters_changed_signal_emitted(

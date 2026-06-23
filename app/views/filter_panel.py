@@ -308,6 +308,11 @@ class FilterPanel(QFrame):
         "xml": "XML-only",
     }
 
+    TAG_MATCH_MODE_LABELS: dict[str, str] = {
+        "or": "Any",
+        "and": "All",
+    }
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent, Qt.WindowType.Popup)
         self.setObjectName("FilterPanel")
@@ -315,6 +320,7 @@ class FilterPanel(QFrame):
 
         self._source_checkboxes: dict[str, QCheckBox] = {}
         self._type_radios: dict[str, QRadioButton] = {}
+        self._tag_match_mode_radios: dict[str, QRadioButton] = {}
         self._tag_chips: dict[str, TagChip] = {}
 
         main_layout = QVBoxLayout()
@@ -374,6 +380,18 @@ class FilterPanel(QFrame):
         tags_label = QLabel("Tags")
         tags_label.setFont(header_font)
         tags_header_row.addWidget(tags_label)
+        self._tag_match_mode_group = QButtonGroup(self)
+        for key, label in self.TAG_MATCH_MODE_LABELS.items():
+            rb = QRadioButton(label)
+            rb.setToolTip(
+                "Match any selected tag" if key == "or" else "Match all selected tags"
+            )
+            if key == "or":
+                rb.setChecked(True)
+            rb.toggled.connect(self._on_filter_changed)
+            self._tag_match_mode_radios[key] = rb
+            self._tag_match_mode_group.addButton(rb)
+            tags_header_row.addWidget(rb)
         tags_header_row.addStretch()
 
         self._select_all_label = QLabel("Select All")
@@ -496,12 +514,19 @@ class FilterPanel(QFrame):
             if key != "__no_tags__" and chip.active:
                 tags.add(key)
 
+        tag_match_mode = "or"
+        for key, rb in self._tag_match_mode_radios.items():
+            if rb.isChecked():
+                tag_match_mode = key
+                break
+
         include_no_tags = self._no_tags_chip.active
 
         return FilterState(
             sources=sources,
             mod_type=mod_type,
             tags=tags,
+            tag_match_mode=tag_match_mode,
             include_no_tags=include_no_tags,
         )
 
@@ -522,6 +547,11 @@ class FilterPanel(QFrame):
             rb.blockSignals(True)
             if key == "all":
                 rb.setChecked(True)
+            rb.blockSignals(False)
+
+        for key, rb in self._tag_match_mode_radios.items():
+            rb.blockSignals(True)
+            rb.setChecked(key == "or")
             rb.blockSignals(False)
 
         for chip in self._tag_chips.values():
