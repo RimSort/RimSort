@@ -56,11 +56,13 @@ class MissingDependenciesDialog(QDialog):
             )
         )
         description.setWordWrap(True)
+        description.setObjectName("missingDepsDescription")
         main_layout.addWidget(description)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         scroll_content = QWidget()
+        scroll_content.setObjectName("missingDepsContent")
         self.scroll_layout = QVBoxLayout(scroll_content)
         self.scroll_area.setWidget(scroll_content)
         main_layout.addWidget(self.scroll_area)
@@ -68,18 +70,21 @@ class MissingDependenciesDialog(QDialog):
         button_layout = QHBoxLayout()
 
         select_all_button = QPushButton(self.tr("Select All"))
+        select_all_button.setObjectName("secondaryButton")
         select_all_button.clicked.connect(self.select_all)
         button_layout.addWidget(select_all_button)
 
         button_layout.addStretch()
 
         add_button = QPushButton(self.tr("Add Selected && Sort"))
+        add_button.setObjectName("actionButton")
         add_button.clicked.connect(self.accept)
         add_button.setDefault(True)
         add_button.setShortcut("Return")  # Enter key
         button_layout.addWidget(add_button)
 
         ignore_button = QPushButton(self.tr("Sort Without Adding"))
+        ignore_button.setObjectName("secondaryButton")
         ignore_button.clicked.connect(self.reject)
         ignore_button.setShortcut("Escape")  # Esc key
         button_layout.addWidget(ignore_button)
@@ -179,7 +184,6 @@ class MissingDependenciesDialog(QDialog):
                 total_download=total_download,
                 total_missing_per_mod=total_missing_per_mod,
             )
-            summary_color = "#cc8800"  # amber/warning
         else:
             summary_text = self.tr(
                 "<b>Summary:</b> {total_deps} total dependencies across {mods_with_deps} mods — "
@@ -189,16 +193,11 @@ class MissingDependenciesDialog(QDialog):
                 mods_with_deps=mods_with_deps,
                 total_satisfied=total_satisfied,
             )
-            summary_color = "green"
 
         summary_label = QLabel(summary_text)
         summary_label.setWordWrap(True)
         summary_label.setTextFormat(Qt.TextFormat.RichText)
-        summary_label.setStyleSheet(
-            f"color: {summary_color}; font-size: 13px; padding: 8px; "
-            f"background-color: #f5f5f5; border: 1px solid {summary_color}; "
-            f"border-radius: 4px; margin-bottom: 10px;"
-        )
+        summary_label.setObjectName("missingDepsHeader")
         self.scroll_layout.addWidget(summary_label)
         self.scroll_layout.addSpacing(5)
 
@@ -228,6 +227,7 @@ class MissingDependenciesDialog(QDialog):
             header_label = QLabel("".join(mod_header_parts))
             header_label.setWordWrap(True)
             header_label.setTextFormat(Qt.TextFormat.RichText)
+            header_label.setObjectName("modHeaderLabel")
             self.scroll_layout.addWidget(header_label)
 
             # --- Satisfied deps (read-only) ---
@@ -235,7 +235,7 @@ class MissingDependenciesDialog(QDialog):
                 satisfied_label = QLabel(
                     self.tr("  ✅ Satisfied: ") + ", ".join(sorted(satisfied))
                 )
-                satisfied_label.setStyleSheet("color: green; margin-left: 20px;")
+                satisfied_label.setObjectName("satisfiedDepLabel")
                 satisfied_label.setWordWrap(True)
                 self.scroll_layout.addWidget(satisfied_label)
 
@@ -280,7 +280,7 @@ class MissingDependenciesDialog(QDialog):
                     "\nAll dependencies are satisfied. No missing dependencies found."
                 )
             )
-            no_missing_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+            no_missing_label.setObjectName("noMissingDepsLabel")
             no_missing_label.setWordWrap(True)
             self.scroll_layout.addWidget(no_missing_label)
             # Hide the add/sort buttons since there's nothing to add
