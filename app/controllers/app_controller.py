@@ -11,6 +11,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
+from app.services.instance_service import InstanceService
 from app.utils.app_info import AppInfo
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
@@ -44,6 +45,8 @@ class AppController(QObject):
         self.do_dds_cleanup()
         # Initialize the new MetadataController
         self.initialize_metadata_controller()
+        # Initialize the instance service (self-subscribes to EventBus)
+        self.initialize_instance_service()
         # Initialize the main window controller
         self.initialize_main_window()
 
@@ -126,6 +129,13 @@ class AppController(QObject):
             settings=self.settings_controller.settings,
             get_active_instance=lambda: self.settings_controller.active_instance,
             metadata_db_controller=aux_db_controller,
+        )
+
+    def initialize_instance_service(self) -> None:
+        """Initializes the instance service."""
+        InstanceService(
+            settings=self.settings_controller.settings,
+            steamcmd_wrapper=self.steamcmd_wrapper,
         )
 
     def initialize_main_window(self) -> None:
