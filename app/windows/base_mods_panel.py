@@ -180,9 +180,11 @@ class BaseModsPanel(QWidget):
         self.installEventFilter(self)
         self.setObjectName(object_name)
         self.ui_elements.title = QLabel(title_text)
+        self.ui_elements.title.setObjectName("baseModsPanelTitle")
         self.ui_elements.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.ui_elements.details_label = QLabel(details_text)
+        self.ui_elements.details_label.setObjectName("baseModsPanelDetails")
         self.ui_elements.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.setWindowTitle(window_title)
@@ -335,6 +337,9 @@ class BaseModsPanel(QWidget):
             editor_select_all_button=QPushButton(self.tr("Select all")),
             editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
         )
+        self.ui_elements.editor_deselect_all_button.setObjectName("secondaryButton")
+        self.ui_elements.editor_select_all_button.setObjectName("secondaryButton")
+        self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
 
     def _initialize_layouts(self) -> None:
         """Initialize layout dataclasses."""
@@ -731,12 +736,15 @@ class BaseModsPanel(QWidget):
             Configured QPushButton.
         """
         if button_type == ButtonType.REFRESH:
-            return self._create_button(self.tr("Refresh"), custom_callback)
+            return self._create_button(
+                self.tr("Refresh"), custom_callback, "secondaryButton"
+            )
         elif button_type == ButtonType.STEAMCMD:
             if pfid_column is not None:
                 return self._create_button(
                     self.tr("Download selected with SteamCMD"),
                     self._create_update_callback(pfid_column, OperationMode.STEAMCMD),
+                    "actionButton",
                 )
         elif button_type == ButtonType.SUBSCRIBE:
             if pfid_column is not None:
@@ -748,6 +756,7 @@ class BaseModsPanel(QWidget):
                         "subscribe",
                         completion_callback,
                     ),
+                    "actionButton",
                 )
         elif button_type == ButtonType.UNSUBSCRIBE:
             if pfid_column is not None:
@@ -759,12 +768,13 @@ class BaseModsPanel(QWidget):
                         "unsubscribe",
                         completion_callback,
                     ),
+                    "dangerButton",
                 )
         elif button_type == ButtonType.CUSTOM:
-            return self._create_button(text, custom_callback)
+            return self._create_button(text, custom_callback, "primaryButton")
 
         # Fallback
-        return self._create_button(text or "Button", custom_callback)
+        return self._create_button(text or "Button", custom_callback, "secondaryButton")
 
     def _create_refresh_button(
         self, callback: Callable[[], None] | None
@@ -836,6 +846,7 @@ class BaseModsPanel(QWidget):
 
         button = QPushButton()
         button.setText(self.tr("Delete"))
+        button.setObjectName("dangerButton")
         deletion_menu = ModDeletionMenu(
             settings=settings,
             get_selected_mod_metadata=get_selected_mod_metadata,
@@ -989,6 +1000,7 @@ class BaseModsPanel(QWidget):
             Configured custom button
         """
         button = QPushButton(text)
+        button.setObjectName("primaryButton")
         button.clicked.connect(callback)
         return button
 
@@ -1007,6 +1019,7 @@ class BaseModsPanel(QWidget):
         """
         button = QToolButton()
         button.setText(text)
+        button.setObjectName("selectToolButton")
         menu = QMenu(button)
         for menu_item in menu_items:
             action = QAction(menu_item.text, self)
