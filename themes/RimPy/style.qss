@@ -671,6 +671,35 @@ QDialog#missingDependenciesDialog {
     color: #e6edf3;
 }
 
+/* Missing dependencies description */
+QLabel#missingDepsDescription {
+    color: #cfcfcf; /* Subtext */
+    font-size: 12px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    line-height: 1.3;
+}
+
+/* Missing dependencies scroll content */
+QWidget#missingDepsContent {
+    background-color: #1B2838; /* Secondary Background */
+    border: none;
+}
+
+/* Missing dependencies summary header */
+QLabel#missingDepsHeader {
+    background-color: #22303d; /* Tertiary Background */
+    color: #e6edf3; /* White */
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 4px;
+    border-bottom: 1px solid #455364; /* Primary Text */
+    qproperty-alignment: AlignCenter;
+}
+
 /* Local dependencies label */
 QLabel#localDepsLabel {
     background-color: #19232d;
