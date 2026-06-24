@@ -84,6 +84,32 @@ class ButtonFactory:
         )
         return button
 
+    def create_select_all_button(self) -> QPushButton:
+        """Create a button with Select all/Deselect all dropdown."""
+        button = QPushButton()
+        button.setText(self.panel.tr("Select"))
+        button.setObjectName("actionButton")
+
+        menu = QMenu(button)
+
+        select_all_action = QAction(self.panel.tr("Select all"), self.panel)
+        select_all_action.triggered.connect(
+            lambda: self.panel._set_all_checkbox_rows(True)
+        )
+        menu.addAction(select_all_action)
+
+        deselect_all_action = QAction(self.panel.tr("Deselect all"), self.panel)
+        deselect_all_action.triggered.connect(
+            lambda: self.panel._set_all_checkbox_rows(False)
+        )
+        menu.addAction(deselect_all_action)
+
+        button.setMenu(menu)
+        button.clicked.connect(
+            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
+        )
+        return button
+
     def create_steam_button(
         self,
         pfid_column: int,
