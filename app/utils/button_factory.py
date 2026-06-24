@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, Callable
 
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
+from PySide6.QtWidgets import QMenu, QPushButton
 
 from app.models.operation_mode import OperationMode
 
@@ -21,7 +21,7 @@ class ButtonType(Enum):
     STEAMCMD = "steamcmd"
     STEAM = "steam"
     DELETE = "delete"
-    SELECT = "select"
+
     CUSTOM = "custom"
 
 
@@ -58,7 +58,7 @@ class ButtonFactory:
     def __init__(self, panel: Any):
         self.panel = panel
 
-    def _create_dropdown_button(
+    def create_dropdown_button(
         self,
         text: str,
         object_name: str,
@@ -92,7 +92,7 @@ class ButtonFactory:
 
     def create_steamcmd_button(self, pfid_column: int) -> QPushButton:
         """Create a SteamCMD button with dropdown menu."""
-        return self._create_dropdown_button(
+        return self.create_dropdown_button(
             "SteamCMD",
             "actionButton",
             [
@@ -107,7 +107,7 @@ class ButtonFactory:
 
     def create_select_all_button(self) -> QPushButton:
         """Create a button with Select all/Deselect all dropdown."""
-        return self._create_dropdown_button(
+        return self.create_dropdown_button(
             "Select",
             "actionButton",
             [
@@ -122,7 +122,7 @@ class ButtonFactory:
         completion_callback: Callable[[], None] | None = None,
     ) -> QPushButton:
         """Create a Steam button with subscribe/unsubscribe dropdown."""
-        return self._create_dropdown_button(
+        return self.create_dropdown_button(
             "Steam",
             "actionButton",
             [
@@ -177,20 +177,4 @@ class ButtonFactory:
         button = QPushButton(text)
         button.setObjectName("primaryButton")
         button.clicked.connect(callback)
-        return button
-
-    def create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
-        """Create a select button with dropdown menu."""
-        button = QToolButton()
-        button.setText(text)
-        button.setObjectName("selectToolButton")
-        menu = QMenu(button)
-        for menu_item in menu_items:
-            action = QAction(menu_item.text, self.panel)
-            action.triggered.connect(menu_item.callback)
-            menu.addAction(action)
-        button.setMenu(menu)
-        button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         return button

@@ -9,7 +9,7 @@ from typing import Any, Callable, Sequence, TypeVar
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QAction, QKeyEvent, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QKeyEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -18,10 +18,8 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLayout,
-    QMenu,
     QPushButton,
     QTableView,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -30,7 +28,7 @@ from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
 from app.models.operation_mode import OperationMode
 from app.models.settings import Settings
-from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType, MenuItem
+from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.mod_info import ModInfo
@@ -739,8 +737,7 @@ class BaseModsPanel(QWidget):
             return self._create_delete_button_from_config(config, factory)
         elif config.button_type == ButtonType.CUSTOM:
             return self._create_custom_button_from_config(config, factory)
-        elif config.button_type == ButtonType.SELECT:
-            return self._create_select_button_from_config(config, factory)
+
         return None
 
     def _create_refresh_button_from_config(
@@ -791,14 +788,6 @@ class BaseModsPanel(QWidget):
             return factory.create_custom_button(config.text, config.custom_callback)
         return None
 
-    def _create_select_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
-        """Create a select button from config."""
-        if config.menu_items:
-            return factory.create_select_button(config.text, config.menu_items)
-        return None
-
     def _create_custom_button(
         self, text: str, callback: Callable[[], None]
     ) -> QPushButton:
@@ -815,31 +804,6 @@ class BaseModsPanel(QWidget):
         button = QPushButton(text)
         button.setObjectName("primaryButton")
         button.clicked.connect(callback)
-        return button
-
-    def _create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
-        """
-        Create a select button with dropdown menu.
-
-        Args:
-            text: Button text
-            menu_items: List of menu items for the dropdown
-
-        Returns:
-            Configured select button with menu
-        """
-        button = QToolButton()
-        button.setText(text)
-        button.setObjectName("selectToolButton")
-        menu = QMenu(button)
-        for menu_item in menu_items:
-            action = QAction(menu_item.text, self)
-            action.triggered.connect(menu_item.callback)
-            menu.addAction(action)
-        button.setMenu(menu)
-        button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         return button
 
     # ===== CENTRALIZED METADATA HANDLING =====
