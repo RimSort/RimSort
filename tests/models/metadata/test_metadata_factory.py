@@ -1,8 +1,10 @@
 import shutil
+import sys
 import warnings
 from pathlib import Path
 
 import pygit2
+import pytest
 
 from app.models.metadata.metadata_factory import (
     _create_scenario_mod_from_rsc,
@@ -694,3 +696,57 @@ def test_read_mod_config_invalid_3() -> None:
     mods_config = read_mods_config(path)
 
     assert mods_config is None
+
+
+def _create_mod_with_noncanonical_about_xml(tmp_path: Path) -> Path:
+    """Create a mod directory with non-canonical casing (about/about.xml)."""
+    mod_path = tmp_path / "case_mod"
+    about_dir = mod_path / "about"
+    about_dir.mkdir(parents=True)
+    (about_dir / "about.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<ModMetaData>\n"
+        "  <name>Case Test Mod</name>\n"
+        "  <author>Test</author>\n"
+        "  <packageId>test.casemod</packageId>\n"
+        "  <supportedVersions><li>1.5</li></supportedVersions>\n"
+        "  <description>desc</description>\n"
+        "</ModMetaData>\n"
+    )
+    return mod_path
+
+
+def test_create_listed_mod_case_insensitive_enabled(tmp_path: Path) -> None:
+    """Mod with about/about.xml (wrong casing) loads when toggle is enabled."""
+    mod_path = _create_mod_with_noncanonical_about_xml(tmp_path)
+
+    valid, mod = create_listed_mod_from_path(
+        mod_path,
+        "1.5",
+        LOCAL_MODS_PATH,
+        RIMWORLD_PATH,
+        STEAM_WORKSHOP_PATH,
+        case_insensitive_about_xml=True,
+    )
+    assert valid
+    assert mod.valid
+
+
+@pytest.mark.skipif(
+    sys.platform != "linux",
+    reason="Only meaningful on case-sensitive filesystems (Linux)",
+)
+def test_create_listed_mod_case_insensitive_disabled(tmp_path: Path) -> None:
+    """Mod with about/about.xml (wrong casing) does NOT load when toggle is disabled."""
+    mod_path = _create_mod_with_noncanonical_about_xml(tmp_path)
+
+    valid, mod = create_listed_mod_from_path(
+        mod_path,
+        "1.5",
+        LOCAL_MODS_PATH,
+        RIMWORLD_PATH,
+        STEAM_WORKSHOP_PATH,
+        case_insensitive_about_xml=False,
+    )
+    assert not valid
+    assert not mod.valid
