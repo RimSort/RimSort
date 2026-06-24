@@ -1517,6 +1517,20 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.include_mod_notes_in_mod_name_filter_checkbox)
 
+        self.case_insensitive_about_xml_checkbox = QCheckBox(
+            self.tr("Case-insensitive About.xml lookup")
+        )
+        self.case_insensitive_about_xml_checkbox.setToolTip(
+            self.tr(
+                "Enable case-insensitive lookup for About/About.xml.\n"
+                "Some mods use incorrect casing (e.g., about/about.xml) which breaks on\n"
+                "case-sensitive filesystems (Linux). Per the RimWorld modding spec, the\n"
+                "correct path is About/About.xml.\n"
+                "See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml"
+            )
+        )
+        group_layout.addWidget(self.case_insensitive_about_xml_checkbox)
+
         backup_layout = QHBoxLayout()
         self.enable_backup_before_update_checkbox = QCheckBox(
             self.tr("Create backup before RimSort update")

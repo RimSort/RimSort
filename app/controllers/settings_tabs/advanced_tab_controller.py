@@ -83,6 +83,9 @@ class AdvancedTabController(BaseTabController):
         self.dialog.include_mod_notes_in_mod_name_filter_checkbox.setChecked(
             self.settings.include_mod_notes_in_mod_name_filter
         )
+        self.dialog.case_insensitive_about_xml_checkbox.setChecked(
+            self.settings.case_insensitive_about_xml_lookup
+        )
         self.dialog.enable_backup_before_update_checkbox.setChecked(
             self.settings.enable_backup_before_update
         )
@@ -131,6 +134,9 @@ class AdvancedTabController(BaseTabController):
         )
         self.settings.include_mod_notes_in_mod_name_filter = (
             self.dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
+        )
+        self.settings.case_insensitive_about_xml_lookup = (
+            self.dialog.case_insensitive_about_xml_checkbox.isChecked()
         )
         self.settings.enable_backup_before_update = (
             self.dialog.enable_backup_before_update_checkbox.isChecked()
