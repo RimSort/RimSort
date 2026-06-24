@@ -157,12 +157,18 @@ class MetadataMediator:
             logger.error(f"Failed to load Use This Instead DB: {e}")
             self._use_this_instead = None
 
-    def refresh_metadata(self, prefer_versioned: bool = True) -> None:
+    def refresh_metadata(
+        self,
+        prefer_versioned: bool = True,
+        case_insensitive_about_xml: bool = True,
+    ) -> None:
         """Force refreshes the internal metadata.
 
         :param prefer_versioned: When True (default), ByVersion keys in mod
             About.xml override base values non-additively. When False, all
             ByVersion keys are ignored and only base values are used.
+        :param case_insensitive_about_xml: When True (default), use case-insensitive
+            About.xml lookup. When False, require exact "About/About.xml" path.
         """
 
         for path in {self.local_mods_path, self.game_path}:
@@ -233,6 +239,7 @@ class MetadataMediator:
                 metadata_mutex,
                 self._mods_metadata,
                 prefer_versioned,
+                case_insensitive_about_xml,
             )
             for mod_path_batch in mod_paths_batches
         ]
@@ -287,6 +294,7 @@ class MetadataMediator:
             mutex: QMutex,
             mods_metadata: dict[str, ListedMod],
             prefer_versioned: bool = True,
+            case_insensitive_about_xml: bool = True,
         ):
             """Creates a worker to parse mods in a separate thread. Mutates the mods_metadata dict.
 
@@ -313,6 +321,9 @@ class MetadataMediator:
             :param prefer_versioned: When True, ByVersion keys override base
                 values non-additively. When False, ByVersion keys are ignored.
             :type prefer_versioned: bool
+            :param case_insensitive_about_xml: When True, use case-insensitive
+                About.xml lookup. When False, require exact "About/About.xml" path.
+            :type case_insensitive_about_xml: bool
             """
             super().__init__()
             self.mod_path = mod_path
@@ -328,6 +339,7 @@ class MetadataMediator:
             self.mutex = mutex
             self.mods_metadata = mods_metadata
             self.prefer_versioned = prefer_versioned
+            self.case_insensitive_about_xml = case_insensitive_about_xml
 
         def run(self) -> None:
             paths = (
@@ -346,6 +358,7 @@ class MetadataMediator:
                         self.rimworld_path,
                         self.workshop_path,
                         self.prefer_versioned,
+                        self.case_insensitive_about_xml,
                     )
 
                     if not valid:
