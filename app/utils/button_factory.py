@@ -11,6 +11,8 @@ from typing import Any, Callable
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
 
+from app.models.operation_mode import OperationMode
+
 
 class ButtonType(Enum):
     """Enumeration of button types for standardized button creation."""
@@ -56,59 +58,63 @@ class ButtonFactory:
     def __init__(self, panel: Any):
         self.panel = panel
 
+    def _create_dropdown_button(
+        self,
+        text: str,
+        object_name: str,
+        menu_items: list[tuple[str, Callable[[], None]]],
+    ) -> QPushButton:
+        """Create a QPushButton with a dropdown menu."""
+        button = QPushButton()
+        button.setText(self.panel.tr(text))
+        button.setObjectName(object_name)
+        menu = QMenu(button)
+        for label, callback in menu_items:
+            action = QAction(self.panel.tr(label), self.panel)
+            action.triggered.connect(callback)
+            menu.addAction(action)
+        button.setMenu(menu)
+        button.clicked.connect(
+            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
+        )
+        return button
+
     def create_refresh_button(
         self, callback: Callable[[], None] | None = None
     ) -> QPushButton:
         """Create a refresh button."""
-        return self.panel._create_refresh_button(callback)
+        button = QPushButton()
+        button.setText(self.panel.tr("Refresh"))
+        button.setObjectName("primaryButton")
+        if callback:
+            button.clicked.connect(callback)
+        return button
 
     def create_steamcmd_button(self, pfid_column: int) -> QPushButton:
         """Create a SteamCMD button with dropdown menu."""
-        button = QPushButton()
-        button.setText(self.panel.tr("SteamCMD"))
-        button.setObjectName("actionButton")
-
-        from app.windows.base_mods_panel import OperationMode
-
-        menu = QMenu(button)
-
-        download_action = QAction(self.panel.tr("Download with SteamCMD"), self.panel)
-        download_action.triggered.connect(
-            self.panel._create_update_callback(pfid_column, OperationMode.STEAMCMD)
+        return self._create_dropdown_button(
+            "SteamCMD",
+            "actionButton",
+            [
+                (
+                    "Download with SteamCMD",
+                    self.panel._create_update_callback(
+                        pfid_column, OperationMode.STEAMCMD
+                    ),
+                ),
+            ],
         )
-        menu.addAction(download_action)
-
-        button.setMenu(menu)
-        button.clicked.connect(
-            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-        )
-        return button
 
     def create_select_all_button(self) -> QPushButton:
         """Create a button with Select all/Deselect all dropdown."""
-        button = QPushButton()
-        button.setText(self.panel.tr("Select"))
-        button.setObjectName("actionButton")
-
-        menu = QMenu(button)
-
-        select_all_action = QAction(self.panel.tr("Select all"), self.panel)
-        select_all_action.triggered.connect(
-            lambda: self.panel._set_all_checkbox_rows(True)
+        return self._create_dropdown_button(
+            "Select",
+            "actionButton",
+            [
+                ("Select all", lambda: self.panel._set_all_checkbox_rows(True)),
+                ("Deselect all", lambda: self.panel._set_all_checkbox_rows(False)),
+            ],
         )
-        menu.addAction(select_all_action)
-
-        deselect_all_action = QAction(self.panel.tr("Deselect all"), self.panel)
-        deselect_all_action.triggered.connect(
-            lambda: self.panel._set_all_checkbox_rows(False)
-        )
-        menu.addAction(deselect_all_action)
-
-        button.setMenu(menu)
-        button.clicked.connect(
-            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-        )
-        return button
 
     def create_steam_button(
         self,
@@ -116,7 +122,30 @@ class ButtonFactory:
         completion_callback: Callable[[], None] | None = None,
     ) -> QPushButton:
         """Create a Steam button with subscribe/unsubscribe dropdown."""
-        return self.panel._create_steam_button(pfid_column, completion_callback)
+        return self._create_dropdown_button(
+            "Steam",
+            "actionButton",
+            [
+                (
+                    "Subscribe selected",
+                    self.panel._create_update_callback(
+                        pfid_column,
+                        OperationMode.STEAM,
+                        "subscribe",
+                        completion_callback,
+                    ),
+                ),
+                (
+                    "Unsubscribe selected",
+                    self.panel._create_update_callback(
+                        pfid_column,
+                        OperationMode.STEAM,
+                        "unsubscribe",
+                        completion_callback,
+                    ),
+                ),
+            ],
+        )
 
     def create_delete_button(
         self,

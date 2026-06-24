@@ -3,6 +3,7 @@ from typing import Any
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import filter_eligible_mods_for_update
 from app.windows.base_mods_panel import (
@@ -10,7 +11,6 @@ from app.windows.base_mods_panel import (
     ButtonConfig,
     ButtonType,
     ColumnIndex,
-    OperationMode,
 )
 
 
