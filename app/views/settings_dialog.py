@@ -786,6 +786,22 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.prefer_versioned_about_tags_checkbox
         )
 
+        self.case_insensitive_about_xml_checkbox = QCheckBox(
+            self.tr("Case-insensitive About.xml lookup")
+        )
+        self.case_insensitive_about_xml_checkbox.setToolTip(
+            self.tr(
+                "Enable case-insensitive lookup for About/About.xml.\n"
+                "Some mods use incorrect casing (e.g., about/about.xml) which breaks on\n"
+                "case-sensitive filesystems (Linux). Per the RimWorld modding spec, the\n"
+                "correct path is About/About.xml.\n"
+                "See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml"
+            )
+        )
+        xml_parsing_group_box_layout.addWidget(
+            self.case_insensitive_about_xml_checkbox
+        )
+
         # Mod list options group
         _, modlist_option_group_box_layout = self._add_group_box(tab_layout)
 
@@ -1516,20 +1532,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             )
         )
         group_layout.addWidget(self.include_mod_notes_in_mod_name_filter_checkbox)
-
-        self.case_insensitive_about_xml_checkbox = QCheckBox(
-            self.tr("Case-insensitive About.xml lookup")
-        )
-        self.case_insensitive_about_xml_checkbox.setToolTip(
-            self.tr(
-                "Enable case-insensitive lookup for About/About.xml.\n"
-                "Some mods use incorrect casing (e.g., about/about.xml) which breaks on\n"
-                "case-sensitive filesystems (Linux). Per the RimWorld modding spec, the\n"
-                "correct path is About/About.xml.\n"
-                "See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml"
-            )
-        )
-        group_layout.addWidget(self.case_insensitive_about_xml_checkbox)
 
         backup_layout = QHBoxLayout()
         self.enable_backup_before_update_checkbox = QCheckBox(

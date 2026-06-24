@@ -42,6 +42,9 @@ class SortingTabController(BaseTabController):
         )
         if self.settings.prefer_versioned_about_tags:
             self.dialog.prefer_versioned_about_tags_checkbox.setChecked(True)
+        self.dialog.case_insensitive_about_xml_checkbox.setChecked(
+            self.settings.case_insensitive_about_xml_lookup
+        )
         self.dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
         )
@@ -70,6 +73,9 @@ class SortingTabController(BaseTabController):
         )
         self.settings.prefer_versioned_about_tags = (
             self.dialog.prefer_versioned_about_tags_checkbox.isChecked()
+        )
+        self.settings.case_insensitive_about_xml_lookup = (
+            self.dialog.case_insensitive_about_xml_checkbox.isChecked()
         )
         self.settings.try_download_missing_mods = (
             self.dialog.download_missing_mods_checkbox.isChecked()
