@@ -48,7 +48,6 @@ class UIElements:
 
     title: QLabel
     details_label: QLabel
-    editor_deselect_all_button: QPushButton
     editor_select_all_button: QPushButton
     editor_cancel_button: QPushButton
 
@@ -230,16 +229,6 @@ class BaseModsPanel(QWidget):
             self.layouts.editor_exit_actions_layout
         )
 
-        self.ui_elements.editor_deselect_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, False)
-        )
-        self.layouts.editor_checkbox_actions_layout.addWidget(
-            self.ui_elements.editor_deselect_all_button
-        )
-
-        self.ui_elements.editor_select_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, True)
-        )
         self.layouts.editor_checkbox_actions_layout.addWidget(
             self.ui_elements.editor_select_all_button
         )
@@ -295,15 +284,13 @@ class BaseModsPanel(QWidget):
 
     def _initialize_ui_elements(self) -> None:
         """Initialize UI elements dataclasses."""
+        factory = self.get_button_factory()
         self.ui_elements = UIElements(
             title=QLabel(),
             details_label=QLabel(),
-            editor_deselect_all_button=QPushButton(self.tr("Deselect all")),
-            editor_select_all_button=QPushButton(self.tr("Select all")),
+            editor_select_all_button=factory.create_select_all_button(),
             editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
         )
-        self.ui_elements.editor_deselect_all_button.setObjectName("primaryButton")
-        self.ui_elements.editor_select_all_button.setObjectName("primaryButton")
         self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
 
     def _initialize_layouts(self) -> None:
