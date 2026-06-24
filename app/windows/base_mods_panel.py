@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.models.operation_mode import OperationMode
 from app.models.settings import Settings
 from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType, MenuItem
 from app.utils.event_bus import EventBus
@@ -80,13 +81,6 @@ class ColumnIndex(Enum):
     SOURCE = 8
     PATH = 9
     WORKSHOP_PAGE = 10
-
-
-class OperationMode(Enum):
-    """Enumeration for mod update operation modes."""
-
-    STEAMCMD = "SteamCMD"
-    STEAM = "Steam"
 
 
 class BaseModsPanel(QWidget):
@@ -640,108 +634,6 @@ class BaseModsPanel(QWidget):
         label.setPath(path)
         label.setObjectName(object_name)
         return label
-
-    def _create_button(
-        self,
-        text: str,
-        callback: Callable[[], None] | None = None,
-        object_name: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button.
-
-        Args:
-            text: Button text.
-            callback: Optional callback function.
-            object_name: Optional object name for the button.
-
-        Returns:
-            QPushButton: Configured button.
-        """
-        button = QPushButton()
-        button.setText(text)
-        if object_name:
-            button.setObjectName(object_name)
-        if callback is not None:
-            button.clicked.connect(callback)
-        return button
-
-    def _create_standardized_button(
-        self,
-        button_type: ButtonType,
-        pfid_column: int | None = None,
-        completion_callback: Callable[[], None] | None = None,
-        custom_callback: Callable[[], None] | None = None,
-        text: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button based on type.
-
-        Args:
-            button_type: Type of button to create.
-            pfid_column: Column index for published file ID (for Steam-related buttons).
-            completion_callback: Callback after operation completes.
-            custom_callback: Custom callback for custom buttons.
-            text: Custom text for the button.
-
-        Returns:
-            Configured QPushButton.
-        """
-        if button_type == ButtonType.REFRESH:
-            return self._create_button(
-                self.tr("Refresh"), custom_callback, "primaryButton"
-            )
-        elif button_type == ButtonType.CUSTOM:
-            return self._create_button(text, custom_callback, "primaryButton")
-
-        # Fallback
-        return self._create_button(text or "Button", custom_callback, "primaryButton")
-
-    def _create_refresh_button(
-        self, callback: Callable[[], None] | None
-    ) -> QPushButton:
-        """Create a standardized refresh button."""
-        return self._create_standardized_button(
-            ButtonType.REFRESH, custom_callback=callback
-        )
-
-    def _create_steam_button(
-        self, pfid_column: int, completion_callback: Callable[[], None] | None = None
-    ) -> QPushButton:
-        """Create a Steam button with dropdown for subscribe/unsubscribe."""
-        button = QPushButton()
-        button.setText(self.tr("Steam"))
-        button.setObjectName("actionButton")
-
-        menu = QMenu(button)
-
-        subscribe_action = QAction(self.tr("Subscribe selected"), self)
-        subscribe_action.triggered.connect(
-            self._create_update_callback(
-                pfid_column,
-                OperationMode.STEAM,
-                "subscribe",
-                completion_callback,
-            )
-        )
-        menu.addAction(subscribe_action)
-
-        unsubscribe_action = QAction(self.tr("Unsubscribe selected"), self)
-        unsubscribe_action.triggered.connect(
-            self._create_update_callback(
-                pfid_column,
-                OperationMode.STEAM,
-                "unsubscribe",
-                completion_callback,
-            )
-        )
-        menu.addAction(unsubscribe_action)
-
-        button.setMenu(menu)
-        button.clicked.connect(
-            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-        )
-        return button
 
     def _create_deletion_button(
         self,

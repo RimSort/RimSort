@@ -7,12 +7,12 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
-    OperationMode,
 )
 
 
