@@ -798,9 +798,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
                 "See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml"
             )
         )
-        xml_parsing_group_box_layout.addWidget(
-            self.case_insensitive_about_xml_checkbox
-        )
+        xml_parsing_group_box_layout.addWidget(self.case_insensitive_about_xml_checkbox)
 
         # Mod list options group
         _, modlist_option_group_box_layout = self._add_group_box(tab_layout)
