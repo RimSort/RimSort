@@ -60,6 +60,7 @@ class MenuBar(QObject):
         self.add_zip_mod_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
+        self.update_git_mods_action: QAction
         self.github_mods_action: QAction
         self.steam_verify_game_files_action: QAction
         self.backup_instance_action: QAction
@@ -306,6 +307,9 @@ class MenuBar(QObject):
         )
         self.update_workshop_mods_action = self._add_action(
             download_menu, self.tr("Update Workshop Mods")
+        )
+        self.update_git_mods_action = self._add_action(
+            download_menu, self.tr("Update Git Mods")
         )
         download_menu.addSeparator()
         self.github_mods_action = self._add_action(

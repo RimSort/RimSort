@@ -55,6 +55,7 @@ from app.utils.http_downloader import (
     DownloadResult,
     HttpDownloadWorker,
 )
+from app.models.metadata.metadata_structure import ModType
 from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
@@ -304,6 +305,8 @@ class MainContentController(QObject):
         for signal in update_targets:
             signal.connect(self._on_check_updates_requested)
 
+        EventBus().do_check_for_git_updates.connect(self._on_update_all_git_mods)
+
         # Bind download signals
         for event_signal, (
             base_path_obj,
@@ -364,6 +367,25 @@ class MainContentController(QObject):
         )
         self.view.window_manager.register(self._github_mods_panel)
         self._github_mods_panel.show()
+
+    def _on_update_all_git_mods(self) -> None:
+        """Collect all git mod paths from metadata and check for updates."""
+        git_paths: list[Path] = []
+        for _path_key, mod_data in self.metadata_controller.mods_metadata.items():
+            if mod_data.mod_type == ModType.GIT and mod_data.mod_path:
+                git_paths.append(mod_data.mod_path)
+
+        # GitHub-managed mods have their own release-based update flow
+        git_paths = self._filter_non_github_repos(git_paths)
+
+        if not git_paths:
+            InformationBox(
+                title=self.tr("No Git Mods Found"),
+                text=self.tr("No git-based mods were found in your local mods folder."),
+            ).exec()
+            return
+
+        self._on_check_updates_requested(git_paths)
 
     @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
