@@ -1232,3 +1232,42 @@ QProgressBar#logProgressBar::chunk {
     background-color: #22303d;
     border-radius: 2px;
 }
+
+/* ===== Filter Panel (app/views/filter_panel.py) ===== */
+QFrame#FilterPanel {
+    background-color: #1B2838;
+    border: 1px solid #346792;
+    border-radius: 8px;
+}
+
+QFrame#TagChip {
+    background-color: #272e37;
+    border: 1px solid #455364;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #e6edf3;
+}
+
+QFrame#TagChip[active="true"] {
+    background-color: #3688c3;
+    border-color: #3688c3;
+}
+
+QFrame#TagChip[active="false"] {
+    background-color: #272e37;
+    border-color: #455364;
+    color: #cfcfcf;
+}
+
+QFrame#TagChip:hover {
+    background-color: #37414f;
+    border-color: #54687a;
+}
+
+QLabel#FilterBadge {
+    background-color: #c4334d;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
+}
