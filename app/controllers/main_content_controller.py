@@ -55,7 +55,7 @@ from app.utils.http_downloader import (
     DownloadResult,
     HttpDownloadWorker,
 )
-from app.utils.metadata import MetadataManager
+from app.models.metadata.metadata_structure import ModType
 from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
@@ -370,13 +370,10 @@ class MainContentController(QObject):
 
     def _on_update_all_git_mods(self) -> None:
         """Collect all git mod paths from metadata and check for updates."""
-        metadata_manager = MetadataManager.instance()
         git_paths: list[Path] = []
-        for _uuid, mod_data in metadata_manager.internal_local_metadata.items():
-            if mod_data.get("git_repo") and not mod_data.get("steamcmd"):
-                mod_path = mod_data.get("path")
-                if mod_path:
-                    git_paths.append(Path(mod_path))
+        for _path_key, mod_data in self.metadata_controller.mods_metadata.items():
+            if mod_data.mod_type == ModType.GIT and mod_data.mod_path:
+                git_paths.append(mod_data.mod_path)
 
         # GitHub-managed mods have their own release-based update flow
         git_paths = self._filter_non_github_repos(git_paths)

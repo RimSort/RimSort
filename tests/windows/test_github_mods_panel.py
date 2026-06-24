@@ -6,7 +6,6 @@ from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractButton, QApplication, QCheckBox
 
-from app.utils.metadata import MetadataManager
 from app.windows.github_mods_panel import _COL_NAME, _COL_REPO, GitHubModsPanel
 
 
@@ -15,9 +14,9 @@ def _make_panel(**overrides: object) -> GitHubModsPanel:
     panel = GitHubModsPanel.__new__(GitHubModsPanel)
     panel._update_worker = None
     panel._auto_update_signals_blocked = False
-    panel.metadata_manager = MagicMock()
-    panel.settings_controller = MagicMock()
-    panel.settings_controller.settings.aux_db_path = "/tmp/test.db"
+    panel.metadata_controller = MagicMock()
+    panel.settings = MagicMock()
+    panel.settings.aux_db_path = "/tmp/test.db"
     panel.editor_model = MagicMock()
     panel.editor_table_view = MagicMock()
     panel.ui_elements = MagicMock()
@@ -351,20 +350,18 @@ class TestOnUninstallConvertToGit:
 class TestUninstallButton:
     @patch("app.windows.github_mods_panel.GitHubModsPanel._populate_from_mods")
     @patch("app.windows.github_mods_panel.EventBus")
-    @patch.object(MetadataManager, "instance")
     def test_uninstall_button_exists_in_layout(
         self,
-        mock_mm_instance: MagicMock,
         mock_event_bus: MagicMock,
         mock_populate: MagicMock,
         qapp: QApplication,
     ) -> None:
-        mock_mm = MagicMock()
-        mock_mm.settings_controller.settings.aux_db_path = "/tmp/test.db"
-        mock_mm_instance.return_value = mock_mm
         mock_event_bus.return_value.do_refresh_mods_lists = MagicMock()
 
-        panel = GitHubModsPanel()
+        mock_mc = MagicMock()
+        mock_mc.settings.aux_db_path = "/tmp/test.db"
+
+        panel = GitHubModsPanel(metadata_controller=mock_mc)
         layout = panel.layouts.editor_main_actions_layout
 
         button_texts: list[str] = []
