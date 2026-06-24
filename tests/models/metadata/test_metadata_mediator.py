@@ -25,12 +25,7 @@ def test_initial_state(mediator: MetadataMediator) -> None:
     assert mediator.steam_db is None
     assert mediator.game_version == "Unknown"
 
-    try:
-        assert mediator.mods_metadata is None
-    except ValueError:
-        pass
-    else:
-        assert False
+    assert mediator.mods_metadata == {}
 
 
 def test_refresh_metadata(mediator: MetadataMediator) -> None:

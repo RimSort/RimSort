@@ -72,12 +72,12 @@ class MetadataMediator:
         """Mods_metadata is a dict representation of all the listedmods, where the key is
         the path to the mod.
 
-        :raises ValueError: Raised when mods_metadata has not been initiated
+        Returns an empty dict when metadata has not been loaded yet.
         :return: A dict of ListedMods keyed by mod path.
         :rtype: dict[str, ListedMod]
         """
         if self._mods_metadata is None:
-            raise ValueError("Mods metadata have not been initiated")
+            return {}
         return self._mods_metadata
 
     @property
@@ -167,9 +167,11 @@ class MetadataMediator:
 
         for path in {self.local_mods_path, self.game_path}:
             if path is None or not path.exists() or not path.is_dir():
-                raise ValueError(
-                    "Essential paths are missing, invalid, or not directories"
+                logger.warning(
+                    "Essential paths are missing, invalid, or not directories. "
+                    "Skipping metadata refresh."
                 )
+                return
 
         self._refresh_game_version()
 
