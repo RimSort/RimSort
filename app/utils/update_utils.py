@@ -61,6 +61,14 @@ WINDOWS_PROTECTED_PATHS = [
     r"C:\WINDOWS",
 ]
 
+# Tokens used for drive-agnostic protected path detection.
+# e.g. D:\Program Files (x86)\... or E:\Program Files (x86)\... should be treated as protected.
+WINDOWS_PROTECTED_TOKENS = [
+    "WINDOWS",
+    "PROGRAM FILES",
+    "PROGRAM FILES (X86)",
+]
+
 # Thread timeouts and waits
 BACKUP_TIMEOUT_SECONDS = 600  # 10 minutes for backup
 EXTRACTION_THREAD_TIMEOUT_MS = 5000  # 5 seconds for thread cleanup
@@ -528,12 +536,25 @@ class UpdateManager(QObject):
         app_folder = AppInfo().application_folder
         app_path_str = str(app_folder).replace("/", "\\").upper()
 
+        # Primary check: legacy protected strings (typically C:\...).
         for protected in WINDOWS_PROTECTED_PATHS:
             if protected in app_path_str:
                 logger.info(
                     f"Application in protected path: {protected} - elevation required"
                 )
                 return True
+
+        # Secondary check: drive-agnostic token match.
+        # Detect protected directory segments without relying on drive letter.
+        # We only match full directory names (e.g. \PROGRAM FILES\), not partial substrings.
+        for token in WINDOWS_PROTECTED_TOKENS:
+            protected_dir_pattern = f"\\{token}\\"
+            if protected_dir_pattern in app_path_str:
+                logger.info(
+                    f"Application in protected path token '{token}' - elevation required"
+                )
+                return True
+
         return False
 
     def _test_write_access(self) -> bool:
