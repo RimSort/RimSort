@@ -5,7 +5,7 @@ from typing import Any, Generator, Optional
 
 from loguru import logger
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QCheckBox
+from PySide6.QtWidgets import QCheckBox, QLabel, QPushButton
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (
@@ -13,11 +13,12 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     ReplacementInfo,
 )
-from app.utils.button_factory import ButtonConfig, ButtonType, MenuItem
+from app.utils.button_factory import ButtonConfig, ButtonType
 from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ColumnIndex,
+    UIElements,
 )
 
 
@@ -78,23 +79,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()
 
-        button_configs = [
-            ButtonConfig(
-                button_type=ButtonType.SELECT,
-                text=self.tr("Select"),
-                menu_items=[
-                    MenuItem(
-                        text=self.tr("Select all Originals"),
-                        callback=self._select_all_originals,
-                    ),
-                    MenuItem(
-                        text=self.tr("Select all Replacements"),
-                        callback=self._select_all_replacements,
-                    ),
-                ],
-            ),
-        ]
-        button_configs.extend(self._get_base_button_configs())
+        button_configs = list(self._get_base_button_configs())
 
         if steam_client_integration_enabled:
             button_configs.append(
@@ -115,6 +100,28 @@ class UseThisInsteadPanel(BaseModsPanel):
         # Initialize row index trackers for bulk selection operations
         self._original_rows: set[int] = set()
         self._replacement_rows: set[int] = set()
+
+    def _initialize_ui_elements(self) -> None:
+        """Initialize UI elements with custom select button."""
+        self.ui_elements = UIElements(
+            title=QLabel(),
+            details_label=QLabel(),
+            editor_select_all_button=self._create_custom_select_button(),
+            editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
+        )
+        self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
+
+    def _create_custom_select_button(self) -> QPushButton:
+        """Create the select button with Originals/Replacements dropdown."""
+        factory = self.get_button_factory()
+        return factory.create_dropdown_button(
+            "Select",
+            "actionButton",
+            [
+                ("Select all Originals", self._select_all_originals),
+                ("Select all Replacements", self._select_all_replacements),
+            ],
+        )
 
     def show_if_has_alternatives(self) -> bool:
         """
