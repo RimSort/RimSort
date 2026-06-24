@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QInputDialog, QMessageBox
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import Base
+from app.models.metadata.metadata_structure import ModType
 from app.models.settings import Settings
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
@@ -55,7 +56,6 @@ from app.utils.http_downloader import (
     DownloadResult,
     HttpDownloadWorker,
 )
-from app.models.metadata.metadata_structure import ModType
 from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
