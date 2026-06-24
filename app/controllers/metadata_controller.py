@@ -113,7 +113,11 @@ class MetadataController(QObject):
         """Refresh the metadata."""
         self.reset_paths()
         prefer_versioned = self.settings.prefer_versioned_about_tags
-        self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
+        case_insensitive = self.settings.case_insensitive_about_xml_lookup
+        self.metadata_mediator.refresh_metadata(
+            prefer_versioned=prefer_versioned,
+            case_insensitive_about_xml=case_insensitive,
+        )
 
         with self.metadata_db_controller.Session() as session:
             for path, mod_data in self.metadata_mediator.mods_metadata.items():
