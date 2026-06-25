@@ -16,6 +16,7 @@ from app.utils.constants import (
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.dict_utils import recursively_update_dict
+from app.utils.json_utils import atomic_json_dump
 from app.utils.steam.webapi.wrapper import DynamicQuery
 
 
@@ -90,8 +91,7 @@ def output_database(
                 prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
                 recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
             )
-            with open(output_database_path, "w", encoding="utf-8") as output:
-                json.dump(db_to_update, output, indent=4)
+            atomic_json_dump(db_to_update, output_database_path, indent=4)
         else:
             progress_callback(
                 "Unable to load database from specified path! Does the file exist...?"
@@ -101,12 +101,10 @@ def output_database(
                 / ("NEW_" + Path(output_database_path).name)
             )
             progress_callback(f"\nCaching DynamicQuery result:\n\n{appended_path}")
-            with open(appended_path, "w", encoding="utf-8") as output_f:
-                json.dump(database, output_f, indent=4)
+            atomic_json_dump(database, appended_path, indent=4)
     else:
         progress_callback(f"\nCaching DynamicQuery result:\n{output_database_path}")
-        with open(output_database_path, "w", encoding="utf-8") as output_f:
-            json.dump(database, output_f, indent=4)
+        atomic_json_dump(database, output_database_path, indent=4)
 
 
 class DBBuilderCore:

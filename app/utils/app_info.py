@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from pathlib import Path
@@ -8,6 +7,7 @@ from lxml import etree, objectify
 from platformdirs import PlatformDirs
 
 from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.json_utils import atomic_json_dump
 
 
 class AppInfo:
@@ -118,8 +118,7 @@ class AppInfo:
         # Initialize user rules file if it does not exist
         if not self._user_rules_file.exists():
             self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._user_rules_file, "w", encoding="utf-8") as output:
-                json.dump(DEFAULT_USER_RULES, output, indent=4)
+            atomic_json_dump(DEFAULT_USER_RULES, str(self._user_rules_file), indent=4)
 
         # AppImage: clean up .bak from a previous successful update
         self._cleanup_appimage_backup()

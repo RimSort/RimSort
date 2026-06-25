@@ -16,6 +16,7 @@ from app.utils.gui_info import (
     show_dialogue_conditional,
     show_dialogue_file,
 )
+from app.utils.json_utils import atomic_json_dump
 from app.views.dialogue import show_information, show_warning
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
@@ -488,8 +489,7 @@ class TroubleshootingController:
                 "knownExpansions": known_expansions_list,
             }
 
-            with open(save_path, "w") as f:
-                json.dump(export_data, f, indent=2)
+            atomic_json_dump(export_data, save_path, indent=2)
         except Exception as e:
             logger.error(f"Failed to export mod list: {e}")
             show_warning(

@@ -5,6 +5,7 @@ from typing import Any
 from loguru import logger
 
 from app.utils.app_info import AppInfo
+from app.utils.json_utils import atomic_json_dump
 
 
 class IgnoreManager:
@@ -87,8 +88,7 @@ class IgnoreManager:
                 "description": "Mods to ignore when checking for missing properties (identified by packageid)",
             }
 
-            with open(ignore_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
+            atomic_json_dump(data, str(ignore_file), indent=4)
 
             logger.info(f"Saved {len(ignored_mods)} ignored mods to {ignore_file}")
             return True
