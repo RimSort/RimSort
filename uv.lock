@@ -998,7 +998,7 @@ dev = [
     { name = "types-beautifulsoup4", specifier = ">=4.12.0.20250516" },
     { name = "types-greenlet", specifier = ">=3.5.0.20260518" },
     { name = "types-lxml", specifier = ">=2025.3.30" },
-    { name = "types-networkx", specifier = ">=3.6.1.20260612" },
+    { name = "types-networkx", specifier = ">=3.6.1.20260624" },
     { name = "types-pexpect", specifier = ">=4.9.0.20260518" },
     { name = "types-psutil", specifier = ">=7.2.2.20260518" },
     { name = "types-pygit2", specifier = ">=1.15.0.20250319" },
@@ -1184,14 +1184,14 @@ wheels = [
 
 [[package]]
 name = "types-networkx"
-version = "3.6.1.20260612"
+version = "3.6.1.20260624"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/d6/86483526df18c9936cb321b33f6df929db20414378f536972c5e9ee20789/types_networkx-3.6.1.20260612.tar.gz", hash = "sha256:9a28345fb3ad985e460667ef2b9c0879920761c8000cd07b424c0bf1b24ca778", size = 73974, upload-time = "2026-06-12T06:22:35.097Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/f9/975c2bb35407c241fb788e9c75b2e2642af43a6c9cf81056a119dd98e59c/types_networkx-3.6.1.20260624.tar.gz", hash = "sha256:f031a9ee0bd27de4ab6d3e35a10f3492a4befc7b8c348607892b0ccb1b415d4d", size = 74060, upload-time = "2026-06-24T05:56:25.279Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/1d/4694309c774f552a0dad8d357bc8c2b152120c9744dad4f21fdc3e819c37/types_networkx-3.6.1.20260612-py3-none-any.whl", hash = "sha256:829cdad128c10e072aacadd0421d7ebd64cee9731110e9d6b3f22b575fe0bbfd", size = 162459, upload-time = "2026-06-12T06:22:33.875Z" },
+    { url = "https://files.pythonhosted.org/packages/14/d4/67136d3323dd8a8ecc8124531f737dee97819811026da20a2a72949f462a/types_networkx-3.6.1.20260624-py3-none-any.whl", hash = "sha256:071734f88733afaaa06cbb62eb8c603626f4f9aa18424771acbdd3a638828d9a", size = 162457, upload-time = "2026-06-24T05:56:24.063Z" },
 ]
 
 [[package]]
