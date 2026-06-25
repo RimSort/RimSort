@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import sys
 import traceback
 from collections.abc import Callable
 from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import Pool, cpu_count
 from time import sleep, time
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
@@ -19,6 +20,7 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
+from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from app.views.dialogue import show_warning
 
@@ -683,35 +685,41 @@ class DynamicQuery(QObject):
         RimPy db_data["database"] format, or the skeleton of one from local_metadata
         :return: Dict containing the updated json data from PublishedFileIds query
         """
+        total_mods = len(publishedfileids)
+        # Estimate: each mod takes ~0.2s (API call + interval sleep)
+        est_seconds = int(total_mods * 0.2)
+        if est_seconds < 60:
+            est_str = f"{est_seconds}s"
+        else:
+            est_str = f"{est_seconds // 60}m {est_seconds % 60}s"
         self._emit_message(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for "
+            f"{total_mods} mods (single process)\n"
+            f"Estimated time: ~{est_str}.\n"
+            f"Please wait..."
         )
-        # Maximum processes
-        num_processes = cpu_count()
-        # Create a pool of worker processes
-        with Pool(processes=num_processes) as pool:
-            # Create instances of SteamworksAppDependenciesQuery for each chunk
-            queries = [
-                SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[int(str_pfid) for str_pfid in chunk],
-                    interval=1,
-                    _libs=str(AppInfo().libs_folder),
-                )
-                for chunk in list(
-                    chunks(
-                        _list=publishedfileids,
-                        limit=ceil(len(publishedfileids) / num_processes),
-                    )
-                )
-            ]
-            # Map the execution of the queries to the pool of processes
-            results = pool.map(SteamworksAppDependenciesQuery.run, queries)
-        # Merge the results from all processes into a single dictionary
-        self._emit_message("Processes completed!\nCollecting results")
+        # Check Steam availability before spawning processes
+        if not check_steam_available(str(AppInfo().libs_folder)):
+            self._emit_message(
+                "\nSteam is not available. Skipping AppID dependency retrieval."
+            )
+            return
+        # Run all queries in a single process — the Steamworks SDK cannot
+        # be initialized from multiple processes simultaneously (cross-thread
+        # pipe stalls)
+        deps_query = SteamworksAppDependenciesQuery(
+            pfid_or_pfids=[int(str_pfid) for str_pfid in publishedfileids],
+            interval=0.2,
+            _libs=str(AppInfo().libs_folder),
+            chunk_index=1,
+            total_chunks=1,
+            progress_callback=self._emit_message,
+        )
+        result = deps_query.run()
+        # Merge results into a single dictionary
         pfids_appid_deps: dict[int, list[int]] = {}
-        for result in results:
-            if result is not None:
-                pfids_appid_deps.update(result)
+        if result is not None:
+            pfids_appid_deps.update(result)
         self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)

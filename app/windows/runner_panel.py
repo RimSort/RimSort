@@ -487,7 +487,7 @@ class RunnerPanel(QWidget):
             self.progress_bar.setRange(0, int(end))
             self.progress_bar.setValue(int(start))
             return True
-        return False
+        return self._handle_todds_output(line)
 
     def _overwrite_last_line(self, text: str) -> None:
         """Replace the last line in the text display with the given text."""
